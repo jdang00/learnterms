@@ -1,7 +1,7 @@
-
 <script>
-  import "tailwindcss/tailwind.css";
+	import 'tailwindcss/tailwind.css';
 </script>
 
-<slot />
-
+<html data-theme="light" lang="en">
+	<slot />
+</html>
