@@ -1,25 +1,38 @@
 <script lang="ts">
+	import { flashcards } from '$lib/flashcards'; // Import the flashcards
+
+	let currentFlashcardIndex = 0;
 	let input: string = '';
-	let answer: string = 'hepatostomy';
+	let answer: string = flashcards[currentFlashcardIndex].term; // Set the initial answer
+	let meaning: string = flashcards[currentFlashcardIndex].meaning; // Set the initial meaning
 	let answerstatus: boolean = false;
 
 	function checkAnswer(): boolean {
-		if (input === answer) {
+		if (input.trim().toLowerCase() === answer.trim().toLowerCase()) {
 			answerstatus = true;
+			setTimeout(nextFlashcard, 1000); // Move to the next flashcard after a brief delay
 			return true;
 		} else {
 			answerstatus = false;
-
+			console.log('FALSE');
 			return false;
 		}
 	}
+
+	function nextFlashcard() {
+		currentFlashcardIndex = (currentFlashcardIndex + 1) % flashcards.length;
+		answer = flashcards[currentFlashcardIndex].term;
+		meaning = flashcards[currentFlashcardIndex].meaning;
+		input = ''; // Clear the input for the next flashcard
+		answerstatus = false; // Reset the answer status
+	}
 </script>
 
-<div class="flex items-center justify between w-full flex-col p-8 min-h-screen">
+<div class="flex items-center justify-between w-full flex-col p-8 min-h-screen">
 	<div class="w-full max-w-3xl">
 		<h1 class="font-medium mt-3 text-3xl">Introduction to Optometry Terms</h1>
 		<div class="border-b-2 border-gray-300 my-5"></div>
-		<p class="mt-3 text-xl">Surgical opening of the liver</p>
+		<p class="mt-3 text-xl">{meaning}</p>
 
 		<div>
 			{#if answerstatus === true}
@@ -37,7 +50,13 @@
 					bind:value={input}
 				/>
 			{/if}
-			<button class="btn btn-primary" on:click={() => checkAnswer()}>Enter</button>
+			<button class="btn btn-primary mt-3" on:click={checkAnswer}>Enter</button>
 		</div>
 	</div>
 </div>
+
+<footer class="footer footer-center text-base-content p-4">
+	<aside>
+		<p>Copyright © {new Date().getFullYear()} - Justin A. Dang</p>
+	</aside>
+</footer>
