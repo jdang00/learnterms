@@ -1,4 +1,13 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+
+	export let ref: HTMLElement | null = null;
+	onMount(() => {
+		if (ref) {
+			ref.focus();
+		}
+	});
+
 	import { flashcards } from '$lib/flashcards'; // Import the flashcards
 
 	let currentFlashcardIndex = 0;
@@ -10,7 +19,7 @@
 	function checkAnswer(): boolean {
 		if (input.trim().toLowerCase() === answer.trim().toLowerCase()) {
 			answerstatus = true;
-			setTimeout(nextFlashcard, 1000); // Move to the next flashcard after a brief delay
+			setTimeout(nextFlashcard, 100); // Move to the next flashcard after a brief delay
 			return true;
 		} else {
 			answerstatus = false;
@@ -34,7 +43,7 @@
 		<div class="border-b-2 border-gray-300 my-5"></div>
 		<p class="mt-3 text-xl">{meaning}</p>
 
-		<div>
+		<form>
 			{#if answerstatus === true}
 				<input
 					type="text"
@@ -48,10 +57,11 @@
 					placeholder="Type here"
 					class="input input-bordered input-error w-full max-w-xs mt-5"
 					bind:value={input}
+					bind:this={ref}
 				/>
 			{/if}
-			<button class="btn btn-primary mt-3" on:click={checkAnswer}>Enter</button>
-		</div>
+			<button type="submit" class="btn btn-primary mt-3" on:click={checkAnswer}>Enter</button>
+		</form>
 	</div>
 </div>
 
