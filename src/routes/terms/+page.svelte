@@ -24,7 +24,7 @@
 		<div class="flex flex-col space-y-4 items-center p-8 mt-5">
 			{#each cardList as card}
 				<div
-					class="card bg-base-100 w-full shadow-xl transform transition duration-300 hover:scale-110"
+					class="card bg-base-100 w-full shadow-xl transform transition duration-300 hover:scale-105"
 				>
 					<div class="card-body flex flex-row space-x-6 items-center">
 						<h2 class="font-semibold text-lg text-left w-2/5 break-words">{card.term}</h2>
