@@ -48,7 +48,7 @@ export const flashcards = [
 		meaning: 'Inflammation of the tissue surrounding the heart'
 	},
 	{
-		term: 'Perisoteum',
+		term: 'Periosteum',
 		meaning: 'Tissue surrounding bone'
 	},
 	{
