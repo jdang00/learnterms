@@ -68,9 +68,12 @@
 			return true;
 		} else {
 			answerstatus = AnswerStatus.incorrect;
-			if (ref) {
-				ref.focus();
-			}
+			setTimeout(() => {
+				if (ref) {
+					ref.focus();
+				}
+			}, 50);
+
 			return false;
 		}
 	}
@@ -84,7 +87,6 @@
 		answerstatus = AnswerStatus.empty;
 
 		if (shouldFocus) {
-			// Use a small timeout to ensure the UI has updated before focusing
 			setTimeout(() => {
 				if (ref) {
 					ref.focus();
@@ -182,3 +184,5 @@
 
 	<button class="btn mt-5" on:click={() => handleNextButtonClick()}><ChevronRight /></button>
 </div>
+
+<p class="text-gray-500">Press tab to reveal term.</p>
