@@ -60,7 +60,7 @@ export const flashcards = [
 		meaning: 'Root word for skull'
 	},
 	{
-		term: 'Cradniology',
+		term: 'Craniology',
 		meaning: 'Study of the skull'
 	},
 	{
