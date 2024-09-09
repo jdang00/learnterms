@@ -1,5 +1,6 @@
 <script lang="ts">
 	import 'tailwindcss/tailwind.css';
+
 	let theme: string = 'light';
 	import SignInButton from 'clerk-sveltekit/client/SignInButton.svelte';
 
