@@ -8,20 +8,22 @@
 </script>
 
 <div class="flex items-center justify-between w-full flex-col p-8 min-h-screen">
-	<div class="w-full max-w-3xl">
+	<div class="w-full">
 		<div class="flex justify-between items-end">
-			<div class="flex items-end space-x-3">
+			<div class="flex flex-wrap items-end space-x-3">
 				<a class="font-medium mt-3 text-3xl" href="/">Introduction to Optometry Terms</a>
 				<p class="font-bold text-gray-400">BETA</p>
 			</div>
-			<SignedIn>
-				<UserButton class="item-end" afterSignOutUrl="/" />
-			</SignedIn>
-			<SignedOut>
-				<SignInButton class="btn btn-link self-end">Login</SignInButton>
-			</SignedOut>
+
+			<div class="self-center">
+				<SignedIn>
+					<UserButton class="item-end" afterSignOutUrl="/" />
+				</SignedIn>
+				<SignedOut>
+					<SignInButton class="btn btn-link self-end">Login</SignInButton>
+				</SignedOut>
+			</div>
 		</div>
-		<div class="divider"></div>
 		<div class="flex flex-col space-y-2 items-center">
 			<Quiz />
 			<a class="btn btn-active btn-secondary max-w-lg" href="/terms">View all cards</a>
