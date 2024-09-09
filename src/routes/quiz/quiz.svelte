@@ -1,22 +1,23 @@
 <script lang="ts">
-	import { flashcards } from '$lib/flashcards';
+	export let data: { flashcards: Card[] };
+
+	type Card = {
+		id: number;
+		term: string;
+		meaning: string;
+		lesson: string;
+	};
+
 	import { onMount } from 'svelte';
 	import { Eye, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { Confetti } from 'svelte-confetti';
 
-	export let ref: HTMLElement | null = null;
+	let ref: HTMLElement | null = null;
 	onMount(() => {
 		if (ref) {
 			ref.focus();
 		}
 	});
-
-	// Define flashcard structure with progress tracking
-	interface Flashcard {
-		term: string;
-		meaning: string;
-		status: 'done' | 'incomplete';
-	}
 
 	enum AnswerStatus {
 		empty,
@@ -24,7 +25,7 @@
 		incorrect
 	}
 
-	function shuffle(array: Flashcard[]): Flashcard[] {
+	function shuffle(array: Card[]): Card[] {
 		for (let i = array.length - 1; i > 0; i--) {
 			const j = Math.floor(Math.random() * (i + 1));
 			[array[i], array[j]] = [array[j], array[i]];
@@ -32,28 +33,31 @@
 		return array;
 	}
 
-	let shuffledFlashcards: Flashcard[] = shuffle(
-		flashcards.map((card) => ({ ...card, status: 'incomplete' }))
+	let cards: Card[] = shuffle(
+		data.flashcards.map((item) => ({
+			id: item.id, // Directly use the id as cardid
+			term: item.term,
+			meaning: item.meaning,
+			lesson: item.lesson
+		}))
 	);
+
 	let currentFlashcardIndex = 0;
 	let input: string = '';
-	let answer: string = shuffledFlashcards[currentFlashcardIndex].term;
-	let meaning: string = shuffledFlashcards[currentFlashcardIndex].meaning;
+	let answer: string = cards[currentFlashcardIndex].term;
+	let meaning: string = cards[currentFlashcardIndex].meaning;
 	let answerstatus: AnswerStatus = AnswerStatus.empty;
 	let showAnswer: boolean = false;
 
-	// Check answer and move to the next card
 	function checkAnswer(): boolean {
 		if (input.trim().toLowerCase() === answer.trim().toLowerCase()) {
 			answerstatus = AnswerStatus.correct;
-			shuffledFlashcards[currentFlashcardIndex].status = 'done';
 			setTimeout(nextFlashcard, 1000);
 
 			return true;
 		} else {
 			answerstatus = AnswerStatus.incorrect;
 			if (ref) {
-				console.log(ref);
 				ref.focus();
 			}
 			return false;
@@ -62,9 +66,9 @@
 
 	function nextFlashcard() {
 		showAnswer = false;
-		currentFlashcardIndex = (currentFlashcardIndex + 1) % shuffledFlashcards.length;
-		answer = shuffledFlashcards[currentFlashcardIndex].term;
-		meaning = shuffledFlashcards[currentFlashcardIndex].meaning;
+		currentFlashcardIndex = (currentFlashcardIndex + 1) % cards.length;
+		answer = cards[currentFlashcardIndex].term;
+		meaning = cards[currentFlashcardIndex].meaning;
 		input = '';
 		answerstatus = AnswerStatus.empty;
 		if (ref) {
@@ -72,11 +76,11 @@
 		}
 	}
 
+	// Function to go back to the previous flashcard
 	function previousFlashcard() {
-		currentFlashcardIndex =
-			(currentFlashcardIndex - 1 + shuffledFlashcards.length) % shuffledFlashcards.length;
-		answer = shuffledFlashcards[currentFlashcardIndex].term;
-		meaning = shuffledFlashcards[currentFlashcardIndex].meaning;
+		currentFlashcardIndex = (currentFlashcardIndex - 1 + cards.length) % cards.length;
+		answer = cards[currentFlashcardIndex].term;
+		meaning = cards[currentFlashcardIndex].meaning;
 		input = '';
 		answerstatus = AnswerStatus.empty;
 		if (ref) {
@@ -84,11 +88,9 @@
 		}
 	}
 
-	// Reset progress (optional feature)
+	// Optional: Reset progress
 	function resetProgress() {
-		shuffledFlashcards = shuffle(
-			shuffledFlashcards.map((card) => ({ ...card, status: 'incomplete' }))
-		);
+		cards = shuffle(cards.map((card) => ({ ...card, status: 'incomplete' })));
 		currentFlashcardIndex = 0;
 		nextFlashcard();
 	}

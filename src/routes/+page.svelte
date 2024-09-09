@@ -5,6 +5,8 @@
 	import UserButton from 'clerk-sveltekit/client/UserButton.svelte';
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
+
+	export let data;
 </script>
 
 <div class="flex items-center justify-between w-full flex-col p-8 min-h-screen">
@@ -25,7 +27,7 @@
 			</div>
 		</div>
 		<div class="flex flex-col space-y-2 items-center">
-			<Quiz />
+			<Quiz {data} />
 			<a class="btn btn-active btn-secondary max-w-lg" href="/terms">View all cards</a>
 		</div>
 	</div>
