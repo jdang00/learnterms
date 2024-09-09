@@ -60,7 +60,7 @@
 					<div class="card-body flex flex-row space-x-6 h-56 items-center">
 						<h2 class="font-semibold text-lg text-left w-2/5 break-words">{card.term}</h2>
 						<div class="divider divider-horizontal"></div>
-						<p class="text-gray-700 text-right w-2/5 break-words">{card.meaning}</p>
+						<p class=" text-right w-2/5 break-words">{card.meaning}</p>
 					</div>
 				</div>
 			{/each}

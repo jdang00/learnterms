@@ -27,6 +27,8 @@
 		<li>Migrated card architecture to backend database (PostgreSQL)</li>
 		<li>Login implementation</li>
 	</ul>
+
+	<p class="text-gray-500 mt-3">Made with Svelte and 🧡</p>
 </div>
 
 <style>
