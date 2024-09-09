@@ -13,10 +13,15 @@
 	import { Confetti } from 'svelte-confetti';
 
 	let ref: HTMLElement | null = null;
+
 	onMount(() => {
 		if (ref) {
 			ref.focus();
 		}
+		document.addEventListener('keydown', handleKeydown);
+		return () => {
+			document.removeEventListener('keydown', handleKeydown);
+		};
 	});
 
 	enum AnswerStatus {
@@ -52,8 +57,14 @@
 	function checkAnswer(): boolean {
 		if (input.trim().toLowerCase() === answer.trim().toLowerCase()) {
 			answerstatus = AnswerStatus.correct;
-			setTimeout(nextFlashcard, 1000);
-
+			setTimeout(() => {
+				nextFlashcard(false);
+				setTimeout(() => {
+					if (ref) {
+						ref.focus();
+					}
+				}, 50);
+			}, 1000);
 			return true;
 		} else {
 			answerstatus = AnswerStatus.incorrect;
@@ -64,19 +75,28 @@
 		}
 	}
 
-	function nextFlashcard() {
+	function nextFlashcard(shouldFocus: boolean = true) {
 		showAnswer = false;
 		currentFlashcardIndex = (currentFlashcardIndex + 1) % cards.length;
 		answer = cards[currentFlashcardIndex].term;
 		meaning = cards[currentFlashcardIndex].meaning;
 		input = '';
 		answerstatus = AnswerStatus.empty;
-		if (ref) {
-			ref.focus();
+
+		if (shouldFocus) {
+			// Use a small timeout to ensure the UI has updated before focusing
+			setTimeout(() => {
+				if (ref) {
+					ref.focus();
+				}
+			}, 50);
 		}
 	}
 
-	// Function to go back to the previous flashcard
+	function handleNextButtonClick() {
+		nextFlashcard(true);
+	}
+
 	function previousFlashcard() {
 		currentFlashcardIndex = (currentFlashcardIndex - 1 + cards.length) % cards.length;
 		answer = cards[currentFlashcardIndex].term;
@@ -87,12 +107,21 @@
 			ref.focus();
 		}
 	}
-
-	// Optional: Reset progress
 	function resetProgress() {
 		cards = shuffle(cards.map((card) => ({ ...card, status: 'incomplete' })));
 		currentFlashcardIndex = 0;
 		nextFlashcard();
+	}
+
+	function toggleAnswer() {
+		showAnswer = !showAnswer;
+	}
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Tab') {
+			event.preventDefault(); // Prevent default Tab behavior
+			toggleAnswer();
+		}
 	}
 </script>
 
@@ -151,5 +180,5 @@
 		</div>
 	</div>
 
-	<button class="btn mt-5" on:click={() => nextFlashcard()}><ChevronRight /></button>
+	<button class="btn mt-5" on:click={() => handleNextButtonClick()}><ChevronRight /></button>
 </div>
