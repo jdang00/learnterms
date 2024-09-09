@@ -9,7 +9,7 @@
 	export let data;
 </script>
 
-<div class="flex items-center justify-between w-full flex-col p-8 min-h-screen">
+<div class="flex items-center justify-between w-full flex-col p-8 min-h-96">
 	<div class="w-full">
 		<div class="flex justify-between items-end">
 			<div class="flex flex-wrap items-end space-x-3">
@@ -34,7 +34,8 @@
 </div>
 
 <footer class="footer footer-center text-base-content p-4">
-	<aside>
-		<p>Copyright © {new Date().getFullYear()} - Justin A. Dang</p>
+	<aside class="flex flex-row">
+		<p>Copyright © {new Date().getFullYear()} - Justin A. Dang |</p>
+		<a class="link" href="/about">About / Changelog</a>
 	</aside>
 </footer>
