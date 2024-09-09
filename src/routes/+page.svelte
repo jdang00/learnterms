@@ -32,10 +32,3 @@
 		</div>
 	</div>
 </div>
-
-<footer class="footer footer-center text-base-content p-4">
-	<aside class="flex flex-row">
-		<p>Copyright © {new Date().getFullYear()} - Justin A. Dang |</p>
-		<a class="link" href="/about">About / Changelog</a>
-	</aside>
-</footer>
