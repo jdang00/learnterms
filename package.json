@@ -39,6 +39,7 @@
 	"dependencies": {
 		"@supabase/supabase-js": "^2.45.3",
 		"clerk-sveltekit": "^0.4.2",
-		"lucide-svelte": "^0.438.0"
+		"lucide-svelte": "^0.438.0",
+		"mode-watcher": "^0.4.1"
 	}
 }
