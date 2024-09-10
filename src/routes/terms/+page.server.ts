@@ -49,7 +49,8 @@ export const load = async ({ locals }) => {
           flashcards!inner (id, term, meaning, lesson)
       `
 			)
-			.eq('user_id', '367b2142-deb6-4dcd-87d5-803b49825e04');
+			.eq('user_id', '367b2142-deb6-4dcd-87d5-803b49825e04')
+			.order('is_starred', { ascending: false });
 
 		data = returnData;
 
@@ -67,7 +68,8 @@ export const load = async ({ locals }) => {
           flashcards!inner (id, term, meaning, lesson)
       `
 			)
-			.eq('user_id', existingUser.id);
+			.eq('user_id', existingUser.id)
+			.order('is_starred', { ascending: false });
 
 		data = returnData;
 
