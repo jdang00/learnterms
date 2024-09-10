@@ -50,7 +50,8 @@ export const load = async ({ locals }) => {
           flashcards!inner (id, term, meaning, lesson)
       `
 		)
-		.eq('user_id', existingUser.id);
+		.eq('user_id', existingUser.id)
+		.order('is_starred', { ascending: false });
 
 	if (cardsError) {
 		console.error('Error fetching cards:', cardsError);

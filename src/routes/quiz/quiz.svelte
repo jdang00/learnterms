@@ -2,10 +2,14 @@
 	export let data: { flashcards: Card[] };
 
 	type Card = {
-		id: number;
-		term: string;
-		meaning: string;
-		lesson: string;
+		card_id: string;
+		is_starred: boolean;
+		flashcards: {
+			id: number;
+			term: string;
+			meaning: string;
+			lesson: string;
+		};
 	};
 
 	import { onMount } from 'svelte';
@@ -37,20 +41,23 @@
 		}
 		return array;
 	}
-
 	let cards: Card[] = shuffle(
 		data.flashcards.map((item) => ({
-			id: item.id, // Directly use the id as cardid
-			term: item.term,
-			meaning: item.meaning,
-			lesson: item.lesson
+			card_id: item.card_id,
+			is_starred: item.is_starred,
+			flashcards: {
+				id: item.flashcards.id,
+				term: item.flashcards.term,
+				meaning: item.flashcards.meaning,
+				lesson: item.flashcards.lesson
+			}
 		}))
 	);
 
 	let currentFlashcardIndex = 0;
 	let input: string = '';
-	let answer: string = cards[currentFlashcardIndex].term;
-	let meaning: string = cards[currentFlashcardIndex].meaning;
+	let answer: string = cards[currentFlashcardIndex].flashcards.term;
+	let meaning: string = cards[currentFlashcardIndex].flashcards.meaning;
 	let answerstatus: AnswerStatus = AnswerStatus.empty;
 	let showAnswer: boolean = false;
 
@@ -81,8 +88,8 @@
 	function nextFlashcard(shouldFocus: boolean = true) {
 		showAnswer = false;
 		currentFlashcardIndex = (currentFlashcardIndex + 1) % cards.length;
-		answer = cards[currentFlashcardIndex].term;
-		meaning = cards[currentFlashcardIndex].meaning;
+		answer = cards[currentFlashcardIndex].flashcards.term;
+		meaning = cards[currentFlashcardIndex].flashcards.meaning;
 		input = '';
 		answerstatus = AnswerStatus.empty;
 
@@ -101,8 +108,8 @@
 
 	function previousFlashcard() {
 		currentFlashcardIndex = (currentFlashcardIndex - 1 + cards.length) % cards.length;
-		answer = cards[currentFlashcardIndex].term;
-		meaning = cards[currentFlashcardIndex].meaning;
+		answer = cards[currentFlashcardIndex].flashcards.term;
+		meaning = cards[currentFlashcardIndex].flashcards.meaning;
 		input = '';
 		answerstatus = AnswerStatus.empty;
 		if (ref) {
