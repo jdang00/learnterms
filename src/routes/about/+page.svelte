@@ -18,6 +18,15 @@
 
 	<h1 class="text-3xl mt-5 font-semibold">Changelog</h1>
 
+	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 9, 2024</h3>
+	<ul class="mt-5 m-8">
+		<li>Implemented Dark Mode</li>
+		<li>
+			Added starred cards (this behavior is currently very glitchy on the front end. Refresh to see
+			all updates after starring.)
+		</li>
+	</ul>
+
 	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 8, 2024</h3>
 	<ul class="mt-5 m-8">
 		<li>Added tab to reveal word</li>
