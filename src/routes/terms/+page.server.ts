@@ -37,25 +37,44 @@ export const load = async ({ locals }) => {
 		}
 	}
 
-	if (!existingUser) {
-		throw error(401, 'User not authenticated');
-	}
+	let data;
 
-	const { data: data, error: cardsError } = await supabase
-		.from('user_cards')
-		.select(
-			`
+	if (!existingUser) {
+		const { data: returnData, error: cardsError } = await supabase
+			.from('user_cards')
+			.select(
+				`
           card_id,
           is_starred,
           flashcards!inner (id, term, meaning, lesson)
       `
-		)
-		.eq('user_id', existingUser.id)
-		.order('is_starred', { ascending: false });
+			)
+			.eq('user_id', '367b2142-deb6-4dcd-87d5-803b49825e04');
 
-	if (cardsError) {
-		console.error('Error fetching cards:', cardsError);
-		throw error(500, 'Error fetching cards');
+		data = returnData;
+
+		if (cardsError) {
+			console.error('Error fetching cards:', cardsError);
+			throw error(500, 'Error fetching cards');
+		}
+	} else {
+		const { data: returnData, error: cardsError } = await supabase
+			.from('user_cards')
+			.select(
+				`
+          card_id,
+          is_starred,
+          flashcards!inner (id, term, meaning, lesson)
+      `
+			)
+			.eq('user_id', existingUser.id);
+
+		data = returnData;
+
+		if (cardsError) {
+			console.error('Error fetching cards:', cardsError);
+			throw error(500, 'Error fetching cards');
+		}
 	}
 	return {
 		flashcards: data ?? []
