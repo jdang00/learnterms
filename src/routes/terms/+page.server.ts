@@ -3,7 +3,6 @@ import { error } from '@sveltejs/kit';
 
 export const load = async ({ locals }) => {
 	const user = locals.session;
-	console.log(user);
 
 	let existingUser;
 
@@ -44,14 +43,13 @@ export const load = async ({ locals }) => {
 			.from('user_cards')
 			.select(
 				`
-          card_id,
+          id,
           is_starred,
           flashcards!inner (id, term, meaning, lesson)
       `
 			)
 			.eq('user_id', '367b2142-deb6-4dcd-87d5-803b49825e04')
 			.order('is_starred', { ascending: false });
-
 		data = returnData;
 
 		if (cardsError) {
@@ -63,7 +61,7 @@ export const load = async ({ locals }) => {
 			.from('user_cards')
 			.select(
 				`
-          card_id,
+          id,
           is_starred,
           flashcards!inner (id, term, meaning, lesson)
       `

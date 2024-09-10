@@ -6,7 +6,7 @@
 	export let data: { flashcards: Card[] };
 
 	type Card = {
-		card_id: string;
+		id: string;
 		is_starred: boolean;
 		flashcards: {
 			id: string;
@@ -17,7 +17,7 @@
 	};
 
 	let cards: Card[] = data.flashcards.map((item) => ({
-		card_id: item.card_id,
+		id: item.id,
 		is_starred: item.is_starred,
 		flashcards: {
 			id: item.flashcards.id,
@@ -34,19 +34,16 @@
 		card.is_starred = !card.is_starred;
 
 		try {
-			await updateCardStarredStatus(card.card_id, card.is_starred);
+			await updateCardStarredStatus(card.id, card.is_starred);
 		} catch (error) {
 			console.error('Error updating starred status:', error);
 			card.is_starred = originalStarredStatus;
 		}
 	}
 
-	async function updateCardStarredStatus(card_id: string, is_starred: boolean) {
-		const { error } = await supabase
-			.from('user_cards')
-			.update({ is_starred })
-			.eq('card_id', card_id);
-
+	async function updateCardStarredStatus(id: string, is_starred: boolean) {
+		const { error } = await supabase.from('user_cards').update({ is_starred }).eq('id', id);
+		console.log(id);
 		if (error) {
 			console.error('Error updating starred status:', error);
 		}

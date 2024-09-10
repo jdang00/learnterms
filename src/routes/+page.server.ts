@@ -3,7 +3,6 @@ import { error } from '@sveltejs/kit';
 
 export const load = async ({ locals }) => {
 	const user = locals.session;
-	console.log(user);
 
 	let existingUser;
 
@@ -44,7 +43,7 @@ export const load = async ({ locals }) => {
 			.from('user_cards')
 			.select(
 				`
-          card_id,
+          id,
           is_starred,
           flashcards!inner (id, term, meaning, lesson)
       `
@@ -62,12 +61,14 @@ export const load = async ({ locals }) => {
 			.from('user_cards')
 			.select(
 				`
-          card_id,
+          id,
           is_starred,
           flashcards!inner (id, term, meaning, lesson)
       `
 			)
 			.eq('user_id', existingUser.id);
+
+		console.log(existingUser);
 
 		data = returnData;
 

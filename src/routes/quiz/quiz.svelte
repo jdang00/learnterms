@@ -2,7 +2,7 @@
 	export let data: { flashcards: Card[] };
 
 	type Card = {
-		card_id: string;
+		id: string;
 		is_starred: boolean;
 		flashcards: {
 			id: number;
@@ -43,7 +43,7 @@
 	}
 	let cards: Card[] = shuffle(
 		data.flashcards.map((item) => ({
-			card_id: item.card_id,
+			id: item.id,
 			is_starred: item.is_starred,
 			flashcards: {
 				id: item.flashcards.id,
