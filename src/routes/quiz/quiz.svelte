@@ -13,7 +13,7 @@
 	};
 
 	import { onMount } from 'svelte';
-	import { Eye, ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import { Eye, ChevronLeft, ChevronRight, Shuffle } from 'lucide-svelte';
 	import { Confetti } from 'svelte-confetti';
 
 	let ref: HTMLElement | null = null;
@@ -34,25 +34,38 @@
 		incorrect
 	}
 
-	function shuffle(array: Card[]): Card[] {
-		for (let i = array.length - 1; i > 0; i--) {
+	function shuffleArray(array: Card[]): Card[] {
+		let shuffled = [...array];
+		for (let i = shuffled.length - 1; i > 0; i--) {
 			const j = Math.floor(Math.random() * (i + 1));
-			[array[i], array[j]] = [array[j], array[i]];
+			[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
 		}
-		return array;
+		return shuffled;
 	}
-	let cards: Card[] = shuffle(
-		data.flashcards.map((item) => ({
-			id: item.id,
-			is_starred: item.is_starred,
-			flashcards: {
-				id: item.flashcards.id,
-				term: item.flashcards.term,
-				meaning: item.flashcards.meaning,
-				lesson: item.flashcards.lesson
-			}
-		}))
-	);
+
+	let originalCards: Card[] = data.flashcards.map((item) => ({
+		id: item.id,
+		is_starred: item.is_starred,
+		flashcards: {
+			id: item.flashcards.id,
+			term: item.flashcards.term,
+			meaning: item.flashcards.meaning,
+			lesson: item.flashcards.lesson
+		}
+	}));
+
+	let cards: Card[] = [...originalCards];
+	let isShuffled: boolean = false;
+
+	function toggleShuffle() {
+		isShuffled = !isShuffled;
+		if (isShuffled) {
+			cards = shuffleArray(cards);
+		} else {
+			cards = [...originalCards];
+		}
+		resetProgress();
+	}
 
 	let currentFlashcardIndex = 0;
 	let input: string = '';
@@ -61,7 +74,6 @@
 	let answerstatus: AnswerStatus = AnswerStatus.empty;
 	let showAnswer: boolean = false;
 
-	// New variables for tracking progress
 	let totalCards: number = cards.length;
 	let correctAnswers: number = 0;
 	let incorrectAnswers: number = 0;
@@ -123,12 +135,18 @@
 			ref.focus();
 		}
 	}
+
 	function resetProgress() {
-		cards = shuffle(cards.map((card) => ({ ...card, status: 'incomplete' })));
 		currentFlashcardIndex = 0;
 		correctAnswers = 0;
 		incorrectAnswers = 0;
-		nextFlashcard();
+		answer = cards[currentFlashcardIndex].flashcards.term;
+		meaning = cards[currentFlashcardIndex].flashcards.meaning;
+		input = '';
+		answerstatus = AnswerStatus.empty;
+		if (ref) {
+			ref.focus();
+		}
 	}
 
 	function toggleAnswer() {
@@ -137,7 +155,7 @@
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Tab') {
-			event.preventDefault(); // Prevent default Tab behavior
+			event.preventDefault();
 			toggleAnswer();
 		}
 	}
@@ -203,9 +221,17 @@
 
 <p class="text-gray-500">Press tab to reveal term.</p>
 
-<!-- New section for displaying progress -->
 <div class="mt-5 text-center">
 	<p>Card {currentFlashcardIndex + 1} / {totalCards}</p>
 	<p>Correct: {correctAnswers} | Incorrect: {incorrectAnswers}</p>
+</div>
+
+<div class="flex flex-row gap-2">
+	<div class="mt-3 text-center">
+		<button class="btn" on:click={toggleShuffle}>
+			<Shuffle class="mr-2" />
+			{isShuffled ? 'Unshuffled' : 'Shuffle'}
+		</button>
+	</div>
 	<button class="btn mt-3" on:click={resetProgress}>Reset Progress</button>
 </div>
