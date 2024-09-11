@@ -78,7 +78,7 @@
 	let showAnswer: boolean = false;
 
 	let totalCards: number = cards.length;
-	let correctAnswers: number = 143;
+	let correctAnswers: number = 0;
 	let incorrectAnswers: number = 0;
 
 	function checkAnswer(): boolean {
