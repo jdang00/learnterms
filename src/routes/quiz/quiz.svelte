@@ -61,9 +61,15 @@
 	let answerstatus: AnswerStatus = AnswerStatus.empty;
 	let showAnswer: boolean = false;
 
+	// New variables for tracking progress
+	let totalCards: number = cards.length;
+	let correctAnswers: number = 0;
+	let incorrectAnswers: number = 0;
+
 	function checkAnswer(): boolean {
 		if (input.trim().toLowerCase() === answer.trim().toLowerCase()) {
 			answerstatus = AnswerStatus.correct;
+			correctAnswers++;
 			setTimeout(() => {
 				nextFlashcard(false);
 				setTimeout(() => {
@@ -75,6 +81,7 @@
 			return true;
 		} else {
 			answerstatus = AnswerStatus.incorrect;
+			incorrectAnswers++;
 			setTimeout(() => {
 				if (ref) {
 					ref.focus();
@@ -119,6 +126,8 @@
 	function resetProgress() {
 		cards = shuffle(cards.map((card) => ({ ...card, status: 'incomplete' })));
 		currentFlashcardIndex = 0;
+		correctAnswers = 0;
+		incorrectAnswers = 0;
 		nextFlashcard();
 	}
 
@@ -193,3 +202,10 @@
 </div>
 
 <p class="text-gray-500">Press tab to reveal term.</p>
+
+<!-- New section for displaying progress -->
+<div class="mt-5 text-center">
+	<p>Card {currentFlashcardIndex + 1} / {totalCards}</p>
+	<p>Correct: {correctAnswers} | Incorrect: {incorrectAnswers}</p>
+	<button class="btn mt-3" on:click={resetProgress}>Reset Progress</button>
+</div>

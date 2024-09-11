@@ -68,8 +68,6 @@ export const load = async ({ locals }) => {
 			)
 			.eq('user_id', existingUser.id);
 
-		console.log(existingUser);
-
 		data = returnData;
 
 		if (cardsError) {
