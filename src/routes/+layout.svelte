@@ -61,7 +61,7 @@
 				</div>
 			</div>
 			<a class="btn btn-ghost text-xl" href="/"
-				>LearnTerm
+				>LearnTerms
 				<p class="font-bold text-sm text-gray-400 mt-1">BETA</p>
 			</a>
 		</div>
