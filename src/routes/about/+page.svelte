@@ -24,12 +24,9 @@
 		<li>Added card count</li>
 		<li>Added correct and incorrect counts</li>
 		<li>Review wrong cards flow</li>
-		<li>Slighly authentication improvments </li>
+		<li>Slighly authentication improvments</li>
 		<li>Persistent dark mode</li>
 	</ul>
-
-	<p class="text-gray-500 mt-3">Made with Svelte and 🧡</p>
-</div>
 
 	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 9, 2024</h3>
 	<ul class="mt-5 m-8">
