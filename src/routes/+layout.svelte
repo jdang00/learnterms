@@ -40,13 +40,41 @@
 </script>
 
 <html lang="en" class="min-h-screen">
-	<div class="flex items-center justify-between w-full flex-col p-8 min-h-96">
-		<div class="w-full">
-			<div class="flex justify-between items-end">
-				<div class="flex flex-wrap items-end space-x-3">
-					<a class="font-medium mt-3 text-3xl" href="/">Introduction to Optometry Terms</a>
-					<p class="font-bold text-gray-400">BETA</p>
+	<div class="navbar bg-base-100 mt-2 px-4">
+		<div class="navbar-start">
+			<div class="dropdown">
+				<div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-5 w-5"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M4 6h16M4 12h8m-8 6h16"
+						/>
+					</svg>
 				</div>
+			</div>
+			<a class="btn btn-ghost text-xl" href="/"
+				>LearnTerm
+				<p class="font-bold text-sm text-gray-400 mt-1">BETA</p>
+			</a>
+		</div>
+		<div class="navbar-center hidden lg:flex"></div>
+		<div class="navbar-end">
+			<div class="flex flex-row gap-3">
+				<button class="btn btn-sm" on:click={handleThemeToggle}>
+					{#if $theme === 'dark'}
+						<Sun />
+					{:else}
+						<Moon />
+					{/if}
+				</button>
 				<div class="self-center">
 					<SignedIn>
 						<UserButton afterSignOutUrl="/" />
@@ -56,6 +84,10 @@
 					</SignedOut>
 				</div>
 			</div>
+		</div>
+	</div>
+	<div class="flex items-center justify-between w-full flex-col p-8 min-h-96">
+		<div class="w-full">
 			<slot />
 			<footer class="footer footer-center text-base-content p-4 mt-24">
 				<aside class="flex flex-row">
@@ -64,13 +96,6 @@
 					</p>
 					<a class="link" href="/about">About / Changelog</a>
 				</aside>
-				<button class="btn" on:click={handleThemeToggle}>
-					{#if $theme === 'dark'}
-						<Sun />
-					{:else}
-						<Moon />
-					{/if}
-				</button>
 			</footer>
 		</div>
 	</div>
