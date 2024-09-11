@@ -64,7 +64,13 @@
 				<p class="font-bold text-sm text-gray-400 mt-1">BETA</p>
 			</a>
 		</div>
-		<div class="navbar-center hidden lg:flex"></div>
+		<div class="navbar-center hidden lg:flex">
+			<ul class="menu menu-horizontal px-1">
+				<li><a href="/about">About</a></li>
+
+				<li><a href="/terms">Decks</a></li>
+			</ul>
+		</div>
 		<div class="navbar-end">
 			<div class="flex flex-row gap-4">
 				<button class="btn btn-sm self-center" on:click={handleThemeToggle}>

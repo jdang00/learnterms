@@ -298,7 +298,7 @@
 </div>
 <div class="flex flex-row gap-2 justify-center">
 	<div class="mt-3 text-center">
-		<button class="btn" on:click={toggleShuffle}>
+		<button class="btn btn-secondary" on:click={toggleShuffle}>
 			<Shuffle class="mr-2" />
 			{isShuffled ? 'Unshuffled' : 'Shuffle'}
 		</button>
