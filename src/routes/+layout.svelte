@@ -1,16 +1,45 @@
 <script lang="ts">
 	import 'tailwindcss/tailwind.css';
 	import { Sun, Moon } from 'lucide-svelte';
-
-	let theme: string = 'light';
 	import SignInButton from 'clerk-sveltekit/client/SignInButton.svelte';
-
 	import UserButton from 'clerk-sveltekit/client/UserButton.svelte';
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
+	import { theme, manuallySet, toggleTheme } from '$lib/themeStore';
+	import { onMount } from 'svelte';
+
+	let currentTheme: string;
+	let isManuallySet: boolean;
+
+	theme.subscribe((value) => {
+		currentTheme = value;
+		if (typeof document !== 'undefined') {
+			document.documentElement.setAttribute('data-theme', value);
+		}
+	});
+
+	manuallySet.subscribe((value) => {
+		isManuallySet = value;
+	});
+
+	onMount(() => {
+		// Check system preference on mount only if theme hasn't been manually set
+		if (!isManuallySet) {
+			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+			if (prefersDark && currentTheme === 'light') {
+				theme.set('dark');
+			} else if (!prefersDark && currentTheme === 'dark') {
+				theme.set('light');
+			}
+		}
+	});
+
+	function handleThemeToggle() {
+		toggleTheme();
+	}
 </script>
 
-<html data-theme={theme} lang="en" class="min-h-screen">
+<html lang="en" class="min-h-screen">
 	<div class="flex items-center justify-between w-full flex-col p-8 min-h-96">
 		<div class="w-full">
 			<div class="flex justify-between items-end">
@@ -18,7 +47,6 @@
 					<a class="font-medium mt-3 text-3xl" href="/">Introduction to Optometry Terms</a>
 					<p class="font-bold text-gray-400">BETA</p>
 				</div>
-
 				<div class="self-center">
 					<SignedIn>
 						<UserButton afterSignOutUrl="/" />
@@ -36,11 +64,13 @@
 					</p>
 					<a class="link" href="/about">About / Changelog</a>
 				</aside>
-				{#if theme === 'dark'}
-					<button class="btn" on:click={() => (theme = 'light')}><Sun /></button>
-				{:else}
-					<button class="btn" on:click={() => (theme = 'dark')}><Moon /></button>
-				{/if}
+				<button class="btn" on:click={handleThemeToggle}>
+					{#if $theme === 'dark'}
+						<Sun />
+					{:else}
+						<Moon />
+					{/if}
+				</button>
 			</footer>
 		</div>
 	</div>

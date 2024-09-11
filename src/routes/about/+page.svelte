@@ -18,6 +18,19 @@
 
 	<h1 class="text-3xl mt-5 font-semibold">Changelog</h1>
 
+	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 10, 2024</h3>
+	<ul class="mt-5 m-8">
+		<li>Added shuffling cards functionality (future decks will be in lesson workbook order)</li>
+		<li>Added card count</li>
+		<li>Added correct and incorrect counts</li>
+		<li>Review wrong cards flow</li>
+		<li>Slighly authentication improvments </li>
+		<li>Persistent dark mode</li>
+	</ul>
+
+	<p class="text-gray-500 mt-3">Made with Svelte and 🧡</p>
+</div>
+
 	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 9, 2024</h3>
 	<ul class="mt-5 m-8">
 		<li>Implemented Dark Mode</li>
