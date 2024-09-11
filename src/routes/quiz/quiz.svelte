@@ -169,6 +169,13 @@
 			event.preventDefault();
 			toggleAnswer();
 		}
+
+		if (event.key === 'ArrowRight') {
+			nextFlashcard();
+		}
+		if (event.key === 'ArrowLeft') {
+			previousFlashcard();
+		}
 	}
 
 	function resetWithWrongCards() {
