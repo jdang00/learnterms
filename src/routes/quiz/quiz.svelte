@@ -13,7 +13,7 @@
 	};
 
 	import { onMount } from 'svelte';
-	import { Eye, ChevronLeft, ChevronRight, Shuffle } from 'lucide-svelte';
+	import { Eye, ChevronLeft, ChevronRight, Shuffle, RefreshCw } from 'lucide-svelte';
 	import { Confetti } from 'svelte-confetti';
 
 	let ref: HTMLElement | null = null;
@@ -55,7 +55,10 @@
 	}));
 
 	let cards: Card[] = [...originalCards];
+	let wrongCards: Card[] = [];
 	let isShuffled: boolean = false;
+	let isFinished: boolean = false;
+	let isReviewingWrongCards: boolean = false;
 
 	function toggleShuffle() {
 		isShuffled = !isShuffled;
@@ -75,31 +78,37 @@
 	let showAnswer: boolean = false;
 
 	let totalCards: number = cards.length;
-	let correctAnswers: number = 0;
+	let correctAnswers: number = 143;
 	let incorrectAnswers: number = 0;
 
 	function checkAnswer(): boolean {
 		if (input.trim().toLowerCase() === answer.trim().toLowerCase()) {
 			answerstatus = AnswerStatus.correct;
 			correctAnswers++;
-			setTimeout(() => {
-				nextFlashcard(false);
+			if (correctAnswers === totalCards) {
+				isFinished = true;
+			} else {
 				setTimeout(() => {
-					if (ref) {
-						ref.focus();
-					}
-				}, 50);
-			}, 1000);
+					nextFlashcard(false);
+					setTimeout(() => {
+						if (ref) {
+							ref.focus();
+						}
+					}, 50);
+				}, 1000);
+			}
 			return true;
 		} else {
 			answerstatus = AnswerStatus.incorrect;
 			incorrectAnswers++;
+			if (!isReviewingWrongCards) {
+				wrongCards.push(cards[currentFlashcardIndex]);
+			}
 			setTimeout(() => {
 				if (ref) {
 					ref.focus();
 				}
 			}, 50);
-
 			return false;
 		}
 	}
@@ -144,6 +153,8 @@
 		meaning = cards[currentFlashcardIndex].flashcards.meaning;
 		input = '';
 		answerstatus = AnswerStatus.empty;
+		isFinished = false;
+		isReviewingWrongCards = false;
 		if (ref) {
 			ref.focus();
 		}
@@ -159,6 +170,21 @@
 			toggleAnswer();
 		}
 	}
+
+	function resetWithWrongCards() {
+		if (wrongCards.length > 0) {
+			cards = [...wrongCards];
+			wrongCards = [];
+			totalCards = cards.length;
+			isReviewingWrongCards = true;
+			resetProgress();
+		} else {
+			cards = [...originalCards];
+			totalCards = cards.length;
+			isReviewingWrongCards = false;
+			resetProgress();
+		}
+	}
 </script>
 
 <div class="border-b-2 border-gray-300 my-5"></div>
@@ -167,7 +193,13 @@
 	<p class="mt-3 text-xl">{meaning}</p>
 
 	<form class="flex items-center">
-		{#if answerstatus === AnswerStatus.correct}
+		{#if isFinished}
+			<Confetti />
+
+			<div class="input input-bordered w-full max-w-lg mt-5 flex items-center justify-center">
+				<span class="text-success font-bold">Finished!</span>
+			</div>
+		{:else if answerstatus === AnswerStatus.correct}
 			<Confetti />
 			<input
 				type="text"
@@ -193,12 +225,19 @@
 				bind:value={input}
 			/>
 		{/if}
-		<button type="submit" class="btn btn-primary ms-3 mt-5" on:click={checkAnswer}>Enter</button>
+		<button
+			type="submit"
+			class="btn btn-primary ms-3 mt-5"
+			on:click={checkAnswer}
+			disabled={isFinished}>Enter</button
+		>
 	</form>
 </div>
 
 <div class="flex justify-center mt-5 space-x-4 items-center">
-	<button class="btn" on:click={() => previousFlashcard()}><ChevronLeft /></button>
+	<button class="btn" on:click={() => previousFlashcard()} disabled={isFinished}
+		><ChevronLeft /></button
+	>
 
 	<div class="card bg-base-100 w-96 shadow-md mt-6">
 		<div class="card-body">
@@ -216,7 +255,9 @@
 		</div>
 	</div>
 
-	<button class="btn mt-5" on:click={() => handleNextButtonClick()}><ChevronRight /></button>
+	<button class="btn mt-5" on:click={() => handleNextButtonClick()} disabled={isFinished}
+		><ChevronRight /></button
+	>
 </div>
 
 <p class="text-gray-500">Press tab to reveal term.</p>
@@ -224,14 +265,29 @@
 <div class="mt-5 text-center">
 	<p>Card {currentFlashcardIndex + 1} / {totalCards}</p>
 	<p>Correct: {correctAnswers} | Incorrect: {incorrectAnswers}</p>
+	{#if isReviewingWrongCards}
+		<p class="text-warning">Reviewing wrong cards</p>
+	{/if}
 </div>
-
-<div class="flex flex-row gap-2">
+<div class="flex flex-row gap-2 justify-center">
 	<div class="mt-3 text-center">
 		<button class="btn" on:click={toggleShuffle}>
 			<Shuffle class="mr-2" />
 			{isShuffled ? 'Unshuffled' : 'Shuffle'}
 		</button>
 	</div>
-	<button class="btn mt-3" on:click={resetProgress}>Reset Progress</button>
+	{#if isFinished}
+		<button class="btn mt-3" on:click={resetProgress}>
+			<RefreshCw class="mr-2" />
+			{incorrectAnswers === 0 ? 'Start Over' : 'Reset Progress'}
+		</button>
+	{:else}
+		<button class="btn mt-3" on:click={resetProgress}>Reset Progress</button>
+	{/if}
+	{#if isFinished && incorrectAnswers !== 0}
+		<button class="btn mt-3" on:click={resetWithWrongCards}>
+			<RefreshCw class="mr-2" />
+			Review Wrong Cards
+		</button>
+	{/if}
 </div>
