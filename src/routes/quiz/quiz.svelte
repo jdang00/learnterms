@@ -80,6 +80,11 @@
 	let totalCards: number = cards.length;
 	let correctAnswers: number = 0;
 	let incorrectAnswers: number = 0;
+	let progress: number = 0;
+
+	function updateProgress() {
+		progress = (correctAnswers / totalCards) * 100;
+	}
 
 	function checkAnswer(): boolean {
 		if (input.trim().toLowerCase() === answer.trim().toLowerCase()) {
@@ -120,7 +125,7 @@
 		meaning = cards[currentFlashcardIndex].flashcards.meaning;
 		input = '';
 		answerstatus = AnswerStatus.empty;
-
+		updateProgress();
 		if (shouldFocus) {
 			setTimeout(() => {
 				if (ref) {
@@ -151,6 +156,7 @@
 		incorrectAnswers = 0;
 		answer = cards[currentFlashcardIndex].flashcards.term;
 		meaning = cards[currentFlashcardIndex].flashcards.meaning;
+		updateProgress();
 		input = '';
 		answerstatus = AnswerStatus.empty;
 		isFinished = false;
@@ -268,6 +274,7 @@
 </div>
 
 <p class="text-gray-500">Press tab to reveal term.</p>
+<progress class="progress progress-success w-96" value={progress} max="100"></progress>
 
 <div class="mt-5 text-center">
 	<p>Card {currentFlashcardIndex + 1} / {totalCards}</p>

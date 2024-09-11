@@ -23,7 +23,6 @@
 	});
 
 	onMount(() => {
-		// Check system preference on mount only if theme hasn't been manually set
 		if (!isManuallySet) {
 			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 			if (prefersDark && currentTheme === 'light') {
@@ -67,8 +66,8 @@
 		</div>
 		<div class="navbar-center hidden lg:flex"></div>
 		<div class="navbar-end">
-			<div class="flex flex-row gap-3">
-				<button class="btn btn-sm" on:click={handleThemeToggle}>
+			<div class="flex flex-row gap-4">
+				<button class="btn btn-sm self-center" on:click={handleThemeToggle}>
 					{#if $theme === 'dark'}
 						<Sun />
 					{:else}
