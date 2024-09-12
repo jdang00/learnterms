@@ -15,7 +15,7 @@
 		<li>Added card count</li>
 		<li>Added correct and incorrect counts</li>
 		<li>Review wrong cards flow</li>
-		<li>Slighly authentication improvments</li>
+		<li>Slight authentication improvments</li>
 		<li>Persistent dark mode</li>
 	</ul>
 
