@@ -21,7 +21,7 @@ export const load = async ({ locals }) => {
 		if (!foundUser) {
 			const { data: newUser, error: insertError } = await supabase
 				.from('users')
-				.insert({ clerk_user_id: user.userId })
+				.insert({ clerk_user_id: user.userId, name: user.fullName })
 				.select()
 				.single();
 
