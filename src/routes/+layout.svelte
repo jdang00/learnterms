@@ -99,7 +99,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="flex items-center justify-between w-full flex-col p-8 min-h-96">
+	<div class="flex items-center justify-between w-full flex-col min-h-96">
 		<div class="w-full">
 			<slot />
 			<footer class="footer footer-center text-base-content p-4 mt-24">
@@ -107,7 +107,7 @@
 					<p>
 						Copyright © {new Date().getFullYear()} - Oklahoma College of Optometry Class of 2028 |
 					</p>
-					<a class="link" href="/about">About / Changelog</a>
+					<a class="link" href="/changelog">Changelog</a>
 				</aside>
 			</footer>
 		</div>

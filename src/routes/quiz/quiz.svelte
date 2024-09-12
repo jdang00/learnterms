@@ -15,6 +15,8 @@
 	import { onMount } from 'svelte';
 	import { Eye, ChevronLeft, ChevronRight, Shuffle, RefreshCw } from 'lucide-svelte';
 	import { Confetti } from 'svelte-confetti';
+	import { fly } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
 
 	let ref: HTMLElement | null = null;
 
@@ -24,7 +26,6 @@
 		}
 
 		document.addEventListener('keydown', handleKeydown);
-		setTimeout(updateLoading, 5000);
 
 		return () => {
 			document.removeEventListener('keydown', handleKeydown);
@@ -74,8 +75,11 @@
 	}
 
 	let currentFlashcardIndex = 0;
+	let currentCard: Card;
+	$: currentCard = cards[currentFlashcardIndex];
 	let input: string = '';
 	let answer: string = cards[currentFlashcardIndex].flashcards.term;
+
 	let meaning: string = cards[currentFlashcardIndex].flashcards.meaning;
 	let answerstatus: AnswerStatus = AnswerStatus.empty;
 	let showAnswer: boolean = false;
@@ -85,11 +89,7 @@
 	let incorrectAnswers: number = 0;
 	let progress: number = 0;
 
-	let loading: boolean = true;
-
-	function updateLoading() {
-		loading = !loading;
-	}
+	let cardSlide: string = 'right';
 
 	function updateProgress() {
 		progress = (correctAnswers / totalCards) * 100;
@@ -128,10 +128,12 @@
 	}
 
 	function nextFlashcard(shouldFocus: boolean = true) {
+		cardSlide = 'left';
 		showAnswer = false;
 		currentFlashcardIndex = (currentFlashcardIndex + 1) % cards.length;
-		answer = cards[currentFlashcardIndex].flashcards.term;
-		meaning = cards[currentFlashcardIndex].flashcards.meaning;
+		currentCard = cards[currentFlashcardIndex];
+		answer = currentCard.flashcards.term;
+		meaning = currentCard.flashcards.meaning;
 		input = '';
 		answerstatus = AnswerStatus.empty;
 		updateProgress();
@@ -149,9 +151,11 @@
 	}
 
 	function previousFlashcard() {
+		cardSlide = 'right';
 		currentFlashcardIndex = (currentFlashcardIndex - 1 + cards.length) % cards.length;
-		answer = cards[currentFlashcardIndex].flashcards.term;
-		meaning = cards[currentFlashcardIndex].flashcards.meaning;
+		currentCard = cards[currentFlashcardIndex];
+		answer = currentCard.flashcards.term;
+		meaning = currentCard.flashcards.meaning;
 		input = '';
 		answerstatus = AnswerStatus.empty;
 		if (ref) {
@@ -161,10 +165,11 @@
 
 	function resetProgress() {
 		currentFlashcardIndex = 0;
+		currentCard = cards[currentFlashcardIndex];
 		correctAnswers = 0;
 		incorrectAnswers = 0;
-		answer = cards[currentFlashcardIndex].flashcards.term;
-		meaning = cards[currentFlashcardIndex].flashcards.meaning;
+		answer = currentCard.flashcards.term;
+		meaning = currentCard.flashcards.meaning;
 		updateProgress();
 		input = '';
 		answerstatus = AnswerStatus.empty;
@@ -209,10 +214,14 @@
 	}
 </script>
 
-<div class="border-b-2 border-gray-300 my-5"></div>
+<div class=" my-5"></div>
 
 <div class="flex flex-col items-center">
-	<p class="mt-3 text-xl">{meaning}</p>
+	{#key currentCard}
+		<p class="mt-3 text-xl">
+			{meaning}
+		</p>
+	{/key}
 
 	<form class="flex items-center">
 		{#if isFinished}
@@ -257,37 +266,35 @@
 </div>
 
 <div class="flex justify-center mt-5 space-x-4 items-center">
-	<button class="btn" on:click={() => previousFlashcard()} disabled={isFinished}
-		><ChevronLeft /></button
-	>
+	<button class="btn" on:click={previousFlashcard} disabled={isFinished}><ChevronLeft /></button>
 
-	<div class="card bg-base-100 w-96 shadow-md mt-6">
-		<div class="card-body">
-			{#if showAnswer === false}
-				<div class="flex">
-					<h2 class="card-title blur">{answer}</h2>
-				</div>
-				<button class="btn mt-5" on:click={() => (showAnswer = true)}><Eye /></button>
-			{:else}
-				<div class="flex">
-					<h2 class="card-title">{answer}</h2>
-				</div>
-				<button class="btn mt-5" on:click={() => (showAnswer = false)}><Eye /></button>
-			{/if}
+	{#key currentCard}
+		<div
+			class="card bg-base-100 w-96 shadow-md mt-6"
+			in:fly={{ duration: 250, x: cardSlide === 'left' ? 100 : -100, easing: quintOut }}
+		>
+			<div class="card-body">
+				{#if showAnswer === false}
+					<div class="flex">
+						<h2 class="card-title blur">{answer}</h2>
+					</div>
+				{:else}
+					<div class="flex">
+						<h2 class="card-title">{answer}</h2>
+					</div>
+				{/if}
+				<button class="btn mt-5" on:click={toggleAnswer}><Eye /></button>
+			</div>
 		</div>
-	</div>
+	{/key}
 
-	<button class="btn mt-5" on:click={() => handleNextButtonClick()} disabled={isFinished}
+	<button class="btn mt-5" on:click={handleNextButtonClick} disabled={isFinished}
 		><ChevronRight /></button
 	>
 </div>
 <p class="text-gray-500">Press tab to reveal term.</p>
 
-{#if loading === false}
-	<progress class="progress progress-success w-96" value={progress} max="100"></progress>
-{:else}
-	<progress class="progress progress-success w-96"></progress>
-{/if}
+<progress class="progress progress-success w-96" value={progress} max="100"></progress>
 
 <div class="mt-5 text-center">
 	<p>Card {currentFlashcardIndex + 1} / {totalCards}</p>

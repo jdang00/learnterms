@@ -18,7 +18,7 @@
 			<div class="collapse-title text-xl font-medium">Is LearnTerms the best way to study?</div>
 			<div class="collapse-content">
 				<p>
-					Nope. Not even close. Technically the most efficent way to study is active recall coupled
+					Nope. Not even close. Technically the most efficient way to study is active recall coupled
 					with spaced repetition. Medical students do this with Anki. <a
 						href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9045547/"
 						class="link link-primary"
@@ -59,42 +59,4 @@
 			</div>
 		</div>
 	</div>
-	<h1 class="text-3xl mt-5 font-semibold mb-5">Changelog</h1>
-
-	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 10, 2024</h3>
-	<ul class="mt-1 m-8">
-		<li>Added shuffling cards functionality (future decks will be in lesson workbook order)</li>
-		<li>Added card count</li>
-		<li>Added correct and incorrect counts</li>
-		<li>Review wrong cards flow</li>
-		<li>Slighly authentication improvments</li>
-		<li>Persistent dark mode</li>
-	</ul>
-
-	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 9, 2024</h3>
-	<ul class="mt-1 m-8">
-		<li>Implemented Dark Mode</li>
-		<li>
-			Added starred cards (this behavior is currently very glitchy on the front end. Refresh to see
-			all updates after starring.)
-		</li>
-	</ul>
-
-	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 8, 2024</h3>
-	<ul class="mt-1 m-8">
-		<li>Added tab to reveal word</li>
-		<li>Added toggle switch for list and grid view for cards</li>
-		<li>Cursor focus implementation</li>
-		<li>Made this page</li>
-		<li>Migrated card architecture to backend database (PostgreSQL)</li>
-		<li>Login implementation</li>
-	</ul>
-
-	<p class="text-gray-500 mt-3">Made with Svelte and 🧡</p>
 </div>
-
-<style>
-	ul {
-		list-style-type: '✨';
-	}
-</style>
