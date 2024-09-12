@@ -1,6 +1,14 @@
 <div class="max-w-3xl px-10">
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
+	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 11, 2024</h3>
+	<ul class="mt-1 m-8">
+		<li>Progress bar added, courtesy of Collin</li>
+		<li>Lesson 4 Terms added</li>
+		<li>Fully functional starring function (previous implementation was a little sus)</li>
+		<li>Local review deck feature</li>
+	</ul>
+
 	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 10, 2024</h3>
 	<ul class="mt-1 m-8">
 		<li>Added shuffling cards functionality (future decks will be in lesson workbook order)</li>
