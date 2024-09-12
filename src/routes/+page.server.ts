@@ -1,5 +1,6 @@
 import supabase from '$lib/supabaseClient';
 import { error } from '@sveltejs/kit';
+import { PRIVATE_USERCARD_TABLE, PRIVATE_USER_TABLE } from '$env/static/private';
 
 export const load = async ({ locals }) => {
 	const user = locals.session;
@@ -8,7 +9,7 @@ export const load = async ({ locals }) => {
 
 	if (user) {
 		const { data: foundUser, error: userError } = await supabase
-			.from('users')
+			.from(PRIVATE_USER_TABLE)
 			.select()
 			.eq('clerk_user_id', user.userId)
 			.single();
@@ -20,7 +21,7 @@ export const load = async ({ locals }) => {
 
 		if (!foundUser) {
 			const { data: newUser, error: insertError } = await supabase
-				.from('users')
+				.from(PRIVATE_USER_TABLE)
 				.insert({ clerk_user_id: user.userId, name: user.fullName })
 				.select()
 				.single();
@@ -40,7 +41,7 @@ export const load = async ({ locals }) => {
 
 	if (!existingUser) {
 		const { data: returnData, error: cardsError } = await supabase
-			.from('user_cards')
+			.from(PRIVATE_USERCARD_TABLE)
 			.select(
 				`
           id,
@@ -60,7 +61,7 @@ export const load = async ({ locals }) => {
 		}
 	} else {
 		const { data: returnData, error: cardsError } = await supabase
-			.from('user_cards')
+			.from(PRIVATE_USERCARD_TABLE)
 			.select(
 				`
           id,
