@@ -239,7 +239,7 @@
 
 <div class="my-5"></div>
 
-<div class="flex flex-col items-center">
+<div class="flex flex-col items-center p-8">
 	{#key currentCard}
 		<p class="mt-3 text-xl">
 			{meaning}
