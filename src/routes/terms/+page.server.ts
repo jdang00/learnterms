@@ -45,10 +45,12 @@ export const load = async ({ locals }) => {
 				`
           id,
           is_starred,
-          flashcards!inner (id, term, meaning, lesson)
+          flashcards!inner (id, term, meaning, lesson),
+          review
       `
 			)
 			.eq('user_id', '367b2142-deb6-4dcd-87d5-803b49825e04')
+			.eq('flashcards.lesson', 4)
 			.order('is_starred', { ascending: false });
 		data = returnData;
 
@@ -63,10 +65,12 @@ export const load = async ({ locals }) => {
 				`
           id,
           is_starred,
-          flashcards!inner (id, term, meaning, lesson)
+          flashcards!inner (id, term, meaning, lesson),
+          review
       `
 			)
 			.eq('user_id', existingUser.id)
+			.eq('flashcards.lesson', 4)
 			.order('is_starred', { ascending: false });
 
 		data = returnData;

@@ -10,13 +10,15 @@
 			meaning: string;
 			lesson: string;
 		};
+		review: boolean;
 	};
 
 	import { onMount } from 'svelte';
-	import { Eye, ChevronLeft, ChevronRight, Shuffle, RefreshCw } from 'lucide-svelte';
+	import { Eye, ChevronLeft, ChevronRight, Shuffle, RefreshCw, BookOpen } from 'lucide-svelte';
 	import { Confetti } from 'svelte-confetti';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import supabase from '$lib/supabaseClient';
 
 	let ref: HTMLElement | null = null;
 
@@ -55,14 +57,17 @@
 			term: item.flashcards.term,
 			meaning: item.flashcards.meaning,
 			lesson: item.flashcards.lesson
-		}
+		},
+		review: item.review
 	}));
 
 	let cards: Card[] = [...originalCards];
 	let wrongCards: Card[] = [];
+	let reviewDeck: Card[] = [];
 	let isShuffled: boolean = false;
 	let isFinished: boolean = false;
 	let isReviewingWrongCards: boolean = false;
+	let isQuizingReviewDeck: boolean = false;
 
 	function toggleShuffle() {
 		isShuffled = !isShuffled;
@@ -78,22 +83,17 @@
 	let currentCard: Card;
 	$: currentCard = cards[currentFlashcardIndex];
 	let input: string = '';
-	let answer: string = cards[currentFlashcardIndex].flashcards.term;
-
-	let meaning: string = cards[currentFlashcardIndex].flashcards.meaning;
+	$: answer = currentCard?.flashcards.term || '';
+	$: meaning = currentCard?.flashcards.meaning || '';
 	let answerstatus: AnswerStatus = AnswerStatus.empty;
 	let showAnswer: boolean = false;
 
-	let totalCards: number = cards.length;
+	$: totalCards = cards.length;
 	let correctAnswers: number = 0;
 	let incorrectAnswers: number = 0;
-	let progress: number = 0;
+	$: progress = (correctAnswers / totalCards) * 100;
 
 	let cardSlide: string = 'right';
-
-	function updateProgress() {
-		progress = (correctAnswers / totalCards) * 100;
-	}
 
 	function checkAnswer(): boolean {
 		if (input.trim().toLowerCase() === answer.trim().toLowerCase()) {
@@ -114,9 +114,13 @@
 			return true;
 		} else {
 			answerstatus = AnswerStatus.incorrect;
+			if (cards[currentFlashcardIndex].review === false) toggleReview(cards[currentFlashcardIndex]);
 			incorrectAnswers++;
-			if (!isReviewingWrongCards) {
-				wrongCards.push(cards[currentFlashcardIndex]);
+			if (!isReviewingWrongCards && !isQuizingReviewDeck) {
+				wrongCards = [...wrongCards, cards[currentFlashcardIndex]];
+				if (!reviewDeck.some((card) => card.id === cards[currentFlashcardIndex].id)) {
+					reviewDeck = [...reviewDeck, cards[currentFlashcardIndex]];
+				}
 			}
 			setTimeout(() => {
 				if (ref) {
@@ -131,12 +135,8 @@
 		cardSlide = 'left';
 		showAnswer = false;
 		currentFlashcardIndex = (currentFlashcardIndex + 1) % cards.length;
-		currentCard = cards[currentFlashcardIndex];
-		answer = currentCard.flashcards.term;
-		meaning = currentCard.flashcards.meaning;
 		input = '';
 		answerstatus = AnswerStatus.empty;
-		updateProgress();
 		if (shouldFocus) {
 			setTimeout(() => {
 				if (ref) {
@@ -153,9 +153,6 @@
 	function previousFlashcard() {
 		cardSlide = 'right';
 		currentFlashcardIndex = (currentFlashcardIndex - 1 + cards.length) % cards.length;
-		currentCard = cards[currentFlashcardIndex];
-		answer = currentCard.flashcards.term;
-		meaning = currentCard.flashcards.meaning;
 		input = '';
 		answerstatus = AnswerStatus.empty;
 		if (ref) {
@@ -165,16 +162,13 @@
 
 	function resetProgress() {
 		currentFlashcardIndex = 0;
-		currentCard = cards[currentFlashcardIndex];
 		correctAnswers = 0;
 		incorrectAnswers = 0;
-		answer = currentCard.flashcards.term;
-		meaning = currentCard.flashcards.meaning;
-		updateProgress();
 		input = '';
 		answerstatus = AnswerStatus.empty;
 		isFinished = false;
 		isReviewingWrongCards = false;
+		isQuizingReviewDeck = false;
 		if (ref) {
 			ref.focus();
 		}
@@ -202,19 +196,48 @@
 		if (wrongCards.length > 0) {
 			cards = [...wrongCards];
 			wrongCards = [];
-			totalCards = cards.length;
 			isReviewingWrongCards = true;
+			isQuizingReviewDeck = false;
 			resetProgress();
 		} else {
 			cards = [...originalCards];
-			totalCards = cards.length;
+			isReviewingWrongCards = false;
+			isQuizingReviewDeck = false;
+			resetProgress();
+		}
+	}
+
+	function quizReviewDeck() {
+		if (reviewDeck.length > 0) {
+			cards = [...reviewDeck];
+			isQuizingReviewDeck = true;
 			isReviewingWrongCards = false;
 			resetProgress();
 		}
 	}
+
+	async function toggleReview(card: Card) {
+		const originalStarredStatus = card.review;
+		card.review = !card.review;
+		try {
+			await updateCardStarredStatus(card.id, card.review);
+			cards = [...cards];
+		} catch (error) {
+			console.error('Error updating starred status:', error);
+			card.is_starred = originalStarredStatus;
+		}
+	}
+
+	async function updateCardStarredStatus(id: string, review: boolean) {
+		const { error } = await supabase.from('user_cards').update({ review }).eq('id', id);
+		if (error) {
+			console.error('Error updating starred status:', error);
+			throw error;
+		}
+	}
 </script>
 
-<div class=" my-5"></div>
+<div class="my-5"></div>
 
 <div class="flex flex-col items-center">
 	{#key currentCard}
@@ -223,7 +246,7 @@
 		</p>
 	{/key}
 
-	<form class="flex items-center">
+	<form class="flex items-center" on:submit|preventDefault={checkAnswer}>
 		{#if isFinished}
 			<Confetti />
 
@@ -256,12 +279,7 @@
 				bind:value={input}
 			/>
 		{/if}
-		<button
-			type="submit"
-			class="btn btn-primary ms-3 mt-5"
-			on:click={checkAnswer}
-			disabled={isFinished}>Enter</button
-		>
+		<button type="submit" class="btn btn-primary ms-3 mt-5" disabled={isFinished}>Enter</button>
 	</form>
 </div>
 
@@ -301,6 +319,8 @@
 	<p>Correct: {correctAnswers} | Incorrect: {incorrectAnswers}</p>
 	{#if isReviewingWrongCards}
 		<p class="text-warning">Reviewing wrong cards</p>
+	{:else if isQuizingReviewDeck}
+		<p class="text-info">Quizzing review deck</p>
 	{/if}
 </div>
 <div class="flex flex-row gap-2 justify-center">
@@ -322,6 +342,12 @@
 		<button class="btn mt-3" on:click={resetWithWrongCards}>
 			<RefreshCw class="mr-2" />
 			Review Wrong Cards
+		</button>
+	{/if}
+	{#if reviewDeck.length > 0}
+		<button class="btn mt-3" on:click={quizReviewDeck}>
+			<BookOpen class="mr-2" />
+			Quiz Review Deck ({reviewDeck.length})
 		</button>
 	{/if}
 </div>

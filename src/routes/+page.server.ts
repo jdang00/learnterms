@@ -45,7 +45,8 @@ export const load = async ({ locals }) => {
 				`
           id,
           is_starred,
-          flashcards!inner (id, term, meaning, lesson)
+          flashcards!inner (id, term, meaning, lesson),
+          review
       `
 			)
 			.eq('user_id', '367b2142-deb6-4dcd-87d5-803b49825e04')
