@@ -109,6 +109,7 @@
 					</p>
 					<a class="link" href="/changelog">Changelog</a>
 				</aside>
+				Hello Austin
 			</footer>
 		</div>
 	</div>
