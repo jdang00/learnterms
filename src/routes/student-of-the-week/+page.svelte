@@ -1,5 +1,5 @@
 <script lang="ts">
-	import CSwift from '$lib/c_swift.png';
+	import CSwift from '$lib/c_swift.webp';
 </script>
 
 <div class="flex flex-col items-center mt-5">
