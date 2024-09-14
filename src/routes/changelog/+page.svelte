@@ -1,6 +1,15 @@
 <div class="max-w-3xl px-10">
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
+	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 14, 2024</h3>
+	<ul class="mt-1 m-8">
+		<li>
+			<a class="link-accent" target="_blank" href="/student-of-the-week"
+				>Student of the week, changes every month</a
+			>
+		</li>
+	</ul>
+
 	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 11, 2024</h3>
 	<ul class="mt-1 m-8">
 		<li>Progress bar added, courtesy of Collin</li>
@@ -43,6 +52,6 @@
 
 <style>
 	ul {
-		list-style-type: '✨';
+		list-style-type: '✨ ';
 	}
 </style>

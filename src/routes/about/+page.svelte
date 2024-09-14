@@ -1,6 +1,6 @@
 <div class="max-w-3xl px-10">
 	<h1 class="text-4xl mt-5 font-semibold">About</h1>
-	<p class="text-gray-500 mt-3">
+	<p class="mt-5">
 		LearnTerms is a custom study tool created by the Northeastern State University Oklahoma College
 		of Optometry Class of 2028. Designed to complement existing platforms like Quizlet and Anki, it
 		offers unique features not available elsewhere or behind paywalls. LearnTerms is built to be
@@ -12,7 +12,7 @@
 		>.
 	</p>
 
-	<div class="flex flex-col gap-3">
+	<div class="flex flex-col gap-3 mt-10">
 		<div class="collapse collapse-arrow bg-base-200 mt-5">
 			<input type="radio" name="my-accordion-2" checked="checked" />
 			<div class="collapse-title text-xl font-medium">Is LearnTerms the best way to study?</div>
