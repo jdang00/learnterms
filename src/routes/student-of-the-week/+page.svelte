@@ -16,6 +16,7 @@
 				<li>Successfully terminated the life of a wasp by herself</li>
 				<li>Avid reality TV show enjoyer</li>
 				<li>Polish features</li>
+				<li>Avid golfer</li>
 			</ul>
 		</div>
 	</div>
