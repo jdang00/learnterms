@@ -1,4 +1,11 @@
-<div class="max-w-3xl px-10">
+<div class="max-w-3xl px-10 mt-5">
+	<div class="badge badge-accent">Breaking</div>
+	<p class="mt-3">
+		LearnTerms will undergoing major maintenance to finish the implementation of the Review Deck on
+		Tuesday, September 17. After that time, the service will exit its beta period and ship the first
+		1.0 release as a fully featured product.
+	</p>
+
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
 	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 15, 2024</h3>
