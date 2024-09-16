@@ -323,7 +323,7 @@
 		<p class="text-info">Quizzing review deck</p>
 	{/if}
 </div>
-<div class="flex flex-row gap-2 justify-center">
+<div class="flex flex-row gap-2 justify-center flex-wrap">
 	<div class="mt-3 text-center">
 		<button class="btn btn-secondary" on:click={toggleShuffle}>
 			<Shuffle class="mr-2" />

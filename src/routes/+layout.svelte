@@ -10,7 +10,6 @@
 	const themes = ['light', 'dark', 'dracula', 'valentine', 'retro', 'bumblebee'];
 
 	onMount(() => {
-		// Initialize theme-change
 		const themeChange = window.themeChange;
 		if (typeof themeChange !== 'undefined') {
 			themeChange(false);
@@ -66,7 +65,6 @@
 				<div class="dropdown dropdown-end">
 					<div tabindex="-1" class="btn btn-ghost m-1">
 						<Palette />
-						Theme
 					</div>
 					<ul
 						tabindex="-1"
