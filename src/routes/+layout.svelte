@@ -1,42 +1,26 @@
 <script lang="ts">
 	import 'tailwindcss/tailwind.css';
-	import { Sun, Moon } from 'lucide-svelte';
+	import { Palette } from 'lucide-svelte';
 	import SignInButton from 'clerk-sveltekit/client/SignInButton.svelte';
 	import UserButton from 'clerk-sveltekit/client/UserButton.svelte';
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
-	import { theme, manuallySet, toggleTheme } from '$lib/themeStore';
 	import { onMount } from 'svelte';
 
-	let currentTheme: string;
-	let isManuallySet: boolean;
-
-	theme.subscribe((value) => {
-		currentTheme = value;
-		if (typeof document !== 'undefined') {
-			document.documentElement.setAttribute('data-theme', value);
-		}
-	});
-
-	manuallySet.subscribe((value) => {
-		isManuallySet = value;
-	});
+	const themes = ['light', 'dark', 'dracula', 'valentine', 'retro', 'bumblebee'];
 
 	onMount(() => {
-		if (!isManuallySet) {
-			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-			if (prefersDark && currentTheme === 'light') {
-				theme.set('dark');
-			} else if (!prefersDark && currentTheme === 'dark') {
-				theme.set('light');
-			}
+		// Initialize theme-change
+		const themeChange = window.themeChange;
+		if (typeof themeChange !== 'undefined') {
+			themeChange(false);
 		}
 	});
-
-	function handleThemeToggle() {
-		toggleTheme();
-	}
 </script>
+
+<svelte:head>
+	<script src="https://cdn.jsdelivr.net/npm/theme-change@2.0.2/index.js"></script>
+</svelte:head>
 
 <html lang="en" class="min-h-screen">
 	<div class="navbar bg-base-100 mt-2 px-4">
@@ -63,7 +47,6 @@
 					class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 				>
 					<li><a href="/about">About</a></li>
-
 					<li><a href="/terms">Decks</a></li>
 				</ul>
 			</div>
@@ -75,19 +58,29 @@
 		<div class="navbar-center hidden lg:flex">
 			<ul class="menu menu-horizontal px-1">
 				<li><a href="/about">About</a></li>
-
 				<li><a href="/terms">Decks</a></li>
 			</ul>
 		</div>
 		<div class="navbar-end">
 			<div class="flex flex-row gap-4">
-				<button class="btn btn-sm self-center" on:click={handleThemeToggle}>
-					{#if $theme === 'dark'}
-						<Sun />
-					{:else}
-						<Moon />
-					{/if}
-				</button>
+				<div class="dropdown dropdown-end">
+					<div tabindex="-1" class="btn btn-ghost m-1">
+						<Palette />
+						Theme
+					</div>
+					<ul
+						tabindex="-1"
+						class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+					>
+						{#each themes as themeOption}
+							<li>
+								<button data-set-theme={themeOption} data-act-class="active">
+									{themeOption}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				</div>
 				<div class="self-center">
 					<SignedIn>
 						<UserButton afterSignOutUrl="/" />

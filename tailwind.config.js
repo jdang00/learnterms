@@ -9,6 +9,6 @@ export default {
 	},
 	plugins: [typography, daisyui],
 	daisyui: {
-		themes: ['light', 'dark', 'cupcake']
+		themes: ['light', 'dark', 'dracula', 'valentine', 'retro', 'bumblebee']
 	}
 };
