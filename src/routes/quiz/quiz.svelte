@@ -19,6 +19,8 @@
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import supabase from '$lib/supabaseClient';
+	import { Sound } from 'svelte-sound';
+	import correct from '$lib/training-program-correct2-88734.mp3';
 
 	let ref: HTMLElement | null = null;
 
@@ -95,9 +97,12 @@
 
 	let cardSlide: string = 'right';
 
+	const correct_sound = new Sound(correct);
+
 	function checkAnswer(): boolean {
 		if (input.trim().toLowerCase() === answer.trim().toLowerCase()) {
 			answerstatus = AnswerStatus.correct;
+			correct_sound.play();
 			correctAnswers++;
 			if (correctAnswers === totalCards) {
 				isFinished = true;
@@ -283,8 +288,12 @@
 	</form>
 </div>
 
-<div class="flex justify-center mt-5 space-x-4 items-center">
-	<button class="btn" on:click={previousFlashcard} disabled={isFinished}><ChevronLeft /></button>
+<div
+	class="flex flex-col md:flex-row justify-center items-center mt-5 space-y-4 md:space-y-0 md:space-x-4"
+>
+	<button class="btn hidden md:block" on:click={previousFlashcard} disabled={isFinished}>
+		<ChevronLeft />
+	</button>
 
 	{#key currentCard}
 		<div
@@ -306,9 +315,18 @@
 		</div>
 	{/key}
 
-	<button class="btn mt-5" on:click={handleNextButtonClick} disabled={isFinished}
-		><ChevronRight /></button
-	>
+	<button class="btn hidden md:block" on:click={handleNextButtonClick} disabled={isFinished}>
+		<ChevronRight />
+	</button>
+
+	<div class="flex space-x-4 md:hidden">
+		<button class="btn" on:click={previousFlashcard} disabled={isFinished}>
+			<ChevronLeft />
+		</button>
+		<button class="btn" on:click={handleNextButtonClick} disabled={isFinished}>
+			<ChevronRight />
+		</button>
+	</div>
 </div>
 <p class="text-gray-500">Press tab to reveal term.</p>
 
@@ -316,7 +334,6 @@
 
 <div class="mt-5 text-center">
 	<p>Card {currentFlashcardIndex + 1} / {totalCards}</p>
-	<p>Correct: {correctAnswers} | Incorrect: {incorrectAnswers}</p>
 	{#if isReviewingWrongCards}
 		<p class="text-warning">Reviewing wrong cards</p>
 	{:else if isQuizingReviewDeck}
