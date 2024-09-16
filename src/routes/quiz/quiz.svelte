@@ -288,7 +288,12 @@
 <div
 	class="flex flex-col md:flex-row justify-center items-center mt-5 space-y-4 md:space-y-0 md:space-x-4"
 >
-	<button class="btn hidden md:block" on:click={previousFlashcard} disabled={isFinished}>
+	<button
+		class="btn hidden md:block"
+		aria-label="left"
+		on:click={previousFlashcard}
+		disabled={isFinished}
+	>
 		<ChevronLeft />
 	</button>
 
@@ -312,15 +317,20 @@
 		</div>
 	{/key}
 
-	<button class="btn hidden md:block" on:click={handleNextButtonClick} disabled={isFinished}>
+	<button
+		class="btn hidden md:block"
+		aria-label="right"
+		on:click={handleNextButtonClick}
+		disabled={isFinished}
+	>
 		<ChevronRight />
 	</button>
 
 	<div class="flex space-x-4 md:hidden">
-		<button class="btn" on:click={previousFlashcard} disabled={isFinished}>
+		<button class="btn" on:click={previousFlashcard} aria-label="left" disabled={isFinished}>
 			<ChevronLeft />
 		</button>
-		<button class="btn" on:click={handleNextButtonClick} disabled={isFinished}>
+		<button class="btn" on:click={handleNextButtonClick} aria-label="right" disabled={isFinished}>
 			<ChevronRight />
 		</button>
 	</div>

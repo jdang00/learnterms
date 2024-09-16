@@ -18,6 +18,10 @@
 </script>
 
 <svelte:head>
+	<title>LearnTerms</title>
+	<meta charset="utf-8" />
+	<meta name="description" content="Learn terms the fast and easy way. Free forever." />
+
 	<script src="https://cdn.jsdelivr.net/npm/theme-change@2.0.2/index.js"></script>
 </svelte:head>
 
