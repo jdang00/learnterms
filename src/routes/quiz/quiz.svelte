@@ -97,12 +97,9 @@
 
 	let cardSlide: string = 'right';
 
-	const correct_sound = new Sound(correct);
-
 	function checkAnswer(): boolean {
 		if (input.trim().toLowerCase() === answer.trim().toLowerCase()) {
 			answerstatus = AnswerStatus.correct;
-			correct_sound.play();
 			correctAnswers++;
 			if (correctAnswers === totalCards) {
 				isFinished = true;
