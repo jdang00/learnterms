@@ -2,8 +2,7 @@
 	import { Star, Search, Grid, List } from 'lucide-svelte';
 	import supabase from '$lib/supabaseClient';
 	import { PUBLIC_USERCARD_TABLE } from '$env/static/public';
-	import { flip } from 'svelte/animate';
-	import { fade, fly } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
 	export let data: { flashcards: Flashcard[]; starredCards: StarredCard[]; userID: string };
@@ -27,6 +26,8 @@
 	let isTableView = true;
 	let currentCardIndex = 0;
 	let showingTerm = true;
+
+	let tableKey = 0;
 
 	function isCardStarred(cardId: string): boolean {
 		return starredCards.some((sc) => sc.card_id === cardId);
@@ -86,8 +87,7 @@
 
 				starredCards = [...starredCards, newCard];
 			}
-
-			// Force a re-sort of the flashcards
+			tableKey += 1;
 			sortedFlashcards = [...sortedFlashcards];
 		} catch (error) {
 			console.error('Error toggling star:', error);
@@ -96,14 +96,12 @@
 
 	function nextCard() {
 		cardSlide = 'left';
-
 		currentCardIndex = (currentCardIndex + 1) % sortedFlashcards.length;
 		showingTerm = true;
 	}
 
 	function prevCard() {
 		cardSlide = 'right';
-
 		currentCardIndex = (currentCardIndex - 1 + sortedFlashcards.length) % sortedFlashcards.length;
 		showingTerm = true;
 	}
@@ -113,7 +111,22 @@
 	}
 
 	let cardSlide: string = 'right';
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (!isTableView) {
+			if (event.key === 'ArrowLeft') {
+				prevCard();
+			} else if (event.key === 'ArrowRight') {
+				nextCard();
+			} else if (event.key === ' ') {
+				event.preventDefault(); // Prevent scrolling
+				flipCard();
+			}
+		}
+	}
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <div class="w-full flex flex-col items-center mt-5 p-4">
 	<div class="flex justify-between w-full max-w-5xl mb-4">
@@ -149,26 +162,28 @@
 						<th>Definition</th>
 					</tr>
 				</thead>
-				<tbody>
-					{#each sortedFlashcards as flashcard (flashcard.id)}
-						<tr>
-							{#if data.userID}
-								<th>
-									<button class="btn btn-ghost btn-circle" on:click={() => toggleStar(flashcard)}>
-										<Star
-											size={24}
-											class={isCardStarred(flashcard.id)
-												? 'fill-yellow-400 stroke-yellow-400'
-												: 'stroke-current'}
-										/>
-									</button>
-								</th>
-							{/if}
-							<td class="font-semibold">{flashcard.term}</td>
-							<td>{flashcard.meaning}</td>
-						</tr>
-					{/each}
-				</tbody>
+				{#key tableKey}
+					<tbody>
+						{#each sortedFlashcards as flashcard (flashcard.id)}
+							<tr>
+								{#if data.userID}
+									<th>
+										<button class="btn btn-ghost btn-circle" on:click={() => toggleStar(flashcard)}>
+											<Star
+												size={24}
+												class={isCardStarred(flashcard.id)
+													? 'fill-yellow-400 stroke-yellow-400'
+													: 'stroke-current'}
+											/>
+										</button>
+									</th>
+								{/if}
+								<td class="font-semibold">{flashcard.term}</td>
+								<td>{flashcard.meaning}</td>
+							</tr>
+						{/each}
+					</tbody>
+				{/key}
 			</table>
 		</div>
 	{:else}
@@ -186,6 +201,9 @@
 				</div>
 			</div>
 		{/key}
+		<div class="text-center mt-4">
+			Card {currentCardIndex + 1} of {sortedFlashcards.length}
+		</div>
 		<div class="flex gap-2 mt-5">
 			<button class="btn btn-ghost" on:click={prevCard}>&larr; Previous</button>
 			<button class="btn btn-secondary" on:click={flipCard}>Flip</button>
