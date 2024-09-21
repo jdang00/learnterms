@@ -1,16 +1,11 @@
 <script lang="ts">
-	export let data: { flashcards: Card[] };
+	export let data;
 
 	type Card = {
 		id: string;
-		is_starred: boolean;
-		flashcards: {
-			id: number;
-			term: string;
-			meaning: string;
-			lesson: string;
-		};
-		review: boolean;
+		term: string;
+		meaning: string;
+		lesson: number;
 	};
 
 	import { onMount } from 'svelte';
@@ -19,8 +14,6 @@
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import supabase from '$lib/supabaseClient';
-	import { Sound } from 'svelte-sound';
-	import correct from '$lib/training-program-correct2-88734.mp3';
 
 	let ref: HTMLElement | null = null;
 
@@ -51,16 +44,11 @@
 		return shuffled;
 	}
 
-	let originalCards: Card[] = data.flashcards.map((item) => ({
-		id: item.id,
-		is_starred: item.is_starred,
-		flashcards: {
-			id: item.flashcards.id,
-			term: item.flashcards.term,
-			meaning: item.flashcards.meaning,
-			lesson: item.flashcards.lesson
-		},
-		review: item.review
+	let originalCards: Card[] = data.flashcards.map((flashcard: Card) => ({
+		id: flashcard.id,
+		term: flashcard.term,
+		meaning: flashcard.meaning,
+		lesson: flashcard.lesson
 	}));
 
 	let cards: Card[] = [...originalCards];
@@ -85,8 +73,8 @@
 	let currentCard: Card;
 	$: currentCard = cards[currentFlashcardIndex];
 	let input: string = '';
-	$: answer = currentCard?.flashcards.term || '';
-	$: meaning = currentCard?.flashcards.meaning || '';
+	$: answer = currentCard?.term || '';
+	$: meaning = currentCard?.meaning || '';
 	let answerstatus: AnswerStatus = AnswerStatus.empty;
 	let showAnswer: boolean = false;
 

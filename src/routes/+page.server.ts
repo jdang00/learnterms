@@ -1,86 +1,28 @@
 import supabase from '$lib/supabaseClient';
 import { error } from '@sveltejs/kit';
-import { PRIVATE_USERCARD_TABLE, PRIVATE_USER_TABLE } from '$env/static/private';
+import { PRIVATE_FLASHCARD_TABLE } from '$env/static/private';
+
+type Flashcard = {
+	id: string;
+	term: string;
+	meaning: string;
+	lesson: number;
+};
 
 export const load = async ({ locals }) => {
 	const user = locals.session;
 
-	let existingUser;
-
-	if (user) {
-		const { data: foundUser, error: userError } = await supabase
-			.from(PRIVATE_USER_TABLE)
-			.select()
-			.eq('clerk_user_id', user.userId)
-			.single();
-
-		if (userError && userError.code !== 'PGRST116') {
-			console.error('Error checking for existing user:', userError);
-			throw error(500, 'Error checking user status');
-		}
-
-		if (!foundUser) {
-			const { data: newUser, error: insertError } = await supabase
-				.from(PRIVATE_USER_TABLE)
-				.insert({ clerk_user_id: user.userId, name: user.fullName })
-				.select()
-				.single();
-
-			if (insertError) {
-				console.error('Error creating new user:', insertError);
-				throw error(500, 'Error creating new user');
-			}
-
-			existingUser = newUser;
-		} else {
-			existingUser = foundUser;
-		}
-	}
-
-	let data;
-
-	if (!existingUser) {
-		const { data: returnData, error: cardsError } = await supabase
-			.from(PRIVATE_USERCARD_TABLE)
-			.select(
-				`
-          id,
-          is_starred,
-          flashcards!inner (id, term, meaning, lesson),
-          review
-      `
-			)
-			.eq('user_id', '367b2142-deb6-4dcd-87d5-803b49825e04')
-			.eq('flashcards.lesson', 4);
-
-		data = returnData;
-
-		if (cardsError) {
-			console.error('Error fetching cards:', cardsError);
-			throw error(500, 'Error fetching cards');
-		}
-	} else {
-		const { data: returnData, error: cardsError } = await supabase
-			.from(PRIVATE_USERCARD_TABLE)
-			.select(
-				`
-          id,
-          is_starred,
-          flashcards!inner (id, term, meaning, lesson)
-      `
-			)
-			.eq('user_id', existingUser.id)
-			.eq('flashcards.lesson', 4);
-
-		data = returnData;
-
-		if (cardsError) {
-			console.error('Error fetching cards:', cardsError);
-			throw error(500, 'Error fetching cards');
-		}
+	const { data: allFlashcards, error: flashcardsError } = await supabase
+		.from(PRIVATE_FLASHCARD_TABLE)
+		.select('id, term, meaning, lesson')
+		.eq('lesson', 4)
+		.returns<Flashcard[]>();
+	if (flashcardsError) {
+		console.error('Error fetching flashcards:', flashcardsError);
+		throw error(500, 'Error fetching flashcards');
 	}
 
 	return {
-		flashcards: data ?? []
+		flashcards: allFlashcards ?? []
 	};
 };
