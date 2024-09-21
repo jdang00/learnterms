@@ -166,8 +166,8 @@
 					<tbody>
 						{#each sortedFlashcards as flashcard (flashcard.id)}
 							<tr>
-								{#if data.userID}
-									<th>
+								<th>
+									{#if data.userID}
 										<button class="btn btn-ghost btn-circle" on:click={() => toggleStar(flashcard)}>
 											<Star
 												size={24}
@@ -176,8 +176,8 @@
 													: 'stroke-current'}
 											/>
 										</button>
-									</th>
-								{/if}
+									{/if}
+								</th>
 								<td class="font-semibold">{flashcard.term}</td>
 								<td>{flashcard.meaning}</td>
 							</tr>
