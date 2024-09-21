@@ -151,17 +151,19 @@
 				</thead>
 				<tbody>
 					{#each sortedFlashcards as flashcard (flashcard.id)}
-						<tr animate:flip={{ duration: 300 }} transition:fade>
-							<th>
-								<button class="btn btn-ghost btn-circle" on:click={() => toggleStar(flashcard)}>
-									<Star
-										size={24}
-										class={isCardStarred(flashcard.id)
-											? 'fill-yellow-400 stroke-yellow-400'
-											: 'stroke-current'}
-									/>
-								</button>
-							</th>
+						<tr>
+							{#if data.userID}
+								<th>
+									<button class="btn btn-ghost btn-circle" on:click={() => toggleStar(flashcard)}>
+										<Star
+											size={24}
+											class={isCardStarred(flashcard.id)
+												? 'fill-yellow-400 stroke-yellow-400'
+												: 'stroke-current'}
+										/>
+									</button>
+								</th>
+							{/if}
 							<td class="font-semibold">{flashcard.term}</td>
 							<td>{flashcard.meaning}</td>
 						</tr>
