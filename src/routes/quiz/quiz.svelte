@@ -84,10 +84,13 @@
 	let isFinished: boolean = false;
 	let missedCards: Set<string> = new Set();
 
+	let shuffledCards: Card[] = [];
+
 	function toggleShuffle() {
 		isShuffled = !isShuffled;
 		if (isShuffled) {
-			cards = shuffleArray(cards);
+			shuffledCards = shuffleArray([...cards]);
+			cards = shuffledCards;
 		} else {
 			cards = [...originalCards];
 		}
@@ -207,7 +210,9 @@
 		answerstatus = AnswerStatus.empty;
 		isFinished = false;
 		missedCards.clear();
-		cards = [...originalCards];
+		if (!isShuffled) {
+			cards = [...originalCards];
+		}
 		if (ref) {
 			ref.focus();
 		}
