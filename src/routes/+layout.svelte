@@ -53,10 +53,7 @@
 					<li><a href="/terms">Decks</a></li>
 				</ul>
 			</div>
-			<a class="btn btn-ghost text-xl" href="/"
-				>LearnTerms
-				<p class="font-bold text-sm text-gray-400 mt-1">BETA</p>
-			</a>
+			<a class="btn btn-ghost text-xl" href="/">LearnTerms </a>
 		</div>
 		<div class="navbar-center hidden lg:flex">
 			<ul class="menu menu-horizontal px-1">

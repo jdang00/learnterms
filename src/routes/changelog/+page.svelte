@@ -2,7 +2,17 @@
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
 	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 20, 2024</h3>
-	LearnTerms is almost in full release! Just a few more finishing touches!
+	<p class="ms-2">LearnTerms 1.0 is here!</p>
+
+	<ul class="mt-1 m-8">
+		<li>Starring terms now works as a review deck on main quiz page</li>
+		<li>Resetting cards now works correctly</li>
+		<li>Separated development environment on the backend</li>
+		<li>Lesson 5 Terms</li>
+	</ul>
+
+	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 20, 2024</h3>
+	<p class="ms-2">LearnTerms is almost in full release! Just a few more finishing touches!</p>
 	<ul class="mt-1 m-8">
 		<li>Major refactor of the database system</li>
 		<li>Rennovated deck display for table view and flashcards view</li>
