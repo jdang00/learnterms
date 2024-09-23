@@ -1,6 +1,6 @@
 import supabase from '$lib/supabaseClient';
 import { error } from '@sveltejs/kit';
-import { PRIVATE_FLASHCARD_TABLE } from '$env/static/private';
+import { PRIVATE_FLASHCARD_TABLE, PRIVATE_USER_TABLE } from '$env/static/private';
 import { PUBLIC_LESSON } from '$env/static/public';
 
 type Flashcard = {
@@ -23,7 +23,18 @@ export const load = async ({ locals }) => {
 		throw error(500, 'Error fetching flashcards');
 	}
 
+	let userid = '';
+	if (user) {
+		const { data: userID } = await supabase
+			.from(PRIVATE_USER_TABLE)
+			.select('id')
+			.eq('clerk_user_id', user.userId);
+
+		const userIdValue = userID?.[0]?.id || null;
+		userid = userIdValue;
+	}
 	return {
-		flashcards: allFlashcards ?? []
+		flashcards: allFlashcards ?? [],
+		user: userid
 	};
 };
