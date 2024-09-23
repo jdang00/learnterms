@@ -228,6 +228,7 @@
 </script>
 
 <div class="my-5"></div>
+<div class="badge badge-accent">NEW: View term cards in the decks tab!</div>
 
 <div class="flex flex-col items-center p-8">
 	{#key currentCard}

@@ -5,6 +5,7 @@ import {
 	PRIVATE_USER_TABLE,
 	PRIVATE_FLASHCARD_TABLE
 } from '$env/static/private';
+import { PUBLIC_LESSON } from '$env/static/public';
 
 type Flashcard = {
 	id: string;
@@ -58,7 +59,7 @@ export const load = async ({ locals }) => {
 	const { data: allFlashcards, error: flashcardsError } = await supabase
 		.from(PRIVATE_FLASHCARD_TABLE)
 		.select('id, term, meaning, lesson')
-		.eq('lesson', 4)
+		.eq('lesson', PUBLIC_LESSON)
 		.returns<Flashcard[]>();
 	if (flashcardsError) {
 		console.error('Error fetching flashcards:', flashcardsError);
