@@ -400,14 +400,14 @@
 					Redo Missed Cards ({missedCards.size})
 				</button>
 			{/if}
-			{#if data.user}
-				<button class="btn mt-3" on:click={reviewStarredCards} disabled={starredCards.size === 0}>
-					<BookOpen />
-					Quiz Starred Terms ({starredCards.size})
-				</button>
-			{/if}
 		{:else}
 			<button class="btn mt-3" on:click={resetProgress}>Reset Progress</button>
+		{/if}
+		{#if data.user}
+			<button class="btn mt-3" on:click={reviewStarredCards} disabled={starredCards.size === 0}>
+				<BookOpen />
+				Quiz Starred Terms ({starredCards.size})
+			</button>
 		{/if}
 	</div>
 </div>
