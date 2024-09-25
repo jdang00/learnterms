@@ -223,6 +223,11 @@
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
+		if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+			event.preventDefault();
+			toggleStar();
+		}
+
 		if (event.key === 'Tab') {
 			event.preventDefault();
 			toggleAnswer();
