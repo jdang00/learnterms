@@ -50,6 +50,7 @@
 					class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 				>
 					<li><a href="/about">About</a></li>
+					<li><a href="/blog">Blog</a></li>
 					<li><a href="/terms">Decks</a></li>
 				</ul>
 			</div>
@@ -58,6 +59,7 @@
 		<div class="navbar-center hidden lg:flex">
 			<ul class="menu menu-horizontal px-1">
 				<li><a href="/about">About</a></li>
+				<li><a href="/blog">Blog</a></li>
 				<li><a href="/terms">Decks</a></li>
 			</ul>
 		</div>
@@ -95,7 +97,7 @@
 		<div class="w-full">
 			<slot />
 			<footer class="footer footer-center text-base-content p-4 mt-24">
-				<aside class="flex flex-row">
+				<aside class="flex flex-row flex-wrap justify-center">
 					<p>
 						Copyright © {new Date().getFullYear()} - Oklahoma College of Optometry Class of 2028 |
 					</p>

@@ -263,9 +263,6 @@
 </script>
 
 <div class="my-5"></div>
-<a href="/blog/LearnTerms 1.0" target="_blank" class="link-accent"
-	>🎉 LearnTerms 1.0 is here! Click to learn more!</a
->
 
 <div class="flex flex-col items-center p-8">
 	{#key currentCard}

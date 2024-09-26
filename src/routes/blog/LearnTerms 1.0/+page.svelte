@@ -28,6 +28,8 @@
 	<div class="w-full max-w-3xl">
 		<div class="flex flex-col justify-between flex-wrap">
 			<h1 class="font-bold text-4xl">LearnTerms 1.0 Release</h1>
+			<span>22 September 2024</span>
+
 			<div class="flex flex-row gap-6 flex-wrap mt-8">
 				<a href="https://www.justindang.dev/" target="_blank">
 					<div class="avatar">
