@@ -408,3 +408,6 @@
 		{/if}
 	</div>
 </div>
+{#if !data.user}
+	<div class="text-neutral">Login to star cards!</div>
+{/if}
