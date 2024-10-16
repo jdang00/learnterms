@@ -41,7 +41,7 @@
 		"clerk-sveltekit": "^0.4.2",
 		"lucide-svelte": "^0.438.0",
 		"mode-watcher": "^0.4.1",
-		"posthog-js": "^1.164.1",
+		"posthog-js": "^1.170.1",
 		"svelte-sound": "^0.6.0"
 	}
 }
