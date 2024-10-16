@@ -22,19 +22,16 @@
 					<div class="text-neutral">NSU Oklahoma College of Optometry</div>
 					<div class="text-neutral">Class of 2028</div>
 				</div>
-
-				<div class="flex flex-col gap-2">
-					Read the LENS Algorithm paper here:
-					<a
-						href="https://utfs.io/f/DYlXFqnaImOrDUuam6qnaImOrwFJXt2vDNoh9uC37QZKg0VR"
-						class="btn"
-						target="_blank"
-					>
-						<BookOpenText />
-
-						<h2>The LENS Algorithm for Introduction to Optometry 4001</h2>
-					</a>
-				</div>
+			</div>
+			<div class="flex flex-col gap-2 mt-8">
+				Read the LENS Algorithm paper here:
+				<a
+					href="https://utfs.io/f/DYlXFqnaImOrDUuam6qnaImOrwFJXt2vDNoh9uC37QZKg0VR"
+					class="btn btn-outline btn-primary"
+					target="_blank"
+				>
+					The LENS Algorithm for Introduction to Optometry 4001
+				</a>
 			</div>
 		</div>
 		<div class="divider"></div>
@@ -94,12 +91,10 @@
 
 		<a
 			href="https://utfs.io/f/DYlXFqnaImOrDUuam6qnaImOrwFJXt2vDNoh9uC37QZKg0VR"
-			class="btn mt-8"
+			class="btn btn-outline btn-primary mt-8"
 			target="_blank"
 		>
-			<BookOpenText />
-
-			<h2>The LENS Algorithm for Introduction to Optometry 4001</h2>
+			The LENS Algorithm for Introduction to Optometry 4001
 		</a>
 
 		<p class="mt-8">
