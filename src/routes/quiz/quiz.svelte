@@ -111,6 +111,7 @@
 	$: progress = (correctAnswers / totalCards) * 100;
 
 	let cardSlide: string = 'right';
+
 	async function toggleStar() {
 		if (!data.user) return;
 
