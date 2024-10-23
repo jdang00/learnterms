@@ -1,14 +1,10 @@
 <script lang="ts">
 	export let data: { flashcards: Card[]; user: string };
 	import { PUBLIC_USERCARD_TABLE } from '$env/static/public';
-
-	type Card = {
-		id: string;
-		term: string;
-		meaning: string;
-		lesson: number;
-	};
-
+	import { Confetti } from 'svelte-confetti';
+	import { fly } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
+	import supabase from '$lib/supabaseClient';
 	import { onMount } from 'svelte';
 	import {
 		Eye,
@@ -19,13 +15,19 @@
 		BookOpen,
 		Star
 	} from 'lucide-svelte';
-	import { Confetti } from 'svelte-confetti';
-	import { fly } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
-	import supabase from '$lib/supabaseClient';
 
-	let ref: HTMLElement | null = null;
-	let starredCards: Set<string> = new Set();
+	type Card = {
+		id: string;
+		term: string;
+		meaning: string;
+		lesson: number;
+	};
+
+	enum AnswerStatus {
+		empty,
+		correct,
+		incorrect
+	}
 
 	onMount(() => {
 		if (ref) {
@@ -43,6 +45,9 @@
 		};
 	});
 
+	let ref: HTMLElement | null = null;
+	let starredCards: Set<string> = new Set();
+
 	async function fetchStarredCards() {
 		const { data: starredData, error } = await supabase
 			.from(PUBLIC_USERCARD_TABLE)
@@ -55,12 +60,6 @@
 		} else {
 			starredCards = new Set(starredData.map((item) => item.card_id));
 		}
-	}
-
-	enum AnswerStatus {
-		empty,
-		correct,
-		incorrect
 	}
 
 	function shuffleArray(array: Card[]): Card[] {
@@ -112,7 +111,6 @@
 	$: progress = (correctAnswers / totalCards) * 100;
 
 	let cardSlide: string = 'right';
-
 	async function toggleStar() {
 		if (!data.user) return;
 
@@ -203,12 +201,7 @@
 	}
 
 	function resetProgress() {
-		currentFlashcardIndex = 0;
-		correctAnswers = 0;
-		incorrectAnswers = 0;
-		input = '';
-		answerstatus = AnswerStatus.empty;
-		isFinished = false;
+		resetQuiz();
 		missedCards.clear();
 		if (!isShuffled) {
 			cards = [...originalCards];
@@ -241,23 +234,22 @@
 		}
 	}
 
-	function redoMissedCards() {
+	function resetQuiz() {
 		currentFlashcardIndex = 0;
 		correctAnswers = 0;
 		incorrectAnswers = 0;
 		input = '';
 		answerstatus = AnswerStatus.empty;
 		isFinished = false;
+	}
+
+	function redoMissedCards() {
+		resetQuiz();
 		cards = originalCards.filter((card) => missedCards.has(card.id));
 	}
 
 	function reviewStarredCards() {
-		currentFlashcardIndex = 0;
-		correctAnswers = 0;
-		incorrectAnswers = 0;
-		input = '';
-		answerstatus = AnswerStatus.empty;
-		isFinished = false;
+		resetQuiz();
 		cards = originalCards.filter((card) => starredCards.has(card.id));
 	}
 </script>
