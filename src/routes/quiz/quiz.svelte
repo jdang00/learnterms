@@ -29,9 +29,43 @@
 		incorrect
 	}
 
+	type StoredProgress = {
+		currentIndex: number;
+		correctAnswers: number;
+		incorrectAnswers: number;
+		missedCards: string[];
+		isShuffled: boolean;
+		shuffledCards?: Card[];
+	};
+
+	function saveProgress() {
+		const progressData: StoredProgress = {
+			currentIndex: currentFlashcardIndex,
+			correctAnswers,
+			incorrectAnswers,
+			missedCards: Array.from(missedCards),
+			isShuffled,
+			shuffledCards: isShuffled ? cards : undefined
+		};
+		localStorage.setItem('flashcardProgress', JSON.stringify(progressData));
+	}
 	onMount(() => {
 		if (ref) {
 			ref.focus();
+		}
+		const savedProgress = localStorage.getItem('flashcardProgress');
+		if (savedProgress) {
+			const progress: StoredProgress = JSON.parse(savedProgress);
+			currentFlashcardIndex = progress.currentIndex;
+			correctAnswers = progress.correctAnswers;
+			incorrectAnswers = progress.incorrectAnswers;
+			missedCards = new Set(progress.missedCards);
+			isShuffled = progress.isShuffled;
+
+			if (isShuffled && progress.shuffledCards) {
+				cards = progress.shuffledCards;
+				shuffledCards = progress.shuffledCards;
+			}
 		}
 
 		document.addEventListener('keydown', handleKeydown);
@@ -82,6 +116,7 @@
 	let isShuffled: boolean = false;
 	let isFinished: boolean = false;
 	let missedCards: Set<string> = new Set();
+	let inReview: boolean = false;
 
 	let shuffledCards: Card[] = [];
 
@@ -146,22 +181,42 @@
 		if (input.trim().toLowerCase() === answer.trim().toLowerCase()) {
 			answerstatus = AnswerStatus.correct;
 			correctAnswers++;
-			if (correctAnswers === totalCards) {
+			saveProgress();
+
+			if (inReview) {
+				if (cards.length === 0) {
+					cards = [...originalCards];
+
+					isFinished = true;
+				}
+				if (currentFlashcardIndex >= cards.length) {
+					currentFlashcardIndex = 0;
+				}
+			} else if (correctAnswers === totalCards) {
 				isFinished = true;
-			} else {
-				setTimeout(() => {
+			}
+
+			setTimeout(() => {
+				if (!isFinished) {
 					nextFlashcard(false);
+					if (cards.length === 0) {
+						cards = [...originalCards];
+						isFinished = true;
+					}
 					setTimeout(() => {
 						if (ref) {
 							ref.focus();
 						}
 					}, 50);
-				}, 1000);
-			}
+				}
+			}, 1000);
+
 			return true;
 		} else {
 			answerstatus = AnswerStatus.incorrect;
-			incorrectAnswers++;
+			if (!inReview) {
+				incorrectAnswers++;
+			}
 			missedCards.add(currentCard.id);
 			setTimeout(() => {
 				if (ref) {
@@ -173,11 +228,22 @@
 	}
 
 	function nextFlashcard(shouldFocus: boolean = true) {
+		console.log(correctAnswers);
+		if (cards.length === 0) {
+			isFinished = true;
+			return;
+		}
 		cardSlide = 'left';
 		showAnswer = false;
-		currentFlashcardIndex = (currentFlashcardIndex + 1) % cards.length;
+
+		if (!inReview) {
+			currentFlashcardIndex = (currentFlashcardIndex + 1) % cards.length;
+		} else {
+			cards = cards.filter((_, index) => index !== currentFlashcardIndex);
+		}
 		input = '';
 		answerstatus = AnswerStatus.empty;
+		saveProgress();
 		if (shouldFocus) {
 			setTimeout(() => {
 				if (ref) {
@@ -203,10 +269,13 @@
 
 	function resetProgress() {
 		resetQuiz();
+
 		missedCards.clear();
 		if (!isShuffled) {
 			cards = [...originalCards];
 		}
+		localStorage.removeItem('flashcardProgress');
+
 		if (ref) {
 			ref.focus();
 		}
@@ -242,10 +311,13 @@
 		input = '';
 		answerstatus = AnswerStatus.empty;
 		isFinished = false;
+		inReview = false;
+		localStorage.removeItem('flashcardProgress');
 	}
 
 	function redoMissedCards() {
 		resetQuiz();
+		inReview = true;
 		cards = originalCards.filter((card) => missedCards.has(card.id));
 	}
 
@@ -269,7 +341,9 @@
 			<Confetti />
 
 			<div class="input input-bordered w-full max-w-lg mt-5 flex items-center justify-center">
-				<span class="text-success font-bold">Finished!</span>
+				<span class="text-success font-bold">
+					{inReview ? 'Review Complete!' : 'Finished!'}
+				</span>
 			</div>
 		{:else if answerstatus === AnswerStatus.correct}
 			<Confetti />
@@ -383,9 +457,9 @@
 		{#if isFinished}
 			<button class="btn mt-3" on:click={resetProgress}>
 				<RefreshCw class="mr-2" />
-				{incorrectAnswers === 0 ? 'Start Over' : 'Reset Progress'}
+				{inReview ? 'Start New Session' : incorrectAnswers === 0 ? 'Start Over' : 'Reset Progress'}
 			</button>
-			{#if missedCards.size > 0}
+			{#if missedCards.size > 0 && !inReview}
 				<button class="btn mt-3" on:click={redoMissedCards}>
 					Redo Missed Cards ({missedCards.size})
 				</button>

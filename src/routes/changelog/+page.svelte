@@ -1,6 +1,27 @@
 <div class="max-w-3xl px-10 mt-5">
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
+	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">October 25, 2024</h3>
+	<p class="ms-2">With the publishing of the LENS Algorithm, feature updates are back!</p>
+
+	<ul class="mt-1 m-8">
+		<li>
+			The "Redo Missed Cards" session will now remove cards as you get them right. The flow here is
+			yet to be determined, but it will likley change to a "remove from review" or "keep in review"
+			prompt. Thanks to Matt W.
+		</li>
+		<li>
+			Progress now persists without logging in. Thanks to Kaity S. This actually turned out to be a
+			very neat feature. I had my doubts.
+		</li>
+		<li>Begin transitioning site code to Svelte 5 for performance gains.</li>
+		<li>
+			<a class="link-accent" target="_blank" href="/student-of-the-week"
+				>Student of the week, changes every month</a
+			>
+		</li>
+	</ul>
+
 	<h3 class="text-xl mt-3 font-medium text-gray-400 px-3">September 20, 2024</h3>
 	<p class="ms-2">LearnTerms 1.0 is here!</p>
 

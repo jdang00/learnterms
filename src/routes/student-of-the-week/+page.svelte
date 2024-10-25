@@ -1,5 +1,4 @@
 <script lang="ts">
-	import CSwift from '$lib/c_swift.webp';
 	import { Confetti } from 'svelte-confetti';
 </script>
 
@@ -29,16 +28,20 @@
 	<h2 class="text-gray-400">(changes every month)</h2>
 
 	<div class="flex flex-col md:flex-row md:space-x-16 justify-center items-center mt-12">
-		<img class="object-contain h-96 mb-8" alt="Courtney Swift" src={CSwift} />
+		<img
+			class="object-contain h-96 mb-8"
+			alt="Brayden Dyer"
+			src={'https://scontent-atl3-1.xx.fbcdn.net/v/t39.30808-6/462971281_2020148811755216_8068748815958606949_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=TF1AGtpl0S0Q7kNvgEWbIkk&_nc_zt=23&_nc_ht=scontent-atl3-1.xx&_nc_gid=A3CPTz2NR4op3LEXOOyoNZ9&oh=00_AYCmn3zx9JnQY-3MVTm5CNJ_v1YkIjbWTvzvy6Lsgf51rw&oe=6721E534'}
+		/>
 		<div class="self-start">
-			<h2 class="text-4xl mb-3 font-medium">Courtney Swift</h2>
+			<h2 class="text-4xl mb-3 font-medium">Brayden Dyer</h2>
 			<h2 class="text-xl font-semibold mt-5">Notable facts:</h2>
 			<ul class="ms-8">
-				<li>Twelve time US Open Women's Singles Champion</li>
-				<li>Successfully terminated the life of a wasp by herself</li>
-				<li>Avid reality TV show enjoyer</li>
-				<li>Polish features</li>
-				<li>Avid golfer</li>
+				<li>2 time MVP NSUOCO 2024 Intramural Football and Soccer</li>
+				<li>Newly married</li>
+				<li>Ping pong legend</li>
+				<li>Most dripped out optometry student on a daily basis</li>
+				<li>Sharpest haircut</li>
 			</ul>
 		</div>
 	</div>
