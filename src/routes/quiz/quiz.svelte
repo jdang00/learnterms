@@ -228,7 +228,6 @@
 	}
 
 	function nextFlashcard(shouldFocus: boolean = true) {
-		console.log(correctAnswers);
 		if (cards.length === 0) {
 			isFinished = true;
 			return;
