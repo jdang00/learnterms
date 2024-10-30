@@ -1,3 +1,4 @@
+<!-- @migration-task Error while migrating Svelte code: `<div>` is invalid inside `<html>` -->
 <script lang="ts">
 	import 'tailwindcss/tailwind.css';
 	import { Palette } from 'lucide-svelte';

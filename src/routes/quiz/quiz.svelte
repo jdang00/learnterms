@@ -1,5 +1,6 @@
 <script lang="ts">
-	export let data: { flashcards: Card[]; user: string };
+	import { preventDefault } from 'svelte/legacy';
+
 	import { PUBLIC_USERCARD_TABLE } from '$env/static/public';
 	import { Confetti } from 'svelte-confetti';
 	import { fly } from 'svelte/transition';
@@ -15,6 +16,11 @@
 		BookOpen,
 		Star
 	} from 'lucide-svelte';
+	interface Props {
+		data: { flashcards: Card[]; user: string };
+	}
+
+	let { data }: Props = $props();
 
 	type Card = {
 		id: string;
@@ -79,8 +85,8 @@
 		};
 	});
 
-	let ref: HTMLElement | null = null;
-	let starredCards: Set<string> = new Set();
+	let ref: HTMLElement | null = $state(null);
+	let starredCards: Set<string> = $state(new Set());
 
 	async function fetchStarredCards() {
 		const { data: starredData, error } = await supabase
@@ -112,11 +118,11 @@
 		lesson: flashcard.lesson
 	}));
 
-	let cards: Card[] = [...originalCards];
-	let isShuffled: boolean = false;
-	let isFinished: boolean = false;
-	let missedCards: Set<string> = new Set();
-	let inReview: boolean = false;
+	let cards: Card[] = $state([...originalCards]);
+	let isShuffled: boolean = $state(false);
+	let isFinished: boolean = $state(false);
+	let missedCards: Set<string> = $state(new Set());
+	let inReview: boolean = $state(false);
 
 	let shuffledCards: Card[] = [];
 
@@ -131,21 +137,21 @@
 		resetProgress();
 	}
 
-	let currentFlashcardIndex = 0;
-	let currentCard: Card;
-	$: currentCard = cards[currentFlashcardIndex];
-	let input: string = '';
-	$: answer = currentCard?.term || '';
-	$: meaning = currentCard?.meaning || '';
-	let answerstatus: AnswerStatus = AnswerStatus.empty;
-	let showAnswer: boolean = false;
+	let currentFlashcardIndex = $state(0);
+	let currentCard: Card = $derived(cards[currentFlashcardIndex]);
+	
+	let input: string = $state('');
+	let answer = $derived(currentCard?.term || '');
+	let meaning = $derived(currentCard?.meaning || '');
+	let answerstatus: AnswerStatus = $state(AnswerStatus.empty);
+	let showAnswer: boolean = $state(false);
 
-	$: totalCards = cards.length;
-	let correctAnswers: number = 0;
-	let incorrectAnswers: number = 0;
-	$: progress = (correctAnswers / totalCards) * 100;
+	let totalCards = $derived(cards.length);
+	let correctAnswers: number = $state(0);
+	let incorrectAnswers: number = $state(0);
+	let progress = $derived((correctAnswers / totalCards) * 100);
 
-	let cardSlide: string = 'right';
+	let cardSlide: string = $state('right');
 
 	async function toggleStar() {
 		if (!data.user) return;
@@ -335,7 +341,7 @@
 		</p>
 	{/key}
 
-	<form class="flex items-center" on:submit|preventDefault={checkAnswer}>
+	<form class="flex items-center" onsubmit={preventDefault(checkAnswer)}>
 		{#if isFinished}
 			<Confetti />
 
@@ -382,7 +388,7 @@
 	<button
 		class="btn hidden md:block"
 		aria-label="left"
-		on:click={previousFlashcard}
+		onclick={previousFlashcard}
 		disabled={isFinished}
 	>
 		<ChevronLeft />
@@ -405,7 +411,7 @@
 						</div>
 					{/if}
 					{#if data.user}
-						<button on:click={toggleStar}>
+						<button onclick={toggleStar}>
 							<Star
 								class={starredCards.has(currentCard.id)
 									? 'fill-yellow-400 stroke-yellow-400'
@@ -414,7 +420,7 @@
 						</button>
 					{/if}
 				</div>
-				<button class="btn" on:click={toggleAnswer}><Eye /></button>
+				<button class="btn" onclick={toggleAnswer}><Eye /></button>
 			</div>
 		</div>
 	{/key}
@@ -422,17 +428,17 @@
 	<button
 		class="btn hidden md:block"
 		aria-label="right"
-		on:click={handleNextButtonClick}
+		onclick={handleNextButtonClick}
 		disabled={isFinished}
 	>
 		<ChevronRight />
 	</button>
 
 	<div class="flex space-x-4 md:hidden">
-		<button class="btn" on:click={previousFlashcard} aria-label="left" disabled={isFinished}>
+		<button class="btn" onclick={previousFlashcard} aria-label="left" disabled={isFinished}>
 			<ChevronLeft />
 		</button>
-		<button class="btn" on:click={handleNextButtonClick} aria-label="right" disabled={isFinished}>
+		<button class="btn" onclick={handleNextButtonClick} aria-label="right" disabled={isFinished}>
 			<ChevronRight />
 		</button>
 	</div>
@@ -446,7 +452,7 @@
 </div>
 <div class="flex flex-row gap-2 justify-center flex-wrap">
 	<div class="mt-3 text-center">
-		<button class="btn btn-secondary" on:click={toggleShuffle}>
+		<button class="btn btn-secondary" onclick={toggleShuffle}>
 			<Shuffle class="mr-2" />
 			{isShuffled ? 'Unshuffled' : 'Shuffle'}
 		</button>
@@ -454,20 +460,20 @@
 
 	<div class="flex flex-wrap gap-2 justify-center">
 		{#if isFinished}
-			<button class="btn mt-3" on:click={resetProgress}>
+			<button class="btn mt-3" onclick={resetProgress}>
 				<RefreshCw class="mr-2" />
 				{inReview ? 'Start New Session' : incorrectAnswers === 0 ? 'Start Over' : 'Reset Progress'}
 			</button>
 			{#if missedCards.size > 0 && !inReview}
-				<button class="btn mt-3" on:click={redoMissedCards}>
+				<button class="btn mt-3" onclick={redoMissedCards}>
 					Redo Missed Cards ({missedCards.size})
 				</button>
 			{/if}
 		{:else}
-			<button class="btn mt-3" on:click={resetProgress}>Reset Progress</button>
+			<button class="btn mt-3" onclick={resetProgress}>Reset Progress</button>
 		{/if}
 		{#if data.user}
-			<button class="btn mt-3" on:click={reviewStarredCards} disabled={starredCards.size === 0}>
+			<button class="btn mt-3" onclick={reviewStarredCards} disabled={starredCards.size === 0}>
 				<BookOpen />
 				Quiz Starred Terms ({starredCards.size})
 			</button>

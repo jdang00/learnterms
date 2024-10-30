@@ -1,11 +1,17 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { Star, Search, Grid, List } from 'lucide-svelte';
 	import supabase from '$lib/supabaseClient';
 	import { PUBLIC_USERCARD_TABLE } from '$env/static/public';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
-	export let data: { flashcards: Flashcard[]; starredCards: StarredCard[]; userID: string };
+	interface Props {
+		data: { flashcards: Flashcard[]; starredCards: StarredCard[]; userID: string };
+	}
+
+	let { data }: Props = $props();
 
 	type Flashcard = {
 		id: string;
@@ -22,29 +28,32 @@
 
 	let flashcards: Flashcard[] = data.flashcards;
 	let starredCards: StarredCard[] = data.starredCards;
-	let searchTerm = '';
-	let isTableView = true;
-	let currentCardIndex = 0;
-	let showingTerm = true;
+	let searchTerm = $state('');
+	let isTableView = $state(true);
+	let currentCardIndex = $state(0);
+	let showingTerm = $state(true);
 
-	let tableKey = 0;
+	let tableKey = $state(0);
 
 	function isCardStarred(cardId: string): boolean {
 		return starredCards.some((sc) => sc.card_id === cardId);
 	}
 
-	$: filteredFlashcards = flashcards.filter(
+	let filteredFlashcards = $derived(flashcards.filter(
 		(card) =>
 			card.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			card.meaning.toLowerCase().includes(searchTerm.toLowerCase())
-	);
+	));
 
-	$: sortedFlashcards = filteredFlashcards.sort((a, b) => {
-		const aIsStarred = isCardStarred(a.id);
-		const bIsStarred = isCardStarred(b.id);
-		if (aIsStarred && !bIsStarred) return -1;
-		if (!aIsStarred && bIsStarred) return 1;
-		return 0;
+	let sortedFlashcards;
+	run(() => {
+		sortedFlashcards = filteredFlashcards.sort((a, b) => {
+			const aIsStarred = isCardStarred(a.id);
+			const bIsStarred = isCardStarred(b.id);
+			if (aIsStarred && !bIsStarred) return -1;
+			if (!aIsStarred && bIsStarred) return 1;
+			return 0;
+		});
 	});
 
 	async function toggleStar(flashcard: Flashcard) {
@@ -110,7 +119,7 @@
 		showingTerm = !showingTerm;
 	}
 
-	let cardSlide: string = 'right';
+	let cardSlide: string = $state('right');
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (!isTableView) {
@@ -126,7 +135,7 @@
 	}
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 <div class="w-full flex flex-col items-center mt-5 p-4">
 	<div class="flex justify-between w-full max-w-5xl mb-4">
@@ -143,7 +152,7 @@
 				</button>
 			</div>
 		</div>
-		<button class="btn btn-primary" on:click={() => (isTableView = !isTableView)}>
+		<button class="btn btn-primary" onclick={() => (isTableView = !isTableView)}>
 			{#if isTableView}
 				<Grid size={20} />
 			{:else}
@@ -168,7 +177,7 @@
 							<tr>
 								<th>
 									{#if data.userID}
-										<button class="btn btn-ghost btn-circle" on:click={() => toggleStar(flashcard)}>
+										<button class="btn btn-ghost btn-circle" onclick={() => toggleStar(flashcard)}>
 											<Star
 												size={24}
 												class={isCardStarred(flashcard.id)
@@ -205,14 +214,14 @@
 			Card {currentCardIndex + 1} of {sortedFlashcards.length}
 		</div>
 		<div class="flex gap-2 mt-5">
-			<button class="btn btn-ghost" on:click={prevCard}>&larr; Previous</button>
-			<button class="btn btn-secondary" on:click={flipCard}>Flip</button>
-			<button class="btn btn-ghost" on:click={nextCard}>Next &rarr;</button>
+			<button class="btn btn-ghost" onclick={prevCard}>&larr; Previous</button>
+			<button class="btn btn-secondary" onclick={flipCard}>Flip</button>
+			<button class="btn btn-ghost" onclick={nextCard}>Next &rarr;</button>
 		</div>
 		<div class="mt-4">
 			<button
 				class="btn btn-ghost btn-circle"
-				on:click={() => toggleStar(sortedFlashcards[currentCardIndex])}
+				onclick={() => toggleStar(sortedFlashcards[currentCardIndex])}
 			>
 				<Star
 					size={24}
