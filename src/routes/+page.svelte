@@ -4,7 +4,7 @@
 	export let data;
 </script>
 
-/**/ Hello mom /**/
+<!--Hi mom-->
 <div class="flex flex-col space-y-2 items-center">
 	<Quiz {data} />
 </div>
