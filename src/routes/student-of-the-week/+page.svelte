@@ -31,7 +31,7 @@
 		<img
 			class="object-contain h-96 mb-8"
 			alt="Brayden Dyer"
-			src={'https://scontent-atl3-1.xx.fbcdn.net/v/t39.30808-6/462971281_2020148811755216_8068748815958606949_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=TF1AGtpl0S0Q7kNvgEWbIkk&_nc_zt=23&_nc_ht=scontent-atl3-1.xx&_nc_gid=A3CPTz2NR4op3LEXOOyoNZ9&oh=00_AYCmn3zx9JnQY-3MVTm5CNJ_v1YkIjbWTvzvy6Lsgf51rw&oe=6721E534'}
+			src={'https://scontent-dfw5-2.xx.fbcdn.net/v/t39.30808-6/462971281_2020148811755216_8068748815958606949_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=PWiiOuxnu-sQ7kNvgEzRMfu&_nc_zt=23&_nc_ht=scontent-dfw5-2.xx&_nc_gid=A0bdFfMwaGLjYoAWDJTWNKR&oh=00_AYAZ_r41NHLMjktJBdFF4rybFqBkVP2ik9R90DwERB3y3Q&oe=6739D874'}
 		/>
 		<div class="self-start">
 			<h2 class="text-4xl mb-3 font-medium">Brayden Dyer</h2>
