@@ -3,7 +3,7 @@
 
 <!--Hi mom-->
 <div class="flex flex-col space-y-2 items-center text-center">
-	<h1 class="font-bold text-4xl mt-24 mb-3 mx-12">
+	<h1 class="font-bold text-4xl mt-24 mb-3">
 		Big things are coming to <span class="text-primary">LearnTerms!</span>
 	</h1>
 	<p class="mx-16 text-base-content">
