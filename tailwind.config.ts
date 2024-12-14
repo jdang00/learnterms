@@ -1,12 +1,14 @@
+import daisyui from 'daisyui';
 import typography from '@tailwindcss/typography';
-import type { Config } from 'tailwindcss';
 
+/** @type {import('tailwindcss').Config} */
 export default {
-	content: ['./src/**/*.{html,js,svelte,ts}'],
-
+	content: ['./src/**/*.{html,svelte,js,ts}'],
 	theme: {
 		extend: {}
 	},
-
-	plugins: [typography]
-} satisfies Config;
+	plugins: [typography, daisyui],
+	daisyui: {
+		themes: ['light', 'dark', 'dracula', 'valentine', 'retro', 'bumblebee']
+	}
+};

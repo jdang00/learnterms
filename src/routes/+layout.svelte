@@ -25,7 +25,7 @@
 	<script src="https://cdn.jsdelivr.net/npm/theme-change@2.0.2/index.js"></script>
 </svelte:head>
 
-<html lang="en" class="min-h-screen">
+<div class="min-h-screen">
 	<div class="navbar bg-base-100 mt-2 px-4">
 		<div class="navbar-start">
 			<div class="dropdown">
@@ -51,7 +51,6 @@
 				>
 					<li><a href="/about">About</a></li>
 					<li><a href="/blog">Blog</a></li>
-					<li><a href="/terms">Decks</a></li>
 				</ul>
 			</div>
 			<a class="btn btn-ghost text-xl" href="/">LearnTerms </a>
@@ -60,7 +59,6 @@
 			<ul class="menu menu-horizontal px-1">
 				<li><a href="/about">About</a></li>
 				<li><a href="/blog">Blog</a></li>
-				<li><a href="/terms">Decks</a></li>
 			</ul>
 		</div>
 		<div class="navbar-end">
@@ -71,7 +69,7 @@
 					</div>
 					<ul
 						tabindex="-1"
-						class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+						class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
 					>
 						{#each themes as themeOption}
 							<li>
@@ -93,10 +91,10 @@
 			</div>
 		</div>
 	</div>
-	<div class="flex items-center justify-between w-full flex-col min-h-96">
+	<div class="flex min-h-96 w-full flex-col items-center justify-between">
 		<div class="w-full">
 			<slot />
-			<footer class="footer footer-center text-base-content p-4 mt-24">
+			<footer class="footer footer-center text-base-content mt-24 p-4">
 				<aside class="flex flex-row flex-wrap justify-center">
 					<p>
 						Copyright © {new Date().getFullYear()} - Oklahoma College of Optometry Class of 2028 |
@@ -106,4 +104,4 @@
 			</footer>
 		</div>
 	</div>
-</html>
+</div>

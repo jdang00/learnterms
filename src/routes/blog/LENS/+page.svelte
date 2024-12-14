@@ -1,29 +1,27 @@
-<script>
-	import JUSTIN from '$lib/JD.webp';
-	import { BookOpenText } from 'lucide-svelte';
-</script>
-
-<div class="flex items-center justify-between w-full flex-col p-8 mt-10 min-h-screen">
+<div class="mt-10 flex min-h-screen w-full flex-col items-center justify-between p-8">
 	<div class="w-full max-w-3xl">
-		<div class="flex flex-col justify-between flex-wrap">
-			<h1 class="font-bold text-4xl">The LENS Algorithm: Playing the Numbers Game</h1>
+		<div class="flex flex-col flex-wrap justify-between">
+			<h1 class="text-4xl font-bold">The LENS Algorithm: Playing the Numbers Game</h1>
 			<span>16 October 2024</span>
 
-			<div class="flex flex-row gap-6 flex-wrap mt-8">
+			<div class="mt-8 flex flex-row flex-wrap gap-6">
 				<a href="https://www.justindang.dev/" target="_blank">
 					<div class="avatar">
 						<div class="ring-primary ring-offset-base-100 w-14 rounded-full ring ring-offset-2">
-							<img src={JUSTIN} alt="Justin Dang" />
+							<img
+								src="https://utfs.io/f/DYlXFqnaImOrNYQ0L9zP0UTz89wOGJKi17DasVtufbylgkQF"
+								alt="Justin Dang"
+							/>
 						</div>
 					</div>
 				</a>
 				<div class="flex flex-col text-sm">
 					<div class="font-semibold">Justin A. Dang</div>
-					<div class="text-neutral">NSU Oklahoma College of Optometry</div>
-					<div class="text-neutral">Class of 2028</div>
+					<div class="text-base-content">NSU Oklahoma College of Optometry</div>
+					<div class="text-base-content">Class of 2028</div>
 				</div>
 			</div>
-			<div class="flex flex-col gap-2 mt-8">
+			<div class="mt-8 flex flex-col gap-2">
 				Read the LENS Algorithm paper here:
 				<a
 					href="https://utfs.io/f/DYlXFqnaImOrDUuam6qnaImOrwFJXt2vDNoh9uC37QZKg0VR"
@@ -51,10 +49,10 @@
 			studying habits. Here's how it works.
 		</p>
 
-		<h2 class="font-semibold text-xl mt-10">LENS: Learning Efficiency and Nomenclature Scoring</h2>
+		<h2 class="mt-10 text-xl font-semibold">LENS: Learning Efficiency and Nomenclature Scoring</h2>
 
 		<p class="mt-2">LENS works by taking three things into account:</p>
-		<ul class="mt-4 m-8">
+		<ul class="m-8 mt-4">
 			<li>
 				<b>Importance:</b> How relevant is it to the eye?
 			</li>

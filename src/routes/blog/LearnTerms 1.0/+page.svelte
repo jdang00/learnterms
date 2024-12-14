@@ -1,5 +1,4 @@
 <script>
-	import JUSTIN from '$lib/JD.webp';
 	import { Confetti } from 'svelte-confetti';
 </script>
 
@@ -24,24 +23,27 @@
 		fallDistance="100vh"
 	/>
 </div>
-<div class="flex items-center justify-between w-full flex-col p-8 mt-10 min-h-screen">
+<div class="mt-10 flex min-h-screen w-full flex-col items-center justify-between p-8">
 	<div class="w-full max-w-3xl">
-		<div class="flex flex-col justify-between flex-wrap">
-			<h1 class="font-bold text-4xl">LearnTerms 1.0 Release</h1>
+		<div class="flex flex-col flex-wrap justify-between">
+			<h1 class="text-4xl font-bold">LearnTerms 1.0 Release</h1>
 			<span>22 September 2024</span>
 
-			<div class="flex flex-row gap-6 flex-wrap mt-8">
+			<div class="mt-8 flex flex-row flex-wrap gap-6">
 				<a href="https://www.justindang.dev/" target="_blank">
 					<div class="avatar">
 						<div class="ring-primary ring-offset-base-100 w-14 rounded-full ring ring-offset-2">
-							<img src={JUSTIN} alt="Justin Dang" />
+							<img
+								src="https://utfs.io/f/DYlXFqnaImOrNYQ0L9zP0UTz89wOGJKi17DasVtufbylgkQF"
+								alt="Justin Dang"
+							/>
 						</div>
 					</div>
 				</a>
 				<div class="flex flex-col text-sm">
 					<div class="font-semibold">Justin A. Dang</div>
-					<div class="text-neutral">NSU Oklahoma College of Optometry</div>
-					<div class="text-neutral">Class of 2028</div>
+					<div class="text-base-content">NSU Oklahoma College of Optometry</div>
+					<div class="text-base-content">Class of 2028</div>
 				</div>
 			</div>
 		</div>
@@ -57,13 +59,13 @@
 			anyone looking to do well on their Intro quizzes.
 		</p>
 
-		<h2 class="font-semibold text-xl mt-10">Why Choose LearnTerms?</h2>
+		<h2 class="mt-10 text-xl font-semibold">Why Choose LearnTerms?</h2>
 
 		<p class="mt-2">
 			LearnTerms stands out as the best tool for studying Intro to Optometry terms for several
 			reasons:
 		</p>
-		<ul class="mt-4 m-8">
+		<ul class="m-8 mt-4">
 			<li>
 				<b>Reinforce learning through typing:</b> Typing terms enhances memory retention, spelling accuracy,
 				and familiarity with word roots.
@@ -78,13 +80,13 @@
 			</li>
 		</ul>
 
-		<h2 class="font-semibold text-xl mt-10">Key Features</h2>
+		<h2 class="mt-10 text-xl font-semibold">Key Features</h2>
 
 		<p class="mt-2">
 			Here are some of the features I’m most proud of, carefully designed to make studying easier
 			and more effective:
 		</p>
-		<ul class="mt-4 m-8">
+		<ul class="m-8 mt-4">
 			<li>
 				<b>Starred card review:</b> For
 				<a
@@ -116,7 +118,7 @@
 			</li>
 		</ul>
 
-		<h2 class="font-semibold text-xl mt-10">A Personal Note</h2>
+		<h2 class="mt-10 text-xl font-semibold">A Personal Note</h2>
 
 		<p class="mt-2">
 			Since learning to <a
@@ -130,9 +132,9 @@
 			Class of 2028’s go-to resource for studying.
 		</p>
 
-		<h2 class="font-semibold text-xl mt-10">Special Thanks</h2>
+		<h2 class="mt-10 text-xl font-semibold">Special Thanks</h2>
 
-		<ul class="mt-4 m-8">
+		<ul class="m-8 mt-4">
 			<li>
 				<b>Kate:</b> The site’s first user. Seeing you use LearnTerms 20 minutes before class that first
 				week gave me the motivation to develop this into something bigger.
