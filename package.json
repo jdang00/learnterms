@@ -1,7 +1,7 @@
 {
-	"name": "learntermssv5",
+	"name": "learnterms",
 	"private": true,
-	"version": "0.0.1",
+	"version": "1.5.1",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
