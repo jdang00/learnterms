@@ -7,7 +7,7 @@
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
 	import { onMount } from 'svelte';
 
-	const themes = ['light', 'dark', 'dracula', 'valentine', 'retro', 'bumblebee'];
+	const themes = ['light', 'dark', 'dracula', 'valentine', 'retro', 'bumblebee', 'nord'];
 
 	onMount(() => {
 		const themeChange = window.themeChange;

@@ -19,6 +19,9 @@
 	"/changelog": [
 		"src/routes/+layout.js"
 	],
+	"/mod": [
+		"src/routes/+layout.js"
+	],
 	"/sign-in": [
 		"src/routes/+layout.js"
 	],
@@ -26,10 +29,6 @@
 		"src/routes/+layout.js"
 	],
 	"/student-of-the-week": [
-		"src/routes/+layout.js"
-	],
-	"/terms": [
-		"src/routes/terms/+page.server.ts",
 		"src/routes/+layout.js"
 	]
 }

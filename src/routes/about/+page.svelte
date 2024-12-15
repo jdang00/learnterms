@@ -1,20 +1,19 @@
 <div class="max-w-3xl px-10">
 	<h1 class="text-4xl mt-5 font-semibold">About</h1>
 	<p class="mt-5">
-		LearnTerms is a custom study tool created by the Northeastern State University Oklahoma College
-		of Optometry Class of 2028. Designed to complement existing platforms like Quizlet and Anki, it
-		offers unique features not available elsewhere or behind paywalls. LearnTerms is built to be
-		flexible, practical, and completely free to use, always open source. You can access the site’s
-		code on <a
-			class="link link-secondary"
-			href="https://github.com/jdang00/learnterms"
-			target="_blank">GitHub</a
+		LearnTerms is a free, open-source study tool built to make mastering complex topics easier and
+		faster. Created by the Northeastern State University Oklahoma College of Optometry Class of
+		2028, it bridges the gap between platforms like Quizlet and Anki with unique, paywall-free
+		features. Whether you’re prepping for exams or fine-tuning your knowledge, LearnTerms is
+		flexible, practical, and designed with students in mind. Explore the code and contribute on
+		<a class="link link-secondary" href="https://github.com/jdang00/learnterms" target="_blank"
+			>GitHub</a
 		>.
 	</p>
 
 	<div class="flex flex-col gap-3 mt-10">
 		<div class="collapse collapse-arrow bg-base-200 mt-5">
-			<input type="radio" name="my-accordion-2" checked="checked" />
+			<input type="radio" name="my-accordion-2" />
 			<div class="collapse-title text-xl font-medium">Is LearnTerms the best way to study?</div>
 			<div class="collapse-content">
 				<p>

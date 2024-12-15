@@ -27,16 +27,21 @@ export const dictionary = {
 		"/blog/LENS": [5],
 		"/blog/LearnTerms 1.0": [6],
 		"/changelog": [7],
-		"/sign-in": [8],
-		"/sign-up": [9],
-		"/student-of-the-week": [10],
-		"/terms": [~11]
+		"/mod": [8],
+		"/sign-in": [9],
+		"/sign-up": [10],
+		"/student-of-the-week": [11]
 	};
 
 export const hooks = {
 	handleError: client_hooks.handleError || (({ error }) => { console.error(error) }),
-
-	reroute: (() => {})
+	init: client_hooks.init,
+	reroute: (() => {}),
+	transport: {}
 };
 
-export { default as root } from '../root.svelte';
+export const decoders = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, v.decode]));
+
+export const decode = (type, value) => decoders[type](value);
+
+export { default as root } from '../root.js';
