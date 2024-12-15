@@ -19,8 +19,26 @@
 
 <svelte:head>
 	<title>LearnTerms</title>
-	<meta charset="utf-8" />
 	<meta name="description" content="Learn terms the fast and easy way. Free forever." />
+
+	<meta property="og:url" content="https://learnterms.com" />
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="LearnTerms" />
+	<meta property="og:description" content="Learn anything the fast and easy way. Free forever." />
+	<meta
+		property="og:image"
+		content="https://utfs.io/f/DYlXFqnaImOrrhcGjisLdGjaF1OlZIY57ygCH9oDWsxAUveS"
+	/>
+
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta property="twitter:domain" content="learnterms.com" />
+	<meta property="twitter:url" content="https://learnterms.com" />
+	<meta name="twitter:title" content="LearnTerms" />
+	<meta name="twitter:description" content="Learn terms the fast and easy way. Free forever." />
+	<meta
+		name="twitter:image"
+		content="https://utfs.io/f/DYlXFqnaImOrrhcGjisLdGjaF1OlZIY57ygCH9oDWsxAUveS"
+	/>
 
 	<script src="https://cdn.jsdelivr.net/npm/theme-change@2.0.2/index.js"></script>
 </svelte:head>
