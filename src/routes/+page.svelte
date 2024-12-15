@@ -5,7 +5,7 @@
 <div class="flex flex-col space-y-2 items-center text-center">
 	<h1 class="font-bold text-4xl mt-24 mb-3 relative">
 		Big things are coming to <span class="text-primary relative">
-			Learn Terms
+			LearnTerms
 			<span
 				class="absolute inset-0 -z-10 bg-primary opacity-30 blur-xl rounded-lg transform -translate-y-1/2 top-1/2"
 			></span>
