@@ -6,14 +6,12 @@
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
 	import { onMount } from 'svelte';
+	import { themeChange } from 'theme-change';
 
 	const themes = ['light', 'dark', 'dracula', 'valentine', 'retro', 'bumblebee', 'nord'];
 
 	onMount(() => {
-		const themeChange = window.themeChange;
-		if (typeof themeChange !== 'undefined') {
-			themeChange(false);
-		}
+		themeChange(false);
 	});
 </script>
 
@@ -39,8 +37,6 @@
 		name="twitter:image"
 		content="https://utfs.io/f/DYlXFqnaImOrrhcGjisLdGjaF1OlZIY57ygCH9oDWsxAUveS"
 	/>
-
-	<script src="https://cdn.jsdelivr.net/npm/theme-change@2.0.2/index.js"></script>
 </svelte:head>
 
 <div class="min-h-screen">
