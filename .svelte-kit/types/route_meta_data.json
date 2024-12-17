@@ -20,6 +20,7 @@
 		"src/routes/+layout.js"
 	],
 	"/mod": [
+		"src/routes/mod/+page.server.ts",
 		"src/routes/+layout.js"
 	],
 	"/sign-in": [
