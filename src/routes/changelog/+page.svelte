@@ -2,6 +2,27 @@
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
 	<div class="ms-8">
+		<h3 class="text-xl mt-3 font-medium text-base-content px-3">December 18, 2024</h3>
+		<p class="ms-2">Holiday updates continue.</p>
+
+		<ul class="mt-1 m-8">
+			<li>Dude I literally remade ExamSoft for LearnTerms...</li>
+			<li>
+				Additional site maintence and a change to the <a href="/about" class="link-accent">About</a>
+				page to get it up to date
+			</li>
+			<li>Major tuning to the RAG system that will generate practice questions</li>
+			<li>
+				Additional database and local storage enhancments that will make the site more durable to
+				outages
+			</li>
+			<li>
+				<a href="https://www.youtube.com/watch?v=xeSwrFKFNFw" class="link-accent" target="_blank"
+					>Acanthamoeba</a
+				>
+			</li>
+		</ul>
+
 		<h3 class="text-xl mt-3 font-medium text-base-content px-3">December 15, 2024</h3>
 		<p class="ms-2">LearnTerms Holiday updates are underway!</p>
 
