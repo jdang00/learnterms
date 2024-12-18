@@ -12,7 +12,6 @@ export const load = async () => {
 		throw error(500, `Failed to load questions: ${questionsError.message}`);
 	}
 
-	// Cast the fetched data to the Question[] type
 	return {
 		questions: questions as Question[]
 	};
