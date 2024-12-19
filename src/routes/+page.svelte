@@ -3,11 +3,11 @@
 
 <!--Hi mom-->
 <div class="flex flex-col space-y-2 items-center text-center">
-	<h1 class="font-bold text-4xl mt-24 mb-3 relative mx-12">
+	<h1 class="font-bold text-4xl mt-24 mb-3 relative md:mx-12">
 		Big things are coming to <span class="text-primary relative">
 			<a href="/mod">LearnTerms</a>
 			<span
-				class="absolute inset-0 -z-10 bg-primary opacity-30 blur-xl rounded-lg transform -translate-y-1/2 top-1/2"
+				class="absolute inset-0 -z-10 bg-primary opacity-30 blur-xl rounded-lg transform -translate-y-1/2 top-1/2 animate-pulse"
 			></span>
 		</span>
 	</h1>
