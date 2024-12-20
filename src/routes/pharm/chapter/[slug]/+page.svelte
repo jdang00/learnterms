@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { Flag } from 'lucide-svelte';
+	import { ArrowLeft } from 'lucide-svelte';
 
 	interface Option {
 		text: string;
@@ -131,6 +132,7 @@
 			</div>
 
 			<div class="flex flex-row justify-center mt-8 gap-4">
+				<a class="btn btn-outline" href="/pharm"> <ArrowLeft />Back</a>
 				<button class="btn btn-outline btn-success" onclick={checkAnswers}>Check</button>
 				<button
 					class="btn btn-warning btn-outline"

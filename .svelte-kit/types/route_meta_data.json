@@ -19,8 +19,11 @@
 	"/changelog": [
 		"src/routes/+layout.js"
 	],
-	"/mod": [
-		"src/routes/mod/+page.server.ts",
+	"/pharm": [
+		"src/routes/+layout.js"
+	],
+	"/pharm/chapter/[slug]": [
+		"src/routes/pharm/chapter/[slug]/+page.server.ts",
 		"src/routes/+layout.js"
 	],
 	"/sign-in": [

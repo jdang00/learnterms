@@ -1,12 +1,16 @@
 import supabase from '$lib/supabaseClient';
 import { error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 
 import type { Question } from '$lib/types';
 
-export const load = async () => {
+export const load: PageServerLoad = async ({ params }) => {
+	const chapter: number = parseInt(params.slug);
+
 	const { data: questions, error: questionsError } = await supabase
 		.from('pharmquestions')
-		.select('question_data');
+		.select('question_data')
+		.eq('chapter', chapter);
 
 	if (questionsError) {
 		throw error(500, `Failed to load questions: ${questionsError.message}`);
