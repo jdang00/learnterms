@@ -102,7 +102,7 @@
 
 		{#if questions[currentlySelected]}
 			<div class="w-full mb-8 mt-2">
-				<div class="mx-6">
+				<div class="mx-6 sm:mx-8">
 					<div class="font-bold text-lg mb-4">
 						{questions[currentlySelected].question_data.question}
 					</div>
