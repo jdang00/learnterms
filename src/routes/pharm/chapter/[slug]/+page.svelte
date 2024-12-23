@@ -65,16 +65,36 @@
 	}
 </script>
 
-<div class="flex flex-row max-h-screen h-full lg:h-screen lg:border-t border-base-300">
+<div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
 	<div class="hidden lg:block w-1/4 lg:border-r border-base-300">
-		<div class="mx-8 mt-8">
+		<a class="btn btn-ghost mt-4 ms-2" href="/pharm"> <ArrowLeft />Back</a>
+
+		<div class="mx-8 mt-4">
+			<p class="font-bold text-sm tracking-wide text-secondary mb-2">
+				CHAPTER {chapterData.chapter}
+			</p>
 			<h1 class="text-3xl font-bold">{chapterData.name}</h1>
 			<p class="text-base-content mt-2">{chapterData.desc}</p>
 		</div>
 	</div>
 
 	<div class="container mx-auto lg:w-3/4 flex flex-col items-center min-h-screen">
-		<div class="flex flex-row w-full mt-6 overflow-y-scroll">
+		<div class="lg:hidden flex flex-row mt-2 items-center w-full justify-between">
+			<a class="btn btn-ghost flex-shrink-0" href="/pharm">
+				<ArrowLeft />Back
+			</a>
+
+			<div class="flex flex-row gap-2 justify-center grow">
+				<p class="font-bold tracking-wide text-secondary">
+					CHAPTER {chapterData.chapter}
+				</p>
+				<p>·</p>
+				<h1 class="font-bold">{chapterData.name}</h1>
+			</div>
+
+			<div class="shrink w-12"></div>
+		</div>
+		<div class="flex flex-row w-full lg:mt-6 mt-4 overflow-y-scroll">
 			{#key flagCount}
 				{#each questions as _, index}
 					<div class="indicator">
@@ -127,7 +147,6 @@
 				</div>
 
 				<div class="flex flex-row justify-center mt-8 gap-4">
-					<a class="btn btn-outline" href="/pharm"> <ArrowLeft />Back</a>
 					<button class="btn btn-outline btn-success" onclick={checkAnswers}>Check</button>
 					<button
 						class="btn btn-warning btn-outline"

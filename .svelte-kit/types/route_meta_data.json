@@ -20,6 +20,7 @@
 		"src/routes/+layout.js"
 	],
 	"/pharm": [
+		"src/routes/pharm/+page.server.ts",
 		"src/routes/+layout.js"
 	],
 	"/pharm/chapter/[slug]": [

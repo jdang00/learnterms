@@ -28,7 +28,7 @@ export const dictionary = {
 		"/blog/LENS": [5],
 		"/blog/LearnTerms 1.0": [6],
 		"/changelog": [7],
-		"/pharm": [8],
+		"/pharm": [~8],
 		"/pharm/chapter/[slug]": [~9],
 		"/sign-in": [10],
 		"/sign-up": [11],
