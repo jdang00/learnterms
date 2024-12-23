@@ -85,14 +85,14 @@
 			</a>
 
 			<div class="flex flex-row gap-2 justify-center grow">
-				<p class="font-bold tracking-wide text-secondary">
+				<p class="font-bold tracking-wide text-secondary hidden md:block">
 					CHAPTER {chapterData.chapter}
 				</p>
-				<p>·</p>
+				<p class="hidden md:block">·</p>
 				<h1 class="font-bold">{chapterData.name}</h1>
 			</div>
 
-			<div class="shrink w-12"></div>
+			<div class="flex-shrink-0 w-16"></div>
 		</div>
 		<div class="flex flex-row w-full lg:mt-6 mt-4 overflow-y-scroll">
 			{#key flagCount}
