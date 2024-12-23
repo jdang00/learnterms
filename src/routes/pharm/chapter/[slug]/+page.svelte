@@ -115,7 +115,7 @@
 				<h1 class="font-bold">{chapterData.name}</h1>
 			</div>
 
-			<div class="flex-shrink-0 w-16"></div>
+			<div class="flex-shrink-0 w-24"></div>
 		</div>
 		<div class="flex flex-row w-full lg:mt-6 mt-4 overflow-y-scroll">
 			{#key flagCount}
