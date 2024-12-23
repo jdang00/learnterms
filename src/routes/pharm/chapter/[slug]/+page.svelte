@@ -13,7 +13,7 @@
 	let flagCount = $state(0);
 	let checkResult = $state<string | null>(null);
 	let refreshKey = $state(0);
-	let blur = $state(true);
+	let unblur = $state(false);
 	let isModalOpen = $state(false);
 
 	let questionOptions = $derived(
@@ -92,10 +92,10 @@
 				<div class="card-body">
 					<div class="flex flex-row justify-between border-b pb-2">
 						<h2 class="card-title">Solution</h2>
-						<button class="btn btn-ghost" onclick={() => (blur = !blur)}><Eye /></button>
+						<button class="btn btn-ghost" onclick={() => (unblur = !unblur)}><Eye /></button>
 					</div>
 
-					<p class="{blur ? '' : 'blur'} mt-2">{questionSolution}</p>
+					<p class="{unblur ? '' : 'blur'} mt-2">{questionSolution}</p>
 				</div>
 			</div>
 		</div>
