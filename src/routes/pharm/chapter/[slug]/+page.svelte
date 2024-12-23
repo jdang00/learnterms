@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { Flag } from 'lucide-svelte';
-	import { ArrowLeft } from 'lucide-svelte';
+	import { ArrowLeft, Eye } from 'lucide-svelte';
 	import type { Question, Chapter } from './types';
 
 	let { data }: { data: PageData } = $props();
@@ -12,6 +12,9 @@
 	let flags = new Set<number>();
 	let flagCount = $state(0);
 	let checkResult = $state<string | null>(null);
+	let refreshKey = $state(0);
+	let blur = $state(true);
+	let isModalOpen = $state(false);
 
 	let questionOptions = $derived(
 		questions[currentlySelected]?.question_data.options.map((option, index) => ({
@@ -20,6 +23,8 @@
 			isSelected: selectedAnswers[currentlySelected]?.has(option.split('.')[0].trim()) || false
 		})) || []
 	);
+
+	let questionSolution = $derived(questions[currentlySelected].question_data.explanation);
 
 	function toggleFlag(index: number) {
 		flags.has(index) ? flags.delete(index) : flags.add(index);
@@ -63,6 +68,13 @@
 		const saved = selectedAnswers[currentlySelected] || new Set();
 		questionOptions.forEach((o) => (o.isSelected = saved.has(o.letter)));
 	}
+
+	function clearSelectedAnswers() {
+		selectedAnswers[currentlySelected] = new Set();
+		questionOptions.forEach((o) => (o.isSelected = false));
+		checkResult = null;
+		refreshKey++;
+	}
 </script>
 
 <div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
@@ -75,6 +87,17 @@
 			</p>
 			<h1 class="text-3xl font-bold">{chapterData.name}</h1>
 			<p class="text-base-content mt-2">{chapterData.desc}</p>
+
+			<div class="card bg-base-100 shadow-xl mt-12">
+				<div class="card-body">
+					<div class="flex flex-row justify-between border-b pb-2">
+						<h2 class="card-title">Solution</h2>
+						<button class="btn btn-ghost" onclick={() => (blur = !blur)}><Eye /></button>
+					</div>
+
+					<p class="{blur ? '' : 'blur'} mt-2">{questionSolution}</p>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -127,26 +150,29 @@
 						{questions[currentlySelected].question_data.question}
 					</div>
 
-					<div class="flex flex-col justify-start mt-4 space-y-4">
-						{#each questionOptions as option, index}
-							<label class="label cursor-pointer bg-base-200 rounded-full flex items-center">
-								<span class="flex-grow ml-8 my-2">{option.text}</span>
-								<div class="flex items-center justify-center w-16 mr-4">
-									{#key currentlySelected}
-										<input
-											type="checkbox"
-											class="checkbox checkbox-primary"
-											checked={option.isSelected ? 'checked' : undefined}
-											onclick={() => toggleOption(index)}
-										/>
-									{/key}
-								</div>
-							</label>
-						{/each}
-					</div>
+					{#key refreshKey}
+						<div class="flex flex-col justify-start mt-4 space-y-4">
+							{#each questionOptions as option, index}
+								<label class="label cursor-pointer bg-base-200 rounded-full flex items-center">
+									<span class="flex-grow ml-8 my-2">{option.text}</span>
+									<div class="flex items-center justify-center w-16 mr-4">
+										{#key currentlySelected}
+											<input
+												type="checkbox"
+												class="checkbox checkbox-primary"
+												checked={option.isSelected ? 'checked' : undefined}
+												onclick={() => toggleOption(index)}
+											/>
+										{/key}
+									</div>
+								</label>
+							{/each}
+						</div>
+					{/key}
 				</div>
-
 				<div class="flex flex-row justify-center mt-8 gap-4">
+					<button class="btn btn-outline" onclick={clearSelectedAnswers}>Clear</button>
+
 					<button class="btn btn-outline btn-success" onclick={checkAnswers}>Check</button>
 					<button
 						class="btn btn-warning btn-outline"
@@ -155,6 +181,21 @@
 					>
 						<Flag />
 					</button>
+					<button class="btn modal-button lg:hidden" onclick={() => (isModalOpen = true)}
+						><Eye /></button
+					>
+					<dialog class="modal" class:modal-open={isModalOpen}>
+						<div class="modal-box">
+							<form method="dialog">
+								<button
+									class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+									onclick={() => (isModalOpen = false)}>✕</button
+								>
+							</form>
+							<h3 class="text-lg font-bold">Solution</h3>
+							<p class="py-4">{questionSolution}</p>
+						</div>
+					</dialog>
 				</div>
 
 				{#if checkResult !== null}
