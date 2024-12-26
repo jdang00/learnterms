@@ -6,10 +6,10 @@
 
 <!--Hi mom-->
 <div class="flex flex-col items-center mt-8">
-	<div class="max-w-5xl mx-12 lg:mx-2">
+	<div class="max-w-5xl mx-auto px-4 sm:px-8 lg:px-8">
 		<!-- Hero Header -->
-		<div class="space-y-4 max-w-2xl">
-			<h1 class="font-bold text-5xl mt-24 relative">
+		<div class="space-y-4 max-w-3xl">
+			<h1 class="font-bold text-4xl lg:text-6xl mt-24 relative">
 				<span class="text-primary relative">
 					LearnTerms
 					<span
@@ -31,7 +31,7 @@
 			<div class="border-base-300 flex justify-center border-t px-4"><Mock /></div>
 		</div>
 
-		<div class="mt-32 flex flex-row flex-wrap gap-x-8">
+		<div class="mt-32 flex flex-col lg:flex-row flex-wrap gap-x-8">
 			<div class="max-w-lg self-center">
 				<h2 class="font-bold text-4xl">Laser Focused and Built for Mastery.</h2>
 				<p class="text-xl mt-4">
@@ -43,7 +43,7 @@
 				</p>
 			</div>
 
-			<div class="mockup-phone mt-8 lg:mt-0">
+			<div class="mockup-phone mt-8 lg:mt-0 scale-75">
 				<div class="camera"></div>
 				<div class="display">
 					<div class="artboard artboard-demo phone-4 bg-white">
@@ -65,7 +65,7 @@
 			</p>
 
 			<div class="mt-16">
-				<div class="flex lg:flex-row flex-col gap-6">
+				<div class="flex flex-col lg:flex-row gap-6">
 					<div class="flex flex-col gap-y-2 lg:w-1/3">
 						<Brain size="36" />
 						<h3 class="font-semibold text-2xl">Artificial Intelligence</h3>

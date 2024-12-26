@@ -30,7 +30,7 @@
 </div>
 
 <div class="container mx-auto lg:w-3/5 flex flex-col items-center">
-	<div class="lg:hidden flex flex-row mt-2 items-center w-full justify-between">
+	<div class="lg:hidden flex flex-row mt-2 items-center justify-between">
 		<a class="btn btn-ghost flex-shrink-0" href="/pharm">
 			<ArrowLeft />Back
 		</a>
@@ -48,7 +48,7 @@
 
 	<div class="border-t border-base-300 w-full my-6"></div>
 
-	<div class="w-full mb-8 mt-2">
+	<div class=" mb-8 mt-2">
 		<div class="mx-6 sm:mx-8">
 			<div class="font-bold text-lg mb-4">
 				Which of the following are true about ophthalmic fluoroquinolones?
