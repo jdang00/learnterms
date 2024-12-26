@@ -93,5 +93,20 @@
 				</div>
 			</div>
 		</div>
+
+		<div class="mt-36">
+			<h2 class="font-bold text-4xl text-center">Crafted With Care, By People You Trust.</h2>
+			<p class="text-lg mt-4">
+				LearnTerms is activly developed by folks you know and love. We go the extra mile to ensure
+				every feature is tuned exactly how we need it. We're in this together!
+			</p>
+			<img
+				src="https://utfs.io/f/DYlXFqnaImOrxA6g7hMjopGvhFXsSYTPmnUcH1rDawbJ7kQL"
+				alt="Class of 2028"
+				class="mt-10 rounded-lg transform scale-100 transition duration-500 hover:scale-105 relative"
+			/>
+
+			<p class="text-base-content text-center">NSUOCO Class of 2028</p>
+		</div>
 	</div>
 </div>
