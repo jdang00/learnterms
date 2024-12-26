@@ -22,7 +22,7 @@
 	<meta property="og:url" content="https://learnterms.com" />
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content="LearnTerms" />
-	<meta property="og:description" content="Learn anything the fast and easy way. Free forever." />
+	<meta property="og:description" content="Smarter Studying, Simplified." />
 	<meta
 		property="og:image"
 		content="https://utfs.io/f/DYlXFqnaImOrrhcGjisLdGjaF1OlZIY57ygCH9oDWsxAUveS"

@@ -103,7 +103,7 @@
 			<img
 				src="https://utfs.io/f/DYlXFqnaImOrxA6g7hMjopGvhFXsSYTPmnUcH1rDawbJ7kQL"
 				alt="Class of 2028"
-				class="mt-10 rounded-lg transform scale-100 transition duration-500 hover:scale-105 relative"
+				class="mt-10 rounded-lg transform scale-95 transition duration-500 hover:scale-100 relative"
 			/>
 
 			<p class="text-base-content text-center">NSUOCO Class of 2028</p>
