@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { Flag } from 'lucide-svelte';
-	import { ArrowLeft, Eye } from 'lucide-svelte';
+	import { ArrowLeft, Eye, Flag } from 'lucide-svelte';
 	import type { Question, Chapter } from './types';
 
 	let { data }: { data: PageData } = $props();
