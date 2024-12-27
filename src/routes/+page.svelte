@@ -105,8 +105,8 @@
 		<div class="mt-36">
 			<h2 class="font-bold text-4xl text-center">Crafted With Care, By People You Trust.</h2>
 			<p class="text-lg mt-4">
-				LearnTerms is activly developed by folks you know and love. We go the extra mile to ensure
-				every feature is tuned exactly how we need it. We're in this together!
+				LearnTerms is actively developed by familiar faces who are committed to fine-tuning every
+				feature to meet your needs. We’re in this together!
 			</p>
 			<img
 				src="https://utfs.io/f/DYlXFqnaImOrxA6g7hMjopGvhFXsSYTPmnUcH1rDawbJ7kQL"
