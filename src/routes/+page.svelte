@@ -6,7 +6,7 @@
 
 <!--Hi mom-->
 <div class="flex flex-col items-center mt-8">
-	<div class="max-w-5xl mx-auto px-4 sm:px-8 lg:px-8">
+	<div class="max-w-5xl mx-auto px-8 sm:px-12">
 		<!-- Hero Header -->
 		<div class="space-y-4 max-w-3xl">
 			<h1 class="font-bold text-4xl lg:text-6xl mt-24 relative">
@@ -28,10 +28,16 @@
 			<div class="mockup-browser-toolbar">
 				<div class="input border-base-300 border">app.learnterms.com</div>
 			</div>
-			<div class="border-base-300 flex justify-center border-t px-4"><Mock /></div>
+			<div class="border-base-300 flex justify-center border-t px-6"><Mock /></div>
+		</div>
+		<div class="mockup-browser border-base-300 border mt-8 max-w-sm md:hidden">
+			<div class="mockup-browser-toolbar">
+				<div class="input border-base-300 border">app.learnterms.com</div>
+			</div>
+			<div class="border-base-300 flex justify-center border-t px-6"><Mock /></div>
 		</div>
 
-		<div class="mt-32 flex flex-col lg:flex-row flex-wrap gap-x-8">
+		<div class="mt-32 flex flex-col lg:flex-row gap-x-8">
 			<div class="max-w-lg self-center">
 				<h2 class="font-bold text-4xl">Laser Focused and Built for Mastery.</h2>
 				<p class="text-xl mt-4">
@@ -43,7 +49,7 @@
 				</p>
 			</div>
 
-			<div class="mockup-phone mt-8 lg:mt-0 scale-75">
+			<div class="mockup-phone lg:mt-0 scale-75">
 				<div class="camera"></div>
 				<div class="display">
 					<div class="artboard artboard-demo phone-4 bg-white">
@@ -57,7 +63,7 @@
 			</div>
 		</div>
 
-		<div class="mt-36">
+		<div class="mt-20">
 			<h2 class="font-bold text-5xl">Powered By The Latest and Greatest.</h2>
 			<p class="text-2xl mt-4">
 				Transform your studying by leveraging cutting edge features, all designed in a seamless
@@ -70,24 +76,26 @@
 						<Brain size="36" />
 						<h3 class="font-semibold text-2xl">Artificial Intelligence</h3>
 						<p class="text-lg">
-							Using large language models trained on course content, you get to experience accurate
-							and detailed practice questions you won't find anywhere else.
+							Advanced language models are utilized to generate accurate and detailed practice
+							questions tailored to specific course content, offering an unmatched preparation
+							experience.
 						</p>
 					</div>
 					<div class="flex flex-col gap-y-2 lg:w-1/3">
 						<Sigma size="36" />
 						<h3 class="font-semibold text-2xl">Smart Algorithms</h3>
 						<p class="text-lg">
-							We use predictive models to highlight the terms and questions most likely to appear on
-							your quizzes and exams. Proven to be accurate.
+							Predictive models identify and prioritize terms and questions with the highest
+							likelihood of appearing on quizzes and exams, ensuring targeted and efficient study
+							sessions.
 						</p>
 					</div>
 					<div class="flex flex-col gap-y-2 lg:w-1/3">
 						<ChartScatter size="36" />
 						<h3 class="font-semibold text-2xl">Detailed Analytics</h3>
 						<p class="text-lg">
-							Every click, quiz, and session informs your progress. LearnTerms provides actionable
-							feedback to help you study more efficiently.
+							Comprehensive progress tracking analyzes performance data to provide actionable
+							insights, enabling a more focused and effective approach to mastering complex topics.
 						</p>
 					</div>
 				</div>
@@ -106,7 +114,7 @@
 				class="mt-10 rounded-lg transform scale-95 transition duration-500 hover:scale-100 relative"
 			/>
 
-			<p class="text-base-content text-center">NSUOCO Class of 2028</p>
+			<p class="text-base-content text-center mt-8">NSUOCO Class of 2028</p>
 		</div>
 	</div>
 </div>

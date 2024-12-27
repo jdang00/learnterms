@@ -31,10 +31,6 @@
 
 <div class="container mx-auto lg:w-3/5 flex flex-col items-center">
 	<div class="lg:hidden flex flex-row mt-2 items-center justify-between">
-		<a class="btn btn-ghost flex-shrink-0" href="/pharm">
-			<ArrowLeft />Back
-		</a>
-
 		<div class="flex-shrink-0 w-24"></div>
 	</div>
 	<div class="flex flex-row w-full lg:mt-6 mt-4 overflow-y-scroll">
