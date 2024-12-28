@@ -1,5 +1,8 @@
 <script lang="ts">
 	import 'tailwindcss/tailwind.css';
+	let { children } = $props();
+
+	import type { PageData } from './$types';
 	import { Palette } from 'lucide-svelte';
 	import SignInButton from 'clerk-sveltekit/client/SignInButton.svelte';
 	import UserButton from 'clerk-sveltekit/client/UserButton.svelte';
@@ -105,7 +108,7 @@
 	</div>
 	<div class="flex min-h-96 w-full flex-col items-center justify-between">
 		<div class="w-full">
-			<slot />
+			{@render children?.()}
 			<footer class="footer footer-center text-base-content mt-24 p-4">
 				<aside class="flex flex-row flex-wrap justify-center">
 					<p>
