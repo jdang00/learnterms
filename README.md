@@ -1,5 +1,6 @@
-![LearnTerms.com](https://utfs.io/f/DYlXFqnaImOr6b8ZTOYKMG3TeLB2CicaW8b1hoH7EIvUmVsj "LearnTerms is smarter studying, simplified.")
+[![LearnTerms](https://utfs.io/f/DYlXFqnaImOr6b8ZTOYKMG3TeLB2CicaW8b1hoH7EIvUmVsj)](https://www.learnterms.com)
 
+# LearnTerms
 LearnTerms is a free, open-source study tool built to make mastering complex topics easier and faster. Created by the Northeastern State University Oklahoma College of Optometry Class of 2028, it bridges the gap between platforms like Quizlet and Anki with unique, paywall-free features. Whether you're prepping for exams or fine-tuning your knowledge, LearnTerms is flexible, practical, and designed with students in mind.
 
 ## Tools
