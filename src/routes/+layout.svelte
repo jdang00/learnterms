@@ -25,7 +25,7 @@
 	<meta property="og:description" content="Smarter Studying, Simplified." />
 	<meta
 		property="og:image"
-		content="https://utfs.io/f/DYlXFqnaImOrrhcGjisLdGjaF1OlZIY57ygCH9oDWsxAUveS"
+		content="https://utfs.io/f/DYlXFqnaImOr6b8ZTOYKMG3TeLB2CicaW8b1hoH7EIvUmVsj"
 	/>
 
 	<meta name="twitter:card" content="summary_large_image" />
