@@ -2,9 +2,9 @@ import supabase from '$lib/supabaseClient';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-import type { Chapter } from './types.ts';
+import type { Chapter, authLog } from '$lib/types';
 
-export const load: PageServerLoad = async ({}) => {
+export const load: PageServerLoad = async ({ locals }) => {
 	const { data: chapters, error: chaptersError } = await supabase
 		.from('pharmchapters')
 		.select('chapter, name, desc, numprobs');

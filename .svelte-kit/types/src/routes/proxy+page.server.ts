@@ -1,6 +1,7 @@
+// @ts-nocheck
 import type { authLog } from '$lib/types';
 
-export const load = async ({ locals }) => {
+export const load = async ({ locals }: Parameters<PageServerLoad>[0]) => {
 	try {
 		const user = locals.session;
 

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { ArrowRight, Brain, Sigma, ChartScatter, LayoutDashboard } from 'lucide-svelte';
-	import type { authLog } from './types.ts';
 	import type { PageData } from './$types';
 	let { data }: { data: PageData } = $props();
 

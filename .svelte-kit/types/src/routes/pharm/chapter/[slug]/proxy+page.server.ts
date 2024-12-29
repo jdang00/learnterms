@@ -3,7 +3,7 @@ import supabase from '$lib/supabaseClient';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-import type { Question, Chapter } from './types.ts';
+import type { Question, Chapter } from '$lib/types';
 
 export const load = async ({ params }: Parameters<PageServerLoad>[0]) => {
 	const chapter: number = parseInt(params.slug);
