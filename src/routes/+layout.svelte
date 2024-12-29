@@ -98,7 +98,7 @@
 				</div>
 
 				<a
-					class="btn btn-ghost self-center me-2"
+					class="btn btn-ghost self-center me-4"
 					href="https://github.com/jdang00/learnterms"
 					target="_blank"
 					aria-label="GitHub"
