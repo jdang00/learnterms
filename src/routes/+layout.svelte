@@ -1,6 +1,5 @@
 <script lang="ts">
 	import 'tailwindcss/tailwind.css';
-
 	let { children } = $props();
 
 	import { Palette } from 'lucide-svelte';
@@ -8,12 +7,11 @@
 	import UserButton from 'clerk-sveltekit/client/UserButton.svelte';
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
-	import { onMount } from 'svelte';
 	import { themeChange } from 'theme-change';
 
 	const themes = ['light', 'dark', 'dracula', 'valentine', 'retro', 'bumblebee', 'nord'];
 
-	onMount(() => {
+	$effect(() => {
 		themeChange(false);
 	});
 </script>

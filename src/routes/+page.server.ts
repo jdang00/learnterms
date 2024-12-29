@@ -17,7 +17,6 @@ export const load = async ({ locals }) => {
 			userName: user.claims.userName || 'Guest'
 		};
 
-		console.log(log);
 		return log;
 	} catch (error) {
 		console.error('Error loading user data:', error);

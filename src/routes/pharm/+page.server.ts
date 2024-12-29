@@ -1,10 +1,16 @@
 import supabase from '$lib/supabaseClient';
 import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
 
 import type { Chapter, authLog } from '$lib/types';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load = async ({ locals }) => {
+	const user = locals.session;
+
+	const log: authLog = {
+		loggedIn: true,
+		userName: user.claims.userName
+	};
+
 	const { data: chapters, error: chaptersError } = await supabase
 		.from('pharmchapters')
 		.select('chapter, name, desc, numprobs');
@@ -14,6 +20,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	return {
-		chapters: chapters as Chapter[]
+		chapters: chapters as Chapter[],
+		log
 	};
 };

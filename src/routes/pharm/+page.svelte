@@ -1,13 +1,21 @@
 <script lang="ts">
 	import { ArrowRight } from 'lucide-svelte';
 	import type { PageData } from './$types';
+	import type { Chapter, authLog } from '$lib/types';
+
 	let { data }: { data: PageData } = $props();
-	import type { Chapter } from '$lib/types';
+
 	let chapters: Chapter[] = data.chapters;
 	const chapterprog: number[] = [12, 0];
+
+	let userInfo: authLog = data.log;
 </script>
 
-<div class="container mx-auto px-4 max-w-4xl mt-12 lg:mt-8">
+<div class="container mx-auto px-4 max-w-7xl mt-12 lg:mt-8">
+	<div class="mb-12">
+		<h1 class="font-semibold text-4xl">Hi, {userInfo.userName.split(' ')[0]}</h1>
+	</div>
+
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 		{#each chapters as chapter, index}
 			<div class="card bg-base-300 text-base-content">

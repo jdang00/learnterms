@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { ArrowLeft, Eye, Flag } from 'lucide-svelte';
-	import type { Question, Chapter } from './types';
+	import type { Question, Chapter } from '$lib/types';
 
 	let { data }: { data: PageData } = $props();
 	let questions: Question[] = data.questions;
