@@ -1,8 +1,8 @@
 <script lang="ts">
 	import 'tailwindcss/tailwind.css';
+
 	let { children } = $props();
 
-	import type { PageData } from './$types';
 	import { Palette } from 'lucide-svelte';
 	import SignInButton from 'clerk-sveltekit/client/SignInButton.svelte';
 	import UserButton from 'clerk-sveltekit/client/UserButton.svelte';
