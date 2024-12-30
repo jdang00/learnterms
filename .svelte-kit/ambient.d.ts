@@ -27,9 +27,8 @@
  */
 declare module '$env/static/private' {
 	export const CLERK_SECRET_KEY: string;
-	export const PRIVATE_USERCARD_TABLE: string;
-	export const PRIVATE_USER_TABLE: string;
-	export const PRIVATE_FLASHCARD_TABLE: string;
+	export const PRIVATE_SUPABASE_URL: string;
+	export const PRIVATE_SUPABASE_ANON_KEY: string;
 	export const TERM_PROGRAM: string;
 	export const NODE: string;
 	export const INIT_CWD: string;
@@ -103,12 +102,6 @@ declare module '$env/static/private' {
  */
 declare module '$env/static/public' {
 	export const PUBLIC_CLERK_PUBLISHABLE_KEY: string;
-	export const PUBLIC_SUPABASE_URL: string;
-	export const PUBLIC_SUPABASE_ANON_KEY: string;
-	export const PUBLIC_USERCARD_TABLE: string;
-	export const PUBLIC_USER_TABLE: string;
-	export const PUBLIC_FLASHCARD_TABLE: string;
-	export const PUBLIC_LESSON: string;
 }
 
 /**
@@ -128,9 +121,8 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		CLERK_SECRET_KEY: string;
-		PRIVATE_USERCARD_TABLE: string;
-		PRIVATE_USER_TABLE: string;
-		PRIVATE_FLASHCARD_TABLE: string;
+		PRIVATE_SUPABASE_URL: string;
+		PRIVATE_SUPABASE_ANON_KEY: string;
 		TERM_PROGRAM: string;
 		NODE: string;
 		INIT_CWD: string;
@@ -211,12 +203,6 @@ declare module '$env/dynamic/private' {
 declare module '$env/dynamic/public' {
 	export const env: {
 		PUBLIC_CLERK_PUBLISHABLE_KEY: string;
-		PUBLIC_SUPABASE_URL: string;
-		PUBLIC_SUPABASE_ANON_KEY: string;
-		PUBLIC_USERCARD_TABLE: string;
-		PUBLIC_USER_TABLE: string;
-		PUBLIC_FLASHCARD_TABLE: string;
-		PUBLIC_LESSON: string;
 		[key: `PUBLIC_${string}`]: string | undefined;
 	}
 }
