@@ -1,13 +1,25 @@
-node_modules/
+node_modules
 
-# dotenv environment variables file
-.env
-.env.test
-
-# build output
+# Output
+.output
 .vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
 
-# OS-specific
+# OS
 .DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
 
 tmp
