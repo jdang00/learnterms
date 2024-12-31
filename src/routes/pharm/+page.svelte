@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Flame, Calendar } from 'lucide-svelte';
 	import type { PageData } from './$types';
 	import type { Chapter, authLog } from '$lib/types';
 
