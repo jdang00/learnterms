@@ -3,5 +3,5 @@
 </script>
 
 <div class="flex items-center justify-center mt-16">
-	<SignUp redirectUrl="/" />
+	<SignUp redirectUrl="/dashboard" />
 </div>

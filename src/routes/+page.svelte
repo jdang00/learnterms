@@ -5,13 +5,12 @@
 	let { data }: { data: PageData } = $props();
 	let { loggedIn } = data.auth;
 
-	import Mock from './mock.svelte';
+	import Mock from './Mock.svelte';
 </script>
 
 <!--Hi mom-->
 <div class="flex flex-col items-center mt-8">
 	<div class="max-w-5xl mx-auto px-8 sm:px-12">
-		<!-- Hero Header -->
 		<div class="space-y-4 max-w-3xl">
 			<h1 class="font-bold text-5xl lg:text-6xl mt-24 relative">
 				<span class="text-primary relative">
