@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { ArrowRight, Brain, Sigma, ChartScatter, LayoutDashboard } from 'lucide-svelte';
 	import type { PageData } from './$types';
+
 	let { data }: { data: PageData } = $props();
+	let { loggedIn } = data.auth;
 
 	import Mock from './mock.svelte';
 </script>
@@ -24,10 +26,10 @@
 				Purpose-built tools to help you ace your exams—backed by data, driven by focus.
 			</p>
 		</div>
-		{#if !data.loggedIn}
+		{#if !loggedIn}
 			<a class="btn btn-primary my-8" href="/sign-in">Get Started <ArrowRight /></a>
 		{:else}
-			<a class="btn btn-primary my-8" href="/pharm"> <LayoutDashboard /> Dashboard</a>
+			<a class="btn btn-primary my-8" href="/dashboard"> <LayoutDashboard /> Dashboard</a>
 		{/if}
 
 		<div class="mockup-browser border-base-300 border mt-8 hidden md:block">

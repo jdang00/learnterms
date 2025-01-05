@@ -89,7 +89,7 @@
 
 <div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
 	<div class="hidden lg:block w-1/4 lg:border-r border-base-300">
-		<a class="btn btn-ghost mt-4 ms-2" href="/pharm"> <ArrowLeft />Back</a>
+		<a class="btn btn-ghost mt-4 ms-2" href="/dashboard"> <ArrowLeft />Back</a>
 
 		<div class="mx-8 mt-4">
 			<p class="font-bold text-sm tracking-wide text-secondary mb-2">
@@ -113,7 +113,7 @@
 
 	<div class="container mx-auto lg:w-3/4 flex flex-col items-center min-h-screen">
 		<div class="lg:hidden flex flex-row mt-2 items-center w-full justify-between">
-			<a class="btn btn-ghost flex-shrink-0" href="/pharm">
+			<a class="btn btn-ghost flex-shrink-0" href="/dashboard">
 				<ArrowLeft />Back
 			</a>
 

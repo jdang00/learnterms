@@ -36,8 +36,8 @@
 	<div class="flex flex-row w-full lg:mt-6 mt-4 overflow-y-scroll">
 		<div class="indicator">
 			<button class="btn btn-circle btn-primary mx-2">1</button>
-			{#each { length: 18 } as _, i}
-				<button class="btn btn-circle mx-2">{i + 2}</button>
+			{#each { length: 18 }, i}
+				<button class="btn btn-circle btn-soft mx-2">{i + 2}</button>
 			{/each}
 		</div>
 	</div>
@@ -52,7 +52,7 @@
 
 			<div class="flex flex-col justify-start mt-4 space-y-4">
 				<label class="label cursor-pointer bg-base-200 rounded-full flex items-center">
-					<span class="flex-grow ml-8 my-2">A. They are used for severe infections</span>
+					<span class="flex-grow ml-8 my-4">A. They are used for severe infections</span>
 					<div class="flex items-center justify-center w-16 mr-4">
 						<input type="checkbox" class="checkbox checkbox-primary" />
 					</div>

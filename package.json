@@ -44,6 +44,7 @@
 		"clerk-sveltekit": "^0.4.2",
 		"lucide-svelte": "^0.468.0",
 		"posthog-js": "^1.200.1",
+		"posthog-node": "^4.3.2",
 		"theme-change": "^2.5.0"
 	}
 }

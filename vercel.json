@@ -8,7 +8,59 @@
 					"value": "app.learnterms.com"
 				}
 			],
-			"destination": "/pharm/:path*"
+			"destination": "/dashboard/:path*"
+		},
+		{
+			"source": "/:path*",
+			"has": [
+				{
+					"type": "host",
+					"value": "admin.learnterms.com"
+				}
+			],
+			"destination": "/admin/:path*"
+		},
+		{
+			"source": "/:path*",
+			"has": [
+				{
+					"type": "host",
+					"value": "api.learnterms.com"
+				}
+			],
+			"destination": "/api/:path*"
+		},
+		{
+			"source": "/ingest/:path*",
+			"destination": "https://app.posthog.com/:path*"
+		},
+		{
+			"source": "/decide/:path*",
+			"destination": "https://app.posthog.com/decide/:path*"
+		},
+		{
+			"source": "/e/:path*",
+			"destination": "https://app.posthog.com/e/:path*"
+		},
+		{
+			"source": "/s/:path*",
+			"destination": "https://app.posthog.com/s/:path*"
+		},
+		{
+			"source": "/capture/:path*",
+			"destination": "https://app.posthog.com/capture/:path*"
+		},
+		{
+			"source": "/batch/:path*",
+			"destination": "https://app.posthog.com/batch/:path*"
+		},
+		{
+			"source": "/api/surveys/:path*",
+			"destination": "https://app.posthog.com/api/surveys/:path*"
+		},
+		{
+			"source": "/static/survey/:path*",
+			"destination": "https://app.posthog.com/static/survey/:path*"
 		}
 	]
 }

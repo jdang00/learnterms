@@ -7,7 +7,7 @@
 	let chapters: Chapter[] = data.chapters;
 	const chapterprog: number[] = [12, 0];
 
-	let userInfo: authLog = data.log;
+	let userInfo: authLog = data.auth;
 </script>
 
 <div class="container mx-auto px-4 max-w-7xl mt-12 lg:mt-8">
@@ -30,7 +30,7 @@
 					<tr class="hover">
 						<th>{index + 1}</th>
 						<td>
-							<a class="flex flex-col hover:text-info" href="pharm/chapter/{index + 1}">
+							<a class="flex flex-col hover:text-info" href="dashboard/pharm/{index + 1}">
 								<h3 class="font-semibold text-lg">{chapter.name}</h3>
 								<p class="hidden lg:block">{chapter.desc}</p>
 							</a>

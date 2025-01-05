@@ -13,7 +13,24 @@
 
 	$effect(() => {
 		themeChange(false);
+
+		if (browser) {
+			posthog.init('phc_3eXFYO1aHVEWM75fi3wXFE6OiJZiDNvI5pcl67S19fK', {
+				api_host: 'https://us.i.posthog.com',
+				capture_pageview: false,
+				capture_pageleave: false
+			});
+		}
 	});
+
+	import { browser } from '$app/environment';
+	import { beforeNavigate, afterNavigate } from '$app/navigation';
+	import posthog from 'posthog-js';
+
+	if (browser) {
+		beforeNavigate(() => posthog.capture('$pageleave'));
+		afterNavigate(() => posthog.capture('$pageview'));
+	}
 </script>
 
 <svelte:head>
@@ -96,7 +113,7 @@
 				</div>
 
 				<a
-					class="btn btn-ghost self-center me-4"
+					class="btn btn-ghost self-center me-4 hidden lg:flex"
 					href="https://github.com/jdang00/learnterms"
 					target="_blank"
 					aria-label="GitHub"

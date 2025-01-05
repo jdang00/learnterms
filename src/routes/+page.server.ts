@@ -1,29 +1,8 @@
-import type { authLog } from '$lib/types';
+import type { PageServerLoad } from './$types';
+import { auth } from '$lib/auth.svelte';
 
-export const load = async ({ locals }) => {
-	try {
-		const user = locals.session;
-
-		if (!user) {
-			console.warn('No user found in session.');
-			return {
-				loggedIn: false,
-				userName: 'Guest'
-			};
-		}
-
-		const log: authLog = {
-			loggedIn: true,
-			userName: user.claims.userName || 'Guest'
-		};
-
-		return log;
-	} catch (error) {
-		console.error('Error loading user data:', error);
-
-		return {
-			loggedIn: false,
-			userName: 'Error'
-		};
-	}
+export const load: PageServerLoad = async () => {
+	return {
+		auth
+	};
 };
