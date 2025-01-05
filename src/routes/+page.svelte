@@ -13,7 +13,7 @@
 	<div class="max-w-5xl mx-auto px-8 sm:px-12">
 		<!-- Hero Header -->
 		<div class="space-y-4 max-w-3xl">
-			<h1 class="font-bold text-4xl lg:text-6xl mt-24 relative">
+			<h1 class="font-bold text-5xl lg:text-6xl mt-24 relative">
 				<span class="text-primary relative">
 					LearnTerms
 					<span
