@@ -5,7 +5,7 @@
 	let { data }: { data: PageData } = $props();
 	let { loggedIn } = data.auth;
 
-	import Mock from './Mock.svelte';
+	import Mock from './mock.svelte';
 </script>
 
 <!--Hi mom-->
