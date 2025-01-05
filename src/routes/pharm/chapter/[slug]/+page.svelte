@@ -26,7 +26,11 @@
 	let questionSolution = $derived(questions[currentlySelected].question_data.explanation);
 
 	function toggleFlag(index: number) {
-		flags.has(index) ? flags.delete(index) : flags.add(index);
+		if (flags.has(index)) {
+			flags.delete(index);
+		} else {
+			flags.add(index);
+		}
 		flagCount = flags.size;
 	}
 
@@ -39,10 +43,17 @@
 
 	function toggleOption(index: number) {
 		const option = questionOptions[index].letter;
-		selectedAnswers[currentlySelected] ??= new Set();
-		selectedAnswers[currentlySelected].has(option)
-			? selectedAnswers[currentlySelected].delete(option)
-			: selectedAnswers[currentlySelected].add(option);
+
+		if (!selectedAnswers[currentlySelected]) {
+			selectedAnswers[currentlySelected] = new Set();
+		}
+
+		if (selectedAnswers[currentlySelected].has(option)) {
+			selectedAnswers[currentlySelected].delete(option);
+		} else {
+			selectedAnswers[currentlySelected].add(option);
+		}
+
 		questionOptions[index].isSelected = !questionOptions[index].isSelected;
 	}
 
@@ -118,7 +129,7 @@
 		</div>
 		<div class="flex flex-row w-full lg:mt-6 mt-4 overflow-y-scroll">
 			{#key flagCount}
-				{#each questions as _, index}
+				{#each questions, index}
 					<div class="indicator">
 						{#if flags.has(index + 1)}
 							<span
@@ -153,7 +164,7 @@
 						<div class="flex flex-col justify-start mt-4 space-y-4">
 							{#each questionOptions as option, index}
 								<label class="label cursor-pointer bg-base-200 rounded-full flex items-center">
-									<span class="flex-grow ml-8 my-2">{option.text}</span>
+									<span class="flex-grow ml-8 my-4">{option.text}</span>
 									<div class="flex items-center justify-center w-16 mr-4">
 										{#key currentlySelected}
 											<input

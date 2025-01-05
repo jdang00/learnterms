@@ -5,7 +5,6 @@ import type { Chapter, authLog } from '$lib/types';
 
 export const load = async ({ locals }) => {
 	const user = locals.session;
-	console.log(user);
 
 	const log: authLog = {
 		loggedIn: true,

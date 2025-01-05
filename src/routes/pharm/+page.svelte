@@ -30,7 +30,7 @@
 					<tr class="hover">
 						<th>{index + 1}</th>
 						<td>
-							<a class="flex flex-col" href="pharm/chapter/{index + 1}">
+							<a class="flex flex-col hover:text-info" href="pharm/chapter/{index + 1}">
 								<h3 class="font-semibold text-lg">{chapter.name}</h3>
 								<p class="hidden lg:block">{chapter.desc}</p>
 							</a>

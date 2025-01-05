@@ -1,5 +1,5 @@
 <script lang="ts">
-	import 'tailwindcss/tailwind.css';
+	import '../app.css';
 	let { children } = $props();
 
 	import { Palette } from 'lucide-svelte';
