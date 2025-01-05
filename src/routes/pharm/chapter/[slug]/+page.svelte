@@ -133,12 +133,12 @@
 					<div class="indicator">
 						{#if flags.has(index + 1)}
 							<span
-								class="indicator-item indicator-start badge badge-warning badge-xs !right-10 translate-x-1/2 translate-y-1/4
+								class="indicator-item indicator-start badge badge-warning badge-xs !right-10 translate-x-1/4 translate-y-1/4
 "
 							></span>
 						{/if}
 						<button
-							class="btn btn-circle mx-2 {currentlySelected === index
+							class="btn btn-circle btn-soft mx-2 {currentlySelected === index
 								? 'btn-primary'
 								: 'btn-outline'} {selectedAnswers[index]?.size > 0 ? 'btn-accent' : ''}"
 							aria-label="question {index + 1}"
