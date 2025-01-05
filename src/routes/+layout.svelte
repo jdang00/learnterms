@@ -9,7 +9,7 @@
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
 	import { themeChange } from 'theme-change';
 
-	const themes = ['light', 'dark', 'dracula', 'valentine', 'retro', 'bumblebee', 'nord'];
+	const themes = ['light', 'dark', 'dracula', 'retro', 'nord'];
 
 	$effect(() => {
 		themeChange(false);

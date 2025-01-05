@@ -15,42 +15,23 @@
 		<h1 class="font-semibold text-4xl">Hi, {userInfo.userName.split(' ')[0]}</h1>
 	</div>
 
-	<div class="overflow-x-auto">
-		<table class="table table-lg">
-			<!-- head -->
-			<thead>
-				<tr>
-					<th>Chapter</th>
-					<th>Module</th>
-					<th>Progress</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each chapters as chapter, index}
-					<tr class="hover">
-						<th>{index + 1}</th>
-						<td>
-							<a class="flex flex-col hover:text-info" href="dashboard/pharm/{index + 1}">
-								<h3 class="font-semibold text-lg">{chapter.name}</h3>
-								<p class="hidden lg:block">{chapter.desc}</p>
-							</a>
-						</td>
-						<td>
-							<div class="flex flex-row self-center gap-4">
-								<div
-									class="radial-progress self-center text-success"
-									style="--value:{(chapterprog[index] / Number(chapter.numprobs)) *
-										100}; --size:2rem;"
-									role="progressbar"
-								></div>
-								<div class="self-center">
-									{Math.round((chapterprog[index] / Number(chapter.numprobs)) * 100)}%.
-								</div>
-							</div></td
-						>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</div>
+	<ul class="list bg-base-200 rounded-box shadow-md">
+		{#each chapters as chapter, index}
+			<a href="/dashboard/pharm/{index + 1}" class="hover:text-primary">
+				<li class="list-row">
+					<div class="text-4xl font-thin opacity-30 tabular-nums">{index + 1}</div>
+
+					<div>
+						<div class="text-2xl font-semibold">{chapter.name}</div>
+						<div class=" uppercase font-semibold opacity-60">
+							{Math.round((chapterprog[index] / Number(chapter.numprobs)) * 100)}% complete
+						</div>
+					</div>
+					<p class="list-col-wrap">
+						{chapter.desc}
+					</p>
+				</li>
+			</a>
+		{/each}
+	</ul>
 </div>
