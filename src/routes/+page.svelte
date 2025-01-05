@@ -55,17 +55,12 @@
 				</p>
 			</div>
 
-			<div class="mockup-phone lg:mt-0 scale-75">
-				<div class="camera"></div>
-				<div class="display">
-					<div class="artboard artboard-demo phone-4 bg-white">
-						<img
-							src="https://utfs.io/f/DYlXFqnaImOrHdvL2B8oz43pOdy8PbVBRIvwFe0Zuk5rYQxl"
-							alt="learnterms"
-							class="object-contain mt-24"
-						/>
-					</div>
-				</div>
+			<div class="artboard artboard-demo phone-4 bg-white border border-gray-300 m-8 p-2 mt-24">
+				<img
+					src="https://utfs.io/f/DYlXFqnaImOrHdvL2B8oz43pOdy8PbVBRIvwFe0Zuk5rYQxl"
+					alt="learnterms"
+					class="object-contain"
+				/>
 			</div>
 		</div>
 

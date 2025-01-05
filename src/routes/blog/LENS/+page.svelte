@@ -1,3 +1,7 @@
+<script lang="ts">
+	import { Link } from 'lucide-svelte';
+</script>
+
 <div class="mt-10 flex min-h-screen w-full flex-col items-center justify-between p-8">
 	<div class="w-full max-w-3xl">
 		<div class="flex flex-col flex-wrap justify-between">
@@ -25,9 +29,10 @@
 				Read the LENS Algorithm paper here:
 				<a
 					href="https://utfs.io/f/DYlXFqnaImOrDUuam6qnaImOrwFJXt2vDNoh9uC37QZKg0VR"
-					class="btn btn-outline btn-primary"
+					class="btn btn-soft btn-primary"
 					target="_blank"
 				>
+					<Link />
 					The LENS Algorithm for Introduction to Optometry 4001
 				</a>
 			</div>
@@ -89,9 +94,11 @@
 
 		<a
 			href="https://utfs.io/f/DYlXFqnaImOrDUuam6qnaImOrwFJXt2vDNoh9uC37QZKg0VR"
-			class="btn btn-outline btn-primary mt-8"
+			class="btn btn-soft btn-primary mt-8"
 			target="_blank"
 		>
+			<Link />
+
 			The LENS Algorithm for Introduction to Optometry 4001
 		</a>
 
