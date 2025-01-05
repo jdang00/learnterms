@@ -36,7 +36,7 @@
 	<div class="flex flex-row w-full lg:mt-6 mt-4 overflow-y-scroll">
 		<div class="indicator">
 			<button class="btn btn-circle btn-primary mx-2">1</button>
-			{#each { length: 18 }, i}
+			{#each Array(18) as _, i}
 				<button class="btn btn-circle btn-soft mx-2">{i + 2}</button>
 			{/each}
 		</div>
