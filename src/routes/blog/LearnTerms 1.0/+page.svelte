@@ -104,7 +104,7 @@
 			</li>
 			<li>
 				<b>Changelog:</b> Stay updated on site improvements via the
-				<a class="link-secondary" target="_blank" href="/changelog">changelog </a>in the footer. I’m
+				<a class="link-secondary" target="_blank" href="/changelog">changelog </a> in the footer. I’m
 				continuously refining the platform to improve your study experience.
 			</li>
 			<li>
