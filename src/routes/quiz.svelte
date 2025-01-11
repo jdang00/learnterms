@@ -8,12 +8,18 @@
 		BookOpen,
 		Star
 	} from 'lucide-svelte';
+
+	let showAnswer = false;
+
+	function toggleAnswer() {
+		showAnswer = !showAnswer;
+	}
 </script>
 
 <div class="my-5"></div>
 
 <div class="flex flex-col items-center p-8">
-	<p class="mt-3 text-xl">Example meaning or definition here</p>
+	<p class="mt-3 text-xl">Inflammation of the eyelids</p>
 
 	<div class="flex items-center">
 		<input type="text" placeholder="Type here" class="input input-bordered w-full max-w-xs mt-5" />
@@ -26,13 +32,13 @@
 		<div class="card-body">
 			<div class="flex flex-row justify-between mb-8 mt-4">
 				<div class="flex">
-					<h2 class="card-title blur">Example Term</h2>
+					<h2 class="card-title {showAnswer ? '' : 'blur'}">Blepharitis</h2>
 				</div>
-				<button>
+				<button class="btn btn-ghost">
 					<Star class="stroke-current" />
 				</button>
 			</div>
-			<button class="btn"><Eye /></button>
+			<button class="btn" onclick={toggleAnswer}><Eye /></button>
 		</div>
 	</div>
 

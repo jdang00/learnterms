@@ -3,9 +3,8 @@
 	import type { Snippet } from 'svelte';
 	import { ClerkProvider, SignedIn, SignedOut, SignInButton, UserButton } from 'svelte-clerk';
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY } from '$env/static/public';
-	import type { LayoutData } from './$types';
 
-	const { data, children }: { data: LayoutData; children: Snippet } = $props();
+	const { children }: { children: Snippet } = $props();
 
 	import { Palette } from 'lucide-svelte';
 	import { themeChange } from 'theme-change';
@@ -90,7 +89,7 @@
 				<a
 					class="ms-2 font-mono lg:text-sm text-xs align-middle text-base-content/60 inline-block link link-hover"
 					href="/changelog"
-					target="_blank">2.0.0-beta.1</a
+					target="_blank">v2beta1</a
 				>
 			</div>
 			<div class="navbar-center hidden lg:flex">
