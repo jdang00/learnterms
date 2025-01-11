@@ -11,9 +11,10 @@
 
 <!--Hi mom-->
 <div class="flex flex-col items-center mt-8">
-	<div class="max-w-5xl mx-auto px-8 sm:px-12">
+	<!-- Wrap entire container in a w-full to ensure it spans the screen. -->
+	<div class="w-full max-w-5xl mx-auto px-4 sm:px-12">
 		<div class="space-y-4 max-w-3xl">
-			<h1 class="font-bold text-5xl lg:text-6xl mt-24 relative">
+			<h1 class="font-bold text-5xl lg:text-6xl mt-12 sm:mt-24 relative">
 				<span class="text-primary relative">
 					LearnTerms
 					<span
@@ -32,21 +33,35 @@
 			<a class="btn btn-primary my-8" href="/dashboard"> <LayoutDashboard /> Dashboard</a>
 		{/if}
 
+		<!--
+			1) Ensure the browser mockups are responsive
+			2) Removed explicit max-w-sm on mobile version to let it fill available space
+		-->
 		<div class="mockup-browser border-base-300 border mt-8 hidden md:block">
 			<div class="mockup-browser-toolbar">
 				<div class="input border-base-300 border">app.learnterms.com</div>
 			</div>
-			<div class="border-base-300 flex justify-center border-t px-6"><Mock /></div>
-		</div>
-		<div class="mockup-browser border-base-300 border mt-8 max-w-sm md:hidden">
-			<div class="mockup-browser-toolbar">
-				<div class="input border-base-300 border">app.learnterms.com</div>
+			<div class="border-base-300 flex justify-center border-t px-6">
+				<Mock />
 			</div>
-			<div class="border-base-300 flex justify-center border-t px-6"><Mock /></div>
+		</div>
+		<div class="mockup-browser border-base-300 border mt-8 md:hidden w-full">
+			<div class="mockup-browser-toolbar">
+				<div class="input border-base-300 border w-full">app.learnterms.com</div>
+			</div>
+			<div class="border-base-300 flex justify-center border-t px-4 sm:px-6">
+				<Mock />
+			</div>
 		</div>
 
-		<div class="mt-32 flex flex-col lg:flex-row gap-x-24">
-			<div class="max-w-lg self-center lg:w-2/5">
+		<!--
+			Adjust spacing for better mobile fit:
+			- Use smaller gap-x on mobile
+			- Remove scale-75 so the phone is not cut off
+			- Reduce top margin on smaller screens
+		-->
+		<div class="mt-16 lg:mt-32 flex flex-col lg:flex-row gap-y-10 gap-x-8 lg:gap-x-24">
+			<div class="max-w-lg self-center lg:w-2/5 px-4 sm:px-0">
 				<h2 class="font-bold text-4xl">Laser Focused and Built for Mastery.</h2>
 				<p class="text-xl mt-4">
 					LearnTerms is a free, open-source study plaform, full of tools built to make mastering
@@ -56,7 +71,8 @@
 					your knowledge, LearnTerms is flexible, practical, and designed with you in mind.
 				</p>
 			</div>
-			<div class="mockup-phone mt-24 lg:mt-0 scale-75 sm:scale-100">
+			<!-- Removed scale-75 and changed mt-24 to mt-0 on larger screens for better fit -->
+			<div class="mockup-phone mt-8 lg:mt-0 mx-auto">
 				<div class="mockup-phone-camera"></div>
 				<div class="mockup-phone-display grid place-content-center bg-base-100">
 					<Quiz />
@@ -64,7 +80,7 @@
 			</div>
 		</div>
 
-		<div class="mt-36">
+		<div class="mt-36 px-4 sm:px-0">
 			<h2 class="font-bold text-5xl">Powered By The Latest and Greatest.</h2>
 			<p class="text-2xl mt-4">
 				Transform your studying by leveraging cutting edge features, all designed in a seamless
@@ -103,17 +119,19 @@
 			</div>
 		</div>
 
-		<div class="mt-36">
+		<div class="mt-36 px-4 sm:px-0">
 			<h2 class="font-bold text-4xl text-center">Crafted With Care, By People You Trust.</h2>
-			<p class="text-lg mt-4">
+			<p class="text-lg mt-4 text-center">
 				LearnTerms is actively developed by familiar faces who are committed to fine-tuning every
 				feature to meet your needs. We’re in this together!
 			</p>
-			<img
-				src="https://utfs.io/f/DYlXFqnaImOrxA6g7hMjopGvhFXsSYTPmnUcH1rDawbJ7kQL"
-				alt="Class of 2028"
-				class="mt-10 rounded-lg transform scale-95 transition duration-500 hover:scale-100 relative"
-			/>
+			<div class="flex justify-center mt-10">
+				<img
+					src="https://utfs.io/f/DYlXFqnaImOrxA6g7hMjopGvhFXsSYTPmnUcH1rDawbJ7kQL"
+					alt="Class of 2028"
+					class="rounded-lg transform scale-95 transition duration-500 hover:scale-100 max-w-full"
+				/>
+			</div>
 
 			<p class="text-base-content text-center mt-8">NSUOCO Class of 2028</p>
 		</div>
