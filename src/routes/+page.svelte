@@ -11,7 +11,6 @@
 
 <!--Hi mom-->
 <div class="flex flex-col items-center mt-8">
-	<!-- Wrap entire container in a w-full to ensure it spans the screen. -->
 	<div class="w-full max-w-5xl mx-auto px-4 sm:px-12">
 		<div class="space-y-4 max-w-3xl">
 			<h1 class="font-bold text-5xl lg:text-6xl mt-12 sm:mt-24 relative">
@@ -33,10 +32,6 @@
 			<a class="btn btn-primary my-8" href="/dashboard"> <LayoutDashboard /> Dashboard</a>
 		{/if}
 
-		<!--
-			1) Ensure the browser mockups are responsive
-			2) Removed explicit max-w-sm on mobile version to let it fill available space
-		-->
 		<div class="mockup-browser border-base-300 border mt-8 hidden md:block">
 			<div class="mockup-browser-toolbar">
 				<div class="input border-base-300 border">app.learnterms.com</div>
@@ -54,12 +49,6 @@
 			</div>
 		</div>
 
-		<!--
-			Adjust spacing for better mobile fit:
-			- Use smaller gap-x on mobile
-			- Remove scale-75 so the phone is not cut off
-			- Reduce top margin on smaller screens
-		-->
 		<div class="mt-16 lg:mt-32 flex flex-col lg:flex-row gap-y-10 gap-x-8 lg:gap-x-24">
 			<div class="max-w-lg self-center lg:w-2/5 px-4 sm:px-0">
 				<h2 class="font-bold text-4xl">Laser Focused and Built for Mastery.</h2>
@@ -71,7 +60,6 @@
 					your knowledge, LearnTerms is flexible, practical, and designed with you in mind.
 				</p>
 			</div>
-			<!-- Removed scale-75 and changed mt-24 to mt-0 on larger screens for better fit -->
 			<div class="mockup-phone mt-8 lg:mt-0 mx-auto">
 				<div class="mockup-phone-camera"></div>
 				<div class="mockup-phone-display grid place-content-center bg-base-100">
