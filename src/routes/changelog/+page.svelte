@@ -17,6 +17,7 @@
 			<li>The site is now more responsive overall.</li>
 			<li>Solutions implementation on quizzing page</li>
 			<li>back and forth buttons to navigate questions</li>
+			<li>Massive redesign for the dashboard</li>
 		</ul>
 
 		<h3 class="text-xl mt-3 font-medium text-base-content">December 18, 2024</h3>

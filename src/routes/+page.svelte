@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ArrowRight, Brain, Sigma, ChartScatter, LayoutDashboard } from 'lucide-svelte';
 	import Mock from './mock.svelte';
+	import Quiz from './quiz.svelte';
 
 	import { useClerkContext } from 'svelte-clerk';
 
@@ -44,8 +45,8 @@
 			<div class="border-base-300 flex justify-center border-t px-6"><Mock /></div>
 		</div>
 
-		<div class="mt-32 flex flex-col lg:flex-row gap-x-8">
-			<div class="max-w-lg self-center">
+		<div class="mt-32 flex flex-col lg:flex-row gap-x-24">
+			<div class="max-w-lg self-center lg:w-2/5">
 				<h2 class="font-bold text-4xl">Laser Focused and Built for Mastery.</h2>
 				<p class="text-xl mt-4">
 					LearnTerms is a free, open-source study plaform, full of tools built to make mastering
@@ -55,17 +56,15 @@
 					your knowledge, LearnTerms is flexible, practical, and designed with you in mind.
 				</p>
 			</div>
-
-			<div class="artboard artboard-demo phone-4 bg-white border border-gray-300 m-8 p-2 mt-24">
-				<img
-					src="https://utfs.io/f/DYlXFqnaImOrHdvL2B8oz43pOdy8PbVBRIvwFe0Zuk5rYQxl"
-					alt="learnterms"
-					class="object-contain"
-				/>
+			<div class="mockup-phone mt-24 lg:mt-0 scale-75 sm:scale-100">
+				<div class="mockup-phone-camera"></div>
+				<div class="mockup-phone-display grid place-content-center bg-base-100">
+					<Quiz />
+				</div>
 			</div>
 		</div>
 
-		<div class="mt-20">
+		<div class="mt-36">
 			<h2 class="font-bold text-5xl">Powered By The Latest and Greatest.</h2>
 			<p class="text-2xl mt-4">
 				Transform your studying by leveraging cutting edge features, all designed in a seamless
