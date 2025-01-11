@@ -2,7 +2,24 @@
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
 	<div class="ms-8">
-		<h3 class="text-xl mt-3 font-medium text-base-content px-3">December 18, 2024</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">January 10, 2025</h3>
+		<p class="ms-2">It's been a while, but we've been hard at work!</p>
+
+		<ul class="mt-1 m-8">
+			<li>LearnTerms has a new look!</li>
+			<li>Authentication is now completely updated to Svelte 5.</li>
+			<li>Stunning new landing page</li>
+			<li>Making the quizzing section much more mobile friendly</li>
+			<li>
+				Reworked AI RAG pipeline for question generation for improved precision. This is still well
+				into beta and won't be final until a few weeks into the Spring semester.
+			</li>
+			<li>The site is now more responsive overall.</li>
+			<li>Solutions implementation on quizzing page</li>
+			<li>back and forth buttons to navigate questions</li>
+		</ul>
+
+		<h3 class="text-xl mt-3 font-medium text-base-content">December 18, 2024</h3>
 		<p class="ms-2">Holiday updates continue.</p>
 
 		<ul class="mt-1 m-8">
@@ -23,7 +40,7 @@
 			</li>
 		</ul>
 
-		<h3 class="text-xl mt-3 font-medium text-base-content px-3">December 15, 2024</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">December 15, 2024</h3>
 		<p class="ms-2">LearnTerms Holiday updates are underway!</p>
 
 		<ul class="mt-1 m-8">
@@ -36,7 +53,7 @@
 			<li>Rebuilding site backend to accommodate expected incoming user data.</li>
 		</ul>
 
-		<h3 class="text-xl mt-3 font-medium text-base-content px-3">October 25, 2024</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">October 25, 2024</h3>
 		<p class="ms-2">With the publishing of the LENS Algorithm, feature updates are back!</p>
 
 		<ul class="mt-1 m-8">
@@ -57,7 +74,7 @@
 			</li>
 		</ul>
 
-		<h3 class="text-xl mt-3 font-medium text-base-content px-3">September 20, 2024</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">September 20, 2024</h3>
 		<p class="ms-2">LearnTerms 1.0 is here!</p>
 
 		<ul class="mt-1 m-8">
@@ -67,7 +84,7 @@
 			<li>Lesson 5 Terms</li>
 		</ul>
 
-		<h3 class="text-xl mt-3 font-medium text-base-content px-3">September 20, 2024</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">September 20, 2024</h3>
 		<p class="ms-2">LearnTerms is almost in full release! Just a few more finishing touches!</p>
 		<ul class="mt-1 m-8">
 			<li>Major refactor of the database system</li>
@@ -76,7 +93,7 @@
 			<li>Search for terms!</li>
 		</ul>
 
-		<h3 class="text-xl mt-3 font-medium text-base-content px-3">September 15, 2024</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">September 15, 2024</h3>
 		<ul class="mt-1 m-8">
 			<li>Theme changes</li>
 			<li>Performance enhancments</li>
@@ -92,7 +109,7 @@
 			<li>Now more mobile friendly than ever for that last minute studying.</li>
 		</ul>
 
-		<h3 class="text-xl mt-3 font-medium text-base-content px-3">September 14, 2024</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">September 14, 2024</h3>
 		<ul class="mt-1 m-8">
 			<li>
 				<a class="link-accent" target="_blank" href="/student-of-the-week"
@@ -101,7 +118,7 @@
 			</li>
 		</ul>
 
-		<h3 class="text-xl mt-3 font-medium text-base-content px-3">September 11, 2024</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">September 11, 2024</h3>
 		<ul class="mt-1 m-8">
 			<li>Progress bar added, courtesy of Collin</li>
 			<li>Lesson 4 Terms added</li>
@@ -109,7 +126,7 @@
 			<li>Local review deck feature, courtesy of Cori</li>
 		</ul>
 
-		<h3 class="text-xl mt-3 font-medium text-base-content px-3">September 10, 2024</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">September 10, 2024</h3>
 		<ul class="mt-1 m-8">
 			<li>Added shuffling cards functionality (future decks will be in lesson workbook order)</li>
 			<li>Added card count</li>
@@ -119,7 +136,7 @@
 			<li>Persistent dark mode</li>
 		</ul>
 
-		<h3 class="text-xl mt-3 font-medium text-base-content px-3">September 9, 2024</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">September 9, 2024</h3>
 		<ul class="mt-1 m-8">
 			<li>Implemented Dark Mode</li>
 			<li>
@@ -128,7 +145,7 @@
 			</li>
 		</ul>
 
-		<h3 class="text-xl mt-3 font-medium text-base-content px-3">September 8, 2024</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">September 8, 2024</h3>
 		<ul class="mt-1 m-8">
 			<li>Added tab to reveal word</li>
 			<li>Added toggle switch for list and grid view for cards</li>
