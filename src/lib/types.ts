@@ -24,4 +24,5 @@ export interface Chapter {
 	desc: string;
 	numprobs: number;
 	chapter: number;
+	emoji: string;
 }

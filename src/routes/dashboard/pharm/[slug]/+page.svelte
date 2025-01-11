@@ -232,7 +232,7 @@
 	</div>
 
 	<div
-		class="fixed bottom-0 left-0 w-full bg-base-100 shadow-lg border-t border-base-300 z-50 flex justify-between items-center px-4 py-4 lg:hidden"
+		class="fixed bottom-0 left-0 w-full bg-base-100 shadow-lg border-t border-base-300 z-50 flex gap-2 items-center px-4 py-4 lg:hidden flex-wrap justify-center"
 	>
 		<button class="btn btn-outline" onclick={clearSelectedAnswers}>Clear</button>
 		<button class="btn btn-outline btn-success" onclick={checkAnswers}>Check</button>
@@ -243,20 +243,22 @@
 		>
 			<Flag />
 		</button>
-		<button
-			class="btn btn-outline"
-			onclick={goToPreviousQuestion}
-			disabled={currentlySelected === 0}
-		>
-			<ArrowLeft />
-		</button>
-		<button
-			class="btn btn-outline"
-			onclick={goToNextQuestion}
-			disabled={currentlySelected === questions.length - 1}
-		>
-			<ArrowRight />
-		</button>
+		<div class="flex flex-row gap-2">
+			<button
+				class="btn btn-outline"
+				onclick={goToPreviousQuestion}
+				disabled={currentlySelected === 0}
+			>
+				<ArrowLeft />
+			</button>
+			<button
+				class="btn btn-outline"
+				onclick={goToNextQuestion}
+				disabled={currentlySelected === questions.length - 1}
+			>
+				<ArrowRight />
+			</button>
+		</div>
 		<button class="btn modal-button lg:hidden" onclick={() => (isModalOpen = true)}><Eye /></button>
 		<dialog class="modal" class:modal-open={isModalOpen}>
 			<div class="modal-box">

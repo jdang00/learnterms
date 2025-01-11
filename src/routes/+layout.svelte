@@ -3,8 +3,9 @@
 	import type { Snippet } from 'svelte';
 	import { ClerkProvider, SignedIn, SignedOut, SignInButton, UserButton } from 'svelte-clerk';
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY } from '$env/static/public';
+	import type { LayoutData } from './$types';
 
-	const { children }: { children: Snippet } = $props();
+	const { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 	import { Palette } from 'lucide-svelte';
 	import { themeChange } from 'theme-change';
