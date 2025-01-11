@@ -142,7 +142,9 @@
 					</a>
 					<div class="self-center">
 						<SignedIn>
-							<UserButton afterSignOutUrl="/" />
+							<div class="mt-1">
+								<UserButton afterSignOutUrl="/" />
+							</div>
 						</SignedIn>
 						<SignedOut>
 							<div class="btn btn-outline btn-primary self-end">
