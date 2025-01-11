@@ -59,7 +59,7 @@
 
 <ClerkProvider publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}>
 	<div class="min-h-screen">
-		<div class="navbar bg-base-100 mt-2 px-4">
+		<div class="navbar bg-base-100 my-1 px-4">
 			<div class="navbar-start">
 				<div class="dropdown">
 					<div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
