@@ -32,7 +32,6 @@
 		"prettier-plugin-tailwindcss": "^0.6.5",
 		"svelte": "^5.16.1",
 		"svelte-check": "^4.0.0",
-		"svelte-confetti": "^2.2.0",
 		"tailwindcss": "^4.0.0-beta.8",
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.0.0",
@@ -41,10 +40,10 @@
 	"dependencies": {
 		"@supabase/supabase-js": "^2.47.7",
 		"@tailwindcss/postcss": "^4.0.0-beta.8",
-		"clerk-sveltekit": "^0.4.2",
 		"lucide-svelte": "^0.468.0",
 		"posthog-js": "^1.200.1",
 		"posthog-node": "^4.3.2",
+		"svelte-clerk": "^0.5.3",
 		"theme-change": "^2.5.0"
 	}
 }

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { ArrowRight, Brain, Sigma, ChartScatter, LayoutDashboard } from 'lucide-svelte';
-	import type { PageData } from './$types';
-
-	let { data }: { data: PageData } = $props();
-	let { loggedIn } = data.auth;
-
 	import Mock from './mock.svelte';
+
+	import { useClerkContext } from 'svelte-clerk';
+
+	const ctx = useClerkContext();
+	const userId = $derived(ctx.auth.userId);
 </script>
 
 <!--Hi mom-->
@@ -25,7 +25,7 @@
 				Purpose-built tools to help you ace your exams—backed by data, driven by focus.
 			</p>
 		</div>
-		{#if !loggedIn}
+		{#if userId === null}
 			<a class="btn btn-primary my-8" href="/sign-in">Get Started <ArrowRight /></a>
 		{:else}
 			<a class="btn btn-primary my-8" href="/dashboard"> <LayoutDashboard /> Dashboard</a>

@@ -1,18 +1,33 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import type { Chapter, authLog } from '$lib/types';
+	import type { Chapter } from '$lib/types';
+	import { useClerkContext } from 'svelte-clerk';
+
+	const ctx = useClerkContext();
+	const user = $derived(ctx.user);
 
 	let { data }: { data: PageData } = $props();
-
 	let chapters: Chapter[] = data.chapters;
 	const chapterprog: number[] = [12, 0];
-
-	let userInfo: authLog = data.auth;
 </script>
 
 <div class="container mx-auto px-4 max-w-7xl mt-12 lg:mt-8">
 	<div class="mb-12">
-		<h1 class="font-semibold text-4xl">Hi, {userInfo.userName.split(' ')[0]}</h1>
+		{#if user === undefined}
+			<div class="flex w-52 flex-col gap-4">
+				<div class="flex items-center gap-4">
+					<div class="skeleton h-16 w-16 shrink-0 rounded-full"></div>
+					<div class="flex flex-col gap-4">
+						<div class="skeleton h-4 w-20"></div>
+						<div class="skeleton h-4 w-28"></div>
+					</div>
+				</div>
+			</div>
+		{:else if user === null}
+			<h1 class="font-semibold text-4xl">Hi, Guest</h1>
+		{:else}
+			<h1 class="font-semibold text-4xl">Hi, {user.firstName.split(' ')[0]}</h1>
+		{/if}
 	</div>
 
 	<ul class="list bg-base-200 rounded-box shadow-md">

@@ -1,9 +1,6 @@
 import supabase from '$lib/supabaseClient';
 import type { PageServerLoad } from './$types';
-
 import { error } from '@sveltejs/kit';
-import { auth } from '$lib/auth.svelte';
-
 import type { Chapter } from '$lib/types';
 
 export const load: PageServerLoad = async () => {
@@ -16,7 +13,6 @@ export const load: PageServerLoad = async () => {
 	}
 
 	return {
-		chapters: chapters as Chapter[],
-		auth
+		chapters: chapters as Chapter[]
 	};
 };

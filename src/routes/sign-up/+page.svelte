@@ -1,7 +1,7 @@
 <script lang="ts">
-	import SignUp from 'clerk-sveltekit/client/SignUp.svelte';
+	import { SignUp } from 'svelte-clerk';
 </script>
 
-<div class="flex items-center justify-center mt-16">
-	<SignUp redirectUrl="/dashboard" />
+<div class="min-h-screen flex items-center justify-center">
+	<SignUp path="/sign-up" routing="path" redirectUrl="/" />
 </div>
