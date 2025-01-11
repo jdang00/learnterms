@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { ArrowLeft, Eye, Flag } from 'lucide-svelte';
+	import { ArrowLeft, Eye, Flag, ArrowRight } from 'lucide-svelte';
 	import type { Question, Chapter } from '$lib/types';
 
 	let { data }: { data: PageData } = $props();
@@ -85,6 +85,18 @@
 		checkResult = null;
 		refreshKey++;
 	}
+
+	function goToNextQuestion() {
+		if (currentlySelected < questions.length - 1) {
+			changeSelected(currentlySelected + 1);
+		}
+	}
+
+	function goToPreviousQuestion() {
+		if (currentlySelected > 0) {
+			changeSelected(currentlySelected - 1);
+		}
+	}
 </script>
 
 <div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
@@ -113,8 +125,8 @@
 
 	<div class="container mx-auto lg:w-3/4 flex flex-col items-center min-h-screen">
 		<div class="lg:hidden flex flex-row mt-2 items-center w-full justify-between">
-			<a class="btn btn-ghost flex-shrink-0" href="/dashboard">
-				<ArrowLeft />Back
+			<a class="btn btn-ghost flex-shrink-0 flex items-center ms-3" href="/dashboard">
+				<ArrowLeft />
 			</a>
 
 			<div class="flex flex-row gap-2 justify-center grow">
@@ -180,9 +192,8 @@
 						</div>
 					{/key}
 				</div>
-				<div class="flex flex-row justify-center mt-8 gap-4">
+				<div class=" flex-row justify-center mt-8 gap-4 hidden lg:flex">
 					<button class="btn btn-outline" onclick={clearSelectedAnswers}>Clear</button>
-
 					<button class="btn btn-outline btn-success" onclick={checkAnswers}>Check</button>
 					<button
 						class="btn btn-warning btn-outline"
@@ -191,21 +202,20 @@
 					>
 						<Flag />
 					</button>
-					<button class="btn modal-button lg:hidden" onclick={() => (isModalOpen = true)}
-						><Eye /></button
+					<button
+						class="btn btn-outline"
+						onclick={goToPreviousQuestion}
+						disabled={currentlySelected === 0}
 					>
-					<dialog class="modal" class:modal-open={isModalOpen}>
-						<div class="modal-box">
-							<form method="dialog">
-								<button
-									class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-									onclick={() => (isModalOpen = false)}>✕</button
-								>
-							</form>
-							<h3 class="text-lg font-bold">Solution</h3>
-							<p class="py-4">{questionSolution}</p>
-						</div>
-					</dialog>
+						<ArrowLeft />
+					</button>
+					<button
+						class="btn btn-outline"
+						onclick={goToNextQuestion}
+						disabled={currentlySelected === questions.length - 1}
+					>
+						<ArrowRight />
+					</button>
 				</div>
 
 				{#if checkResult !== null}
@@ -219,5 +229,46 @@
 				{/if}
 			</div>
 		{/if}
+	</div>
+
+	<div
+		class="fixed bottom-0 left-0 w-full bg-base-100 shadow-lg border-t border-base-300 z-50 flex justify-between items-center px-4 py-4 lg:hidden"
+	>
+		<button class="btn btn-outline" onclick={clearSelectedAnswers}>Clear</button>
+		<button class="btn btn-outline btn-success" onclick={checkAnswers}>Check</button>
+		<button
+			class="btn btn-warning btn-outline"
+			aria-label="flag question {currentlySelected + 1}"
+			onclick={() => toggleFlag(currentlySelected + 1)}
+		>
+			<Flag />
+		</button>
+		<button
+			class="btn btn-outline"
+			onclick={goToPreviousQuestion}
+			disabled={currentlySelected === 0}
+		>
+			<ArrowLeft />
+		</button>
+		<button
+			class="btn btn-outline"
+			onclick={goToNextQuestion}
+			disabled={currentlySelected === questions.length - 1}
+		>
+			<ArrowRight />
+		</button>
+		<button class="btn modal-button lg:hidden" onclick={() => (isModalOpen = true)}><Eye /></button>
+		<dialog class="modal" class:modal-open={isModalOpen}>
+			<div class="modal-box">
+				<form method="dialog">
+					<button
+						class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+						onclick={() => (isModalOpen = false)}>✕</button
+					>
+				</form>
+				<h3 class="text-lg font-bold">Solution</h3>
+				<p class="py-4">{questionSolution}</p>
+			</div>
+		</dialog>
 	</div>
 </div>
