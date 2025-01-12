@@ -58,8 +58,8 @@
 </svelte:head>
 
 <ClerkProvider publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}>
-	<div class="min-h-screen">
-		<div class="navbar bg-base-100 my-1 px-4">
+	<div class="flex flex-col min-h-screen">
+		<div class="navbar bg-base-100 h-16">
 			<div class="navbar-start">
 				<div class="dropdown">
 					<div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
@@ -160,18 +160,19 @@
 				</div>
 			</div>
 		</div>
-		<div class="flex min-h-96 w-full flex-col items-center justify-between">
-			<div class="w-full">
+		<div class="flex flex-1 flex-col overflow-hidden">
+			<div class="flex-1 w-full overflow-y-auto">
 				{@render children?.()}
-				<footer class="footer footer-center text-base-content mt-24 p-4">
-					<aside class="flex flex-row flex-wrap justify-center">
-						<p>
-							Copyright © {new Date().getFullYear()} - Oklahoma College of Optometry Class of 2028 |
-						</p>
-						<a class="link" href="/changelog">Changelog</a>
-					</aside>
-				</footer>
 			</div>
+
+			<footer class="footer footer-center text-base-content p-4">
+				<aside class="flex flex-row flex-wrap justify-center">
+					<p>
+						Copyright © {new Date().getFullYear()} - Oklahoma College of Optometry Class of 2028 |
+					</p>
+					<a class="link" href="/changelog">Changelog</a>
+				</aside>
+			</footer>
 		</div>
 	</div>
 </ClerkProvider>

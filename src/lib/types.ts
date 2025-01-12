@@ -26,3 +26,14 @@ export interface Chapter {
 	chapter: number;
 	emoji: string;
 }
+
+export interface ChatMessage {
+	role: 'user' | 'assistant';
+	content: string;
+}
+
+export interface ChatState {
+	messages: ChatMessage[];
+	loading: boolean;
+	input: string;
+}
