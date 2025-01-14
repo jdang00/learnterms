@@ -19,6 +19,7 @@
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"@tailwindcss/typography": "^0.5.15",
 		"@tailwindcss/vite": "^0.0.0-development.1",
+		"@types/aos": "^3.0.7",
 		"@types/showdown": "^2.0.6",
 		"autoprefixer": "^10.4.20",
 		"daisyui": "^5.0.0-beta.1",
@@ -40,6 +41,7 @@
 	"dependencies": {
 		"@supabase/supabase-js": "^2.47.7",
 		"@tailwindcss/postcss": "^4.0.0-beta.8",
+		"aos": "^2.3.4",
 		"lucide-svelte": "^0.468.0",
 		"openai": "^4.78.1",
 		"posthog-js": "^1.200.1",
