@@ -101,7 +101,7 @@
 				<div class="flex flex-row">
 					<div class="dropdown dropdown-end">
 						<div tabindex="-1" class="btn btn-ghost m-1">
-							<Palette />
+							<Palette size="22" />
 						</div>
 
 						<ul
@@ -126,8 +126,8 @@
 					>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
+							width="22"
+							height="22"
 							viewBox="0 0 24 24"
 							fill="none"
 							stroke="currentColor"
