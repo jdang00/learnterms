@@ -166,9 +166,12 @@
 			</div>
 
 			<footer class="footer footer-center text-base-content p-4">
-				<aside class="flex flex-row flex-wrap justify-center">
-					<p>
+				<aside class="flex flex-col flex-wrap justify-center lg:flex-row">
+					<p class="hidden lg:block">
 						Copyright © {new Date().getFullYear()} - Oklahoma College of Optometry Class of 2028 |
+					</p>
+					<p class="lg:hidden">
+						Copyright © {new Date().getFullYear()} - NSUOCO Class of 2028
 					</p>
 					<a class="link" href="/changelog">Changelog</a>
 				</aside>
