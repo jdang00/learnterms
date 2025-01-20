@@ -81,14 +81,15 @@
 												(chapterprog[index] / Number(chapter.numprobs)) * 100
 											)}% Complete"
 										>
-											<div
-												class="radial-progress text-success"
-												style="--value:{(chapterprog[index] / Number(chapter.numprobs)) *
-													100}; --size:3rem;"
-												role="progressbar"
-											>
-												{Math.round((chapterprog[index] / Number(chapter.numprobs)) * 100)}%
-											</div>
+											<!--
+<div
+    class="radial-progress text-success"
+    style="--value:{(chapterprog[index] / Number(chapter.numprobs)) * 100}; --size:3rem;"
+    role="progressbar"
+>
+    {Math.round((chapterprog[index] / Number(chapter.numprobs)) * 100)}%
+</div>
+-->
 										</div>
 									{/if}
 									<div
