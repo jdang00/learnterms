@@ -2,6 +2,17 @@
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
 	<div class="ms-8">
+		<h3 class="text-xl mt-3 font-medium text-base-content">January 20, 2025</h3>
+		<p class="ms-2">The insanity begins...</p>
+
+		<ul class="mt-1 m-8">
+			<li>113 high yield questions generated for the upcoming Chapter 1 quiz</li>
+			<li>Cleaned up odds and ends for production</li>
+			<li>New onboarding features</li>
+			<li>Making the quizzing section much more mobile friendly</li>
+			<li>Analytics engine reworked to improve future featuers.</li>
+		</ul>
+
 		<h3 class="text-xl mt-3 font-medium text-base-content">January 10, 2025</h3>
 		<p class="ms-2">It's been a while, but we've been hard at work!</p>
 
