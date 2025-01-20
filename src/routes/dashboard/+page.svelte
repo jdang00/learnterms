@@ -43,6 +43,11 @@
 				</div>
 			{/if}
 		</div>
+		<a
+			class="btn btn-dash btn-secondary mx-10 text-center p-8"
+			href="/blog/LearnTerms v2"
+			target="_blank">Discover how LearnTerms helps you prepare for General Pharmacology!</a
+		>
 	</div>
 
 	<!-- Scrollable Content -->
