@@ -19,7 +19,8 @@
 		questions[currentlySelected]?.question_data.options.map((option, index) => ({
 			text: option,
 			letter: option.split('.')[0].trim(),
-			isSelected: selectedAnswers[currentlySelected]?.has(option.split('.')[0].trim()) || false
+			isSelected: selectedAnswers[currentlySelected]?.has(option.split('.')[0].trim()) || false,
+			isEliminated: false
 		})) || []
 	);
 
@@ -42,6 +43,7 @@
 	}
 
 	function toggleOption(index: number) {
+		if (questionOptions[index].isEliminated) return;
 		const option = questionOptions[index].letter;
 
 		if (!selectedAnswers[currentlySelected]) {
@@ -72,11 +74,24 @@
 		selectedAnswers[currentlySelected] = new Set(
 			questionOptions.filter((o) => o.isSelected).map((o) => o.letter)
 		);
+
+		if (!selectedAnswers[currentlySelected].eliminated) {
+			selectedAnswers[currentlySelected].eliminated = new Set(
+				questionOptions.filter((o) => o.isEliminated).map((o) => o.letter)
+			);
+		}
 	}
 
 	function restoreSelectedAnswers() {
-		const saved = selectedAnswers[currentlySelected] || new Set();
-		questionOptions.forEach((o) => (o.isSelected = saved.has(o.letter)));
+		const saved = selectedAnswers[currentlySelected] || {
+			selected: new Set(),
+			eliminated: new Set()
+		};
+
+		questionOptions.forEach((o) => {
+			o.isSelected = saved.selected.has(o.letter);
+			o.isEliminated = saved.eliminated?.has(o.letter) || false;
+		});
 	}
 
 	function clearSelectedAnswers() {
@@ -96,6 +111,18 @@
 		if (currentlySelected > 0) {
 			changeSelected(currentlySelected - 1);
 		}
+	}
+
+	function toggleElimination(index: number) {
+		const option = questionOptions[index];
+		option.isEliminated = !option.isEliminated;
+
+		if (option.isEliminated && option.isSelected) {
+			selectedAnswers[currentlySelected].delete(option.letter);
+			option.isSelected = false;
+		}
+
+		refreshKey++;
 	}
 </script>
 
@@ -176,16 +203,26 @@
 						<div class="flex flex-col justify-start mt-4 space-y-4">
 							{#each questionOptions as option, index}
 								<label class="label cursor-pointer bg-base-200 rounded-full flex items-center">
-									<span class="flex-grow ml-8 my-4">{option.text}</span>
+									{#key currentlySelected}
+										<input
+											type="checkbox"
+											class="checkbox checkbox-primary checkbox-sm ms-6"
+											checked={option.isSelected ? 'checked' : undefined}
+											onclick={() => toggleOption(index)}
+											disabled={option.isEliminated}
+										/>
+									{/key}
+									<span
+										class="flex-grow ml-8 my-4 {option.isEliminated
+											? 'line-through opacity-50'
+											: ''}">{option.text}</span
+									>
 									<div class="flex items-center justify-center w-16 mr-4">
-										{#key currentlySelected}
-											<input
-												type="checkbox"
-												class="checkbox checkbox-primary"
-												checked={option.isSelected ? 'checked' : undefined}
-												onclick={() => toggleOption(index)}
-											/>
-										{/key}
+										<button
+											class="btn btn-ghost btn-circle"
+											onclick={() => toggleElimination(index)}
+											aria-label="eliminate option {option.letter}"><Eye /></button
+										>
 									</div>
 								</label>
 							{/each}
