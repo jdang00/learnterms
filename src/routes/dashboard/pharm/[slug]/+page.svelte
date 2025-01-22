@@ -66,7 +66,7 @@
 
 	function checkAnswers() {
 		const correctAnswers = new Set(questions[currentlySelected].question_data.correct_answers);
-		const selected = selectedAnswers[currentlySelected] || new Set();
+		const selected = selectedAnswers[currentlySelected]?.selected || new Set();
 
 		checkResult =
 			Array.from(selected).every((a) => correctAnswers.has(a)) &&
