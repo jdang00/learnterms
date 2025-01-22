@@ -7,7 +7,7 @@
 	let questions: Question[] = data.questions;
 	let chapterData: Chapter = data.chapters;
 	let currentlySelected = $state(0);
-	let selectedAnswers: Record<number, Set<string>> = {};
+	let selectedAnswers: Record<number, { selected: Set<string>; eliminated: Set<string> }> = {};
 	let flags = new Set<number>();
 	let flagCount = $state(0);
 	let checkResult = $state<string | null>(null);
@@ -19,8 +19,10 @@
 		questions[currentlySelected]?.question_data.options.map((option, index) => ({
 			text: option,
 			letter: option.split('.')[0].trim(),
-			isSelected: selectedAnswers[currentlySelected]?.has(option.split('.')[0].trim()) || false,
-			isEliminated: false
+			isSelected:
+				selectedAnswers[currentlySelected]?.selected?.has(option.split('.')[0].trim()) || false,
+			isEliminated:
+				selectedAnswers[currentlySelected]?.eliminated?.has(option.split('.')[0].trim()) || false
 		})) || []
 	);
 
@@ -47,13 +49,16 @@
 		const option = questionOptions[index].letter;
 
 		if (!selectedAnswers[currentlySelected]) {
-			selectedAnswers[currentlySelected] = new Set();
+			selectedAnswers[currentlySelected] = {
+				selected: new Set(),
+				eliminated: new Set()
+			};
 		}
 
-		if (selectedAnswers[currentlySelected].has(option)) {
-			selectedAnswers[currentlySelected].delete(option);
+		if (selectedAnswers[currentlySelected].selected.has(option)) {
+			selectedAnswers[currentlySelected].selected.delete(option);
 		} else {
-			selectedAnswers[currentlySelected].add(option);
+			selectedAnswers[currentlySelected].selected.add(option);
 		}
 
 		questionOptions[index].isSelected = !questionOptions[index].isSelected;
@@ -71,15 +76,20 @@
 	}
 
 	function saveSelectedAnswers() {
-		selectedAnswers[currentlySelected] = new Set(
+		if (!selectedAnswers[currentlySelected]) {
+			selectedAnswers[currentlySelected] = {
+				selected: new Set(),
+				eliminated: new Set()
+			};
+		}
+
+		selectedAnswers[currentlySelected].selected = new Set(
 			questionOptions.filter((o) => o.isSelected).map((o) => o.letter)
 		);
 
-		if (!selectedAnswers[currentlySelected].eliminated) {
-			selectedAnswers[currentlySelected].eliminated = new Set(
-				questionOptions.filter((o) => o.isEliminated).map((o) => o.letter)
-			);
-		}
+		selectedAnswers[currentlySelected].eliminated = new Set(
+			questionOptions.filter((o) => o.isEliminated).map((o) => o.letter)
+		);
 	}
 
 	function restoreSelectedAnswers() {
@@ -89,14 +99,20 @@
 		};
 
 		questionOptions.forEach((o) => {
-			o.isSelected = saved.selected.has(o.letter);
+			o.isSelected = saved.selected?.has(o.letter) || false;
 			o.isEliminated = saved.eliminated?.has(o.letter) || false;
 		});
 	}
 
 	function clearSelectedAnswers() {
-		selectedAnswers[currentlySelected] = new Set();
-		questionOptions.forEach((o) => (o.isSelected = false));
+		selectedAnswers[currentlySelected] = {
+			selected: new Set(),
+			eliminated: new Set()
+		};
+		questionOptions.forEach((o) => {
+			o.isSelected = false;
+			o.isEliminated = false;
+		});
 		checkResult = null;
 		refreshKey++;
 	}
@@ -117,9 +133,21 @@
 		const option = questionOptions[index];
 		option.isEliminated = !option.isEliminated;
 
-		if (option.isEliminated && option.isSelected) {
-			selectedAnswers[currentlySelected].delete(option.letter);
-			option.isSelected = false;
+		if (!selectedAnswers[currentlySelected]) {
+			selectedAnswers[currentlySelected] = {
+				selected: new Set(),
+				eliminated: new Set()
+			};
+		}
+
+		if (option.isEliminated) {
+			selectedAnswers[currentlySelected].eliminated.add(option.letter);
+			if (option.isSelected) {
+				selectedAnswers[currentlySelected].selected.delete(option.letter);
+				option.isSelected = false;
+			}
+		} else {
+			selectedAnswers[currentlySelected].eliminated.delete(option.letter);
 		}
 
 		refreshKey++;
