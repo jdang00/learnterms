@@ -13,6 +13,7 @@
 	let checkResult = $state<string | null>(null);
 	let refreshKey = $state(0);
 	let unblur = $state(false);
+	let showSolution = $state(false);
 	let isModalOpen = $state(false);
 
 	let questionOptions = $derived(
@@ -24,6 +25,17 @@
 			isEliminated:
 				selectedAnswers[currentlySelected]?.eliminated?.has(option.split('.')[0].trim()) || false
 		})) || []
+	);
+
+	let questionAnswerStates = $derived(
+		showSolution
+			? questionOptions.map((option) => ({
+					...option,
+					isCorrect: questions[currentlySelected].question_data.correct_answers.includes(
+						option.letter
+					)
+				}))
+			: questionOptions
 	);
 
 	let questionSolution = $derived(questions[currentlySelected].question_data.explanation);
@@ -42,6 +54,7 @@
 		currentlySelected = index;
 		checkResult = null;
 		unblur = false;
+		showSolution = false;
 		restoreSelectedAnswers();
 	}
 
@@ -154,11 +167,18 @@
 		refreshKey++;
 	}
 
+	function handleSolution() {
+		showSolution = !showSolution;
+		unblur = !unblur;
+		refreshKey++;
+		console.log(showSolution);
+	}
+
 	function handleKeydown(event: KeyboardEvent) {
 		switch (event.key) {
 			case 'Tab':
 				event.preventDefault();
-				unblur = !unblur;
+				handleSolution();
 				break;
 			case 'Enter':
 				checkAnswers();
@@ -196,7 +216,7 @@
 				<div class="card-body">
 					<div class="flex flex-row justify-between border-b pb-2">
 						<h2 class="card-title">Solution</h2>
-						<button class="btn btn-ghost" onclick={() => (unblur = !unblur)}><Eye /></button>
+						<button class="btn btn-ghost" onclick={() => handleSolution()}><Eye /></button>
 					</div>
 
 					<p class="{unblur ? '' : 'blur'} mt-2">{questionSolution}</p>
@@ -256,28 +276,34 @@
 
 					{#key refreshKey}
 						<div class="flex flex-col justify-start mt-4 space-y-4">
-							{#each questionOptions as option, index}
-								<label class="label cursor-pointer bg-base-200 rounded-full flex items-center">
-									{#key currentlySelected}
-										<input
-											type="checkbox"
-											class="checkbox checkbox-primary checkbox-sm ms-6"
-											checked={option.isSelected ? 'checked' : undefined}
-											onclick={() => toggleOption(index)}
-											disabled={option.isEliminated}
-										/>
-									{/key}
+							{#each questionAnswerStates as option, index}
+								<label
+									class="label cursor-pointer rounded-full flex items-center border-2 border-base-300 bg-base-200 transition-colors
+        {showSolution ? (option.isCorrect ? 'border-success/50' : 'border-error/50') : ''}"
+								>
+									<input
+										type="checkbox"
+										class="checkbox checkbox-primary checkbox-sm ms-6"
+										checked={option.isSelected ? 'checked' : undefined}
+										onclick={() => toggleOption(index)}
+										disabled={option.isEliminated || showSolution}
+									/>
 									<span
 										class="flex-grow ml-8 my-4 {option.isEliminated
 											? 'line-through opacity-50'
-											: ''}">{option.text}</span
+											: ''}"
 									>
+										{option.text}
+									</span>
 									<div class="flex items-center justify-center w-16 mr-4">
 										<button
 											class="btn btn-ghost btn-circle"
 											onclick={() => toggleElimination(index)}
-											aria-label="eliminate option {option.letter}"><Eye /></button
+											disabled={showSolution}
+											aria-label="eliminate option {option.letter}"
 										>
+											<Eye />
+										</button>
 									</div>
 								</label>
 							{/each}
