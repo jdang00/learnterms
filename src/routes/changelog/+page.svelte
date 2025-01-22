@@ -2,6 +2,28 @@
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
 	<div class="ms-8">
+		<h3 class="text-xl mt-3 font-medium text-base-content">January 21, 2025</h3>
+		<p class="ms-2">The fast paced development cycle continutes!</p>
+
+		<ul class="mt-1 m-8">
+			<li>Eliminate answers feature added, a neat tool that lets you narrow down your answers</li>
+			<li>
+				When implementing eliminate answers, I broke like 12 things. Then I fixed it, pushed the
+				changes into production the night everyone is trying to study for the quiz, and then broke
+				15 other things. THIS IS WHY YOU DO NOT PUSH BREAKING CHANGES ON THE NIGHT BEFORE THE EXAM.
+			</li>
+			<li>Fixed breaking bugs, now should function as expected.</li>
+			<li>Blur resets on question change.</li>
+			<li>
+				Use escape to clear, enter to check, tab to reveal solution, and arrows keys to navigate
+				questions.
+			</li>
+			<li>
+				Began implementation for saved progress on questions per user. This is a rather complex
+				feature and will rollout closer to the weekend. After extended testing and implementation.
+			</li>
+		</ul>
+
 		<h3 class="text-xl mt-3 font-medium text-base-content">January 20, 2025</h3>
 		<p class="ms-2">The insanity begins...</p>
 

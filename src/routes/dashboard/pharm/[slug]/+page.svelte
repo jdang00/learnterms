@@ -41,6 +41,7 @@
 		saveSelectedAnswers();
 		currentlySelected = index;
 		checkResult = null;
+		unblur = false;
 		restoreSelectedAnswers();
 	}
 
@@ -152,6 +153,32 @@
 
 		refreshKey++;
 	}
+
+	function handleKeydown(event: KeyboardEvent) {
+		switch (event.key) {
+			case 'Tab':
+				event.preventDefault();
+				unblur = !unblur;
+				break;
+			case 'Enter':
+				checkAnswers();
+				break;
+			case 'Escape':
+				clearSelectedAnswers();
+				break;
+			case 'ArrowRight':
+				goToNextQuestion();
+				break;
+			case 'ArrowLeft':
+				goToPreviousQuestion();
+				break;
+		}
+	}
+
+	$effect(() => {
+		document.addEventListener('keydown', handleKeydown);
+		return () => document.removeEventListener('keydown', handleKeydown);
+	});
 </script>
 
 <div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
@@ -207,7 +234,7 @@
 						<button
 							class="btn btn-circle btn-soft mx-2 {currentlySelected === index
 								? 'btn-primary'
-								: 'btn-outline'} {selectedAnswers[index]?.size > 0 ? 'btn-accent' : ''}"
+								: 'btn-outline'} {selectedAnswers[index]?.selected?.size > 0 ? 'btn-accent' : ''}"
 							aria-label="question {index + 1}"
 							onclick={() => changeSelected(index)}
 						>
