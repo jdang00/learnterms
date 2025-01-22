@@ -279,7 +279,7 @@
 							{#each questionAnswerStates as option, index}
 								<label
 									class="label cursor-pointer rounded-full flex items-center border-2 border-base-300 bg-base-200 transition-colors
-        {showSolution ? (option.isCorrect ? 'border-success/50' : 'border-error/50') : ''}"
+        {showSolution ? (option.isCorrect ? 'border-success' : 'border-error') : ''}"
 								>
 									<input
 										type="checkbox"
