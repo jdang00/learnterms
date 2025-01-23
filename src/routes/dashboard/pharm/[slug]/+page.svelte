@@ -56,6 +56,7 @@
 		unblur = false;
 		showSolution = false;
 		restoreSelectedAnswers();
+		refreshKey++;
 	}
 
 	function toggleOption(index: number) {
@@ -171,7 +172,6 @@
 		showSolution = !showSolution;
 		unblur = !unblur;
 		refreshKey++;
-		console.log(showSolution);
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
