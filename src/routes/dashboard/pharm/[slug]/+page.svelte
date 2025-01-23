@@ -202,7 +202,7 @@
 </script>
 
 <div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
-	<div class="hidden lg:block w-1/4 lg:border-r border-base-300">
+	<div class="hidden lg:block w-1/4 lg:border-r border-base-300 overflow-y-auto">
 		<a class="btn btn-ghost mt-4 ms-2" href="/dashboard"> <ArrowLeft />Back</a>
 
 		<div class="mx-8 mt-4">
@@ -225,8 +225,10 @@
 		</div>
 	</div>
 
-	<div class="container mx-auto lg:w-3/4 flex flex-col items-center min-h-screen">
-		<div class="lg:hidden flex flex-row mt-2 items-center w-full justify-between">
+	<div class="container mx-auto lg:w-3/4 flex flex-col items-center lg:min-h-screen">
+		<div
+			class="lg:hidden flex flex-row mt-2 items-center w-full justify-between sticky top-0 bg-base-100 z-40 py-2"
+		>
 			<a class="btn btn-ghost flex-shrink-0 flex items-center ms-3" href="/dashboard">
 				<ArrowLeft />
 			</a>
@@ -241,7 +243,9 @@
 
 			<div class="flex-shrink-0 w-24"></div>
 		</div>
-		<div class="flex flex-row w-full lg:mt-6 mt-4 overflow-y-scroll">
+
+		<!--Question Selection Menu -->
+		<div class="flex flex-row w-full mb-4 overflow-x-auto lg:mb-0 lg:mt-6 space-x-2">
 			{#key flagCount}
 				{#each questions, index}
 					<div class="indicator">
@@ -265,12 +269,13 @@
 			{/key}
 		</div>
 
-		<div class="border-t border-base-300 w-full my-6"></div>
+		<div class="hidden sm:block border-t border-base-300 w-full my-6"></div>
 
+		<!--Quizzing Sections -->
 		{#if questions[currentlySelected]}
-			<div class="w-full mb-8 mt-2">
-				<div class="mx-6 sm:mx-8">
-					<div class="font-bold text-lg mb-4">
+			<div class="w-full mb-8 mt-2 overflow-y-auto max-h-[70vh] pb-16 sm:pb-0">
+				<div class="mx-4 sm:mx-6">
+					<div class="font-bold text-lg sm:text-xl mb-4">
 						{questions[currentlySelected].question_data.question}
 					</div>
 
@@ -349,13 +354,14 @@
 		{/if}
 	</div>
 
+	<!--Mobile Menu-->
 	<div
 		class="fixed bottom-0 left-0 w-full bg-base-100 shadow-lg border-t border-base-300 z-50 flex gap-2 items-center px-4 py-4 lg:hidden flex-wrap justify-center"
 	>
-		<button class="btn btn-outline" onclick={clearSelectedAnswers}>Clear</button>
-		<button class="btn btn-outline btn-success" onclick={checkAnswers}>Check</button>
+		<button class="btn btn-outline btn-sm" onclick={clearSelectedAnswers}>Clear</button>
+		<button class="btn btn-outline btn-success btn-sm" onclick={checkAnswers}>Check</button>
 		<button
-			class="btn btn-warning btn-outline"
+			class="btn btn-warning btn-outline btn-sm"
 			aria-label="flag question {currentlySelected + 1}"
 			onclick={() => toggleFlag(currentlySelected + 1)}
 		>
@@ -363,22 +369,24 @@
 		</button>
 		<div class="flex flex-row gap-2">
 			<button
-				class="btn btn-outline"
+				class="btn btn-outline btn-sm"
 				onclick={goToPreviousQuestion}
 				disabled={currentlySelected === 0}
 			>
 				<ArrowLeft />
 			</button>
 			<button
-				class="btn btn-outline"
+				class="btn btn-outline btn-sm"
 				onclick={goToNextQuestion}
 				disabled={currentlySelected === questions.length - 1}
 			>
 				<ArrowRight />
 			</button>
 		</div>
-		<button class="btn modal-button lg:hidden" onclick={() => (isModalOpen = true)}><Eye /></button>
-		<dialog class="modal" class:modal-open={isModalOpen}>
+		<button class="btn modal-button lg:hidden btn-sm" onclick={() => (isModalOpen = true)}
+			><Eye /></button
+		>
+		<dialog class="modal max-w-full p-4" class:modal-open={isModalOpen}>
 			<div class="modal-box">
 				<form method="dialog">
 					<button
