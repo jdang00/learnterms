@@ -317,9 +317,9 @@
 				</div>
 				<div class=" flex-row justify-center mt-8 gap-4 hidden lg:flex">
 					<button class="btn btn-outline" onclick={clearSelectedAnswers}>Clear</button>
-					<button class="btn btn-outline btn-success" onclick={checkAnswers}>Check</button>
+					<button class="btn btn-soft btn-success" onclick={checkAnswers}>Check</button>
 					<button
-						class="btn btn-warning btn-outline"
+						class="btn btn-warning btn-soft"
 						aria-label="flag question {currentlySelected + 1}"
 						onclick={() => toggleFlag(currentlySelected + 1)}
 					>
