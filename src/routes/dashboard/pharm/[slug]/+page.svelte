@@ -17,7 +17,7 @@
 	let isModalOpen = $state(false);
 
 	let questionOptions = $derived(
-		questions[currentlySelected]?.question_data.options.map((option, index) => ({
+		questions[currentlySelected]?.question_data.options.map((option) => ({
 			text: option,
 			letter: option.split('.')[0].trim(),
 			isSelected:
@@ -247,7 +247,7 @@
 		<!--Question Selection Menu -->
 		<div class="flex flex-row w-full mb-4 overflow-x-auto lg:mb-0 lg:mt-6 space-x-2">
 			{#key flagCount}
-				{#each questions, index}
+				{#each questions as _, index}
 					<div class="indicator">
 						{#if flags.has(index + 1)}
 							<span

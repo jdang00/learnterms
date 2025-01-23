@@ -38,16 +38,11 @@
 						</div>
 					</div>
 					<h1 class="font-semibold text-4xl self-center">
-						Hi, {user.firstName.split(' ')[0]}
+						Hi, {user.firstName?.split(' ')[0]}
 					</h1>
 				</div>
 			{/if}
 		</div>
-		<a
-			class="btn btn-dash btn-secondary mx-10 text-center p-8"
-			href="/blog/LearnTerms v2"
-			target="_blank">Discover how LearnTerms helps you prepare for General Pharmacology!</a
-		>
 	</div>
 
 	<!-- Scrollable Content -->
@@ -63,7 +58,6 @@
 							class="card shadow-lg transition duration-300"
 							class:hover={index < enabledThreshold}
 							class:disabled={index >= enabledThreshold}
-							class:hover:text-secondary={index < enabledThreshold}
 						>
 							<div class="card-body flex flex-row justify-between items-center bg-base-100">
 								<div class="flex flex-row gap-8">
@@ -122,5 +116,6 @@
 
 	.card:hover:not(.disabled) {
 		transform: scale(1.01);
+		text-decoration: underline;
 	}
 </style>
