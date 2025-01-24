@@ -56,30 +56,6 @@
 
 	restorefromDB();
 
-	async function saveProgress(questionId: string) {
-		const progress = selectedAnswers[questionId];
-		if (!progress) return;
-		if (progress.eliminated.size === 0 && progress.selected.size === 0) return;
-
-		const { error } = await supabase.from('user_question_interactions').upsert(
-			{
-				user_id: userId,
-				question_id: questionId,
-				selected_options: Array.from(progress.selected).map((letter) => ({ letter })),
-				eliminated_options: Array.from(progress.eliminated).map((letter) => ({ letter })),
-				is_flagged: flags.has(questionId),
-				updated_at: new Date()
-			},
-			{
-				onConflict: ['user_id', 'question_id']
-			}
-		);
-
-		if (error) {
-			console.error('Error saving progress:', error);
-		}
-	}
-
 	// Initialize question map and IDs
 	function initializeState() {
 		questionMap = Object.fromEntries(questions.map((q) => [q.id, q]));
@@ -126,7 +102,6 @@
 	// Changes the currently selected question by ID
 	async function changeSelected(id: string) {
 		saveSelectedAnswers();
-		saveProgress(id);
 		currentlySelectedId = id;
 		checkResult = null;
 		unblur = false;
@@ -313,14 +288,22 @@
 		try {
 			for (const questionId in selectedAnswers) {
 				const progress = selectedAnswers[questionId];
-				if (progress && (progress.selected.size > 0 || progress.eliminated.size > 0)) {
+				const hasSelectedOrEliminated =
+					progress && (progress.selected.size > 0 || progress.eliminated.size > 0);
+				const isFlagged = flags.has(questionId);
+
+				if (hasSelectedOrEliminated || isFlagged) {
 					const { error } = await supabase.from('user_question_interactions').upsert(
 						{
 							user_id: userId,
 							question_id: questionId,
-							selected_options: Array.from(progress.selected).map((letter) => ({ letter })),
-							eliminated_options: Array.from(progress.eliminated).map((letter) => ({ letter })),
-							is_flagged: flags.has(questionId),
+							selected_options: hasSelectedOrEliminated
+								? Array.from(progress.selected).map((letter) => ({ letter }))
+								: [],
+							eliminated_options: hasSelectedOrEliminated
+								? Array.from(progress.eliminated).map((letter) => ({ letter }))
+								: [],
+							is_flagged: isFlagged,
 							updated_at: new Date()
 						},
 						{
@@ -330,8 +313,6 @@
 
 					if (error) {
 						console.error(`Error saving progress for question ${questionId}:`, error);
-					} else {
-						console.log(`Progress saved successfully for question ${questionId}`);
 					}
 				}
 			}
