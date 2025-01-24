@@ -286,6 +286,8 @@
 
 	async function saveAllProgressToDB() {
 		try {
+			const rowsToUpsert = [];
+
 			for (const questionId in selectedAnswers) {
 				const progress = selectedAnswers[questionId];
 				const hasSelectedOrEliminated =
@@ -293,27 +295,28 @@
 				const isFlagged = flags.has(questionId);
 
 				if (hasSelectedOrEliminated || isFlagged) {
-					const { error } = await supabase.from('user_question_interactions').upsert(
-						{
-							user_id: userId,
-							question_id: questionId,
-							selected_options: hasSelectedOrEliminated
-								? Array.from(progress.selected).map((letter) => ({ letter }))
-								: [],
-							eliminated_options: hasSelectedOrEliminated
-								? Array.from(progress.eliminated).map((letter) => ({ letter }))
-								: [],
-							is_flagged: isFlagged,
-							updated_at: new Date()
-						},
-						{
-							onConflict: ['user_id', 'question_id']
-						}
-					);
+					rowsToUpsert.push({
+						user_id: userId,
+						question_id: questionId,
+						selected_options: hasSelectedOrEliminated
+							? Array.from(progress.selected).map((letter) => ({ letter }))
+							: [],
+						eliminated_options: hasSelectedOrEliminated
+							? Array.from(progress.eliminated).map((letter) => ({ letter }))
+							: [],
+						is_flagged: isFlagged,
+						updated_at: new Date()
+					});
+				}
+			}
 
-					if (error) {
-						console.error(`Error saving progress for question ${questionId}:`, error);
-					}
+			if (rowsToUpsert.length > 0) {
+				const { error } = await supabase.from('user_question_interactions').upsert(rowsToUpsert, {
+					onConflict: ['user_id', 'question_id']
+				});
+
+				if (error) {
+					console.error('Error saving progress to the database:', error);
 				}
 			}
 		} catch (err) {
