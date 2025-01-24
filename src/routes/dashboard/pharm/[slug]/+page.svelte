@@ -1,14 +1,27 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { onDestroy } from 'svelte';
 	import { ArrowLeft, Eye, Flag, ArrowRight } from 'lucide-svelte';
 	import type { Question, Chapter } from '$lib/types';
+	import supabase from '$lib/supabaseClient';
 
+	// Props and initial state
 	let { data }: { data: PageData } = $props();
 	let questions: Question[] = data.questions;
 	let chapterData: Chapter = data.chapters;
-	let currentlySelected = $state(0);
-	let selectedAnswers: Record<number, { selected: Set<string>; eliminated: Set<string> }> = {};
-	let flags = new Set<number>();
+	let userId = data.userId;
+	let userProgress = data.progressData;
+
+	// Reactive state declarations
+	let questionMap = $state<Record<string, Question>>({});
+	let questionIds = $state<string[]>([]);
+	let currentlySelectedId: string = $state('');
+
+	let selectedAnswers = $state<Record<string, { selected: Set<string>; eliminated: Set<string> }>>(
+		{}
+	);
+
+	let flags = new Set<string>();
 	let flagCount = $state(0);
 	let checkResult = $state<string | null>(null);
 	let refreshKey = $state(0);
@@ -16,14 +29,74 @@
 	let showSolution = $state(false);
 	let isModalOpen = $state(false);
 
+	function restorefromDB() {
+		const updatedAnswers: Record<string, { selected: Set<string>; eliminated: Set<string> }> = {};
+		flags.clear();
+		flagCount = 0;
+
+		userProgress.forEach((progress) => {
+			const selectedLetters = progress.selected_options.map((option) => option.letter);
+			const eliminatedLetters = progress.eliminated_options.map((option) => option.letter);
+
+			updatedAnswers[progress.question_id] = {
+				selected: new Set(selectedLetters),
+				eliminated: new Set(eliminatedLetters)
+			};
+
+			if (progress.is_flagged) {
+				flags.add(progress.question_id);
+			}
+		});
+
+		selectedAnswers = updatedAnswers;
+		flagCount = flags.size;
+
+		refreshKey++;
+	}
+
+	restorefromDB();
+
+	async function saveProgress(questionId: string) {
+		const progress = selectedAnswers[questionId];
+		if (!progress) return;
+		if (progress.eliminated.size === 0 && progress.selected.size === 0) return;
+
+		const { error } = await supabase.from('user_question_interactions').upsert(
+			{
+				user_id: userId,
+				question_id: questionId,
+				selected_options: Array.from(progress.selected).map((letter) => ({ letter })),
+				eliminated_options: Array.from(progress.eliminated).map((letter) => ({ letter })),
+				is_flagged: flags.has(questionId),
+				updated_at: new Date()
+			},
+			{
+				onConflict: ['user_id', 'question_id']
+			}
+		);
+
+		if (error) {
+			console.error('Error saving progress:', error);
+		}
+	}
+
+	// Initialize question map and IDs
+	function initializeState() {
+		questionMap = Object.fromEntries(questions.map((q) => [q.id, q]));
+		questionIds = questions.map((q) => q.id);
+		currentlySelectedId = questionIds[0];
+	}
+	initializeState();
+
+	// Derived stores for options, answer states, and solutions
 	let questionOptions = $derived(
-		questions[currentlySelected]?.question_data.options.map((option) => ({
+		questionMap[currentlySelectedId]?.question_data.options.map((option) => ({
 			text: option,
 			letter: option.split('.')[0].trim(),
 			isSelected:
-				selectedAnswers[currentlySelected]?.selected?.has(option.split('.')[0].trim()) || false,
+				selectedAnswers[currentlySelectedId]?.selected?.has(option.split('.')[0].trim()) || false,
 			isEliminated:
-				selectedAnswers[currentlySelected]?.eliminated?.has(option.split('.')[0].trim()) || false
+				selectedAnswers[currentlySelectedId]?.eliminated?.has(option.split('.')[0].trim()) || false
 		})) || []
 	);
 
@@ -31,84 +104,95 @@
 		showSolution
 			? questionOptions.map((option) => ({
 					...option,
-					isCorrect: questions[currentlySelected].question_data.correct_answers.includes(
+					isCorrect: questionMap[currentlySelectedId].question_data.correct_answers.includes(
 						option.letter
 					)
 				}))
 			: questionOptions
 	);
 
-	let questionSolution = $derived(questions[currentlySelected].question_data.explanation);
+	let questionSolution = $derived(questionMap[currentlySelectedId].question_data.explanation);
 
-	function toggleFlag(index: number) {
-		if (flags.has(index)) {
-			flags.delete(index);
+	// Toggles the flagged state of a question
+	function toggleFlag(id: string) {
+		if (flags.has(id)) {
+			flags.delete(id);
 		} else {
-			flags.add(index);
+			flags.add(id);
 		}
 		flagCount = flags.size;
 	}
 
-	function changeSelected(index: number) {
+	// Changes the currently selected question by ID
+	async function changeSelected(id: string) {
 		saveSelectedAnswers();
-		currentlySelected = index;
+		saveProgress(id);
+		currentlySelectedId = id;
 		checkResult = null;
 		unblur = false;
 		showSolution = false;
 		restoreSelectedAnswers();
+
 		refreshKey++;
 	}
 
+	// Toggles the selection state of an option
 	function toggleOption(index: number) {
 		if (questionOptions[index].isEliminated) return;
 		const option = questionOptions[index].letter;
 
-		if (!selectedAnswers[currentlySelected]) {
-			selectedAnswers[currentlySelected] = {
+		if (!selectedAnswers[currentlySelectedId]) {
+			selectedAnswers[currentlySelectedId] = {
 				selected: new Set(),
 				eliminated: new Set()
 			};
 		}
 
-		if (selectedAnswers[currentlySelected].selected.has(option)) {
-			selectedAnswers[currentlySelected].selected.delete(option);
+		if (selectedAnswers[currentlySelectedId].selected.has(option)) {
+			selectedAnswers[currentlySelectedId].selected.delete(option);
 		} else {
-			selectedAnswers[currentlySelected].selected.add(option);
+			selectedAnswers[currentlySelectedId].selected.add(option);
 		}
 
 		questionOptions[index].isSelected = !questionOptions[index].isSelected;
 	}
 
+	// Compares selected answers with the correct ones and sets the result
 	function checkAnswers() {
-		const correctAnswers = new Set(questions[currentlySelected].question_data.correct_answers);
-		const selected = selectedAnswers[currentlySelected]?.selected || new Set();
-
-		checkResult =
-			Array.from(selected).every((a) => correctAnswers.has(a)) &&
-			Array.from(correctAnswers).every((a) => selected.has(a))
-				? 'Correct!'
-				: 'Incorrect. Try again.';
-	}
-
-	function saveSelectedAnswers() {
-		if (!selectedAnswers[currentlySelected]) {
-			selectedAnswers[currentlySelected] = {
-				selected: new Set(),
-				eliminated: new Set()
-			};
+		const currentQuestion = questionMap[currentlySelectedId];
+		if (!currentQuestion) {
+			checkResult = 'Error. Question ID not found.';
+			return;
 		}
 
-		selectedAnswers[currentlySelected].selected = new Set(
+		const correctAnswers = new Set(currentQuestion.question_data.correct_answers);
+		const selected = selectedAnswers[currentlySelectedId]?.selected || new Set();
+
+		const isCorrect =
+			Array.from(selected).every((a) => correctAnswers.has(a)) &&
+			Array.from(correctAnswers).every((a) => selected.has(a));
+
+		checkResult = isCorrect ? 'Correct!' : 'Incorrect. Try again.';
+	}
+
+	// Saves the selected and eliminated options for the current question
+	function saveSelectedAnswers() {
+		if (!selectedAnswers[currentlySelectedId]) {
+			selectedAnswers[currentlySelectedId] = { selected: new Set(), eliminated: new Set() };
+		}
+
+		selectedAnswers[currentlySelectedId].selected = new Set(
 			questionOptions.filter((o) => o.isSelected).map((o) => o.letter)
 		);
 
-		selectedAnswers[currentlySelected].eliminated = new Set(
+		selectedAnswers[currentlySelectedId].eliminated = new Set(
 			questionOptions.filter((o) => o.isEliminated).map((o) => o.letter)
 		);
 	}
 
+	// Restores the saved options for the current question
 	function restoreSelectedAnswers() {
-		const saved = selectedAnswers[currentlySelected] || {
+		const saved = selectedAnswers[currentlySelectedId] || {
 			selected: new Set(),
 			eliminated: new Set()
 		};
@@ -119,8 +203,9 @@
 		});
 	}
 
-	function clearSelectedAnswers() {
-		selectedAnswers[currentlySelected] = {
+	// Clears all selected and eliminated options for the current question
+	async function clearSelectedAnswers() {
+		selectedAnswers[currentlySelectedId] = {
 			selected: new Set(),
 			eliminated: new Set()
 		};
@@ -129,51 +214,68 @@
 			o.isEliminated = false;
 		});
 		checkResult = null;
+
 		refreshKey++;
+
+		const { error } = await supabase
+			.from('user_question_interactions')
+			.delete()
+			.eq('question_id', currentlySelectedId);
+
+		if (error) {
+			console.error('Error deleting progress from database:', error);
+		}
 	}
 
+	// Moves to the next question
 	function goToNextQuestion() {
-		if (currentlySelected < questions.length - 1) {
-			changeSelected(currentlySelected + 1);
+		const currentIndex = questionIds.indexOf(currentlySelectedId);
+		if (currentIndex < questions.length - 1) {
+			changeSelected(questionIds[currentIndex + 1]);
 		}
 	}
 
+	// Moves to the previous question
 	function goToPreviousQuestion() {
-		if (currentlySelected > 0) {
-			changeSelected(currentlySelected - 1);
+		const currentIndex = questionIds.indexOf(currentlySelectedId);
+		if (currentIndex > 0) {
+			changeSelected(questionIds[currentIndex - 1]);
 		}
 	}
 
+	// Toggles the elimination state of an option
 	function toggleElimination(index: number) {
 		const option = questionOptions[index];
 		option.isEliminated = !option.isEliminated;
 
-		if (!selectedAnswers[currentlySelected]) {
-			selectedAnswers[currentlySelected] = {
+		if (!selectedAnswers[currentlySelectedId]) {
+			selectedAnswers[currentlySelectedId] = {
 				selected: new Set(),
 				eliminated: new Set()
 			};
 		}
 
 		if (option.isEliminated) {
-			selectedAnswers[currentlySelected].eliminated.add(option.letter);
+			selectedAnswers[currentlySelectedId].eliminated.add(option.letter);
 			if (option.isSelected) {
-				selectedAnswers[currentlySelected].selected.delete(option.letter);
+				selectedAnswers[currentlySelectedId].selected.delete(option.letter);
 				option.isSelected = false;
 			}
 		} else {
-			selectedAnswers[currentlySelected].eliminated.delete(option.letter);
+			selectedAnswers[currentlySelectedId].eliminated.delete(option.letter);
 		}
 
 		refreshKey++;
 	}
 
+	// Toggles the display of the solution
 	function handleSolution() {
 		showSolution = !showSolution;
 		unblur = !unblur;
 		refreshKey++;
 	}
 
+	// Handles keyboard navigation and shortcuts
 	function handleKeydown(event: KeyboardEvent) {
 		switch (event.key) {
 			case 'Tab':
@@ -195,10 +297,48 @@
 		}
 	}
 
+	// Effect for reactive updates and event listeners
 	$effect(() => {
+		questionMap = Object.fromEntries(questions.map((q) => [q.id, q]));
+		questionIds = questions.map((q) => q.id);
 		document.addEventListener('keydown', handleKeydown);
 		return () => document.removeEventListener('keydown', handleKeydown);
 	});
+
+	onDestroy(() => {
+		saveAllProgressToDB();
+	});
+
+	async function saveAllProgressToDB() {
+		try {
+			for (const questionId in selectedAnswers) {
+				const progress = selectedAnswers[questionId];
+				if (progress && (progress.selected.size > 0 || progress.eliminated.size > 0)) {
+					const { error } = await supabase.from('user_question_interactions').upsert(
+						{
+							user_id: userId,
+							question_id: questionId,
+							selected_options: Array.from(progress.selected).map((letter) => ({ letter })),
+							eliminated_options: Array.from(progress.eliminated).map((letter) => ({ letter })),
+							is_flagged: flags.has(questionId),
+							updated_at: new Date()
+						},
+						{
+							onConflict: ['user_id', 'question_id']
+						}
+					);
+
+					if (error) {
+						console.error(`Error saving progress for question ${questionId}:`, error);
+					} else {
+						console.log(`Progress saved successfully for question ${questionId}`);
+					}
+				}
+			}
+		} catch (err) {
+			console.error('Unexpected error while saving progress:', err);
+		}
+	}
 </script>
 
 <div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
@@ -247,20 +387,20 @@
 		<!--Question Selection Menu -->
 		<div class="flex flex-row w-full mb-4 overflow-x-auto lg:mb-0 lg:mt-6 space-x-2">
 			{#key flagCount}
-				{#each questions as _, index}
+				{#each questionIds as id, index}
 					<div class="indicator">
-						{#if flags.has(index + 1)}
+						{#if flags.has(id)}
 							<span
 								class="indicator-item indicator-start badge badge-warning badge-xs !right-10 translate-x-1/4 translate-y-1/4
 "
 							></span>
 						{/if}
 						<button
-							class="btn btn-circle btn-soft mx-2 {currentlySelected === index
+							class="btn btn-circle btn-soft mx-2 {currentlySelectedId === id
 								? 'btn-primary'
-								: 'btn-outline'} {selectedAnswers[index]?.selected?.size > 0 ? 'btn-accent' : ''}"
+								: 'btn-outline'} {selectedAnswers[id]?.selected?.size > 0 ? 'btn-accent' : ''}"
 							aria-label="question {index + 1}"
-							onclick={() => changeSelected(index)}
+							onclick={() => changeSelected(id)}
 						>
 							{index + 1}
 						</button>
@@ -272,11 +412,11 @@
 		<div class="hidden sm:block border-t border-base-300 w-full my-6"></div>
 
 		<!--Quizzing Sections -->
-		{#if questions[currentlySelected]}
+		{#if questionMap[currentlySelectedId]}
 			<div class="w-full mb-8 mt-2 overflow-y-auto max-h-[70vh] pb-16 sm:pb-0">
 				<div class="mx-4 sm:mx-6">
 					<div class="font-bold text-lg sm:text-xl mb-4">
-						{questions[currentlySelected].question_data.question}
+						{questionMap[currentlySelectedId].question_data.question}
 					</div>
 
 					{#key refreshKey}
@@ -320,22 +460,22 @@
 					<button class="btn btn-soft btn-success" onclick={checkAnswers}>Check</button>
 					<button
 						class="btn btn-warning btn-soft"
-						aria-label="flag question {currentlySelected + 1}"
-						onclick={() => toggleFlag(currentlySelected + 1)}
+						aria-label="flag question {questionIds.indexOf(currentlySelectedId)}"
+						onclick={() => toggleFlag(currentlySelectedId)}
 					>
 						<Flag />
 					</button>
 					<button
 						class="btn btn-outline"
 						onclick={goToPreviousQuestion}
-						disabled={currentlySelected === 0}
+						disabled={questionIds.indexOf(currentlySelectedId) === 0}
 					>
 						<ArrowLeft />
 					</button>
 					<button
 						class="btn btn-outline"
 						onclick={goToNextQuestion}
-						disabled={currentlySelected === questions.length - 1}
+						disabled={questionIds.indexOf(currentlySelectedId) === questions.length - 1}
 					>
 						<ArrowRight />
 					</button>
@@ -362,8 +502,8 @@
 		<button class="btn btn-outline btn-success btn-sm" onclick={checkAnswers}>Check</button>
 		<button
 			class="btn btn-warning btn-outline btn-sm"
-			aria-label="flag question {currentlySelected + 1}"
-			onclick={() => toggleFlag(currentlySelected + 1)}
+			aria-label="flag question {questionIds.indexOf(currentlySelectedId)}"
+			onclick={() => toggleFlag(currentlySelectedId)}
 		>
 			<Flag />
 		</button>
@@ -371,14 +511,14 @@
 			<button
 				class="btn btn-outline btn-sm"
 				onclick={goToPreviousQuestion}
-				disabled={currentlySelected === 0}
+				disabled={questionIds.indexOf(currentlySelectedId) === 0}
 			>
 				<ArrowLeft />
 			</button>
 			<button
 				class="btn btn-outline btn-sm"
 				onclick={goToNextQuestion}
-				disabled={currentlySelected === questions.length - 1}
+				disabled={questionIds.indexOf(currentlySelectedId) === questions.length - 1}
 			>
 				<ArrowRight />
 			</button>

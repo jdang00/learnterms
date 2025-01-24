@@ -16,7 +16,15 @@ export interface QuestionData {
 }
 
 export interface Question {
+	id: string;
 	question_data: QuestionData;
+}
+
+export interface QuestionProgress {
+	question_id: string;
+	selected_options: Option[];
+	eliminated_options: Option[];
+	is_flagged: boolean;
 }
 
 export interface Chapter {

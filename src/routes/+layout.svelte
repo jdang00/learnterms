@@ -18,13 +18,13 @@
 	$effect(() => {
 		themeChange(false);
 
-		if (browser) {
+		/* if (browser) {
 			posthog.init('phc_3eXFYO1aHVEWM75fi3wXFE6OiJZiDNvI5pcl67S19fK', {
 				api_host: 'https://us.i.posthog.com',
 				capture_pageview: false,
 				capture_pageleave: false
 			});
-		}
+		}*/
 	});
 
 	if (browser) {
