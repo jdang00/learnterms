@@ -8,6 +8,10 @@ export interface Option {
 	letter: string;
 }
 
+interface ExtendedOption extends Option {
+	isCorrect?: boolean;
+}
+
 export interface QuestionData {
 	options: string[];
 	question: string;

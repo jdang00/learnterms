@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	import { onDestroy } from 'svelte';
 	import { ArrowLeft, Eye, Flag, ArrowRight } from 'lucide-svelte';
-	import type { Question, Chapter } from '$lib/types';
+	import type { Question, Chapter, ExtendedOptions } from '$lib/types';
 	import supabase from '$lib/supabaseClient';
 
 	// Props and initial state
@@ -85,7 +85,7 @@
 					)
 				}))
 			: questionOptions
-	);
+	) as ExtendedOptions[];
 
 	let questionSolution = $derived(questionMap[currentlySelectedId].question_data.explanation);
 
@@ -415,7 +415,7 @@
 									<input
 										type="checkbox"
 										class="checkbox checkbox-primary checkbox-sm ms-6"
-										checked={option.isSelected ? 'checked' : undefined}
+										checked={option.isSelected ? true : false}
 										onclick={() => toggleOption(index)}
 										disabled={option.isEliminated || showSolution}
 									/>
