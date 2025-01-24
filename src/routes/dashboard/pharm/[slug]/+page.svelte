@@ -343,7 +343,9 @@
 						<button class="btn btn-ghost" onclick={() => handleSolution()}><Eye /></button>
 					</div>
 
-					<p class="{unblur ? '' : 'blur'} mt-2">{questionSolution}</p>
+					<p class={`mt-2 transition-all duration-300 ${unblur ? 'blur-none' : 'blur-sm'}`}>
+						{questionSolution}
+					</p>
 				</div>
 			</div>
 		</div>
