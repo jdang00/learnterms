@@ -38,7 +38,6 @@
 							is Smarter Studying, Simplified.
 						</div>
 					</div>
-					clas
 				</h1>
 				<p class="text-base-content text-2xl">
 					Purpose-built tools to help you ace your exams—backed by data, driven by focus.
