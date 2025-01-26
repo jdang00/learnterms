@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { onDestroy } from 'svelte';
-	import { ArrowLeft, Eye, Flag, ArrowRight } from 'lucide-svelte';
-	import type { Question, Chapter, ExtendedOptions } from '$lib/types';
+	import { ArrowLeft, Eye, Flag, ArrowRight, Shuffle } from 'lucide-svelte';
+	import type { Question, Chapter, ExtendedOption, Option } from '$lib/types';
 	import supabase from '$lib/supabaseClient';
 
 	// Props and initial state
@@ -12,11 +12,13 @@
 	let userId = data.userId;
 	let userProgress = data.progressData;
 
-	// Reactive state declarations
+	// Reactive state declarationss
 	let questionMap = $state<Record<string, Question>>({});
 	let questionIds = $state<string[]>([]);
-	let currentlySelectedId: string = $state('');
+	let shuffledQuestionIds = $state<string[]>([]);
 
+	let isShuffled = $state(false);
+	let currentlySelectedId: string = $state('');
 	let selectedAnswers = $state<Record<string, { selected: Set<string>; eliminated: Set<string> }>>(
 		{}
 	);
@@ -29,10 +31,37 @@
 	let showSolution = $state(false);
 	let isModalOpen = $state(false);
 
+	let interactedQuestions = $state<Set<string>>(new Set());
+
+	let progress = $derived.by(() => {
+		const totalQuestions = questions.length;
+		const answeredQuestions = interactedQuestions.size;
+
+		return Math.round((answeredQuestions / totalQuestions) * 100);
+	});
+
+	function shuffleQuestionMap() {
+		const entries = Object.entries(questionMap); // Convert map to array
+		for (let i = entries.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[entries[i], entries[j]] = [entries[j], entries[i]];
+		}
+		shuffledQuestionIds = entries.map(([id]) => id); // Update shuffled question IDs
+	}
+
+	function toggleShuffle() {
+		isShuffled = !isShuffled;
+		if (isShuffled) {
+			shuffleQuestionMap();
+		}
+		currentlySelectedId = getCurrentQuestionIds()[0];
+	}
+
 	function restorefromDB() {
 		const updatedAnswers: Record<string, { selected: Set<string>; eliminated: Set<string> }> = {};
 		flags.clear();
 		flagCount = 0;
+		interactedQuestions.clear(); // Clear the set before populating it
 
 		userProgress.forEach((progress) => {
 			const selectedLetters = progress.selected_options.map((option) => option.letter);
@@ -43,6 +72,11 @@
 				eliminated: new Set(eliminatedLetters)
 			};
 
+			// Add the question to interactedQuestions if it has selected or eliminated options
+			if (selectedLetters.length > 0 || eliminatedLetters.length > 0) {
+				interactedQuestions.add(progress.question_id);
+			}
+
 			if (progress.is_flagged) {
 				flags.add(progress.question_id);
 			}
@@ -50,6 +84,9 @@
 
 		selectedAnswers = updatedAnswers;
 		flagCount = flags.size;
+
+		// Reassign to trigger reactivity
+		interactedQuestions = new Set(interactedQuestions);
 
 		refreshKey++;
 	}
@@ -66,14 +103,14 @@
 
 	// Derived stores for options, answer states, and solutions
 	let questionOptions = $derived(
-		questionMap[currentlySelectedId]?.question_data.options.map((option) => ({
+		(questionMap[currentlySelectedId]?.question_data.options.map((option) => ({
 			text: option,
 			letter: option.split('.')[0].trim(),
 			isSelected:
 				selectedAnswers[currentlySelectedId]?.selected?.has(option.split('.')[0].trim()) || false,
 			isEliminated:
 				selectedAnswers[currentlySelectedId]?.eliminated?.has(option.split('.')[0].trim()) || false
-		})) || []
+		})) as Option[]) || []
 	);
 
 	let questionAnswerStates = $derived(
@@ -85,7 +122,7 @@
 					)
 				}))
 			: questionOptions
-	) as ExtendedOptions[];
+	) as ExtendedOption[];
 
 	let questionSolution = $derived(questionMap[currentlySelectedId].question_data.explanation);
 
@@ -130,6 +167,19 @@
 		}
 
 		questionOptions[index].isSelected = !questionOptions[index].isSelected;
+
+		// Update interactedQuestions
+		if (
+			selectedAnswers[currentlySelectedId].selected.size > 0 ||
+			selectedAnswers[currentlySelectedId].eliminated.size > 0
+		) {
+			interactedQuestions.add(currentlySelectedId);
+		} else {
+			interactedQuestions.delete(currentlySelectedId);
+		}
+
+		// Reassign to trigger reactivity
+		interactedQuestions = new Set(interactedQuestions);
 	}
 
 	// Compares selected answers with the correct ones and sets the result
@@ -190,6 +240,12 @@
 		});
 		checkResult = null;
 
+		// Update interactedQuestions
+		interactedQuestions.delete(currentlySelectedId);
+
+		// Reassign to trigger reactivity
+		interactedQuestions = new Set(interactedQuestions);
+
 		refreshKey++;
 
 		const { error } = await supabase
@@ -202,19 +258,26 @@
 		}
 	}
 
+	function getCurrentQuestionIds() {
+		return isShuffled ? shuffledQuestionIds : questionIds;
+	}
+
 	// Moves to the next question
 	function goToNextQuestion() {
-		const currentIndex = questionIds.indexOf(currentlySelectedId);
-		if (currentIndex < questions.length - 1) {
-			changeSelected(questionIds[currentIndex + 1]);
+		const currentQuestionIds = getCurrentQuestionIds();
+		const currentIndex = currentQuestionIds.indexOf(currentlySelectedId);
+		if (currentIndex < currentQuestionIds.length - 1) {
+			currentlySelectedId = currentQuestionIds[currentIndex + 1];
 		}
 	}
 
 	// Moves to the previous question
+
 	function goToPreviousQuestion() {
-		const currentIndex = questionIds.indexOf(currentlySelectedId);
+		const currentQuestionIds = getCurrentQuestionIds();
+		const currentIndex = currentQuestionIds.indexOf(currentlySelectedId);
 		if (currentIndex > 0) {
-			changeSelected(questionIds[currentIndex - 1]);
+			currentlySelectedId = currentQuestionIds[currentIndex - 1];
 		}
 	}
 
@@ -240,9 +303,21 @@
 			selectedAnswers[currentlySelectedId].eliminated.delete(option.letter);
 		}
 
+		// Update interactedQuestions
+		if (
+			selectedAnswers[currentlySelectedId].selected.size > 0 ||
+			selectedAnswers[currentlySelectedId].eliminated.size > 0
+		) {
+			interactedQuestions.add(currentlySelectedId);
+		} else {
+			interactedQuestions.delete(currentlySelectedId);
+		}
+
+		// Reassign to trigger reactivity
+		interactedQuestions = new Set(interactedQuestions);
+
 		refreshKey++;
 	}
-
 	// Toggles the display of the solution
 	function handleSolution() {
 		showSolution = !showSolution;
@@ -326,6 +401,7 @@
 </script>
 
 <div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
+	<!--Sidebar -->
 	<div class="hidden lg:block w-1/4 lg:border-r border-base-300 overflow-y-auto">
 		<a class="btn btn-ghost mt-4 ms-2" href="/dashboard"> <ArrowLeft />Back</a>
 
@@ -336,6 +412,14 @@
 			<h1 class="text-3xl font-bold">{chapterData.name}</h1>
 			<p class="text-base-content mt-2">{chapterData.desc}</p>
 
+			<p class="text-neutral/50 mt-4">{progress}% done.</p>
+			<p>
+				<progress
+					class="progress progress-success w-full transition-colors"
+					value={progress}
+					max="100"
+				></progress>
+			</p>
 			<div class="card bg-base-100 shadow-xl mt-12">
 				<div class="card-body">
 					<div class="flex flex-row justify-between border-b pb-2">
@@ -373,7 +457,7 @@
 		<!--Question Selection Menu -->
 		<div class="flex flex-row w-full mb-4 overflow-x-auto lg:mb-0 lg:mt-6 space-x-2">
 			{#key flagCount}
-				{#each questionIds as id, index}
+				{#each getCurrentQuestionIds() as id, index}
 					<div class="indicator">
 						{#if flags.has(id)}
 							<span
@@ -420,7 +504,7 @@
 										disabled={option.isEliminated || showSolution}
 									/>
 									<span
-										class="flex-grow ml-8 my-4 {option.isEliminated
+										class="flex-grow text-wrap break-words ml-8 my-4 {option.isEliminated
 											? 'line-through opacity-50'
 											: ''}"
 									>
@@ -441,6 +525,8 @@
 						</div>
 					{/key}
 				</div>
+
+				<!--Button Section -->
 				<div class=" flex-row justify-center mt-8 gap-4 hidden lg:flex">
 					<button class="btn btn-outline" onclick={clearSelectedAnswers}>Clear</button>
 					<button class="btn btn-soft btn-success" onclick={checkAnswers}>Check</button>
@@ -450,6 +536,9 @@
 						onclick={() => toggleFlag(currentlySelectedId)}
 					>
 						<Flag />
+					</button>
+					<button class="btn btn-secondary" onclick={toggleShuffle}
+						><Shuffle size="18" /> {isShuffled ? 'Unshuffle' : 'Shuffle'}
 					</button>
 					<button
 						class="btn btn-outline"

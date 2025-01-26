@@ -6,9 +6,10 @@ export interface Option {
 	text: string;
 	isSelected: boolean;
 	letter: string;
+	isEliminated: boolean;
 }
 
-interface ExtendedOption extends Option {
+export interface ExtendedOption extends Option {
 	isCorrect?: boolean;
 }
 
