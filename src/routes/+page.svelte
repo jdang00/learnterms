@@ -25,13 +25,20 @@
 		<div data-aos="fade-up">
 			<div class="space-y-4 max-w-3xl">
 				<h1 class="font-bold text-5xl lg:text-6xl mt-12 sm:mt-24 relative">
-					<span class="text-primary relative">
-						LearnTerms
-						<span
-							class="absolute inset-0 -z-10 bg-primary opacity-30 blur-xl rounded-lg transform -translate-y-1/2 top-1/2 animate-pulse"
-						></span>
-					</span>
-					is Smarter Studying, Simplified.
+					<div class="flex flex-col">
+						<div class="badge badge-secondary mb-8">Built for NSUOCO Class of 2028 🤍</div>
+
+						<div>
+							<span class="text-primary relative">
+								LearnTerms
+								<span
+									class="absolute inset-0 -z-10 bg-primary opacity-30 blur-xl rounded-lg transform -translate-y-1/2 top-1/2 animate-pulse"
+								></span>
+							</span>
+							is Smarter Studying, Simplified.
+						</div>
+					</div>
+					clas
 				</h1>
 				<p class="text-base-content text-2xl">
 					Purpose-built tools to help you ace your exams—backed by data, driven by focus.
