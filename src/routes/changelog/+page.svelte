@@ -2,6 +2,27 @@
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
 	<div class="ms-8">
+		<h3 class="text-xl mt-3 font-medium text-base-content">January 26, 2025</h3>
+		<p class="ms-2">
+			Over the past few days, LearnTerms v2 has been getting some new features suggested by users
+			like you!
+		</p>
+
+		<ul class="mt-1 m-8">
+			<li>
+				LearnTerms now saves user progress for all chapters. (This might still be a little buggy
+				from time to time but I will roll fixes as I work on the backend service that supports
+				tracking the questions.
+			</li>
+			<li>Eliminate answers is now fully implemented and working well.</li>
+
+			<li>On show solution, the options now highlight their answer status for quick navigation.</li>
+			<li>Added a shuffle button.</li>
+			<li>Add a progress bar.</li>
+			<li>Fixed bugs on mobile that were introduced on various builds.</li>
+			<li>The analytics engine is now swapped out from Posthog to Vercel.</li>
+		</ul>
+
 		<h3 class="text-xl mt-3 font-medium text-base-content">January 21, 2025</h3>
 		<p class="ms-2">The fast paced development cycle continutes!</p>
 

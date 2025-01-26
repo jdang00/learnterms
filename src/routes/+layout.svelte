@@ -14,26 +14,9 @@
 
 	const themes = ['light', 'dark', 'dracula', 'retro', 'nord'];
 
-	import { browser } from '$app/environment';
-	import { beforeNavigate, afterNavigate } from '$app/navigation';
-	import posthog from 'posthog-js';
-
 	$effect(() => {
 		themeChange(false);
-
-		/* if (browser) {
-			posthog.init('phc_3eXFYO1aHVEWM75fi3wXFE6OiJZiDNvI5pcl67S19fK', {
-				api_host: 'https://us.i.posthog.com',
-				capture_pageview: false,
-				capture_pageleave: false
-			});
-		}*/
 	});
-
-	if (browser) {
-		beforeNavigate(() => posthog.capture('$pageleave'));
-		afterNavigate(() => posthog.capture('$pageview'));
-	}
 </script>
 
 <svelte:head>
@@ -46,7 +29,7 @@
 	<meta property="og:description" content="Smarter Studying, Simplified." />
 	<meta
 		property="og:image"
-		content="https://utfs.io/f/DYlXFqnaImOr6b8ZTOYKMG3TeLB2CicaW8b1hoH7EIvUmVsj"
+		content="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w"
 	/>
 
 	<meta name="twitter:card" content="summary_large_image" />
@@ -56,7 +39,7 @@
 	<meta name="twitter:description" content="Learn terms the fast and easy way. Free forever." />
 	<meta
 		name="twitter:image"
-		content="https://utfs.io/f/DYlXFqnaImOrrhcGjisLdGjaF1OlZIY57ygCH9oDWsxAUveS"
+		content="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w"
 	/>
 	<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 </svelte:head>
@@ -93,7 +76,7 @@
 				<a
 					class="ms-2 font-mono lg:text-sm text-xs align-middle text-base-content/60 inline-block link link-hover"
 					href="/changelog"
-					target="_blank">v2beta3</a
+					target="_blank">v2beta6</a
 				>
 			</div>
 			<div class="navbar-center hidden lg:flex">
