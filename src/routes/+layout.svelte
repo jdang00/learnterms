@@ -3,6 +3,9 @@
 	import type { Snippet } from 'svelte';
 	import { ClerkProvider, SignedIn, SignedOut, SignInButton, UserButton } from 'svelte-clerk';
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY } from '$env/static/public';
+	import { injectAnalytics } from '@vercel/analytics/sveltekit';
+
+	injectAnalytics();
 
 	const { children }: { children: Snippet } = $props();
 

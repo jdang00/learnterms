@@ -42,6 +42,7 @@
 	"dependencies": {
 		"@supabase/supabase-js": "^2.47.7",
 		"@tailwindcss/postcss": "^4.0.0-beta.8",
+		"@vercel/analytics": "^1.4.1",
 		"aos": "^2.3.4",
 		"lucide-svelte": "^0.468.0",
 		"openai": "^4.78.1",
