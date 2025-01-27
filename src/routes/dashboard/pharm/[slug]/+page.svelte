@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, tick } from 'svelte';
 	import {
 		ArrowLeft,
 		Eye,
@@ -42,6 +42,7 @@
 	let showIncomplete = $state(false);
 
 	let interactedQuestions = $state<Set<string>>(new Set());
+	let questionButtons: HTMLButtonElement[] = $state([]);
 
 	let progress = $derived.by(() => {
 		const totalQuestions = questions.length;
@@ -392,6 +393,21 @@
 		return () => document.removeEventListener('keydown', handleKeydown);
 	});
 
+	$effect(() => {
+		void currentlySelectedId;
+		tick().then(() => {
+			const currentIds = getCurrentQuestionIds();
+			const index = currentIds.indexOf(currentlySelectedId);
+			if (index > -1 && questionButtons[index]) {
+				questionButtons[index].scrollIntoView({
+					behavior: 'smooth',
+					block: 'nearest',
+					inline: 'center'
+				});
+			}
+		});
+	});
+
 	onDestroy(() => {
 		saveAllProgressToDB();
 	});
@@ -508,6 +524,7 @@
 								: 'btn-outline'} {selectedAnswers[id]?.selected?.size > 0 ? 'btn-accent' : ''}"
 							aria-label="question {index + 1}"
 							onclick={() => changeSelected(id)}
+							bind:this={questionButtons[index]}
 						>
 							{index + 1}
 						</button>
