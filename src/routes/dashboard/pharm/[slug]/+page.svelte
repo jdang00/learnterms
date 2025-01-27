@@ -1,7 +1,15 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { onDestroy } from 'svelte';
-	import { ArrowLeft, Eye, Flag, ArrowRight, Shuffle, BookmarkCheck } from 'lucide-svelte';
+	import {
+		ArrowLeft,
+		Eye,
+		Flag,
+		ArrowRight,
+		Shuffle,
+		BookmarkCheck,
+		ChevronUp
+	} from 'lucide-svelte';
 	import type { Question, Chapter, ExtendedOption, Option } from '$lib/types';
 	import supabase from '$lib/supabaseClient';
 
@@ -652,9 +660,34 @@
 		<button class="btn modal-button lg:hidden btn-sm" onclick={() => (isModalOpen = true)}
 			><Eye /></button
 		>
-		<button class="btn btn-secondary btn-sm" onclick={toggleShuffle}
-			><Shuffle size="18" /> {isShuffled ? 'Unshuffle' : 'Shuffle'}
-		</button>
+
+		<div class="dropdown dropdown-top dropdown-center">
+			<div tabindex="0" role="button" class="btn btn-sm btn-soft btn-accent m-1">
+				Sort <ChevronUp />
+			</div>
+			<ul
+				tabindex="-1"
+				class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+			>
+				<li>
+					<button class="" onclick={toggleShuffle}
+						><Shuffle size="18" /> {isShuffled ? 'Unshuffle' : 'Shuffle'}
+					</button>
+				</li>
+				<li>
+					<button onclick={toggleShowFlagged}
+						><Flag size="16" />{showFlagged ? 'Show All' : 'Show Flagged'}</button
+					>
+				</li>
+				<li>
+					<button onclick={toggleShowIncomplete}>
+						<BookmarkCheck size="16" />
+						{showIncomplete ? 'Show All' : 'Show Incomplete'}
+					</button>
+				</li>
+			</ul>
+		</div>
+
 		<dialog class="modal max-w-full p-4" class:modal-open={isModalOpen}>
 			<div class="modal-box">
 				<form method="dialog">

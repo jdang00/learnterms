@@ -2,7 +2,7 @@
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
 	<div class="ms-8">
-		<h3 class="text-xl mt-3 font-medium text-base-content">January 26, 2025</h3>
+		<h3 class="text-xl mt-3 font-medium text-base-content">January 27, 2025</h3>
 		<p class="ms-2">
 			Over the past few days, LearnTerms v2 has been getting some new features suggested by users
 			like you!
@@ -21,6 +21,9 @@
 			<li>Add a progress bar.</li>
 			<li>Fixed bugs on mobile that were introduced on various builds.</li>
 			<li>The analytics engine is now swapped out from Posthog to Vercel.</li>
+			<li>Sort by flagged</li>
+			<li>Sort by incomplete</li>
+			<li>Improved mobile menu</li>
 		</ul>
 
 		<h3 class="text-xl mt-3 font-medium text-base-content">January 21, 2025</h3>
