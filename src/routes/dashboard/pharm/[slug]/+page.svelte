@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { onDestroy } from 'svelte';
-	import { ArrowLeft, Eye, Flag, ArrowRight, Shuffle } from 'lucide-svelte';
+	import { ArrowLeft, Eye, Flag, ArrowRight, Shuffle, BookmarkCheck } from 'lucide-svelte';
 	import type { Question, Chapter, ExtendedOption, Option } from '$lib/types';
 	import supabase from '$lib/supabaseClient';
 
@@ -30,6 +30,8 @@
 	let unblur = $state(false);
 	let showSolution = $state(false);
 	let isModalOpen = $state(false);
+	let showFlagged = $state(false);
+	let showIncomplete = $state(false);
 
 	let interactedQuestions = $state<Set<string>>(new Set());
 
@@ -259,7 +261,29 @@
 	}
 
 	function getCurrentQuestionIds() {
-		return isShuffled ? shuffledQuestionIds : questionIds;
+		let ids = isShuffled ? shuffledQuestionIds : questionIds;
+
+		// Filter flagged questions if showFlagged is true
+		if (showFlagged) {
+			ids = ids.filter((id) => flags.has(id));
+		}
+
+		// Sort incomplete questions to the front if showIncomplete is true
+		if (showIncomplete) {
+			ids = [...ids].sort((a, b) => {
+				const aComplete = selectedAnswers[a]?.selected.size > 0;
+				const bComplete = selectedAnswers[b]?.selected.size > 0;
+				return aComplete === bComplete ? 0 : aComplete ? 1 : -1;
+			});
+		}
+
+		return ids;
+	}
+
+	function toggleShowIncomplete() {
+		showIncomplete = !showIncomplete;
+		currentlySelectedId = getCurrentQuestionIds()[0] || '';
+		refreshKey++; // Trigger a rerender
 	}
 
 	// Moves to the next question
@@ -279,6 +303,11 @@
 		if (currentIndex > 0) {
 			currentlySelectedId = currentQuestionIds[currentIndex - 1];
 		}
+	}
+
+	function toggleShowFlagged() {
+		showFlagged = !showFlagged;
+		currentlySelectedId = getCurrentQuestionIds()[0] || '';
 	}
 
 	// Toggles the elimination state of an option
@@ -485,8 +514,30 @@
 		{#if questionMap[currentlySelectedId]}
 			<div class="w-full mb-8 mt-2 overflow-y-auto max-h-[70vh] pb-16 sm:pb-0">
 				<div class="mx-4 sm:mx-6">
-					<div class="font-bold text-lg sm:text-xl mb-4">
-						{questionMap[currentlySelectedId].question_data.question}
+					<div class="flex flex-row justify-between">
+						<div class="font-bold text-lg sm:text-xl mb-4 self-center">
+							{questionMap[currentlySelectedId].question_data.question}
+						</div>
+
+						<div class="dropdown dropdown-end lg:block hidden">
+							<div tabindex="0" role="button" class="btn btn-soft btn-accent m-1">Sort</div>
+							<ul
+								tabindex="-1"
+								class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+							>
+								<li>
+									<button onclick={toggleShowFlagged}
+										><Flag size="16" />{showFlagged ? 'Show All' : 'Show Flagged'}</button
+									>
+								</li>
+								<li>
+									<button onclick={toggleShowIncomplete}>
+										<BookmarkCheck size="16" />
+										{showIncomplete ? 'Show All' : 'Show Incomplete'}
+									</button>
+								</li>
+							</ul>
+						</div>
 					</div>
 
 					{#key refreshKey}
@@ -601,6 +652,9 @@
 		<button class="btn modal-button lg:hidden btn-sm" onclick={() => (isModalOpen = true)}
 			><Eye /></button
 		>
+		<button class="btn btn-secondary btn-sm" onclick={toggleShuffle}
+			><Shuffle size="18" /> {isShuffled ? 'Unshuffle' : 'Shuffle'}
+		</button>
 		<dialog class="modal max-w-full p-4" class:modal-open={isModalOpen}>
 			<div class="modal-box">
 				<form method="dialog">
