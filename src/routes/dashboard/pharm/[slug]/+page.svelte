@@ -465,7 +465,7 @@
 			<h1 class="text-3xl font-bold">{chapterData.name}</h1>
 			<p class="text-base-content mt-2">{chapterData.desc}</p>
 
-			<p class="text-neutral/50 mt-4">{progress}% done.</p>
+			<p class="text-base-content/60 mt-4">{progress}% done.</p>
 			<p>
 				<progress
 					class="progress progress-success w-full transition-colors"
@@ -488,6 +488,7 @@
 		</div>
 	</div>
 
+	<!--Mobile info -->
 	<div class="container mx-auto lg:w-3/4 flex flex-col items-center lg:min-h-screen">
 		<div
 			class="lg:hidden flex flex-row mt-2 items-center w-full justify-between sticky top-0 bg-base-100 z-40 py-2"
