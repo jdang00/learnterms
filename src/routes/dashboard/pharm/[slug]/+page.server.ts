@@ -55,18 +55,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const { data: questions, error: questionsError } = questionsQuery;
 	const { data: chapters, error: chaptersError } = chaptersQuery;
 
-	if (questionsError) {
-		throw error(500, `Failed to load questions: ${questionsError.message}`);
-	}
+	if (questionsError) throw error(500, `Failed to load questions: ${questionsError.message}`);
+	if (chaptersError) throw error(500, `Failed to load chapters: ${chaptersError.message}`);
 
-	if (chaptersError) {
-		throw error(500, `Failed to load chapters: ${chaptersError.message}`);
-	}
+	// Get question IDs for the current chapter
+	const questionIds = questions?.map((q) => q.id) || [];
 
+	// Get progress only for these questions
 	const { data: progressData, error: progressDataError } = await supabase
 		.from('user_question_interactions')
 		.select('question_id, selected_options, eliminated_options, is_flagged')
-		.eq('user_id', userId);
+		.eq('user_id', userId)
+		.in('question_id', questionIds); // Use the extracted IDs
 
 	if (progressDataError) {
 		throw error(500, `Failed to load progress: ${progressDataError.message}`);
