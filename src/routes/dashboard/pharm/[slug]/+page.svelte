@@ -43,6 +43,9 @@
 
 	let interactedQuestions = $state<Set<string>>(new Set());
 	let questionButtons: HTMLButtonElement[] = $state([]);
+	let correctAnswersCount = $derived(
+		questionMap[currentlySelectedId].question_data.correct_answers.length
+	);
 
 	let progress = $derived.by(() => {
 		const totalQuestions = questions.length;
@@ -162,34 +165,40 @@
 	// Toggles the selection state of an option
 	function toggleOption(index: number) {
 		if (questionOptions[index].isEliminated) return;
-		const option = questionOptions[index].letter;
+		const optionLetter = questionOptions[index].letter;
 
-		if (!selectedAnswers[currentlySelectedId]) {
-			selectedAnswers[currentlySelectedId] = {
-				selected: new Set(),
-				eliminated: new Set()
-			};
-		}
+		const current = selectedAnswers[currentlySelectedId] || {
+			selected: new Set<string>(),
+			eliminated: new Set<string>()
+		};
 
-		if (selectedAnswers[currentlySelectedId].selected.has(option)) {
-			selectedAnswers[currentlySelectedId].selected.delete(option);
+		// Create new selected set
+		const newSelected = new Set(current.selected);
+		if (newSelected.has(optionLetter)) {
+			newSelected.delete(optionLetter);
 		} else {
-			selectedAnswers[currentlySelectedId].selected.add(option);
+			newSelected.add(optionLetter);
 		}
 
-		questionOptions[index].isSelected = !questionOptions[index].isSelected;
+		// Immutable update pattern
+		selectedAnswers = {
+			...selectedAnswers,
+			[currentlySelectedId]: {
+				selected: newSelected,
+				eliminated: current.eliminated // Use current instead of selectedAnswers[] for freshness
+			}
+		};
 
-		// Update interactedQuestions
-		if (
-			selectedAnswers[currentlySelectedId].selected.size > 0 ||
-			selectedAnswers[currentlySelectedId].eliminated.size > 0
-		) {
+		// Update interactions
+		const hasInteractions = newSelected.size > 0 || current.eliminated.size > 0;
+		if (hasInteractions) {
 			interactedQuestions.add(currentlySelectedId);
 		} else {
 			interactedQuestions.delete(currentlySelectedId);
 		}
 
-		// Reassign to trigger reactivity
+		// Force reactivity
+		currentlySelectedId = currentlySelectedId;
 		interactedQuestions = new Set(interactedQuestions);
 	}
 
@@ -202,6 +211,7 @@
 		}
 
 		const correctAnswers = new Set(currentQuestion.question_data.correct_answers);
+
 		const selected = selectedAnswers[currentlySelectedId]?.selected || new Set();
 
 		const isCorrect =
@@ -321,40 +331,47 @@
 
 	// Toggles the elimination state of an option
 	function toggleElimination(index: number) {
-		const option = questionOptions[index];
-		option.isEliminated = !option.isEliminated;
+		const optionLetter = questionOptions[index].letter;
 
-		if (!selectedAnswers[currentlySelectedId]) {
-			selectedAnswers[currentlySelectedId] = {
-				selected: new Set(),
-				eliminated: new Set()
-			};
-		}
+		const current = selectedAnswers[currentlySelectedId] || {
+			selected: new Set<string>(),
+			eliminated: new Set<string>()
+		};
 
-		if (option.isEliminated) {
-			selectedAnswers[currentlySelectedId].eliminated.add(option.letter);
-			if (option.isSelected) {
-				selectedAnswers[currentlySelectedId].selected.delete(option.letter);
-				option.isSelected = false;
-			}
+		// Create new eliminated set
+		const newEliminated = new Set(current.eliminated);
+		if (newEliminated.has(optionLetter)) {
+			newEliminated.delete(optionLetter);
 		} else {
-			selectedAnswers[currentlySelectedId].eliminated.delete(option.letter);
+			newEliminated.add(optionLetter);
 		}
 
-		// Update interactedQuestions
-		if (
-			selectedAnswers[currentlySelectedId].selected.size > 0 ||
-			selectedAnswers[currentlySelectedId].eliminated.size > 0
-		) {
+		// Remove from selected if being eliminated
+		const newSelected = new Set(current.selected);
+		if (newEliminated.has(optionLetter)) {
+			newSelected.delete(optionLetter);
+		}
+
+		// Immutable update
+		selectedAnswers = {
+			...selectedAnswers,
+			[currentlySelectedId]: {
+				selected: newSelected,
+				eliminated: newEliminated
+			}
+		};
+
+		// Update interactions
+		const hasInteractions = newSelected.size > 0 || newEliminated.size > 0;
+		if (hasInteractions) {
 			interactedQuestions.add(currentlySelectedId);
 		} else {
 			interactedQuestions.delete(currentlySelectedId);
 		}
 
-		// Reassign to trigger reactivity
+		// Force reactivity
+		currentlySelectedId = currentlySelectedId;
 		interactedQuestions = new Set(interactedQuestions);
-
-		refreshKey++;
 	}
 	// Toggles the display of the solution
 	function handleSolution() {
@@ -543,6 +560,7 @@
 					<div class="flex flex-row justify-between">
 						<div class="font-bold text-lg sm:text-xl mb-4 self-center">
 							{questionMap[currentlySelectedId].question_data.question}
+							<span class="text-neutral/50 font-medium text-sm">Pick {correctAnswersCount}.</span>
 						</div>
 
 						<div class="dropdown dropdown-end lg:block hidden">
