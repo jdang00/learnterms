@@ -44,7 +44,7 @@
 	let interactedQuestions = $state<Set<string>>(new Set());
 	let questionButtons: HTMLButtonElement[] = $state([]);
 	let correctAnswersCount = $derived(
-		questionMap[currentlySelectedId].question_data.correct_answers.length
+		questionMap[currentlySelectedId]?.question_data?.correct_answers?.length ?? 0
 	);
 
 	let progress = $derived.by(() => {
@@ -111,20 +111,25 @@
 	function initializeState() {
 		questionMap = Object.fromEntries(questions.map((q) => [q.id, q]));
 		questionIds = questions.map((q) => q.id);
-		currentlySelectedId = questionIds[0];
+		// Only set currentlySelectedId if questions exist
+		if (questionIds.length > 0) {
+			currentlySelectedId = questionIds[0];
+		} else {
+			currentlySelectedId = ''; // Handle empty state appropriately
+		}
 	}
 	initializeState();
 
 	// Derived stores for options, answer states, and solutions
 	let questionOptions = $derived(
-		(questionMap[currentlySelectedId]?.question_data.options.map((option) => ({
+		(questionMap[currentlySelectedId]?.question_data?.options?.map((option) => ({
 			text: option,
 			letter: option.split('.')[0].trim(),
 			isSelected:
 				selectedAnswers[currentlySelectedId]?.selected?.has(option.split('.')[0].trim()) || false,
 			isEliminated:
 				selectedAnswers[currentlySelectedId]?.eliminated?.has(option.split('.')[0].trim()) || false
-		})) as Option[]) || []
+		})) || []) as Option[]
 	);
 
 	// Derived store for question answer states
