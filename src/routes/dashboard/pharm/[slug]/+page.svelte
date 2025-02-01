@@ -127,6 +127,7 @@
 		})) as Option[]) || []
 	);
 
+	// Derived store for question answer states
 	let questionAnswerStates = $derived(
 		showSolution
 			? questionOptions.map((option) => ({
@@ -299,6 +300,7 @@
 		return ids;
 	}
 
+	// Shows or hides incomplete questions
 	function toggleShowIncomplete() {
 		showIncomplete = !showIncomplete;
 		currentlySelectedId = getCurrentQuestionIds()[0] || '';
@@ -324,6 +326,7 @@
 		}
 	}
 
+	// Toggles the display of flagged questions
 	function toggleShowFlagged() {
 		showFlagged = !showFlagged;
 		currentlySelectedId = getCurrentQuestionIds()[0] || '';
@@ -410,6 +413,7 @@
 		return () => document.removeEventListener('keydown', handleKeydown);
 	});
 
+	// Effect for scrolling to the currently selected question
 	$effect(() => {
 		void currentlySelectedId;
 		tick().then(() => {
@@ -429,6 +433,7 @@
 		saveAllProgressToDB();
 	});
 
+	// Saves all progress to the database
 	async function saveAllProgressToDB() {
 		try {
 			const rowsToUpsert = [];
