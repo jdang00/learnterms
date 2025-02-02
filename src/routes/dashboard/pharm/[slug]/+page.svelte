@@ -8,7 +8,8 @@
 		ArrowRight,
 		Shuffle,
 		BookmarkCheck,
-		ChevronUp
+		ChevronUp,
+		ListRestart
 	} from 'lucide-svelte';
 	import { QuestionMap } from './states.svelte';
 
@@ -73,7 +74,9 @@
 <div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
 	<!--Sidebar -->
 	<div class="hidden lg:block w-1/4 lg:border-r border-base-300 overflow-y-auto">
-		<a class="btn btn-ghost mt-4 ms-2" href="/dashboard"> <ArrowLeft />Back</a>
+		<div class="flex flex-row justify-between">
+			<a class="btn btn-ghost mt-4 ms-2" href="/dashboard"> <ArrowLeft />Back</a>
+		</div>
 
 		<div class="mx-8 mt-4">
 			<p class="font-bold text-sm tracking-wide text-secondary mb-2">
@@ -90,19 +93,52 @@
 					max="100"
 				></progress>
 			</p>
-			<div class="card bg-base-100 shadow-xl mt-12">
-				<div class="card-body">
-					<div class="flex flex-row justify-between border-b pb-2">
-						<h2 class="card-title">Solution</h2>
-						<button class="btn btn-ghost" onclick={() => qm.handleSolution()}><Eye /></button>
-					</div>
 
-					<p class={`mt-2 transition-all duration-300 ${qm.unblur ? 'blur-none' : 'blur-sm'}`}>
-						{qm.questionSolution}
-					</p>
+			<div class="flex flex-col justify-center">
+				<div class="card bg-base-100 shadow-xl mt-12">
+					<div class="card-body">
+						<div class="flex flex-row justify-between border-b pb-2">
+							<h2 class="card-title">Solution</h2>
+							<button class="btn btn-ghost" onclick={() => qm.handleSolution()}><Eye /></button>
+						</div>
+
+						<p
+							class={`mt-2 transition-all duration-300 ${qm.showSolution ? 'blur-none' : 'blur-sm'}`}
+						>
+							{qm.questionSolution}
+						</p>
+					</div>
 				</div>
+				<button
+					class="btn mt-12 btn-error btn-soft self-center"
+					onclick={() => (qm.isResetModalOpen = true)}>Reset</button
+				>
 			</div>
 		</div>
+	</div>
+
+	<div>
+		<dialog class="modal max-w-full p-4" class:modal-open={qm.isResetModalOpen}>
+			<div class="modal-box">
+				<form method="dialog">
+					<button
+						class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+						onclick={() => (qm.isResetModalOpen = false)}>✕</button
+					>
+				</form>
+				<h3 class="text-lg font-bold">Reset Progress</h3>
+				<p class="py-4">
+					Do you want to start over? All current progress for this chapter will be lost.
+				</p>
+
+				<div class="justify-self-end">
+					<button class="btn btn-error" onclick={() => qm.reset()}>Reset</button>
+					<button class="btn btn-outline" onclick={() => (qm.isResetModalOpen = false)}
+						>Cancel</button
+					>
+				</div>
+			</div>
+		</dialog>
 	</div>
 
 	<!--Mobile info -->
@@ -329,12 +365,17 @@
 
 		<div class="dropdown dropdown-top dropdown-center">
 			<div tabindex="0" role="button" class="btn btn-sm btn-soft btn-accent m-1">
-				Sort <ChevronUp />
+				Options <ChevronUp />
 			</div>
 			<ul
 				tabindex="-1"
 				class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
 			>
+				<li>
+					<button class="text-error" onclick={() => (qm.isResetModalOpen = true)}
+						><ListRestart size="18" />Reset</button
+					>
+				</li>
 				<li>
 					<button class="" onclick={qm.toggleShuffle}
 						><Shuffle size="18" /> {qm.isShuffled ? 'Unshuffle' : 'Shuffle'}

@@ -23,19 +23,19 @@ export class QuestionMap {
 	interactedQuestions = $state<Set<string>>(new Set());
 	shuffledQuestionIds = $state<string[]>([]);
 	isShuffled = $state(false);
-	flags = new Set<string>();
-	flagCount = $state(0);
+	flags = $state(new Set());
+	flagCount = $derived(this.flags.size);
 	checkResult = $state<string | null>(null);
 	refreshKey = $state(0);
-	unblur = $state(false);
 	isModalOpen = $state(false);
+	isResetModalOpen = $state(false);
 	showFlagged = $state(false);
 	showIncomplete = $state(false);
 	questionButtons: HTMLButtonElement[] = $state([]);
 	noFlags = $state(false);
 
 	correctAnswersCount = $derived(
-		this.questionMap[this.currentlySelectedId]?.question_data?.correct_answers?.length ?? 0
+		this.questionMap[this.currentlySelectedId]?.question_data.correct_answers.length ?? 0
 	);
 
 	questionOptions = $derived(
@@ -75,19 +75,23 @@ export class QuestionMap {
 	});
 
 	toggleFlag = () => {
-		if (this.flags.has(this.currentlySelectedId)) {
-			this.flags.delete(this.currentlySelectedId);
+		// Create a new Set instance to trigger reactivity
+		const newFlags = new Set(this.flags);
+		if (newFlags.has(this.currentlySelectedId)) {
+			newFlags.delete(this.currentlySelectedId);
 		} else {
-			this.flags.add(this.currentlySelectedId);
+			newFlags.add(this.currentlySelectedId);
 		}
-		this.flagCount = this.flags.size;
+
+		this.flags = newFlags; // Reassign to trigger reactivity
 	};
 
 	restorefromDB = () => {
 		const updatedAnswers: Record<string, { selected: Set<string>; eliminated: Set<string> }> = {};
-		this.flags.clear();
-		this.flagCount = 0;
-		this.interactedQuestions.clear();
+
+		// Create new temporary sets for reactivity
+		const newFlags = new Set<string>();
+		const newInteracted = new Set<string>();
 
 		this.userProgress.forEach((progress) => {
 			const selectedLetters = progress.selected_options.map((option) => option.letter);
@@ -98,18 +102,21 @@ export class QuestionMap {
 				eliminated: new Set(eliminatedLetters)
 			};
 
+			// Track interactions
 			if (selectedLetters.length > 0 || eliminatedLetters.length > 0) {
-				this.interactedQuestions.add(progress.question_id);
+				newInteracted.add(progress.question_id);
 			}
 
+			// Track flags
 			if (progress.is_flagged) {
-				this.flags.add(progress.question_id);
+				newFlags.add(progress.question_id);
 			}
 		});
 
+		// Reactively update state with new sets
 		this.selectedAnswers = updatedAnswers;
-		this.flagCount = this.flags.size;
-		this.interactedQuestions = new Set(this.interactedQuestions);
+		this.flags = newFlags;
+		this.interactedQuestions = newInteracted;
 		this.refreshKey++;
 	};
 
@@ -117,7 +124,6 @@ export class QuestionMap {
 		this.saveselectedAnswers();
 		this.currentlySelectedId = id;
 		this.checkResult = null;
-		this.unblur = false;
 		this.showSolution = false;
 		this.restoreselectedAnswers();
 		this.refreshKey++;
@@ -349,7 +355,6 @@ export class QuestionMap {
 
 	handleSolution = () => {
 		this.showSolution = !this.showSolution;
-		this.unblur = !this.unblur;
 		this.refreshKey++;
 	};
 
@@ -357,22 +362,24 @@ export class QuestionMap {
 		try {
 			const rowsToUpsert = [];
 
-			for (const questionId in this.selectedAnswers) {
-				const progress = this.selectedAnswers[questionId];
-				const hasSelectedOrEliminated =
-					progress && (progress.selected.size > 0 || progress.eliminated.size > 0);
-				const isFlagged = this.flags.has(questionId);
+			// Iterate through ALL question IDs
+			for (const questionId of this.questionIds) {
+				const progress = this.selectedAnswers[questionId] || {
+					selected: new Set<string>(),
+					eliminated: new Set<string>()
+				};
 
-				if (hasSelectedOrEliminated || isFlagged) {
+				const isFlagged = this.flags.has(questionId);
+				const hasInteractions = progress.selected.size > 0 || progress.eliminated.size > 0;
+				const existsInDB = this.userProgress.some((p) => p.question_id === questionId);
+
+				// Always save if: flagged, has interactions, OR existed in DB previously
+				if (isFlagged || hasInteractions || existsInDB) {
 					rowsToUpsert.push({
 						user_id: this.userId,
 						question_id: questionId,
-						selected_options: hasSelectedOrEliminated
-							? Array.from(progress.selected).map((letter) => ({ letter }))
-							: [],
-						eliminated_options: hasSelectedOrEliminated
-							? Array.from(progress.eliminated).map((letter) => ({ letter }))
-							: [],
+						selected_options: Array.from(progress.selected).map((letter) => ({ letter })),
+						eliminated_options: Array.from(progress.eliminated).map((letter) => ({ letter })),
 						is_flagged: isFlagged,
 						updated_at: new Date()
 					});
@@ -383,13 +390,39 @@ export class QuestionMap {
 				const { error } = await supabase.from('user_question_interactions').upsert(rowsToUpsert, {
 					onConflict: ['user_id', 'question_id']
 				});
-
-				if (error) {
-					console.error('Error saving progress to the database:', error);
-				}
+				if (error) console.error('Save error:', error);
 			}
 		} catch (err) {
-			console.error('Unexpected error while saving progress:', err);
+			console.error('Unexpected error:', err);
+		}
+	};
+
+	reset = async () => {
+		// Clear local state
+		this.selectedAnswers = {};
+		this.flags = new Set();
+		this.interactedQuestions.clear();
+		this.checkResult = null;
+		this.showSolution = false;
+		this.refreshKey++;
+		this.isResetModalOpen = false;
+
+		// Reset the currently selected question to the first available one
+		this.currentlySelectedId = this.questionIds.length > 0 ? this.questionIds[0] : '';
+
+		const questionIdsToDelete = Array.from(
+			new Set([...this.questionIds, ...Array.from(this.flags)])
+		);
+
+		// Delete only those records for this user whose question_id is in this.questionIds
+		const { error } = await supabase
+			.from('user_question_interactions')
+			.delete()
+			.eq('user_id', this.userId)
+			.in('question_id', questionIdsToDelete);
+
+		if (error) {
+			console.error('Error resetting progress in database:', error);
 		}
 	};
 }
