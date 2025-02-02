@@ -32,6 +32,7 @@ export class QuestionMap {
 	showFlagged = $state(false);
 	showIncomplete = $state(false);
 	questionButtons: HTMLButtonElement[] = $state([]);
+	noFlags = $state(false);
 
 	correctAnswersCount = $derived(
 		this.questionMap[this.currentlySelectedId]?.question_data?.correct_answers?.length ?? 0
@@ -141,7 +142,6 @@ export class QuestionMap {
 
 	// Compares selected answers with the correct ones and sets the result
 	checkAnswers = () => {
-		console.log(this.unblur);
 		const currentQuestion = this.questionMap[this.currentlySelectedId];
 		if (!currentQuestion) {
 			this.checkResult = 'Error. Question ID not found.';
@@ -175,6 +175,11 @@ export class QuestionMap {
 		let ids = this.isShuffled ? this.shuffledQuestionIds : this.questionIds;
 
 		if (this.showFlagged) {
+			if (this.flags.size === 0) {
+				this.noFlags = true;
+				this.showFlagged = false;
+				return ids;
+			}
 			ids = ids.filter((id) => this.flags.has(id));
 		}
 
@@ -284,8 +289,8 @@ export class QuestionMap {
 
 	goToNextQuestion = () => {
 		const currentQuestionIds = this.getCurrentQuestionIds();
-		const currentIndex = currentQuestionIds.indexOf(this.currentlySelectedId);
-		if (currentIndex < currentQuestionIds.length - 1) {
+		const currentIndex = currentQuestionIds?.indexOf(this.currentlySelectedId);
+		if (currentIndex < currentQuestionIds?.length - 1) {
 			this.currentlySelectedId = currentQuestionIds[currentIndex + 1];
 		}
 	};

@@ -125,15 +125,43 @@
 			<div class="flex-shrink-0 w-24"></div>
 		</div>
 
-		<!--Question Selection Menu -->
-		<div class="flex flex-row w-full mb-4 overflow-x-auto lg:mb-0 lg:mt-6 space-x-2">
+		{#if qm.noFlags}
+			<!-- Alert Box (Responsive & Centered) -->
+			<div
+				role="alert"
+				class="alert alert-warning fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-11/12 sm:w-max max-w-xs sm:max-w-sm md:max-w-md p-4 text-center animate-fade"
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="h-6 w-6 shrink-0 stroke-current inline-block align-middle mr-2"
+					fill="none"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+					/>
+				</svg>
+				<span class="align-middle">No Questions Flagged.</span>
+				<button
+					class="btn btn-sm btn-ghost btn-warning"
+					onclick={() => {
+						qm.noFlags = false;
+					}}>X</button
+				>
+			</div>
+		{/if}
+
+		<!-- Question Selection Menu -->
+		<div class="flex flex-row w-full mb-4 overflow-x-auto lg:mb-0 lg:mt-6 space-x-2 relative">
 			{#key qm.flagCount}
 				{#each qm.getCurrentQuestionIds() as id, index}
 					<div class="indicator">
 						{#if qm.flags.has(id)}
 							<span
-								class="indicator-item indicator-start badge badge-warning badge-xs !right-10 translate-x-1/4 translate-y-1/4
-"
+								class="indicator-item indicator-start badge badge-warning badge-xs !right-10 translate-x-1/4 translate-y-1/4"
 							></span>
 						{/if}
 						<button
@@ -160,7 +188,8 @@
 					<div class="flex flex-row justify-between">
 						<div class="font-bold text-lg sm:text-xl mb-4 self-center">
 							{qm.questionMap[qm.currentlySelectedId].question_data.question}
-							<span class="text-neutral/50 font-medium text-sm">Pick {qm.correctAnswersCount}.</span
+							<span class="text-base-content/50 font-medium text-sm ms-2"
+								>Pick {qm.correctAnswersCount}.</span
 							>
 						</div>
 
@@ -339,3 +368,20 @@
 		</dialog>
 	</div>
 </div>
+
+<style>
+	@keyframes fadeInOut {
+		0% {
+			opacity: 0;
+			transform: translateY(-10px);
+		}
+
+		100% {
+			opacity: 1;
+			transform: translateY(-10px);
+		}
+	}
+	.animate-fade {
+		animation: fadeInOut 0.5s forwards;
+	}
+</style>
