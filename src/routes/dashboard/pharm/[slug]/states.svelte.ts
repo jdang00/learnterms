@@ -154,15 +154,24 @@ export class QuestionMap {
 			return;
 		}
 
+		// Get correct answers as a Set for quick lookups
 		const correctAnswers = new Set(currentQuestion.question_data.correct_answers);
-
 		const selected = this.selectedAnswers[this.currentlySelectedId]?.selected || new Set();
 
-		const isCorrect =
-			Array.from(selected).every((a) => correctAnswers.has(a)) &&
-			Array.from(correctAnswers).every((a) => selected.has(a));
+		// Early exit if set sizes differ (can't be identical)
+		if (selected.size !== correctAnswers.size) {
+			this.checkResult = 'Incorrect. Try again.';
+			return;
+		}
 
-		this.checkResult = isCorrect ? 'Correct!' : 'Incorrect. Try again.';
+		// Convert both sets to sorted arrays and compare as JSON strings
+		const sortedSelected = Array.from(selected).sort();
+		const sortedCorrect = Array.from(correctAnswers).sort();
+
+		this.checkResult =
+			JSON.stringify(sortedSelected) === JSON.stringify(sortedCorrect)
+				? 'Correct!'
+				: 'Incorrect. Try again.';
 	};
 
 	restoreselectedAnswers = () => {
