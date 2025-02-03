@@ -96,7 +96,7 @@
 	// Create a debounced version of saveAllProgressToDB (with a 2-second delay)
 	const debouncedSaveAllProgressToDB = debounce(() => {
 		qm.saveAllProgressToDB();
-	}, 2000);
+	}, 5000);
 
 	// Trigger the debounced save whenever the currently selected question changes.
 	$effect(() => {
