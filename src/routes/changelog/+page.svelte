@@ -2,6 +2,29 @@
 	<h1 class="text-4xl mt-5 font-semibold mb-5">Changelog</h1>
 
 	<div class="ms-8">
+		<h3 class="text-xl mt-3 font-medium text-base-content">February 3, 2025</h3>
+		<p class="ms-2">
+			We are a week or two out from the final v2 release, and we're crushing bugs and adding the
+			final features!
+		</p>
+
+		<ul class="mt-1 m-8">
+			<li>User progress saving now works on refresh and across the site.</li>
+			<li>Sort functions fully done.</li>
+			<li>Revamped backend for a much better dev experience.</li>
+			<li>Added a reset button to clear progress.</li>
+			<li>Performance updates across all features.</li>
+			<li>
+				Added a stage environment to prevent random bugs from getting into the live production site.
+				This should lead to significantly reduced broken features to the site at any given time.
+			</li>
+			<li>
+				Question generation model is now more fine-tuned to make more complex questions while being
+				more stable.
+			</li>
+			<li>Question selection now moves smoothly to always keep it in view.</li>
+		</ul>
+
 		<h3 class="text-xl mt-3 font-medium text-base-content">January 27, 2025</h3>
 		<p class="ms-2">
 			Over the past few days, LearnTerms v2 has been getting some new features suggested by users
@@ -56,7 +79,7 @@
 			<li>Cleaned up odds and ends for production</li>
 			<li>New onboarding features</li>
 			<li>Making the quizzing section much more mobile friendly</li>
-			<li>Analytics engine reworked to improve future featuers.</li>
+			<li>Analytics engine reworked to improve future features.</li>
 		</ul>
 
 		<h3 class="text-xl mt-3 font-medium text-base-content">January 10, 2025</h3>
