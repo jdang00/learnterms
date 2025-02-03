@@ -13,13 +13,13 @@
 			<li>Sort functions fully done.</li>
 			<li>Revamped backend for a much better dev experience.</li>
 			<li>Added a reset button to clear progress.</li>
-			<li>Performance updates across all featuers.</li>
+			<li>Performance updates across all features.</li>
 			<li>
-				Added a stage enviroment to prevent random bugs from getting into the live production site.
+				Added a stage environment to prevent random bugs from getting into the live production site.
 				This should lead to significantly reduced broken features to the site at any given time.
 			</li>
 			<li>
-				Question generation model is now more finetuned to make more complex questions while being
+				Question generation model is now more fine-tuned to make more complex questions while being
 				more stable.
 			</li>
 			<li>Question selection now moves smoothly to always keep it in view.</li>
@@ -79,7 +79,7 @@
 			<li>Cleaned up odds and ends for production</li>
 			<li>New onboarding features</li>
 			<li>Making the quizzing section much more mobile friendly</li>
-			<li>Analytics engine reworked to improve future featuers.</li>
+			<li>Analytics engine reworked to improve future features.</li>
 		</ul>
 
 		<h3 class="text-xl mt-3 font-medium text-base-content">January 10, 2025</h3>
