@@ -10,8 +10,7 @@
 
 		<ul class="mt-1 m-8">
 			<li>User progress saving now works on refresh and across the site.</li>
-			<li>Sort functions fully fone.</li>
-
+			<li>Sort functions fully done.</li>
 			<li>Revamped backend for a much better dev experience.</li>
 			<li>Added a reset button to clear progress.</li>
 			<li>Performance updates across all featuers.</li>
