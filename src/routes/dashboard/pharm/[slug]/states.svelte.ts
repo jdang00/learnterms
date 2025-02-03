@@ -209,41 +209,6 @@ export class QuestionMap {
 		return ids;
 	};
 
-	toggleOption = (index: number) => {
-		if (this.questionOptions[index].isEliminated) return;
-		const optionLetter = this.questionOptions[index].letter;
-
-		const current = this.selectedAnswers[this.currentlySelectedId] || {
-			selected: new Set<string>(),
-			eliminated: new Set<string>()
-		};
-
-		const newSelected = new Set(current.selected);
-		if (newSelected.has(optionLetter)) {
-			newSelected.delete(optionLetter);
-		} else {
-			newSelected.add(optionLetter);
-		}
-
-		this.selectedAnswers = {
-			...this.selectedAnswers,
-			[this.currentlySelectedId]: {
-				selected: newSelected,
-				eliminated: current.eliminated
-			}
-		};
-
-		const hasInteractions = newSelected.size > 0 || current.eliminated.size > 0;
-		if (hasInteractions) {
-			this.interactedQuestions.add(this.currentlySelectedId);
-		} else {
-			this.interactedQuestions.delete(this.currentlySelectedId);
-		}
-
-		this.currentlySelectedId = this.currentlySelectedId;
-		this.interactedQuestions = new Set(this.interactedQuestions);
-	};
-
 	initializeState = () => {
 		this.questionMap = Object.fromEntries(this.questions.map((q) => [q.id, q]));
 		this.questionIds = this.questions.map((q) => q.id);
@@ -318,31 +283,39 @@ export class QuestionMap {
 		}
 	};
 
-	toggleShowFlagged = () => {
-		this.showFlagged = !this.showFlagged;
-		this.currentlySelectedId = this.getCurrentQuestionIds()[0] || '';
-	};
-
-	toggleElimination = (index: number) => {
-		const optionLetter = this.questionOptions[index].letter;
-
+	// Helper to update answer state for the currently selected question
+	updateAnswerState = (type: 'selected' | 'eliminated', optionLetter: string) => {
+		// Retrieve the current state or initialize with empty sets
 		const current = this.selectedAnswers[this.currentlySelectedId] || {
 			selected: new Set<string>(),
 			eliminated: new Set<string>()
 		};
 
-		const newEliminated = new Set(current.eliminated);
-		if (newEliminated.has(optionLetter)) {
-			newEliminated.delete(optionLetter);
-		} else {
-			newEliminated.add(optionLetter);
-		}
-
+		// Create copies of the sets for immutability
 		const newSelected = new Set(current.selected);
-		if (newEliminated.has(optionLetter)) {
-			newSelected.delete(optionLetter);
+		const newEliminated = new Set(current.eliminated);
+
+		if (type === 'selected') {
+			// Toggle the option in the 'selected' set using if/else statements
+			if (newSelected.has(optionLetter)) {
+				newSelected.delete(optionLetter);
+			} else {
+				newSelected.add(optionLetter);
+			}
+		} else if (type === 'eliminated') {
+			// Toggle the option in the 'eliminated' set using if/else statements
+			if (newEliminated.has(optionLetter)) {
+				newEliminated.delete(optionLetter);
+			} else {
+				newEliminated.add(optionLetter);
+			}
+			// Ensure that an eliminated option is removed from the selected set.
+			if (newSelected.has(optionLetter)) {
+				newSelected.delete(optionLetter);
+			}
 		}
 
+		// Update the answers for the current question
 		this.selectedAnswers = {
 			...this.selectedAnswers,
 			[this.currentlySelectedId]: {
@@ -351,6 +324,7 @@ export class QuestionMap {
 			}
 		};
 
+		// Update interactedQuestions based on whether there are any selections or eliminations
 		const hasInteractions = newSelected.size > 0 || newEliminated.size > 0;
 		if (hasInteractions) {
 			this.interactedQuestions.add(this.currentlySelectedId);
@@ -358,10 +332,26 @@ export class QuestionMap {
 			this.interactedQuestions.delete(this.currentlySelectedId);
 		}
 
-		this.currentlySelectedId = this.currentlySelectedId;
+		// Force reactivity (if required by your framework)
 		this.interactedQuestions = new Set(this.interactedQuestions);
 	};
 
+	// Updated toggleOption method using the helper
+	toggleOption = (index: number) => {
+		// Do nothing if the option is currently marked as eliminated
+		if (this.questionOptions[index].isEliminated) return;
+
+		const optionLetter = this.questionOptions[index].letter;
+		this.updateAnswerState('selected', optionLetter);
+	};
+
+	// Updated toggleElimination method using the helper
+	toggleElimination = (index: number) => {
+		const optionLetter = this.questionOptions[index].letter;
+		this.updateAnswerState('eliminated', optionLetter);
+	};
+
+	// handleSolution remains unchanged
 	handleSolution = () => {
 		this.showSolution = !this.showSolution;
 		this.refreshKey++;
