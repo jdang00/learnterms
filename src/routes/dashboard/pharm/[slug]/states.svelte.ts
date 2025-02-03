@@ -227,6 +227,17 @@ export class QuestionMap {
 		this.currentlySelectedId = this.getCurrentQuestionIds()[0];
 	};
 
+	toggleSortByFlagged = () => {
+		// Toggle the flag filter state
+		this.showFlagged = !this.showFlagged;
+
+		// Recalculate the current question selection based on the new filter
+		this.currentlySelectedId = this.getCurrentQuestionIds()[0] || '';
+
+		// Optionally, trigger any additional UI refresh logic if needed
+		this.refreshKey++;
+	};
+
 	shuffleQuestionMap = () => {
 		const entries = Object.entries(this.questionMap);
 		for (let i = entries.length - 1; i > 0; i--) {

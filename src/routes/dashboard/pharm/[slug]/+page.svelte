@@ -42,7 +42,7 @@
 		}
 	}
 
-	// Effect for reactive updates and event listeners
+	// Update question map and attach keydown listener.
 	$effect(() => {
 		qm.questionMap = Object.fromEntries(qm.questions.map((q) => [q.id, q]));
 		qm.questionIds = qm.questions.map((q) => q.id);
@@ -50,8 +50,9 @@
 		return () => document.removeEventListener('keydown', handleKeydown);
 	});
 
-	// Effect for scrolling to the currently selected question
+	// Scroll to the currently selected question whenever it changes.
 	$effect(() => {
+		// This dependency causes the effect to re-run when qm.currentlySelectedId changes.
 		void qm.currentlySelectedId;
 		tick().then(() => {
 			const currentIds = qm.getCurrentQuestionIds();
@@ -66,6 +67,47 @@
 		});
 	});
 
+	// --- Debounce Implementation ---
+
+	/**
+	 * A type‑safe debounce helper that delays the execution of a function until after
+	 * `delay` milliseconds have passed since its last call.
+	 *
+	 * @param func The function to debounce.
+	 * @param delay The delay in milliseconds.
+	 * @returns A debounced version of `func`.
+	 */
+	function debounce<T extends (...args: unknown[]) => void>(
+		func: T,
+		delay: number,
+		{ immediate = false } = {}
+	): (...args: Parameters<T>) => void {
+		let timeoutId: ReturnType<typeof setTimeout>;
+		return (...args: Parameters<T>) => {
+			const callNow = immediate && !timeoutId;
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => {
+				if (!immediate) func(...args);
+			}, delay);
+			if (callNow) func(...args);
+		};
+	}
+
+	// Create a debounced version of saveAllProgressToDB (with a 2-second delay)
+	const debouncedSaveAllProgressToDB = debounce(() => {
+		qm.saveAllProgressToDB();
+	}, 2000);
+
+	// Trigger the debounced save whenever the currently selected question changes.
+	$effect(() => {
+		const currentId = qm.currentlySelectedId;
+		// If currentId is defined, schedule a save.
+		if (currentId !== undefined) {
+			debouncedSaveAllProgressToDB();
+		}
+	});
+
+	// Ensure progress is saved immediately when the component is destroyed.
 	onDestroy(() => {
 		qm.saveAllProgressToDB();
 	});
@@ -236,7 +278,7 @@
 								class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
 							>
 								<li>
-									<button onclick={qm.toggleShowFlagged}
+									<button onclick={qm.toggleSortByFlagged}
 										><Flag size="16" />{qm.showFlagged ? 'Show All' : 'Show Flagged'}</button
 									>
 								</li>
@@ -382,7 +424,7 @@
 					</button>
 				</li>
 				<li>
-					<button onclick={qm.toggleShowFlagged}
+					<button onclick={qm.toggleSortByFlagged}
 						><Flag size="16" />{qm.showFlagged ? 'Show All' : 'Show Flagged'}</button
 					>
 				</li>
