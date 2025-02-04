@@ -280,17 +280,21 @@ export class QuestionMap {
 
 	goToNextQuestion = () => {
 		const currentQuestionIds = this.getCurrentQuestionIds();
-		const currentIndex = currentQuestionIds?.indexOf(this.currentlySelectedId);
-		if (currentIndex < currentQuestionIds?.length - 1) {
-			this.currentlySelectedId = currentQuestionIds[currentIndex + 1];
+		if (!currentQuestionIds) return; // Guard against null/undefined
+		const currentIndex = currentQuestionIds.indexOf(this.currentlySelectedId);
+		if (currentIndex === -1) return; // Fix: Exit if ID not found
+		if (currentIndex < currentQuestionIds.length - 1) {
+			this.changeSelected(currentQuestionIds[currentIndex + 1]);
 		}
 	};
 
 	goToPreviousQuestion = () => {
 		const currentQuestionIds = this.getCurrentQuestionIds();
+		if (!currentQuestionIds) return; // Guard against null/undefined
 		const currentIndex = currentQuestionIds.indexOf(this.currentlySelectedId);
+		if (currentIndex === -1) return; // Fix: Exit if ID not found
 		if (currentIndex > 0) {
-			this.currentlySelectedId = currentQuestionIds[currentIndex - 1];
+			this.changeSelected(currentQuestionIds[currentIndex - 1]);
 		}
 	};
 
