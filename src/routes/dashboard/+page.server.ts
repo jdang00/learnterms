@@ -15,7 +15,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const { data: chapters, error: chaptersError } = await supabase
 		.from('pharmchapters')
-		.select('chapter, name, desc, numprobs, emoji');
+		.select('chapter, name, desc, numprobs, emoji')
+		.order('chapter');
 
 	if (chaptersError) {
 		throw error(500, `Failed to load chapters: ${chaptersError.message}`);
