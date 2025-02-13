@@ -79,17 +79,7 @@
 											data-tip="{Math.round(
 												(chapterprog[index] / Number(chapter.numprobs)) * 100
 											)}% Complete"
-										>
-											<!--
-<div
-    class="radial-progress text-success"
-    style="--value:{(chapterprog[index] / Number(chapter.numprobs)) * 100}; --size:3rem;"
-    role="progressbar"
->
-    {Math.round((chapterprog[index] / Number(chapter.numprobs)) * 100)}%
-</div>
--->
-										</div>
+										></div>
 									{/if}
 									<div
 										class="btn btn-primary btn-circle btn-soft"

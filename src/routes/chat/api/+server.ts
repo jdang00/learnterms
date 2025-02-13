@@ -13,7 +13,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		const { messages }: { messages: ChatMessage[] } = await request.json();
 
 		const completion = await openai.chat.completions.create({
-			model: 'o1-mini',
+			model: 'gpt-4o-mini',
 			messages: messages
 		});
 
