@@ -11,7 +11,7 @@
 	let chapters: Chapter[] = data.chapters;
 	const chapterprog: number[] = Array(14).fill(0);
 
-	const enabledThreshold = 2;
+	const enabledThreshold = 3;
 </script>
 
 <div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
