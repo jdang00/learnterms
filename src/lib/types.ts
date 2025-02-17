@@ -40,7 +40,7 @@ export interface AdminQuestions {
 		explanation: string;
 		correct_answers: string[];
 	};
-	chapter: number;
+	chapter: string;
 }
 
 export interface Chapter {
