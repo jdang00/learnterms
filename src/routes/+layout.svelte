@@ -21,7 +21,10 @@
 
 <svelte:head>
 	<title>LearnTerms</title>
-	<meta name="description" content="Learn terms the fast and easy way. Free forever." />
+	<meta
+		name="description"
+		content="Smarter Studying, Simplified. Adaptive learning powered by AI."
+	/>
 
 	<meta property="og:url" content="https://learnterms.com" />
 	<meta property="og:type" content="website" />

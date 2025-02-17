@@ -32,6 +32,17 @@ export interface QuestionProgress {
 	is_flagged: boolean;
 }
 
+export interface AdminQuestions {
+	id: string;
+	question_data: {
+		options: string[];
+		question: string;
+		explanation: string;
+		correct_answers: string[];
+	};
+	chapter: string;
+}
+
 export interface Chapter {
 	name: string;
 	desc: string;
