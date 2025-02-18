@@ -221,18 +221,26 @@
 						>
 							<Trash2 size="16" />
 						</button>
-						<button
-							class="btn btn-sm btn-soft btn-accent rounded-full"
-							onclick={() => (editingId = editingId === question.id ? '' : question.id)}
-						>
-							<Pencil size="16" />
-						</button>
+
 						{#if editingId === question.id}
 							<button
 								class="btn btn-sm btn-primary rounded-full ml-2"
 								onclick={() => updateQuestion(question)}
 							>
 								Save
+							</button>
+							<button
+								class="btn btn-sm btn-soft rounded-full"
+								onclick={() => (editingId = editingId === question.id ? '' : question.id)}
+							>
+								Cancel
+							</button>
+						{:else}
+							<button
+								class="btn btn-sm btn-soft btn-accent rounded-full"
+								onclick={() => (editingId = editingId === question.id ? '' : question.id)}
+							>
+								<Pencil size="16" />
 							</button>
 						{/if}
 					</td>

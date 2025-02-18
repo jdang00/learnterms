@@ -12,6 +12,10 @@
 		ListRestart
 	} from 'lucide-svelte';
 	import { QuestionMap } from './states.svelte';
+	import { useClerkContext } from 'svelte-clerk';
+
+	const ctx = useClerkContext();
+	const admin = $derived(ctx.user?.publicMetadata.role === 'admin');
 
 	// Props and initial state
 	let { data }: { data: PageData } = $props();
@@ -151,10 +155,15 @@
 						</p>
 					</div>
 				</div>
-				<button
-					class="btn mt-12 btn-error btn-soft self-center"
-					onclick={() => (qm.isResetModalOpen = true)}>Reset</button
-				>
+
+				<div class="flex flex-row mt-12 justify-center space-x-2">
+					<button class="btn btn-error btn-soft" onclick={() => (qm.isResetModalOpen = true)}
+						>Reset</button
+					>
+					{#if admin}
+						<a class="btn btn-info btn-soft" href="/admin" target="_blank">Admin Panel</a>
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>
