@@ -18,6 +18,7 @@
 	let pendingDeleteId = $state<string>('');
 	let isDeleting = $state(false);
 	let deleteError = $state<string | null>(null);
+	let deleteAllModal = $state(false);
 
 	onMount(() => {
 		if (browser) {
@@ -96,36 +97,56 @@
 	}
 </script>
 
-<!-- Controls: Search Bar and Chapter Filter -->
-<div class="flex flex-row space-x-2 justify-end me-6 mt-12">
-	<div class="mb-4">
-		<label class="input">
-			<svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-				<g
-					stroke-linejoin="round"
-					stroke-linecap="round"
-					stroke-width="2.5"
-					fill="none"
-					stroke="currentColor"
-				>
-					<circle cx="11" cy="11" r="8"></circle>
-					<path d="m21 21-4.3-4.3"></path>
-				</g>
-			</svg>
-			<input type="search" placeholder="Search" bind:value={searchQuery} class="grow" />
-		</label>
-	</div>
+<div class="flex flex-row justify-between mt-12 mx-6">
+	<button class="btn btn-error btn-soft" onclick={() => (deleteAllModal = true)}>Delete All</button>
+	<!-- Controls: Search Bar and Chapter Filter -->
+	<div class="flex flex-row space-x-2 justify-end">
+		<div class="mb-4">
+			<label class="input">
+				<svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+					<g
+						stroke-linejoin="round"
+						stroke-linecap="round"
+						stroke-width="2.5"
+						fill="none"
+						stroke="currentColor"
+					>
+						<circle cx="11" cy="11" r="8"></circle>
+						<path d="m21 21-4.3-4.3"></path>
+					</g>
+				</svg>
+				<input type="search" placeholder="Search" bind:value={searchQuery} class="grow" />
+			</label>
+		</div>
 
-	<div class="mb-4">
-		<select class="select" bind:value={selectedChapter}>
-			<option value="">All Chapters</option>
-			{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter}
-				{#if chapter}
-					<option value={chapter} selected={selectedChapter === chapter}>{chapter}</option>
-				{/if}
-			{/each}
-		</select>
+		<div class="mb-4">
+			<select class="select" bind:value={selectedChapter}>
+				<option value="">All Chapters</option>
+				{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter}
+					{#if chapter}
+						<option value={chapter} selected={selectedChapter === chapter}>{chapter}</option>
+					{/if}
+				{/each}
+			</select>
+		</div>
 	</div>
+</div>
+
+<div>
+	<dialog class="modal max-w-full p-4" class:modal-open={deleteAllModal}>
+		<div class="modal-box">
+			<form method="dialog">
+				<button
+					class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+					onclick={() => {
+						deleteAllModal = false;
+					}}>✕</button
+				>
+			</form>
+			<h3 class="text-lg font-bold">⁉️</h3>
+			<p>Yo what?</p>
+		</div>
+	</dialog>
 </div>
 
 <div>
