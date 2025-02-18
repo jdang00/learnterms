@@ -161,9 +161,7 @@
 						>Reset</button
 					>
 					{#if admin}
-						<button class="btn btn-info btn-soft" onclick={() => (qm.isResetModalOpen = true)}
-							>Admin Panel</button
-						>
+						<a class="btn btn-info btn-soft" href="/admin" target="_blank">Admin Panel</a>
 					{/if}
 				</div>
 			</div>
