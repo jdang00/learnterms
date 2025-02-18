@@ -40,16 +40,22 @@
 		"vite": "^6.0.0"
 	},
 	"dependencies": {
+		"@ai-sdk/openai": "^1.1.12",
+		"@ai-sdk/svelte": "^1.1.17",
 		"@supabase/supabase-js": "^2.47.7",
 		"@tailwindcss/postcss": "^4.0.0-beta.8",
 		"@vercel/analytics": "^1.4.1",
+		"ai": "^4.1.41",
 		"aos": "^2.3.4",
+		"dompurify": "^3.2.4",
 		"lucide-svelte": "^0.468.0",
+		"marked": "^15.0.7",
 		"openai": "^4.78.1",
 		"posthog-node": "^4.3.2",
 		"showdown": "^2.1.0",
 		"svelte-clerk": "^0.5.3",
 		"tailwindcss": "^4.0.0",
-		"theme-change": "^2.5.0"
+		"theme-change": "^2.5.0",
+		"zod": "^3.24.2"
 	}
 }

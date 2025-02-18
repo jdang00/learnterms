@@ -1,18 +1,47 @@
 <script lang="ts">
 	import supabase from '$lib/supabaseClient';
-	import type { AdminQuestions, Question } from '$lib/types';
+	import type { AdminQuestions } from '$lib/types';
 	import type { PageData } from './$types';
 	import { Trash2, Pencil } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 
 	// Retrieve the questions from props.
 	let { data }: { data: PageData } = $props();
-	// Use 'let' here so we can reassign on deletion.
-	let questions: AdminQuestions[] = data.questions;
+	let questions: AdminQuestions[] = $state(data.questions);
 
 	// Reactive states for search query, chapter filter, and the currently editing question.
 	let searchQuery = $state('');
 	let selectedChapter = $state('');
 	let editingId: string = $state('');
+	let isDeleteModalOpen = $state(false);
+	let pendingDeleteId = $state<string>('');
+	let isDeleting = $state(false);
+	let deleteError = $state<string | null>(null);
+	let deleteAllModal = $state(false);
+
+	onMount(() => {
+		if (browser) {
+			// Initialize from URL parameters
+			const urlParams = new URLSearchParams(window.location.search);
+			searchQuery = urlParams.get('search') || '';
+
+			// Create effect for URL updates
+			$effect(() => {
+				const params = new URLSearchParams();
+				if (searchQuery) params.set('search', searchQuery);
+
+				const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+				window.history.replaceState({}, '', newUrl);
+			});
+
+			// Handle browser back/forward navigation
+			window.addEventListener('popstate', () => {
+				const params = new URLSearchParams(window.location.search);
+				searchQuery = params.get('search') || '';
+			});
+		}
+	});
 
 	// Derive filtered questions based on searchQuery and selectedChapter.
 	let filteredQuestions = $derived(
@@ -22,47 +51,6 @@
 				(selectedChapter === '' || q.chapter === selectedChapter)
 		)
 	);
-
-	// Utility function to edit parts of the JSON blob (if needed).
-	function editJsonBlob({
-		jsonBlob,
-		options,
-		question,
-		explanation,
-		correct_answers
-	}: {
-		jsonBlob: Question;
-		options?: string[];
-		question?: string;
-		explanation?: string;
-		correct_answers?: string[];
-	}): Question {
-		if (!jsonBlob || typeof jsonBlob !== 'object') {
-			throw new Error('Invalid JSON object.');
-		}
-
-		if (options !== undefined) {
-			if (!Array.isArray(options)) throw new Error('Options must be an array.');
-			jsonBlob.question_data.options = options;
-		}
-
-		if (question !== undefined) {
-			if (typeof question !== 'string') throw new Error('Question must be a string.');
-			jsonBlob.question_data.question = question;
-		}
-
-		if (explanation !== undefined) {
-			if (typeof explanation !== 'string') throw new Error('Explanation must be a string.');
-			jsonBlob.question_data.explanation = explanation;
-		}
-
-		if (correct_answers !== undefined) {
-			if (!Array.isArray(correct_answers)) throw new Error('Correct answers must be an array.');
-			jsonBlob.question_data.correct_answers = correct_answers;
-		}
-
-		return jsonBlob;
-	}
 
 	/**
 	 * Update the question in the database.
@@ -89,62 +77,139 @@
 	/**
 	 * Delete the question from the database.
 	 */
-	async function deleteQuestion(questionId: string) {
-		const { data, error } = await supabase.from('pharmquestions').delete().eq('id', questionId);
+	async function handleDelete() {
+		if (!pendingDeleteId) return;
+
+		isDeleting = true;
+		deleteError = null;
+
+		const { error } = await supabase.from('pharmquestions').delete().eq('id', pendingDeleteId);
+
+		isDeleting = false;
 
 		if (error) {
-			console.error('Error deleting question:', error);
+			deleteError = error.message;
 		} else {
-			console.log('Question deleted:', data);
-			// Remove the deleted question from the local array.
-			questions = questions.filter((q) => q.id !== questionId);
+			questions = questions.filter((q) => q.id !== pendingDeleteId);
+			pendingDeleteId = '';
+			isDeleteModalOpen = false;
 		}
-	}
-
-	/**
-	 * Toggle a correct answer for a question.
-	 * If the option exists in correct_answers, remove it; otherwise, add it.
-	 * Then, update the question in the database.
-	 */
-	function toggleCorrectAnswer(question: AdminQuestions, option: string) {
-		const index = question.question_data.correct_answers.indexOf(option);
-		if (index === -1) {
-			question.question_data.correct_answers.push(option);
-		} else {
-			question.question_data.correct_answers.splice(index, 1);
-		}
-		updateQuestion(question);
 	}
 </script>
 
-<!-- Controls: Search Bar and Chapter Filter -->
-<div class="flex flex-row space-x-2 justify-end me-6 mt-12">
-	<div class="mb-4">
-		<label class="input">
-			<svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-				<g
-					stroke-linejoin="round"
-					stroke-linecap="round"
-					stroke-width="2.5"
-					fill="none"
-					stroke="currentColor"
-				>
-					<circle cx="11" cy="11" r="8"></circle>
-					<path d="m21 21-4.3-4.3"></path>
-				</g>
-			</svg>
-			<input type="search" placeholder="Search" bind:value={searchQuery} class="grow" />
-		</label>
-	</div>
+<div class="flex flex-row justify-between mt-12 mx-6">
+	<button class="btn btn-error btn-soft" onclick={() => (deleteAllModal = true)}>Delete All</button>
+	<!-- Controls: Search Bar and Chapter Filter -->
+	<div class="flex flex-row space-x-2 justify-end">
+		<div class="mb-4">
+			<label class="input">
+				<svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+					<g
+						stroke-linejoin="round"
+						stroke-linecap="round"
+						stroke-width="2.5"
+						fill="none"
+						stroke="currentColor"
+					>
+						<circle cx="11" cy="11" r="8"></circle>
+						<path d="m21 21-4.3-4.3"></path>
+					</g>
+				</svg>
+				<input type="search" placeholder="Search" bind:value={searchQuery} class="grow" />
+			</label>
+		</div>
 
-	<div class="mb-4">
-		<select class="select" bind:value={selectedChapter}>
-			<option value="">All Chapters</option>
-			{#each Array.from(new Set(questions.map((q) => q.chapter))) as chapter}
-				<option value={chapter}>{chapter}</option>
-			{/each}
-		</select>
+		<div class="mb-4">
+			<select class="select" bind:value={selectedChapter}>
+				<option value="">All Chapters</option>
+				{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter}
+					{#if chapter}
+						<option value={chapter} selected={selectedChapter === chapter}>{chapter}</option>
+					{/if}
+				{/each}
+			</select>
+		</div>
 	</div>
+</div>
+
+<div>
+	<dialog class="modal max-w-full p-4" class:modal-open={deleteAllModal}>
+		<div class="modal-box">
+			<form method="dialog">
+				<button
+					class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+					onclick={() => {
+						deleteAllModal = false;
+					}}>✕</button
+				>
+			</form>
+			<h3 class="text-lg font-bold">⁉️</h3>
+			<p>Yo what?</p>
+		</div>
+	</dialog>
+</div>
+
+<div>
+	<dialog class="modal max-w-full p-4" class:modal-open={isDeleteModalOpen}>
+		<div class="modal-box">
+			<form method="dialog">
+				<button
+					class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+					onclick={() => {
+						isDeleteModalOpen = false;
+						pendingDeleteId = '';
+					}}>✕</button
+				>
+			</form>
+			<h3 class="text-lg font-bold">Delete Question</h3>
+			{#if pendingDeleteId}
+				<p class="py-4">Are you sure you want to delete this question?</p>
+				<div class="my-4 p-4 bg-base-200 rounded-box">
+					{questions.find((q) => q.id === pendingDeleteId)?.question_data.question}
+				</div>
+			{/if}
+
+			{#if deleteError}
+				<div class="alert alert-error mb-4">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="stroke-current shrink-0 h-6 w-6"
+						fill="none"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+					<span>Error: {deleteError}</span>
+				</div>
+			{/if}
+
+			<div class="modal-action">
+				<button
+					class="btn btn-outline"
+					onclick={() => {
+						isDeleteModalOpen = false;
+						pendingDeleteId = '';
+					}}
+					disabled={isDeleting}
+				>
+					Cancel
+				</button>
+				<button class="btn btn-error" onclick={handleDelete} disabled={isDeleting}>
+					{#if isDeleting}
+						<span class="loading loading-spinner"></span>
+						Deleting...
+					{:else}
+						Delete
+					{/if}
+				</button>
+			</div>
+		</div>
+	</dialog>
 </div>
 
 <!-- Questions Table -->
@@ -175,7 +240,7 @@
 					</td>
 					<td>
 						{#if editingId === question.id}
-							{#each question.question_data.options, i}
+							{#each question.question_data.options as _, i}
 								<input
 									type="text"
 									class="input input-bordered w-full mb-2"
@@ -217,7 +282,10 @@
 					<td class="flex flex-row space-x-2">
 						<button
 							class="btn btn-sm btn-soft btn-error rounded-full"
-							onclick={() => deleteQuestion(question.id)}
+							onclick={() => {
+								pendingDeleteId = question.id;
+								isDeleteModalOpen = true;
+							}}
 						>
 							<Trash2 size="16" />
 						</button>

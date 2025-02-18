@@ -182,11 +182,11 @@
 					Do you want to start over? All current progress for this chapter will be lost.
 				</p>
 
-				<div class="justify-self-end">
-					<button class="btn btn-error" onclick={() => qm.reset()}>Reset</button>
+				<div class="flex justify-end space-x-2">
 					<button class="btn btn-outline" onclick={() => (qm.isResetModalOpen = false)}
 						>Cancel</button
 					>
+					<button class="btn btn-error" onclick={() => qm.reset()}>Reset</button>
 				</div>
 			</div>
 		</dialog>
