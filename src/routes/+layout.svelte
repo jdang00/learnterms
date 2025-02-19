@@ -76,11 +76,6 @@
 					</ul>
 				</div>
 				<a class="btn btn-ghost text-xl" href="/">LearnTerms </a>
-				<a
-					class="ms-2 font-mono lg:text-sm text-xs align-middle text-base-content/60 inline-block link link-hover"
-					href="/changelog"
-					target="_blank">v2beta9</a
-				>
 			</div>
 			<div class="navbar-center hidden lg:flex">
 				<ul class="menu menu-horizontal px-1">

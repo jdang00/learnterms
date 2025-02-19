@@ -3,6 +3,17 @@
 
 	<a href="/blog/LearnTerms v2" class="card lg:card-side bg-base-100 hover:bg-base-200">
 		<div class="card-body">
+			<h2 class="card-title">LearnTerms v2 Release</h2>
+			<p class="text-secondary text-sm">February 18, 2025</p>
+
+			<p class="text-base-content">
+				The future of our exam prep is here: LearnTerms v2 has officially arrived!
+			</p>
+		</div>
+	</a>
+
+	<a href="/blog/LearnTerms v2 Beta" class="card lg:card-side bg-base-100 hover:bg-base-200">
+		<div class="card-body">
 			<h2 class="card-title">LearnTerms v2 Beta</h2>
 			<p class="text-secondary text-sm">Janurary 15, 2025</p>
 
