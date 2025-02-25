@@ -10,17 +10,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 		return redirect(307, '/sign-in');
 	}
 
-	const { data: userProgress, error: progressError } = await supabase
-		.from('user_progress_per_chapter')
-		.select('*')
-		.order('user_id', { ascending: true })
-		.order('chapter_id', { ascending: true });
+	const { data: questions, error: questionsError } = await supabase
+		.from('pharmquestions')
+		.select('id, question_data, chapter')
+		.order('chapter', { ascending: true });
 
-	if (progressError) {
-		throw error(500, `Failed to load user progress: ${progressError.message}`);
+	if (questionsError) {
+		throw error(500, `Failed to load questions: ${questionsError.message}`);
 	}
 
 	return {
-		userProgress
+		questions
 	};
 };

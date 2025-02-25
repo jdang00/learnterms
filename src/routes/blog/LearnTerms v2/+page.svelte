@@ -1,5 +1,5 @@
 <div class="mt-10 flex min-h-screen w-full flex-col items-center justify-between p-8">
-	<div class="w-full max-w-3xl">
+	<div class="w-full max-w-5xl">
 		<div class="flex flex-col flex-wrap justify-between">
 			<h1 class="text-4xl font-bold">LearnTerms v2</h1>
 			<span>18 February 2024</span>
@@ -23,6 +23,21 @@
 			</div>
 		</div>
 		<div class="divider"></div>
+
+		<div class="p-24 flex justify-center border border-base-content/50 rounded-xl mb-8">
+			<div class="text-6xl font-bold">
+				<span class="text-primary relative">
+					LearnTerms
+					<span
+						class="absolute inset-0 -z-10 bg-primary opacity-30 blur-lg rounded-lg transform -translate-y-1/2 top-1/2 animate-pulse"
+					></span>
+				</span>
+				v2
+				<div class="text-xl font-semibold text-base-content/40 justify-self-center">
+					Smarter Studying, Simplified.
+				</div>
+			</div>
+		</div>
 
 		<div class="space-y-4">
 			<p>The future of our exam prep is here: LearnTerms v2 has officially arrived!</p>
@@ -283,6 +298,12 @@
 				</p>
 			</div>
 			<p>
+				It’s crucial that the model offers precise and thorough solution generation. It serves a
+				dual purpose: explaining why the correct options are the right ones while also explaining
+				why the other options are incorrect. Usually, it presents concepts related to the incorrect
+				options, thereby reinforcing knowledge.
+			</p>
+			<p>
 				3. Provide the content: Finally, we give the model a "context dump," meaning all the
 				material we want it to use to generate questions. This might be a paragraph from a textbook,
 				a slide from a lecture, or a set of notes. For example:
@@ -320,6 +341,12 @@
 				considering the inherent unpredictability of some AI models. We chose GPT-4o for its
 				superior comprehension abilities and cost-effectiveness.
 			</p>
+			<p>
+				We are fine tuning the system to ensure that it can handle a wide range of content types and
+				formats.This is very easy using LangFlow, a low code tool in order to build and display
+				generation flows quickly. It connects with our DataStax AstraDB backend to store and
+				retrieve data efficiently.
+			</p>
 
 			<h4 class="font-bold text-xl mt-6">Domain-Specific Expertise: Understanding Your Content</h4>
 
@@ -343,12 +370,74 @@
 				directly relevant to your course. This level of personalization and domain-specific
 				understanding is what sets LearnTerms apart from anything else currently available."
 			</p>
-			<p></p>
-			<p></p>
-			<p></p>
-			<p></p>
-			<p></p>
-			<p></p>
+
+			<h3 class="font-bold text-2xl mt-12">Building the Exam Module</h3>
+			<p>
+				At the heart of LearnTerms v2 is the Exam Module, carefully designed to replicate the
+				experience of our testing software, Examplify. Thanks to your feedback during the beta
+				phase, this module is now packed with useful tools to help you optimize your exam
+				preparation.
+			</p>
+			<p>
+				So, what does the Exam Module's adaptability mean for you? It means that as LearnTerms grows
+				and expands to cover more of your courses, you'll always have a consistent and reliable tool
+				at your fingertips for exam preparation. Think of it as your personal exam prep space. More
+				than just a practice test, it's a comprehensive solution designed to help you build
+				confidence, improve your performance, and reduce stress on test day. By providing a familiar
+				simulation of Examplify, the Exam Module allows you to refine your test-taking strategies
+				and approach your exams with a sense of calm and control. You'll be able to navigate the
+				software with ease, answer questions efficiently, and focus on demonstrating your knowledge,
+				ensuring a smooth transition from practice to the real exam.
+			</p>
+
+			<h4 class="font-bold text-xl mt-8">
+				Study Smarter, Not Harder: New Tools in the Exam Module
+			</h4>
+			<p>
+				Based on your feedback from the beta phase, the Exam Module now includes these helpful
+				tools:
+			</p>
+			<ul class="m-8 mt-4">
+				<li>
+					<strong>Shuffle Questions:</strong> Break the habit of memorizing answer orders. Shuffling
+					forces you to really think about each question, just like on a real exam.
+				</li>
+				<li>
+					<strong>Flag & Focus:</strong> Having trouble with certain questions? Flag them to revisit
+					later, or filter your view to only show flagged or incomplete questions. This lets you target
+					your weak spots without wasting time on what you already know. You can also sort by incomplete
+					questions.
+				</li>
+				<li>
+					<strong>Eliminate Choices:</strong> Stuck between a few options? Temporarily cross out answers
+					you know are wrong. This mimics the process of elimination you'll use during exams, helping
+					you narrow down the best answer.
+				</li>
+			</ul>
+
+			<h4 class="font-bold text-xl mt-8">Track Your Progress, Not Your Anxiety</h4>
+			<p>
+				Watch your confidence grow with real-time progress tracking. The module automatically saves
+				your work, so you can pick up right where you left off—no more guessing what to review next.
+				If you ever want a fresh start, the Reset Progress button lets you easily clear your
+				progress, perfect for final reviews or group study sessions.
+			</p>
+			<h4 class="font-bold text-xl mt-8">Shortcuts for Speed, Solutions for Clarity</h4>
+			<p>
+				Keyboard shortcuts (like Tab for solutions or arrow keys to navigate) help you stay in the
+				zone, while instant solution reveals explain why answers are right or wrong. This isn't just
+				about getting the answer correct—it's about reinforcing concepts so you avoid making the
+				same mistakes again.
+			</p>
+			<h4 class="font-bold text-xl mt-8">Why These Tools Work</h4>
+			<p>
+				These tools aren't just random additions; they're designed to support effective learning.
+				Shuffling prevents superficial memorization. Flagging helps you identify your knowledge
+				gaps. Eliminating options reduces decision fatigue. Together, they create a system that
+				adapts to your needs, whether you're reviewing before an exam or building long-term
+				understanding. By the time exam day arrives, you'll have already practiced in a familiar
+				environment, leaving you free to focus on acing the content.
+			</p>
 			<p></p>
 		</div>
 	</div>
