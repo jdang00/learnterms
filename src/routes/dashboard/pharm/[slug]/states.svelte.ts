@@ -5,7 +5,7 @@ import supabase from '$lib/supabaseClient';
 export class QuestionMap {
 	questions: Question[];
 	chapterData: Chapter;
-	userId;
+	userId: string;
 	userProgress;
 
 	constructor(data: PageData) {
