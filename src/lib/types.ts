@@ -61,3 +61,30 @@ export interface ChatState {
 	loading: boolean;
 	input: string;
 }
+
+export interface RawUserProgress {
+	user_id: string;
+	user_name: string;
+	chapter_id: number;
+	chapter_name: string;
+	total_questions: number;
+	attempted_questions: number;
+	progress_percentage: number | null;
+}
+
+export interface ChapterProgress {
+	chapter_id: number;
+	chapter_name: string;
+	total_questions: number;
+	attempted_questions: number;
+	progress_percentage: number | null;
+}
+
+export interface UserProgress {
+	user_id: string;
+	user_name: string;
+	chapters: ChapterProgress[];
+	total_attempted: number;
+	total_questions: number;
+	overall_progress: number;
+}

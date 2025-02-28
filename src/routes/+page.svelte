@@ -47,13 +47,11 @@
 			{#if userId === null}
 				<a class="btn btn-primary my-8" href="/sign-in">Get Started <ArrowRight /></a>
 			{:else if ctx.user?.publicMetadata.role === 'admin'}
-				<a class="btn btn-primary my-8" href="/dashboard"> <LayoutDashboard /> Dashboard</a>
+				<a class="btn btn-primary my-8" href="/dashboard"> <LayoutDashboard /> Modules</a>
 
-				<a class="btn btn-primary btn-soft my-8" href="/admin"
-					><Database />Admin Question Database</a
-				>
+				<a class="btn btn-primary btn-soft my-8" href="/admin"><Database />Admin</a>
 			{:else}
-				<a class="btn btn-primary my-8" href="/dashboard"> <LayoutDashboard /> Dashboard</a>
+				<a class="btn btn-primary my-8" href="/dashboard"> <LayoutDashboard /> Modules</a>
 			{/if}
 		</div>
 
