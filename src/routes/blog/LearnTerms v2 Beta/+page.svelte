@@ -2,7 +2,7 @@
 	<div class="w-full max-w-3xl">
 		<div class="flex flex-col flex-wrap justify-between">
 			<h1 class="text-4xl font-bold">LearnTerms v2 Beta</h1>
-			<span>15 Janurary 2024</span>
+			<span>15 January 2024</span>
 
 			<div class="mt-8 flex flex-row flex-wrap gap-6">
 				<a href="https://www.justindang.dev/" target="_blank">

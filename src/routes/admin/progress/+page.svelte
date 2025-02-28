@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import type { RawUserProgress, UserProgress } from '$lib/types';
-	import { Search, Edit } from 'lucide-svelte';
+	import { Search } from 'lucide-svelte';
 
 	// Props and data
 	let { data }: { data: PageData } = $props();

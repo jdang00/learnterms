@@ -1,5 +1,5 @@
 <div class="mt-10 flex min-h-screen w-full flex-col items-center justify-between p-8">
-	<div class="w-full max-w-5xl">
+	+ <div class="w-full max-w-full md:max-w-5xl">
 		<div class="flex flex-col flex-wrap justify-between">
 			<h1 class="text-4xl font-bold">LearnTerms v2</h1>
 			<span>18 February 2024</span>
