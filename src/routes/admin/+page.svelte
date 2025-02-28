@@ -4,7 +4,7 @@
 
 <main class="max-w-5xl mx-auto px-10 mt-12">
 	<!-- Dashboard Header -->
-	<h1 class="mb-8 text-4xl font-semibold">Dashboard</h1>
+	<h1 class="mb-8 text-4xl font-semibold">Admin</h1>
 
 	<!-- Admin Controls as DaisyUI Cards -->
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
