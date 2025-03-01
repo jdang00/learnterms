@@ -1,13 +1,14 @@
-<div class="mt-10 flex min-h-screen w-full flex-col items-center justify-between p-8">
-	+ <div class="w-full max-w-full md:max-w-5xl">
-		<div class="flex flex-col flex-wrap justify-between">
-			<h1 class="text-4xl font-bold">LearnTerms v2</h1>
-			<span>18 February 2024</span>
+<div class="min-h-screen w-full bg-base-100 py-16">
+	<div class="mx-auto w-full max-w-3xl px-6">
+		<!-- Header Section with improved spacing -->
+		<header class="mb-16">
+			<h1 class="mb-3 text-5xl font-bold">LearnTerms v2: Smarter Studying, Simplified</h1>
+			<span class="text-sm text-gray-500">28 February 2024</span>
 
-			<div class="mt-8 flex flex-row flex-wrap gap-6">
+			<div class="mt-10 flex items-center gap-6">
 				<a href="https://www.justindang.dev/" target="_blank">
 					<div class="avatar">
-						<div class="ring-primary ring-offset-base-100 w-14 rounded-full ring ring-offset-2">
+						<div class="ring-primary ring-offset-base-100 w-16 rounded-full ring ring-offset-2">
 							<img
 								src="https://utfs.io/f/DYlXFqnaImOrNYQ0L9zP0UTz89wOGJKi17DasVtufbylgkQF"
 								alt="Justin Dang"
@@ -16,14 +17,14 @@
 					</div>
 				</a>
 				<div class="flex flex-col text-sm">
-					<div class="font-semibold">Justin A. Dang</div>
-					<div class="text-base-content">NSU Oklahoma College of Optometry</div>
-					<div class="text-base-content">Class of 2028</div>
+					<span class="text-lg font-semibold">Justin A. Dang</span>
+					<span class="text-base-content/80">NSU Oklahoma College of Optometry</span>
+					<span class="text-base-content/80">Class of 2028</span>
 				</div>
 			</div>
-		</div>
-		<div class="divider"></div>
+		</header>
 
+		<!-- Interactive Graphic Header with more polish -->
 		<div class="p-24 flex justify-center border border-base-content/50 rounded-xl mb-8">
 			<div class="text-6xl font-bold">
 				<span class="text-primary relative">
@@ -39,407 +40,472 @@
 			</div>
 		</div>
 
-		<div class="space-y-4">
-			<p>The future of our exam prep is here: LearnTerms v2 has officially arrived!</p>
-			<p>
-				Our vision for LearnTerms is clear: to become the go-to study platform for optometry
-				students at NSUOCO. Back in January, we launched a beta phase, introducing three core
-				features designed to make studying hyper-efficient. Since then, we've been hard at work
-				refining and perfecting these tools based on your invaluable feedback.
-			</p>
-			<p>Now, they're ready for prime time.</p>
-			<p>
-				In this post, we'll dive deep into these powerful features, exploring their development,
-				their unique capabilities, and, most importantly, how you can leverage them to maximize your
-				study time and achieve that A. Get ready to unlock a new level of exam success with
-				LearnTerms v2.
-			</p>
+		<div class="divider my-8"></div>
 
-			<h3 class="font-bold text-2xl mt-12">The Problem</h3>
-			<p>
-				LearnTerms began as a focused solution, addressing a specific challenge within a single
-				course. This laser focus proved advantageous: it allowed us to concentrate our engineering
-				efforts, fill a niche unmet by existing methods, and create a lightweight, user-friendly
-				service with minimal barriers to entry. We wanted to build upon these core principles and
-				elevate the platform even further.
-			</p>
-			<p>
-				The previous version, while effective, had limitations: its scope was confined to a single
-				class, and maintaining accuracy required significant manual effort. I personally spent
-				countless hours manually verifying terms for both accuracy and for the LENs ranked list.
-				LearnTerms v2 directly addresses these challenges while staying true to the essence of what
-				made the original so successful.
-			</p>
-
-			<p>Our objectives for v2 were clear:</p>
-			<ul class="m-8 mt-4">
-				<li>Build a robust and reliable study platform that remains incredibly easy to use.</li>
-				<li>Create study content that is accurate, efficient, and rapidly generated.</li>
-				<li>
-					Maintain domain-specific expertise and a personalized understanding of course content.
-				</li>
-			</ul>
-			<p>
-				Achieving our vision for LearnTerms v2 was no small feat. On the engineering side, it
-				required a significant investment of time and resources. To ensure a smooth rollout, we're
-				initially testing these new technologies within a single class this semester. This allows us
-				to build a solid foundation, learn valuable lessons, and adapt the platform for any content
-				within the curriculum.
-			</p>
-			<p>
-				Our first objective – building a robust and reliable study platform – starts with a
-				beautiful and responsive interface. Think of it as the foundation of a well-designed house.
-				To achieve this, we needed to ensure that the interface was seamlessly connected to stable
-				and lightning-fast data streams. This involved significant optimizations to how we store our
-				questions (the database) and how we access them to display them on your device (the API).
-				These improvements mean faster loading times and a smoother overall experience for you.
-			</p>
-			<p>
-				Finally, we've implemented persistent saving across the entire site. This means your
-				progress on all features is automatically saved, allowing you to log in and access your
-				content from any device with an internet connection. This was a highly appreciated feature
-				in the previous version, and we've made sure it's even more reliable and seamless this time
-				around.
-			</p>
-
-			<h3 class="font-bold text-2xl mt-12">Under the Hood: Upgrading Our Core Technologies</h3>
-			<p>
-				To create this responsive and user-friendly experience, we've upgraded the core technologies
-				that power LearnTerms. This includes major new versions of our site coding framework (Svelte
-				5), our web component library (daisyUI v5), and our styling framework (TailwindCSS 3). Each
-				of these components contributes to a faster, lighter, and more responsive site on your
-				device.
-			</p>
-
-			<h4 class="font-bold text-xl mt-6">Svelte 5: Speed and Efficiency</h4>
-			<p>
-				Last semester, LearnTerms was built using Svelte 4, which allowed us to develop features and
-				components incredibly quickly. One of the advantages of using a framework like Svelte,
-				compared to more traditional tools like React or Angular, is its focus on optimizing for
-				speed while building interactive websites. With the upgrade to Svelte 5, the initial loading
-				time and the responsiveness of interactions have been significantly improved. Behind the
-				scenes, the developer experience has also been drastically enhanced, thanks to new features
-				that streamline the coding process.
-			</p>
-
-			<div class="border-2 p-8 border-base-content/50 rounded-xl mt-12">
-				<p class="text-base-content/70 mt-8 text-xl font-medium">
-					LearnTerms Exam Module First Load Performance
+		<!-- Content with improved spacing -->
+		<div class="space-y-20">
+			<!-- Introduction -->
+			<section>
+				<h2 class="mb-6 text-4xl font-bold /90">Introduction</h2>
+				<p class="text-lg leading-relaxed">
+					Welcome to the launch of <strong>LearnTerms v2</strong> – a revolutionary upgrade designed
+					to transform your exam preparation. With smarter study tools and an AI-powered backend, LearnTerms
+					v2 is set to become the go-to platform for our class. In this post, we'll walk you through
+					the evolution of the platform, explain the technology behind the upgrade, and show you how
+					these changes will make your study sessions more efficient and effective.
 				</p>
-				<p class="text-base-content/40 text-sm">Lower is better</p>
-				<div class="flex flex-col space-y-4 my-12">
-					<progress class="progress progress-success" value="0.9" max="5"></progress>
-					<p class="italic text-base-content/50">Svelte 5 ~ 0.9 s</p>
-					<progress class="progress progress-success" value="3.4" max="5"></progress>
-					<p class="italic text-base-content/50">Svelte 4 ~ 3.4 s</p>
+			</section>
+
+			<!-- Background & The Problem -->
+			<section>
+				<h2 class="mb-6 text-4xl font-bold /90">Background &amp; The Problem</h2>
+
+				<h3 class="mb-4 mt-8 text-2xl font-semibold">Background</h3>
+				<p class="mb-6 text-lg leading-relaxed">
+					LearnTerms began as a focused solution addressing a specific challenge in a single course.
+					By concentrating our efforts on a niche area, we were able to create a lightweight and
+					user-friendly service with minimal barriers to entry. However, as our user base grew and
+					expectations increased, the limitations of the original version became apparent.
+				</p>
+
+				<h3 class="mb-4 mt-10 text-2xl font-semibold">The Problem</h3>
+				<ul class="mb-6 ml-6 space-y-3 text-lg">
+					<li class="leading-relaxed">
+						<strong>Limited Scope:</strong> The previous version was confined to a single class, which
+						restricted its potential.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Manual Verification:</strong> A significant amount of manual effort was required
+						to verify terms and maintain accuracy, consuming countless hours.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Scalability Challenges:</strong> The system needed to evolve to accommodate a broader
+						range of content while still delivering a high-quality user experience.
+					</li>
+				</ul>
+				<p class="text-lg leading-relaxed">
+					These challenges highlighted the need for a robust, scalable solution that would automate
+					and streamline study material generation.
+				</p>
+			</section>
+
+			<!-- The Evolution -->
+			<section>
+				<h2 class="mb-6 text-4xl font-bold /90">The Evolution: What's New in LearnTerms v2</h2>
+
+				<h3 class="mb-4 mt-8 text-2xl font-semibold">Vision for v2</h3>
+				<p class="mb-4 text-lg leading-relaxed">
+					LearnTerms v2 is built with three clear objectives:
+				</p>
+				<ul class="mb-6 ml-6 space-y-3 text-lg">
+					<li class="leading-relaxed">
+						<strong>Robust Platform:</strong> Develop a study tool that is not only powerful but also
+						incredibly easy to use.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Rapid and Accurate Content Generation:</strong> Utilize AI to produce high-quality,
+						accurate study questions quickly.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Personalized Learning:</strong> Maintain domain-specific expertise to ensure the
+						content is tailored to your course and study habits.
+					</li>
+				</ul>
+				<p class="mb-8 text-lg leading-relaxed">
+					Feedback from our beta phase was critical in shaping these upgrades, ensuring that each
+					new feature addresses real-world study challenges.
+				</p>
+
+				<h3 class="mb-4 mt-10 text-2xl font-semibold">User Benefits</h3>
+				<ul class="mb-6 ml-6 space-y-3 text-lg">
+					<li class="leading-relaxed">
+						<strong>Enhanced Efficiency:</strong> Experience faster load times and smoother interactions.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Reliable Exam Preparation:</strong> Access a consistent and dependable exam module
+						that simulates real test conditions.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Cross-Device Continuity:</strong> Enjoy persistent saving across devices so you can
+						pick up exactly where you left off.
+					</li>
+				</ul>
+			</section>
+
+			<!-- Under the Hood -->
+			<section>
+				<h2 class="mb-6 text-4xl font-bold /90">Under the Hood: Upgrading Our Core Technologies</h2>
+
+				<h3 class="mb-4 mt-8 text-2xl font-semibold">Svelte 5: Speed and Efficiency</h3>
+				<p class="mb-4 text-lg leading-relaxed">
+					Upgrading from Svelte 4 to <strong>Svelte 5</strong> has dramatically improved the platform.
+					Key benefits include:
+				</p>
+				<ul class="mb-8 ml-6 space-y-3 text-lg">
+					<li class="leading-relaxed">
+						<strong>Faster Initial Load:</strong> Reduced waiting time when you first access the platform.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Smoother Interactions:</strong> Enhanced responsiveness for a more fluid user experience.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Improved Developer Experience:</strong> New features streamline the coding process,
+						translating into quicker updates and bug fixes.
+					</li>
+				</ul>
+
+				<!-- Performance Card -->
+				<div class="my-14 rounded-xl border-2 border-base-content/20 bg-base-200/30 p-10 shadow-sm">
+					<p class="mb-2 text-2xl font-medium text-base-content/80">
+						LearnTerms Exam Module First Load Performance
+					</p>
+					<p class="mb-8 text-sm text-base-content/60">Lower is better</p>
+
+					<div class="space-y-8 py-4">
+						<div>
+							<progress class="progress progress-success h-4 w-full" value="0.9" max="5"></progress>
+							<p class="mt-2 italic text-base-content/70">Svelte 5 ~ 0.9 s</p>
+						</div>
+						<div>
+							<progress class="progress progress-success h-4 w-full" value="3.4" max="5"></progress>
+							<p class="mt-2 italic text-base-content/70">Svelte 4 ~ 3.4 s</p>
+						</div>
+					</div>
+
+					<p class="mt-8 text-center italic text-base-content/60">
+						The new Exam Module's first load time sees a 75% improvement on average when comparing
+						Svelte 5 to Svelte 4.
+					</p>
 				</div>
-			</div>
-			<p class="italic text-base-content/60 mb-12 justify-self-center text-sm">
-				The new Exam Module's first load time sees a 75% improvement on average when comparing
-				Svelte 5 to Svelte 4.
-			</p>
 
-			<h4 class="font-bold text-xl mt-6">daisyUI v5: A Fresh and Modern Look</h4>
-			<p>
-				The original goal of LearnTerms wasn't necessarily to be the prettiest platform, but to
-				deliver a great study experience for your exams. However, we knew it had to look good by
-				default. That's why we chose daisyUI, an off-the-shelf component library that works
-				seamlessly with our styling framework, Tailwind. When building a product, you ideally want
-				to customize every detail, from button colors to styles and placement. But the default look
-				of daisyUI made it incredibly easy to quickly build and deploy new features. As a result,
-				we've greatly benefited from the improvements made in daisyUI v5. The library now has zero
-				dependencies and is 61% smaller in size, resulting in faster loading times. The new color
-				variables and design system improvements made it a breeze to give LearnTerms a fresh
-				makeover. Where the interface previously looked playful and helpful, with a unique flair of
-				color, it now has a more mature and refined look while retaining the original DNA that made
-				it so special. The new interface is designed for speed and quick interactions while
-				providing helpful hints about all the powerful tools under the hood.
-			</p>
+				<h3 class="mb-4 mt-12 text-2xl font-semibold">daisyUI v5: A Fresh and Modern Look</h3>
+				<p class="mb-4 text-lg leading-relaxed">
+					The new <strong>daisyUI v5</strong> update brings a modern, refined design to LearnTerms. Highlights
+					include:
+				</p>
+				<ul class="mb-8 ml-6 space-y-3 text-lg">
+					<li class="leading-relaxed">
+						<strong>Lean and Lightweight:</strong> The library is now 61% smaller and dependency-free.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Enhanced Aesthetics:</strong> A cleaner, more mature look that still retains the
+						playful essence of the original design.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Quick Deployment:</strong> Simplifies the process of building and deploying new features,
+						ensuring a consistent visual experience.
+					</li>
+				</ul>
 
-			<figure class="diff aspect-16/9 my-16" tabindex="-1">
-				<div class="diff-item-1" role="img">
-					<img
-						alt="old Daisy"
-						src="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrIueSvlRSqTOnyANtE2Y4Fa91scRBu8mK7egZ"
-					/>
+				<!-- Diff Image with more spacing -->
+				<figure class="diff aspect-16/9 my-16" tabindex="-1">
+					<div class="diff-item-1" role="img">
+						<img
+							alt="old Daisy"
+							src="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrIueSvlRSqTOnyANtE2Y4Fa91scRBu8mK7egZ"
+						/>
+					</div>
+					<div class="diff-item-2" role="img" tabindex="-1">
+						<img
+							alt="new D"
+							src="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrIEi1vrRSqTOnyANtE2Y4Fa91scRBu8mK7egZ"
+						/>
+					</div>
+					<div class="diff-resizer"></div>
+				</figure>
+
+				<h3 class="mb-4 mt-12 text-2xl font-semibold">
+					TailwindCSS 4.0: Performance and Modern Standards
+				</h3>
+				<p class="mb-4 text-lg leading-relaxed">
+					With the upgrade to <strong>TailwindCSS 4.0</strong>, we see:
+				</p>
+				<ul class="mb-8 ml-6 space-y-3 text-lg">
+					<li class="leading-relaxed">
+						<strong>Faster Builds:</strong> Both full and incremental build times have significantly
+						decreased.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Optimized Styling:</strong> The high-performance engine ensures our custom styles
+						load quickly and render beautifully.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Modern Standards:</strong> Continued support for modern web standards enhances overall
+						performance and compatibility.
+					</li>
+				</ul>
+
+				<h4 class="mb-4 mt-8 text-xl font-semibold">Benchmark Comparison</h4>
+				<div class="overflow-x-auto">
+					<table class="table">
+						<thead>
+							<tr>
+								<th></th>
+								<th>v3.4</th>
+								<th>v4.0</th>
+								<th>Improvement</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Full build</td>
+								<td>378ms</td>
+								<td>100ms</td>
+								<td>3.78x</td>
+							</tr>
+							<tr>
+								<td>Incremental rebuild with new CSS</td>
+								<td>44ms</td>
+								<td>5ms</td>
+								<td>8.8x</td>
+							</tr>
+							<tr>
+								<td>Incremental rebuild with no new CSS</td>
+								<td>35ms</td>
+								<td>192µs</td>
+								<td>182x</td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
-				<div class="diff-item-2" role="img" tabindex="-1">
-					<img
-						alt="new D"
-						src="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrIEi1vrRSqTOnyANtE2Y4Fa91scRBu8mK7egZ"
-					/>
-				</div>
-				<div class="diff-resizer"></div>
-			</figure>
-
-			<h4 class="font-bold text-xl mt-6">TailwindCSS 4.0: Performance and Modern Standards</h4>
-			<p>
-				When it comes to styling beyond the defaults provided by daisyUI, we turn to TailwindCSS
-				4.0. Like Svelte 5, this was a ground-up rewrite that features a new high-performance
-				engine. We appreciate the performance gains and the fact that daisyUI works natively with
-				it. While the full scope of enhancements is difficult to quantify for our specific use case,
-				the faster full and incremental builds, combined with our component library, and our
-				commitment to keeping up with modern web standards are all supported by TailwindCSS 4.0.
-			</p>
-
-			<div class="overflow-x-auto">
-				<table class="table">
-					<thead>
-						<tr>
-							<th></th>
-							<th>v3.4</th>
-							<th>v4.0</th>
-							<th>Improvement</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td>Full build</td>
-							<td>378ms</td>
-							<td>100ms</td>
-							<td>3.78x</td>
-						</tr>
-						<tr>
-							<td>Incremental rebuild with new CSS</td>
-							<td>44ms</td>
-							<td>5ms</td>
-							<td>8.8x</td>
-						</tr>
-						<tr>
-							<td>Incremental rebuild with no new CSS</td>
-							<td>35ms</td>
-							<td>192µs</td>
-							<td>182x</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-
-			<p class="italic text-base-content/60 mb-12 justify-self-center text-sm">
-				Tailwind benchmarks using Catalyst, the TailwindCSS UI kit.
-			</p>
-
-			<div class="divider"></div>
-			<p class="mt-8">
-				Now, let's talk about how we're revolutionizing content creation for your studying. In the
-				past, creating the terms for Intro to Optometry involved a lot of manual labor. We'd use OCR
-				and clever scripting to extract terms from workbooks, but the validation and accuracy checks
-				took a significant amount of time. And, without fail, every week someone would report a
-				mistake, requiring me to dive back in and fix it. To create study material that is
-				efficient, accurate, and generated in a reasonable amount of time, we turned to artificial
-				intelligence as the solution.
-			</p>
-
-			<h3 class="font-bold text-2xl mt-12">Harnessing the Power of AI for Personalized Learning</h3>
-			<p>
-				Large language models (LLMs) are the foundation of services you use every day, like ChatGPT.
-				Their strength lies in their ability to generate content quickly while maintaining a high
-				degree of accuracy. By fine-tuning these models and using a technique called prompt
-				engineering, we can get them to behave exactly as we want.
-			</p>
-			<p>The idea is simple, yet powerful:</p>
-			<p>
-				1. Define the task: We start by clearly instructing the model on what we want it to do. For
-				example:
-			</p>
-
-			<div class="bg-base-300 w-full font-mono text-base-content p-8 rounded-xl">
-				“You are a pharmacology expert tasked with creating diverse question types to help students
-				master clinically relevant material. Generate 10 questions based on the provided material.
-				The questions should challenge understanding, application, and critical thinking. Make sure
-				that some questions have multiple answers to maximize yield of information.“
-			</div>
-			<p>
-				2. Specify the format: Next, we provide the model with the exact format we want the question
-				to be in, including an example. For example:
-			</p>
-			<div class="bg-base-300 w-full font-mono text-base-content p-8 rounded-xl">
-				<p>### Instructions:</p>
-				<p>Use the following structure for formatting:</p>
-				<p>Question [#]: [Insert the question text here.]</p>
-				<br />
-				<p>Options:</p>
-				<p>A. [Insert Option A]</p>
-				<p>B. [Insert Option B]</p>
-				<p>C. [Insert Option C]</p>
-				<p>D. [Insert Option D]</p>
-				<p>E. [Insert Option E]</p>
-				<br />
-				<p>Correct Answers: [List correct options, e.g., A, C, D]</p>
-				<p>
-					Explanation: [Explain why each correct option is correct and each incorrect option is
-					incorrect.]
+				<p class="mt-4 text-center italic text-base-content/60 text-sm">
+					Lower numbers indicate better performance.
 				</p>
-				<br />
+			</section>
 
-				<p>### Example:</p>
-				<p>
-					Material: ACE inhibitors are commonly used to treat hypertension. They also have
-					protective effects on the kidneys in diabetic patients but may cause a dry cough as a side
-					effect. Common drugs include lisinopril and enalapril.
+			<!-- AI Section -->
+			<section>
+				<h2 class="mb-6 text-4xl font-bold /90">
+					Harnessing the Power of AI for Personalized Learning
+				</h2>
+
+				<h3 class="mb-4 mt-8 text-2xl font-semibold">Introduction to AI Integration</h3>
+				<p class="mb-8 text-lg leading-relaxed">
+					LearnTerms v2 leverages advanced <strong>Large Language Models (LLMs)</strong> to generate
+					personalized study questions quickly and accurately. By fine-tuning these models and utilizing
+					effective prompt engineering, we ensure that every generated question is both relevant and
+					accurate.
 				</p>
-				<p>Output:</p>
-				<p>
-					Question: A patient with diabetes and hypertension is being considered for ACE inhibitor
-					therapy. Which of the following statements are true regarding ACE inhibitors in this
-					context?
+
+				<h3 class="mb-4 mt-10 text-2xl font-semibold">The AI Workflow</h3>
+				<ol class="mb-8 ml-6 space-y-6 text-lg">
+					<li>
+						<strong class="block mb-2 text-lg">Define the Task:</strong>
+						<p class="leading-relaxed">
+							Clear instructions guide the model on what is expected. For example, a prompt might
+							direct the model to generate diverse question types that challenge understanding and
+							critical thinking.
+						</p>
+					</li>
+					<li>
+						<strong class="block mb-2 text-lg">Specify the Format:</strong>
+						<p class="mb-2 leading-relaxed">
+							We provide an exact format for the questions, including:
+						</p>
+						<ul class="mb-4 ml-6 space-y-2">
+							<li>A numbered question format</li>
+							<li>Multiple-choice options</li>
+							<li>
+								An explanation section that details why certain options are correct or incorrect
+							</li>
+						</ul>
+						<p class="mb-2 italic">Example Prompt Block:</p>
+						<pre class="bg-base-300 p-6 rounded-lg text-sm overflow-x-auto mb-4">
+"You are a pharmacology expert tasked with creating diverse question types
+to help students master clinically relevant material. Generate 10 questions
+based on the provided material. The questions should challenge understanding,
+application, and critical thinking. Make sure that some questions have
+multiple answers."
+            </pre>
+					</li>
+					<li>
+						<strong class="block mb-2 text-lg">Provide the Content:</strong>
+						<p class="leading-relaxed">
+							The model receives a comprehensive "context dump" of relevant material—from textbook
+							excerpts to lecture notes—ensuring it has the necessary information to generate
+							high-quality questions.
+						</p>
+					</li>
+				</ol>
+
+				<h3 class="mb-4 mt-10 text-2xl font-semibold">Validation Process</h3>
+				<p class="text-lg leading-relaxed">
+					After the questions are generated, a secondary AI validation step checks the accuracy and
+					logic of each question. With an accuracy rate of approximately <strong>95%</strong>, only
+					about 5 out of every 100 questions may need revision. This dual-layered approach
+					guarantees reliable study materials.
 				</p>
-				<p>Options:</p>
-				<p>A. They can help protect kidney function in diabetic patients.</p>
-				<p>B. They are contraindicated in patients with diabetes.</p>
-				<p>C. A potential side effect is a dry cough.</p>
-				<p>D. They are ineffective in treating hypertension in diabetic patients.</p>
-				<p>E. Lisinopril and enalapril are examples of ACE inhibitors.</p>
-				<p>Correct Answers: A,C,E</p>
-				<p>
-					Explanation: ACE inhibitors treat hypertension, can cause a dry cough, and include drugs
-					like lisinopril and enalapril. However, they do not cause hyperkalemia in all patients and
-					are not contraindicated in all diabetics.
+			</section>
+
+			<!-- Exam Module -->
+			<section>
+				<h2 class="mb-6 text-4xl font-bold /90">
+					Building the Exam Module: Features &amp; Benefits
+				</h2>
+
+				<h3 class="mb-4 mt-8 text-2xl font-semibold">Overview of the Exam Module</h3>
+				<p class="mb-8 text-lg leading-relaxed">
+					The <strong>Exam Module</strong> is designed to replicate the experience of ExamSoft while
+					integrating modern features inspired by user feedback. This module is at the heart of LearnTerms
+					v2 and is built to provide a comprehensive exam preparation experience.
 				</p>
-			</div>
-			<p>
-				It’s crucial that the model offers precise and thorough solution generation. It serves a
-				dual purpose: explaining why the correct options are the right ones while also explaining
-				why the other options are incorrect. Usually, it presents concepts related to the incorrect
-				options, thereby reinforcing knowledge.
-			</p>
-			<p>
-				3. Provide the content: Finally, we give the model a "context dump," meaning all the
-				material we want it to use to generate questions. This might be a paragraph from a textbook,
-				a slide from a lecture, or a set of notes. For example:
-			</p>
 
-			<div class="bg-base-300 w-full font-mono text-base-content p-8 rounded-xl">
-				Amantadine was developed as an anti-influenza drug (prevents viral shedding) but is now used
-				as a Parkinson’s drug to help prevent dyskinesia (involuntary movements). ## HIV/AIDS drugs
-				These drugs are usually reverse transcriptase inhibitors (can be nucleotide analogs or non-
-				nucleotide drugs that bind the enzyme) that prevent viral RNA from copying into DNA or
-				integrase inhibitors that inhibit viral DNA from inserting into the host genome. Tenofovir,
-				emtricitabine, and efavirenz are all examples of RTIs – reverse transcriptase inhibitors.
-				Tenofovir is the backbone to many HIV drugs and is also used for Hepatitis B. Dolutegravir,
-				elvitegravir, and raltegravir are integrase inhibitors. Descovy – emtricitabine and
-				tenofovir – is approved for PrEP therapy (pre-exposure prophylaxis) Remdesivir is an IV drug
-				that is a ribonucleotide analogue inhibitor of viral RNA polymerase.
-			</div>
-			<p>
-				The model then takes this prompt and analyzes the material to generate relevant questions.
-				From there, it's a matter of tuning the model based on its outputs and formatting the
-				questions for our question bank.
-			</p>
+				<h3 class="mb-4 mt-10 text-2xl font-semibold">Core Features</h3>
+				<ul class="mb-8 ml-6 space-y-3 text-lg">
+					<li class="leading-relaxed">
+						<strong>Shuffle Questions:</strong> Randomizes the order of questions to prevent memorization
+						and promote genuine understanding.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Flag &amp; Focus:</strong> Allows you to mark challenging questions and quickly filter
+						to review only flagged or incomplete questions.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Eliminate Choices:</strong> Helps mimic the process of elimination used in actual
+						exams by allowing you to cross out clearly incorrect answers.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Progress Tracking:</strong> Automatically saves your progress in real time, enabling
+						seamless cross-device study sessions.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Keyboard Shortcuts:</strong> Use intuitive shortcuts (like Tab for solutions and
+						arrow keys for navigation) to speed up your study sessions.
+					</li>
+				</ul>
 
-			<h3 class="font-bold text-2xl mt-12">From Prompt to Publish: A Streamlined Workflow</h3>
-			<p>
-				With a sophisticated automated workflow, we can generate 100+ questions in about 10 minutes
-				from prompt to publish. But we don't stop there. To ensure accuracy, these questions also
-				undergo a validation step by another, smaller AI model. This model simply checks to see if
-				the information is accurate and makes sense.
-			</p>
-			<p></p>
-			<p>
-				Through rigorous testing, we've achieved an accuracy rate of approximately 95%, meaning only
-				about 5 out of 100 questions are potentially flawed. This is a remarkable margin,
-				considering the inherent unpredictability of some AI models. We chose GPT-4o for its
-				superior comprehension abilities and cost-effectiveness.
-			</p>
-			<p>
-				We are fine tuning the system to ensure that it can handle a wide range of content types and
-				formats.This is very easy using LangFlow, a low code tool in order to build and display
-				generation flows quickly. It connects with our DataStax AstraDB backend to store and
-				retrieve data efficiently.
-			</p>
+				<h3 class="mb-4 mt-10 text-2xl font-semibold">User Experience</h3>
+				<p class="text-lg leading-relaxed">
+					Together, these features create a reliable, engaging, and personalized exam prep space.
+					Whether you're reviewing for a final exam or conducting group study sessions, the Exam
+					Module ensures you can practice efficiently and effectively.
+				</p>
+			</section>
 
-			<h4 class="font-bold text-xl mt-6">Domain-Specific Expertise: Understanding Your Content</h4>
+			<!-- Study Smarter section -->
+			<section>
+				<h2 class="mb-6 text-4xl font-bold /90">
+					Study Smarter, Not Harder: Impact on Your Learning
+				</h2>
 
-			<p>
-				To fulfill our final objective, we wanted to ensure that the AI truly understands the
-				specific domain it's operating in – in other words, your course content. This principle
-				stems from the idea of not wanting to reinvent the wheel. There are countless sites that can
-				generate study material and questions on various topics. What makes our system special is
-				that it actually understands and evolves to the way you study and how your exams are
-				structured.
-			</p>
-			<p>
-				This starts with a vector database, a specialized way of storing our notes, slides, and
-				other content so that the AI can easily access and retrieve relevant information. We then
-				use a process called embedding to return the most relevant information for question
-				generation.
-			</p>
-			<p>
-				The model is aware of question styles, key concepts, and specific topics to be quizzed on.
-				This is how we can generate questions that are specifically "pick 3" or that focus on topics
-				directly relevant to your course. This level of personalization and domain-specific
-				understanding is what sets LearnTerms apart from anything else currently available."
-			</p>
+				<h3 class="mb-4 mt-8 text-2xl font-semibold">Personalization &amp; Efficiency</h3>
+				<p class="mb-8 text-lg leading-relaxed">
+					LearnTerms v2 is designed to adapt to your unique study habits. With AI-powered question
+					generation, persistent progress saving, and a user-centric interface, you can focus on
+					what matters most—mastering the material.
+				</p>
 
-			<h3 class="font-bold text-2xl mt-12">Building the Exam Module</h3>
-			<p>
-				At the heart of LearnTerms v2 is the Exam Module, carefully designed to replicate the
-				experience of our testing software, Examplify. Thanks to your feedback during the beta
-				phase, this module is now packed with useful tools to help you optimize your exam
-				preparation.
-			</p>
-			<p>
-				So, what does the Exam Module's adaptability mean for you? It means that as LearnTerms grows
-				and expands to cover more of your courses, you'll always have a consistent and reliable tool
-				at your fingertips for exam preparation. Think of it as your personal exam prep space. More
-				than just a practice test, it's a comprehensive solution designed to help you build
-				confidence, improve your performance, and reduce stress on test day. By providing a familiar
-				simulation of Examplify, the Exam Module allows you to refine your test-taking strategies
-				and approach your exams with a sense of calm and control. You'll be able to navigate the
-				software with ease, answer questions efficiently, and focus on demonstrating your knowledge,
-				ensuring a smooth transition from practice to the real exam.
-			</p>
+				<h3 class="mb-4 mt-10 text-2xl font-semibold">Real-World Outcomes</h3>
+				<ul class="mb-8 ml-6 space-y-3 text-lg">
+					<li class="leading-relaxed">
+						<strong>Enhanced Confidence:</strong> Familiarity with a consistent and reliable exam simulation
+						can boost your confidence on test day.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Improved Performance:</strong> Regular practice with tailored questions leads to
+						deeper understanding and better exam results.
+					</li>
+					<li class="leading-relaxed">
+						<strong>Reduced Anxiety:</strong> With tools like progress tracking and the ability to reset
+						your practice sessions, you can manage your study load and reduce pre-exam stress.
+					</li>
+				</ul>
+			</section>
 
-			<h4 class="font-bold text-xl mt-8">
-				Study Smarter, Not Harder: New Tools in the Exam Module
-			</h4>
-			<p>
-				Based on your feedback from the beta phase, the Exam Module now includes these helpful
-				tools:
-			</p>
-			<ul class="m-8 mt-4">
-				<li>
-					<strong>Shuffle Questions:</strong> Break the habit of memorizing answer orders. Shuffling
-					forces you to really think about each question, just like on a real exam.
-				</li>
-				<li>
-					<strong>Flag & Focus:</strong> Having trouble with certain questions? Flag them to revisit
-					later, or filter your view to only show flagged or incomplete questions. This lets you target
-					your weak spots without wasting time on what you already know. You can also sort by incomplete
-					questions.
-				</li>
-				<li>
-					<strong>Eliminate Choices:</strong> Stuck between a few options? Temporarily cross out answers
-					you know are wrong. This mimics the process of elimination you'll use during exams, helping
-					you narrow down the best answer.
-				</li>
-			</ul>
+			<!-- Conclusion section -->
+			<section>
+				<h2 class="mb-6 text-4xl font-bold /90">Conclusion &amp; Future Directions</h2>
 
-			<h4 class="font-bold text-xl mt-8">Track Your Progress, Not Your Anxiety</h4>
-			<p>
-				Watch your confidence grow with real-time progress tracking. The module automatically saves
-				your work, so you can pick up right where you left off—no more guessing what to review next.
-				If you ever want a fresh start, the Reset Progress button lets you easily clear your
-				progress, perfect for final reviews or group study sessions.
-			</p>
-			<h4 class="font-bold text-xl mt-8">Shortcuts for Speed, Solutions for Clarity</h4>
-			<p>
-				Keyboard shortcuts (like Tab for solutions or arrow keys to navigate) help you stay in the
-				zone, while instant solution reveals explain why answers are right or wrong. This isn't just
-				about getting the answer correct—it's about reinforcing concepts so you avoid making the
-				same mistakes again.
-			</p>
-			<h4 class="font-bold text-xl mt-8">Why These Tools Work</h4>
-			<p>
-				These tools aren't just random additions; they're designed to support effective learning.
-				Shuffling prevents superficial memorization. Flagging helps you identify your knowledge
-				gaps. Eliminating options reduces decision fatigue. Together, they create a system that
-				adapts to your needs, whether you're reviewing before an exam or building long-term
-				understanding. By the time exam day arrives, you'll have already practiced in a familiar
-				environment, leaving you free to focus on acing the content.
-			</p>
-			<p></p>
+				<p class="mb-8 text-lg leading-relaxed">
+					LearnTerms v2 is a significant leap forward in exam preparation technology. By addressing
+					the limitations of the original version, upgrading our core technologies, and integrating
+					advanced AI, we have created a platform that is faster, smarter, and more reliable.
+				</p>
+
+				<h3 class="mb-4 mt-10 text-2xl font-semibold">Looking Ahead</h3>
+				<p class="text-lg leading-relaxed">
+					As we continue to refine the platform, expect even more features designed to personalize
+					and improve your study experience. Together, we'll redefine what it means to study
+					smarter, not harder.
+				</p>
+
+				<p class="text-lg mt-4 leading-relaxed">
+					In conclusion, LearnTerms v2 represents a significant leap forward in exam preparation for
+					our class. By building on the success and addressing the limitations of its predecessor,
+					LearnTerms v2 offers a robust, reliable, and user-friendly platform powered by
+					cutting-edge technologies like Svelte 5, daisyUI v5, and TailwindCSS 4.0. The integration
+					of AI for content creation streamlines the generation of accurate and efficient study
+					materials, personalized to the specific needs of the curriculum. With the Exam Module,
+					students can now study smarter, not harder, utilizing tools designed to replicate the exam
+					environment, track progress, and reinforce learning. LearnTerms v2 aims to become an
+					indispensable tool, helping you study well and feel good about it!
+				</p>
+			</section>
+
+			<!-- Appendices section -->
+			<section>
+				<h2 class="mb-6 text-4xl font-bold /90">Appendices</h2>
+
+				<p class="text-lg leading-relaxed">
+					For those interested in the deeper technical aspects, we offer additional documentation on
+					our performance benchmarks, code snippets, and configuration details. Head over to the
+					project <a
+						href="https://github.com/jdang00/learnterms/tree/main"
+						class="link link-secondary"
+						target="_blank">GitHub</a
+					> to view the project's codebase and contribute to its development.
+				</p>
+			</section>
 		</div>
+
+		<h3 class="mb-6 text-2xl font-semibold mt-12">Special Thanks</h3>
+
+		<p class="mb-8 text-lg leading-relaxed">
+			Thank you for reading about everything we've been working on since mid December. It's been a
+			labor of love and just as much as I want it to help me, I really want it to enable you to be
+			the best future doctors possible. Finally, I want to give my thanks to the following people
+			for special contributions they've made to the project. Without them, my work would have been
+			that much harder.
+		</p>
+
+		<ul class="space-y-4 pl-6">
+			<li class="flex gap-3 items-start">
+				<span class="text-primary mt-1">✨</span>
+				<span class="text-base-content/90"
+					>Thank you <span class="font-medium">Brayden and Collin</span> for their direct contribution
+					to the content and codebase. Working with you gentlemen has made the site a pleasure to use
+					for everyone.</span
+				>
+			</li>
+
+			<li class="flex gap-3 items-start">
+				<span class="text-primary mt-1">✨</span>
+				<span class="text-base-content/90"
+					>Thanks to <span class="font-medium">Kaity and Sophie</span> for accurately reporting on errors
+					and bugs from week to week, as well as providing study material to train the AI pipeline.</span
+				>
+			</li>
+
+			<li class="flex gap-3 items-start">
+				<span class="text-primary mt-1">✨</span>
+				<span class="text-base-content/90"
+					>Thanks to <span class="font-medium">Colby and Austin</span> for case testing the platform
+					in real time during the beta period. This natural interaction helped me dial in the typical
+					user interaction.</span
+				>
+			</li>
+
+			<li class="flex gap-3 items-start">
+				<span class="text-primary mt-1">✨</span>
+				<span class="text-base-content/90"
+					>Thanks to <span class="font-medium">Cooper, Nate, Ethan, and Eric</span> for helping bridge
+					the gap between practice and quizzes.</span
+				>
+			</li>
+		</ul>
+
+		<p class="mt-6 text-lg">Much thanks,</p>
+		<p class="text-lg">JD</p>
 	</div>
 </div>
 
