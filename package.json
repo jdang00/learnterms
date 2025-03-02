@@ -1,7 +1,7 @@
 {
 	"name": "learnterms",
 	"private": true,
-	"version": "2.0.0 beta-8",
+	"version": "2.0.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -51,7 +51,6 @@
 		"lucide-svelte": "^0.468.0",
 		"marked": "^15.0.7",
 		"openai": "^4.78.1",
-		"posthog-node": "^4.3.2",
 		"showdown": "^2.1.0",
 		"svelte-clerk": "^0.5.3",
 		"tailwindcss": "^4.0.0",
