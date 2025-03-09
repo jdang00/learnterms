@@ -16,14 +16,14 @@ export class QuestionMap {
 	}
 
 	questionIds = $state<string[]>([]);
-	currentlySelectedId: string = $state('');
+	currentlySelectedId = $state('');
 	questionMap = $state<Record<string, Question>>({});
 	selectedAnswers = $state<Record<string, { selected: Set<string>; eliminated: Set<string> }>>({});
 	showSolution = $state(false);
 	interactedQuestions = $state<Set<string>>(new Set());
 	shuffledQuestionIds = $state<string[]>([]);
 	isShuffled = $state(false);
-	flags = $state(new Set());
+	flags = $state(new Set<string>());
 	flagCount = $derived(this.flags.size);
 	checkResult = $state<string | null>(null);
 	refreshKey = $state(0);
@@ -34,6 +34,21 @@ export class QuestionMap {
 	questionButtons: HTMLButtonElement[] = $state([]);
 	noFlags = $state(false);
 	navigationIds = $state<string[]>([]);
+	dirtyQuestions = new Set<string>();
+
+	// Debounce function
+	private debounce = <T extends (...args: unknown[]) => void>(func: T, delay: number) => {
+		let timeoutId: ReturnType<typeof setTimeout>;
+		return (...args: Parameters<T>) => {
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => func(...args), delay);
+		};
+	};
+
+	// Debounced save method
+	private debouncedSaveAllProgressToDB = this.debounce(() => {
+		this.saveAllProgressToDB();
+	}, 5000);
 
 	correctAnswersCount = $derived(
 		this.questionMap[this.currentlySelectedId]?.question_data.correct_answers.length ?? 0
@@ -74,11 +89,9 @@ export class QuestionMap {
 	};
 
 	isQuestionVisible = (id: string) => {
-		// If "show incomplete" is on, only show questions with no selected answers
 		if (this.showIncomplete && this.selectedAnswers[id]?.selected.size > 0) {
 			return false;
 		}
-		// Add other filters here if needed (e.g., this.showFlagged && !this.flags.has(id))
 		return true;
 	};
 
@@ -89,21 +102,19 @@ export class QuestionMap {
 	});
 
 	toggleFlag = () => {
-		// Create a new Set instance to trigger reactivity
-		const newFlags = new Set(this.flags);
-		if (newFlags.has(this.currentlySelectedId)) {
-			newFlags.delete(this.currentlySelectedId);
+		const questionId = this.currentlySelectedId;
+		if (this.flags.has(questionId)) {
+			this.flags.delete(questionId);
 		} else {
-			newFlags.add(this.currentlySelectedId);
+			this.flags.add(questionId);
 		}
-
-		this.flags = newFlags; // Reassign to trigger reactivity
+		this.flags = new Set(this.flags);
+		this.dirtyQuestions.add(questionId);
+		this.debouncedSaveAllProgressToDB();
 	};
 
 	restorefromDB = () => {
 		const updatedAnswers: Record<string, { selected: Set<string>; eliminated: Set<string> }> = {};
-
-		// Create new temporary sets for reactivity
 		const newFlags = new Set<string>();
 		const newInteracted = new Set<string>();
 
@@ -116,18 +127,15 @@ export class QuestionMap {
 				eliminated: new Set(eliminatedLetters)
 			};
 
-			// Track interactions
 			if (selectedLetters.length > 0 || eliminatedLetters.length > 0) {
 				newInteracted.add(progress.question_id);
 			}
 
-			// Track flags
 			if (progress.is_flagged) {
 				newFlags.add(progress.question_id);
 			}
 		});
 
-		// Reactively update state with new sets
 		this.selectedAnswers = updatedAnswers;
 		this.flags = newFlags;
 		this.interactedQuestions = newInteracted;
@@ -160,7 +168,6 @@ export class QuestionMap {
 		);
 	};
 
-	// Compares selected answers with the correct ones and sets the result
 	checkAnswers = () => {
 		const currentQuestion = this.questionMap[this.currentlySelectedId];
 		if (!currentQuestion) {
@@ -168,17 +175,14 @@ export class QuestionMap {
 			return;
 		}
 
-		// Get correct answers as a Set for quick lookups
 		const correctAnswers = new Set(currentQuestion.question_data.correct_answers);
 		const selected = this.selectedAnswers[this.currentlySelectedId]?.selected || new Set();
 
-		// Early exit if set sizes differ (can't be identical)
 		if (selected.size !== correctAnswers.size) {
 			this.checkResult = 'Incorrect. Try again.';
 			return;
 		}
 
-		// Convert both sets to sorted arrays and compare as JSON strings
 		const sortedSelected = Array.from(selected).sort();
 		const sortedCorrect = Array.from(correctAnswers).sort();
 
@@ -231,6 +235,9 @@ export class QuestionMap {
 		} else {
 			this.currentlySelectedId = '';
 		}
+		this.selectedAnswers = Object.fromEntries(
+			this.questionIds.map((id) => [id, { selected: new Set(), eliminated: new Set() }])
+		);
 		this.updateNavigationIds();
 	};
 
@@ -243,13 +250,8 @@ export class QuestionMap {
 	};
 
 	toggleSortByFlagged = () => {
-		// Toggle the flag filter state
 		this.showFlagged = !this.showFlagged;
-
-		// Recalculate the current question selection based on the new filter
 		this.currentlySelectedId = this.getCurrentQuestionIds()[0] || '';
-
-		// Optionally, trigger any additional UI refresh logic if needed
 		this.refreshKey++;
 	};
 
@@ -262,29 +264,17 @@ export class QuestionMap {
 		this.shuffledQuestionIds = entries.map(([id]) => id);
 	};
 
-	clearselectedAnswers = async () => {
-		this.selectedAnswers[this.currentlySelectedId] = {
-			selected: new Set(),
-			eliminated: new Set()
+	clearSelectedAnswers = () => {
+		const questionId = this.currentlySelectedId;
+		this.selectedAnswers[questionId] = {
+			selected: new Set<string>(),
+			eliminated: new Set<string>()
 		};
-		this.questionOptions.forEach((o) => {
-			o.isSelected = false;
-			o.isEliminated = false;
-		});
-		this.checkResult = null;
-
-		this.interactedQuestions.delete(this.currentlySelectedId);
+		this.selectedAnswers = { ...this.selectedAnswers };
+		this.dirtyQuestions.add(questionId);
+		this.interactedQuestions.delete(questionId);
 		this.interactedQuestions = new Set(this.interactedQuestions);
-		this.refreshKey++;
-
-		const { error } = await supabase
-			.from('user_question_interactions')
-			.delete()
-			.eq('question_id', this.currentlySelectedId);
-
-		if (error) {
-			console.error('Error deleting progress from database:', error);
-		}
+		this.debouncedSaveAllProgressToDB();
 	};
 
 	toggleShowIncomplete = () => {
@@ -292,6 +282,7 @@ export class QuestionMap {
 		this.updateNavigationIds();
 		this.refreshKey++;
 	};
+
 	updateNavigationIds = () => {
 		if (this.showIncomplete) {
 			const incompleteIds = this.questionIds.filter(
@@ -304,7 +295,6 @@ export class QuestionMap {
 		this.currentlySelectedId = this.navigationIds[0] || '';
 	};
 
-	/** Moves to the next visible question in the sequence */
 	goToNextQuestion = () => {
 		const baseSequence = this.getBaseSequence();
 		const currentIndex = baseSequence.indexOf(this.currentlySelectedId);
@@ -317,10 +307,8 @@ export class QuestionMap {
 				return;
 			}
 		}
-		// No next question found; stay on current or handle end of quiz
 	};
 
-	/** Moves to the previous visible question in the sequence */
 	goToPreviousQuestion = () => {
 		const baseSequence = this.getBaseSequence();
 		const currentIndex = baseSequence.indexOf(this.currentlySelectedId);
@@ -333,7 +321,6 @@ export class QuestionMap {
 				return;
 			}
 		}
-		// No previous question found; stay on current or handle start of quiz
 	};
 
 	refreshIncompleteSort = () => {
@@ -343,39 +330,31 @@ export class QuestionMap {
 		}
 	};
 
-	// Helper to update answer state for the currently selected question
 	updateAnswerState = (type: 'selected' | 'eliminated', optionLetter: string) => {
-		// Retrieve the current state or initialize with empty sets
 		const current = this.selectedAnswers[this.currentlySelectedId] || {
 			selected: new Set<string>(),
 			eliminated: new Set<string>()
 		};
-
-		// Create copies of the sets for immutability
 		const newSelected = new Set(current.selected);
 		const newEliminated = new Set(current.eliminated);
 
 		if (type === 'selected') {
-			// Toggle the option in the 'selected' set using if/else statements
 			if (newSelected.has(optionLetter)) {
 				newSelected.delete(optionLetter);
 			} else {
 				newSelected.add(optionLetter);
 			}
 		} else if (type === 'eliminated') {
-			// Toggle the option in the 'eliminated' set using if/else statements
 			if (newEliminated.has(optionLetter)) {
 				newEliminated.delete(optionLetter);
 			} else {
 				newEliminated.add(optionLetter);
 			}
-			// Ensure that an eliminated option is removed from the selected set.
 			if (newSelected.has(optionLetter)) {
 				newSelected.delete(optionLetter);
 			}
 		}
 
-		// Update the answers for the current question
 		this.selectedAnswers = {
 			...this.selectedAnswers,
 			[this.currentlySelectedId]: {
@@ -384,34 +363,34 @@ export class QuestionMap {
 			}
 		};
 
-		// Update interactedQuestions based on whether there are any selections or eliminations
 		const hasInteractions = newSelected.size > 0 || newEliminated.size > 0;
 		if (hasInteractions) {
 			this.interactedQuestions.add(this.currentlySelectedId);
 		} else {
 			this.interactedQuestions.delete(this.currentlySelectedId);
 		}
-
-		// Force reactivity (if required by your framework)
 		this.interactedQuestions = new Set(this.interactedQuestions);
+
+		this.dirtyQuestions.add(this.currentlySelectedId);
+		this.debouncedSaveAllProgressToDB();
 	};
 
-	// Updated toggleOption method using the helper
 	toggleOption = (index: number) => {
-		// Do nothing if the option is currently marked as eliminated
-		if (this.questionOptions[index].isEliminated) return;
-
-		const optionLetter = this.questionOptions[index].letter;
+		const option = this.questionOptions[index];
+		if (!option) {
+			console.warn(`Option at index ${index} not found for question ${this.currentlySelectedId}`);
+			return;
+		}
+		if (option.isEliminated) return;
+		const optionLetter = option.letter;
 		this.updateAnswerState('selected', optionLetter);
 	};
 
-	// Updated toggleElimination method using the helper
 	toggleElimination = (index: number) => {
 		const optionLetter = this.questionOptions[index].letter;
 		this.updateAnswerState('eliminated', optionLetter);
 	};
 
-	// handleSolution remains unchanged
 	handleSolution = () => {
 		this.showSolution = !this.showSolution;
 		this.refreshKey++;
@@ -421,35 +400,32 @@ export class QuestionMap {
 		try {
 			const rowsToUpsert = [];
 
-			// Iterate through ALL question IDs
-			for (const questionId of this.questionIds) {
+			for (const questionId of this.dirtyQuestions) {
 				const progress = this.selectedAnswers[questionId] || {
 					selected: new Set<string>(),
 					eliminated: new Set<string>()
 				};
-
 				const isFlagged = this.flags.has(questionId);
-				const hasInteractions = progress.selected.size > 0 || progress.eliminated.size > 0;
-				const existsInDB = this.userProgress.some((p) => p.question_id === questionId);
 
-				// Always save if: flagged, has interactions, OR existed in DB previously
-				if (isFlagged || hasInteractions || existsInDB) {
-					rowsToUpsert.push({
-						user_id: this.userId,
-						question_id: questionId,
-						selected_options: Array.from(progress.selected).map((letter) => ({ letter })),
-						eliminated_options: Array.from(progress.eliminated).map((letter) => ({ letter })),
-						is_flagged: isFlagged,
-						updated_at: new Date()
-					});
-				}
+				rowsToUpsert.push({
+					user_id: this.userId,
+					question_id: questionId,
+					selected_options: Array.from(progress.selected).map((letter) => ({ letter })),
+					eliminated_options: Array.from(progress.eliminated).map((letter) => ({ letter })),
+					is_flagged: isFlagged,
+					updated_at: new Date()
+				});
 			}
 
 			if (rowsToUpsert.length > 0) {
 				const { error } = await supabase.from('user_question_interactions').upsert(rowsToUpsert, {
 					onConflict: ['user_id', 'question_id']
 				});
-				if (error) console.error('Save error:', error);
+				if (error) {
+					console.error('Save error:', error);
+				} else {
+					this.dirtyQuestions.clear();
+				}
 			}
 		} catch (err) {
 			console.error('Unexpected error:', err);
@@ -457,7 +433,6 @@ export class QuestionMap {
 	};
 
 	reset = async () => {
-		// Clear local state
 		this.selectedAnswers = {};
 		this.flags = new Set();
 		this.interactedQuestions.clear();
@@ -466,14 +441,12 @@ export class QuestionMap {
 		this.refreshKey++;
 		this.isResetModalOpen = false;
 
-		// Reset the currently selected question to the first available one
 		this.currentlySelectedId = this.questionIds.length > 0 ? this.questionIds[0] : '';
 
 		const questionIdsToDelete = Array.from(
 			new Set([...this.questionIds, ...Array.from(this.flags)])
 		);
 
-		// Delete only those records for this user whose question_id is in this.questionIds
 		const { error } = await supabase
 			.from('user_question_interactions')
 			.delete()
@@ -483,5 +456,7 @@ export class QuestionMap {
 		if (error) {
 			console.error('Error resetting progress in database:', error);
 		}
+
+		this.dirtyQuestions.clear();
 	};
 }
