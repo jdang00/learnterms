@@ -11,37 +11,43 @@
 	let chapters: Chapter[] = data.chapters;
 	const chapterprog: number[] = Array(14).fill(0);
 
-	const enabledThreshold = 4;
+	const enabledThreshold = 6;
 </script>
 
 <div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
 	<!-- Sidebar -->
 	<div class="w-1/4 hidden lg:block lg:border-r border-base-300">
+		<!-- User Greeting Section -->
 		<div class="mb-12">
 			{#if user === undefined}
-				<div class="flex w-52 flex-col gap-8 mt-12 mx-8">
-					<div class="flex items-center gap-4">
-						<div class="skeleton h-16 w-16 rounded-full"></div>
-						<div class="flex flex-col gap-4">
-							<div class="skeleton h-4 w-20"></div>
-							<div class="skeleton h-4 w-28"></div>
-						</div>
-					</div>
+				<!-- Skeleton Loading State -->
+				<div class="flex items-center gap-8 mt-12 mx-12">
+					<div class="hidden xl:block skeleton h-24 w-24 rounded-full"></div>
+					<div class="skeleton h-8 w-32"></div>
 				</div>
 			{:else if user === null}
-				<h1 class="font-semibold text-4xl">Hi, Guest</h1>
+				<!-- Guest State -->
+				<div class="mt-12 mx-12">
+					<h1 class="font-semibold text-4xl">Hi, Guest</h1>
+				</div>
 			{:else}
-				<div class="flex flex-row gap-8 mt-12 mx-12" in:fade>
+				<!-- Authenticated User State -->
+				<div class="flex items-center gap-8 mt-12 mx-12" in:fade>
 					<div class="avatar hidden xl:block">
 						<div class="ring-primary ring-offset-base-100 w-24 rounded-full ring ring-offset-2">
 							<img src={user.imageUrl} alt="user profile" />
 						</div>
 					</div>
-					<h1 class="font-semibold text-4xl self-center">
+					<h1 class="font-semibold text-4xl">
 						Hi, {user.firstName?.split(' ')[0]}
 					</h1>
 				</div>
 			{/if}
+		</div>
+
+		<!-- Challenge Question Link (Centered) -->
+		<div class="flex justify-center">
+			<a href="/dashboard/challenge" class="btn btn-primary"> Chapter 6 Challenge Questions 🧠 </a>
 		</div>
 	</div>
 
