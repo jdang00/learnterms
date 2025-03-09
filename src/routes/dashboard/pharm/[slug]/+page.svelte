@@ -35,7 +35,7 @@
 				qm.checkAnswers();
 				break;
 			case 'Escape':
-				qm.clearselectedAnswers();
+				qm.clearSelectedAnswers();
 				break;
 			case 'ArrowRight':
 				qm.goToNextQuestion();
@@ -100,7 +100,7 @@
 	// Create a debounced version of saveAllProgressToDB (with a 2-second delay)
 	const debouncedSaveAllProgressToDB = debounce(() => {
 		qm.saveAllProgressToDB();
-	}, 5000);
+	}, 15000);
 
 	// Trigger the debounced save whenever the currently selected question changes.
 	$effect(() => {
@@ -340,7 +340,7 @@
 
 				<!--Button Section -->
 				<div class=" flex-row justify-center mt-8 gap-4 hidden lg:flex">
-					<button class="btn btn-outline" onclick={qm.clearselectedAnswers}>Clear</button>
+					<button class="btn btn-outline" onclick={qm.clearSelectedAnswers}>Clear</button>
 					<button class="btn btn-soft btn-success" onclick={qm.checkAnswers}>Check</button>
 					<button
 						class="btn btn-warning btn-soft"
@@ -385,7 +385,7 @@
 	<div
 		class="fixed bottom-0 left-0 w-full bg-base-100 shadow-lg border-t border-base-300 z-50 flex gap-2 items-center px-4 py-4 lg:hidden flex-wrap justify-center"
 	>
-		<button class="btn btn-outline btn-sm" onclick={qm.clearselectedAnswers}>Clear</button>
+		<button class="btn btn-outline btn-sm" onclick={qm.clearSelectedAnswers}>Clear</button>
 		<button class="btn btn-outline btn-success btn-sm" onclick={qm.checkAnswers}>Check</button>
 		<button
 			class="btn btn-warning btn-outline btn-sm"
