@@ -140,6 +140,10 @@
 				></progress>
 			</p>
 
+			{#if qm.questionPic != ''}
+				<img src={qm.questionPic} alt="Current questions" class="w-full h-auto mt-12" />
+			{/if}
+
 			<div class="flex flex-col justify-center">
 				<div class="card bg-base-100 shadow-xl mt-12">
 					<div class="card-body">

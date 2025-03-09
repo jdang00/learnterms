@@ -4,7 +4,7 @@ import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { clerkClient } from 'svelte-clerk/server';
 import { SECRET_USER_TABLE } from '$env/static/private';
-import type { Question, Chapter, QuestionProgress } from '$lib/types';
+import type { ChallengeQuestion, Chapter, QuestionProgress } from '$lib/types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// Extract userId from locals.auth
@@ -80,7 +80,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		progressData: progressData as QuestionProgress[],
 		userId: userId,
-		questions: pharmchallengeData as Question[],
+		questions: pharmchallengeData as ChallengeQuestion[],
 		chapters: mockChapters,
 		user: JSON.parse(JSON.stringify(user))
 	};

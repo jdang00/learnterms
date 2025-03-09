@@ -1,9 +1,9 @@
-import type { Question, Option, ExtendedOption, Chapter } from '$lib/types';
+import type { ChallengeQuestion, Option, ExtendedOption, Chapter } from '$lib/types';
 import type { PageData } from './$types';
 import supabase from '$lib/supabaseClient';
 
 export class QuestionMap {
-	questions: Question[];
+	questions: ChallengeQuestion[];
 	chapterData: Chapter;
 	userId: string;
 	userProgress;
@@ -17,7 +17,7 @@ export class QuestionMap {
 
 	questionIds = $state<string[]>([]);
 	currentlySelectedId: string = $state('');
-	questionMap = $state<Record<string, Question>>({});
+	questionMap = $state<Record<string, ChallengeQuestion>>({});
 	selectedAnswers = $state<Record<string, { selected: Set<string>; eliminated: Set<string> }>>({});
 	showSolution = $state(false);
 	interactedQuestions = $state<Set<string>>(new Set());
@@ -67,6 +67,8 @@ export class QuestionMap {
 	questionSolution = $derived(
 		this.questionMap[this.currentlySelectedId]?.question_data?.explanation || ''
 	);
+
+	questionPic = $derived(this.questionMap[this.currentlySelectedId]?.pic_url || '');
 
 	progress = $derived.by(() => {
 		const totalQuestions = this.questions.length;

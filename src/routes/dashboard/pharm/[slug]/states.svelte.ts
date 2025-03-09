@@ -69,6 +69,19 @@ export class QuestionMap {
 		this.questionMap[this.currentlySelectedId]?.question_data?.explanation || ''
 	);
 
+	getBaseSequence = () => {
+		return this.isShuffled ? this.shuffledQuestionIds : this.questionIds;
+	};
+
+	isQuestionVisible = (id: string) => {
+		// If "show incomplete" is on, only show questions with no selected answers
+		if (this.showIncomplete && this.selectedAnswers[id]?.selected.size > 0) {
+			return false;
+		}
+		// Add other filters here if needed (e.g., this.showFlagged && !this.flags.has(id))
+		return true;
+	};
+
 	progress = $derived.by(() => {
 		const totalQuestions = this.questions.length;
 		const answeredQuestions = this.interactedQuestions.size;
@@ -291,20 +304,36 @@ export class QuestionMap {
 		this.currentlySelectedId = this.navigationIds[0] || '';
 	};
 
+	/** Moves to the next visible question in the sequence */
 	goToNextQuestion = () => {
-		const currentIndex = this.navigationIds.indexOf(this.currentlySelectedId);
+		const baseSequence = this.getBaseSequence();
+		const currentIndex = baseSequence.indexOf(this.currentlySelectedId);
 		if (currentIndex === -1) return;
-		if (currentIndex < this.navigationIds.length - 1) {
-			this.changeSelected(this.navigationIds[currentIndex + 1]);
+
+		for (let i = currentIndex + 1; i < baseSequence.length; i++) {
+			const nextId = baseSequence[i];
+			if (this.isQuestionVisible(nextId)) {
+				this.changeSelected(nextId);
+				return;
+			}
 		}
+		// No next question found; stay on current or handle end of quiz
 	};
 
+	/** Moves to the previous visible question in the sequence */
 	goToPreviousQuestion = () => {
-		const currentIndex = this.navigationIds.indexOf(this.currentlySelectedId);
+		const baseSequence = this.getBaseSequence();
+		const currentIndex = baseSequence.indexOf(this.currentlySelectedId);
 		if (currentIndex === -1) return;
-		if (currentIndex > 0) {
-			this.changeSelected(this.navigationIds[currentIndex - 1]);
+
+		for (let i = currentIndex - 1; i >= 0; i--) {
+			const prevId = baseSequence[i];
+			if (this.isQuestionVisible(prevId)) {
+				this.changeSelected(prevId);
+				return;
+			}
 		}
+		// No previous question found; stay on current or handle start of quiz
 	};
 
 	refreshIncompleteSort = () => {

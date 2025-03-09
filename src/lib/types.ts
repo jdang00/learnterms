@@ -25,6 +25,12 @@ export interface Question {
 	question_data: QuestionData;
 }
 
+export interface ChallengeQuestion {
+	id: string;
+	question_data: QuestionData;
+	pic_url: string;
+}
+
 export interface QuestionProgress {
 	question_id: string;
 	selected_options: Option[];
