@@ -37,9 +37,9 @@ export class QuestionMap {
 	dirtyQuestions = new Set<string>();
 
 	// Debounce function
-	private debounce = (func: Function, delay: number) => {
+	private debounce = <T extends (...args: unknown[]) => void>(func: T, delay: number) => {
 		let timeoutId: ReturnType<typeof setTimeout>;
-		return (...args: any[]) => {
+		return (...args: Parameters<T>) => {
 			clearTimeout(timeoutId);
 			timeoutId = setTimeout(() => func(...args), delay);
 		};
