@@ -33,7 +33,6 @@ export class QuestionMap {
 	showIncomplete = $state(false);
 	questionButtons: HTMLButtonElement[] = $state([]);
 	noFlags = $state(false);
-	navigationIds = $state<string[]>([]);
 
 	correctAnswersCount = $derived(
 		this.questionMap[this.currentlySelectedId]?.question_data.correct_answers.length ?? 0
@@ -218,7 +217,6 @@ export class QuestionMap {
 		} else {
 			this.currentlySelectedId = '';
 		}
-		this.updateNavigationIds();
 	};
 
 	toggleShuffle = () => {
@@ -265,7 +263,7 @@ export class QuestionMap {
 		this.refreshKey++;
 
 		const { error } = await supabase
-			.from('user_question_interactions')
+			.from('user_challenge_interactions')
 			.delete()
 			.eq('question_id', this.currentlySelectedId);
 
@@ -276,41 +274,27 @@ export class QuestionMap {
 
 	toggleShowIncomplete = () => {
 		this.showIncomplete = !this.showIncomplete;
-		this.updateNavigationIds();
+		this.currentlySelectedId = this.getCurrentQuestionIds()[0] || '';
 		this.refreshKey++;
-	};
-	updateNavigationIds = () => {
-		if (this.showIncomplete) {
-			const incompleteIds = this.questionIds.filter(
-				(id) => !this.selectedAnswers[id]?.selected.size
-			);
-			this.navigationIds = incompleteIds;
-		} else {
-			this.navigationIds = this.isShuffled ? this.shuffledQuestionIds : this.questionIds;
-		}
-		this.currentlySelectedId = this.navigationIds[0] || '';
 	};
 
 	goToNextQuestion = () => {
-		const currentIndex = this.navigationIds.indexOf(this.currentlySelectedId);
-		if (currentIndex === -1) return;
-		if (currentIndex < this.navigationIds.length - 1) {
-			this.changeSelected(this.navigationIds[currentIndex + 1]);
+		const currentQuestionIds = this.getCurrentQuestionIds();
+		if (!currentQuestionIds) return; // Guard against null/undefined
+		const currentIndex = currentQuestionIds.indexOf(this.currentlySelectedId);
+		if (currentIndex === -1) return; // Fix: Exit if ID not found
+		if (currentIndex < currentQuestionIds.length - 1) {
+			this.changeSelected(currentQuestionIds[currentIndex + 1]);
 		}
 	};
 
 	goToPreviousQuestion = () => {
-		const currentIndex = this.navigationIds.indexOf(this.currentlySelectedId);
-		if (currentIndex === -1) return;
+		const currentQuestionIds = this.getCurrentQuestionIds();
+		if (!currentQuestionIds) return; // Guard against null/undefined
+		const currentIndex = currentQuestionIds.indexOf(this.currentlySelectedId);
+		if (currentIndex === -1) return; // Fix: Exit if ID not found
 		if (currentIndex > 0) {
-			this.changeSelected(this.navigationIds[currentIndex - 1]);
-		}
-	};
-
-	refreshIncompleteSort = () => {
-		if (this.showIncomplete) {
-			this.updateNavigationIds();
-			this.refreshKey++;
+			this.changeSelected(currentQuestionIds[currentIndex - 1]);
 		}
 	};
 
@@ -417,7 +401,7 @@ export class QuestionMap {
 			}
 
 			if (rowsToUpsert.length > 0) {
-				const { error } = await supabase.from('user_question_interactions').upsert(rowsToUpsert, {
+				const { error } = await supabase.from('user_challenge_interactions').upsert(rowsToUpsert, {
 					onConflict: ['user_id', 'question_id']
 				});
 				if (error) console.error('Save error:', error);
@@ -446,7 +430,7 @@ export class QuestionMap {
 
 		// Delete only those records for this user whose question_id is in this.questionIds
 		const { error } = await supabase
-			.from('user_question_interactions')
+			.from('user_challenge_interactions')
 			.delete()
 			.eq('user_id', this.userId)
 			.in('question_id', questionIdsToDelete);
