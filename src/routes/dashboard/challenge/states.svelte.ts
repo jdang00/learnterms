@@ -404,7 +404,7 @@ export class QuestionMap {
 
 			if (rowsToUpsert.length > 0) {
 				const { error } = await supabase.from('user_challenge_interactions').upsert(rowsToUpsert, {
-					onConflict: ['user_id', 'question_id']
+					onConflict: 'user_id, question_id'
 				});
 				if (error) console.error('Save error:', error);
 			}

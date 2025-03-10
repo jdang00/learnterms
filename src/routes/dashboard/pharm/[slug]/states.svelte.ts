@@ -398,33 +398,44 @@ export class QuestionMap {
 
 	saveAllProgressToDB = async () => {
 		try {
-			const rowsToUpsert = [];
+			// Maximum items per batch (adjust based on your needs)
+			const BATCH_SIZE = 50;
+			const allDirtyQuestions = Array.from(this.dirtyQuestions);
 
-			for (const questionId of this.dirtyQuestions) {
-				const progress = this.selectedAnswers[questionId] || {
-					selected: new Set<string>(),
-					eliminated: new Set<string>()
-				};
-				const isFlagged = this.flags.has(questionId);
+			// Process in chunks if there are many dirty questions
+			for (let i = 0; i < allDirtyQuestions.length; i += BATCH_SIZE) {
+				const batch = allDirtyQuestions.slice(i, i + BATCH_SIZE);
+				const rowsToUpsert = [];
 
-				rowsToUpsert.push({
-					user_id: this.userId,
-					question_id: questionId,
-					selected_options: Array.from(progress.selected).map((letter) => ({ letter })),
-					eliminated_options: Array.from(progress.eliminated).map((letter) => ({ letter })),
-					is_flagged: isFlagged,
-					updated_at: new Date()
-				});
-			}
+				for (const questionId of batch) {
+					const progress = this.selectedAnswers[questionId] || {
+						selected: new Set<string>(),
+						eliminated: new Set<string>()
+					};
+					const isFlagged = this.flags.has(questionId);
 
-			if (rowsToUpsert.length > 0) {
-				const { error } = await supabase.from('user_question_interactions').upsert(rowsToUpsert, {
-					onConflict: ['user_id', 'question_id']
-				});
-				if (error) {
-					console.error('Save error:', error);
-				} else {
-					this.dirtyQuestions.clear();
+					// Create a compact representation of the data
+					rowsToUpsert.push({
+						user_id: this.userId,
+						question_id: questionId,
+						// Use more compact representation
+						selected_options: Array.from(progress.selected).map((letter) => ({ letter })),
+						eliminated_options: Array.from(progress.eliminated).map((letter) => ({ letter })),
+						is_flagged: isFlagged,
+						updated_at: new Date()
+					});
+				}
+
+				if (rowsToUpsert.length > 0) {
+					const { error } = await supabase.from('user_question_interactions').upsert(rowsToUpsert, {
+						onConflict: 'user_id,question_id'
+					});
+
+					if (error) {
+						console.error('Save error for batch:', error);
+					} else {
+						batch.forEach((id) => this.dirtyQuestions.delete(id));
+					}
 				}
 			}
 		} catch (err) {
