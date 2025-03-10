@@ -395,6 +395,7 @@ export class QuestionMap {
 		this.showSolution = !this.showSolution;
 		this.refreshKey++;
 	};
+
 	saveAllProgressToDB = async () => {
 		try {
 			// Maximum items per batch (adjust based on your needs)
@@ -432,9 +433,7 @@ export class QuestionMap {
 
 					if (error) {
 						console.error('Save error for batch:', error);
-						// Consider adding retry logic here
 					} else {
-						// Mark these questions as saved
 						batch.forEach((id) => this.dirtyQuestions.delete(id));
 					}
 				}
