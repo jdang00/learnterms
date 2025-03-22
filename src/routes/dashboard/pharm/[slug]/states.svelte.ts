@@ -1,6 +1,7 @@
 import type { Question, Option, ExtendedOption, Chapter } from '$lib/types';
 import type { PageData } from './$types';
 import supabase from '$lib/supabaseClient';
+import { Flag } from './flag.svelte';
 
 export class QuestionMap {
 	questions: Question[];
@@ -15,26 +16,29 @@ export class QuestionMap {
 		this.userProgress = data.progressData;
 	}
 
+	fm = new Flag();
+
 	questionIds = $state<string[]>([]);
 	currentlySelectedId = $state('');
 	questionMap = $state<Record<string, Question>>({});
 	selectedAnswers = $state<Record<string, { selected: Set<string>; eliminated: Set<string> }>>({});
-	showSolution = $state(false);
+	dirtyQuestions = new Set<string>();
+	navigationIds = $state<string[]>([]);
+
 	interactedQuestions = $state<Set<string>>(new Set());
 	shuffledQuestionIds = $state<string[]>([]);
 	isShuffled = $state(false);
-	flags = $state(new Set<string>());
-	flagCount = $derived(this.flags.size);
+
 	checkResult = $state<string | null>(null);
-	refreshKey = $state(0);
+
 	isModalOpen = $state(false);
 	isResetModalOpen = $state(false);
-	showFlagged = $state(false);
 	showIncomplete = $state(false);
+
+	refreshKey = $state(0);
+	showSolution = $state(false);
+
 	questionButtons: HTMLButtonElement[] = $state([]);
-	noFlags = $state(false);
-	navigationIds = $state<string[]>([]);
-	dirtyQuestions = new Set<string>();
 
 	// Debounce function
 	private debounce = <T extends (...args: unknown[]) => void>(func: T, delay: number) => {
@@ -103,12 +107,7 @@ export class QuestionMap {
 
 	toggleFlag = () => {
 		const questionId = this.currentlySelectedId;
-		if (this.flags.has(questionId)) {
-			this.flags.delete(questionId);
-		} else {
-			this.flags.add(questionId);
-		}
-		this.flags = new Set(this.flags);
+		this.fm.toggleFlag(questionId);
 		this.dirtyQuestions.add(questionId);
 		this.debouncedSaveAllProgressToDB();
 	};
@@ -137,7 +136,7 @@ export class QuestionMap {
 		});
 
 		this.selectedAnswers = updatedAnswers;
-		this.flags = newFlags;
+		this.fm.flags = newFlags;
 		this.interactedQuestions = newInteracted;
 		this.refreshKey++;
 	};
@@ -207,13 +206,13 @@ export class QuestionMap {
 	getCurrentQuestionIds = () => {
 		let ids = this.isShuffled ? this.shuffledQuestionIds : this.questionIds;
 
-		if (this.showFlagged) {
-			if (this.flags.size === 0) {
-				this.noFlags = true;
-				this.showFlagged = false;
+		if (this.fm.showFlagged) {
+			if (this.fm.flags.size === 0) {
+				this.fm.noFlags = true;
+				this.fm.showFlagged = false;
 				return ids;
 			}
-			ids = ids.filter((id) => this.flags.has(id));
+			ids = ids.filter((id) => this.fm.flags.has(id));
 		}
 
 		if (this.showIncomplete) {
@@ -250,7 +249,7 @@ export class QuestionMap {
 	};
 
 	toggleSortByFlagged = () => {
-		this.showFlagged = !this.showFlagged;
+		this.fm.showFlagged = !this.fm.showFlagged;
 		this.currentlySelectedId = this.getCurrentQuestionIds()[0] || '';
 		this.refreshKey++;
 	};
@@ -412,7 +411,7 @@ export class QuestionMap {
 						selected: new Set<string>(),
 						eliminated: new Set<string>()
 					};
-					const isFlagged = this.flags.has(questionId);
+					const isFlagged = this.fm.flags.has(questionId);
 
 					// Create a compact representation of the data
 					rowsToUpsert.push({
@@ -445,7 +444,7 @@ export class QuestionMap {
 
 	reset = async () => {
 		this.selectedAnswers = {};
-		this.flags = new Set();
+		this.fm.flags = new Set();
 		this.interactedQuestions.clear();
 		this.checkResult = null;
 		this.showSolution = false;
@@ -455,7 +454,7 @@ export class QuestionMap {
 		this.currentlySelectedId = this.questionIds.length > 0 ? this.questionIds[0] : '';
 
 		const questionIdsToDelete = Array.from(
-			new Set([...this.questionIds, ...Array.from(this.flags)])
+			new Set([...this.questionIds, ...Array.from(this.fm.flags)])
 		);
 
 		const { error } = await supabase

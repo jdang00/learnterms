@@ -212,7 +212,7 @@
 			<div class="flex-shrink-0 w-24"></div>
 		</div>
 
-		{#if qm.noFlags}
+		{#if qm.fm.noFlags}
 			<!-- Alert Box (Responsive & Centered) -->
 			<div
 				role="alert"
@@ -235,7 +235,7 @@
 				<button
 					class="btn btn-sm btn-ghost btn-warning"
 					onclick={() => {
-						qm.noFlags = false;
+						qm.fm.noFlags = false;
 					}}>X</button
 				>
 			</div>
@@ -243,10 +243,10 @@
 
 		<!-- Question Selection Menu -->
 		<div class="flex flex-row w-full mb-4 overflow-x-auto lg:mb-0 lg:mt-6 space-x-2 relative">
-			{#key qm.flagCount}
+			{#key qm.fm.flagCount}
 				{#each qm.getCurrentQuestionIds() as id, index}
 					<div class="indicator">
-						{#if qm.flags.has(id)}
+						{#if qm.fm.flags.has(id)}
 							<span
 								class="indicator-item indicator-start badge badge-warning badge-xs !right-10 translate-x-1/4 translate-y-1/4"
 							></span>
@@ -288,7 +288,7 @@
 							>
 								<li>
 									<button onclick={qm.toggleSortByFlagged}
-										><Flag size="16" />{qm.showFlagged ? 'Show All' : 'Show Flagged'}</button
+										><Flag size="16" />{qm.fm.showFlagged ? 'Show All' : 'Show Flagged'}</button
 									>
 								</li>
 								<li>
@@ -434,7 +434,7 @@
 				</li>
 				<li>
 					<button onclick={qm.toggleSortByFlagged}
-						><Flag size="16" />{qm.showFlagged ? 'Show All' : 'Show Flagged'}</button
+						><Flag size="16" />{qm.fm.showFlagged ? 'Show All' : 'Show Flagged'}</button
 					>
 				</li>
 				<li>
