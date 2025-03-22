@@ -2,101 +2,202 @@
 	import type { PageData } from './$types';
 	import type { Chapter } from '$lib/types';
 	import { useClerkContext } from 'svelte-clerk';
-	import { ArrowRight } from 'lucide-svelte';
-	import { fade } from 'svelte/transition';
+	import { ArrowRight, BookOpen, Lock, Medal } from 'lucide-svelte';
+	import { fade, fly } from 'svelte/transition';
+
 	const ctx = useClerkContext();
 	const user = $derived(ctx.user);
-
 	let { data }: { data: PageData } = $props();
 	let chapters: Chapter[] = data.chapters;
-	const chapterprog: number[] = Array(14).fill(0);
-
 	const enabledThreshold = 8;
+	let activeFilter = $state('all');
+
+	// For animation sequence
+	let mounted = $state(false);
+	$effect(() => {
+		mounted = true;
+	});
+
+	// Filter chapters
+	const filteredChapters = $derived(
+		activeFilter === 'all'
+			? chapters.map((chapter, i) => ({ chapter, originalIndex: i }))
+			: activeFilter === 'available'
+				? chapters
+						.filter((_, i) => i < enabledThreshold)
+						.map((chapter, i) => ({ chapter, originalIndex: i }))
+				: chapters
+						.filter((_, i) => i >= enabledThreshold)
+						.map((chapter, i) => ({ chapter, originalIndex: i + enabledThreshold }))
+	);
 </script>
 
-<div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
+<div class="flex flex-col lg:flex-row max-h-screen lg:h-screen border-base-300 bg-base-100">
 	<!-- Sidebar -->
-	<div class="w-1/4 hidden lg:block lg:border-r border-base-300">
+	<div class="w-full lg:w-1/4 lg:border-r border-base-300 flex flex-col bg-base-100">
 		<!-- User Greeting Section -->
-		<div class="mb-12">
+		<div class="p-6 border-b border-base-300">
 			{#if user === undefined}
 				<!-- Skeleton Loading State -->
-				<div class="flex items-center gap-8 mt-12 mx-12">
-					<div class="hidden xl:block skeleton h-24 w-24 rounded-full"></div>
+				<div class="flex items-center gap-4">
+					<div class="hidden xl:block skeleton h-16 w-16 rounded-full"></div>
 					<div class="skeleton h-8 w-32"></div>
 				</div>
 			{:else if user === null}
 				<!-- Guest State -->
-				<div class="mt-12 mx-12">
-					<h1 class="font-semibold text-4xl">Hi, Guest</h1>
+				<div class="flex items-center gap-4" in:fade>
+					<div class="avatar hidden xl:block">
+						<div class="w-16 rounded-full bg-base-300">
+							<span class="text-2xl flex items-center justify-center h-full">👤</span>
+						</div>
+					</div>
+					<div>
+						<h1 class="font-semibold text-2xl">Hi, Guest</h1>
+						<p class="text-base-content/70 text-sm">Welcome to your learning dashboard</p>
+					</div>
 				</div>
 			{:else}
 				<!-- Authenticated User State -->
-				<div class="flex items-center gap-8 mt-12 mx-12" in:fade>
+				<div class="flex items-center gap-4" in:fade>
 					<div class="avatar hidden xl:block">
-						<div class="ring-primary ring-offset-base-100 w-24 rounded-full ring ring-offset-2">
+						<div class="ring-primary ring-offset-base-100 w-16 rounded-full ring ring-offset-2">
 							<img src={user.imageUrl} alt="user profile" />
 						</div>
 					</div>
-					<h1 class="font-semibold text-4xl">
-						Hi, {user.firstName?.split(' ')[0]}
-					</h1>
+					<div>
+						<h1 class="font-semibold text-2xl">
+							Hi, {user.firstName?.split(' ')[0]}
+						</h1>
+					</div>
 				</div>
 			{/if}
 		</div>
 
-		<!-- Challenge Question Link (Centered) -->
-		<div class="flex justify-center">
-			<a href="/dashboard/challenge" class="btn btn-primary"> Chapter 6 Challenge Questions 🧠 </a>
+		<!-- Challenge & Progress Summary -->
+		<div class="p-6 flex flex-col gap-4 border-b border-base-300">
+			<a href="/dashboard/challenge" class="btn btn-primary w-full">
+				<Medal size={18} />
+				Chapter 6 Challenge Questions
+			</a>
+		</div>
+
+		<!-- Mobile nav controls (visible on small screens) -->
+		<div class="lg:hidden border-b border-base-300 p-4">
+			<div class="join w-full">
+				<button
+					class="join-item btn flex-1"
+					class:btn-active={activeFilter === 'all'}
+					onclick={() => (activeFilter = 'all')}
+				>
+					All
+				</button>
+				<button
+					class="join-item btn flex-1"
+					class:btn-active={activeFilter === 'available'}
+					onclick={() => (activeFilter = 'available')}
+				>
+					Available
+				</button>
+				<button
+					class="join-item btn flex-1"
+					class:btn-active={activeFilter === 'locked'}
+					onclick={() => (activeFilter = 'locked')}
+				>
+					Locked
+				</button>
+			</div>
 		</div>
 	</div>
 
-	<!-- Scrollable Content -->
-	<div class="w-full lg:w-3/4 pt-8 pb-32 px-4 lg:px-6 overflow-hidden bg-base-200">
-		<div class="h-full overflow-y-auto">
-			<div class="flex flex-col gap-6">
-				{#each chapters as chapter, index}
-					<a
-						href={index < enabledThreshold ? `dashboard/pharm/${index + 1}` : null}
-						class={index < enabledThreshold ? '' : 'pointer-events-none'}
-					>
-						<div
-							class="card shadow-lg transition duration-300"
-							class:hover={index < enabledThreshold}
-							class:disabled={index >= enabledThreshold}
-						>
-							<div class="card-body flex flex-row justify-between items-center bg-base-100">
-								<div class="flex flex-row gap-8">
-									<h1 class="text-xl font-bold self-center text-base-content/70 hidden md:block">
-										{index + 1}
-									</h1>
+	<!-- Main Content -->
+	<div class="w-full lg:w-3/4 flex flex-col bg-base-200 overflow-hidden">
+		<!-- Header with filters (desktop only) -->
+		<div
+			class="hidden lg:flex justify-between items-center p-6 border-b border-base-300 bg-base-100"
+		>
+			<h2 class="text-2xl font-bold">Learning Modules</h2>
+			<div class="join">
+				<button
+					class="join-item btn btn-sm"
+					class:btn-active={activeFilter === 'all'}
+					onclick={() => (activeFilter = 'all')}
+				>
+					All Modules
+				</button>
+				<button
+					class="join-item btn btn-sm"
+					class:btn-active={activeFilter === 'available'}
+					onclick={() => (activeFilter = 'available')}
+				>
+					Available ({enabledThreshold})
+				</button>
+				<button
+					class="join-item btn btn-sm"
+					class:btn-active={activeFilter === 'locked'}
+					onclick={() => (activeFilter = 'locked')}
+				>
+					Locked ({chapters.length - enabledThreshold})
+				</button>
+			</div>
+		</div>
 
-									<div>
-										<h2 class="card-title base-content">
-											{chapter.emoji + ' ' + chapter.name}
-										</h2>
-										<p class="text-base-content/70 mt-1">{chapter.desc}</p>
+		<!-- Modules Grid -->
+		<div class="overflow-y-auto p-6">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				{#each filteredChapters as { chapter, originalIndex }, index}
+					{#if mounted}
+						<div in:fly={{ y: 20, delay: index * 50, duration: 300 }} class="relative">
+							<a
+								href={originalIndex < enabledThreshold
+									? `dashboard/pharm/${originalIndex + 1}`
+									: null}
+								class={originalIndex < enabledThreshold ? '' : 'pointer-events-none'}
+							>
+								<div
+									class="card bg-base-100 shadow-md h-full transition-all duration-300 overflow-hidden"
+									class:hover:shadow-lg={originalIndex < enabledThreshold}
+									class:hover:translate-y-[-2px]={originalIndex < enabledThreshold}
+									class:opacity-60={originalIndex >= enabledThreshold}
+								>
+									<div class="card-body">
+										<div class="flex justify-between items-start">
+											<div class="flex items-center gap-3 mb-2">
+												<div class="text-4xl">
+													{chapter.emoji}
+												</div>
+												<span class="font-bold text-xs tracking-wide mb-2 text-base-content/75"
+													>CHAPTER {originalIndex + 1}</span
+												>
+											</div>
+
+											<div>
+												{#if originalIndex < enabledThreshold}
+													<BookOpen />
+												{:else}
+													<Lock class="text-base-content/50" size={20} />
+												{/if}
+											</div>
+										</div>
+
+										<h2 class="card-title text-lg">{chapter.name}</h2>
+										<p class="text-base-content/70 text-sm mb-4">{chapter.desc}</p>
+
+										<div class="mt-auto flex justify-end items-center">
+											{#if originalIndex < enabledThreshold}
+												<div class="btn btn-sm btn-primary btn-outline rounded-full">
+													<ArrowRight size={16} />
+												</div>
+											{:else}
+												<div class="btn btn-sm btn-disabled rounded-full">
+													<Lock size={16} />
+												</div>
+											{/if}
+										</div>
 									</div>
 								</div>
-								<div class="flex items-center gap-6">
-									{#if index < enabledThreshold}
-										<div
-											class="tooltip tooltip-left hidden md:block"
-											data-tip="{Math.round(
-												(chapterprog[index] / Number(chapter.numprobs)) * 100
-											)}% Complete"
-										></div>
-									{/if}
-									<div
-										class="btn btn-primary btn-circle btn-soft"
-										class:btn-disabled={index >= enabledThreshold}
-									>
-										<ArrowRight />
-									</div>
-								</div>
-							</div>
+							</a>
 						</div>
-					</a>
+					{/if}
 				{/each}
 			</div>
 		</div>
@@ -104,14 +205,9 @@
 </div>
 
 <style>
-	.disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-		pointer-events: none;
-	}
-
-	.card:hover:not(.disabled) {
-		transform: scale(1.01);
-		text-decoration: underline;
+	/* Smooth scrolling */
+	.overflow-y-auto {
+		scroll-behavior: smooth;
+		-webkit-overflow-scrolling: touch;
 	}
 </style>

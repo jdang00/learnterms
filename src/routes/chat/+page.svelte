@@ -1,43 +1,41 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
 	import { useChat } from '@ai-sdk/svelte';
 	import { Send } from 'lucide-svelte';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 
-	// Destructure the stores and functions from the Vercel AI SDK
+	// Destructure the reactive stores and functions from the AI SDK
 	const { input, handleSubmit, messages } = useChat();
 
 	/**
 	 * Converts Markdown content to sanitized HTML.
-	 * Uses marked with synchronous operation and proper typing.
 	 */
 	function formatMarkdown(content: string): string {
-		// Force marked to return a string synchronously
-		const html = marked.parse(content, { async: false }) as string;
-		// Explicitly type the sanitized output as string
-		const sanitized = DOMPurify.sanitize(html, {
-			ALLOWED_TAGS: [
-				'p',
-				'strong',
-				'em',
-				'code',
-				'pre',
-				'blockquote',
-				'ul',
-				'ol',
-				'li',
-				'a',
-				'h1',
-				'h2',
-				'h3',
-				'h4',
-				'h5',
-				'h6'
-			],
-			ALLOWED_ATTR: ['href']
-		});
-		return sanitized;
+		// Convert Markdown to raw HTML
+		const rawHtml = marked.parse(content, { async: false });
+		// Sanitize to avoid XSS
+		return DOMPurify.sanitize(rawHtml);
 	}
+
+	function scrollToBottom() {
+		const chatHistory = document.querySelector('.overflow-y-auto');
+		if (chatHistory) {
+			chatHistory.scrollTop = chatHistory.scrollHeight;
+		}
+	}
+
+	// Side effect: scroll to bottom when messages change
+	$effect(() => {
+		if ($messages.length > 0) {
+			setTimeout(scrollToBottom, 0);
+		}
+	});
+
+	// Side effect: also scroll to bottom on mount
+	$effect(() => {
+		scrollToBottom();
+	});
 </script>
 
 <main class="relative flex flex-col h-screen pt-16">
@@ -45,24 +43,36 @@
 	<div class="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
 		<div class="max-w-4xl mx-auto w-full">
 			{#each $messages as message (message.id)}
-				<div class="chat {message.role === 'user' ? 'chat-end' : 'chat-start'}">
-					<div class="chat-bubble {message.role === 'assistant' ? 'chat-bubble-primary' : ''}">
+				{#if message.role === 'user'}
+					<!-- User messages -->
+					<div class="chat chat-end">
+						<div class="chat-bubble bg-primary text-primary-content">
+							{@html formatMarkdown(message.content)}
+						</div>
+					</div>
+				{:else if message.role === 'assistant'}
+					<!-- Assistant messages with Markdown + fade transition -->
+					<div
+						transition:fade
+						class="card bg-base-100 shadow-sm p-4 rounded-lg prose max-w-none my-8"
+					>
 						{@html formatMarkdown(message.content)}
 					</div>
-				</div>
+				{/if}
 			{/each}
 		</div>
 	</div>
 
 	<!-- Chat Input (fixed to the bottom) -->
-	<div class="fixed bottom-0 left-0 right-0 bg-base-100 p-4">
+	<div class="fixed bottom-0 left-0 right-0 bg-base-200 p-4">
 		<div class="max-w-4xl mx-auto w-full">
-			<form on:submit|preventDefault={handleSubmit} class="flex gap-2 px-4">
+			<!-- Svelte automatically prevents the default form submission -->
+			<form onsubmit={handleSubmit} class="flex gap-2 px-4">
 				<input
 					type="text"
 					bind:value={$input}
 					placeholder="Type your message..."
-					class="input input-bordered flex-1 rounded-full min-w-0"
+					class="input input-bordered flex-1 rounded-full"
 				/>
 				<button type="submit" class="btn btn-primary rounded-full">
 					<Send class="w-4 h-4" />

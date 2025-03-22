@@ -9,7 +9,8 @@
 		Shuffle,
 		BookmarkCheck,
 		ChevronUp,
-		ListRestart
+		ListRestart,
+		ArrowDownNarrowWide
 	} from 'lucide-svelte';
 	import { QuestionMap } from './states.svelte';
 	import { useClerkContext } from 'svelte-clerk';
@@ -143,9 +144,13 @@
 			<div class="flex flex-col justify-center">
 				<div class="card bg-base-100 shadow-xl mt-12">
 					<div class="card-body">
-						<div class="flex flex-row justify-between border-b pb-2">
+						<div class="flex flex-row flex-wrap justify-between border-b pb-2">
 							<h2 class="card-title">Solution</h2>
-							<button class="btn btn-ghost" onclick={() => qm.handleSolution()}><Eye /></button>
+							<div class="flex flex-row">
+								<kbd class="kbd kbd-sm hidden xl:block self-center me-1">tab</kbd>
+
+								<button class="btn btn-ghost" onclick={() => qm.handleSolution()}><Eye /></button>
+							</div>
 						</div>
 
 						<p
@@ -212,7 +217,7 @@
 			<div class="flex-shrink-0 w-24"></div>
 		</div>
 
-		{#if qm.noFlags}
+		{#if qm.fm.noFlags}
 			<!-- Alert Box (Responsive & Centered) -->
 			<div
 				role="alert"
@@ -235,7 +240,7 @@
 				<button
 					class="btn btn-sm btn-ghost btn-warning"
 					onclick={() => {
-						qm.noFlags = false;
+						qm.fm.noFlags = false;
 					}}>X</button
 				>
 			</div>
@@ -243,10 +248,10 @@
 
 		<!-- Question Selection Menu -->
 		<div class="flex flex-row w-full mb-4 overflow-x-auto lg:mb-0 lg:mt-6 space-x-2 relative">
-			{#key qm.flagCount}
+			{#key qm.fm.flagCount}
 				{#each qm.getCurrentQuestionIds() as id, index}
 					<div class="indicator">
-						{#if qm.flags.has(id)}
+						{#if qm.fm.flags.has(id)}
 							<span
 								class="indicator-item indicator-start badge badge-warning badge-xs !right-10 translate-x-1/4 translate-y-1/4"
 							></span>
@@ -281,14 +286,16 @@
 						</div>
 
 						<div class="dropdown dropdown-end lg:block hidden">
-							<div tabindex="0" role="button" class="btn btn-soft btn-accent m-1">Sort</div>
+							<div tabindex="0" role="button" class="btn btn-soft btn-accent m-1 btn-circle">
+								<ArrowDownNarrowWide />
+							</div>
 							<ul
 								tabindex="-1"
 								class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
 							>
 								<li>
 									<button onclick={qm.toggleSortByFlagged}
-										><Flag size="16" />{qm.showFlagged ? 'Show All' : 'Show Flagged'}</button
+										><Flag size="16" />{qm.fm.showFlagged ? 'Show All' : 'Show Flagged'}</button
 									>
 								</li>
 								<li>
@@ -352,6 +359,7 @@
 					<button class="btn btn-secondary" onclick={qm.toggleShuffle}
 						><Shuffle size="18" /> {qm.isShuffled ? 'Unshuffle' : 'Shuffle'}
 					</button>
+
 					<button
 						class="btn btn-outline"
 						onclick={qm.goToPreviousQuestion}
@@ -359,6 +367,7 @@
 					>
 						<ArrowLeft />
 					</button>
+
 					<button
 						class="btn btn-outline"
 						onclick={qm.goToNextQuestion}
@@ -434,7 +443,7 @@
 				</li>
 				<li>
 					<button onclick={qm.toggleSortByFlagged}
-						><Flag size="16" />{qm.showFlagged ? 'Show All' : 'Show Flagged'}</button
+						><Flag size="16" />{qm.fm.showFlagged ? 'Show All' : 'Show Flagged'}</button
 					>
 				</li>
 				<li>
