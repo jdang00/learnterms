@@ -47,7 +47,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Fetch all records from the 'pharmchallenge' table
 	const { data: pharmchallengeData, error: pharmchallengeError } = await supabase
 		.from('pharmchallenge')
-		.select('*');
+		.select('*')
+		.eq('chapter', 910);
 
 	if (pharmchallengeError) {
 		throw error(500, `Failed to load pharmchallenge data: ${pharmchallengeError.message}`);
