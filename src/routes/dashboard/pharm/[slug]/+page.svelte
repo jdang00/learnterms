@@ -10,7 +10,8 @@
 		BookmarkCheck,
 		ChevronUp,
 		ListRestart,
-		ArrowDownNarrowWide
+		ArrowDownNarrowWide,
+		Lightbulb
 	} from 'lucide-svelte';
 	import { QuestionMap } from './states.svelte';
 	import { useClerkContext } from 'svelte-clerk';
@@ -27,22 +28,35 @@
 
 	// Handles keyboard navigation and shortcuts
 	function handleKeydown(event: KeyboardEvent) {
-		switch (event.key) {
-			case 'Tab':
+		if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+			return;
+		}
+		const key = event.key.toLowerCase();
+		switch (key) {
+			case 'tab':
 				event.preventDefault();
 				qm.handleSolution();
 				break;
-			case 'Enter':
+			case 'enter':
 				qm.checkAnswers();
 				break;
-			case 'Escape':
+			case 'escape':
 				qm.clearSelectedAnswers();
 				break;
-			case 'ArrowRight':
+			case 'arrowright':
 				qm.goToNextQuestion();
 				break;
-			case 'ArrowLeft':
+			case 'arrowleft':
 				qm.goToPreviousQuestion();
+				break;
+			case 'f':
+				qm.toggleFlag();
+				break;
+			case 's':
+				if (event.shiftKey) {
+					event.preventDefault();
+					qm.toggleShuffle();
+				}
 				break;
 		}
 	}
@@ -165,8 +179,38 @@
 					<button class="btn btn-error btn-soft" onclick={() => (qm.isResetModalOpen = true)}
 						>Reset</button
 					>
+
+					<div class="tooltip" data-tip="Shortcuts">
+						<div class="tooltip-content text-black font-mono flex flex-col gap-1 p-2">
+							<div class="flex items-center gap-8 justify-between">
+								<kbd class="kbd">shift + s</kbd>
+								<span class="text-white">Shuffle</span>
+							</div>
+							<div class="flex items-center gap-8 justify-between">
+								<kbd class="kbd">f</kbd>
+								<span class="text-white">Flag</span>
+							</div>
+							<div class="flex items-center gap-8 justify-between">
+								<kbd class="kbd">enter</kbd>
+								<span class="text-white">Check</span>
+							</div>
+							<div class="flex flex-col gap-1">
+								<div class="flex items-center gap-8 justify-between">
+									<kbd class="kbd">arrows</kbd>
+									<span class="text-white">Navigation</span>
+								</div>
+							</div>
+							<div class="flex items-center gap-8 justify-between">
+								<kbd class="kbd">esc</kbd>
+								<span class="text-white">Clear</span>
+							</div>
+						</div>
+						<button class="btn btn-ghost">
+							<Lightbulb />
+						</button>
+					</div>
 					{#if admin}
-						<a class="btn btn-info btn-soft" href="/admin" target="_blank">Admin Panel</a>
+						<a class="btn btn-info btn-soft" href="/admin" target="_blank">Admin</a>
 					{/if}
 				</div>
 			</div>

@@ -49,6 +49,18 @@ export interface AdminQuestions {
 	chapter: string;
 }
 
+export interface AdminChallengeQuestions {
+	id: string;
+	question_data: {
+		options: string[];
+		question: string;
+		explanation: string;
+		correct_answers: string[];
+	};
+	chapter: string;
+	pic_url: string | null;
+}
+
 export interface Chapter {
 	name: string;
 	desc: string;
