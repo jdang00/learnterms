@@ -43,7 +43,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const chapter: number = parseInt(params.slug);
 
 	const [questionsQuery, chaptersQuery] = await Promise.all([
-		supabase.from('pharmquestions').select('id, question_data').eq('chapter', chapter),
+		supabase
+			.from('pharmquestions')
+			.select('id, question_data')
+			.eq('chapter', chapter)
+			.order('created_at', { ascending: true }),
 		supabase
 			.from('pharmchapters')
 			.select('name, desc, numprobs, chapter')

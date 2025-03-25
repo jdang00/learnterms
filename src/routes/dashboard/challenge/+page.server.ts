@@ -48,7 +48,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const { data: pharmchallengeData, error: pharmchallengeError } = await supabase
 		.from('pharmchallenge')
 		.select('*')
-		.eq('chapter', 910);
+		.eq('chapter', 910)
+		.order('created_at', { ascending: true });
 
 	if (pharmchallengeError) {
 		throw error(500, `Failed to load pharmchallenge data: ${pharmchallengeError.message}`);

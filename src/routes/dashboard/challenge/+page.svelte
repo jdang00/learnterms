@@ -26,22 +26,35 @@
 
 	// Handles keyboard navigation and shortcuts
 	function handleKeydown(event: KeyboardEvent) {
-		switch (event.key) {
-			case 'Tab':
+		if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+			return;
+		}
+		const key = event.key.toLowerCase();
+		switch (key) {
+			case 'tab':
 				event.preventDefault();
 				qm.handleSolution();
 				break;
-			case 'Enter':
+			case 'enter':
 				qm.checkAnswers();
 				break;
-			case 'Escape':
+			case 'escape':
 				qm.clearselectedAnswers();
 				break;
-			case 'ArrowRight':
+			case 'arrowright':
 				qm.goToNextQuestion();
 				break;
-			case 'ArrowLeft':
+			case 'arrowleft':
 				qm.goToPreviousQuestion();
+				break;
+			case 'f':
+				qm.toggleFlag();
+				break;
+			case 's':
+				if (event.shiftKey) {
+					event.preventDefault();
+					qm.toggleShuffle();
+				}
 				break;
 		}
 	}
@@ -125,7 +138,9 @@
 		</div>
 
 		<div class="mx-8 mt-4">
-			<p class="font-bold text-sm tracking-wide text-secondary mb-2">CHAPTER {qm.chapterData.chapter}</p>
+			<p class="font-bold text-sm tracking-wide text-secondary mb-2">
+				CHAPTER {qm.chapterData.chapter}
+			</p>
 			<h1 class="text-3xl font-bold">{qm.chapterData.name}</h1>
 			<p class="text-base-content mt-2">{qm.chapterData.desc}</p>
 

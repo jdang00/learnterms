@@ -1,5 +1,7 @@
 @import 'tailwindcss';
+@import 'uploadthing/tw/v4';
 @plugin "@tailwindcss/typography";
+
 @plugin "daisyui" {
 	themes:
 		light --default,
@@ -8,3 +10,5 @@
 		retro,
 		nord;
 }
+
+@source "../node_modules/@uploadthing/svelte/dist";
