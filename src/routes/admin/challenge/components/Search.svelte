@@ -1,5 +1,5 @@
 <script>
-	import { Plus } from 'lucide-svelte';
+	import { Plus, ArrowLeft } from 'lucide-svelte';
 	let {
 		searchQuery = $bindable(),
 		questions = $bindable(),
@@ -9,10 +9,13 @@
 </script>
 
 <div class="flex flex-col sm:flex-row justify-between items-start">
-	<div class="flex gap-2 mb-4 sm:mb-0">
-		<button class="btn btn-primary" onclick={openAddModal}>
-			<Plus size={16} /> Add Question
-		</button>
+	<div class="flex flex-row gap-4">
+		<a href="/admin" class="btn btn-ghost"><ArrowLeft /></a>
+		<div class="flex gap-2 mb-4 sm:mb-0">
+			<button class="btn btn-primary" onclick={openAddModal}>
+				<Plus size={16} /> Add Question
+			</button>
+		</div>
 	</div>
 
 	<!-- Controls: Search Bar and Chapter Filter -->

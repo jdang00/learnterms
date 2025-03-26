@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import type { RawUserProgress, UserProgress } from '$lib/types';
-	import { Search } from 'lucide-svelte';
+	import { Search, ArrowLeft } from 'lucide-svelte';
 
 	// Props and data
 	let { data }: { data: PageData } = $props();
@@ -162,7 +162,11 @@
 		<label for="my-drawer" class="drawer-overlay"></label>
 		<div class="menu p-4 w-80 h-full bg-base-100 shadow-lg">
 			<div class="flex flex-col gap-4">
-				<h2 class="text-xl font-bold px-1 pt-2">Users</h2>
+				<div class="flex flex-row gap-2">
+					<a href="/admin" class="btn btn-ghost"><ArrowLeft /></a>
+
+					<h2 class="text-xl font-bold px-1 pt-2">Users</h2>
+				</div>
 
 				<div class="relative">
 					<input
