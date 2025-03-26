@@ -243,7 +243,7 @@
 			>
 		</div>
 
-		<h2 class="text-xl font-bold px-1 pt-2">Users</h2>
+		<h2 class="text-xl font-bold px-1 pt-2">Questions</h2>
 
 		<!-- Controls: Search Bar and Chapter Filter -->
 		<div class="flex flex-col sm:flex-row gap-2 sm:items-center w-full sm:w-auto">
