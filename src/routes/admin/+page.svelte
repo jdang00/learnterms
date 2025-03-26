@@ -1,5 +1,8 @@
 <script>
 	import { ArrowRightIcon } from 'lucide-svelte';
+	import { useClerkContext } from 'svelte-clerk';
+
+	const ctx = useClerkContext();
 </script>
 
 <main class="max-w-5xl mx-auto px-10 mt-12">
@@ -21,18 +24,20 @@
 			</div>
 		</a>
 
-		<a
-			href="/admin/challenge"
-			class="card bg-base-100 shadow-xl cursor-pointer hover:shadow-2xl transition-shadow duration-200 hover:text-primary"
-		>
-			<div class="card-body flex flex-row justify-between">
-				<div>
-					<h2 class="card-title">🧠 Manage Challenge Questions</h2>
-					<p>Create, edit, and organize challenge questions.</p>
+		{#if ctx.user?.publicMetadata.create === 'contributor'}
+			<a
+				href="/admin/challenge"
+				class="card bg-base-100 shadow-xl cursor-pointer hover:shadow-2xl transition-shadow duration-200 hover:text-primary"
+			>
+				<div class="card-body flex flex-row justify-between">
+					<div>
+						<h2 class="card-title">🧠 Manage Challenge Questions</h2>
+						<p>Create, edit, and organize challenge questions.</p>
+					</div>
+					<button class="btn btn-primary rounded-full self-center"><ArrowRightIcon /></button>
 				</div>
-				<button class="btn btn-primary rounded-full self-center"><ArrowRightIcon /></button>
-			</div>
-		</a>
+			</a>
+		{/if}
 
 		<a
 			href="/admin/progress"
