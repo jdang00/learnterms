@@ -2,7 +2,7 @@
 	import supabase from '$lib/supabaseClient';
 	import type { AdminQuestions } from '$lib/types';
 	import type { PageData } from './$types';
-	import { Trash2, Pencil, ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import { Trash2, Pencil, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-svelte';
 	import { browser } from '$app/environment';
 
 	// Retrieve the questions from props.
@@ -235,9 +235,15 @@
 
 <div class="flex flex-col gap-4 mt-12 mx-6">
 	<div class="flex flex-col sm:flex-row justify-between items-start">
-		<button class="btn btn-error btn-soft mb-4 sm:mb-0" onclick={() => (deleteAllModal = true)}
-			>Delete All</button
-		>
+		<div class="flex flex-row gap-2">
+			<a href="/admin" class="btn btn-ghost"><ArrowLeft /></a>
+
+			<button class="btn btn-error btn-soft mb-4 sm:mb-0" onclick={() => (deleteAllModal = true)}
+				>Delete All</button
+			>
+		</div>
+
+		<h2 class="text-xl font-bold px-1 pt-2">Questions</h2>
 
 		<!-- Controls: Search Bar and Chapter Filter -->
 		<div class="flex flex-col sm:flex-row gap-2 sm:items-center w-full sm:w-auto">
