@@ -220,17 +220,6 @@
 			}
 		}
 	}
-
-	// Add this function to extract the letter from an option
-	function getLetterFromOption(option: string): string {
-		const match = option.match(/^([A-Z])\./);
-		return match ? match[1] : '';
-	}
-
-	// Function to get the full option text by letter
-	function getOptionByLetter(options: string[], letter: string): string {
-		return options.find((opt) => opt.startsWith(`${letter}.`)) || '';
-	}
 </script>
 
 <div class="flex flex-col gap-4 mt-12 mx-6">
@@ -274,7 +263,7 @@
 			<div>
 				<select id="chapter-select" class="select" bind:value={selectedChapter}>
 					<option value="">All Chapters</option>
-					{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter}
+					{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter (chapter)}
 						{#if chapter}
 							<option value={chapter} selected={selectedChapter === chapter}>{chapter}</option>
 						{/if}
@@ -330,7 +319,7 @@
 					pageNum = currentPage - 2 + i;
 				}
 				return pageNum;
-			}) as pageNum}
+			}) as pageNum (pageNum)}
 				<button
 					class="join-item btn btn-sm"
 					class:btn-active={pageNum === currentPage}
@@ -467,7 +456,7 @@
 							class="select select-bordered"
 							bind:value={editingQuestion.chapter}
 						>
-							{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter}
+							{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter (chapter)}
 								{#if chapter}
 									<option value={chapter}>{chapter}</option>
 								{/if}
@@ -521,7 +510,7 @@
 					<fieldset class="form-control">
 						<legend class="text-base font-medium mb-2">Correct Answers</legend>
 
-						{#each editingQuestion.question_data.correct_answers as answer, i}
+						{#each editingQuestion.question_data.correct_answers, i}
 							<div class="flex items-center mb-2">
 								<label for={`edit-correct-answer-${i}`} class="sr-only"
 									>Correct answer {i + 1}</label
@@ -532,7 +521,7 @@
 									bind:value={editingQuestion.question_data.correct_answers[i]}
 								>
 									<option value="" disabled>Select correct answer</option>
-									{#each ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] as letter}
+									{#each ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] as letter (letter)}
 										<!-- Only include options that exist -->
 										{#if editingQuestion.question_data.options.some( (opt) => opt.startsWith(`${letter}.`) )}
 											<option value={letter}>{letter}</option>
@@ -636,18 +625,18 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each paginatedQuestions as question}
+			{#each paginatedQuestions as question (question.id)}
 				<tr>
 					<td class="max-w-xs truncate">{question.question_data.question}</td>
 					<td class="max-w-xs">
-						{#each question.question_data.options as option}
+						{#each question.question_data.options as option (option)}
 							<div class="truncate">{option}</div>
 						{/each}
 					</td>
 					<td class="max-w-xs truncate">{question.question_data.explanation}</td>
 
 					<td>
-						{#each question.question_data.correct_answers as answer}
+						{#each question.question_data.correct_answers as answer (answer)}
 							<div class="font-mono">{answer}</div>
 						{/each}
 					</td>
@@ -723,7 +712,7 @@
 				pageNum = currentPage - 2 + i;
 			}
 			return pageNum;
-		}) as pageNum}
+		}) as pageNum (pageNum)}
 			<button
 				class="join-item btn btn-sm"
 				class:btn-active={pageNum === currentPage}

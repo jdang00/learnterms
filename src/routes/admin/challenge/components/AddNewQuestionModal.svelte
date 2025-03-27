@@ -1,5 +1,7 @@
 <script>
-	import { Trash2 } from 'lucide-svelte';
+	import { Trash2, FileImage, AlertCircle, Plus, X } from 'lucide-svelte';
+	import { fade, fly } from 'svelte/transition';
+
 	let {
 		isAddModalOpen = $bindable(),
 		newQuestion = $bindable(),
@@ -15,199 +17,279 @@
 		isAddingSaving,
 		addQuestion
 	} = $props();
+
+	$inspect(newQuestion);
+
+	// Ensure at least one correct answer is selected when the form opens
+	$effect(() => {
+		if (
+			newQuestion &&
+			(!newQuestion.question_data.correct_answers ||
+				newQuestion.question_data.correct_answers.length === 0)
+		) {
+			newQuestion.question_data.correct_answers = ['A'];
+		}
+	});
+
+	let letters = ['A.', 'B.', 'C.', 'D.'];
+
+	// This function returns just the part after "A. ", "B. ", etc.
+	function getDisplayText(index) {
+		// If the stored option is "A. Something", this removes "A. ":
+		return newQuestion.question_data.options[index].replace(/^[A-D]\.\s*/, '');
+	}
+
+	// Whenever user changes the text, put the letter back at the start.
+	function handleInput(e, index) {
+		const newText = e.target.value;
+		newQuestion.question_data.options[index] = `${letters[index]} ${newText}`;
+	}
 </script>
 
 <div>
-	<dialog class="modal max-w-full p-4" class:modal-open={isAddModalOpen}>
-		<div class="modal-box w-11/12 max-w-4xl">
-			<form method="dialog">
+	{#if isAddModalOpen}
+		<div class="modal-backdrop" transition:fade={{ duration: 150 }}></div>
+	{/if}
+
+	<dialog class="modal max-w-full" class:modal-open={isAddModalOpen}>
+		<div
+			class="modal-box w-11/12 max-w-5xl p-0 overflow-hidden bg-base-100 shadow-lg rounded-lg"
+			transition:fly={{ y: 20, duration: 200 }}
+		>
+			<div
+				class="px-6 py-4 border-b border-base-200 flex justify-between items-center sticky top-0 bg-base-100 z-10"
+			>
+				<h3 class="text-xl font-bold">Add New Question</h3>
 				<button
-					class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+					class="btn btn-circle btn-ghost"
 					onclick={() => {
 						isAddModalOpen = false;
 						newQuestion = null;
-					}}>✕</button
+					}}
+					aria-label="Close modal"
 				>
-			</form>
-			<h3 class="text-lg font-bold mb-4">Add New Question</h3>
+					<X size={20} />
+				</button>
+			</div>
 
 			{#if newQuestion}
-				<div class="grid grid-cols-1 gap-6">
-					<!-- Chapter -->
-					<div class="form-control">
-						<label for="new-chapter" class="label">
-							<span class="label-text">Chapter</span>
-						</label>
-						<select
-							id="new-chapter"
-							class="select select-bordered"
-							bind:value={newQuestion.chapter}
-						>
-							{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter}
-								{#if chapter}
-									<option value={chapter}>{chapter}</option>
-								{/if}
-							{/each}
-						</select>
-					</div>
+				<div class="p-6 overflow-y-auto max-h-[70vh]">
+					<div class="grid grid-cols-1 gap-8">
+						<!-- Question Content -->
+						<div class="card bg-base-200/50 p-6 rounded-lg">
+							<h4 class="text-lg font-medium mb-4 flex items-center">
+								<span>Question Content</span>
+							</h4>
 
-					<!-- Question Text -->
-					<div class="form-control">
-						<label for="new-question-text" class="label">
-							<span class="label-text">Question</span>
-						</label>
-						<textarea
-							id="new-question-text"
-							class="textarea textarea-bordered h-24"
-							bind:value={newQuestion.question_data.question}
-							placeholder="Enter question text"
-						></textarea>
-					</div>
-
-					<!-- Options -->
-					<fieldset class="form-control">
-						<legend class="text-base font-medium mb-2">Options</legend>
-
-						{#each newQuestion.question_data.options as _, i}
-							<div class="flex items-center mb-2">
-								<label for={`new-option-${i}`} class="sr-only">Option {i + 1}</label>
-								<input
-									id={`new-option-${i}`}
-									type="text"
-									class="input input-bordered w-full mr-2"
-									bind:value={newQuestion.question_data.options[i]}
-									placeholder={`Option ${String.fromCharCode(65 + i)}`}
-								/>
-								<button
-									class="btn btn-sm btn-error btn-soft"
-									onclick={() => removeNewOption(i)}
-									type="button"
-									aria-label={`Remove option ${i + 1}`}
-									disabled={newQuestion.question_data.options.length <= 2}
-								>
-									<Trash2 size="16" />
-								</button>
-							</div>
-						{/each}
-
-						<button class="btn btn-sm btn-outline mt-2 w-full" onclick={addNewOption} type="button">
-							Add Option
-						</button>
-					</fieldset>
-
-					<!-- Correct Answers -->
-					<fieldset class="form-control">
-						<legend class="text-base font-medium mb-2">Correct Answers</legend>
-
-						{#each newQuestion.question_data.correct_answers as _, i}
-							<div class="flex items-center mb-2">
-								<label for={`new-correct-answer-${i}`} class="sr-only">Correct answer {i + 1}</label
-								>
-								<select
-									id={`new-correct-answer-${i}`}
-									class="select select-bordered w-full mr-2"
-									bind:value={newQuestion.question_data.correct_answers[i]}
-								>
-									<option value="" disabled>Select correct answer</option>
-									{#each ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] as letter, letterIdx}
-										<!-- Only include options that exist -->
-										{#if letterIdx < newQuestion.question_data.options.length}
-											<option value={letter}>{letter}</option>
-										{/if}
-									{/each}
-								</select>
-								<button
-									class="btn btn-sm btn-error btn-soft"
-									onclick={() => removeNewCorrectAnswer(i)}
-									type="button"
-									aria-label={`Remove correct answer ${i + 1}`}
-									disabled={newQuestion.question_data.correct_answers.length <= 1}
-								>
-									<Trash2 size="16" />
-								</button>
-							</div>
-						{/each}
-
-						<button
-							class="btn btn-sm btn-outline mt-2 w-full"
-							onclick={addNewCorrectAnswer}
-							type="button"
-						>
-							Add Correct Answer
-						</button>
-					</fieldset>
-
-					<!-- Explanation -->
-					<div class="form-control">
-						<label for="new-explanation" class="label">
-							<span class="label-text">Explanation</span>
-						</label>
-						<textarea
-							id="new-explanation"
-							class="textarea textarea-bordered h-24"
-							bind:value={newQuestion.question_data.explanation}
-							placeholder="Enter explanation text"
-						></textarea>
-					</div>
-
-					<!-- Image Upload -->
-					<fieldset class="form-control">
-						<legend class="text-base font-medium mb-2">Upload Picture</legend>
-
-						{#if newImageUrl}
-							<div class="mb-4">
-								<div class="flex items-center mb-2">
-									<img src={newImageUrl} alt="Uploaded preview" class="max-h-56 rounded-lg" />
-									<button
-										class="btn btn-sm btn-error ml-4"
-										onclick={() => (newImageUrl = null)}
-										type="button"
+							<div class="space-y-4">
+								<!-- Chapter Selection -->
+								<div class="form-control w-full max-w-xs">
+									<label for="new-chapter" class="label font-medium">
+										<span class="label-text">Chapter</span>
+									</label>
+									<select
+										id="new-chapter"
+										class="select select-bordered w-full"
+										bind:value={newQuestion.chapter}
 									>
-										Remove Image
-									</button>
+										<option value="" disabled selected>Select chapter</option>
+										{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter (chapter)}
+											{#if chapter}
+												<option value={chapter}>{chapter}</option>
+											{/if}
+										{/each}
+									</select>
+								</div>
+
+								<!-- Question Text -->
+								<div class="form-control">
+									<label for="new-question-text" class="label">
+										<span class="label-text font-medium">Question Text</span>
+									</label>
+									<textarea
+										id="new-question-text"
+										class="textarea textarea-bordered h-28 w-full"
+										bind:value={newQuestion.question_data.question}
+										placeholder="Enter your question here..."
+									></textarea>
 								</div>
 							</div>
-						{/if}
 
-						<div class="flex items-center">
-							<input
-								type="file"
-								accept="image/*"
-								onchange={handleNewImageUpload}
-								class="file-input file-input-bordered w-full"
-								disabled={addImageUploading}
-							/>
-							{#if addImageUploading}
-								<div class="ml-2">
-									<span class="loading loading-spinner text-primary"></span>
-								</div>
-							{/if}
+							<!-- Image Upload -->
+							<div class="form-control mt-5">
+								<label class="label font-medium flex justify-between">
+									<span class="label-text">Question Image (Optional)</span>
+								</label>
+
+								{#if newImageUrl}
+									<div class="mb-2 p-2 border border-base-300 rounded-lg bg-base-200/30">
+										<div class="flex flex-col sm:flex-row items-center gap-3">
+											<img
+												src={newImageUrl}
+												alt="Uploaded preview"
+												class="max-h-56 object-contain rounded-md"
+											/>
+											<button
+												class="btn btn-sm btn-error btn-outline gap-1 self-end sm:self-start"
+												onclick={() => (newImageUrl = null)}
+												type="button"
+											>
+												<Trash2 size={16} />
+												<span>Remove</span>
+											</button>
+										</div>
+									</div>
+								{:else}
+									<label
+										class="flex flex-col items-center justify-center h-36 border-2 border-dashed border-base-300 rounded-lg cursor-pointer bg-base-200/30 hover:bg-base-200/60 transition-colors"
+									>
+										<div class="flex flex-col items-center justify-center p-5 text-center">
+											<FileImage size={32} class="text-base-content/60 mb-2" />
+											<p class="text-sm font-medium">Click to upload an image</p>
+											<p class="text-xs text-base-content/60 mt-1">PNG, JPG or GIF (max 5MB)</p>
+										</div>
+										<input
+											type="file"
+											accept="image/*"
+											onchange={handleNewImageUpload}
+											class="hidden"
+											disabled={addImageUploading}
+										/>
+									</label>
+
+									{#if addImageUploading}
+										<div class="flex items-center justify-center mt-2">
+											<span class="loading loading-spinner text-primary"></span>
+											<span class="ml-2 text-sm">Uploading image...</span>
+										</div>
+									{/if}
+								{/if}
+							</div>
 						</div>
-					</fieldset>
+
+						<!-- Answer Options -->
+						<div class="card bg-base-200/50 p-6 rounded-lg">
+							<h4 class="text-lg font-medium mb-4">Answer Options</h4>
+
+							<div class="space-y-5">
+								<!-- Options -->
+								<div class="form-control">
+									<label class="label font-medium flex justify-between">
+										<span class="label-text">Options</span>
+										<button
+											class="btn btn-xs btn-primary gap-1"
+											onclick={addNewOption}
+											type="button"
+										>
+											<Plus size={14} />
+											<span>Add Option</span>
+										</button>
+									</label>
+
+									<div class="space-y-3 mt-2">
+										{#each newQuestion.question_data.options, i}
+											<div class="flex items-center gap-3">
+												<div class="badge badge-lg badge-ghost w-8 flex justify-center">
+													{String.fromCharCode(65 + i)}
+												</div>
+												<input
+													id={'new-option-' + i}
+													type="text"
+													class="input input-bordered w-full"
+													value={getDisplayText(i)}
+													oninput={(e) => handleInput(e, i)}
+												/>
+												<button
+													class="btn btn-sm btn-ghost text-error"
+													onclick={() => removeNewOption(i)}
+													type="button"
+													aria-label={`Remove option ${i + 1}`}
+													disabled={newQuestion.question_data.options.length <= 2}
+												>
+													<Trash2 size={18} />
+												</button>
+											</div>
+										{/each}
+									</div>
+								</div>
+
+								<!-- Correct Answers -->
+								<div class="form-control">
+									<label class="label font-medium flex justify-between">
+										<span class="label-text">Correct Answers</span>
+										<button
+											class="btn btn-xs btn-primary gap-1"
+											onclick={addNewCorrectAnswer}
+											type="button"
+										>
+											<Plus size={14} />
+											<span>Add Correct Answer</span>
+										</button>
+									</label>
+
+									<div class="space-y-3 mt-2">
+										{#each newQuestion.question_data.correct_answers, i}
+											<div class="flex items-center gap-3">
+												<div class="badge badge-lg badge-success w-8 flex justify-center">✓</div>
+												<select
+													id={`new-correct-answer-${i}`}
+													class="select select-bordered w-full"
+													bind:value={newQuestion.question_data.correct_answers[i]}
+												>
+													<option value="" disabled>Select correct answer</option>
+													{#each ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] as letter, letterIdx (letterIdx)}
+														{#if letterIdx < newQuestion.question_data.options.length}
+															<option value={letter}>{letter}</option>
+														{/if}
+													{/each}
+												</select>
+												<button
+													class="btn btn-sm btn-ghost text-error"
+													onclick={() => removeNewCorrectAnswer(i)}
+													type="button"
+													aria-label={`Remove correct answer ${i + 1}`}
+													disabled={newQuestion.question_data.correct_answers.length <= 1}
+												>
+													<Trash2 size={18} />
+												</button>
+											</div>
+										{/each}
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Explanation -->
+						<div class="card bg-base-200/50 p-6 rounded-lg">
+							<div class="form-control">
+								<label for="new-explanation" class="label flex justify-between">
+									<div class="flex items-center">
+										<span class="label-text font-medium">Explanation</span>
+									</div>
+								</label>
+								<textarea
+									id="new-explanation"
+									class="textarea textarea-bordered h-36 w-full"
+									bind:value={newQuestion.question_data.explanation}
+									placeholder="Explain why the correct answer(s) are correct..."
+								></textarea>
+							</div>
+						</div>
+					</div>
+
+					{#if addError}
+						<div class="alert alert-error mt-6 flex items-center gap-2">
+							<AlertCircle size={20} />
+							<span>Error: {addError}</span>
+						</div>
+					{/if}
 				</div>
 
-				{#if addError}
-					<div class="alert alert-error my-4">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="stroke-current shrink-0 h-6 w-6"
-							fill="none"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-							/>
-						</svg>
-						<span>Error: {addError}</span>
-					</div>
-				{/if}
-
-				<div class="modal-action">
+				<div
+					class="px-6 py-4 border-t border-base-200 flex justify-end gap-3 sticky bottom-0 bg-base-100 z-10"
+				>
 					<button
-						class="btn btn-outline"
+						class="btn btn-ghost"
 						onclick={() => {
 							isAddModalOpen = false;
 							newQuestion = null;
@@ -225,9 +307,9 @@
 					>
 						{#if isAddingSaving}
 							<span class="loading loading-spinner"></span>
-							Adding...
+							<span>Adding Question...</span>
 						{:else}
-							Add Question
+							<span>Add Question</span>
 						{/if}
 					</button>
 				</div>
@@ -235,3 +317,23 @@
 		</div>
 	</dialog>
 </div>
+
+<style>
+	.modal-backdrop {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0, 0, 0, 0.4);
+		z-index: 40;
+	}
+
+	/* Add smooth transitions to interactive elements */
+	.btn,
+	.input,
+	.textarea,
+	.select {
+		transition: all 0.2s ease;
+	}
+</style>

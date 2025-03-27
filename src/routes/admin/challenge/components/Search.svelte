@@ -1,18 +1,27 @@
-<script>
-	import { Plus, ArrowLeft } from 'lucide-svelte';
+<script lang="ts">
+	import type { AdminChallengeQuestions } from '$lib/types';
+	import { Plus, ArrowLeft, Search } from 'lucide-svelte';
+
 	let {
 		searchQuery = $bindable(),
 		questions = $bindable(),
 		selectedChapter = $bindable(),
 		openAddModal
 	} = $props();
+
+	// Compute the chapters using a derived rune
+	let chapters = $derived.by(() => {
+		return Array.from(new Set(questions.map((q: AdminChallengeQuestions) => q.chapter))).sort(
+			(a, b) => Number(a) - Number(b)
+		);
+	});
 </script>
 
 <div class="flex flex-col sm:flex-row justify-between items-start">
 	<div class="flex flex-row gap-4">
 		<a href="/admin" class="btn btn-ghost"><ArrowLeft /></a>
 		<div class="flex gap-2 mb-4 sm:mb-0">
-			<button class="btn btn-primary" onclick={openAddModal}>
+			<button class="btn btn-primary me-2" onclick={openAddModal}>
 				<Plus size={16} /> Add Question
 			</button>
 		</div>
@@ -22,18 +31,7 @@
 	<div class="flex flex-col sm:flex-row gap-2 sm:items-center w-full sm:w-auto">
 		<div>
 			<label class="input">
-				<svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-					<g
-						stroke-linejoin="round"
-						stroke-linecap="round"
-						stroke-width="2.5"
-						fill="none"
-						stroke="currentColor"
-					>
-						<circle cx="11" cy="11" r="8"></circle>
-						<path d="m21 21-4.3-4.3"></path>
-					</g>
-				</svg>
+				<Search />
 				<input
 					id="search-input"
 					type="search"
@@ -47,7 +45,7 @@
 		<div>
 			<select id="chapter-select" class="select" bind:value={selectedChapter}>
 				<option value="">All Chapters</option>
-				{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter}
+				{#each chapters as chapter (chapter)}
 					{#if chapter}
 						<option value={chapter}>{chapter}</option>
 					{/if}

@@ -8,6 +8,7 @@
 	import PaginationControls from './components/PaginationControls.svelte';
 	import Search from './components/Search.svelte';
 	import AddNewQuestionModal from './components/AddNewQuestionModal.svelte';
+	import EditQuestionModal from './components/EditQuestionModal.svelte';
 
 	// Retrieve the questions from props.
 	let { data }: { data: PageData } = $props();
@@ -416,16 +417,18 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4 mt-12 mx-6">
-	<Search bind:searchQuery bind:selectedChapter {questions} {openAddModal} />
-	<!-- Top Pagination Controls -->
-	<PaginationControls
-		{currentPage}
-		{totalPages}
-		{questionsPerPage}
-		totalEntries={filteredQuestions.length}
-		{goToPage}
-	/>
+<!-- Search and filter panel -->
+<div class="rounded-box border border-base-content/12 bg-base-100 mx-6 mt-12 mb-4">
+	<div class="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+		<div class="flex flex-col sm:flex-row items-center gap-4 w-full">
+			<Search bind:searchQuery bind:selectedChapter {questions} {openAddModal} />
+		</div>
+
+		<!-- Quick stats about results -->
+		<div class="text-sm text-base-content/70 whitespace-nowrap">
+			<span>{filteredQuestions.length} questions found</span>
+		</div>
+	</div>
 </div>
 
 <!-- Delete Confirmation Modal -->
@@ -451,19 +454,6 @@
 
 			{#if deleteError}
 				<div class="alert alert-error mb-4">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="stroke-current shrink-0 h-6 w-6"
-						fill="none"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-						/>
-					</svg>
 					<span>Error: {deleteError}</span>
 				</div>
 			{/if}
@@ -492,8 +482,6 @@
 	</dialog>
 </div>
 
-<!-- Add New Question Modal -->
-
 <AddNewQuestionModal
 	bind:isAddModalOpen
 	bind:newQuestion
@@ -509,301 +497,97 @@
 	{isAddingSaving}
 	{addQuestion}
 />
+<EditQuestionModal
+	bind:isEditModalOpen
+	bind:editingQuestion
+	bind:editImageUrl
+	{questions}
+	{removeOption}
+	{removeCorrectAnswer}
+	{addCorrectAnswer}
+	{handleEditImageUpload}
+	{editImageUploading}
+	{saveError}
+	{isSaving}
+	{updateQuestion}
+	{addOption}
+/>
 
-<!-- Edit Question Modal -->
-<div>
-	<dialog class="modal max-w-full p-4" class:modal-open={isEditModalOpen}>
-		<div class="modal-box w-11/12 max-w-4xl">
-			<form method="dialog">
-				<button
-					class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-					onclick={() => {
-						isEditModalOpen = false;
-						editingQuestion = null;
-					}}>✕</button
-				>
-			</form>
-			<h3 class="text-lg font-bold mb-4">Edit Question</h3>
-
-			{#if editingQuestion}
-				<div class="grid grid-cols-1 gap-6">
-					<!-- Chapter -->
-					<div class="form-control">
-						<label for="edit-chapter" class="label">
-							<span class="label-text">Chapter</span>
-						</label>
-						<select
-							id="edit-chapter"
-							class="select select-bordered"
-							bind:value={editingQuestion.chapter}
-						>
-							{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter}
-								{#if chapter}
-									<option value={chapter}>{chapter}</option>
-								{/if}
+<div class="rounded-box border border-base-content/12 bg-base-100 mx-6 mb-4">
+	<!-- Table content -->
+	<div class="overflow-x-auto">
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Question</th>
+					<th>Options</th>
+					<th>Image</th>
+					<th>Explanation</th>
+					<th>Correct Answer(s)</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each paginatedQuestions as question (question.id)}
+					<tr>
+						<td class="max-w-xs">{question.question_data.question}</td>
+						<td class="max-w-xs">
+							{#each question.question_data.options as option (option)}
+								<div class="truncate">{option}</div>
 							{/each}
-						</select>
-					</div>
-
-					<!-- Question Text -->
-					<div class="form-control">
-						<label for="edit-question-text" class="label">
-							<span class="label-text">Question</span>
-						</label>
-						<textarea
-							id="edit-question-text"
-							class="textarea textarea-bordered h-24"
-							bind:value={editingQuestion.question_data.question}
-							placeholder="Enter question text"
-						></textarea>
-					</div>
-					<!-- Options -->
-					<fieldset class="form-control">
-						<legend class="text-base font-medium mb-2">Options</legend>
-
-						{#each editingQuestion.question_data.options as _, i}
-							<div class="flex items-center mb-2">
-								<label for={`edit-option-${i}`} class="sr-only">Option {i + 1}</label>
-								<input
-									id={`edit-option-${i}`}
-									type="text"
-									class="input input-bordered w-full mr-2"
-									bind:value={editingQuestion.question_data.options[i]}
-									placeholder={`Option ${i + 1}`}
-								/>
-								<button
-									class="btn btn-sm btn-error btn-soft"
-									onclick={() => removeOption(i)}
-									type="button"
-									aria-label={`Remove option ${i + 1}`}
-									disabled={editingQuestion.question_data.options.length <= 2}
-								>
-									<Trash2 size="16" />
-								</button>
-							</div>
-						{/each}
-
-						<button class="btn btn-sm btn-outline mt-2 w-full" onclick={addOption} type="button">
-							Add Option
-						</button>
-					</fieldset>
-
-					<!-- Correct Answers -->
-					<fieldset class="form-control">
-						<legend class="text-base font-medium mb-2">Correct Answers</legend>
-
-						{#each editingQuestion.question_data.correct_answers as answer, i}
-							<div class="flex items-center mb-2">
-								<label for={`edit-correct-answer-${i}`} class="sr-only"
-									>Correct answer {i + 1}</label
-								>
-								<select
-									id={`edit-correct-answer-${i}`}
-									class="select select-bordered w-full mr-2"
-									bind:value={editingQuestion.question_data.correct_answers[i]}
-								>
-									<option value="" disabled>Select correct answer</option>
-									{#each ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] as letter}
-										<!-- Only include options that exist -->
-										{#if editingQuestion.question_data.options.some( (opt) => opt.startsWith(`${letter}.`) )}
-											<option value={letter}>{letter}</option>
-										{/if}
-									{/each}
-								</select>
-								<button
-									class="btn btn-sm btn-error btn-soft"
-									onclick={() => removeCorrectAnswer(i)}
-									type="button"
-									aria-label={`Remove correct answer ${i + 1}`}
-									disabled={editingQuestion.question_data.correct_answers.length <= 1}
-								>
-									<Trash2 size="16" />
-								</button>
-							</div>
-						{/each}
-
-						<button
-							class="btn btn-sm btn-outline mt-2 w-full"
-							onclick={addCorrectAnswer}
-							type="button"
-						>
-							Add Correct Answer
-						</button>
-					</fieldset>
-
-					<!-- Explanation -->
-					<div class="form-control">
-						<label for="edit-explanation" class="label">
-							<span class="label-text">Explanation</span>
-						</label>
-						<textarea
-							id="edit-explanation"
-							class="textarea textarea-bordered h-24"
-							bind:value={editingQuestion.question_data.explanation}
-							placeholder="Enter explanation text"
-						></textarea>
-					</div>
-
-					<!-- Image Upload -->
-					<fieldset class="form-control">
-						<legend class="text-base font-medium mb-2">Question Image</legend>
-
-						{#if editImageUrl}
-							<div class="mb-4">
-								<div class="flex items-center mb-2">
-									<img src={editImageUrl} alt="Uploaded preview" class="max-h-56 rounded-lg" />
-									<button
-										class="btn btn-sm btn-error ml-4"
-										onclick={() => (editImageUrl = null)}
-										type="button"
-									>
-										Remove Image
-									</button>
+						</td>
+						<td class="w-24">
+							{#if question.pic_url}
+								<div class="avatar">
+									<div class="w-16 rounded">
+										<img src={question.pic_url} alt="Question" />
+									</div>
 								</div>
-							</div>
-						{/if}
-
-						<div class="flex items-center">
-							<input
-								type="file"
-								accept="image/*"
-								onchange={handleEditImageUpload}
-								class="file-input file-input-bordered w-full"
-								disabled={editImageUploading}
-							/>
-							{#if editImageUploading}
-								<div class="ml-2">
-									<span class="loading loading-spinner text-primary"></span>
+							{:else}
+								<div class="text-gray-400">
+									<Image size={24} />
 								</div>
 							{/if}
-						</div>
-					</fieldset>
-				</div>
+						</td>
+						<td class="max-w-xs">{question.question_data.explanation}</td>
+						<td>
+							{#each question.question_data.correct_answers as answer (answer)}
+								<div class="font-mono">{answer}</div>
+							{/each}
+						</td>
+						<td class="flex flex-row space-x-2">
+							<button
+								class="btn btn-sm btn-soft btn-error rounded-full"
+								onclick={() => {
+									pendingDeleteId = question.id;
+									isDeleteModalOpen = true;
+								}}
+								aria-label="Delete question"
+							>
+								<Trash2 size="16" />
+							</button>
+							<button
+								class="btn btn-sm btn-soft btn-accent rounded-full"
+								onclick={() => openEditModal(question)}
+								aria-label="Edit question"
+							>
+								<Pencil size="16" />
+							</button>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
 
-				{#if saveError}
-					<div class="alert alert-error my-4">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="stroke-current shrink-0 h-6 w-6"
-							fill="none"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-							/>
-						</svg>
-						<span>Error: {saveError}</span>
-					</div>
-				{/if}
-
-				<div class="modal-action">
-					<button
-						class="btn btn-outline"
-						onclick={() => {
-							isEditModalOpen = false;
-							editingQuestion = null;
-						}}
-						disabled={isSaving || editImageUploading}
-						type="button"
-					>
-						Cancel
-					</button>
-					<button
-						class="btn btn-primary"
-						onclick={updateQuestion}
-						disabled={isSaving || editImageUploading}
-						type="button"
-					>
-						{#if isSaving}
-							<span class="loading loading-spinner"></span>
-							Saving...
-						{:else}
-							Save Changes
-						{/if}
-					</button>
-				</div>
-			{/if}
-		</div>
-	</dialog>
+	<!-- Pagination as table footer -->
+	<div class="px-4 py-3 border-t border-base-content/10">
+		<PaginationControls
+			{currentPage}
+			{totalPages}
+			{questionsPerPage}
+			totalEntries={filteredQuestions.length}
+			{goToPage}
+		/>
+	</div>
 </div>
-
-<!-- Questions Table -->
-<div class="overflow-x-auto rounded-box border border-base-content/12 bg-base-100 mx-6 my-4">
-	<table class="table">
-		<thead>
-			<tr>
-				<th>Question</th>
-				<th>Options</th>
-				<th>Image</th>
-				<th>Explanation</th>
-				<th>Correct Answer(s)</th>
-				<th>Actions</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each paginatedQuestions as question}
-				<tr>
-					<td class="max-w-xs truncate">{question.question_data.question}</td>
-					<td class="max-w-xs">
-						{#each question.question_data.options as option}
-							<div class="truncate">{option}</div>
-						{/each}
-					</td>
-					<td class="w-24">
-						{#if question.pic_url}
-							<div class="avatar">
-								<div class="w-16 rounded">
-									<img src={question.pic_url} alt="Question" />
-								</div>
-							</div>
-						{:else}
-							<div class="text-gray-400">
-								<Image size={24} />
-							</div>
-						{/if}
-					</td>
-					<td class="max-w-xs truncate">{question.question_data.explanation}</td>
-
-					<td>
-						{#each question.question_data.correct_answers as answer}
-							<div class="font-mono">{answer}</div>
-						{/each}
-					</td>
-
-					<td class="flex flex-row space-x-2">
-						<button
-							class="btn btn-sm btn-soft btn-error rounded-full"
-							onclick={() => {
-								pendingDeleteId = question.id;
-								isDeleteModalOpen = true;
-							}}
-							aria-label="Delete question"
-						>
-							<Trash2 size="16" />
-						</button>
-
-						<button
-							class="btn btn-sm btn-soft btn-accent rounded-full"
-							onclick={() => openEditModal(question)}
-							aria-label="Edit question"
-						>
-							<Pencil size="16" />
-						</button>
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
-</div>
-
-<!-- Bottom Pagination Controls -->
-<PaginationControls
-	{currentPage}
-	{totalPages}
-	{questionsPerPage}
-	totalEntries={filteredQuestions.length}
-	{goToPage}
-/>

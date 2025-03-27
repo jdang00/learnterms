@@ -41,7 +41,7 @@
 
 			{#key qm.refreshKey}
 				<div class="flex flex-col justify-start mt-4 space-y-4">
-					{#each qm.questionAnswerStates as option, index}
+					{#each qm.questionAnswerStates as option, index (index)}
 						<AnswerOptions {qm} {option} {index} />
 					{/each}
 				</div>

@@ -261,7 +261,7 @@
 		<!-- Question Selection Menu -->
 		<div class="flex flex-row w-full mb-4 overflow-x-auto lg:mb-0 lg:mt-6 space-x-2 relative">
 			{#key qm.flagCount}
-				{#each qm.getCurrentQuestionIds() as id, index}
+				{#each qm.getCurrentQuestionIds() as id, index (id)}
 					<div class="indicator">
 						{#if qm.flags.has(id)}
 							<span
@@ -320,7 +320,7 @@
 
 					{#key qm.refreshKey}
 						<div class="flex flex-col justify-start mt-4 space-y-4">
-							{#each qm.questionAnswerStates as option, index}
+							{#each qm.questionAnswerStates as option, index (index)}
 								<label
 									class="label cursor-pointer rounded-full flex items-center border-2 border-base-300 bg-base-200 transition-colors
         {qm.showSolution ? (option.isCorrect ? 'border-success' : 'border-error') : ''}"

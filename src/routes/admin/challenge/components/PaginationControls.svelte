@@ -50,7 +50,7 @@
 				pageNum = currentPage - 2 + i;
 			}
 			return pageNum;
-		}) as pageNum}
+		}) as pageNum (pageNum)}
 			<button
 				class="join-item btn btn-sm"
 				class:btn-active={pageNum === currentPage}
