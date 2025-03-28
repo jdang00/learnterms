@@ -3,7 +3,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import type { AdminChallengeQuestions } from '$lib/types';
 
-	let { lm = $bindable(), handleEditImageUpload } = $props();
+	let { lm = $bindable() } = $props();
 
 	// Derived chapters list from existing questions.
 	let chapters = $derived.by(() => {
@@ -101,50 +101,6 @@
 									<FileImage size={16} class="text-base-content/60" />
 								</div>
 							</h4>
-
-							{#if lm.editImageUrl}
-								<div class="mb-2 p-2 border border-base-300 rounded-lg bg-base-200/30">
-									<div class="flex flex-col sm:flex-row items-center gap-3">
-										<img
-											src={lm.editImageUrl}
-											alt="Uploaded preview"
-											class="max-h-56 object-contain rounded-md"
-										/>
-										<button
-											class="btn btn-sm btn-error btn-outline gap-1 self-end sm:self-start"
-											onclick={() => (lm.editImageUrl = null)}
-											type="button"
-										>
-											<Trash2 size={16} />
-											<span>Remove</span>
-										</button>
-									</div>
-								</div>
-							{:else}
-								<label
-									class="flex flex-col items-center justify-center h-36 border-2 border-dashed border-base-300 rounded-lg cursor-pointer bg-base-200/30 hover:bg-base-200/60 transition-colors"
-								>
-									<div class="flex flex-col items-center justify-center p-5 text-center">
-										<FileImage size={32} class="text-base-content/60 mb-2" />
-										<p class="text-sm font-medium">Click to upload an image</p>
-										<p class="text-xs text-base-content/60 mt-1">PNG, JPG or GIF (max 5MB)</p>
-									</div>
-									<input
-										type="file"
-										accept="image/*"
-										onchange={handleEditImageUpload}
-										class="hidden"
-										disabled={lm.editImageUploading}
-									/>
-								</label>
-
-								{#if lm.editImageUploading}
-									<div class="flex items-center justify-center mt-2">
-										<span class="loading loading-spinner text-primary"></span>
-										<span class="ml-2 text-sm">Uploading image...</span>
-									</div>
-								{/if}
-							{/if}
 						</div>
 
 						<!-- Answer Options Card -->
