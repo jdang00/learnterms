@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Trash2 } from 'lucide-svelte';
+	import type { AdminChallengeQuestions } from '$lib/types';
 	let {
 		isEditModalOpen = $bindable(false),
 		editingQuestion = $bindable(null),
@@ -15,6 +16,14 @@
 		updateQuestion,
 		addOption
 	} = $props();
+
+	let chapters = $derived.by(() => {
+		return Array.from(new Set(questions.map((q: AdminChallengeQuestions) => q.chapter))).sort(
+			(a, b) => Number(a) - Number(b)
+		);
+	});
+
+	const optionLetters: string[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 </script>
 
 <div>
@@ -43,7 +52,7 @@
 							class="select select-bordered"
 							bind:value={editingQuestion.chapter}
 						>
-							{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter (chapter)}
+							{#each chapters as chapter (chapter)}
 								{#if chapter}
 									<option value={chapter}>{chapter}</option>
 								{/if}
@@ -109,9 +118,9 @@
 									bind:value={editingQuestion.question_data.correct_answers[i]}
 								>
 									<option value="" disabled>Select correct answer</option>
-									{#each ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] as letter (letter)}
+									{#each optionLetters as letter (letter)}
 										<!-- Only include options that exist -->
-										{#if editingQuestion.question_data.options.some( (opt) => opt.startsWith(`${letter}.`) )}
+										{#if editingQuestion.question_data.options.some( (opt: string) => opt.startsWith(`${letter}.`) )}
 											<option value={letter}>{letter}</option>
 										{/if}
 									{/each}

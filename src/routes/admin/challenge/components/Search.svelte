@@ -9,7 +9,6 @@
 		openAddModal
 	} = $props();
 
-	// Compute the chapters using a derived rune
 	let chapters = $derived.by(() => {
 		return Array.from(new Set(questions.map((q: AdminChallengeQuestions) => q.chapter))).sort(
 			(a, b) => Number(a) - Number(b)

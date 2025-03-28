@@ -1,6 +1,7 @@
-<script>
-	import { Trash2, FileImage, AlertCircle, Plus, X } from 'lucide-svelte';
+<script lang="ts">
+	import { Trash2, HelpCircle, FileImage, AlertCircle, Plus, X } from 'lucide-svelte';
 	import { fade, fly } from 'svelte/transition';
+	import type { AdminChallengeQuestions } from '$lib/types';
 
 	let {
 		isAddModalOpen = $bindable(),
@@ -18,8 +19,6 @@
 		addQuestion
 	} = $props();
 
-	$inspect(newQuestion);
-
 	// Ensure at least one correct answer is selected when the form opens
 	$effect(() => {
 		if (
@@ -31,19 +30,11 @@
 		}
 	});
 
-	let letters = ['A.', 'B.', 'C.', 'D.'];
-
-	// This function returns just the part after "A. ", "B. ", etc.
-	function getDisplayText(index) {
-		// If the stored option is "A. Something", this removes "A. ":
-		return newQuestion.question_data.options[index].replace(/^[A-D]\.\s*/, '');
-	}
-
-	// Whenever user changes the text, put the letter back at the start.
-	function handleInput(e, index) {
-		const newText = e.target.value;
-		newQuestion.question_data.options[index] = `${letters[index]} ${newText}`;
-	}
+	let chapters = $derived.by(() => {
+		return Array.from(new Set(questions.map((q: AdminChallengeQuestions) => q.chapter))).sort(
+			(a, b) => Number(a) - Number(b)
+		);
+	});
 </script>
 
 <div>
@@ -79,6 +70,9 @@
 						<div class="card bg-base-200/50 p-6 rounded-lg">
 							<h4 class="text-lg font-medium mb-4 flex items-center">
 								<span>Question Content</span>
+								<div class="tooltip tooltip-right ml-2" data-tip="Enter the main question text">
+									<HelpCircle size={16} class="text-base-content/60" />
+								</div>
 							</h4>
 
 							<div class="space-y-4">
@@ -93,7 +87,7 @@
 										bind:value={newQuestion.chapter}
 									>
 										<option value="" disabled selected>Select chapter</option>
-										{#each Array.from(new Set(questions.map((q) => q.chapter))).sort() as chapter (chapter)}
+										{#each chapters as chapter (chapter)}
 											{#if chapter}
 												<option value={chapter}>{chapter}</option>
 											{/if}
@@ -117,7 +111,7 @@
 
 							<!-- Image Upload -->
 							<div class="form-control mt-5">
-								<label class="label font-medium flex justify-between">
+								<label for="questionImage" class="label font-medium flex justify-between">
 									<span class="label-text">Question Image (Optional)</span>
 								</label>
 
@@ -189,15 +183,12 @@
 									<div class="space-y-3 mt-2">
 										{#each newQuestion.question_data.options, i}
 											<div class="flex items-center gap-3">
-												<div class="badge badge-lg badge-ghost w-8 flex justify-center">
-													{String.fromCharCode(65 + i)}
-												</div>
 												<input
-													id={'new-option-' + i}
+													id={`new-option-${i}`}
 													type="text"
 													class="input input-bordered w-full"
-													value={getDisplayText(i)}
-													oninput={(e) => handleInput(e, i)}
+													bind:value={newQuestion.question_data.options[i]}
+													placeholder="Enter option text"
 												/>
 												<button
 													class="btn btn-sm btn-ghost text-error"

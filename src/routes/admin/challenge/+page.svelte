@@ -9,10 +9,15 @@
 	import Search from './components/Search.svelte';
 	import AddNewQuestionModal from './components/AddNewQuestionModal.svelte';
 	import EditQuestionModal from './components/EditQuestionModal.svelte';
+	import { LogicMap } from './logic.svelte';
 
 	// Retrieve the questions from props.
 	let { data }: { data: PageData } = $props();
 	let questions: AdminChallengeQuestions[] = $state(data.questions);
+
+	console.log(data);
+
+	const lm = new LogicMap(data);
 
 	// Reactive states for search query, chapter filter, and the currently editing question.
 	let searchQuery = $state('');
@@ -147,7 +152,8 @@
 			pic_url: null,
 			question_data: {
 				question: '',
-				options: ['A.', 'B.', 'C.', 'D.'],
+				// Initialize options with letter prefixes + space
+				options: ['A. ', 'B. ', 'C. ', 'D. '],
 				correct_answers: [],
 				explanation: ''
 			}
@@ -170,7 +176,8 @@
 			const nextLetter = String.fromCharCode(
 				'A'.charCodeAt(0) + newQuestion.question_data.options.length
 			);
-			newQuestion.question_data.options = [...newQuestion.question_data.options, `${nextLetter}.`];
+			// Add the space after the dot
+			newQuestion.question_data.options = [...newQuestion.question_data.options, `${nextLetter}. `];
 		}
 	}
 
