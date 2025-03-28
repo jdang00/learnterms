@@ -144,7 +144,7 @@
 		<!-- Modules Grid -->
 		<div class="overflow-y-auto p-6">
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-				{#each filteredChapters as { chapter, originalIndex }, index}
+				{#each filteredChapters as { chapter, originalIndex }, index (originalIndex)}
 					{#if mounted}
 						<div in:fly={{ y: 20, delay: index * 50, duration: 300 }} class="relative">
 							<a

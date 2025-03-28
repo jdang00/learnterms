@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { Trash2, HelpCircle, FileImage, AlertCircle, Plus, X } from 'lucide-svelte';
+	import { Trash2, HelpCircle, AlertCircle, Plus, X } from 'lucide-svelte';
 	import { fade, fly } from 'svelte/transition';
-	import type { AdminChallengeQuestions } from '$lib/types';
+	import type { AdminQuestions } from '$lib/types';
 
-	let { lm = $bindable(), handleNewImageUpload } = $props();
+	let { lm = $bindable() } = $props();
 
 	// Ensure at least one correct answer is selected when the form opens
 	$effect(() => {
@@ -17,7 +17,7 @@
 	});
 
 	let chapters = $derived.by(() => {
-		return Array.from(new Set(lm.questions.map((q: AdminChallengeQuestions) => q.chapter))).sort(
+		return Array.from(new Set(lm.questions.map((q: AdminQuestions) => q.chapter))).sort(
 			(a, b) => Number(a) - Number(b)
 		);
 	});
@@ -93,57 +93,6 @@
 										placeholder="Enter your question here..."
 									></textarea>
 								</div>
-							</div>
-
-							<!-- Image Upload -->
-							<div class="form-control mt-5">
-								<label for="questionImage" class="label font-medium flex justify-between">
-									<span class="label-text">Question Image (Optional)</span>
-								</label>
-
-								{#if lm.newImageUrl}
-									<div class="mb-2 p-2 border border-base-300 rounded-lg bg-base-200/30">
-										<div class="flex flex-col sm:flex-row items-center gap-3">
-											<img
-												src={lm.newImageUrl}
-												alt="Uploaded preview"
-												class="max-h-56 object-contain rounded-md"
-											/>
-											<button
-												class="btn btn-sm btn-error btn-outline gap-1 self-end sm:self-start"
-												onclick={() => (lm.newImageUrl = null)}
-												type="button"
-											>
-												<Trash2 size={16} />
-												<span>Remove</span>
-											</button>
-										</div>
-									</div>
-								{:else}
-									<label
-										class="flex flex-col items-center justify-center h-36 border-2 border-dashed border-base-300 rounded-lg cursor-pointer bg-base-200/30 hover:bg-base-200/60 transition-colors"
-									>
-										<div class="flex flex-col items-center justify-center p-5 text-center">
-											<FileImage size={32} class="text-base-content/60 mb-2" />
-											<p class="text-sm font-medium">Click to upload an image</p>
-											<p class="text-xs text-base-content/60 mt-1">PNG, JPG or GIF (max 5MB)</p>
-										</div>
-										<input
-											type="file"
-											accept="image/*"
-											onchange={handleNewImageUpload}
-											class="hidden"
-											disabled={lm.addImageUploading}
-										/>
-									</label>
-
-									{#if lm.addImageUploading}
-										<div class="flex items-center justify-center mt-2">
-											<span class="loading loading-spinner text-primary"></span>
-											<span class="ml-2 text-sm">Uploading image...</span>
-										</div>
-									{/if}
-								{/if}
 							</div>
 						</div>
 

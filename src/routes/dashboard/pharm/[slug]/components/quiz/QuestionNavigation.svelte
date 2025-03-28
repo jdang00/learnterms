@@ -5,7 +5,7 @@
 <!-- Question Selection Menu -->
 <div class="flex flex-row w-full mb-4 overflow-x-auto lg:mb-0 lg:mt-6 space-x-2 relative">
 	{#key qm.fm.flagCount}
-		{#each qm.getCurrentQuestionIds() as id, index}
+		{#each qm.getCurrentQuestionIds() as id, index (id)}
 			<div class="indicator">
 				{#if qm.fm.flags.has(id)}
 					<span

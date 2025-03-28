@@ -44,7 +44,7 @@
 
 	// Sort chapters and compute overall progress
 	Object.values(usersProgress).forEach((user) => {
-		user.chapters.sort((a, b) => a.chapter_number - b.chapter_number);
+		user.chapters.sort((a, b) => a.chapter_id - b.chapter_id);
 	});
 
 	const users: UserProgress[] = Object.values(usersProgress)
@@ -120,7 +120,7 @@
 									</tr>
 								</thead>
 								<tbody>
-									{#each selectedUser.chapters as chapter}
+									{#each selectedUser.chapters as chapter (chapter)}
 										<tr class="hover:bg-base-200">
 											<td class="font-medium">{chapter.chapter_name}</td>
 											<td class="text-center">{chapter.total_questions}</td>
@@ -186,7 +186,7 @@
 					<div class="text-center py-4 text-base-content/70">No users found</div>
 				{:else}
 					<ul class="overflow-y-auto max-h-[calc(100vh-180px)]">
-						{#each filteredUsers as user}
+						{#each filteredUsers as user (user.user_id)}
 							<li class="mb-2">
 								<button
 									class="flex justify-between items-center w-full rounded-lg py-3 px-4 {selectedUserId ===

@@ -47,6 +47,7 @@ export interface AdminQuestions {
 		correct_answers: string[];
 	};
 	chapter: string;
+	created_at: string;
 }
 
 export interface AdminChallengeQuestions {
@@ -59,6 +60,7 @@ export interface AdminChallengeQuestions {
 	};
 	chapter: string;
 	pic_url: string | null;
+	created_at: string;
 }
 
 export interface Chapter {

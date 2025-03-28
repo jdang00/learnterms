@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const { data: questions, error: questionsError } = await supabase
 		.from('pharmchallenge')
-		.select('id, question_data, chapter, pic_url')
+		.select('id, question_data, chapter, pic_url, created_at')
 		.order('chapter', { ascending: true });
 
 	if (questionsError) {

@@ -93,7 +93,7 @@
 							tabindex="-1"
 							class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
 						>
-							{#each themes as themeOption}
+							{#each themes as themeOption (themeOption)}
 								<li>
 									<button data-set-theme={themeOption} data-act-class="active">
 										{themeOption}
