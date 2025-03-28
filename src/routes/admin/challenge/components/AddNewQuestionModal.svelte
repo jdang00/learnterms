@@ -3,46 +3,32 @@
 	import { fade, fly } from 'svelte/transition';
 	import type { AdminChallengeQuestions } from '$lib/types';
 
-	let {
-		isAddModalOpen = $bindable(),
-		newQuestion = $bindable(),
-		questions,
-		removeNewOption,
-		addNewOption,
-		removeNewCorrectAnswer,
-		addNewCorrectAnswer,
-		newImageUrl = $bindable(),
-		handleNewImageUpload,
-		addImageUploading,
-		addError,
-		isAddingSaving,
-		addQuestion
-	} = $props();
+	let { lm = $bindable(), handleNewImageUpload } = $props();
 
 	// Ensure at least one correct answer is selected when the form opens
 	$effect(() => {
 		if (
-			newQuestion &&
-			(!newQuestion.question_data.correct_answers ||
-				newQuestion.question_data.correct_answers.length === 0)
+			lm.newQuestion &&
+			(!lm.newQuestion.question_data.correct_answers ||
+				lm.newQuestion.question_data.correct_answers.length === 0)
 		) {
-			newQuestion.question_data.correct_answers = ['A'];
+			lm.newQuestion.question_data.correct_answers = ['A'];
 		}
 	});
 
 	let chapters = $derived.by(() => {
-		return Array.from(new Set(questions.map((q: AdminChallengeQuestions) => q.chapter))).sort(
+		return Array.from(new Set(lm.questions.map((q: AdminChallengeQuestions) => q.chapter))).sort(
 			(a, b) => Number(a) - Number(b)
 		);
 	});
 </script>
 
 <div>
-	{#if isAddModalOpen}
+	{#if lm.isAddModalOpen}
 		<div class="modal-backdrop" transition:fade={{ duration: 150 }}></div>
 	{/if}
 
-	<dialog class="modal max-w-full" class:modal-open={isAddModalOpen}>
+	<dialog class="modal max-w-full" class:modal-open={lm.isAddModalOpen}>
 		<div
 			class="modal-box w-11/12 max-w-5xl p-0 overflow-hidden bg-base-100 shadow-lg rounded-lg"
 			transition:fly={{ y: 20, duration: 200 }}
@@ -54,8 +40,8 @@
 				<button
 					class="btn btn-circle btn-ghost"
 					onclick={() => {
-						isAddModalOpen = false;
-						newQuestion = null;
+						lm.isAddModalOpen = false;
+						lm.newQuestion = null;
 					}}
 					aria-label="Close modal"
 				>
@@ -63,7 +49,7 @@
 				</button>
 			</div>
 
-			{#if newQuestion}
+			{#if lm.newQuestion}
 				<div class="p-6 overflow-y-auto max-h-[70vh]">
 					<div class="grid grid-cols-1 gap-8">
 						<!-- Question Content -->
@@ -84,7 +70,7 @@
 									<select
 										id="new-chapter"
 										class="select select-bordered w-full"
-										bind:value={newQuestion.chapter}
+										bind:value={lm.newQuestion.chapter}
 									>
 										<option value="" disabled selected>Select chapter</option>
 										{#each chapters as chapter (chapter)}
@@ -103,7 +89,7 @@
 									<textarea
 										id="new-question-text"
 										class="textarea textarea-bordered h-28 w-full"
-										bind:value={newQuestion.question_data.question}
+										bind:value={lm.newQuestion.question_data.question}
 										placeholder="Enter your question here..."
 									></textarea>
 								</div>
@@ -115,17 +101,17 @@
 									<span class="label-text">Question Image (Optional)</span>
 								</label>
 
-								{#if newImageUrl}
+								{#if lm.newImageUrl}
 									<div class="mb-2 p-2 border border-base-300 rounded-lg bg-base-200/30">
 										<div class="flex flex-col sm:flex-row items-center gap-3">
 											<img
-												src={newImageUrl}
+												src={lm.newImageUrl}
 												alt="Uploaded preview"
 												class="max-h-56 object-contain rounded-md"
 											/>
 											<button
 												class="btn btn-sm btn-error btn-outline gap-1 self-end sm:self-start"
-												onclick={() => (newImageUrl = null)}
+												onclick={() => (lm.newImageUrl = null)}
 												type="button"
 											>
 												<Trash2 size={16} />
@@ -147,11 +133,11 @@
 											accept="image/*"
 											onchange={handleNewImageUpload}
 											class="hidden"
-											disabled={addImageUploading}
+											disabled={lm.addImageUploading}
 										/>
 									</label>
 
-									{#if addImageUploading}
+									{#if lm.addImageUploading}
 										<div class="flex items-center justify-center mt-2">
 											<span class="loading loading-spinner text-primary"></span>
 											<span class="ml-2 text-sm">Uploading image...</span>
@@ -172,7 +158,7 @@
 										<span class="label-text">Options</span>
 										<button
 											class="btn btn-xs btn-primary gap-1"
-											onclick={addNewOption}
+											onclick={() => lm.addNewOption()}
 											type="button"
 										>
 											<Plus size={14} />
@@ -181,21 +167,21 @@
 									</label>
 
 									<div class="space-y-3 mt-2">
-										{#each newQuestion.question_data.options, i}
+										{#each lm.newQuestion.question_data.options, i}
 											<div class="flex items-center gap-3">
 												<input
 													id={`new-option-${i}`}
 													type="text"
 													class="input input-bordered w-full"
-													bind:value={newQuestion.question_data.options[i]}
+													bind:value={lm.newQuestion.question_data.options[i]}
 													placeholder="Enter option text"
 												/>
 												<button
 													class="btn btn-sm btn-ghost text-error"
-													onclick={() => removeNewOption(i)}
+													onclick={() => lm.removeNewOption(i)}
 													type="button"
 													aria-label={`Remove option ${i + 1}`}
-													disabled={newQuestion.question_data.options.length <= 2}
+													disabled={lm.newQuestion.question_data.options.length <= 2}
 												>
 													<Trash2 size={18} />
 												</button>
@@ -210,7 +196,7 @@
 										<span class="label-text">Correct Answers</span>
 										<button
 											class="btn btn-xs btn-primary gap-1"
-											onclick={addNewCorrectAnswer}
+											onclick={() => lm.addNewCorrectAnswer()}
 											type="button"
 										>
 											<Plus size={14} />
@@ -219,27 +205,27 @@
 									</label>
 
 									<div class="space-y-3 mt-2">
-										{#each newQuestion.question_data.correct_answers, i}
+										{#each lm.newQuestion.question_data.correct_answers, i}
 											<div class="flex items-center gap-3">
 												<div class="badge badge-lg badge-success w-8 flex justify-center">✓</div>
 												<select
 													id={`new-correct-answer-${i}`}
 													class="select select-bordered w-full"
-													bind:value={newQuestion.question_data.correct_answers[i]}
+													bind:value={lm.newQuestion.question_data.correct_answers[i]}
 												>
 													<option value="" disabled>Select correct answer</option>
 													{#each ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] as letter, letterIdx (letterIdx)}
-														{#if letterIdx < newQuestion.question_data.options.length}
+														{#if letterIdx < lm.newQuestion.question_data.options.length}
 															<option value={letter}>{letter}</option>
 														{/if}
 													{/each}
 												</select>
 												<button
 													class="btn btn-sm btn-ghost text-error"
-													onclick={() => removeNewCorrectAnswer(i)}
+													onclick={() => lm.removeNewCorrectAnswer(i)}
 													type="button"
 													aria-label={`Remove correct answer ${i + 1}`}
-													disabled={newQuestion.question_data.correct_answers.length <= 1}
+													disabled={lm.newQuestion.question_data.correct_answers.length <= 1}
 												>
 													<Trash2 size={18} />
 												</button>
@@ -261,17 +247,17 @@
 								<textarea
 									id="new-explanation"
 									class="textarea textarea-bordered h-36 w-full"
-									bind:value={newQuestion.question_data.explanation}
+									bind:value={lm.newQuestion.question_data.explanation}
 									placeholder="Explain why the correct answer(s) are correct..."
 								></textarea>
 							</div>
 						</div>
 					</div>
 
-					{#if addError}
+					{#if lm.addError}
 						<div class="alert alert-error mt-6 flex items-center gap-2">
 							<AlertCircle size={20} />
-							<span>Error: {addError}</span>
+							<span>Error: {lm.addError}</span>
 						</div>
 					{/if}
 				</div>
@@ -282,21 +268,21 @@
 					<button
 						class="btn btn-ghost"
 						onclick={() => {
-							isAddModalOpen = false;
-							newQuestion = null;
+							lm.isAddModalOpen = false;
+							lm.newQuestion = null;
 						}}
-						disabled={isAddingSaving || addImageUploading}
+						disabled={lm.isAddingSaving || lm.addImageUploading}
 						type="button"
 					>
 						Cancel
 					</button>
 					<button
 						class="btn btn-primary"
-						onclick={addQuestion}
-						disabled={isAddingSaving || addImageUploading}
+						onclick={() => lm.addQuestion()}
+						disabled={lm.isAddingSaving || lm.addImageUploading}
 						type="button"
 					>
-						{#if isAddingSaving}
+						{#if lm.isAddingSaving}
 							<span class="loading loading-spinner"></span>
 							<span>Adding Question...</span>
 						{:else}

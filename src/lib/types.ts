@@ -59,6 +59,7 @@ export interface AdminChallengeQuestions {
 	};
 	chapter: string;
 	pic_url: string | null;
+	created_at: string;
 }
 
 export interface Chapter {

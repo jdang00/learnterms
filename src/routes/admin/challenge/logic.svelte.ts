@@ -3,7 +3,7 @@ import type { AdminChallengeQuestions } from '$lib/types';
 import supabase from '$lib/supabaseClient';
 
 export class LogicMap {
-	questions: AdminChallengeQuestions[] = [];
+	questions: AdminChallengeQuestions[] = $state([]);
 
 	constructor(data: PageData) {
 		this.questions = data.questions;
@@ -29,22 +29,41 @@ export class LogicMap {
 	isAddingSaving = $state(false);
 	addError = $state<string | null>(null);
 	addImageUploading = $state(false);
+	filteredQuestions = $derived(
+		(() => {
+			// First filter the questions
+			let filtered = this.questions.filter(
+				(q) =>
+					q.question_data.question.toLowerCase().includes(this.searchQuery.toLowerCase()) &&
+					(this.selectedChapter === '' || q.chapter === this.selectedChapter)
+			);
 
+			// Then sort if a sort field is specified
+			if (this.sortField) {
+				filtered = [...filtered].sort((a, b) => {
+					if (this.sortField === 'created_at') {
+						const dateA = new Date(a.created_at).getTime();
+						const dateB = new Date(b.created_at).getTime();
+						return this.sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+					}
+					return 0; // Default case, no sorting
+				});
+			}
+
+			return filtered;
+		})()
+	);
 	// Image states
 	newImageUrl = $state<string | null>(null);
 	editImageUrl = $state<string | null>(null);
+	totalEntries = $derived(this.filteredQuestions.length);
 
 	// Pagination states
 	currentPage = $state(1);
 	questionsPerPage = $state(10);
 
-	filteredQuestions = $derived(
-		this.questions.filter(
-			(q) =>
-				q.question_data.question.toLowerCase().includes(this.searchQuery.toLowerCase()) &&
-				(this.selectedChapter === '' || q.chapter === this.selectedChapter)
-		)
-	);
+	sortField = $state<string>('');
+	sortDirection = $state<'asc' | 'desc'>('desc');
 
 	totalPages = $derived(Math.ceil(this.filteredQuestions.length / this.questionsPerPage));
 	paginatedQuestions = $derived(
@@ -53,6 +72,26 @@ export class LogicMap {
 			this.currentPage * this.questionsPerPage
 		)
 	);
+
+	toggleSort(field: string) {
+		// If clicking the same field, toggle direction
+		if (this.sortField === field) {
+			this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+		} else {
+			// New field, set it and default to descending (newest first)
+			this.sortField = field;
+			this.sortDirection = 'desc';
+		}
+
+		// Reset to first page when sorting changes
+		this.currentPage = 1;
+	}
+
+	clearSort() {
+		this.sortField = '';
+		this.sortDirection = 'desc';
+		this.currentPage = 1;
+	}
 
 	// Go to a specific page
 	goToPage(page: number) {
@@ -75,8 +114,9 @@ export class LogicMap {
 		// Create a new empty question template
 		this.newQuestion = {
 			id: '',
-			chapter: this.selectedChapter || (this.questions.length > 0 ? this.questions[0].chapter : ''),
+			chapter: '',
 			pic_url: null,
+			created_at: new Date().toISOString(),
 			question_data: {
 				question: '',
 				// Initialize options with letter prefixes + space
@@ -222,7 +262,7 @@ export class LogicMap {
 				q.id === this.editingQuestion?.id
 					? {
 							...q,
-							question_data: { ...this.editingQuestion.question_data },
+							question_data: JSON.parse(JSON.stringify(this.editingQuestion.question_data)),
 							chapter: this.editingQuestion.chapter,
 							pic_url: this.editImageUrl
 						}
