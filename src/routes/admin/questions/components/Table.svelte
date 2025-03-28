@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Image, Trash2, Pencil } from 'lucide-svelte';
+	import { Trash2, Pencil } from 'lucide-svelte';
 	import PaginationControls from './PaginationControls.svelte';
 	let { lm = $bindable() } = $props();
 </script>
@@ -12,7 +12,6 @@
 				<tr>
 					<th>Question</th>
 					<th>Options</th>
-					<th>Image</th>
 					<th>Explanation</th>
 					<th>Correct Answer(s)</th>
 					<th>Actions</th>
@@ -27,19 +26,7 @@
 								<div class="truncate">{option}</div>
 							{/each}
 						</td>
-						<td class="w-24">
-							{#if question.pic_url}
-								<div class="avatar">
-									<div class="w-16 rounded">
-										<img src={question.pic_url} alt="Question" />
-									</div>
-								</div>
-							{:else}
-								<div class="text-gray-400">
-									<Image size={24} />
-								</div>
-							{/if}
-						</td>
+
 						<td class="max-w-xs">{question.question_data.explanation}</td>
 						<td>
 							{#each question.question_data.correct_answers as answer (answer)}
