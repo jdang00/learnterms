@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { onDestroy, tick } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { QuestionMap } from './states.svelte';
 	import { useClerkContext } from 'svelte-clerk';
 	import Sidebar from './components/sidebar/Sidebar.svelte';
@@ -14,10 +14,12 @@
 
 	// Props and initial state
 	let { data }: { data: PageData } = $props();
-	const qm = new QuestionMap(data);
+	let qm = $state(new QuestionMap(data));
 
-	qm.initializeState();
-	qm.restorefromDB();
+	onMount(() => {
+		qm.initializeState();
+		qm.restorefromDB();
+	});
 
 	// Handles keyboard navigation and shortcuts
 	function handleKeydown(event: KeyboardEvent) {
@@ -126,14 +128,14 @@
 </script>
 
 <div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
-	<Sidebar {qm} {admin} />
-	<MobileInfo {qm} />
+	<Sidebar bind:qm {admin} />
+	<MobileInfo bind:qm />
 	<div class="container mx-auto lg:w-3/4 flex flex-col items-center lg:min-h-screen">
-		<QuestionNavigation {qm} />
+		<QuestionNavigation bind:qm />
 		<div class="hidden sm:block border-t border-base-300 w-full my-6"></div>
-		<QuizContent {qm} />
+		<QuizContent bind:qm />
 	</div>
-	<MobileMenu {qm} />
+	<MobileMenu bind:qm />
 </div>
 
 <style>

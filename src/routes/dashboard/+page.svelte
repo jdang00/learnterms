@@ -9,7 +9,7 @@
 	const user = $derived(ctx.user);
 	let { data }: { data: PageData } = $props();
 	let chapters: Chapter[] = data.chapters;
-	const enabledThreshold = 8;
+	const enabledThreshold = 10;
 	let activeFilter = $state('all');
 
 	// For animation sequence

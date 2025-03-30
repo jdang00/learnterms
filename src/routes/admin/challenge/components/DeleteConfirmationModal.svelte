@@ -5,15 +5,19 @@
 <div>
 	<dialog class="modal max-w-full p-4" class:modal-open={lm.isDeleteModalOpen}>
 		<div class="modal-box">
-			<form method="dialog">
-				<button
-					class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-					onclick={() => {
+			<button
+				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+				onclick={() => {
+					lm.isDeleteModalOpen = false;
+					lm.pendingDeleteId = '';
+				}}
+				onkeydown={(e) => {
+					if (e.key === 'Escape') {
 						lm.isDeleteModalOpen = false;
 						lm.pendingDeleteId = '';
-					}}>✕</button
-				>
-			</form>
+					}
+				}}>✕</button
+			>
 			<h3 class="text-lg font-bold">Delete Question</h3>
 			{#if lm.pendingDeleteId}
 				<p class="py-4">Are you sure you want to delete this question?</p>
