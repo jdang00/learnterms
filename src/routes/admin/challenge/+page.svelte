@@ -7,7 +7,7 @@
 	import AddNewQuestionModal from './components/AddNewQuestionModal.svelte';
 	import EditQuestionModal from './components/EditQuestionModal.svelte';
 	import { LogicMap } from './logic.svelte';
-	import DeleteConfirmationModel from './components/DeleteConfirmationModel.svelte';
+	import DeleteConfirmationModal from './components/DeleteConfirmationModal.svelte';
 	import SortOptions from './components/SortOptions.svelte';
 
 	// Retrieve the questions from props.
@@ -115,7 +115,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<DeleteConfirmationModel bind:lm />
+<DeleteConfirmationModal bind:lm />
 
 <AddNewQuestionModal bind:lm {handleNewImageUpload} />
 <EditQuestionModal bind:lm {handleEditImageUpload} />

@@ -1,7 +1,7 @@
 <script>
 	import { Eye } from 'lucide-svelte';
 
-	let { qm, option, index } = $props();
+	let { qm = $bindable(), option, index } = $props();
 </script>
 
 <label

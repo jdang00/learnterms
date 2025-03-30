@@ -1,5 +1,5 @@
 <script>
-	let { qm } = $props();
+	let { qm = $bindable() } = $props();
 	import { ArrowDownNarrowWide, Flag, BookmarkCheck } from 'lucide-svelte';
 	import AnswerOptions from './AnswerOptions.svelte';
 	import ActionButtons from './ActionButtons.svelte';
@@ -25,7 +25,7 @@
 						class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
 					>
 						<li>
-							<button onclick={qm.toggleSortByFlagged}
+							<button onclick={() => qm.toggleSortByFlagged()}
 								><Flag size="16" />{qm.fm.showFlagged ? 'Show All' : 'Show Flagged'}</button
 							>
 						</li>
@@ -42,7 +42,7 @@
 			{#key qm.refreshKey}
 				<div class="flex flex-col justify-start mt-4 space-y-4">
 					{#each qm.questionAnswerStates as option, index (index)}
-						<AnswerOptions {qm} {option} {index} />
+						<AnswerOptions bind:qm {option} {index} />
 					{/each}
 				</div>
 			{/key}

@@ -1,5 +1,5 @@
 <script>
-	let { qm } = $props();
+	let { qm = $bindable() } = $props();
 	import {
 		Eye,
 		ArrowLeft,

@@ -1,5 +1,5 @@
 <script>
-	let { qm } = $props();
+	let { qm = $bindable() } = $props();
 	import { Flag, Shuffle, ArrowRight, ArrowLeft } from 'lucide-svelte';
 </script>
 
