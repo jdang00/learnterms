@@ -1,5 +1,4 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { GoogleGenAI, Type } from '@google/genai';
 import { GEMINI_API_KEY } from '$env/static/private';
 
 // --- Type Definitions ---
@@ -26,6 +25,8 @@ export const POST: RequestHandler = async ({ request }) => {
 				{ status: 400 }
 			);
 		}
+
+		const { GoogleGenAI, Type } = await import('@google/genai');
 
 		// 2. Initialize the GoogleGenAI client
 		const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
