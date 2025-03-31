@@ -44,11 +44,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 	}
 
-	// Fetch all records from the 'pharmchallenge' table
 	const { data: pharmchallengeData, error: pharmchallengeError } = await supabase
 		.from('pharmchallenge')
 		.select('*')
-		.eq('chapter', 910)
+		.in('chapter', [9, 10])
 		.order('created_at', { ascending: true });
 
 	if (pharmchallengeError) {

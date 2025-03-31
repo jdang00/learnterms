@@ -138,9 +138,7 @@
 		</div>
 
 		<div class="mx-8 mt-4">
-			<p class="font-bold text-sm tracking-wide text-secondary mb-2">
-				CHAPTER {qm.chapterData.chapter}
-			</p>
+			<p class="font-bold text-sm tracking-wide text-secondary mb-2">CHAPTERS 9 AND 10</p>
 			<h1 class="text-3xl font-bold">{qm.chapterData.name}</h1>
 			<p class="text-base-content mt-2">{qm.chapterData.desc}</p>
 
