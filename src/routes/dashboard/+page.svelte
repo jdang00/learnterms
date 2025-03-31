@@ -77,7 +77,7 @@
 		<div class="p-6 flex flex-col gap-4 border-b border-base-300">
 			<a href="/dashboard/challenge" class="btn btn-primary w-full">
 				<Medal size={18} />
-				Chapter 7 + 8 Challenge Questions
+				Chapter 9 + 10 Challenge Questions
 			</a>
 		</div>
 
