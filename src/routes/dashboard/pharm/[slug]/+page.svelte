@@ -127,13 +127,29 @@
 	});
 </script>
 
-<div class="flex flex-row max-h-screen lg:h-screen lg:border-t border-b border-base-300">
+<div class="flex flex-col lg:flex-row h-full min-h-screen max-h-screen">
 	<Sidebar bind:qm {admin} />
 	<MobileInfo bind:qm />
-	<div class="container mx-auto lg:w-3/4 flex flex-col items-center lg:min-h-screen">
+	<div
+		class="
+      w-full lg:w-3/4
+      flex flex-col
+      bg-transparent lg:bg-base-100/25
+      lg:backdrop-blur-lg
+      lg:rounded-xl
+      border-0 lg:border lg:border-base-300
+      lg:shadow-lg
+      p-2 sm:p-3 lg:p-8
+      mx-0 lg:mx-6
+      my-0
+      max-w-full lg:max-w-none
+      overflow-hidden
+      flex-grow
+    "
+	>
 		<QuestionNavigation bind:qm />
-		<div class="hidden sm:block border-t border-base-300 w-full my-6"></div>
-		<QuizContent bind:qm />
+		<div class="hidden sm:block border-t border-base-300 w-full my-2 lg:my-4"></div>
+		<QuizContent bind:qm class="flex-grow flex flex-col" />
 	</div>
 	<MobileMenu bind:qm />
 </div>
