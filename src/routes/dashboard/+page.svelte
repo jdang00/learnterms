@@ -4,15 +4,34 @@
 	import { useClerkContext } from 'svelte-clerk';
 	import { ArrowRight, BookOpen, Lock, Medal } from 'lucide-svelte';
 	import { fade, fly } from 'svelte/transition';
+	import { PUBLIC_CHAPTER_THRESHOLD } from '$env/static/public';
 
 	const ctx = useClerkContext();
 	const user = $derived(ctx.user);
 	let { data }: { data: PageData } = $props();
 	let chapters: Chapter[] = data.chapters;
-	const enabledThreshold = 10;
+
+	let enabledThreshold: number = $state(0);
+
+	if (PUBLIC_CHAPTER_THRESHOLD) {
+		const parsedThreshold = parseInt(PUBLIC_CHAPTER_THRESHOLD, 10);
+		if (!isNaN(parsedThreshold)) {
+			enabledThreshold = parsedThreshold;
+		} else {
+			console.error(
+				'Invalid PUBLIC_CHAPTER_THRESHOLD:',
+				PUBLIC_CHAPTER_THRESHOLD,
+				'Defaulting to 0.'
+			);
+			enabledThreshold = 0;
+		}
+	} else {
+		console.warn('PUBLIC_CHAPTER_THRESHOLD is not set.  Defaulting to 0.');
+		enabledThreshold = 0;
+	}
+
 	let activeFilter = $state('all');
 
-	// For animation sequence
 	let mounted = $state(false);
 	$effect(() => {
 		mounted = true;
@@ -77,7 +96,7 @@
 		<div class="p-6 flex flex-col gap-4 border-b border-base-300">
 			<a href="/dashboard/challenge" class="btn btn-primary w-full">
 				<Medal size={18} />
-				Chapter 9 + 10 Challenge Questions
+				Chapter 11 Challenge Questions
 			</a>
 		</div>
 

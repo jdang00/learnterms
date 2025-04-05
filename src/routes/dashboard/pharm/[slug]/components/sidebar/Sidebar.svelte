@@ -7,7 +7,8 @@
 	class="
     hidden lg:block w-1/4
     overflow-y-auto
-    h-full
+    h-screen
+    sticky top-0
     bg-base-100
     border border-base-300
     rounded-xl

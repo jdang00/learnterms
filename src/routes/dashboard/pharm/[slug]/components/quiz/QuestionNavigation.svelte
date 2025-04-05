@@ -16,7 +16,7 @@
 			<div class="indicator">
 				{#if qm.fm.flags.has(id)}
 					<span
-						class="indicator-item indicator-start badge badge-warning badge-xs !right-10 translate-x-1/4 translate-y-1/4 z-[1]"
+						class="indicator-item indicator-start badge badge-warning badge-xs translate-x-[-1/4] translate-y-[-1/4] z-[1]"
 					></span>
 				{/if}
 				<button
