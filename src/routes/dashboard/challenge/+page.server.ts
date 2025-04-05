@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const { data: pharmchallengeData, error: pharmchallengeError } = await supabase
 		.from('pharmchallenge')
 		.select('*')
-		.in('chapter', [9, 10])
+		.in('chapter', [11])
 		.order('created_at', { ascending: true });
 
 	if (pharmchallengeError) {

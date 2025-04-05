@@ -9,6 +9,18 @@ export interface Option {
 	isEliminated: boolean;
 }
 
+export type Ticket = {
+	ticketid: string;
+	customername: string;
+	customeremail: string | null;
+	subject: string;
+	description: string | null;
+	dateopened: string;
+	dateclosed: string | null;
+	status: string | null;
+	resolution: string | null;
+};
+
 export interface ExtendedOption extends Option {
 	isCorrect?: boolean;
 }
