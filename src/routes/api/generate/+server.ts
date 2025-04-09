@@ -42,7 +42,7 @@ Instructions:
 2. Include questions that test recall, understanding, application, and critical thinking.
 3. Ensure at least 2-3 questions require selecting multiple correct answers.
 4. Prioritize questions about ocular relevance if present in the material.
-5. Do NOT reference the provided material in questions (e.g., "according to the text").
+5. Do NOT reference the provided material in questions (e.g., "according to the text", "the material states").
 6. Format options exactly as: "A. Option text", "B. Option text", etc.
 7. Do not indicate "select all that apply" or "select all that are true".
 
@@ -54,8 +54,6 @@ ${material}
 		const result = await ai.models.generateContent({
 			model: 'gemini-2.5-pro-exp-03-25',
 			contents: [{ role: 'user', parts: [{ text: prompt }] }],
-			// Note: The documentation example uses 'config', but the type might be 'generationConfig'
-			// Let's stick to 'generationConfig' for consistency with types, unless 'config' works
 			config: {
 				temperature: 1,
 				maxOutputTokens: 8192,

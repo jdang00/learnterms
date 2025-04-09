@@ -2,6 +2,12 @@ export interface authLog {
 	loggedIn: boolean;
 	userName: string;
 }
+
+export type NewQuestionInput = Omit<
+	AdminChallengeQuestions,
+	'id' | 'created_at' | 'chapter' | 'pic_url'
+>;
+
 export interface Option {
 	text: string;
 	isSelected: boolean;
