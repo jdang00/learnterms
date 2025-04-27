@@ -8,7 +8,7 @@ import { SECRET_USER_TABLE } from '$env/static/private';
 import type { Question, Chapter, QuestionProgress } from '$lib/types';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const { userId } = locals.auth;
+	const { userId } = locals.auth();
 
 	if (!userId) {
 		return redirect(307, '/sign-in');

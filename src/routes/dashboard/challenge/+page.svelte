@@ -144,7 +144,7 @@
 			</div>
 
 			<div class="mx-8 mt-4">
-				<p class="font-bold text-sm tracking-wide text-secondary mb-2">CHAPTER 12</p>
+				<p class="font-bold text-sm tracking-wide text-secondary mb-2">FINAL QUIZ!</p>
 				<h1 class="text-3xl font-bold">{qm.chapterData.name}</h1>
 				<p class="text-base-content mt-2">{qm.chapterData.desc}</p>
 
@@ -225,9 +225,7 @@
 				</a>
 
 				<div class="flex flex-row gap-2 justify-center grow">
-					<p class="font-bold tracking-wide text-secondary hidden md:block">
-						CHAPTER {qm.chapterData.chapter}
-					</p>
+					<p class="font-bold tracking-wide text-secondary hidden md:block">FINAL QUIZ!</p>
 					<p class="hidden md:block">·</p>
 					<h1 class="font-bold">{qm.chapterData.name}</h1>
 				</div>

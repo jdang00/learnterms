@@ -4,7 +4,7 @@ import { clerkClient } from 'svelte-clerk/server';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// Ensure authentication is required for this route
-	const { userId } = locals.auth;
+	const { userId } = locals.auth();
 
 	// Early return if no user is authenticated
 	if (!userId) {
