@@ -96,7 +96,7 @@
 		<div class="p-6 flex flex-col gap-4 border-b border-base-300">
 			<a href="/dashboard/challenge" class="btn btn-primary w-full">
 				<Medal size={18} />
-				Chapter 12 Challenge Questions
+				Final Quiz Challenge Questions!
 			</a>
 		</div>
 

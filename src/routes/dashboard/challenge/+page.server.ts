@@ -8,7 +8,7 @@ import type { ChallengeQuestion, Chapter, QuestionProgress } from '$lib/types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// Extract userId from locals.auth
-	const { userId } = locals.auth;
+	const { userId } = locals.auth();
 
 	// Redirect to sign-in if no userId is present
 	if (!userId) {
@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const { data: pharmchallengeData, error: pharmchallengeError } = await supabase
 		.from('pharmchallenge')
 		.select('*')
-		.in('chapter', [12])
+		.in('chapter', [5, 13, 14, 15])
 		.order('created_at', { ascending: true });
 
 	if (pharmchallengeError) {

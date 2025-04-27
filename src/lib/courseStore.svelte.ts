@@ -145,24 +145,28 @@ const pharmacology: Course = {
 			id: crypto.randomUUID(),
 			name: 'Quizzes',
 			weightType: 'points',
-			weightValue: 160,
+			weightValue: 173, // ← updated total possible
+
 			assessments: [
-				{ id: crypto.randomUUID(), score: null, total: 17 },
-				{ id: crypto.randomUUID(), score: null, total: 18 },
-				{ id: crypto.randomUUID(), score: null, total: 21 },
-				{ id: crypto.randomUUID(), score: null, total: 18 },
-				{ id: crypto.randomUUID(), score: null, total: 13 },
-				{ id: crypto.randomUUID(), score: null, total: 15 },
-				{ id: crypto.randomUUID(), score: null, total: 19 },
-				{ id: crypto.randomUUID(), score: null, total: 15 },
-				{ id: crypto.randomUUID(), score: null, total: 24 }
+				{ id: crypto.randomUUID(), score: null, total: 17 }, // Quiz 1
+				{ id: crypto.randomUUID(), score: null, total: 18 }, // Quiz 2
+				{ id: crypto.randomUUID(), score: null, total: 21 }, // Quiz 3
+				{ id: crypto.randomUUID(), score: null, total: 18 }, // Quiz 4
+				{ id: crypto.randomUUID(), score: null, total: 13 }, // Quiz 5
+				{ id: crypto.randomUUID(), score: null, total: 15 }, // Quiz 6
+				{ id: crypto.randomUUID(), score: null, total: 19 }, // Quiz 7
+				{ id: crypto.randomUUID(), score: null, total: 15 }, // Quiz 8
+				{ id: crypto.randomUUID(), score: null, total: 24 }, // Quiz 9
+				{ id: crypto.randomUUID(), score: null, total: 13 } // Quiz 10
 			]
 		}
+		// …other categories…
 	],
 	gradingScale: [
-		{ letter: 'A', min: 89.5 },
-		{ letter: 'B', min: 79.5 },
-		{ letter: 'C', min: 69.5 },
+		// 173 total possible → 89.5% of 173 ≈ 155; 79.5% ≈ 138; 69.5% ≈ 120
+		{ letter: 'A', min: 155 },
+		{ letter: 'B', min: 138 },
+		{ letter: 'C', min: 120 },
 		{ letter: 'F', min: 0 }
 	]
 };
