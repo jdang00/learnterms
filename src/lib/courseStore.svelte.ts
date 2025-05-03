@@ -76,7 +76,8 @@ const ocularAnatomy: Course = {
 				{ id: crypto.randomUUID(), score: null, total: 15 },
 				{ id: crypto.randomUUID(), score: null, total: 10 },
 				{ id: crypto.randomUUID(), score: null, total: 18 },
-				{ id: crypto.randomUUID(), score: null, total: 14 }
+				{ id: crypto.randomUUID(), score: null, total: 14 },
+				{ id: crypto.randomUUID(), score: null, total: 17 }
 			]
 		},
 		{
@@ -157,7 +158,7 @@ const pharmacology: Course = {
 				{ id: crypto.randomUUID(), score: null, total: 19 }, // Quiz 7
 				{ id: crypto.randomUUID(), score: null, total: 15 }, // Quiz 8
 				{ id: crypto.randomUUID(), score: null, total: 24 }, // Quiz 9
-				{ id: crypto.randomUUID(), score: null, total: 13 } // Quiz 10
+				{ id: crypto.randomUUID(), score: null, total: 18 } // Quiz 10
 			]
 		}
 		// …other categories…
