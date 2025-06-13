@@ -1,9 +1,13 @@
 <script lang="ts">
 	import { Chat } from '@ai-sdk/svelte';
+	import { onMount, afterUpdate } from 'svelte';
 
 	export let scheduleData: any[] = [];
 	export let isOpen = false;
 	export let onToggle: ((isOpen: boolean) => void) | undefined = undefined;
+	
+	let messagesContainer: HTMLDivElement;
+	let shouldAutoScroll = true;
 	
 	// Initialize the chat with OM information using the Chat class
 	const chat = new Chat({
@@ -33,6 +37,30 @@
 			.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
 			.replace(/\*(.*?)\*/g, '<em>$1</em>')
 			.replace(/\n/g, '<br>');
+	}
+
+	function scrollToBottom() {
+		if (messagesContainer && shouldAutoScroll) {
+			messagesContainer.scrollTop = messagesContainer.scrollHeight;
+		}
+	}
+
+	function handleScroll() {
+		if (messagesContainer) {
+			const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
+			// Check if user is near the bottom (within 50px)
+			shouldAutoScroll = scrollTop + clientHeight >= scrollHeight - 50;
+		}
+	}
+
+	// Auto-scroll when messages change or during streaming
+	afterUpdate(() => {
+		scrollToBottom();
+	});
+
+	// Scroll to bottom when chat opens
+	$: if (isOpen) {
+		setTimeout(scrollToBottom, 100);
 	}
 </script>
 
@@ -73,10 +101,14 @@
 		</div>
 
 		<!-- Messages -->
-		<div class="flex-1 overflow-y-auto p-4 space-y-3 bg-base-50">
+		<div 
+			bind:this={messagesContainer}
+			class="flex-1 overflow-y-auto p-4 space-y-3 bg-base-50 scroll-smooth"
+			onscroll={handleScroll}
+		>
 			{#each chat.messages as message (message.id)}
 				<div class="chat chat-{message.role === 'user' ? 'end' : 'start'}">
-					<div class="chat-bubble chat-bubble-{message.role === 'user' ? 'primary' : ''} text-sm">
+					<div class="chat-bubble {message.role === 'user' ? 'chat-bubble-primary' : ''} text-sm">
 						{#each message.parts as part}
 							{#if part.type === 'text'}
 								{@html formatMessage(part.text)}
