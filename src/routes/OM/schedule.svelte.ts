@@ -96,7 +96,7 @@ export class OMScheduleLogic {
 			event: "🚀 AOA Experience - Opening Session",
 			notes:
 				'Theme: "Ignite Your Vision – Experience Optometry". High-energy kickoff with AOA and WCO leadership, future-focused remarks, recognition of national awardees and AOSA student leaders, Keynote by Dr. Richard Edlow. Includes interactive seat messages + donation QR codes. Seamless transition into the Opening Reception at Eye Care Square.',
-			required: false,
+			required: true,
 			category: "session",
 		},
 		{
