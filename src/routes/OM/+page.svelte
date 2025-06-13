@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { OMScheduleLogic } from './schedule.svelte';
+	import OMChatbot from '$lib/components/OMChatbot.svelte';
 
 	// Initialize the schedule logic
 	const scheduleLogic = new OMScheduleLogic();
+	
+	// Chatbot state
+	let chatbotOpen = false;
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300">
@@ -297,7 +301,18 @@
 			<p class="text-lg font-semibold mb-2">
 				🎯 Pro Tip: Use multiple filters to find exactly what you need - like "Required" + "Wednesday" for required events on Wednesday!
 			</p>
-			<p class="text-sm text-base-content/70">Built with ❤️ by your AOSA Trustee-Elect</p>
+			<p class="text-sm text-base-content/70 mb-4">Built with ❤️ by your AOSA Trustee-Elect</p>
+			<div class="alert alert-info inline-block">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+				<span>Need help finding something? Try the OM Assistant chatbot! 👓💬</span>
+			</div>
 		</div>
 	</footer>
 </div>
+
+<!-- OM Chatbot -->
+<OMChatbot 
+	scheduleData={scheduleLogic.schedule} 
+	bind:isOpen={chatbotOpen}
+	onToggle={(isOpen) => chatbotOpen = isOpen}
+/>
