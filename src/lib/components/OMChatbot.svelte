@@ -5,10 +5,10 @@
 	export let scheduleData: any[] = [];
 	export let isOpen = false;
 	export let onToggle: ((isOpen: boolean) => void) | undefined = undefined;
-	
+
 	let messagesContainer: HTMLDivElement;
 	let shouldAutoScroll = true;
-	
+
 	// Initialize the chat with OM information using the Chat class
 	const chat = new Chat({
 		api: '/api/chat',
@@ -21,7 +21,8 @@
 			{
 				id: '1',
 				role: 'assistant',
-				content: "Hi! I'm here to help you with everything about Optometry's Meeting 2025! 👓✨\n\nI can help you:\n• Find specific events and sessions\n• Check event requirements and timing\n• Get information about speakers and topics\n• Navigate the schedule\n• Answer questions about the meeting\n\nWhat would you like to know about OM 2025?"
+				content:
+					"Hi! I'm here to help you with everything about Optometry's Meeting 2025! 👓✨\n\nI can help you:\n• Find specific events and sessions\n• Check event requirements and timing\n• Get information about speakers and topics\n• Navigate the schedule\n• Answer questions about the meeting\n\nWhat would you like to know about OM 2025?"
 			}
 		]
 	});
@@ -73,7 +74,12 @@
 			aria-label="Open OM Assistant"
 		>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+				></path>
 			</svg>
 		</button>
 	{/if}
@@ -81,11 +87,14 @@
 
 <!-- Chat Window -->
 {#if isOpen}
-	<div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-80 sm:w-96 h-[28rem] sm:h-[32rem] bg-base-100 rounded-2xl shadow-2xl border border-base-200 flex flex-col">
+	<div
+		class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-80 sm:w-96 h-[28rem] sm:h-[32rem] bg-base-100 rounded-2xl shadow-2xl border border-base-200 flex flex-col"
+	>
 		<!-- Header -->
-		<div class="bg-primary text-primary-content rounded-t-2xl p-4 flex items-center justify-between">
+		<div
+			class="bg-primary text-primary-content rounded-t-2xl p-4 flex items-center justify-between"
+		>
 			<div class="flex items-center gap-3">
-				
 				<div>
 					<h3 class="font-bold text-sm">LearnTerms Assistant</h3>
 					<p class="text-xs opacity-90">Optometry's Meeting 2025</p>
@@ -101,7 +110,7 @@
 		</div>
 
 		<!-- Messages -->
-		<div 
+		<div
 			bind:this={messagesContainer}
 			class="flex-1 overflow-y-auto p-4 space-y-3 bg-base-50 scroll-smooth"
 			onscroll={handleScroll}
@@ -117,7 +126,7 @@
 					</div>
 				</div>
 			{/each}
-			
+
 			{#if chat.status === 'streaming' || chat.status === 'submitted'}
 				<div class="chat chat-start">
 					<div class="chat-bubble">
@@ -146,7 +155,12 @@
 					aria-label="Send message"
 				>
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+						></path>
 					</svg>
 				</button>
 			</div>
@@ -158,4 +172,4 @@
 	.bg-base-50 {
 		background-color: hsl(var(--b1) / 0.5);
 	}
-</style> 
+</style>
