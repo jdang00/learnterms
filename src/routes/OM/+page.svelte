@@ -4,7 +4,7 @@
 
 	// Initialize the schedule logic
 	const scheduleLogic = new OMScheduleLogic();
-	
+
 	// Chatbot state
 	let chatbotOpen = false;
 </script>
@@ -14,7 +14,7 @@
 	<div class="bg-primary text-primary-content">
 		<div class="max-w-7xl mx-auto px-4 py-6 text-center">
 			<h1 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-4">👓 Optometry's Meeting 2025</h1>
-			
+
 			<div class="stats stats-vertical lg:stats-horizontal bg-base-100 text-primary shadow-lg mt-6">
 				<div class="stat">
 					<div class="stat-title">Total Events</div>
@@ -23,7 +23,9 @@
 				</div>
 				<div class="stat">
 					<div class="stat-title">Required Events</div>
-					<div class="stat-value text-xl md:text-2xl text-success">{scheduleLogic.requiredCount}</div>
+					<div class="stat-value text-xl md:text-2xl text-success">
+						{scheduleLogic.requiredCount}
+					</div>
 					<div class="stat-desc">Must attend</div>
 				</div>
 				<div class="stat">
@@ -33,9 +35,42 @@
 				</div>
 				<div class="stat">
 					<div class="stat-title">Active Filters</div>
-					<div class="stat-value text-xl md:text-2xl text-warning">{scheduleLogic.activeFiltersCount}</div>
+					<div class="stat-value text-xl md:text-2xl text-warning">
+						{scheduleLogic.activeFiltersCount}
+					</div>
 					<div class="stat-desc">Currently applied</div>
 				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- AI Assistant Notice -->
+	<div class=" text-info-content">
+		<div class="max-w-7xl mx-auto px-4 py-4">
+			<div class="flex flex-col md:flex-row items-center justify-between gap-4">
+				<div class="flex items-center gap-3">
+					<div class="text-2xl">🤖</div>
+					<div>
+						<h3 class="font-bold text-lg">Need Help Finding Something?</h3>
+						<p class="text-sm opacity-90">
+							Ask our OM Assistant about events, requirements, locations, and more!
+						</p>
+					</div>
+				</div>
+				<button
+					class="btn btn-outline btn-sm text-info-content border-info-content hover:bg-info-content hover:text-info gap-2"
+					on:click={() => (chatbotOpen = true)}
+				>
+					💬 Open Assistant
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+						></path>
+					</svg>
+				</button>
 			</div>
 		</div>
 	</div>
@@ -54,7 +89,10 @@
 							bind:value={scheduleLogic.searchTerm}
 						/>
 						{#if scheduleLogic.searchTerm}
-							<button class="btn btn-square btn-outline" on:click={() => scheduleLogic.clearSearch()}>
+							<button
+								class="btn btn-square btn-outline"
+								on:click={() => scheduleLogic.clearSearch()}
+							>
 								✕
 							</button>
 						{/if}
@@ -63,9 +101,7 @@
 
 				<!-- Requirement Filter Section -->
 				<div class="mb-6">
-					<h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
-						🎯 Event Requirements
-					</h3>
+					<h3 class="text-lg font-semibold mb-3 flex items-center gap-2">🎯 Event Requirements</h3>
 					<div class="flex flex-wrap gap-2">
 						<button
 							class="btn btn-sm"
@@ -123,17 +159,20 @@
 				<div class="mb-6">
 					<button
 						class="flex items-center gap-2 text-lg font-semibold mb-3 hover:text-primary transition-colors"
-						on:click={() => scheduleLogic.showCategoryFilters = !scheduleLogic.showCategoryFilters}
+						on:click={() =>
+							(scheduleLogic.showCategoryFilters = !scheduleLogic.showCategoryFilters)}
 					>
 						🏷️ Filter by Category
 						{#if scheduleLogic.filters.selectedCategories.size > 0}
-							<div class="badge badge-info">{scheduleLogic.filters.selectedCategories.size} selected</div>
+							<div class="badge badge-info">
+								{scheduleLogic.filters.selectedCategories.size} selected
+							</div>
 						{/if}
 						<span class="text-sm ml-auto">
 							{scheduleLogic.showCategoryFilters ? '▼' : '▶'}
 						</span>
 					</button>
-					
+
 					{#if scheduleLogic.showCategoryFilters}
 						<div class="flex flex-wrap gap-2 animate-in slide-in-from-top-2 duration-200">
 							{#each scheduleLogic.uniqueCategories as category (category)}
@@ -154,7 +193,9 @@
 				</div>
 
 				<!-- Control Bar -->
-				<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-4 border-t border-base-200">
+				<div
+					class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-4 border-t border-base-200"
+				>
 					<div class="flex flex-wrap items-center gap-4">
 						<div class="text-sm text-base-content/70">
 							Showing {scheduleLogic.filteredSchedule.length} of {scheduleLogic.schedule.length} events
@@ -169,7 +210,7 @@
 							</button>
 						{/if}
 					</div>
-					
+
 					<div class="btn-group">
 						<button
 							class="btn btn-sm"
@@ -196,10 +237,7 @@
 				<div class="text-6xl mb-4">🤷‍♀️</div>
 				<h3 class="text-2xl font-bold mb-2">No events found</h3>
 				<p class="text-base-content/70 mb-4">Try adjusting your search or filter criteria</p>
-				<button
-					class="btn btn-primary"
-					on:click={() => scheduleLogic.clearAllFilters()}
-				>
+				<button class="btn btn-primary" on:click={() => scheduleLogic.clearAllFilters()}>
 					Clear All Filters
 				</button>
 			</div>
@@ -238,9 +276,27 @@
 										{item.event}
 									</h3>
 									{#if item.notes}
-										<p class="text-base-content/80 text-sm leading-relaxed">
+										<p class="text-base-content/80 text-sm leading-relaxed mb-3">
 											{item.notes}
 										</p>
+									{/if}
+									{#if item.location}
+										<a
+											href={item.location}
+											target="_blank"
+											rel="noopener noreferrer"
+											class="btn btn-sm btn-outline btn-primary gap-2"
+										>
+											📍 View Location
+											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+												></path>
+											</svg>
+										</a>
 									{/if}
 								</div>
 							</div>
@@ -258,6 +314,7 @@
 								<th class="w-1/6">📅 Day & Time</th>
 								<th class="w-2/6">🎉 Event</th>
 								<th class="w-2/6">📝 Notes</th>
+								<th class="w-1/6 text-center">📍 Location</th>
 								<th class="w-1/6 text-center">Status</th>
 							</tr>
 						</thead>
@@ -280,8 +337,24 @@
 										{item.notes || ''}
 									</td>
 									<td class="text-center">
+										{#if item.location}
+											<a
+												href={item.location}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="btn btn-xs btn-outline btn-primary"
+											>
+												📍 Map
+											</a>
+										{:else}
+											<span class="text-xs text-base-content/50">—</span>
+										{/if}
+									</td>
+									<td class="text-center">
 										{#if item.required}
-											<div class="badge badge-success">✅ <span class="text-xs hidden md:block">Required</span></div>
+											<div class="badge badge-success">
+												✅ <span class="text-xs hidden md:block">Required</span>
+											</div>
 										{:else}
 											<div class="badge badge-ghost">Optional</div>
 										{/if}
@@ -299,20 +372,20 @@
 	<footer class="bg-base-300 text-center py-8 mt-16">
 		<div class="max-w-4xl mx-auto px-4">
 			<p class="text-lg font-semibold mb-2">
-				🎯 Pro Tip: Use multiple filters to find exactly what you need - like "Required" + "Wednesday" for required events on Wednesday!
+				🎯 Pro Tip: Use multiple filters to find exactly what you need - like "Required" +
+				"Wednesday" for required events on Wednesday!
 			</p>
 			<p class="text-sm text-base-content/70 mb-4">Built with ❤️ by your AOSA Trustee-Elect</p>
-			<div class="alert alert-info inline-block">
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-				<span>Need help finding something? Try the OM Assistant chatbot! 👓💬</span>
-			</div>
+			<p class="text-xs text-base-content/60">
+				Questions about events or requirements? Use the OM Assistant above! 🤖💬
+			</p>
 		</div>
 	</footer>
 </div>
 
 <!-- OM Chatbot -->
-<OMChatbot 
-	scheduleData={scheduleLogic.schedule} 
+<OMChatbot
+	scheduleData={scheduleLogic.schedule}
 	bind:isOpen={chatbotOpen}
-	onToggle={(isOpen) => chatbotOpen = isOpen}
+	onToggle={(isOpen) => (chatbotOpen = isOpen)}
 />
