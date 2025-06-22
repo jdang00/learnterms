@@ -6,6 +6,7 @@ export interface ScheduleItem {
 	required: boolean;
 	category: string;
 	location?: string;
+	room?: string; // Added optional room property
 }
 
 export interface FilterState {
@@ -36,7 +37,7 @@ export class OMScheduleLogic {
 			required: false,
 			category: 'networking',
 			location:
-				'https://maps.apple.com/place?address=1001%20Marquette%20Ave%20S,%20Minneapolis,%20MN%2055403,%20United%20States&auid=3797316434688806953&ll=44.969406,-93.273743&lsp=9902&q=Hilton%20Minneapolis'
+				'https://maps.apple.com/place?address=1001%20Marquette%20Avenue%20South%0AMinneapolis,%20MN%2055403%0AUnited%20States&coordinate=44.972518,-93.272767&name=Hilton%20Minneapolis&place-id=I5E1CE9E014CF04FE&map=explore'
 		},
 		{
 			day: 'Wednesday, June 25',
@@ -57,7 +58,7 @@ export class OMScheduleLogic {
 			required: false,
 			category: 'session',
 			location:
-				'https://maps.apple.com/place?address=1001%20Marquette%20Ave%20S,%20Minneapolis,%20MN%2055403,%20United%20States&auid=3797316434688806953&ll=44.969406,-93.273743&lsp=9902&q=Hilton%20Minneapolis'
+				'https://maps.apple.com/place?address=1001%20Marquette%20Avenue%20South%0AMinneapolis,%20MN%2055403%0AUnited%20States&coordinate=44.972518,-93.272767&name=Hilton%20Minneapolis&place-id=I5E1CE9E014CF04FE&map=explore'
 		},
 		{
 			day: 'Wednesday, June 25',
@@ -122,18 +123,20 @@ export class OMScheduleLogic {
 			required: true,
 			category: 'session',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Ballroom AB' // Added room
 		},
 		{
 			day: 'Wednesday, June 25',
 			time: '7:00 pm - 9:00 pm',
 			event: '🎉 Eye Care Square: Exhibit Hall Opening Reception',
 			notes:
-				'Held immediately following the Opening General Session, this reception provides the first opportunity to explore the Exhibit Hall. It aims to leverage a fully engaged, on-site audience to drive early hall traffic and meaningful networking from day one, setting a dynamic and engaging tone for the full exhibit experience. The Exhibit Hall is located in Halls B, C, D, and E of the Minneapolis Convention Center.',
+				'Held immediately following the Opening General Session, this reception provides the first opportunity to explore the Exhibit Hall. It aims to leverage a fully engaged, on-site audience to drive early hall traffic and meaningful networking from day one, setting a dynamic and engaging tone for the full exhibit experience. The Exhibit Hall is located in Halls B, C, D, and E of the Minneapolis Convention Center. Light food and beverages included. Visit the AOSA Student Lounge to receive a voucher for Friday lunch (for all students) and hang out in the AOSA Lounge!',
 			required: false,
 			category: 'exhibit',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Exhibit Hall' // Added room
 		},
 		{
 			day: 'Wednesday, June 25',
@@ -144,7 +147,8 @@ export class OMScheduleLogic {
 			required: false,
 			category: 'session',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Exhibit Hall'
 		},
 		{
 			day: 'Thursday, June 26',
@@ -176,7 +180,8 @@ export class OMScheduleLogic {
 			required: false,
 			category: 'meeting',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Ballroom AB'
 		},
 		{
 			day: 'Thursday, June 26',
@@ -187,18 +192,20 @@ export class OMScheduleLogic {
 			required: false,
 			category: 'exhibit',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Exhibit Hall'
 		},
 		{
 			day: 'Thursday, June 26',
-			time: '10:30 a.m.',
+			time: '10:30 am - 12:00 pm', // Updated time
 			event: '👓 EssilorLuxottica EyeFWD: Student Session',
 			notes:
-				'A dedicated session for students, presented by EssilorLuxottica EyeFWD. Specific content details to be confirmed, but often focuses on career development and industry insights.',
+				'A dedicated session for students, presented by EssilorLuxottica EyeFWD. Attendees must attend to receive an Optometry Student Bowl (OSB) wristband. Specific content details to be confirmed, but often focuses on career development and industry insights.', // Updated notes
 			required: true,
 			category: 'session',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Auditorium' // Added room
 		},
 		{
 			day: 'Thursday, June 26',
@@ -209,7 +216,8 @@ export class OMScheduleLogic {
 			required: false,
 			category: 'session',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Exhibit Hall'
 		},
 		{
 			day: 'Thursday, June 26',
@@ -244,14 +252,15 @@ export class OMScheduleLogic {
 		},
 		{
 			day: 'Thursday, June 26',
-			time: '1:00 p.m.',
+			time: '1:00 pm - 2:30 pm', // Updated time
 			event: '🤝 Affiliate Connections',
 			notes:
-				'A dedicated time and space for AOA affiliates to connect and network. This event is located within the Eye Care Square Exhibit Hall and runs until 2:30 pm.',
+				'A dedicated time and space for AOA affiliates to connect and network. This event is located within the Eye Care Square Exhibit Hall. Open to students and affiliates.', // Updated notes
 			required: true,
 			category: 'networking',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Exhibit Hall'
 		},
 		{
 			day: 'Thursday, June 26',
@@ -273,15 +282,15 @@ export class OMScheduleLogic {
 			required: false,
 			category: 'networking',
 			location:
-				'https://maps.apple.com/place?address=1001%20Marquette%20Ave%20S,%20Minneapolis,%20MN%2055403,%20United%20States&auid=3797316434688806953&ll=44.969406,-93.273743&lsp=9902&q=Hilton%20Minneapolis'
+				'https://maps.apple.com/place?address=1001%20Marquette%20Avenue%20South%0AMinneapolis,%20MN%2055403%0AUnited%20States&coordinate=44.972518,-93.272767&name=Hilton%20Minneapolis&place-id=I5E1CE9E014CF04FE&map=explore'
 		},
 		{
 			day: 'Thursday, June 26',
-			time: '7:00 pm - 11:45 pm', // Updated time to match slideshow
+			time: '7:00 pm - 11:45 pm',
 			event:
-				'🏆 AOSA Optometry Student Bowl™ XXXIV powered by EssilorLuxottica and EssilorLuxottica Live! Student Reception', // Updated event name to match slideshow
+				'🏆 AOSA Optometry Student Bowl™ XXXIV powered by EssilorLuxottica and EssilorLuxottica Live! Student Reception',
 			notes:
-				'This highly anticipated competition features optometry students battling it out in a fast-paced quiz format. It is powered by EssilorLuxottica and includes a larger student reception, "EssilorLuxottica Live!". The event provides both entertainment and significant networking opportunities for students. Held at The Fillmore.',
+				'This highly anticipated competition features optometry students battling it out in a fast-paced quiz format. It is powered by EssilorLuxottica and includes a larger student reception, "EssilorLuxottica Live!". The event provides both entertainment and significant networking opportunities for students. Held at The Fillmore. Doors open at 7:00 pm, with some attendees arriving from 6:30 pm. Please note transportation details: 1.7 miles, 6-minute drive, 31-minute walk.', // Updated notes
 			required: true,
 			category: 'competition',
 			location:
@@ -300,7 +309,7 @@ export class OMScheduleLogic {
 		},
 		{
 			day: 'Friday, June 27',
-			time: '6:30 am - 6:15 am', // Acknowledge the likely typo, keeping as-is from slide
+			time: '6:30 am - 6:15 am',
 			event: '📸 ALL STAFF PICTURE',
 			notes:
 				'A scheduled photo opportunity for all staff members. (Note: The end time of 6:15 am suggests a very quick session or a possible typo in the source material, but it is listed as such.)',
@@ -346,11 +355,12 @@ export class OMScheduleLogic {
 			time: '9:00 am - 4:30 pm',
 			event: '👀 Eye Care Square: Exhibit Hall',
 			notes:
-				'The Exhibit Hall is open for its final full day. This is a great opportunity for last-minute visits to exhibitors, the Innovation Wellness booth, Pickleball court, "Eye Deserve More" booth, and Aesthetics Avenue hub. Located in Halls B, C, D, and E of the Minneapolis Convention Center.',
+				'The Exhibit Hall is open for its final full day. This is a great opportunity for last-minute visits to exhibitors, the Innovation Wellness booth, Pickleball court, "Eye Deserve More" booth, and Aesthetics Avenue hub. Located in Halls B, C, D, and E of the Minneapolis Convention Center. Please remember to thank the sponsors who support AOSA and this meeting!', // Updated notes
 			required: false,
 			category: 'exhibit',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Exhibit Hall'
 		},
 		{
 			day: 'Friday, June 27',
@@ -361,7 +371,8 @@ export class OMScheduleLogic {
 			required: false,
 			category: 'session',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Exhibit Hall'
 		},
 		{
 			day: 'Friday, June 27',
@@ -375,14 +386,15 @@ export class OMScheduleLogic {
 		},
 		{
 			day: 'Friday, June 27',
-			time: '1:00 pm - 3:00 pm', // Extended to 3:00 pm based on slideshow
-			event: '🧑‍⚕️ AOA+ Residency and Graduate Education Summit & Career Fair', // Combined and refined name
+			time: '1:00 pm - 3:00 pm',
+			event: '🧑‍⚕️ AOA+ Residency and Graduate Education Summit & Career Fair',
 			notes:
 				'This summit focuses on residency and graduate education opportunities, and runs concurrently with the Career Fair, offering attendees the chance to connect with potential employers and residency programs. Both events are located within the Eye Care Square Exhibit Hall.',
 			required: true,
 			category: 'career',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Exhibit Hall; Booth 1653' // Added room
 		},
 		{
 			day: 'Friday, June 27',
@@ -393,7 +405,8 @@ export class OMScheduleLogic {
 			required: false,
 			category: 'ceremony',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+			room: 'Ballroom AB'
 		},
 		{
 			day: 'Friday, June 27',
@@ -408,14 +421,14 @@ export class OMScheduleLogic {
 		},
 		{
 			day: 'Friday, June 27',
-			time: '7:00 pm - 10:00 pm', // Updated time to match slideshow
+			time: '7:00 pm - 10:00 pm',
 			event: '🎉 Celebration of Optometry',
 			notes:
-				'An unforgettable evening event held at Orchestra Hall & Peavey Plaza, supported by BAUSCH + LOMB. This dynamic indoor/outdoor experience in the heart of downtown Minneapolis features mainstage entertainment by Chase & The Ovations, performing Prince favorites. It offers a prime opportunity to relax, connect, and celebrate a successful week together. Attire is Smart Casual. Note: A separate, exclusive VIP Experience is also available at Orchestra Hall during these hours for VIP guests (see next entry).',
+				'An unforgettable evening event held at Orchestra Hall & Peavey Plaza, supported by BAUSCH + LOMB. This dynamic indoor/outdoor experience in the heart of downtown Minneapolis features mainstage entertainment by Chase & The Ovations, performing Prince favorites. It offers a prime opportunity to relax, connect, and celebrate a successful week together. Attire is Smart Casual. Note: A separate, exclusive VIP Experience is also available at Orchestra Hall during these hours for VIP guests. This event is a 6-minute walk from the Convention Center. Please ensure you purchased a ticket for this event during registration. You will NOT be admitted without a ticket. If you need to add this event, visit the OM registration desk BEFORE Friday!', // Updated notes
 			required: true,
 			category: 'celebration',
 			location:
-				'https://maps.apple.com/place?address=1111%20Nicollet%20Mall,%20Minneapolis,%20MN%2055403,%20United%20States&coordinate=44.976135,-93.276932&name=Minneapolis%20Orchestra%20Hall&place-id=I8A4F9FA29A91CD9A&map=explore'
+				'https://maps.apple.com/place?address=1111%20Nicollet%20Mall,%20Minneapolis,%20MN%20%2055403,%20United%20States&coordinate=44.972225,-93.274961&name=Orchestra%20Hall&place-id=IF712022ABF1649C4&map=explore'
 		},
 		{
 			day: 'Friday, June 27',
@@ -442,7 +455,7 @@ export class OMScheduleLogic {
 			time: '6:00 am - 8:00 am',
 			event: '🏃 Optometry Cares® The AOA Foundation Run/Walk | Crosby Farms Regional Park',
 			notes:
-				'Join this charitable run/walk event to support Optometry Cares® The AOA Foundation. Held at Crosby Farms Regional Park, it offers a great way to start the day with activity and philanthropy.',
+				'Join this charitable run/walk event to support Optometry Cares® The AOA Foundation. Held at Crosby Farms Regional Park, it offers a great way to start the day with activity and philanthropy. This is a ticketed event; please register in advance. You can also register and donate without participating in the run/walk.', // Updated notes
 			required: false,
 			category: 'activity',
 			location:
@@ -478,7 +491,8 @@ export class OMScheduleLogic {
 			required: false,
 			category: 'meeting',
 			location:
-				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore'
+				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
+				room: 'Ballroom AB'
 		},
 		{
 			day: 'Saturday, June 28',
@@ -540,7 +554,8 @@ export class OMScheduleLogic {
 				item.event.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
 				(item.notes || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
 				item.time.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-				item.day.toLowerCase().includes(this.searchTerm.toLowerCase());
+				item.day.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+				(item.room || '').toLowerCase().includes(this.searchTerm.toLowerCase()); // Added room to search filter
 
 			// Requirement filter
 			const matchesRequirement =
