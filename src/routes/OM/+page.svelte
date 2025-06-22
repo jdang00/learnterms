@@ -91,19 +91,32 @@
 	<div class=" text-info-content">
 		<div class="max-w-7xl mx-auto px-4 py-2 md:py-4">
 			<!-- Mobile: Compact -->
-			<div class="md:hidden flex items-center justify-between gap-3">
-				<div class="flex items-center gap-2">
-					<div class="text-lg">🤖</div>
-					<div>
-						<h3 class="font-bold text-base-content text-sm">Need Help?</h3>
+			<div class="md:hidden">
+				<div class="flex items-center justify-between gap-3 mb-3">
+					<div class="flex items-center gap-2">
+						<div class="text-lg">🤖</div>
+						<div>
+							<h3 class="font-bold text-base-content text-sm">Need Help?</h3>
+						</div>
 					</div>
+					<button
+						class="btn btn-outline btn-xs text-base-content border-info-content hover:bg-info-content hover:text-info"
+						onclick={() => (chatbotOpen = true)}
+					>
+						💬 Assistant
+					</button>
 				</div>
-				<button
-					class="btn btn-outline btn-xs text-base-content border-info-content hover:bg-info-content hover:text-info"
-					onclick={() => (chatbotOpen = true)}
-				>
-					💬 Assistant
-				</button>
+				<!-- Mobile Pocket Guide Link - Made Bigger and More Prominent -->
+				<div class="text-center">
+					<a 
+						href="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrCCDUTGQ5NLDH2JPj7Ax9lkcOvyXtgazbrw0f" 
+						target="_blank" 
+						rel="noopener noreferrer"
+						class="btn btn-primary btn-sm gap-2 font-semibold"
+					>
+						📱 AOSA Official Pocket Guide
+					</a>
+				</div>
 			</div>
 
 			<!-- Desktop: Full -->
@@ -113,24 +126,35 @@
 					<div>
 						<h3 class="font-bold text-base-content text-lg">Need Help Finding Something?</h3>
 						<p class="text-sm text-base-content opacity-90">
-							Ask our OM Assistant about events, requirements, locations, and more!
+							Ask our OM Assistant, or check out the AOSA student schedule for more information!
 						</p>
 					</div>
 				</div>
-				<button
-					class="btn btn-outline text-base-content  gap-2"
-					onclick={() => (chatbotOpen = true)}
-				>
-					💬 Open Assistant
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-						></path>
-					</svg>
-				</button>
+				<div class="flex items-center gap-3">
+					<!-- Desktop Pocket Guide Link - Made Bigger and More Prominent -->
+					<a 
+						href="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrCCDUTGQ5NLDH2JPj7Ax9lkcOvyXtgazbrw0f" 
+						target="_blank" 
+						rel="noopener noreferrer"
+						class="btn btn-primary gap-2 font-semibold"
+					>
+						📱 AOSA Official Pocket Guide
+					</a>
+					<button
+						class="btn btn-outline text-base-content  gap-2"
+						onclick={() => (chatbotOpen = true)}
+					>
+						💬 Open Assistant
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+							></path>
+						</svg>
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
