@@ -27,11 +27,11 @@
 	function getRoomImage(room: string): string {
 		const roomLower = room.toLowerCase();
 		if (roomLower.includes('ballroom ab')) {
-			return '/src/routes/OM/images/BallroomAB.png';
+			return '/images/BallroomAB.png';
 		} else if (roomLower.includes('exhibit hall')) {
-			return '/src/routes/OM/images/Exhbit Halls.png';
+			return '/images/Exhbit Halls.png';
 		} else if (roomLower.includes('auditorium')) {
-			return '/src/routes/OM/images/Auditorium.png';
+			return '/images/Auditorium.png';
 		}
 		return ''; // No image available
 	}
@@ -585,7 +585,7 @@
 				<h4 class="font-semibold text-primary mb-4 text-lg">Convention Center Floor</h4>
 				<div class="bg-base-200 p-4 rounded-lg">
 					<img 
-						src="/src/routes/OM/images/Floor One.png" 
+						src="/images/Floor One.png" 
 						alt="Floor 1 layout"
 						class="w-full h-auto rounded-lg shadow-md max-h-96 object-contain"
 					/>
