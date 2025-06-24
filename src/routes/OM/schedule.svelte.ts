@@ -263,8 +263,7 @@ export class OMScheduleLogic {
 			day: 'Thursday, June 26',
 			time: '1:00 pm - 3:00 pm',
 			event: '💡 Paraoptometric Idea Exchange',
-			notes:
-				'A collaborative session for paraoptometrics to share ideas and best practices. Specific location within the Convention Center to be announced.',
+			notes: 'A collaborative session for paraoptometrics to share ideas and best practices.',
 			required: false,
 			category: 'session',
 			location:
@@ -287,7 +286,7 @@ export class OMScheduleLogic {
 			event:
 				'🏆 AOSA Optometry Student Bowl™ XXXIV powered by EssilorLuxottica and EssilorLuxottica Live! Student Reception',
 			notes:
-				'This highly anticipated competition features optometry students battling it out in a fast-paced quiz format. It is powered by EssilorLuxottica and includes a larger student reception, "EssilorLuxottica Live!". The event provides both entertainment and significant networking opportunities for students. Held at The Fillmore. Doors open at 7:00 pm, with some attendees arriving from 6:30 pm. Please note transportation details: 1.7 miles, 6-minute drive, 31-minute walk.', // Updated notes
+				'This highly anticipated competition features optometry students battling it out in a fast-paced quiz format. It is powered by EssilorLuxottica and includes a larger student reception, "EssilorLuxottica Live!". The event provides both entertainment and significant networking opportunities for students. Held at The Fillmore. Doors open at 7:00 pm. Please note transportation details: 1.7 miles, 6-minute drive, 31-minute walk.', // Updated notes
 			required: true,
 			category: 'competition',
 			location:
