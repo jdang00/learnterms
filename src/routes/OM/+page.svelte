@@ -4,21 +4,19 @@
 
 	// Initialize the schedule logic
 	const scheduleLogic = new OMScheduleLogic();
-	
+
 	// Set default filter to required events for mobile-first experience
 	scheduleLogic.setRequirementFilter('required');
 
 	// Chatbot state
-	let chatbotOpen = false;
+	let chatbotOpen = $state(false);
 
 	// Modal state for room information
-	let selectedRoom = '';
-	let selectedEvent = '';
+	let selectedRoom = $state('');
 
 	// Function to open room modal
-	function openRoomModal(room: string, event: string) {
+	function openRoomModal(room: string) {
 		selectedRoom = room;
-		selectedEvent = event;
 		const modal = document.getElementById('room_modal') as HTMLDialogElement;
 		modal?.showModal();
 	}
@@ -44,7 +42,9 @@
 			<h1 class="text-2xl md:text-4xl lg:text-6xl font-bold mb-3 md:mb-4">👓 OM 2025</h1>
 
 			<!-- Mobile: Compact Stats -->
-			<div class="md:hidden grid grid-cols-2 gap-2 bg-base-100 text-primary rounded-lg p-3 shadow-lg">
+			<div
+				class="md:hidden grid grid-cols-2 gap-2 bg-base-100 text-primary rounded-lg p-3 shadow-lg"
+			>
 				<div class="text-center">
 					<div class="text-lg font-bold text-success">{scheduleLogic.requiredCount}</div>
 					<div class="text-xs">Required</div>
@@ -57,10 +57,14 @@
 
 			<!-- Desktop: Full Stats -->
 			<div class="hidden md:block">
-				<div class="stats stats-vertical lg:stats-horizontal bg-base-100 text-primary shadow-lg mt-6">
+				<div
+					class="stats stats-vertical lg:stats-horizontal bg-base-100 text-primary shadow-lg mt-6"
+				>
 					<div class="stat">
 						<div class="stat-title">Total Events</div>
-						<div class="stat-value text-xl md:text-2xl">{scheduleLogic.filteredSchedule.length}</div>
+						<div class="stat-value text-xl md:text-2xl">
+							{scheduleLogic.filteredSchedule.length}
+						</div>
 						<div class="stat-desc">Available to view</div>
 					</div>
 					<div class="stat">
@@ -108,9 +112,9 @@
 				</div>
 				<!-- Mobile Pocket Guide Link - Made Bigger and More Prominent -->
 				<div class="text-center">
-					<a 
-						href="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrCCDUTGQ5NLDH2JPj7Ax9lkcOvyXtgazbrw0f" 
-						target="_blank" 
+					<a
+						href="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrCCDUTGQ5NLDH2JPj7Ax9lkcOvyXtgazbrw0f"
+						target="_blank"
 						rel="noopener noreferrer"
 						class="btn btn-primary btn-sm gap-2 font-semibold"
 					>
@@ -132,16 +136,16 @@
 				</div>
 				<div class="flex items-center gap-3">
 					<!-- Desktop Pocket Guide Link - Made Bigger and More Prominent -->
-					<a 
-						href="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrCCDUTGQ5NLDH2JPj7Ax9lkcOvyXtgazbrw0f" 
-						target="_blank" 
+					<a
+						href="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrCCDUTGQ5NLDH2JPj7Ax9lkcOvyXtgazbrw0f"
+						target="_blank"
 						rel="noopener noreferrer"
 						class="btn btn-primary gap-2 font-semibold"
 					>
 						📱 AOSA Official Pocket Guide
 					</a>
 					<button
-						class="btn btn-outline text-base-content  gap-2"
+						class="btn btn-outline text-base-content gap-2"
 						onclick={() => (chatbotOpen = true)}
 					>
 						💬 Open Assistant
@@ -171,7 +175,7 @@
 						class:btn-outline={scheduleLogic.filters.requirementFilter !== 'required'}
 						onclick={() => scheduleLogic.setRequirementFilter('required')}
 					>
-						✅ Required 
+						✅ Required
 					</button>
 					<button
 						class="btn btn-sm md:btn-sm flex-1 min-w-0"
@@ -263,7 +267,9 @@
 						<h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
 							📅 Select Days
 							{#if scheduleLogic.filters.selectedDays.size > 0}
-								<div class="badge badge-info">{scheduleLogic.filters.selectedDays.size} selected</div>
+								<div class="badge badge-info">
+									{scheduleLogic.filters.selectedDays.size} selected
+								</div>
 							{/if}
 						</h3>
 						<div class="flex flex-wrap gap-2">
@@ -317,10 +323,7 @@
 						{scheduleLogic.filteredSchedule.length} events
 					</div>
 					{#if scheduleLogic.activeFiltersCount > 0}
-						<button
-							class="btn btn-sm md:btn-sm"
-							onclick={() => scheduleLogic.clearAllFilters()}
-						>
+						<button class="btn btn-sm md:btn-sm" onclick={() => scheduleLogic.clearAllFilters()}>
 							Clear ({scheduleLogic.activeFiltersCount})
 						</button>
 					{/if}
@@ -407,7 +410,7 @@
 									{#if item.room}
 										<button
 											class="btn btn-sm btn-outline btn-primary flex-1"
-											onclick={() => openRoomModal(item.room!, item.event)}
+											onclick={() => openRoomModal(item.room!)}
 										>
 											🏠 Room
 										</button>
@@ -459,7 +462,7 @@
 										{#if item.room}
 											<button
 												class="btn btn-sm btn-outline btn-primary gap-2"
-												onclick={() => openRoomModal(item.room!, item.event)}
+												onclick={() => openRoomModal(item.room!)}
 											>
 												🏠 View Room
 											</button>
@@ -522,7 +525,7 @@
 										{#if item.room}
 											<button
 												class="btn btn-xs btn-outline btn-primary"
-												onclick={() => openRoomModal(item.room!, item.event)}
+												onclick={() => openRoomModal(item.room!)}
 											>
 												🏠 Room
 											</button>
@@ -553,9 +556,7 @@
 		<div class="max-w-4xl mx-auto px-4">
 			<!-- Mobile: Simplified -->
 			<div class="md:hidden">
-				<p class="text-sm font-semibold mb-2">
-					🎯 Use filters to find what you need!
-				</p>
+				<p class="text-sm font-semibold mb-2">🎯 Use filters to find what you need!</p>
 				<p class="text-xs text-base-content/70">Built with ❤️ by your AOSA Trustee-Elect</p>
 			</div>
 
@@ -588,15 +589,15 @@
 			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
 		</form>
 		<h3 class="text-xl font-bold mb-6">🏠 {selectedRoom}</h3>
-		
+
 		<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 			<!-- Room Layout -->
 			{#if getRoomImage(selectedRoom)}
 				<div>
 					<h4 class="font-semibold text-primary mb-4 text-lg">Room</h4>
 					<div class="bg-base-200 p-4 rounded-lg">
-						<img 
-							src={getRoomImage(selectedRoom)} 
+						<img
+							src={getRoomImage(selectedRoom)}
 							alt="Room layout for {selectedRoom}"
 							class="w-full h-auto rounded-lg shadow-md max-h-96 object-contain"
 						/>
@@ -608,8 +609,8 @@
 			<div>
 				<h4 class="font-semibold text-primary mb-4 text-lg">Convention Center Floor</h4>
 				<div class="bg-base-200 p-4 rounded-lg">
-					<img 
-						src="/images/Floor One.png" 
+					<img
+						src="/images/Floor One.png"
 						alt="Floor 1 layout"
 						class="w-full h-auto rounded-lg shadow-md max-h-96 object-contain"
 					/>

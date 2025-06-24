@@ -64,8 +64,7 @@ export class OMScheduleLogic {
 			day: 'Wednesday, June 25',
 			time: '8:30 am - 12:30 pm',
 			event: '🏛️ Presidents Council',
-			notes:
-				'A dedicated meeting for the Presidents Council. Specific room to be confirmed within the Convention Center.',
+			notes: 'A dedicated meeting for the Presidents Council.',
 			required: false,
 			category: 'meeting',
 			location:
@@ -96,8 +95,7 @@ export class OMScheduleLogic {
 			day: 'Wednesday, June 25',
 			time: '4:00 pm - 5:00 pm',
 			event: '⭐ VIP Leadership Exchange Reception - New!',
-			notes:
-				'A newly introduced reception designed for VIP attendees and leadership. Specific location within the Convention Center to be confirmed.',
+			notes: 'A newly introduced reception designed for VIP attendees and leadership.',
 			required: false,
 			category: 'networking',
 			location:
@@ -108,7 +106,7 @@ export class OMScheduleLogic {
 			time: '4:30 pm - 5:15 pm',
 			event: '👋 New Member Reception',
 			notes:
-				'An exclusive reception for new members to network and get acquainted with the AOA community. Specific location within the Convention Center to be confirmed.',
+				'An exclusive reception for new members to network and get acquainted with the AOA community.',
 			required: false,
 			category: 'networking',
 			location:
@@ -175,8 +173,7 @@ export class OMScheduleLogic {
 			day: 'Thursday, June 26',
 			time: '8:30 am - 11:30 am',
 			event: '🏛️ House of Delegates',
-			notes:
-				'The official meeting for the House of Delegates. Specific room location within the Convention Center to be announced.',
+			notes: 'The official meeting for the House of Delegates.',
 			required: false,
 			category: 'meeting',
 			location:
@@ -266,8 +263,7 @@ export class OMScheduleLogic {
 			day: 'Thursday, June 26',
 			time: '1:00 pm - 3:00 pm',
 			event: '💡 Paraoptometric Idea Exchange',
-			notes:
-				'A collaborative session for paraoptometrics to share ideas and best practices. Specific location within the Convention Center to be announced.',
+			notes: 'A collaborative session for paraoptometrics to share ideas and best practices.',
 			required: false,
 			category: 'session',
 			location:
@@ -290,7 +286,7 @@ export class OMScheduleLogic {
 			event:
 				'🏆 AOSA Optometry Student Bowl™ XXXIV powered by EssilorLuxottica and EssilorLuxottica Live! Student Reception',
 			notes:
-				'This highly anticipated competition features optometry students battling it out in a fast-paced quiz format. It is powered by EssilorLuxottica and includes a larger student reception, "EssilorLuxottica Live!". The event provides both entertainment and significant networking opportunities for students. Held at The Fillmore. Doors open at 7:00 pm, with some attendees arriving from 6:30 pm. Please note transportation details: 1.7 miles, 6-minute drive, 31-minute walk.', // Updated notes
+				'This highly anticipated competition features optometry students battling it out in a fast-paced quiz format. It is powered by EssilorLuxottica and includes a larger student reception, "EssilorLuxottica Live!". The event provides both entertainment and significant networking opportunities for students. Held at The Fillmore. Doors open at 7:00 pm. Please note transportation details: 1.7 miles, 6-minute drive, 31-minute walk.', // Updated notes
 			required: true,
 			category: 'competition',
 			location:
@@ -343,8 +339,7 @@ export class OMScheduleLogic {
 			day: 'Friday, June 27',
 			time: '8:30 am - 11:30 am',
 			event: '🏛️ House of Delegates',
-			notes:
-				'The second day of the official meeting for the House of Delegates. Specific room location within the Convention Center to be announced.',
+			notes: 'The second day of the official meeting for the House of Delegates.',
 			required: false,
 			category: 'meeting',
 			location:
@@ -401,7 +396,7 @@ export class OMScheduleLogic {
 			time: '4:00 pm - 6:00 pm',
 			event: '🏅 2025 National Optometry Hall of Fame Induction & AOA Advocacy Awards Ceremony',
 			notes:
-				'A prestigious event honoring new inductees into the National Optometry Hall of Fame and recognizing recipients of AOA Advocacy Awards. Specific location within the Convention Center to be announced.',
+				'A prestigious event honoring new inductees into the National Optometry Hall of Fame and recognizing recipients of AOA Advocacy Awards.',
 			required: false,
 			category: 'ceremony',
 			location:
@@ -486,13 +481,12 @@ export class OMScheduleLogic {
 			day: 'Saturday, June 28',
 			time: '9:00 am - 11:30 am',
 			event: '🏛️ House of Delegates',
-			notes:
-				'The final session of the House of Delegates meeting. Specific room location within the Convention Center to be announced.',
+			notes: 'The final session of the House of Delegates meeting.',
 			required: false,
 			category: 'meeting',
 			location:
 				'https://maps.apple.com/place?address=1301%20S%20Second%20Ave,%20Minneapolis,%20MN%20%2555403,%20United%20States&coordinate=44.969656,-93.273711&name=Minneapolis%20Convention%20Center&place-id=IAB62E16EF76187A8&map=explore',
-				room: 'Ballroom AB'
+			room: 'Ballroom AB'
 		},
 		{
 			day: 'Saturday, June 28',
