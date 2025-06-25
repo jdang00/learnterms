@@ -30,5 +30,11 @@ export default ts.config(
 				parser: ts.parser
 			}
 		}
+	},
+	{
+		files: ['**/*.ts'],
+		languageOptions: {
+			parser: ts.parser
+		}
 	}
 );

@@ -197,7 +197,7 @@ export class OMScheduleLogic {
 			time: '10:30 am - 12:00 pm', // Updated time
 			event: '👓 EssilorLuxottica EyeFWD: Student Session',
 			notes:
-				'A dedicated session for students, presented by EssilorLuxottica EyeFWD. Attendees must attend to receive an Optometry Student Bowl (OSB) wristband. Specific content details to be confirmed, but often focuses on career development and industry insights.', // Updated notes
+				'A dedicated session for students, presented by EssilorLuxottica EyeFWD. Attendees must attend to receive an Optometry Student Bowl (OSB) wristband. This session focuses on career development and industry insights.', // Updated notes
 			required: true,
 			category: 'session',
 			location:
@@ -607,7 +607,8 @@ export class OMScheduleLogic {
 			celebration: '🎉 Celebration',
 			transportation: '🚌 Transport',
 			activity: '🏃‍♂️ Activities',
-			logistics: '📦 Logistics'
+			logistics: '📦 Logistics',
+			career: '💼 Career'
 		};
 		return displayNames[category] || category;
 	}
