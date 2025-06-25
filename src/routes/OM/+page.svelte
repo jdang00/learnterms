@@ -14,11 +14,25 @@
 	// Modal state for room information
 	let selectedRoom = $state('');
 
+	// Expanded descriptions state for mobile
+	let expandedDescriptions = $state(new Set<string>());
+
 	// Function to open room modal
 	function openRoomModal(room: string) {
 		selectedRoom = room;
 		const modal = document.getElementById('room_modal') as HTMLDialogElement;
 		modal?.showModal();
+	}
+
+	// Function to toggle description expansion
+	function toggleDescription(eventKey: string) {
+		const newExpanded = new Set(expandedDescriptions);
+		if (newExpanded.has(eventKey)) {
+			newExpanded.delete(eventKey);
+		} else {
+			newExpanded.add(eventKey);
+		}
+		expandedDescriptions = newExpanded;
 	}
 
 	// Function to get room image based on room name
@@ -388,11 +402,28 @@
 									</div>
 								</div>
 
-								<!-- Notes - Truncated for Mobile -->
+								<!-- Notes - Expandable for Mobile -->
 								{#if item.notes}
-									<p class="text-sm text-base-content/70 line-clamp-2 mb-4 leading-relaxed">
-										{item.notes}
-									</p>
+									{@const eventKey = item.day + item.event + item.time}
+									{@const isExpanded = expandedDescriptions.has(eventKey)}
+									{@const isLongText = item.notes.length > 150}
+									
+									<div class="mb-4">
+										<p 
+											class="text-sm text-base-content/70 leading-relaxed"
+											class:line-clamp-2={!isExpanded && isLongText}
+										>
+											{item.notes}
+										</p>
+										{#if isLongText}
+											<button 
+												class="text-xs text-base-content/40 hover:text-primary-focus mt-1 font-medium"
+												onclick={() => toggleDescription(eventKey)}
+											>
+												{isExpanded ? '▲ Show Less' : '▼ Show More'}
+											</button>
+										{/if}
+									</div>
 								{/if}
 
 								<!-- Action Buttons -->
