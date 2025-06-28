@@ -12,7 +12,7 @@
 	import { Palette } from 'lucide-svelte';
 	import { themeChange } from 'theme-change';
 
-	const themes = ['light', 'dark', 'dracula', 'retro', 'nord'];
+	const themes = ['light', 'dark', 'dracula', 'nord'];
 
 	$effect(() => {
 		themeChange(false);
@@ -73,7 +73,6 @@
 						class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 					>
 						<li><a href="/blog">Blog</a></li>
-						<li><a href="/OM">Optometry's Meeting</a></li>
 					</ul>
 				</div>
 				<a class="btn btn-ghost text-xl" href="/">LearnTerms </a>
@@ -81,7 +80,6 @@
 			<div class="navbar-center hidden lg:flex">
 				<ul class="menu menu-horizontal px-1">
 					<li><a href="/blog">Blog</a></li>
-					<li><a href="/OM">Optometry's Meeting</a></li>
 				</ul>
 			</div>
 			<div class="navbar-end">
