@@ -52,10 +52,10 @@ ${material}
 
 		// 4. Make the API call
 		const result = await ai.models.generateContent({
-			model: 'gemini-2.5-pro-exp-03-25',
+			model: 'gemini-2.5-pro',
 			contents: [{ role: 'user', parts: [{ text: prompt }] }],
 			config: {
-				temperature: 1,
+				temperature: 0.7,
 				maxOutputTokens: 8192,
 				responseMimeType: 'application/json',
 				responseSchema: {
