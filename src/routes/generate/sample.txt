@@ -1,0 +1,19 @@
+Ocular Antihistamines, Mast Cell Stabilizers, and Dual-Action Agents
+
+Antihistamines:
+These agents block H1 histamine receptors, preventing histamine from binding and causing symptoms like itching, redness, and swelling.
+- Emedastine (Emadine): A potent, selective H1 antagonist. Available as a standalone ophthalmic solution. Onset is rapid, but duration is relatively short.
+- Pheniramine/Naphazoline (Naphcon-A, Opcon-A): A combination product. Pheniramine is the antihistamine, while naphazoline is a vasoconstrictor that reduces redness. The vasoconstrictor can cause rebound hyperemia (worsening redness) with prolonged use.
+
+Mast Cell Stabilizers:
+These agents prevent the degranulation of mast cells, thereby inhibiting the release of histamine and other inflammatory mediators. They are prophylactic and take longer to work than antihistamines.
+- Cromolyn sodium (Crolom): The classic example. Requires dosing 4 times a day.
+- Lodoxamide (Alomide): More potent than cromolyn.
+- Pemirolast (Alamast): Similar efficacy to lodoxamide.
+
+Dual-Action Agents:
+These are the most commonly prescribed agents as they combine the immediate relief of an antihistamine with the prophylactic effects of a mast cell stabilizer.
+- Olopatadine (Pataday, Patanol, Pazeo): The most well-known agent. Pataday and Pazeo offer once-daily dosing.
+- Ketotifen (Zaditor, Alaway): Available over-the-counter. Very effective and fast-acting.
+- Azelastine (Optivar): Has a distinct bitter taste (dysgeusia) for some patients.
+- Bepotastine (Bepreve): Known for its comfort and rapid onset.
