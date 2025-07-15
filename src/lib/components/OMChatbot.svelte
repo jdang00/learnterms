@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Chat } from '@ai-sdk/svelte';
-	import { onMount, afterUpdate } from 'svelte';
+	import { afterUpdate } from 'svelte';
 
 	export let scheduleData: any[] = [];
 	export let isOpen = false;
