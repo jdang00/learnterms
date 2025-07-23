@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ArrowRight, Brain, Sigma, ChartScatter, LayoutDashboard, Database } from 'lucide-svelte';
-	import Mock from './mock.svelte';
-	import Quiz from './quiz.svelte';
+	import Mock from '$lib/components/mock.svelte';
+	import Quiz from '$lib/components/quiz.svelte';
 	import { useClerkContext } from 'svelte-clerk';
 	import { fade, fly, scale } from 'svelte/transition';
 

@@ -15,18 +15,6 @@ export interface Option {
 	isEliminated: boolean;
 }
 
-export type Ticket = {
-	ticketid: string;
-	customername: string;
-	customeremail: string | null;
-	subject: string;
-	description: string | null;
-	dateopened: string;
-	dateclosed: string | null;
-	status: string | null;
-	resolution: string | null;
-};
-
 export interface ExtendedOption extends Option {
 	isCorrect?: boolean;
 }
@@ -89,17 +77,6 @@ export interface Chapter {
 	emoji: string;
 }
 
-export interface ChatMessage {
-	role: 'user' | 'assistant';
-	content: string;
-}
-
-export interface ChatState {
-	messages: ChatMessage[];
-	loading: boolean;
-	input: string;
-}
-
 export interface RawUserProgress {
 	user_id: string;
 	user_name: string;
@@ -125,4 +102,14 @@ export interface UserProgress {
 	total_attempted: number;
 	total_questions: number;
 	overall_progress: number;
+}
+
+export interface User {
+	_id: string;
+	_creationTime: number;
+	clerkUserId: string;
+	cohortId: string;
+	metadata: Record<string, unknown>;
+	name: string;
+	updatedAt: number;
 }
