@@ -148,3 +148,20 @@ export interface Module {
 	order: string;
 	status: string;
 }
+
+export interface Question {
+	_id: string;
+	_creationTime: number;
+	metadata: Record<string, unknown>;
+	updatedAt: number;
+	deletedAt: number | undefined;
+	moduleId: string;
+	order: number;
+	type: string;
+	stem: string;
+	options: Array<{ id: string; text: string }>;
+	correctAnswers: string[];
+	explanation: string;
+	aiGenerated: boolean;
+	status: string;
+}

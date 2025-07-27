@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as class_ from "../class.js";
 import type * as module from "../module.js";
+import type * as question from "../question.js";
 import type * as school from "../school.js";
 import type * as users from "../users.js";
 
@@ -29,6 +30,7 @@ import type * as users from "../users.js";
 declare const fullApi: ApiFromModules<{
   class: typeof class_;
   module: typeof module;
+  question: typeof question;
   school: typeof school;
   users: typeof users;
 }>;

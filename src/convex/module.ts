@@ -13,3 +13,15 @@ export const getClassModules = query({
 		return classes;
 	}
 });
+
+export const getModuleById = query({
+	args: { id: v.string() },
+	handler: async (ctx, args) => {
+		const module = await ctx.db
+			.query('module')
+			.filter((q) => q.eq(q.field('_id'), args.id))
+			.first();
+
+		return module;
+	}
+});

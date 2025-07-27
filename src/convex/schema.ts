@@ -55,7 +55,6 @@ export default defineSchema({
 		status: v.string()
 	}),
 	question: defineTable({
-		title: v.string(),
 		metadata: v.object({}),
 		updatedAt: v.number(),
 		deletedAt: v.optional(v.number()),
