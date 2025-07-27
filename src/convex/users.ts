@@ -7,7 +7,7 @@ export const getUserById = query({
 		const user = ctx.db
 			.query('users')
 			.filter((q) => q.eq(q.field('clerkUserId'), args.id))
-			.collect();
+			.take(1);
 
 		return user;
 	}

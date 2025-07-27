@@ -113,3 +113,38 @@ export interface User {
 	name: string;
 	updatedAt: number;
 }
+
+export interface School {
+	_id: string;
+	_creationTime: number;
+	metadata: Record<string, unknown>;
+	description: string;
+	name: string;
+	updatedAt: number;
+}
+
+export interface Class {
+	_id: string;
+	name: string;
+	description: string;
+	metadata: Record<string, unknown>;
+	semesterId: string;
+	updateAt: number;
+	deleteAt: number | undefined;
+	cohortId: string;
+	_creationTime: number;
+	code: string;
+}
+
+export interface Module {
+	_id: string;
+	title: string;
+	description: string;
+	metadata: Record<string, unknown>;
+	classId: string;
+	updateAt: number;
+	deleteAt: number | undefined;
+	_creationTime: number;
+	order: string;
+	status: string;
+}
