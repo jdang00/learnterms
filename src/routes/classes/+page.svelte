@@ -3,10 +3,9 @@
 	import type { PageData } from './$types';
 	import { api } from '../../convex/_generated/api.js';
 	let { data }: { data: PageData } = $props();
-	import type { User } from '$lib/types';
-	const userData: User[] = data.userData;
+	const userData = data.userData;
 
-	const classes = useQuery(api.class.getUserClasses, { id: userData[0].cohortId });
+	const classes = useQuery(api.class.getUserClasses, { id: userData.cohortId });
 </script>
 
 <div class="mx-auto mt-12 max-w-2xl">

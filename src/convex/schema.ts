@@ -67,7 +67,7 @@ export default defineSchema({
 		explanation: v.string(),
 		aiGenerated: v.boolean(),
 		status: v.string()
-	}),
+	}).index('by_moduleId', ['moduleId']),
 	questionMedia: defineTable({
 		url: v.string(),
 		type: v.string(),
@@ -80,5 +80,20 @@ export default defineSchema({
 		caption: v.optional(v.string()),
 		order: v.number(),
 		metadata: v.object({})
+	}),
+	userProgress: defineTable({
+		userId: v.id('users'),
+		questionId: v.id('question'),
+		selectedOptions: v.array(v.string()),
+		eliminatedOptions: v.array(v.string()),
+		isFlagged: v.boolean(),
+		isMastered: v.boolean(),
+		attempts: v.number(),
+		lastAttemptAt: v.optional(v.number()),
+		metadata: v.object({}),
+		deletedAt: v.optional(v.number()),
+		updatedAt: v.number()
 	})
+		.index('by_user_question', ['userId', 'questionId'])
+		.index('by_question_user', ['questionId', 'userId'])
 });

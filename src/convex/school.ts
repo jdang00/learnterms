@@ -11,13 +11,8 @@ export const getAllSchools = query({
 });
 
 export const getSchoolById = query({
-	args: { id: v.string() },
+	args: { id: v.id('school') },
 	handler: async (ctx, args) => {
-		const schools = ctx.db
-			.query('school')
-			.filter((q) => q.eq(q.field('_id'), args.id))
-			.collect();
-
-		return schools;
+		return await ctx.db.get(args.id);
 	}
 });

@@ -15,13 +15,8 @@ export const getClassModules = query({
 });
 
 export const getModuleById = query({
-	args: { id: v.string() },
+	args: { id: v.id('module') },
 	handler: async (ctx, args) => {
-		const module = await ctx.db
-			.query('module')
-			.filter((q) => q.eq(q.field('_id'), args.id))
-			.first();
-
-		return module;
+		return await ctx.db.get(args.id);
 	}
 });

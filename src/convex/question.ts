@@ -2,21 +2,21 @@ import { query } from './_generated/server';
 import { v } from 'convex/values';
 
 export const getQuestionsByModule = query({
-	// Enter module ID
-	args: { id: v.string() },
-	handler: async (ctx, args) => {
-		const classes = ctx.db
+	// match the schema: moduleId is an id("module")
+	args: { id: v.id('module') },
+	handler: async (ctx, { id }) => {
+		const questions = await ctx.db
 			.query('question')
-			.filter((q) => q.eq(q.field('moduleId'), args.id))
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', id))
 			.collect();
 
-		return classes;
+		return questions;
 	}
 });
 
 export const getFirstQuestionInModule = query({
 	// Enter module ID
-	args: { id: v.string() },
+	args: { id: v.id('module') },
 	handler: async (ctx, args) => {
 		const classes = ctx.db
 			.query('question')
