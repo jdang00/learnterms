@@ -8,18 +8,32 @@
 		}
 	}
 
-	function handleClear() {
+	async function handleClear() {
 		qs.selectedAnswers = [];
 		qs.eliminatedAnswers = [];
 		qs.checkResult = '';
+		
+		// Trigger save to delete the record from database
+		if (qs.saveProgressFunction) {
+			await qs.saveProgressFunction();
+		}
 	}
 
-	function handleNext() {
-		qs.goToNextQuestion();
+	async function handleFlag() {
+		qs.toggleFlag();
+		
+		// Trigger save to update flag in database
+		if (qs.saveProgressFunction) {
+			await qs.saveProgressFunction();
+		}
 	}
 
-	function handlePrevious() {
-		qs.goToPreviousQuestion();
+	async function handleNext() {
+		await qs.goToNextQuestion();
+	}
+
+	async function handlePrevious() {
+		await qs.goToPreviousQuestion();
 	}
 
 	function handleShuffle() {
@@ -30,7 +44,11 @@
 <div class=" flex-row justify-center mt-8 gap-4 hidden lg:flex">
 	<button class="btn btn-outline" onclick={handleClear}>Clear</button>
 	<button class="btn btn-soft btn-success" onclick={handleCheck}>Check</button>
-	<button class="btn btn-warning btn-soft">
+	<button 
+		class="btn btn-warning btn-soft"
+		onclick={handleFlag}
+		aria-label="flag question"
+	>
 		<Flag />
 	</button>
 	<button class="btn btn-secondary" onclick={handleShuffle}>

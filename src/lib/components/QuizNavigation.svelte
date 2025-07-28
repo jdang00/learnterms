@@ -1,5 +1,5 @@
 <script>
-	let { questions, handleSelect, currentlySelected } = $props();
+	let { questions, handleSelect, currentlySelected, interactedQuestions = [], flags = [] } = $props();
 </script>
 
 <div
@@ -7,11 +7,18 @@
 "
 >
 	{#each questions.data as question, index (question._id)}
-		<button
-			class="btn btn-circle btn-soft {currentlySelected._id === question._id
-				? 'btn-primary'
-				: 'btn-outline'}"
-			onclick={() => handleSelect(question)}>{index + 1}</button
-		>
+		<div class="indicator">
+			{#if flags.includes(question._id)}
+				<span
+					class="indicator-item indicator-start badge badge-warning badge-xs translate-x-[-1/4] translate-y-[-1/4] z-[1]"
+				></span>
+			{/if}
+			<button
+				class="btn btn-circle btn-soft {currentlySelected._id === question._id
+					? 'btn-primary'
+					: 'btn-outline'} {interactedQuestions.includes(question._id) ? 'btn-accent' : ''}"
+				onclick={() => handleSelect(question)}>{index + 1}</button
+			>
+		</div>
 	{/each}
 </div>

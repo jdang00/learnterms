@@ -24,5 +24,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		id: moduleId
 	});
 
-	return { moduleInfo, module, moduleId };
+	const convexID = await client.query(api.users.getUserById, {
+		id: userId
+	});
+
+	return { moduleInfo, module, moduleId, convexID };
 };
