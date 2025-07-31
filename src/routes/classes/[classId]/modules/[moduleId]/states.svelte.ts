@@ -1,4 +1,5 @@
 import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
 
 export class QuizState {
 	checkResult: string = $state('');
@@ -13,6 +14,18 @@ export class QuizState {
 	saveProgressFunction: (() => Promise<void>) | null = $state(null);
 	loadProgressFunction: ((questionId: Id<'question'>) => Promise<void>) | null = $state(null);
 	currentQuestionFlagged: boolean = $state(false);
+	interactedQuestionsCount: number = $state(0);
+	
+	// Sort functionality
+	showFlagged: boolean = $state(false);
+	showIncomplete: boolean = $state(false);
+	// Live Convex data (source of truth)
+	liveFlaggedQuestions: Id<'question'>[] = $state([]);
+	liveInteractedQuestions: Id<'question'>[] = $state([]);
+	// No flags alert state
+	noFlags: boolean = $state(false);
+	// Reset modal state
+	isResetModalOpen: boolean = $state(false);
 
 	checkAnswer(correctAnswers: string[], userAnswers: string[]) {
 		const sortedCorrect = [...correctAnswers].sort();
@@ -28,6 +41,19 @@ export class QuizState {
 		}
 	}
 
+	// Calculate progress percentage
+	getProgressPercentage(): number {
+		if (!this.questions || this.questions.length === 0) {
+			return 0;
+		}
+		return Math.round((this.interactedQuestionsCount / this.questions.length) * 100);
+	}
+
+	// Update interacted questions count
+	setInteractedQuestionsCount(count: number) {
+		this.interactedQuestionsCount = count;
+	}
+
 	// Toggle flag for current question
 	toggleFlag() {
 		this.currentQuestionFlagged = !this.currentQuestionFlagged;
@@ -36,6 +62,7 @@ export class QuizState {
 		if (this.saveProgressFunction) {
 			this.saveProgressFunction();
 		}
+
 	}
 
 	// Set flag status for current question (used when loading from database)
@@ -44,8 +71,8 @@ export class QuizState {
 	}
 
 	async goToNextQuestion() {
-		const currentQuestions = this.isShuffled ? this.shuffledQuestions : this.questions;
-		if (currentQuestions && this.currentQuestionIndex < currentQuestions.length - 1) {
+		const filteredQuestions = this.getFilteredQuestions();
+		if (filteredQuestions && this.currentQuestionIndex < filteredQuestions.length - 1) {
 			// Save progress before changing question
 			if (this.saveProgressFunction) {
 				await this.saveProgressFunction();
@@ -55,7 +82,7 @@ export class QuizState {
 			this.checkResult = '';
 			
 			// Load progress for the new question
-			const newQuestion = this.getCurrentQuestion();
+			const newQuestion = this.getCurrentFilteredQuestion();
 			if (newQuestion && this.loadProgressFunction) {
 				await this.loadProgressFunction(newQuestion._id);
 			} else {
@@ -67,8 +94,8 @@ export class QuizState {
 	}
 
 	async goToPreviousQuestion() {
-		const currentQuestions = this.isShuffled ? this.shuffledQuestions : this.questions;
-		if (currentQuestions && this.currentQuestionIndex > 0) {
+		const filteredQuestions = this.getFilteredQuestions();
+		if (filteredQuestions && this.currentQuestionIndex > 0) {
 			// Save progress before changing question
 			if (this.saveProgressFunction) {
 				await this.saveProgressFunction();
@@ -78,7 +105,7 @@ export class QuizState {
 			this.checkResult = '';
 			
 			// Load progress for the new question
-			const newQuestion = this.getCurrentQuestion();
+			const newQuestion = this.getCurrentFilteredQuestion();
 			if (newQuestion && this.loadProgressFunction) {
 				await this.loadProgressFunction(newQuestion._id);
 			} else {
@@ -125,6 +152,17 @@ export class QuizState {
 		this.loadProgressFunction = func;
 	}
 
+	// Update live Convex data (source of truth)
+	updateLiveFlaggedQuestions(flagged: Id<'question'>[]) {
+		this.liveFlaggedQuestions = flagged;
+	}
+
+	updateLiveInteractedQuestions(interacted: Id<'question'>[]) {
+		this.liveInteractedQuestions = interacted;
+	}
+
+
+
 	getCurrentQuestion() {
 		const currentQuestions = this.isShuffled ? this.shuffledQuestions : this.questions;
 		if (!currentQuestions || currentQuestions.length === 0) {
@@ -134,12 +172,12 @@ export class QuizState {
 	}
 
 	canGoNext() {
-		const currentQuestions = this.isShuffled ? this.shuffledQuestions : this.questions;
+		const currentQuestions = this.getFilteredQuestions();
 		return currentQuestions && this.currentQuestionIndex < currentQuestions.length - 1;
 	}
 
 	canGoPrevious() {
-		const currentQuestions = this.isShuffled ? this.shuffledQuestions : this.questions;
+		const currentQuestions = this.getFilteredQuestions();
 		return currentQuestions && this.currentQuestionIndex > 0;
 	}
 
@@ -197,5 +235,80 @@ export class QuizState {
 	isCorrect(optionId: string): boolean {
 		const currentQuestion = this.getCurrentQuestion();
 		return currentQuestion ? currentQuestion.correctAnswers.includes(optionId) : false;
+	}
+
+	toggleSortByFlagged() {
+		this.showFlagged = !this.showFlagged;
+		this.currentQuestionIndex = 0;
+		this.checkResult = '';
+		this.selectedAnswers = [];
+		this.eliminatedAnswers = [];
+	}
+
+	toggleShowIncomplete() {
+		this.showIncomplete = !this.showIncomplete;
+		this.currentQuestionIndex = 0;
+		this.checkResult = '';
+		this.selectedAnswers = [];
+		this.eliminatedAnswers = [];
+	}
+
+	getFilteredQuestions(): Doc<'question'>[] {
+		let filteredQuestions = this.isShuffled ? this.shuffledQuestions : this.questions;
+		
+		if (this.showFlagged) {
+			// Check if there are any flagged questions
+			if (this.liveFlaggedQuestions.length === 0) {
+				this.noFlags = true;
+				this.showFlagged = false;
+				return filteredQuestions;
+			}
+			filteredQuestions = filteredQuestions.filter(q => 
+				this.liveFlaggedQuestions.includes(q._id)
+			);
+		}
+		
+		if (this.showIncomplete) {
+			filteredQuestions = filteredQuestions.filter(q => 
+				!this.liveInteractedQuestions.includes(q._id)
+			);
+		}
+		
+		return filteredQuestions;
+	}
+
+	getCurrentFilteredQuestion(): Doc<'question'> | null {
+		const filteredQuestions = this.getFilteredQuestions();
+		if (!filteredQuestions || filteredQuestions.length === 0) {
+			return null;
+		}
+		// Ensure currentQuestionIndex is within bounds of filtered questions
+		const safeIndex = Math.min(this.currentQuestionIndex, filteredQuestions.length - 1);
+		return filteredQuestions[safeIndex] || filteredQuestions[0];
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	async reset(userId: Id<'users'>, moduleId: Id<'module'>, client: any) {
+		// Clear local state
+		this.selectedAnswers = [];
+		this.eliminatedAnswers = [];
+		this.currentQuestionFlagged = false;
+		this.checkResult = '';
+		this.showSolution = false;
+		this.currentQuestionIndex = 0;
+		this.isShuffled = false;
+		this.showFlagged = false;
+		this.showIncomplete = false;
+		this.noFlags = false;
+
+		// Clear progress from database
+		try {
+			await client.mutation(api.userProgress.clearUserProgressForModule, {
+				userId: userId,
+				moduleId: moduleId
+			});
+		} catch (error) {
+			console.error('Error resetting progress:', error);
+		}
 	}
 }

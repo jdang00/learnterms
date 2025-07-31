@@ -38,7 +38,7 @@
 			{:else if ctx.user?.publicMetadata.role === 'admin'}
 				<a
 					class="btn btn-primary my-8"
-					href="/dashboard"
+					href="/classes"
 					in:fly={{ y: 20, duration: 500, delay: 200 }}
 				>
 					<LayoutDashboard /> Modules

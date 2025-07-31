@@ -1,13 +1,25 @@
 <script lang="ts">
-	import { Palette } from 'lucide-svelte';
+	import { Sun, Moon } from 'lucide-svelte';
 	import { themeChange } from 'theme-change';
 	import { SignedIn, SignedOut, SignInButton, UserButton } from 'svelte-clerk';
+	import { writable } from 'svelte/store';
 
-	const themes = ['light', 'dark', 'dracula', 'nord'];
+	const currentTheme = writable('light');
 
 	$effect(() => {
 		themeChange(false);
+		const savedTheme = localStorage.getItem('theme') || 'light';
+		currentTheme.set(savedTheme);
+		document.documentElement.setAttribute('data-theme', savedTheme);
 	});
+
+	function toggleTheme() {
+		const newTheme = $currentTheme === 'light' ? 'dark' : 'light';
+		currentTheme.set(newTheme);
+
+		document.documentElement.setAttribute('data-theme', newTheme);
+		localStorage.setItem('theme', newTheme);
+	}
 </script>
 
 <div class="navbar bg-base-100 h-16">
@@ -42,25 +54,27 @@
 	</div>
 
 	<div class="navbar-end">
-		<div class="flex flex-row">
-			<div class="dropdown dropdown-end">
-				<div tabindex="-1" class="btn btn-ghost m-1">
-					<Palette size="22" />
-				</div>
-
-				<ul
-					tabindex="-1"
-					class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+		<div class="flex flex-row gap-4">
+			<button class="btn btn-ghost btn-circle m-1 relative overflow-hidden" onclick={toggleTheme}>
+				<div
+					class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-in-out {$currentTheme ===
+					'light'
+						? 'opacity-100 rotate-0'
+						: 'opacity-0 -rotate-90'}"
+					data-theme="light"
 				>
-					{#each themes as themeOption (themeOption)}
-						<li>
-							<button data-set-theme={themeOption} data-act-class="active">
-								{themeOption}
-							</button>
-						</li>
-					{/each}
-				</ul>
-			</div>
+					<Sun size="22" />
+				</div>
+				<div
+					class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-in-out {$currentTheme ===
+					'dark'
+						? 'opacity-100 rotate-0'
+						: 'opacity-0 rotate-90'}"
+					data-theme="dark"
+				>
+					<Moon size="22" />
+				</div>
+			</button>
 
 			<div class="self-center">
 				<SignedIn>

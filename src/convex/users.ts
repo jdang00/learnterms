@@ -4,11 +4,20 @@ import { v } from 'convex/values';
 export const getUserById = query({
 	args: { id: v.string() },
 	handler: async (ctx, args) => {
-		const user = ctx.db
+		const user = await ctx.db
 			.query('users')
 			.filter((q) => q.eq(q.field('clerkUserId'), args.id))
 			.first();
 
-		return user;
+		if (!user) return null;
+
+		const cohort = await ctx.db.get(user.cohortId);
+		const school = cohort ? await ctx.db.get(cohort.schoolId) : null;
+		
+		return {
+			...user,
+			cohortName: cohort?.name || null,
+			schoolName: school?.name || null
+		};
 	}
 });

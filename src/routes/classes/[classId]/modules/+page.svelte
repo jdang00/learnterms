@@ -12,7 +12,6 @@
 	const classId: string = data.classId;
 
 	const modules = useQuery(api.module.getClassModules, { id: classId });
-	console.log(modules);
 </script>
 
 <div class="flex flex-col lg:flex-row max-h-screen lg:h-screen border-base-300 bg-base-100">

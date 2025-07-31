@@ -9,7 +9,7 @@ export default defineSchema({
 		cohortId: v.id('cohort'),
 		name: v.string(),
 		metadata: v.object({})
-	}),
+	}).index('by_clerkUserId', ['clerkUserId']),
 	school: defineTable({
 		name: v.string(),
 		description: v.string(),

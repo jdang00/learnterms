@@ -142,3 +142,31 @@ export const deleteUserProgress = mutation({
 		return false;
 	}
 });
+
+export const clearUserProgressForModule = mutation({
+	args: {
+		userId: v.id('users'),
+		moduleId: v.id('module')
+	},
+	handler: async (ctx, args) => {
+		// Get all user progress records for the user
+		const progressRecords = await ctx.db
+			.query('userProgress')
+			.withIndex('by_user_question', (q) =>
+				q.eq('userId', args.userId)
+			)
+			.collect();
+
+		// Filter and delete records where the question belongs to the module
+		let deletedCount = 0;
+		for (const record of progressRecords) {
+			const question = await ctx.db.get(record.questionId);
+			if (question && question.moduleId === args.moduleId) {
+				await ctx.db.delete(record._id);
+				deletedCount++;
+			}
+		}
+
+		return deletedCount;
+	}
+});

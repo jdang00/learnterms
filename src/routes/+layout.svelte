@@ -42,7 +42,7 @@
 </svelte:head>
 
 <ClerkProvider publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}>
-	<div class="flex flex-col min-h-screen">
+	<div class="flex flex-col h-screen">
 		<NavBar />
 
 		<div class="flex flex-1 flex-col overflow-hidden">
@@ -52,13 +52,9 @@
 
 			<footer class="footer footer-center text-base-content p-4">
 				<aside class="flex flex-col flex-wrap justify-center lg:flex-row">
-					<p class="hidden lg:block">
-						Copyright © {new Date().getFullYear()} - Oklahoma College of Optometry Class of 2028 |
+					<p>
+						Copyright © {new Date().getFullYear()} - LearnTerms. All rights reserved.
 					</p>
-					<p class="lg:hidden">
-						Copyright © {new Date().getFullYear()} - NSUOCO Class of 2028
-					</p>
-					<a class="link" href="/changelog">Changelog</a>
 				</aside>
 			</footer>
 		</div>
