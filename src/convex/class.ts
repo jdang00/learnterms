@@ -13,3 +13,10 @@ export const getUserClasses = query({
 		return classes;
 	}
 });
+
+export const getClassById = query({
+	args: { id: v.id('class') },
+	handler: async (ctx, args) => {
+		return await ctx.db.get(args.id);
+	}
+});

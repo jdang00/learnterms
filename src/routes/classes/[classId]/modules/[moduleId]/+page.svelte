@@ -139,7 +139,7 @@
 
 	const module = useQuery(
 		api.module.getModuleById,
-		{ id: data.moduleId },
+		{ id: data.moduleId as Id<'module'> },
 		{ initialData: data.moduleInfo }
 	);
 

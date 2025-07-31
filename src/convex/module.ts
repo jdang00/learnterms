@@ -3,7 +3,7 @@ import { v } from 'convex/values';
 
 export const getClassModules = query({
 	// Enter class ID
-	args: { id: v.string() },
+	args: { id: v.id('class') },
 	handler: async (ctx, args) => {
 		const classes = ctx.db
 			.query('module')

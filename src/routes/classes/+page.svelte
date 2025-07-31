@@ -3,7 +3,9 @@
 	import type { PageData } from './$types';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
-	import { fade } from 'svelte/transition';
+	import { fly, fade } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
+	import { ArrowRight, ArrowLeft } from 'lucide-svelte';
 
 	import { useClerkContext } from 'svelte-clerk/client';
 	const ctx = useClerkContext();
@@ -13,9 +15,35 @@
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
 
+	type ClassType = { _id: Id<'class'>; name: string; code: string; description?: string };
+
+	let currentView: 'classes' | 'modules' = $state('classes');
+	let selectedClass: ClassType | null = $state(null);
+
 	const classes = useQuery(api.class.getUserClasses, {
-		id: userData.cohortId as Id<'cohort'>
+		id: (userData?.cohortId as Id<'cohort'>) || ''
 	});
+
+	let modules = $state();
+
+	$effect(() => {
+		if (selectedClass && currentView === 'modules') {
+			const query = useQuery(api.module.getClassModules, { id: selectedClass._id });
+			modules = query;
+		} else {
+			modules = { isLoading: false, error: null, data: [] };
+		}
+	});
+
+	function selectClass(classItem: ClassType) {
+		selectedClass = classItem;
+		currentView = 'modules';
+	}
+
+	function goBackToClasses() {
+		currentView = 'classes';
+		selectedClass = null;
+	}
 </script>
 
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -53,87 +81,148 @@
 		{/if}
 	</div>
 
-	<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-		<!-- Classes Section -->
-		<div class="lg:col-span-3">
-			<div class="flex items-center justify-between mb-6">
-				<h3 class="text-lg font-semibold">My Classes</h3>
-			</div>
+	<div class="divider"></div>
 
-			{#if classes.isLoading}
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-					{#each Array(4), index (index)}
-						<div class="card bg-base-100 shadow-sm animate-pulse">
-							<div class="card-body">
-								<div class="flex items-start justify-between mb-3">
-									<div class="flex items-center space-x-3">
-										<div class="w-3 h-3 rounded-full skeleton"></div>
-										<div>
-											<div class="skeleton h-4 w-32 mb-1"></div>
-											<div class="skeleton h-3 w-16"></div>
-										</div>
+	<div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-8">
+		<div class="lg:col-span-3 overflow-hidden">
+			{#if currentView === 'classes'}
+				<div in:fade={{ duration: 400, easing: cubicOut }} class="w-full">
+					<div class="flex justify-between mb-6">
+						<h3 class="text-lg font-semibold">My Classes</h3>
+					</div>
+
+					{#if classes.isLoading}
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							{#each Array(4), index (index)}
+								<div class="card bg-base-100 shadow-md animate-pulse">
+									<div class="card-body">
+										<div class="skeleton h-8 w-32 mb-4"></div>
+										<div class="skeleton h-4 w-full mb-2"></div>
+										<div class="skeleton h-4 w-full mb-2"></div>
+										<div class="skeleton h-4 w-2/3 mb-4"></div>
+										<div class="skeleton h-8 w-8 rounded-full ml-auto"></div>
 									</div>
 								</div>
-								<div class="skeleton h-4 w-full mb-2"></div>
-								<div class="skeleton h-4 w-3/4"></div>
+							{/each}
+						</div>
+					{:else if classes.error}
+						<div class="alert alert-error">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="stroke-current shrink-0 h-6 w-6"
+								fill="none"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+								/>
+							</svg>
+							<span>Failed to load classes: {classes.error.toString()}</span>
+						</div>
+					{:else if classes.data.length === 0}
+						<div class="card bg-base-100 shadow-md">
+							<div class="card-body py-12">
+								<div class="text-4xl mb-4">📚</div>
+								<h3 class="text-lg font-semibold mb-2">No classes yet</h3>
+								<p class="text-base-content/70">Your classes will appear here once enrolled.</p>
 							</div>
 						</div>
-					{/each}
-				</div>
-			{:else if classes.error}
-				<div class="alert alert-error">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="stroke-current shrink-0 h-6 w-6"
-						fill="none"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-						/>
-					</svg>
-					<span>Failed to load classes: {classes.error.toString()}</span>
-				</div>
-			{:else if classes.data.length === 0}
-				<div class="card bg-base-100 shadow-sm">
-					<div class="card-body text-center py-12">
-						<div class="text-4xl mb-4">📚</div>
-						<h3 class="text-lg font-semibold mb-2">No classes yet</h3>
-						<p class="text-base-content/70">Your classes will appear here once enrolled.</p>
-					</div>
-				</div>
-			{:else}
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-					{#each classes.data as classItem (classItem._id)}
-						<div class="card bg-base-100 shadow-sm hover:shadow-md transition-shadow" in:fade>
-							<div class="card-body pb-3">
-								<div class="flex items-start justify-between">
-									<div class="flex items-center space-x-3">
-										<div class="w-3 h-3 rounded-full bg-primary"></div>
-										<div>
-											<h4 class="card-title text-base">
-												<a href={`/classes/${classItem._id}/modules`} class="link link-hover">
-													{classItem.name}
-												</a>
-											</h4>
-											<div class="badge badge-ghost badge-sm">{classItem.code}</div>
+					{:else}
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							{#each classes.data as classItem, index (classItem._id)}
+								<div in:fade={{ delay: index * 50, duration: 300 }} class="relative">
+									<button onclick={() => selectClass(classItem)} class="w-full">
+										<div
+											class="card bg-base-100 shadow-md h-80 transition-all duration-300 overflow-hidden hover:shadow-lg hover:translate-y-[-2px]"
+										>
+											<div class="card-body flex flex-col">
+												<div class="flex items-center gap-2 mb-2">
+													<div class="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+													<h2 class="card-title text-lg text-left truncate">{classItem.name}</h2>
+												</div>
+												<div class="badge badge-ghost badge-sm mb-2">{classItem.code}</div>
+												<p class="text-base-content/70 text-sm mb-4 text-left line-clamp-4">
+													{classItem.description || 'No description available'}
+												</p>
+
+												<div class="mt-auto flex justify-end">
+													<div class="btn btn-sm btn-primary btn-outline rounded-full">
+														<ArrowRight size={16} />
+													</div>
+												</div>
+											</div>
 										</div>
+									</button>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			{:else if currentView === 'modules' && selectedClass}
+				<div in:fade={{ duration: 400, easing: cubicOut }} class="w-full">
+					<div class="flex items-center gap-4 mb-6">
+						<button onclick={goBackToClasses} class="btn btn-sm btn-ghost">
+							<ArrowLeft size={16} />
+						</button>
+						<h3 class="text-lg font-semibold">{selectedClass.name}</h3>
+						<div class="badge badge-primary badge-soft">{selectedClass.code}</div>
+					</div>
+
+					{#if modules.isLoading}
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							{#each Array(4), index (index)}
+								<div class="card bg-base-100 shadow-md animate-pulse">
+									<div class="card-body">
+										<div class="skeleton h-8 w-32 mb-4"></div>
+										<div class="skeleton h-4 w-full mb-2"></div>
+										<div class="skeleton h-4 w-full mb-2"></div>
+										<div class="skeleton h-4 w-2/3 mb-4"></div>
+										<div class="skeleton h-8 w-8 rounded-full ml-auto"></div>
 									</div>
 								</div>
+							{/each}
+						</div>
+					{:else if modules.error}
+						<div class="alert alert-error">
+							<span>Failed to load modules: {modules.error.toString()}</span>
+						</div>
+					{:else if modules.data.length === 0}
+						<div class="card bg-base-100 shadow-md">
+							<div class="card-body py-12">
+								<div class="text-4xl mb-4">📚</div>
+								<h3 class="text-lg font-semibold mb-2">No modules yet</h3>
+								<p class="text-base-content/70">Modules will appear here once they are added to this class.</p>
 							</div>
-							<div class="card-body pt-0">
-								<p class="text-sm text-base-content/80">{classItem.description}</p>
-								<div class="card-actions justify-end mt-4">
-									<a href={`/classes/${classItem._id}/modules`} class="btn btn-primary btn-sm">
-										View Modules
+						</div>
+					{:else}
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							{#each modules.data as module, index (module._id)}
+								<div in:fly={{ y: 20, delay: index * 50, duration: 300 }} class="relative">
+									<a href={`/classes/${selectedClass._id}/modules/${module._id}`}>
+										<div
+											class="card bg-base-100 shadow-md h-full transition-all duration-300 overflow-hidden hover:shadow-lg hover:translate-y-[-2px]"
+										>
+											<div class="card-body">
+												<h2 class="card-title text-lg">{module.title}</h2>
+												<p class="text-base-content/70 text-sm mb-4 text-left">
+													{module.description || 'No description available'}
+												</p>
+
+												<div class="mt-auto flex justify-end">
+													<div class="btn btn-sm btn-primary btn-outline rounded-full">
+														<ArrowRight size={16} />
+													</div>
+												</div>
+											</div>
+										</div>
 									</a>
 								</div>
-							</div>
+							{/each}
 						</div>
-					{/each}
+					{/if}
 				</div>
 			{/if}
 		</div>
@@ -143,10 +232,12 @@
 			<h3 class="text-lg font-semibold mb-6">Quick Actions</h3>
 
 			<div class="space-y-3">
-				<div class="card bg-base-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+				<div
+					class="card bg-base-100 shadow-md hover:shadow-lg hover:translate-y-[-2px] transition-all duration-300 cursor-pointer"
+				>
 					<div class="card-body p-4">
-						<div class="flex items-center justify-between">
-							<div class="flex items-center space-x-3">
+						<div class="flex justify-between">
+							<div class="flex space-x-3">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									class="h-5 w-5 text-base-content/60"
@@ -167,10 +258,12 @@
 					</div>
 				</div>
 
-				<div class="card bg-base-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+				<div
+					class="card bg-base-100 shadow-md hover:shadow-lg hover:translate-y-[-2px] transition-all duration-300 cursor-pointer"
+				>
 					<div class="card-body p-4">
-						<div class="flex items-center justify-between">
-							<div class="flex items-center space-x-3">
+						<div class="flex justify-between">
+							<div class="flex space-x-3">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									class="h-5 w-5 text-base-content/60"
@@ -191,10 +284,12 @@
 					</div>
 				</div>
 
-				<div class="card bg-base-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+				<div
+					class="card bg-base-100 shadow-md hover:shadow-lg hover:translate-y-[-2px] transition-all duration-300 cursor-pointer"
+				>
 					<div class="card-body p-4">
-						<div class="flex items-center justify-between">
-							<div class="flex items-center space-x-3">
+						<div class="flexjustify-between">
+							<div class="flex space-x-3">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									class="h-5 w-5 text-base-content/60"

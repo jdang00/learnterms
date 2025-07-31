@@ -40,7 +40,7 @@
 	{#if !hideSidebar}
 		<div class="p-6">
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<a class="btn btn-ghost font-bold" href="/classes/{module.data.classId}/modules">
+				<a class="btn btn-ghost font-bold" href="/classes">
 					<ChevronLeft size={16} /> CHAPTER {module.data.order}
 				</a>
 			</h4>
@@ -88,7 +88,7 @@
 			<div class="flex flex-col items-center space-y-4">
 				<a
 					class="font-bold text-secondary-content bg-secondary text-center w-full rounded-full"
-					href="/classes/{module.data.classId}/modules"
+					href="/classes"
 				>
 					{module.data.order}
 				</a>
