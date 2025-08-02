@@ -28,5 +28,5 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		id: userId
 	});
 
-	return { moduleInfo, module, moduleId, convexID };
+	return { moduleInfo, module, moduleId, convexID, classId: params.classId };
 };

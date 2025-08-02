@@ -292,7 +292,7 @@
 	<p>Error: {questions.error.message}</p>
 {:else if currentlySelected}
 	<div class="flex flex-col lg:flex-row h-full p-2 lg:p-4 lg:gap-8">
-		<QuizSideBar bind:qs {module} {currentlySelected} {userId} moduleId={data.moduleId} {client} />
+		<QuizSideBar bind:qs {module} {currentlySelected} {userId} moduleId={data.moduleId} {client} classId={data.classId} />
 
 		<div class="w-full lg:w-3/4 flex flex-col max-w-full lg:max-w-none overflow-hidden flex-grow">
 			{#if qs.noFlags}

@@ -15,59 +15,151 @@ export const checkExistingRecord = query({
 	}
 });
 
+export const getProgressForClass = query({
+	args: {
+		userId: v.id('users'),
+		classId: v.id('class')
+	},
+	handler: async (ctx, args) => {
+		const modules = await ctx.db
+			.query('module')
+			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.collect();
+
+		if (modules.length === 0) {
+			return {};
+		}
+
+		const questionsByModule = new Map();
+
+		for (const module of modules) {
+			const questions = await ctx.db
+				.query('question')
+				.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
+				.collect();
+			questionsByModule.set(module._id, questions);
+		}
+
+		const progressRecords = await ctx.db
+			.query('userProgress')
+			.withIndex('by_user_question', (q) => q.eq('userId', args.userId))
+			.collect();
+
+		const progressMap = new Map();
+		progressRecords.forEach((record) => {
+			progressMap.set(record.questionId, record);
+		});
+
+		const moduleProgress: Record<
+			string,
+			{
+				moduleTitle: string;
+				moduleOrder: number;
+				totalQuestions: number;
+				interactedQuestions: number;
+				flaggedQuestions: number;
+				masteredQuestions: number;
+				completionPercentage: number;
+				masteryPercentage: number;
+				interactedQuestionIds: string[];
+				flaggedQuestionIds: string[];
+				masteredQuestionIds: string[];
+			}
+		> = {};
+
+		for (const module of modules) {
+			const moduleQuestions = questionsByModule.get(module._id) || [];
+			const totalQuestions = moduleQuestions.length;
+
+			let interactedQuestions = 0;
+			let flaggedQuestions = 0;
+			let masteredQuestions = 0;
+			const interactedQuestionIds = [];
+			const flaggedQuestionIds = [];
+			const masteredQuestionIds = [];
+
+			for (const question of moduleQuestions) {
+				const progress = progressMap.get(question._id);
+				if (progress) {
+					if (progress.selectedOptions.length > 0 || progress.eliminatedOptions.length > 0) {
+						interactedQuestions++;
+						interactedQuestionIds.push(question._id);
+					}
+					if (progress.isFlagged) {
+						flaggedQuestions++;
+						flaggedQuestionIds.push(question._id);
+					}
+					if (progress.isMastered) {
+						masteredQuestions++;
+						masteredQuestionIds.push(question._id);
+					}
+				}
+			}
+
+			moduleProgress[module._id] = {
+				moduleTitle: module.title,
+				moduleOrder: module.order,
+				totalQuestions,
+				interactedQuestions,
+				flaggedQuestions,
+				masteredQuestions,
+				completionPercentage:
+					totalQuestions > 0 ? Math.round((interactedQuestions / totalQuestions) * 100) : 0,
+				masteryPercentage:
+					totalQuestions > 0 ? Math.round((masteredQuestions / totalQuestions) * 100) : 0,
+				interactedQuestionIds,
+				flaggedQuestionIds,
+				masteredQuestionIds
+			};
+		}
+
+		return moduleProgress;
+	}
+});
+
 export const getUserProgressForModule = query({
-	args: { 
-		userId: v.id('users'), 
+	args: {
+		userId: v.id('users'),
 		questionIds: v.array(v.id('question'))
 	},
 	handler: async (ctx, args) => {
-		// Use a more efficient query that directly filters for the specific questions
 		const records = await ctx.db
 			.query('userProgress')
-			.withIndex('by_user_question', (q) =>
-				q.eq('userId', args.userId)
-			)
+			.withIndex('by_user_question', (q) => q.eq('userId', args.userId))
 			.collect();
 
-		// Create a Set for O(1) lookup performance
 		const questionIdSet = new Set(args.questionIds);
-		
+
 		// Filter records that match the question IDs in this module
 		// and have actual interactions (selected or eliminated options)
 		const interactedQuestions = records
-			.filter(record => 
-				questionIdSet.has(record.questionId) &&
-				(record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0)
+			.filter(
+				(record) =>
+					questionIdSet.has(record.questionId) &&
+					(record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0)
 			)
-			.map(record => record.questionId);
+			.map((record) => record.questionId);
 
 		return interactedQuestions;
 	}
 });
 
 export const getFlaggedQuestionsForModule = query({
-	args: { 
-		userId: v.id('users'), 
+	args: {
+		userId: v.id('users'),
 		questionIds: v.array(v.id('question'))
 	},
 	handler: async (ctx, args) => {
 		const records = await ctx.db
 			.query('userProgress')
-			.withIndex('by_user_question', (q) =>
-				q.eq('userId', args.userId)
-			)
+			.withIndex('by_user_question', (q) => q.eq('userId', args.userId))
 			.collect();
 
-		// Create a Set for O(1) lookup performance
 		const questionIdSet = new Set(args.questionIds);
-		
-		// Filter records that match the question IDs in this module and are flagged
+
 		const flaggedQuestions = records
-			.filter(record => 
-				questionIdSet.has(record.questionId) &&
-				record.isFlagged === true
-			)
-			.map(record => record.questionId);
+			.filter((record) => questionIdSet.has(record.questionId) && record.isFlagged === true)
+			.map((record) => record.questionId);
 
 		return flaggedQuestions;
 	}
@@ -152,9 +244,7 @@ export const clearUserProgressForModule = mutation({
 		// Get all user progress records for the user
 		const progressRecords = await ctx.db
 			.query('userProgress')
-			.withIndex('by_user_question', (q) =>
-				q.eq('userId', args.userId)
-			)
+			.withIndex('by_user_question', (q) => q.eq('userId', args.userId))
 			.collect();
 
 		// Filter and delete records where the question belongs to the module

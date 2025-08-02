@@ -1,5 +1,6 @@
 import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
+import type { ConvexClient } from 'convex/browser';
 
 export class QuizState {
 	checkResult: string = $state('');
@@ -15,7 +16,7 @@ export class QuizState {
 	loadProgressFunction: ((questionId: Id<'question'>) => Promise<void>) | null = $state(null);
 	currentQuestionFlagged: boolean = $state(false);
 	interactedQuestionsCount: number = $state(0);
-	
+
 	// Sort functionality
 	showFlagged: boolean = $state(false);
 	showIncomplete: boolean = $state(false);
@@ -57,12 +58,11 @@ export class QuizState {
 	// Toggle flag for current question
 	toggleFlag() {
 		this.currentQuestionFlagged = !this.currentQuestionFlagged;
-		
+
 		// Trigger save to update flag in database
 		if (this.saveProgressFunction) {
 			this.saveProgressFunction();
 		}
-
 	}
 
 	// Set flag status for current question (used when loading from database)
@@ -77,10 +77,10 @@ export class QuizState {
 			if (this.saveProgressFunction) {
 				await this.saveProgressFunction();
 			}
-			
+
 			this.currentQuestionIndex++;
 			this.checkResult = '';
-			
+
 			// Load progress for the new question
 			const newQuestion = this.getCurrentFilteredQuestion();
 			if (newQuestion && this.loadProgressFunction) {
@@ -100,10 +100,10 @@ export class QuizState {
 			if (this.saveProgressFunction) {
 				await this.saveProgressFunction();
 			}
-			
+
 			this.currentQuestionIndex--;
 			this.checkResult = '';
-			
+
 			// Load progress for the new question
 			const newQuestion = this.getCurrentFilteredQuestion();
 			if (newQuestion && this.loadProgressFunction) {
@@ -128,10 +128,10 @@ export class QuizState {
 			if (this.saveProgressFunction) {
 				await this.saveProgressFunction();
 			}
-			
+
 			this.currentQuestionIndex = index;
 			this.checkResult = '';
-			
+
 			// Load progress for the new question
 			const newQuestion = this.getCurrentQuestion();
 			if (newQuestion && this.loadProgressFunction) {
@@ -160,8 +160,6 @@ export class QuizState {
 	updateLiveInteractedQuestions(interacted: Id<'question'>[]) {
 		this.liveInteractedQuestions = interacted;
 	}
-
-
 
 	getCurrentQuestion() {
 		const currentQuestions = this.isShuffled ? this.shuffledQuestions : this.questions;
@@ -255,7 +253,7 @@ export class QuizState {
 
 	getFilteredQuestions(): Doc<'question'>[] {
 		let filteredQuestions = this.isShuffled ? this.shuffledQuestions : this.questions;
-		
+
 		if (this.showFlagged) {
 			// Check if there are any flagged questions
 			if (this.liveFlaggedQuestions.length === 0) {
@@ -263,17 +261,17 @@ export class QuizState {
 				this.showFlagged = false;
 				return filteredQuestions;
 			}
-			filteredQuestions = filteredQuestions.filter(q => 
+			filteredQuestions = filteredQuestions.filter((q) =>
 				this.liveFlaggedQuestions.includes(q._id)
 			);
 		}
-		
+
 		if (this.showIncomplete) {
-			filteredQuestions = filteredQuestions.filter(q => 
-				!this.liveInteractedQuestions.includes(q._id)
+			filteredQuestions = filteredQuestions.filter(
+				(q) => !this.liveInteractedQuestions.includes(q._id)
 			);
 		}
-		
+
 		return filteredQuestions;
 	}
 
@@ -287,8 +285,7 @@ export class QuizState {
 		return filteredQuestions[safeIndex] || filteredQuestions[0];
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	async reset(userId: Id<'users'>, moduleId: Id<'module'>, client: any) {
+	async reset(userId: Id<'users'>, moduleId: Id<'module'>, client: ConvexClient) {
 		// Clear local state
 		this.selectedAnswers = [];
 		this.eliminatedAnswers = [];

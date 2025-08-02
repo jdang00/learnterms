@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { PanelRight, Eye, Info, RotateCcw, ChevronLeft } from 'lucide-svelte';
 
-	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client } = $props();
+	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
 	let hideSidebar = $state(false);
 	let isInfoModalOpen = $state(false);
 	let isSolutionModalOpen = $state(false);
@@ -40,7 +40,7 @@
 	{#if !hideSidebar}
 		<div class="p-6">
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<a class="btn btn-ghost font-bold" href="/classes">
+				<a class="btn btn-ghost font-bold" href={`/classes?classId=${classId}`}>
 					<ChevronLeft size={16} /> CHAPTER {module.data.order}
 				</a>
 			</h4>
@@ -88,7 +88,7 @@
 			<div class="flex flex-col items-center space-y-4">
 				<a
 					class="font-bold text-secondary-content bg-secondary text-center w-full rounded-full"
-					href="/classes"
+					href={`/classes?classId=${classId}`}
 				>
 					{module.data.order}
 				</a>

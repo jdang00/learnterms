@@ -53,7 +53,7 @@ export default defineSchema({
 		order: v.number(),
 		description: v.string(),
 		status: v.string()
-	}),
+	}).index('by_classId', ['classId']),
 	question: defineTable({
 		metadata: v.object({}),
 		updatedAt: v.number(),
