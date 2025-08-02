@@ -42,7 +42,8 @@ export default defineSchema({
 		cohortId: v.id('cohort'),
 		semesterId: v.id('semester'),
 		code: v.string(),
-		description: v.string()
+		description: v.string(),
+		order: v.number()
 	}),
 	module: defineTable({
 		title: v.string(),

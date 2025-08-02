@@ -20,7 +20,23 @@
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
 
-	type ClassType = { _id: Id<'class'>; name: string; code: string; description?: string };
+	type ClassType = { 
+		_id: Id<'class'>; 
+		_creationTime: number;
+		updatedAt: number;
+		cohortId: Id<'cohort'>;
+		name: string; 
+		metadata: {};
+		description: string;
+		semesterId: Id<'semester'>;
+		code: string; 
+		order: number;
+		deletedAt?: number;
+		semester?: {
+			_id: Id<'semester'>;
+			name: string;
+		} | null;
+	};
 
 	let currentView: 'classes' | 'modules' = $state('classes');
 	let selectedClass: ClassType | null = $state(null);

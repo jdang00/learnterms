@@ -1,18 +1,11 @@
 <script lang="ts">
 	import { ArrowRight } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
-	import type { Id } from '../../convex/_generated/dataModel';
-
-	interface ClassType {
-		_id: Id<'class'>;
-		name: string;
-		code: string;
-		description?: string;
-	}
+	import type { Doc } from '../../convex/_generated/dataModel';
 
 	interface Props {
-		classItem: ClassType;
-		onSelect: (classItem: ClassType) => void;
+		classItem: Doc<'class'>;
+		onSelect: (classItem: Doc<'class'>) => void;
 	}
 
 	let { classItem, onSelect }: Props = $props();
@@ -32,7 +25,6 @@
 				<p class="text-base-content/70 text-sm mb-4 text-left line-clamp-4">
 					{classItem.description || 'No description available'}
 				</p>
-
 				<div class="mt-auto flex justify-end">
 					<div class="btn btn-sm btn-primary btn-outline rounded-full">
 						<ArrowRight size={16} />
@@ -41,4 +33,4 @@
 			</div>
 		</div>
 	</button>
-</div> 
+</div>

@@ -17,6 +17,7 @@ import type * as class_ from "../class.js";
 import type * as module from "../module.js";
 import type * as question from "../question.js";
 import type * as school from "../school.js";
+import type * as semester from "../semester.js";
 import type * as userProgress from "../userProgress.js";
 import type * as users from "../users.js";
 
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   module: typeof module;
   question: typeof question;
   school: typeof school;
+  semester: typeof semester;
   userProgress: typeof userProgress;
   users: typeof users;
 }>;

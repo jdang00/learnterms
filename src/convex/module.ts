@@ -5,12 +5,12 @@ export const getClassModules = query({
 	// Enter class ID
 	args: { id: v.id('class') },
 	handler: async (ctx, args) => {
-		const classes = ctx.db
+		const modules = await ctx.db
 			.query('module')
 			.filter((q) => q.eq(q.field('classId'), args.id))
 			.collect();
 
-		return classes;
+		return modules.sort((a, b) => a.order - b.order);
 	}
 });
 
