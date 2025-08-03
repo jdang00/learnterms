@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { ArrowRight } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
-	import type { Doc } from '../../convex/_generated/dataModel';
-
+	import type { ClassWithSemester } from '../types';
 	interface Props {
-		classItem: Doc<'class'>;
-		onSelect: (classItem: Doc<'class'>) => void;
+		classItem: ClassWithSemester;
+		onSelect: (classItem: ClassWithSemester) => void;
 	}
 
 	let { classItem, onSelect }: Props = $props();
@@ -14,15 +13,16 @@
 <div in:fade={{ duration: 300 }} class="relative">
 	<button onclick={() => onSelect(classItem)} class="w-full">
 		<div
-			class="card bg-base-100 border border-base-300 shadow-md h-80 transition-all duration-300 overflow-hidden hover:shadow-lg hover:translate-y-[-2px]"
+			class="rounded-lg bg-base-100 border border-base-300 shadow-sm h-60 transition-all duration-200 overflow-hidden hover:shadow-md hover:border-primary/30"
 		>
-			<div class="card-body flex flex-col">
-				<div class="flex items-center gap-2 mb-2">
-					<div class="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
-					<h2 class="card-title text-lg text-left truncate">{classItem.name}</h2>
+			<div class="p-4 flex flex-col h-full">
+				<div class="flex flex-row justify-between mb-4">
+					<h2 class="font-semibold text-base-content text-left truncate">{classItem.name}</h2>
+					<div class="text-xs text-base-content/60 font-mono mb-3 badge rounded-full">
+						{classItem.code}
+					</div>
 				</div>
-				<div class="badge badge-ghost badge-sm mb-2">{classItem.code}</div>
-				<p class="text-base-content/70 text-sm mb-4 text-left line-clamp-4">
+				<p class="text-sm text-base-content/70 mb-4 text-left line-clamp-4">
 					{classItem.description || 'No description available'}
 				</p>
 				<div class="mt-auto flex justify-end">

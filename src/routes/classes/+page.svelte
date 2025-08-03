@@ -2,7 +2,7 @@
 	import { useQuery } from 'convex-svelte';
 	import type { PageData } from './$types';
 	import { api } from '../../convex/_generated/api.js';
-	import type { Id } from '../../convex/_generated/dataModel';
+	import type { Doc, Id } from '../../convex/_generated/dataModel';
 	import { fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { ArrowLeft } from 'lucide-svelte';
@@ -11,7 +11,7 @@
 	import ModuleCard from '../../lib/components/ModuleCard.svelte';
 	import Sidebar from '../../lib/components/Sidebar.svelte';
 	import ClassList from '../../lib/components/ClassList.svelte';
-
+	import type { ClassWithSemester, ClassProgress } from '../../lib/types';
 	import { useClerkContext } from 'svelte-clerk/client';
 	const ctx = useClerkContext();
 	const name = $derived(ctx.user?.firstName);
@@ -20,39 +20,27 @@
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
 
-	type ClassType = { 
-		_id: Id<'class'>; 
-		_creationTime: number;
-		updatedAt: number;
-		cohortId: Id<'cohort'>;
-		name: string; 
-		metadata: {};
-		description: string;
-		semesterId: Id<'semester'>;
-		code: string; 
-		order: number;
-		deletedAt?: number;
-		semester?: {
-			_id: Id<'semester'>;
-			name: string;
-		} | null;
-	};
-
 	let currentView: 'classes' | 'modules' = $state('classes');
-	let selectedClass: ClassType | null = $state(null);
+	let selectedClass: ClassWithSemester | null = $state(null);
 	let isNavigatingBack = $state(false);
 
-	const classes = useQuery(api.class.getUserClasses, {
+	const classesQuery = useQuery(api.class.getUserClasses, {
 		id: (userData?.cohortId as Id<'cohort'>) || ''
 	});
 
-	let modules = $state<{ isLoading: boolean; error: any; data?: any[] }>({
+	const classes = $derived({
+		data: classesQuery.data || [],
+		isLoading: classesQuery.isLoading,
+		error: classesQuery.error
+	});
+
+	let modules = $state<{ isLoading: boolean; error: any; data?: Doc<'module'>[] }>({
 		isLoading: false,
 		error: null,
 		data: []
 	});
 
-	let classProgress = $state<any>(null);
+	let classProgress: { data: ClassProgress | undefined; isLoading: boolean; error: any } | null = $state(null);
 
 	const userDataQuery = userData?.clerkUserId
 		? useQuery(api.users.getUserById, {
@@ -88,19 +76,20 @@
 
 		if (classId && classes.data && classes.data.length > 0) {
 			const foundClass = classes.data.find((cls) => cls._id === classId);
-			console.log('URL effect - foundClass:', foundClass);
 			if (foundClass && !selectedClass) {
-				console.log('URL effect - setting selectedClass and currentView');
 				selectedClass = foundClass;
 				currentView = 'modules';
 			}
 		}
 	});
 
-	async function selectClass(classItem: ClassType) {
+	async function selectClass(classItem: ClassWithSemester | null) {
+		console.log(classItem);
 		selectedClass = classItem;
 		currentView = 'modules';
-		await goto(`/classes?classId=${classItem._id}`, { replaceState: true });
+		if (classItem != null) {
+			await goto(`/classes?classId=${classItem._id}`, { replaceState: true });
+		}
 	}
 
 	async function goBackToClasses() {
@@ -112,24 +101,24 @@
 	}
 </script>
 
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-	<div class="mb-8">
+<main class="min-h-screen p-8">
+	<div class="mb-8 flex flex-col gap-2">
 		{#if user === undefined}
 			<div class="skeleton h-8 w-64 mb-2"></div>
 			<div class="skeleton h-4 w-80"></div>
 		{:else if user === null}
-			<h2 class="text-2xl font-bold mb-2">Welcome, Guest!</h2>
+			<h1 class="text-2xl font-bold text-base-content">Welcome, Guest!</h1>
 			<p class="text-base-content/70">Here's your learning dashboard.</p>
 		{:else}
-			<div class="flex flex-row gap-8">
-				<div class="avatar hidden xl:block self-center">
+			<div class="flex flex-row gap-8 items-center">
+				<div class="avatar hidden xl:block">
 					<div class="ring-primary ring-offset-base-100 w-16 rounded-full ring ring-offset-2">
 						<img src={user.imageUrl} alt="user profile" />
 					</div>
 				</div>
 
 				<div>
-					<h2 class="text-2xl font-bold mb-2">Hi, {name}!</h2>
+					<h1 class="text-2xl font-bold text-base-content mb-2">Hi, {name}!</h1>
 					{#if userData === null}
 						<div class="skeleton h-4 w-80"></div>
 					{:else}
@@ -137,7 +126,7 @@
 							{userData.schoolName}
 						</p>
 						{#if userData && !classes.isLoading}
-							<div class="badge badge-primary badge-soft mt-2">
+							<div class="badge badge-primary rounded-full badge-soft mt-2">
 								{userData.cohortName}
 							</div>
 						{/if}
@@ -147,28 +136,28 @@
 		{/if}
 	</div>
 
-	<div class="divider"></div>
-
-	<div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-8">
+	<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
 		<div class="lg:col-span-3 overflow-hidden">
 			{#if currentView === 'classes'}
 				<ClassList {classes} onSelectClass={selectClass} />
 			{:else if currentView === 'modules' && selectedClass}
 				<div in:fade={{ duration: 400, easing: cubicOut }} class="w-full">
 					<div class="flex items-center gap-4 mb-6">
-						<button onclick={goBackToClasses} class="btn btn-sm btn-ghost">
+						<button onclick={goBackToClasses} class="btn">
 							<ArrowLeft size={16} />
 						</button>
-						<h3 class="text-lg font-semibold">{selectedClass.name}</h3>
-						<div class="badge badge-primary badge-soft">{selectedClass.code}</div>
+						<h3 class="text-lg font-semibold text-base-content">{selectedClass.name}</h3>
+						<div class="text-xs text-base-content/60 font-mono">{selectedClass.code}</div>
 					</div>
 
 					{#if modules.isLoading}
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 							{#each Array(4), index (index)}
-								<div class="card bg-base-100 shadow-md animate-pulse">
-									<div class="card-body">
-										<div class="skeleton h-8 w-32 mb-4"></div>
+								<div
+									class="rounded-lg bg-base-100 shadow-sm border border-base-300 p-4 animate-pulse"
+								>
+									<div class="space-y-3">
+										<div class="skeleton h-6 w-32 mb-3"></div>
 										<div class="skeleton h-4 w-full mb-2"></div>
 										<div class="skeleton h-4 w-full mb-2"></div>
 										<div class="skeleton h-4 w-2/3 mb-4"></div>
@@ -178,14 +167,14 @@
 							{/each}
 						</div>
 					{:else if modules.error}
-						<div class="alert alert-error">
+						<div class="alert alert-error rounded-lg shadow-sm border border-error/20">
 							<span>Failed to load modules: {modules.error.toString()}</span>
 						</div>
 					{:else if !modules.data || modules.data.length === 0}
-						<div class="card bg-base-100 shadow-md">
-							<div class="card-body py-12">
+						<div class="rounded-lg bg-base-100 shadow-sm border border-base-300 p-8">
+							<div class="text-center py-8">
 								<div class="text-4xl mb-4">📚</div>
-								<h3 class="text-lg font-semibold mb-2">No modules yet</h3>
+								<h3 class="text-lg font-semibold mb-2 text-base-content">No modules yet</h3>
 								<p class="text-base-content/70">
 									Modules will appear here once they are added to this class.
 								</p>
