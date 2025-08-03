@@ -92,7 +92,7 @@
 	function viewClass(id: string) {
 		console.log('View class', id);
 	}
-	
+
 	function editClass(classItem: ClassItem) {
 		editingClass = classItem;
 		isEditModalOpen = true;
