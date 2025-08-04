@@ -7,6 +7,11 @@ export interface ClassWithSemester extends Doc<'class'> {
 	} | null;
 }
 
+export interface CohortInfo {
+	cohort: Doc<'cohort'>;
+	school: Doc<'school'>;
+}
+
 export type ModuleProgress = {
 	moduleTitle: string;
 	moduleOrder: number;

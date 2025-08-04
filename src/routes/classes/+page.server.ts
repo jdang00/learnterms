@@ -17,5 +17,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const userData = await client.query(api.users.getUserById, { id: user.id });
 
+	if (userData === null && user.fullName != null) {
+		await client.mutation(api.users.addUser, { clerkUserId: user.id, name: user.fullName });
+		return redirect(307, '/join-class');
+	} else if (userData?.cohortId === undefined) {
+		return redirect(307, '/join-class');
+	}
+
 	return { userData };
 };

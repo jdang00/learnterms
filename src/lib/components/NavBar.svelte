@@ -1,25 +1,10 @@
 <script lang="ts">
-	import { Sun, Moon } from 'lucide-svelte';
-	import { themeChange } from 'theme-change';
 	import { SignedIn, SignedOut, SignInButton, UserButton } from 'svelte-clerk';
-	import { writable } from 'svelte/store';
+	import { useClerkContext } from 'svelte-clerk/client';
+	import ThemeToggle from './ThemeToggle.svelte';
 
-	const currentTheme = writable('light');
-
-	$effect(() => {
-		themeChange(false);
-		const savedTheme = localStorage.getItem('theme') || 'light';
-		currentTheme.set(savedTheme);
-		document.documentElement.setAttribute('data-theme', savedTheme);
-	});
-
-	function toggleTheme() {
-		const newTheme = $currentTheme === 'light' ? 'dark' : 'light';
-		currentTheme.set(newTheme);
-
-		document.documentElement.setAttribute('data-theme', newTheme);
-		localStorage.setItem('theme', newTheme);
-	}
+	const ctx = useClerkContext();
+	const plan = $derived(ctx.user?.publicMetadata.plan === 'pro');
 </script>
 
 <div class="navbar bg-base-100 h-16">
@@ -57,26 +42,13 @@
 
 	<div class="navbar-end">
 		<div class="flex flex-row gap-4">
-			<button class="btn btn-ghost btn-circle m-1 relative overflow-hidden" onclick={toggleTheme}>
-				<div
-					class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-in-out {$currentTheme ===
-					'light'
-						? 'opacity-100 rotate-0'
-						: 'opacity-0 -rotate-90'}"
-					data-theme="light"
-				>
-					<Sun size="22" />
+			<ThemeToggle variant="ghost" size="md" class="btn-circle m-1" />
+
+			{#if plan}
+				<div class="self-center">
+					<div class="badge badge-primary badge-outline rounded-full">PRO</div>
 				</div>
-				<div
-					class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-in-out {$currentTheme ===
-					'dark'
-						? 'opacity-100 rotate-0'
-						: 'opacity-0 rotate-90'}"
-					data-theme="dark"
-				>
-					<Moon size="22" />
-				</div>
-			</button>
+			{/if}
 
 			<div class="self-center">
 				<SignedIn>

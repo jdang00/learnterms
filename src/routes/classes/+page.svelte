@@ -5,7 +5,7 @@
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 	import { fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import { ArrowLeft } from 'lucide-svelte';
+	import { ArrowLeft, ShieldCheckIcon, UserRoundPenIcon } from 'lucide-svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import ModuleCard from '../../lib/components/ModuleCard.svelte';
@@ -16,6 +16,8 @@
 	const ctx = useClerkContext();
 	const name = $derived(ctx.user?.firstName);
 	const user = $derived(ctx.user);
+	const admin = $derived(ctx.user?.publicMetadata.role === 'admin');
+	const contributor = $derived(ctx.user?.publicMetadata.create === 'contributor');
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
@@ -40,7 +42,8 @@
 		data: []
 	});
 
-	let classProgress: { data: ClassProgress | undefined; isLoading: boolean; error: any } | null = $state(null);
+	let classProgress: { data: ClassProgress | undefined; isLoading: boolean; error: any } | null =
+		$state(null);
 
 	const userDataQuery = userData?.clerkUserId
 		? useQuery(api.users.getUserById, {
@@ -129,6 +132,16 @@
 							<div class="badge badge-primary rounded-full badge-soft mt-2">
 								{userData.cohortName}
 							</div>
+							{#if admin}
+								<div class="badge badge-secondary rounded-full badge-soft mt-2">
+									<ShieldCheckIcon size={16} /> Admin
+								</div>
+							{/if}
+							{#if contributor}
+								<div class="badge badge-accent rounded-full badge-soft mt-2">
+									<UserRoundPenIcon size={16} /> Contributor
+								</div>
+							{/if}
 						{/if}
 					{/if}
 				</div>

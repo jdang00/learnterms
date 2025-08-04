@@ -6,12 +6,18 @@
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import NavBar from '$lib/components/NavBar.svelte';
 	import { setupConvex } from 'convex-svelte';
+	import { theme, clerkTheme } from '$lib/theme.svelte';
+	import { onMount } from 'svelte';
 
 	setupConvex(PUBLIC_CONVEX_URL);
 
 	injectAnalytics();
 
 	const { children }: { children: Snippet } = $props();
+
+	onMount(() => {
+		theme.init();
+	});
 </script>
 
 <svelte:head>
@@ -41,7 +47,10 @@
 	/>
 </svelte:head>
 
-<ClerkProvider publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}>
+<ClerkProvider 
+	publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}
+	appearance={{ baseTheme: $clerkTheme }}
+>
 	<div class="flex flex-col h-screen">
 		<NavBar />
 

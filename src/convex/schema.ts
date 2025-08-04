@@ -6,7 +6,7 @@ export default defineSchema({
 		updatedAt: v.number(),
 		deletedAt: v.optional(v.number()),
 		clerkUserId: v.string(),
-		cohortId: v.id('cohort'),
+		cohortId: v.optional(v.id('cohort')),
 		name: v.string(),
 		metadata: v.object({})
 	}).index('by_clerkUserId', ['clerkUserId']),
@@ -25,7 +25,9 @@ export default defineSchema({
 		deletedAt: v.optional(v.number()),
 		schoolId: v.id('school'),
 		startYear: v.string(),
-		endYear: v.string()
+		endYear: v.string(),
+		classCode: v.optional(v.string()),
+		pic_url: v.optional(v.string())
 	}),
 	semester: defineTable({
 		name: v.string(),
