@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PanelRight, Eye, Info, RotateCcw, ChevronLeft } from 'lucide-svelte';
+	import { PanelRight, Eye, Info, RotateCcw, ChevronLeft, Lightbulb } from 'lucide-svelte';
 
 	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
 	let hideSidebar = $state(false);
@@ -77,10 +77,40 @@
 				</div>
 			</div>
 
-			<div class="flex flex-row mt-6 justify-center">
+			<div class="flex flex-row mt-6 justify-center space-x-2">
 				<button class="btn btn-error btn-soft" onclick={() => (qs.isResetModalOpen = true)}>
 					Reset
 				</button>
+
+				<div class="tooltip" data-tip="Shortcuts">
+					<button class="btn btn-ghost">
+						<Lightbulb />
+					</button>
+					<div class="tooltip-content bg-base-200 text-base-content rounded p-2 shadow-md">
+						<div class="font-mono flex flex-col gap-1">
+							<div class="flex items-center gap-4 justify-between">
+								<kbd class="kbd kbd-sm">shift + s</kbd>
+								<span>Shuffle</span>
+							</div>
+							<div class="flex items-center gap-4 justify-between">
+								<kbd class="kbd kbd-sm">f</kbd>
+								<span>Flag</span>
+							</div>
+							<div class="flex items-center gap-4 justify-between">
+								<kbd class="kbd kbd-sm">enter</kbd>
+								<span>Check</span>
+							</div>
+							<div class="flex items-center gap-4 justify-between">
+								<kbd class="kbd kbd-sm">arrows</kbd>
+								<span>Navigation</span>
+							</div>
+							<div class="flex items-center gap-4 justify-between">
+								<kbd class="kbd kbd-sm">esc</kbd>
+								<span>Clear</span>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	{:else}

@@ -8,7 +8,9 @@
 	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
 	import { QuizState } from './states.svelte';
 	import ActionButtons from '$lib/components/ActionButtons.svelte';
-	import { onMount } from 'svelte';
+	import MobileMenu from '$lib/components/MobileMenu.svelte';
+	import MobileInfo from '$lib/components/MobileInfo.svelte';
+	import { onMount, tick } from 'svelte';
 	import { Flag, BookmarkCheck, ArrowDownNarrowWide } from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -254,6 +256,21 @@
 				event.preventDefault();
 				qs.handleSolution();
 				break;
+			case 'Enter':
+				event.preventDefault();
+				if (currentlySelected) {
+					qs.checkAnswer(currentlySelected.correctAnswers, qs.selectedAnswers);
+				}
+				break;
+			case 'Escape':
+				event.preventDefault();
+				qs.selectedAnswers = [];
+				qs.eliminatedAnswers = [];
+				qs.checkResult = '';
+				if (qs.saveProgressFunction) {
+					await qs.saveProgressFunction();
+				}
+				break;
 			case 'f':
 			case 'F':
 				event.preventDefault();
@@ -272,6 +289,33 @@
 	onMount(() => {
 		document.addEventListener('keydown', handleKeydown);
 		return () => document.removeEventListener('keydown', handleKeydown);
+	});
+
+	// Handle no flags logic
+	$effect(() => {
+		if (qs.showFlagged && qs.liveFlaggedQuestions.length === 0) {
+			qs.noFlags = true;
+			qs.showFlagged = false;
+		}
+	});
+
+	// Scroll to the currently selected question whenever it changes
+	$effect(() => {
+		void qs.currentQuestionIndex;
+		tick().then(() => {
+			const filteredQuestions = qs.getFilteredQuestions();
+			const currentQuestion = qs.getCurrentFilteredQuestion();
+			if (currentQuestion && filteredQuestions.length > 0) {
+				const index = filteredQuestions.findIndex(q => q._id === currentQuestion._id);
+				if (index > -1 && qs.questionButtons && qs.questionButtons[index]) {
+					qs.questionButtons[index].scrollIntoView({
+						behavior: 'smooth',
+						block: 'nearest',
+						inline: 'center'
+					});
+				}
+			}
+		});
 	});
 
 	// Auto-dismiss no flags alert after 3 seconds
@@ -293,6 +337,7 @@
 {:else if currentlySelected}
 	<div class="flex flex-col lg:flex-row h-full p-2 lg:p-4 lg:gap-8">
 		<QuizSideBar bind:qs {module} {currentlySelected} {userId} moduleId={data.moduleId} {client} classId={data.classId} />
+		<MobileInfo bind:qs {module} classId={data.classId} />
 
 		<div class="w-full lg:w-3/4 flex flex-col max-w-full lg:max-w-none overflow-hidden flex-grow">
 			{#if qs.noFlags}
@@ -329,6 +374,7 @@
 				{currentlySelected}
 				interactedQuestions={interactedQuestions.data || []}
 				flags={flaggedQuestions.data || []}
+				{qs}
 			/>
 
 			<div class="text-md sm:text-lg lg:text-xl p-4">
@@ -367,6 +413,7 @@
 				<ActionButtons {qs} {currentlySelected} />
 			</div>
 		</div>
+		<MobileMenu bind:qs {currentlySelected} />
 	</div>
 {:else}
 	<p>No questions available.</p>

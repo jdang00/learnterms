@@ -41,7 +41,7 @@
 	}
 </script>
 
-<div class=" flex-row justify-center mt-8 gap-4 hidden lg:flex">
+<div class="flex flex-row justify-center mt-8 gap-4 hidden lg:flex">
 	<button class="btn btn-outline" onclick={handleClear}>Clear</button>
 	<button class="btn btn-soft btn-success" onclick={handleCheck}>Check</button>
 	<button 

@@ -1,5 +1,5 @@
 <script>
-	let { questions, handleSelect, currentlySelected, interactedQuestions = [], flags = [] } = $props();
+	let { questions, handleSelect, currentlySelected, interactedQuestions = [], flags = [], qs } = $props();
 </script>
 
 <div
@@ -14,6 +14,7 @@
 				></span>
 			{/if}
 			<button
+				bind:this={qs.questionButtons[index]}
 				class="btn btn-circle btn-soft {currentlySelected._id === question._id
 					? 'btn-primary'
 					: 'btn-outline'} {interactedQuestions.includes(question._id) ? 'btn-accent' : ''}"

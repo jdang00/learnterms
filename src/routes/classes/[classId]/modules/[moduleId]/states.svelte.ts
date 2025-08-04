@@ -27,6 +27,10 @@ export class QuizState {
 	noFlags: boolean = $state(false);
 	// Reset modal state
 	isResetModalOpen: boolean = $state(false);
+	// Modal state for mobile
+	isModalOpen: boolean = $state(false);
+	// Question button references for scrolling
+	questionButtons: HTMLButtonElement[] = $state([]);
 
 	checkAnswer(correctAnswers: string[], userAnswers: string[]) {
 		const sortedCorrect = [...correctAnswers].sort();
@@ -257,8 +261,6 @@ export class QuizState {
 		if (this.showFlagged) {
 			// Check if there are any flagged questions
 			if (this.liveFlaggedQuestions.length === 0) {
-				this.noFlags = true;
-				this.showFlagged = false;
 				return filteredQuestions;
 			}
 			filteredQuestions = filteredQuestions.filter((q) =>

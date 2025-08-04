@@ -47,10 +47,13 @@ export const updateClassOrder = mutation({
 		const movedClass = allClasses.find((c) => c._id === args.classId);
 		if (!movedClass) return;
 
+		// Only reorder classes within the same semester
+		const semesterClasses = allClasses.filter(c => c.semesterId === movedClass.semesterId);
+		
 		const oldOrder = movedClass.order;
 		const newOrder = args.newOrder;
 
-		for (const classItem of allClasses) {
+		for (const classItem of semesterClasses) {
 			let updatedOrder = classItem.order;
 
 			if (classItem._id === args.classId) {
@@ -67,5 +70,65 @@ export const updateClassOrder = mutation({
 
 			await ctx.db.patch(classItem._id, { order: updatedOrder });
 		}
+	}
+});
+
+export const insertClass = mutation({
+	args: {
+		name: v.string(),
+		metadata: v.object({}),
+		updatedAt: v.number(),
+		cohortId: v.id('cohort'),
+		semesterId: v.id('semester'),
+		code: v.string(),
+		description: v.string(),
+		order: v.number()
+	},
+	handler: async (ctx, args) => {
+		const id = await ctx.db.insert('class', args);
+		return id;
+	}
+});
+
+export const deleteClass = mutation({
+	args: {
+		classId: v.id('class'),
+		cohortId: v.id('cohort')
+	},
+	handler: async (ctx, args) => {
+		const classToDelete = await ctx.db.get(args.classId);
+		if (!classToDelete || classToDelete.cohortId !== args.cohortId) {
+			throw new Error('Class not found or access denied');
+		}
+		
+		await ctx.db.delete(args.classId);
+		return { deleted: true };
+	}
+});
+
+export const updateClass = mutation({
+	args: {
+		classId: v.id('class'),
+		cohortId: v.id('cohort'),
+		name: v.string(),
+		code: v.string(),
+		description: v.string(),
+		semesterId: v.id('semester')
+	},
+	handler: async (ctx, args) => {
+		const classToUpdate = await ctx.db.get(args.classId);
+		if (!classToUpdate || classToUpdate.cohortId !== args.cohortId) {
+			throw new Error('Class not found or access denied');
+		}
+		
+		await ctx.db.patch(args.classId, {
+			name: args.name,
+			code: args.code,
+			description: args.description,
+			semesterId: args.semesterId,
+			updatedAt: Date.now()
+		});
+		
+		return { updated: true };
 	}
 });
