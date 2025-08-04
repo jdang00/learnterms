@@ -16,7 +16,7 @@
 
 	// Get current classes to calculate next order number
 	const classes = useQuery(api.class.getUserClasses, {
-		id: (userData?.cohortId as Id<'cohort'>) || ''
+		id: userData?.cohortId as Id<'cohort'>
 	});
 
 	$effect(() => {
@@ -27,7 +27,7 @@
 	});
 
 	async function handleSubmit() {
-		if (!className || !classCode || !semesterEditName) return;
+		if (!className || !classCode || !semesterEditName || !userData?.cohortId) return;
 
 		isSubmitting = true;
 
@@ -47,8 +47,6 @@
 			const nextOrder = semesterClasses.length
 				? Math.max(...semesterClasses.map((c) => c.order)) + 1
 				: 0;
-
-			console.log(`Adding class to ${semesterEditName}, next order: ${nextOrder}`);
 
 			await client.mutation(api.class.insertClass, {
 				name: className,
@@ -89,6 +87,12 @@
 		<div class="mb-6 flex items-center gap-2">
 			<h3 class="text-2xl font-extrabold tracking-tight">Add New Class</h3>
 		</div>
+
+		{#if !userData?.cohortId}
+			<div class="alert alert-warning mb-6">
+				<span>⚠️ You need to be assigned to a cohort before creating classes.</span>
+			</div>
+		{/if}
 
 		{#if semesters.isLoading}
 			<div class="mb-6 flex items-center gap-3 text-base-content/70">
@@ -243,7 +247,7 @@
 				<button
 					class="btn btn-primary gap-2"
 					onclick={handleSubmit}
-					disabled={isSubmitting || !className || !classCode}
+					disabled={isSubmitting || !className || !classCode || !userData?.cohortId}
 				>
 					{#if isSubmitting}
 						<span class="loading loading-spinner loading-sm"></span>

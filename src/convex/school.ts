@@ -4,7 +4,7 @@ import { v } from 'convex/values';
 export const getAllSchools = query({
 	args: {},
 	handler: async (ctx) => {
-		const schools = ctx.db.query('school').collect();
+		const schools = await ctx.db.query('school').collect();
 
 		return schools;
 	}

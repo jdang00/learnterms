@@ -1,5 +1,12 @@
-<script>
-	let { questions, handleSelect, currentlySelected, interactedQuestions = [], flags = [], qs } = $props();
+<script lang="ts">
+	let {
+		questions,
+		handleSelect,
+		currentlySelected,
+		interactedQuestions = [],
+		flags = [],
+		qs
+	} = $props();
 </script>
 
 <div

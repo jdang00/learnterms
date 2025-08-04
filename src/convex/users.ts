@@ -32,7 +32,7 @@ export const addUser = mutation({
 			clerkUserId: args.clerkUserId,
 			metadata: {},
 			name: args.name,
-			updatedAt: new Date().getUTCDate()
+			updatedAt: Date.now()
 		});
 
 		return user;

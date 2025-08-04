@@ -2,10 +2,10 @@ import { getContext } from 'svelte';
 import { theme, isDark, type ThemeMode } from '$lib/theme.svelte';
 
 export function useTheme() {
-	try {
-		const context = getContext('theme');
+	const context = getContext('theme');
+	if (context) {
 		return context;
-	} catch {
+	} else {
 		return {
 			theme,
 			isDark,

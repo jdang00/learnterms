@@ -9,9 +9,10 @@ const createThemeStore = () => {
 
 	const init = () => {
 		if (browser) {
-			const savedTheme = localStorage.getItem('theme') as ThemeMode || 'light';
-			set(savedTheme);
-			document.documentElement.setAttribute('data-theme', savedTheme);
+			const savedTheme = localStorage.getItem('theme');
+			const theme: ThemeMode = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'light';
+			set(theme);
+			document.documentElement.setAttribute('data-theme', theme);
 		}
 	};
 
