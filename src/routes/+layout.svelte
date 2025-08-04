@@ -2,13 +2,22 @@
 	import '../app.css';
 	import type { Snippet } from 'svelte';
 	import { ClerkProvider } from 'svelte-clerk';
-	import { PUBLIC_CLERK_PUBLISHABLE_KEY } from '$env/static/public';
+	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import NavBar from '$lib/components/NavBar.svelte';
+	import { setupConvex } from 'convex-svelte';
+	import { theme, clerkTheme } from '$lib/theme.svelte';
+	import { onMount } from 'svelte';
+
+	setupConvex(PUBLIC_CONVEX_URL);
 
 	injectAnalytics();
 
 	const { children }: { children: Snippet } = $props();
+
+	onMount(() => {
+		theme.init();
+	});
 </script>
 
 <svelte:head>
@@ -38,8 +47,11 @@
 	/>
 </svelte:head>
 
-<ClerkProvider publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}>
-	<div class="flex flex-col min-h-screen">
+<ClerkProvider 
+	publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}
+	appearance={{ baseTheme: $clerkTheme }}
+>
+	<div class="flex flex-col h-screen">
 		<NavBar />
 
 		<div class="flex flex-1 flex-col overflow-hidden">
@@ -49,13 +61,9 @@
 
 			<footer class="footer footer-center text-base-content p-4">
 				<aside class="flex flex-col flex-wrap justify-center lg:flex-row">
-					<p class="hidden lg:block">
-						Copyright © {new Date().getFullYear()} - Oklahoma College of Optometry Class of 2028 |
+					<p>
+						Copyright © {new Date().getFullYear()} - LearnTerms. All rights reserved.
 					</p>
-					<p class="lg:hidden">
-						Copyright © {new Date().getFullYear()} - NSUOCO Class of 2028
-					</p>
-					<a class="link" href="/changelog">Changelog</a>
 				</aside>
 			</footer>
 		</div>

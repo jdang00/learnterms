@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { ArrowRight, Brain, Sigma, ChartScatter, LayoutDashboard, Database } from 'lucide-svelte';
-	import Mock from './mock.svelte';
-	import Quiz from './quiz.svelte';
+	import { ArrowRight, Brain, Sigma, ChartScatter, LayoutDashboard } from 'lucide-svelte';
+	import Mock from '$lib/components/mock.svelte';
+	import Quiz from '$lib/components/quiz.svelte';
 	import { useClerkContext } from 'svelte-clerk';
 	import { fade, fly, scale } from 'svelte/transition';
 
@@ -35,29 +35,13 @@
 				>
 					Get Started <ArrowRight />
 				</a>
-			{:else if ctx.user?.publicMetadata.role === 'admin'}
-				<a
-					class="btn btn-primary my-8"
-					href="/dashboard"
-					in:fly={{ y: 20, duration: 500, delay: 200 }}
-				>
-					<LayoutDashboard /> Modules
-				</a>
-
-				<a
-					class="btn btn-primary btn-soft my-8"
-					href="/admin"
-					in:fly={{ y: 20, duration: 500, delay: 300 }}
-				>
-					<Database />Admin
-				</a>
 			{:else}
 				<a
 					class="btn btn-primary my-8"
-					href="/dashboard"
+					href="/classes"
 					in:fly={{ y: 20, duration: 500, delay: 200 }}
 				>
-					<LayoutDashboard /> Modules
+					<LayoutDashboard /> Classes
 				</a>
 			{/if}
 		</div>

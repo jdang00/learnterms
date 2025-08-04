@@ -1,13 +1,10 @@
 <script lang="ts">
-	import { Palette } from 'lucide-svelte';
-	import { themeChange } from 'theme-change';
 	import { SignedIn, SignedOut, SignInButton, UserButton } from 'svelte-clerk';
+	import { useClerkContext } from 'svelte-clerk/client';
+	import ThemeToggle from './ThemeToggle.svelte';
 
-	const themes = ['light', 'dark', 'dracula', 'nord'];
-
-	$effect(() => {
-		themeChange(false);
-	});
+	const ctx = useClerkContext();
+	const plan = $derived(ctx.user?.publicMetadata.plan === 'pro');
 </script>
 
 <div class="navbar bg-base-100 h-16">
@@ -32,39 +29,26 @@
 			<ul
 				tabindex="-1"
 				class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
-			>
-				<li><a href="/blog">Blog</a></li>
-			</ul>
+			></ul>
 		</div>
-		<a class="btn btn-ghost text-xl" href="/">LearnTerms</a>
+		<a class="btn btn-ghost text-xl" href="/"
+			>LearnTerms <span class="text-xs font-mono text-base-content/70">v3alpha</span>
+		</a>
 	</div>
 
 	<div class="navbar-center hidden lg:flex">
-		<ul class="menu menu-horizontal px-1">
-			<li><a href="/blog">Blog</a></li>
-		</ul>
+		<ul class="menu menu-horizontal px-1"></ul>
 	</div>
 
 	<div class="navbar-end">
-		<div class="flex flex-row">
-			<div class="dropdown dropdown-end">
-				<div tabindex="-1" class="btn btn-ghost m-1">
-					<Palette size="22" />
-				</div>
+		<div class="flex flex-row gap-4">
+			<ThemeToggle variant="ghost" size="md" class="btn-circle m-1" />
 
-				<ul
-					tabindex="-1"
-					class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
-				>
-					{#each themes as themeOption (themeOption)}
-						<li>
-							<button data-set-theme={themeOption} data-act-class="active">
-								{themeOption}
-							</button>
-						</li>
-					{/each}
-				</ul>
-			</div>
+			{#if plan}
+				<div class="self-center">
+					<div class="badge badge-primary badge-outline rounded-full">PRO</div>
+				</div>
+			{/if}
 
 			<div class="self-center">
 				<SignedIn>

@@ -17,5 +17,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const userData = await client.query(api.users.getUserById, { id: user.id });
 
+	console.log(userData);
+
 	return { userData };
 };
