@@ -23,3 +23,9 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 tmp
+
+
+# Testing
+/src/routes/performance-test
+/src/routes/api/test-new-method
+/src/routes/api/test-old-method

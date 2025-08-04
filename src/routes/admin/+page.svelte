@@ -8,7 +8,7 @@
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
 	import { Eye, Pencil, Trash2, Plus, CalendarDays } from 'lucide-svelte';
-	import EditClassModal from '$lib/admin//EditClassModal.svelte';
+	import EditClassModal from '$lib/admin/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
 
 	const ctx = useClerkContext();

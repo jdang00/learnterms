@@ -9,7 +9,7 @@ export class QuizState {
 	index: number = $state(0);
 	currentQuestionIndex: number = $state(0);
 	questions: Doc<'question'>[] = $state([]);
-	shuffledQuestions: Doc<'question'>[] = $state([]);
+	shuffledQuestionIds: string[] = $state([]);
 	isShuffled: boolean = $state(false);
 	showSolution = $state(false);
 	saveProgressFunction: (() => Promise<void>) | null = $state(null);
@@ -122,11 +122,19 @@ export class QuizState {
 
 	setQuestions(questions: Doc<'question'>[]) {
 		this.questions = questions || [];
-		this.shuffledQuestions = questions ? [...questions] : [];
+	}
+
+	getCurrentQuestions(): Doc<'question'>[] {
+		if (this.isShuffled && this.shuffledQuestionIds.length > 0) {
+			return this.shuffledQuestionIds.map(id => 
+				this.questions.find(q => q._id === id)
+			).filter(Boolean) as Doc<'question'>[];
+		}
+		return this.questions;
 	}
 
 	async setCurrentQuestionIndex(index: number) {
-		const currentQuestions = this.isShuffled ? this.shuffledQuestions : this.questions;
+		const currentQuestions = this.getCurrentQuestions();
 		if (currentQuestions && index >= 0 && index < currentQuestions.length) {
 			// Save progress before changing question
 			if (this.saveProgressFunction) {
@@ -166,7 +174,7 @@ export class QuizState {
 	}
 
 	getCurrentQuestion() {
-		const currentQuestions = this.isShuffled ? this.shuffledQuestions : this.questions;
+		const currentQuestions = this.getCurrentQuestions();
 		if (!currentQuestions || currentQuestions.length === 0) {
 			return null;
 		}
@@ -196,7 +204,13 @@ export class QuizState {
 
 	shuffleQuestions() {
 		if (this.questions && this.questions.length > 0) {
-			this.shuffledQuestions = [...this.questions].sort(() => Math.random() - 0.5);
+			const questionIds = this.questions.map(q => q._id);
+			const shuffled = [...questionIds];
+			for (let i = shuffled.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+			}
+			this.shuffledQuestionIds = shuffled;
 		}
 	}
 
@@ -256,7 +270,7 @@ export class QuizState {
 	}
 
 	getFilteredQuestions(): Doc<'question'>[] {
-		let filteredQuestions = this.isShuffled ? this.shuffledQuestions : this.questions;
+		let filteredQuestions = this.getCurrentQuestions();
 
 		if (this.showFlagged) {
 			// Check if there are any flagged questions
@@ -296,6 +310,7 @@ export class QuizState {
 		this.showSolution = false;
 		this.currentQuestionIndex = 0;
 		this.isShuffled = false;
+		this.shuffledQuestionIds = [];
 		this.showFlagged = false;
 		this.showIncomplete = false;
 		this.noFlags = false;

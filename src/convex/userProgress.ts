@@ -1,5 +1,18 @@
 import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
+import type { Doc } from './_generated/dataModel';
+
+const getUserProgressRecords = async (ctx: any, userId: string, questionIds: string[]): Promise<Doc<'userProgress'>[]> => {
+	return await ctx.db
+		.query('userProgress')
+		.filter((q: any) =>
+			q.and(
+				q.eq(q.field('userId'), userId),
+				q.or(...questionIds.map((id) => q.eq(q.field('questionId'), id)))
+			)
+		)
+		.collect();
+};
 
 export const checkExistingRecord = query({
 	args: { userId: v.id('users'), questionId: v.id('question') },
@@ -123,22 +136,13 @@ export const getUserProgressForModule = query({
 		questionIds: v.array(v.id('question'))
 	},
 	handler: async (ctx, args) => {
-		const records = await ctx.db
-			.query('userProgress')
-			.withIndex('by_user_question', (q) => q.eq('userId', args.userId))
-			.collect();
+		const records = await getUserProgressRecords(ctx, args.userId, args.questionIds);
 
-		const questionIdSet = new Set(args.questionIds);
-
-		// Filter records that match the question IDs in this module
-		// and have actual interactions (selected or eliminated options)
 		const interactedQuestions = records
-			.filter(
-				(record) =>
-					questionIdSet.has(record.questionId) &&
-					(record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0)
+			.filter(record =>
+				record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0
 			)
-			.map((record) => record.questionId);
+			.map(record => record.questionId);
 
 		return interactedQuestions;
 	}
@@ -150,16 +154,11 @@ export const getFlaggedQuestionsForModule = query({
 		questionIds: v.array(v.id('question'))
 	},
 	handler: async (ctx, args) => {
-		const records = await ctx.db
-			.query('userProgress')
-			.withIndex('by_user_question', (q) => q.eq('userId', args.userId))
-			.collect();
-
-		const questionIdSet = new Set(args.questionIds);
+		const records = await getUserProgressRecords(ctx, args.userId, args.questionIds);
 
 		const flaggedQuestions = records
-			.filter((record) => questionIdSet.has(record.questionId) && record.isFlagged === true)
-			.map((record) => record.questionId);
+			.filter(record => record.isFlagged === true)
+			.map(record => record.questionId);
 
 		return flaggedQuestions;
 	}
@@ -258,5 +257,80 @@ export const clearUserProgressForModule = mutation({
 		}
 
 		return deletedCount;
+	}
+});
+
+
+
+export const testGetUserProgressForModuleOld = query({
+	args: {
+		userId: v.id('users'),
+		questionIds: v.array(v.id('question'))
+	},
+	handler: async (ctx, args) => {
+		const startTime = Date.now();
+		
+		const records = await ctx.db
+			.query('userProgress')
+			.withIndex('by_user_question', (q) => q.eq('userId', args.userId))
+			.collect();
+
+		const questionIdSet = new Set(args.questionIds);
+
+		// Filter records that match the question IDs in this module
+		// and have actual interactions (selected or eliminated options)
+		const interactedQuestions = records
+			.filter(
+				(record) =>
+					questionIdSet.has(record.questionId) &&
+					(record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0)
+			)
+			.map((record) => record.questionId);
+
+		const endTime = Date.now();
+		console.log(`OLD METHOD - Total records fetched: ${records.length}, Filtered to: ${interactedQuestions.length}, Time: ${endTime - startTime}ms`);
+
+		return {
+			interactedQuestions,
+			totalRecords: records.length,
+			executionTime: endTime - startTime
+		};
+	}
+});
+
+export const testGetUserProgressForModuleNew = query({
+	args: {
+		userId: v.id('users'),
+		questionIds: v.array(v.id('question'))
+	},
+	handler: async (ctx, args) => {
+		const startTime = Date.now();
+		
+		// Fetch only progress records for the specified questions
+		const records = await ctx.db
+			.query('userProgress')
+			.filter((q) =>
+				q.and(
+					q.eq(q.field('userId'), args.userId),
+					q.or(...args.questionIds.map(id => q.eq(q.field('questionId'), id)))
+				)
+			)
+			.collect();
+
+		// Filter for actual interactions
+		const interactedQuestions = records
+			.filter(record =>
+				record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0
+			)
+			.map(record => record.questionId);
+
+		const endTime = Date.now();
+		console.log(`NEW METHOD - Total records fetched: ${records.length}, Filtered to: ${interactedQuestions.length}, Time: ${endTime - startTime}ms`);
+
+		return {
+			interactedQuestions,
+			totalRecords: records.length,
+			executionTime: endTime - startTime
+		};
 	}
 });

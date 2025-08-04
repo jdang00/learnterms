@@ -1,5 +1,5 @@
 <script>
-	let { qs = $bindable(), module, classId } = $props();
+	let { module, classId } = $props();
 	import { ArrowLeft } from 'lucide-svelte';
 </script>
 

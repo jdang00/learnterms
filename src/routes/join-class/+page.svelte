@@ -10,6 +10,7 @@
 
 	let classCode = $state('');
 	let isSubmitting = $state(false);
+	let isConfirming = $state(false);
 	let error = $state('');
 	let cohortInfo = $state<CohortInfo | null>(null);
 	let showConfirmation = $state(false);
@@ -38,6 +39,9 @@
 	async function confirmJoin() {
 		if (!cohortInfo || !user) return;
 
+		isConfirming = true;
+		error = '';
+
 		try {
 			await client.mutation(api.cohort.joinCohort, {
 				clerkUserId: user.id,
@@ -47,6 +51,8 @@
 		} catch (err) {
 			console.error(err);
 			error = 'Failed to join class. Please try again.';
+		} finally {
+			isConfirming = false;
 		}
 	}
 
@@ -220,10 +226,16 @@
 							<button
 								type="button"
 								class="btn btn-primary btn-lg flex-1 gap-3"
+								disabled={isConfirming}
 								onclick={confirmJoin}
 							>
-								<CheckCircle size={20} />
-								Confirm & Join
+								{#if isConfirming}
+									<span class="loading loading-spinner loading-sm"></span>
+									Joining...
+								{:else}
+									<CheckCircle size={20} />
+									Confirm & Join
+								{/if}
 							</button>
 						</div>
 					</div>

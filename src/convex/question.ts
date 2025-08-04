@@ -18,11 +18,11 @@ export const getFirstQuestionInModule = query({
 	// Enter module ID
 	args: { id: v.id('module') },
 	handler: async (ctx, args) => {
-		const classes = ctx.db
+		const firstQuestion = ctx.db
 			.query('question')
 			.filter((q) => q.and(q.eq(q.field('moduleId'), args.id), q.eq(q.field('order'), 0)))
 			.first();
 
-		return classes;
+		return firstQuestion;
 	}
 });
