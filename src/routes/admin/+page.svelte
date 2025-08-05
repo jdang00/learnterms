@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { useClerkContext } from 'svelte-clerk';
 	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
@@ -10,8 +9,7 @@
 	import { Eye, Pencil, Trash2, Plus, CalendarDays } from 'lucide-svelte';
 	import EditClassModal from '$lib/admin/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
-
-	const ctx = useClerkContext();
+	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
@@ -22,7 +20,12 @@
 
 	const client = useConvexClient();
 
-	type ClassItem = NonNullable<Doc<'class'>[]>[0];
+	type ClassItem = NonNullable<Doc<'class'>[]>[0] & {
+		semester?: {
+			_id: string;
+			name: string;
+		} | null;
+	};
 	let classList = $state<ClassItem[]>([]);
 
 	let isEditModalOpen = $state(false);
@@ -36,12 +39,6 @@
 			classList = [...classes.data];
 		}
 	});
-
-	// Interactive handlers
-	function handleSelect(id: string) {
-		console.log('Selected class:', id);
-		// e.g., open a side panel or navigate
-	}
 
 	function handleDelete(id: string) {
 		const foundClass = classList.find((c) => c._id === id);
@@ -62,7 +59,6 @@
 				classId: classToDelete!._id as Id<'class'>,
 				cohortId: userData?.cohortId as Id<'cohort'>
 			});
-			console.log('Class deleted successfully');
 		} catch (error) {
 			console.error('Failed to delete class:', error);
 			classList = prev;
@@ -144,7 +140,7 @@
 	}
 </script>
 
-<div class="min-h-screen p-8">
+<div class="min-h-screen p-8 max-w-7xl mx-auto">
 	<div class="mb-8 flex flex-col gap-2">
 		<div class="flex flex-row justify-between items-center">
 			<div>
@@ -245,10 +241,10 @@
 								class="mb-3 flex flex-col gap-2 border-b border-base-200 pb-3 sm:flex-row sm:items-start sm:justify-between"
 							>
 								<div class="flex-1 min-w-0">
-									<button
+									<a
 										data-select-btn
 										class="interactive group flex w-full items-start gap-2 text-left focus:outline-none focus-visible:ring focus-visible:ring-primary/40 sm:items-center"
-										onclick={() => handleSelect(classItem._id)}
+										href="admin/{classItem._id}"
 										title={classItem.name}
 										style="min-height:44px"
 									>
@@ -268,7 +264,7 @@
 												</span>
 											</div>
 										</div>
-									</button>
+									</a>
 								</div>
 
 								<div class="flex items-center gap-2 sm:shrink-0">
@@ -294,40 +290,37 @@
 								<div
 									class="md:border-l md:border-base-200 md:pl-4 flex flex-col items-end gap-2 justify-end md:justify-start"
 								>
-									<div class="flex gap-2 w-full md:w-auto">
-										<a
-											data-view-btn
-											class="btn btn-sm rounded-full btn-ghost"
-											type="button"
-											aria-label="View class"
-											href="admin/{classItem._id}"
-											target="_blank"
+									<div class="dropdown dropdown-end">
+										<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
+										<ul
+											tabindex="-1"
+											class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
 										>
-											<Eye size={16} />
-											<span class="hidden md:inline">View</span>
-										</a>
-
-										<button
-											data-edit-btn
-											class="btn btn-sm btn-info btn-soft rounded-full"
-											type="button"
-											aria-label="Edit class"
-											onclick={() => editClass(classItem)}
-										>
-											<Pencil size={16} />
-											<span class="hidden md:inline">Edit</span>
-										</button>
-
-										<button
-											data-delete-btn
-											class="btn btn-sm btn-error btn-soft rounded-full"
-											type="button"
-											aria-label="Delete class"
-											onclick={() => handleDelete(classItem._id)}
-										>
-											<Trash2 size={16} />
-											<span class="hidden md:inline">Delete</span>
-										</button>
+											<li>
+												<button
+													data-edit-btn
+													class="btn btn-sm btn-ghost w-full justify-start"
+													type="button"
+													aria-label="Edit class"
+													onclick={() => editClass(classItem)}
+												>
+													<Pencil size={16} />
+													<span>Edit</span>
+												</button>
+											</li>
+											<li>
+												<button
+													data-delete-btn
+													class="btn btn-sm btn-ghost text-error w-full justify-start"
+													type="button"
+													aria-label="Delete class"
+													onclick={() => handleDelete(classItem._id)}
+												>
+													<Trash2 size={16} />
+													<span>Delete</span>
+												</button>
+											</li>
+										</ul>
 									</div>
 								</div>
 							</div>
@@ -342,21 +335,10 @@
 <EditClassModal {isEditModalOpen} {closeEditModal} {editingClass} {semesters} {userData} />
 <AddClassModal {isAddModalOpen} {closeAddModal} {semesters} {userData} {currentSemester} />
 
-<dialog class="modal max-w-full p-4" class:modal-open={isDeleteModalOpen}>
-	<div class="modal-box">
-		<form method="dialog">
-			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onclick={cancelDelete}>
-				✕
-			</button>
-		</form>
-		<h3 class="text-lg font-bold">Delete Class</h3>
-		<p class="py-4">
-			Are you sure you want to delete <strong>{classToDelete?.name}</strong>? This action cannot be
-			undone.
-		</p>
-		<div class="flex justify-end space-x-2">
-			<button class="btn btn-outline" onclick={cancelDelete}> Cancel </button>
-			<button class="btn btn-error" onclick={confirmDelete}>Delete</button>
-		</div>
-	</div>
-</dialog>
+<DeleteConfirmationModal
+	{isDeleteModalOpen}
+	onCancel={cancelDelete}
+	onConfirm={confirmDelete}
+	itemName={classToDelete?.name}
+	itemType="class"
+/>

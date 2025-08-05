@@ -1,42 +1,48 @@
-
-# LearnTerms: Smarter Studying, Simplified.
+# LearnTerms: A Modern, AI-Powered Learning Platform
 
 ## Executive Summary
 
-LearnTerms is a revolutionary, AI-powered learning platform designed to help students master complex subjects with ease. By combining cutting-edge technology with a user-centric design, LearnTerms provides a personalized and effective study experience that is second to none. Our platform is built for the modern student, offering a suite of tools that are both powerful and intuitive. With LearnTerms, students can say goodbye to generic, one-size-fits-all study aids and embrace a smarter way to learn.
+LearnTerms is an advanced learning platform designed to provide a personalized and effective study experience for students. The application is currently undergoing a significant architectural transition, migrating from a legacy system to a modern, scalable infrastructure. This migration involves moving from Supabase to Convex for the database, which will enable more robust and flexible data management.
+
+The new architecture is built around a modular, component-based system using Svelte 5 and Daisy UI, with a strong emphasis on a clean, intuitive user experience. The platform's core functionality is centered around AI-powered question generation and personalized learning paths, which are being actively developed and integrated into the new system.
 
 ## Key Features
 
-### 1. AI-Powered Question Generation
+*   **AI-Generated Questions**: The platform's AI engine analyzes course materials to create relevant practice questions, ensuring that students are studying the most important content.
+*   **Personalized Learning Paths**: LearnTerms adapts to each student's learning style, tracking their progress and recommending the most effective study materials and exercises.
+*   **Modern, Component-Based UI**: The user interface is built with Svelte 5 and Daisy UI, providing a clean, intuitive, and responsive experience across all devices.
+*   **Scalable, Real-Time Backend**: The new backend is powered by Convex, a modern, real-time database that enables seamless data synchronization and a more interactive user experience.
+*   **Legacy System**: The legacy system, which is still partially in use, is built on Supabase and provides a foundation for the new architecture.
 
-At the heart of LearnTerms is a sophisticated AI engine that generates high-quality, relevant practice questions. Our AI analyzes course materials to create questions that are tailored to the specific topics and concepts that students need to master. This ensures that students are always studying the right material, at the right time.
+## Database Migration: From Supabase to Convex
 
-### 2. Adaptive Learning Paths
+The most significant change in the LearnTerms platform is the migration of the database from Supabase to Convex. This migration is being implemented incrementally, with new features being built on Convex while the legacy system continues to run on Supabase.
 
-LearnTerms uses smart algorithms to create personalized learning paths for each student. By tracking progress and identifying areas of weakness, our platform can recommend the most effective study materials and exercises to help students improve. This adaptive approach ensures that students are always challenged, but never overwhelmed.
+### Legacy System (Supabase)
 
-### 3. Comprehensive Analytics
+The legacy system is accessible via the `/dashboard` route and is built on Supabase. This system includes the following features:
 
-Our detailed analytics dashboard provides students with a clear overview of their progress. Students can track their performance over time, identify areas for improvement, and see how they stack up against their peers. This data-driven approach to learning empowers students to take control of their education and achieve their full potential.
+*   **Pharmacology and Challenge Questions**: The legacy system provides access to a large database of pharmacology and challenge questions, which are being migrated to the new system.
+*   **User Progress Tracking**: The legacy system tracks user progress and performance, providing a foundation for the new, more advanced analytics system.
 
-### 4. Collaborative Learning
+### New Architecture (Convex)
 
-LearnTerms is more than just a study tool; it's a community. Our platform allows students to collaborate with their peers, share study materials, and learn from one another. This social approach to learning makes studying more engaging and effective.
+The new architecture is accessible via the `/classes` route and is built on Convex. This system includes the following features:
 
-### 5. Gamified Experience
-
-To make learning more fun and engaging, LearnTerms incorporates gamification elements into the platform. Students can earn points, unlock achievements, and compete with their friends, turning studying into a rewarding and enjoyable experience.
+*   **Real-Time Data Synchronization**: The new system uses Convex to provide real-time data synchronization, enabling a more interactive and collaborative user experience.
+*   **Scalable Data Model**: The new data model is designed to be more scalable and flexible, allowing for the addition of new features and functionality in the future.
+*   **Modern, Component-Based UI**: The new UI is built with Svelte 5 and Daisy UI, providing a more modern and intuitive user experience.
 
 ## User Experience
 
-LearnTerms is designed with the user in mind. Our platform is intuitive, easy to use, and accessible from any device. We've paid close attention to every detail of the user experience, from the clean and modern design to the seamless navigation. With LearnTerms, students can focus on what matters most: learning.
+The LearnTerms user experience is designed to be simple, intuitive, and engaging. The platform's clean, modern interface is optimized for all devices, allowing students to study anytime, anywhere. The new architecture will further enhance the user experience by providing a more interactive and personalized learning environment.
 
-## Marketing and Promotion
+## Marketing Focus
 
-LearnTerms is marketed as the ultimate study companion for students who are serious about their education. We target students through a variety of channels, including social media, online advertising, and partnerships with educational institutions. Our messaging focuses on the key benefits of our platform, including:
+Our marketing efforts are focused on highlighting the benefits of the new LearnTerms platform, including:
 
-- **Smarter studying**: Our AI-powered platform helps students study more effectively and efficiently.
-- **Personalized learning**: We create a customized learning experience for each student.
-- **Proven results**: Our platform is backed by data and has been shown to improve student outcomes.
+*   **Smarter, More Effective Studying**: Our AI-powered platform helps students study more efficiently and effectively.
+*   **Personalized Learning**: We provide a customized learning experience for each student, adapting to their unique needs and learning style.
+*   **Proven Results**: Our platform is backed by data and has been shown to improve student outcomes.
 
-By highlighting these key benefits, we can attract and retain a loyal user base of students who are committed to academic excellence.
+By emphasizing these key benefits, we aim to attract and retain a loyal user base of students who are committed to academic excellence.
