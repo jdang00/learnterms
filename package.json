@@ -45,7 +45,6 @@
 		"@ai-sdk/svelte": "^2.1.12",
 		"@clerk/themes": "^2.3.3",
 		"@google/genai": "^1.10.0",
-		"@supabase/supabase-js": "^2.52.0",
 		"@tailwindcss/postcss": "^4.1.11",
 		"@thisux/sveltednd": "^0.0.20",
 		"@uploadthing/svelte": "^7.3.2",

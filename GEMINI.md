@@ -11,7 +11,7 @@ This document provides a set of optimized instructions for Gemini to effectively
 - **Build Tool**: Vite
 - **Language**: TypeScript
 - **Authentication**: Clerk
-- **Database**: Supabase (PostgreSQL)
+- **Database**: Convex
 - **AI**: Google Generative AI (Gemini)
 - **Deployment**: Vercel
 
@@ -32,7 +32,7 @@ This document provides a set of optimized instructions for Gemini to effectively
 - **Styling**: Use TailwindCSS utility classes for all styling. Adhere to the existing design system and color palette defined in `tailwind.config.js` and the Daisy UI theme.
 - **TypeScript**: Use TypeScript for all new code. Ensure that all new code is type-safe and that types are defined in `src/lib/types.ts` or locally within a component.
 - **Authentication**: When working with user authentication, use the `svelte-clerk` library.
-- **Database**: When interacting with the database, use the Supabase client defined in `src/lib/supabaseClient.ts`.
+- **Database**: When interacting with the database, use the Convex client.
 
 ### 2. File Structure
 

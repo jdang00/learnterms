@@ -12,6 +12,10 @@ function makeOptionId(stem: string, text: string, index: number): string {
 	return Math.abs(hash).toString(36).padStart(8, '0').slice(0, 8);
 }
 
+function convertQuestionType(type: string): string {
+	return type.toLowerCase().replace(/\s+/g, '_');
+}
+
 export const getQuestionsByModule = query({
 	// match the schema: moduleId is an id("module")
 	args: { id: v.id('module') },
@@ -81,6 +85,7 @@ export const insertQuestion = mutation({
 
 		const id = await ctx.db.insert('question', {
 			...args,
+			type: convertQuestionType(args.type),
 			options: optionsWithIds,
 			correctAnswers: correctAnswerIds
 		});
@@ -137,7 +142,7 @@ export const updateQuestion = mutation({
 			.filter((id) => id !== '');
 
 		await ctx.db.patch(args.questionId, {
-			type: args.type,
+			type: convertQuestionType(args.type),
 			stem: args.stem,
 			options: optionsWithIds,
 			correctAnswers: correctAnswerIds,

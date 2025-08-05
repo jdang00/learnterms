@@ -11,7 +11,7 @@
 	let questionStem: string = $state('');
 	let questionExplanation: string = $state('');
 	let questionStatus: string = $state('draft');
-	let questionType: string = $state('multiple-choice');
+	let questionType: string = $state('multiple_choice');
 	let options: Array<{ text: string }> = $state([]);
 	let correctAnswers: string[] = $state([]);
 	let isSubmitting: boolean = $state(false);
@@ -21,7 +21,7 @@
 			questionStem = editingQuestion.stem || '';
 			questionExplanation = editingQuestion.explanation || '';
 			questionStatus = editingQuestion.status || 'draft';
-			questionType = editingQuestion.type || 'multiple-choice';
+			questionType = editingQuestion.type || 'multiple_choice';
 			options = (editingQuestion.options || []).map((opt: { id: string; text: string }) => ({
 				text: opt.text
 			}));
@@ -147,8 +147,8 @@
 						class="select select-bordered w-full"
 						bind:value={questionType}
 					>
-						<option value="multiple-choice">Multiple Choice</option>
-						<option value="true-false">True/False</option>
+						<option value="multiple_choice">Multiple Choice</option>
+						<option value="true_false">True/False</option>
 					</select>
 
 					<label

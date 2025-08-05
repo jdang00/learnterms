@@ -11,7 +11,7 @@
 	let questionStem: string = $state('');
 	let questionExplanation: string = $state('');
 	let questionStatus: string = $state('draft');
-	let questionType: string = $state('multiple-choice');
+	let questionType: string = $state('multiple_choice');
 	let options: Array<{ text: string }> = $state([
 		{ text: '' },
 		{ text: '' },
@@ -84,7 +84,7 @@
 			questionStem = '';
 			questionExplanation = '';
 			questionStatus = 'draft';
-			questionType = 'multiple-choice';
+			questionType = 'multiple_choice';
 			options = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
 			correctAnswers = [];
 			closeAddModal();
@@ -136,8 +136,8 @@
 					<span>Type</span>
 				</label>
 				<select id="question-type" class="select select-bordered w-full" bind:value={questionType}>
-					<option value="multiple-choice">Multiple Choice</option>
-					<option value="true-false">True/False</option>
+					<option value="multiple_choice">Multiple Choice</option>
+					<option value="true_false">True/False</option>
 				</select>
 
 				<label

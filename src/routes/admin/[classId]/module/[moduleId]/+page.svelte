@@ -8,6 +8,7 @@
 	import { Pencil, Trash2, Plus, ArrowLeft } from 'lucide-svelte';
 	import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
+	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 
 	let { data }: { data: PageData } = $props();
 	const moduleId = data.moduleId;
@@ -236,6 +237,14 @@
 												</div>
 											{/if}
 
+											{#if questionItem.type}
+												<div
+													class="badge badge-ghost"
+													title={`Type: ${convertToDisplayFormat(questionItem.type)}`}
+												>
+													{convertToDisplayFormat(questionItem.type)}
+												</div>
+											{/if}
 											{#if questionItem.status}
 												<div
 													class="badge badge-soft
