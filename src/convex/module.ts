@@ -35,6 +35,44 @@ export const getModuleById = query({
 	}
 });
 
+export const getModuleQuestionCount = query({
+	args: { moduleId: v.id('module') },
+	handler: async (ctx, args) => {
+		const questions = await ctx.db
+			.query('question')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
+			.collect();
+		
+		return questions.length;
+	}
+});
+
+export const getAdminModulesWithQuestionCounts = query({
+	args: { classId: v.id('class') },
+	handler: async (ctx, args) => {
+		const modules = await ctx.db
+			.query('module')
+			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.collect();
+
+		const modulesWithCounts = await Promise.all(
+			modules.map(async (module) => {
+				const questions = await ctx.db
+					.query('question')
+					.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
+					.collect();
+				
+				return {
+					...module,
+					questionCount: questions.length
+				};
+			})
+		);
+
+		return modulesWithCounts.sort((a, b) => a.order - b.order);
+	}
+});
+
 export const updateModuleOrder = mutation({
 	args: {
 		moduleId: v.id('module'),
@@ -100,8 +138,17 @@ export const deleteModule = mutation({
 			throw new Error('Module not found or access denied');
 		}
 
+		const questions = await ctx.db
+			.query('question')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
+			.collect();
+
+		for (const question of questions) {
+			await ctx.db.delete(question._id);
+		}
+
 		await ctx.db.delete(args.moduleId);
-		return { deleted: true };
+		return { deleted: true, questionsDeleted: questions.length };
 	}
 });
 

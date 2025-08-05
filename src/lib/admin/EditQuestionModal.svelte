@@ -5,6 +5,7 @@
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
+	import { DISPLAY_QUESTION_TYPES } from '../types';
 
 	const client = useConvexClient();
 
@@ -147,8 +148,9 @@
 						class="select select-bordered w-full"
 						bind:value={questionType}
 					>
-						<option value="multiple_choice">Multiple Choice</option>
-						<option value="true_false">True/False</option>
+						{#each Object.entries(DISPLAY_QUESTION_TYPES) as [value, label] (value)}
+							<option value={value}>{label}</option>
+						{/each}
 					</select>
 
 					<label

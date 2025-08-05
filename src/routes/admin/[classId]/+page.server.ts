@@ -7,7 +7,10 @@ import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
-	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL!);
+	if (!PUBLIC_CONVEX_URL) {
+		throw new Error('PUBLIC_CONVEX_URL is not configured');
+	}
+	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
 	const classId = params.classId;
 
 	const { userId } = locals.auth();
@@ -15,13 +18,15 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	if (!userId) {
 		return redirect(307, '/sign-in');
 	}
-	const user = await clerkClient.users.getUser(userId);
-
-	const userData = await client.query(api.users.getUserById, { id: user.id });
-
-	const modules = await client.query(api.module.getClassModules, {
-		id: classId as Id<'class'>
-	});
-
-	return { userData: userData, modules: modules, classId: classId };
+	try {
+		const user = await clerkClient.users.getUser(userId);
+		const userData = await client.query(api.users.getUserById, { id: user.id });
+		const modules = await client.query(api.module.getAdminModulesWithQuestionCounts, {
+			classId: classId as Id<'class'>
+		});
+		return { userData: userData, modules: modules, classId: classId };
+	} catch (error) {
+		console.error('Failed to load class admin page data:', error);
+		throw error;
+	}
 };

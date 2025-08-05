@@ -32,6 +32,30 @@ export const getClassById = query({
 	}
 });
 
+export const getClassContentCounts = query({
+	args: { classId: v.id('class') },
+	handler: async (ctx, args) => {
+		const modules = await ctx.db
+			.query('module')
+			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.collect();
+
+		let totalQuestions = 0;
+		for (const module of modules) {
+			const questions = await ctx.db
+				.query('question')
+				.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
+				.collect();
+			totalQuestions += questions.length;
+		}
+
+		return {
+			moduleCount: modules.length,
+			questionCount: totalQuestions
+		};
+	}
+});
+
 export const updateClassOrder = mutation({
 	args: {
 		classId: v.id('class'),
@@ -100,9 +124,33 @@ export const deleteClass = mutation({
 		if (!classToDelete || classToDelete.cohortId !== args.cohortId) {
 			throw new Error('Class not found or access denied');
 		}
+
+		const modules = await ctx.db
+			.query('module')
+			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.collect();
+
+		let totalQuestionsDeleted = 0;
+		for (const module of modules) {
+			const questions = await ctx.db
+				.query('question')
+				.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
+				.collect();
+
+			for (const question of questions) {
+				await ctx.db.delete(question._id);
+			}
+			totalQuestionsDeleted += questions.length;
+
+			await ctx.db.delete(module._id);
+		}
 		
 		await ctx.db.delete(args.classId);
-		return { deleted: true };
+		return { 
+			deleted: true, 
+			modulesDeleted: modules.length, 
+			questionsDeleted: totalQuestionsDeleted 
+		};
 	}
 });
 

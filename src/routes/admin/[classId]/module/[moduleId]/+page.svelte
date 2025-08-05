@@ -8,6 +8,7 @@
 	import { Pencil, Trash2, Plus, ArrowLeft } from 'lucide-svelte';
 	import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
+	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 
 	let { data }: { data: PageData } = $props();
@@ -32,7 +33,7 @@
 	let editingQuestion = $state<QuestionItem | null>(null);
 	let questionToDelete = $state<QuestionItem | null>(null);
 
-	type QuestionItem = NonNullable<Doc<'question'>[]>[0];
+	type QuestionItem = Doc<'question'>;
 
 	function editQuestion(questionItem: QuestionItem) {
 		editingQuestion = questionItem;
@@ -82,7 +83,7 @@
 		questionToDelete = null;
 	}
 
-	type ModuleItem = NonNullable<Doc<'module'>[]>[0];
+	type ModuleItem = Doc<'module'>;
 	let moduleList = $state<ModuleItem[]>([]);
 
 	async function handleDrop(state: DragDropState<ModuleItem>) {
@@ -159,7 +160,7 @@
 		<div class="flex items-center justify-center p-8">
 			<div class="text-error">Failed to load: {questions.error.toString()}</div>
 		</div>
-	{:else if questions.data.length === 0}
+	{:else if !questions.data || questions.data.length === 0}
 		<div class="flex items-center justify-center p-8">
 			<div class="text-center">
 				<div class="text-4xl mb-4">📚</div>
@@ -363,18 +364,10 @@
 	{moduleId}
 />
 
-<!-- Question Delete Modal -->
-{#if isDeleteQuestionModalOpen}
-	<div class="modal modal-open">
-		<div class="modal-box">
-			<h3 class="font-bold text-lg">Delete Question</h3>
-			<p class="py-4">
-				Are you sure you want to delete this question? This action cannot be undone.
-			</p>
-			<div class="modal-action">
-				<button class="btn" onclick={cancelQuestionDelete}>Cancel</button>
-				<button class="btn btn-error" onclick={confirmQuestionDelete}>Delete</button>
-			</div>
-		</div>
-	</div>
-{/if}
+<DeleteConfirmationModal
+	isDeleteModalOpen={isDeleteQuestionModalOpen}
+	onCancel={cancelQuestionDelete}
+	onConfirm={confirmQuestionDelete}
+	itemName={questionToDelete?.stem}
+	itemType="question"
+/>

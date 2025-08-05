@@ -15,8 +15,8 @@
 	const classId = data.classId;
 
 	const modules = useQuery(
-		api.module.getAdminModule,
-		{ id: classId as Id<'class'> },
+		api.module.getAdminModulesWithQuestionCounts,
+		{ classId: classId as Id<'class'> },
 		{ initialData: data.modules }
 	);
 
@@ -24,7 +24,7 @@
 
 	const client = useConvexClient();
 
-	type ClassItem = NonNullable<Doc<'class'>[]>[0];
+	type ClassItem = Doc<'class'>;
 	let classList = $state<ClassItem[]>([]);
 
 	let isDeleteModalOpen = $state(false);
@@ -36,6 +36,7 @@
 	let isAddModuleModalOpen = $state(false);
 	let isDeleteModuleModalOpen = $state(false);
 	let moduleToDelete = $state<ModuleItem | null>(null);
+	let moduleQuestionCount = $state<number>(0);
 
 	async function confirmDelete() {
 		if (!classToDelete) return;
@@ -62,7 +63,7 @@
 		classToDelete = null;
 	}
 
-	type ModuleItem = NonNullable<Doc<'module'>[]>[0];
+	type ModuleItem = Doc<'module'> & { questionCount: number };
 	let moduleList = $state<ModuleItem[]>([]);
 
 	$effect(() => {
@@ -98,11 +99,22 @@
 	}
 
 	// Module operations
-	function handleModuleDelete(id: string) {
+	async function handleModuleDelete(id: string) {
 		const foundModule = moduleList.find((m) => m._id === id);
 		if (!foundModule) return;
 
 		moduleToDelete = foundModule;
+
+		try {
+			const count = await client.query(api.module.getModuleQuestionCount, {
+				moduleId: id as Id<'module'>
+			});
+			moduleQuestionCount = count;
+		} catch (error) {
+			console.error('Failed to get question count:', error);
+			moduleQuestionCount = 0;
+		}
+
 		isDeleteModuleModalOpen = true;
 	}
 
@@ -124,12 +136,14 @@
 		} finally {
 			isDeleteModuleModalOpen = false;
 			moduleToDelete = null;
+			moduleQuestionCount = 0;
 		}
 	}
 
 	function cancelModuleDelete() {
 		isDeleteModuleModalOpen = false;
 		moduleToDelete = null;
+		moduleQuestionCount = 0;
 	}
 
 	function editModule(moduleItem: ModuleItem) {
@@ -233,13 +247,22 @@
 					>
 						<div class="flex flex-col h-full">
 							<div class="flex flex-row justify-between mb-4">
-								<a
-									href={`/admin/${classId}/module/${moduleItem._id}`}
-									class="font-semibold text-base-content text-left truncate hover:text-primary transition-colors cursor-pointer"
-									title={`Go to questions for ${moduleItem.title}`}
-								>
-									{moduleItem.title}
-								</a>
+								<div class="flex flex-col gap-1">
+									<a
+										href={`/admin/${classId}/module/${moduleItem._id}`}
+										class="font-semibold text-base-content text-left truncate hover:text-primary transition-colors cursor-pointer"
+										title={`Go to questions for ${moduleItem.title}`}
+									>
+										{moduleItem.title}
+									</a>
+									<div class="text-xs text-base-content/60 flex items-center gap-1">
+										<span
+											>{moduleItem.questionCount} question{moduleItem.questionCount === 1
+												? ''
+												: 's'}</span
+										>
+									</div>
+								</div>
 								<div class="text-xs text-base-content/60 font-mono badge rounded-full">
 									{index + 1}
 								</div>
@@ -315,4 +338,5 @@
 	onConfirm={confirmModuleDelete}
 	itemName={moduleToDelete?.title}
 	itemType="module"
+	questionCount={moduleQuestionCount}
 />
