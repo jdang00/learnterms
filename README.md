@@ -44,3 +44,19 @@ We're always looking for collaborators! Here are ways you can contribute:
 - **Support Financially**: Running LearnTerms comes with costs—domain fees, infrastructure, and database management, to name a few. If you'd like to support us, reach out to the development team.
 
 LearnTerms thrives because of its community. Whether you're a casual user or an active contributor, we're grateful for your support!
+
+## License
+
+LearnTerms is released under the **MIT License**. See [LICENSE](./LICENSE) for full terms.
+
+## Open Source
+
+1. **Fork & Customize**  
+   You’re free to fork the repo, modify the code, contribute back—whatever you like. The codebase itself is 100% open and not behind any paywall.
+
+2. **Official Hosted Deployment**  
+   While the code is free, hosting and operating the service incurs infrastructure costs. The official LearnTerms platform offers:
+   - **Free Tier**: Core features, community support, and basic analytics at no cost.  
+   - **Pro Plan**: Advanced analytics, priority support, team/collaboration tools, and higher usage limits.
+
+To use the hosted service, [create an account]([https://www.learnterms.app/signup](https://accounts.learnterms.com/sign-up)) and select the Free or Pro plan that suits your needs.
