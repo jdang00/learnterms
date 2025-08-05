@@ -87,7 +87,6 @@
 	});
 
 	async function selectClass(classItem: ClassWithSemester | null) {
-		console.log(classItem);
 		selectedClass = classItem;
 		currentView = 'modules';
 		if (classItem != null) {
