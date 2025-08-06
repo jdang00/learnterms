@@ -8,6 +8,7 @@
 	import { Pencil, Trash2, Plus, ArrowLeft } from 'lucide-svelte';
 	import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
+	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 
 	let { data }: { data: PageData } = $props();
@@ -32,7 +33,7 @@
 	let editingQuestion = $state<QuestionItem | null>(null);
 	let questionToDelete = $state<QuestionItem | null>(null);
 
-	type QuestionItem = NonNullable<Doc<'question'>[]>[0];
+	type QuestionItem = Doc<'question'>;
 
 	function editQuestion(questionItem: QuestionItem) {
 		editingQuestion = questionItem;
@@ -82,31 +83,90 @@
 		questionToDelete = null;
 	}
 
-	type ModuleItem = NonNullable<Doc<'module'>[]>[0];
-	let moduleList = $state<ModuleItem[]>([]);
+	let questionList = $state<QuestionItem[]>([]);
 
-	async function handleDrop(state: DragDropState<ModuleItem>) {
+	// Bulk delete functionality
+	let selectedQuestions = $state<Set<string>>(new Set());
+	let isBulkDeleteModalOpen = $state(false);
+
+	function toggleQuestionSelection(questionId: string) {
+		const newSelected = new Set(selectedQuestions);
+		if (newSelected.has(questionId)) {
+			newSelected.delete(questionId);
+		} else {
+			newSelected.add(questionId);
+		}
+		selectedQuestions = newSelected;
+	}
+
+	function selectAllQuestions() {
+		selectedQuestions = new Set(questionList.map(q => q._id));
+	}
+
+	function deselectAllQuestions() {
+		selectedQuestions = new Set();
+	}
+
+	function openBulkDeleteModal() {
+		isBulkDeleteModalOpen = true;
+	}
+
+	function closeBulkDeleteModal() {
+		isBulkDeleteModalOpen = false;
+	}
+
+	async function confirmBulkDelete() {
+		if (selectedQuestions.size === 0) return;
+
+		try {
+			const result = await client.mutation(api.question.bulkDeleteQuestions, {
+				questionIds: Array.from(selectedQuestions) as Id<'question'>[],
+				moduleId: moduleId as Id<'module'>
+			});
+
+			if (result.success) {
+				console.log(`Successfully deleted ${result.deletedCount} questions`);
+			} else {
+				console.log('Some deletions failed:', result.errors);
+			}
+
+			selectedQuestions = new Set();
+		} catch (error) {
+			console.error('Failed to bulk delete questions', error);
+		} finally {
+			isBulkDeleteModalOpen = false;
+		}
+	}
+
+	$effect(() => {
+		if (questions.data) {
+			questionList = [...questions.data];
+		}
+	});
+
+	async function handleQuestionDrop(state: DragDropState<QuestionItem>) {
 		const { draggedItem, sourceContainer, targetContainer } = state;
 		if (!targetContainer || sourceContainer === targetContainer) return;
 
-		const sourceIndex = moduleList.findIndex((i) => i._id === draggedItem._id);
+		const sourceIndex = questionList.findIndex((i) => i._id === draggedItem._id);
 		const targetIndex = parseInt(targetContainer);
 
 		if (sourceIndex === -1 || Number.isNaN(targetIndex)) return;
 
-		const updatedList = [...moduleList];
+		const updatedList = [...questionList];
 		const [moved] = updatedList.splice(sourceIndex, 1);
 		updatedList.splice(targetIndex, 0, moved);
-		moduleList = updatedList;
+		questionList = updatedList;
 
 		try {
-			await client.mutation(api.module.updateModuleOrder, {
-				moduleId: moved._id,
+			await client.mutation(api.question.updateQuestionOrder, {
+				questionId: moved._id,
 				newOrder: targetIndex,
-				classId: moduleInfo.data?.classId as Id<'class'>
+				moduleId: moduleId as Id<'module'>
 			});
 		} catch (error) {
-			console.error('Failed to update module order:', error);
+			console.error('Failed to update question order:', error);
+			questionList = [...(questions.data || [])];
 		}
 	}
 </script>
@@ -144,10 +204,25 @@
 				</div>
 			{/if}
 
-			<button class="btn btn-primary gap-2" onclick={openAddQuestionModal}>
-				<Plus size={16} />
-				<span>Add New Question</span>
-			</button>
+			<div class="flex gap-2">
+				{#if selectedQuestions.size > 0}
+					<button class="btn btn-error gap-2" onclick={openBulkDeleteModal}>
+						<Trash2 size={16} />
+						<span>Delete Selected ({selectedQuestions.size})</span>
+					</button>
+					<button class="btn btn-ghost" onclick={deselectAllQuestions}>
+						Deselect All
+					</button>
+				{:else}
+					<button class="btn btn-ghost" onclick={selectAllQuestions}>
+						Select All
+					</button>
+				{/if}
+				<button class="btn btn-primary gap-2" onclick={openAddQuestionModal}>
+					<Plus size={16} />
+					<span>Add New Question</span>
+				</button>
+			</div>
 		</div>
 	</div>
 
@@ -159,7 +234,7 @@
 		<div class="flex items-center justify-center p-8">
 			<div class="text-error">Failed to load: {questions.error.toString()}</div>
 		</div>
-	{:else if questions.data.length === 0}
+	{:else if !questions.data || questions.data.length === 0}
 		<div class="flex items-center justify-center p-8">
 			<div class="text-center">
 				<div class="text-4xl mb-4">📚</div>
@@ -172,11 +247,11 @@
 			{showTruncated ? 'Hide ' : 'Show '} Options</button
 		>
 		<div class="space-y-4">
-			{#each questions.data as questionItem, index (questionItem._id)}
+			{#each questionList as questionItem, index (questionItem._id)}
 				<div
 					use:droppable={{
 						container: index.toString(),
-						callbacks: { onDrop: handleDrop }
+						callbacks: { onDrop: handleQuestionDrop }
 					}}
 					class="relative rounded-xl bg-base-100 shadow-sm border border-base-300 p-4
               transition-shadow duration-300 hover:shadow-md hover:border-primary/30
@@ -208,6 +283,8 @@
 												type="checkbox"
 												class="checkbox checkbox-primary"
 												aria-label="Select question"
+												checked={selectedQuestions.has(questionItem._id)}
+												onclick={() => toggleQuestionSelection(questionItem._id)}
 											/>
 										</label>
 										<div
@@ -363,18 +440,18 @@
 	{moduleId}
 />
 
-<!-- Question Delete Modal -->
-{#if isDeleteQuestionModalOpen}
-	<div class="modal modal-open">
-		<div class="modal-box">
-			<h3 class="font-bold text-lg">Delete Question</h3>
-			<p class="py-4">
-				Are you sure you want to delete this question? This action cannot be undone.
-			</p>
-			<div class="modal-action">
-				<button class="btn" onclick={cancelQuestionDelete}>Cancel</button>
-				<button class="btn btn-error" onclick={confirmQuestionDelete}>Delete</button>
-			</div>
-		</div>
-	</div>
-{/if}
+<DeleteConfirmationModal
+	isDeleteModalOpen={isDeleteQuestionModalOpen}
+	onCancel={cancelQuestionDelete}
+	onConfirm={confirmQuestionDelete}
+	itemName={questionToDelete?.stem}
+	itemType="question"
+/>
+
+<DeleteConfirmationModal
+	isDeleteModalOpen={isBulkDeleteModalOpen}
+	onCancel={closeBulkDeleteModal}
+	onConfirm={confirmBulkDelete}
+	itemName={`${selectedQuestions.size} selected questions`}
+	itemType="question"
+/>

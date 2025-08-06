@@ -5,6 +5,7 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
+	import { useClerkContext } from 'svelte-clerk/client';
 
 	const client = useConvexClient();
 
@@ -13,6 +14,8 @@
 	let classCode: string = $state('');
 	let classDescription: string = $state('');
 	let isSubmitting: boolean = $state(false);
+	let validationErrors: Record<string, string> = $state({});
+	let submitError: string = $state('');
 
 	// Get current classes to calculate next order number
 	const classes = useQuery(api.class.getUserClasses, {
@@ -26,10 +29,78 @@
 		}
 	});
 
+	function validateField(field: string, value: string): string {
+		const trimmed = value.trim();
+		
+		switch (field) {
+			case 'className':
+				if (!trimmed) return 'Class name is required';
+				if (trimmed.length < 2) return 'Class name must be at least 2 characters';
+				if (trimmed.length > 100) return 'Class name cannot exceed 100 characters';
+				
+				// Check for duplicate names (case-insensitive)
+				const existingNames = classes.data?.map(c => c.name.toLowerCase()) || [];
+				if (existingNames.includes(trimmed.toLowerCase())) {
+					return 'A class with this name already exists';
+				}
+				break;
+
+			case 'classCode':
+				if (!trimmed) return 'Class code is required';
+				if (trimmed.length < 2) return 'Class code must be at least 2 characters';
+				if (trimmed.length > 20) return 'Class code cannot exceed 20 characters';
+				
+				const codePattern = /^[a-zA-Z0-9\-_\s]+$/;
+				if (!codePattern.test(trimmed)) {
+					return 'Code can only contain letters, numbers, hyphens, underscores, and spaces';
+				}
+				
+				// Check for duplicate codes (case-insensitive)
+				const existingCodes = classes.data?.map(c => c.code.toLowerCase()) || [];
+				if (existingCodes.includes(trimmed.toLowerCase())) {
+					return 'A class with this code already exists';
+				}
+				break;
+
+			case 'classDescription':
+				if (!trimmed) return 'Description is required';
+				if (trimmed.length < 10) return 'Description must be at least 10 characters';
+				if (trimmed.length > 500) return 'Description cannot exceed 500 characters';
+				break;
+		}
+		
+		return '';
+	}
+
+	function validateOnInput(field: string, value: string) {
+		const error = validateField(field, value);
+		if (error) {
+			validationErrors[field] = error;
+		} else {
+			delete validationErrors[field];
+		}
+		validationErrors = { ...validationErrors };
+	}
+
+	const isFormValid = $derived(
+		className.trim() && 
+		classCode.trim() && 
+		classDescription.trim() && 
+		semesterEditName && 
+		userData?.cohortId &&
+		Object.keys(validationErrors).length === 0
+	);
+
 	async function handleSubmit() {
-		if (!className || !classCode || !semesterEditName || !userData?.cohortId) return;
+		// Validate all fields first
+		validateOnInput('className', className);
+		validateOnInput('classCode', classCode);
+		validateOnInput('classDescription', classDescription);
+
+		if (!isFormValid) return;
 
 		isSubmitting = true;
+		submitError = '';
 
 		try {
 			// Find selected semester ID
@@ -37,7 +108,7 @@
 				(s: Doc<'semester'>) => s.name === semesterEditName
 			);
 			if (!selectedSemester) {
-				console.error('Selected semester not found');
+				submitError = 'Selected semester not found';
 				return;
 			}
 
@@ -49,9 +120,9 @@
 				: 0;
 
 			await client.mutation(api.class.insertClass, {
-				name: className,
-				code: classCode,
-				description: classDescription,
+				name: className.trim(),
+				code: classCode.trim(),
+				description: classDescription.trim(),
 				semesterId: selectedSemester._id,
 				cohortId: userData?.cohortId as Id<'cohort'>,
 				order: nextOrder,
@@ -63,9 +134,12 @@
 			className = '';
 			classCode = '';
 			classDescription = '';
+			validationErrors = {};
+			submitError = '';
 			closeAddModal();
 		} catch (error) {
-			console.error('Failed to create class:', error);
+			submitError = error instanceof Error ? error.message : 'Failed to create class';
+			console.error("Failed to create class:", submitError);
 		} finally {
 			isSubmitting = false;
 		}
@@ -87,6 +161,12 @@
 		<div class="mb-6 flex items-center gap-2">
 			<h3 class="text-2xl font-extrabold tracking-tight">Add New Class</h3>
 		</div>
+
+		{#if submitError}
+			<div class="alert alert-error mb-6">
+				<span>❌ {submitError}</span>
+			</div>
+		{/if}
 
 		{#if !userData?.cohortId}
 			<div class="alert alert-warning mb-6">
@@ -166,12 +246,32 @@
 					<AlignLeft size={18} class="text-primary/80" />
 					<span>Description</span>
 				</label>
-				<textarea
-					id="class-description"
-					class="textarea textarea-bordered w-full min-h-48"
-					bind:value={classDescription}
-					placeholder="Enter class description..."
-				></textarea>
+				<div class="form-control w-full">
+					<textarea
+						id="class-description"
+						class="textarea textarea-bordered w-full min-h-48"
+						class:textarea-error={validationErrors.classDescription}
+						bind:value={classDescription}
+						placeholder="Describe what this class covers..."
+						oninput={() => validateOnInput('classDescription', classDescription)}
+						maxlength="500"
+					></textarea>
+					<div class="label">
+						<span class="label-text-alt text-xs text-base-content/60">
+							10-500 characters
+						</span>
+						<span class="label-text-alt text-xs text-base-content/40">
+							{classDescription.length}/500
+						</span>
+					</div>
+					{#if validationErrors.classDescription}
+						<div class="label">
+							<span class="label-text-alt text-error text-xs">
+								{validationErrors.classDescription}
+							</span>
+						</div>
+					{/if}
+				</div>
 			</div>
 
 			<!-- Two-column label/field grid for md+; single column on mobile -->
@@ -191,13 +291,33 @@
 						<BookOpenText size={18} class="text-primary/80" />
 						<span>Class Name</span>
 					</label>
-					<input
-						id="class-name"
-						type="text"
-						placeholder="Enter class name..."
-						class="input input-bordered w-full"
-						bind:value={className}
-					/>
+					<div class="form-control w-full">
+						<input
+							id="class-name"
+							type="text"
+							placeholder="e.g., General Pharmacoloy"
+							class="input input-bordered w-full"
+							class:input-error={validationErrors.className}
+							bind:value={className}
+							oninput={() => validateOnInput('className', className)}
+							maxlength="100"
+						/>
+						<div class="label">
+							<span class="label-text-alt text-xs text-base-content/60">
+								2-100 characters • Must be unique in your cohort
+							</span>
+							<span class="label-text-alt text-xs text-base-content/40">
+								{className.length}/100
+							</span>
+						</div>
+						{#if validationErrors.className}
+							<div class="label">
+								<span class="label-text-alt text-error text-xs">
+									{validationErrors.className}
+								</span>
+							</div>
+						{/if}
+					</div>
 				</div>
 
 				<label
@@ -215,13 +335,33 @@
 						<Hash size={18} class="text-primary/80" />
 						<span>Code</span>
 					</label>
-					<input
-						id="class-code"
-						type="text"
-						placeholder="Enter class code..."
-						class="input input-bordered w-full"
-						bind:value={classCode}
-					/>
+					<div class="form-control w-full">
+						<input
+							id="class-code"
+							type="text"
+							placeholder="e.g., OPT5103"
+							class="input input-bordered w-full"
+							class:input-error={validationErrors.classCode}
+							bind:value={classCode}
+							oninput={() => validateOnInput('classCode', classCode)}
+							maxlength="20"
+						/>
+						<div class="label">
+							<span class="label-text-alt text-xs text-base-content/60">
+								2-20 characters • Must be unique
+							</span>
+							<span class="label-text-alt text-xs text-base-content/40">
+								{classCode.length}/20
+							</span>
+						</div>
+						{#if validationErrors.classCode}
+							<div class="label">
+								<span class="label-text-alt text-error text-xs">
+									{validationErrors.classCode}
+								</span>
+							</div>
+						{/if}
+					</div>
 				</div>
 
 				<label
@@ -231,12 +371,32 @@
 					<AlignLeft size={18} class="text-primary/80" />
 					<span>Description</span>
 				</label>
-				<textarea
-					id="class-description"
-					class="textarea textarea-bordered hidden w-full min-h-48 md:block"
-					bind:value={classDescription}
-					placeholder="Enter class description..."
-				></textarea>
+				<div class="form-control hidden w-full md:block">
+					<textarea
+						id="class-description"
+						class="textarea textarea-bordered w-full min-h-48"
+						class:textarea-error={validationErrors.classDescription}
+						bind:value={classDescription}
+						placeholder="Describe what this class covers..."
+						oninput={() => validateOnInput('classDescription', classDescription)}
+						maxlength="500"
+					></textarea>
+					<div class="label">
+						<span class="label-text-alt text-xs text-base-content/60">
+							10-500 characters
+						</span>
+						<span class="label-text-alt text-xs text-base-content/40">
+							{classDescription.length}/500
+						</span>
+					</div>
+					{#if validationErrors.classDescription}
+						<div class="label">
+							<span class="label-text-alt text-error text-xs">
+								{validationErrors.classDescription}
+							</span>
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
 
@@ -247,7 +407,8 @@
 				<button
 					class="btn btn-primary gap-2"
 					onclick={handleSubmit}
-					disabled={isSubmitting || !className || !classCode || !userData?.cohortId}
+					disabled={isSubmitting || !isFormValid}
+					title={!isFormValid ? 'Please fill all fields correctly before creating the class' : ''}
 				>
 					{#if isSubmitting}
 						<span class="loading loading-spinner loading-sm"></span>

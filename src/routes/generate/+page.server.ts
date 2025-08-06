@@ -8,9 +8,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!userId) {
 		return redirect(307, '/sign-in');
 	}
-	const user = await clerkClient.users.getUser(userId);
+	try {
+		const user = await clerkClient.users.getUser(userId);
 
-	return {
-		user: JSON.parse(JSON.stringify(user))
-	};
+		return {
+			user: JSON.parse(JSON.stringify(user))
+		};
+	} catch (error) {
+		console.error('Failed to load generate page data:', error);
+		throw error;
+	}
 };

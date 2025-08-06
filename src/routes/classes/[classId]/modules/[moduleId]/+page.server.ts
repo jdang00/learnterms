@@ -6,7 +6,10 @@ import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import type { Id } from '../../../../../convex/_generated/dataModel';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL!);
+	if (!PUBLIC_CONVEX_URL) {
+		throw new Error('PUBLIC_CONVEX_URL is not configured');
+	}
+	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
 
 	const { userId } = locals.auth();
 
@@ -16,17 +19,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const moduleId = params.moduleId as Id<'module'>;
 
-	const module = await client.query(api.question.getQuestionsByModule, {
-		id: moduleId
-	});
+	try {
+		const module = await client.query(api.question.getQuestionsByModule, {
+			id: moduleId
+		});
 
-	const moduleInfo = await client.query(api.module.getModuleById, {
-		id: moduleId
-	});
+		const moduleInfo = await client.query(api.module.getModuleById, {
+			id: moduleId
+		});
 
-	const convexID = await client.query(api.users.getUserById, {
-		id: userId
-	});
+		const convexID = await client.query(api.users.getUserById, {
+			id: userId
+		});
 
-	return { moduleInfo, module, moduleId, convexID, classId: params.classId };
+		return { moduleInfo, module, moduleId, convexID, classId: params.classId };
+	} catch (error) {
+		console.error('Failed to load module page data:', error);
+		throw error;
+	}
 };

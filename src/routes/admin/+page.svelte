@@ -4,9 +4,10 @@
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
 	import { api } from '../../convex/_generated/api.js';
+	import { useClerkContext } from 'svelte-clerk/client';
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
-	import { Eye, Pencil, Trash2, Plus, CalendarDays } from 'lucide-svelte';
+	import { Pencil, Trash2, Plus, CalendarDays } from 'lucide-svelte';
 	import EditClassModal from '$lib/admin/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
@@ -20,7 +21,7 @@
 
 	const client = useConvexClient();
 
-	type ClassItem = NonNullable<Doc<'class'>[]>[0] & {
+	type ClassItem = Doc<'class'> & {
 		semester?: {
 			_id: string;
 			name: string;
@@ -33,6 +34,10 @@
 	let isAddModalOpen = $state(false);
 	let isDeleteModalOpen = $state(false);
 	let classToDelete = $state<ClassItem | null>(null);
+	let classContentCounts = $state<{ moduleCount: number; questionCount: number }>({
+		moduleCount: 0,
+		questionCount: 0
+	});
 
 	$effect(() => {
 		if (classes.data) {
@@ -40,11 +45,22 @@
 		}
 	});
 
-	function handleDelete(id: string) {
+	async function handleDelete(id: string) {
 		const foundClass = classList.find((c) => c._id === id);
 		if (!foundClass) return;
 
 		classToDelete = foundClass;
+
+		try {
+			const counts = await client.query(api.class.getClassContentCounts, {
+				classId: id as Id<'class'>
+			});
+			classContentCounts = counts;
+		} catch (error) {
+			console.error('Failed to get class content counts:', error);
+			classContentCounts = { moduleCount: 0, questionCount: 0 };
+		}
+
 		isDeleteModalOpen = true;
 	}
 
@@ -65,12 +81,14 @@
 		} finally {
 			isDeleteModalOpen = false;
 			classToDelete = null;
+			classContentCounts = { moduleCount: 0, questionCount: 0 };
 		}
 	}
 
 	function cancelDelete() {
 		isDeleteModalOpen = false;
 		classToDelete = null;
+		classContentCounts = { moduleCount: 0, questionCount: 0 };
 	}
 
 	async function handleDrop(state: DragDropState<ClassItem>) {
@@ -341,4 +359,6 @@
 	onConfirm={confirmDelete}
 	itemName={classToDelete?.name}
 	itemType="class"
+	moduleCount={classContentCounts.moduleCount}
+	questionCount={classContentCounts.questionCount}
 />
