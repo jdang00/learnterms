@@ -156,6 +156,8 @@
 		editingModule = null;
 	}
 
+
+
 	function openAddModuleModal() {
 		isAddModuleModalOpen = true;
 	}
@@ -195,10 +197,12 @@
 				</div>
 			{/if}
 
-			<button class="btn btn-primary gap-2" onclick={openAddModuleModal}>
-				<Plus size={16} />
-				<span>Add New Module</span>
-			</button>
+			<div class="flex gap-2">
+				<button class="btn btn-primary gap-2" onclick={openAddModuleModal}>
+					<Plus size={16} />
+					<span>Add New Module</span>
+				</button>
+			</div>
 		</div>
 	</div>
 

@@ -93,28 +93,24 @@ export const updateModuleOrder = mutation({
 			.filter((q) => q.eq(q.field('classId'), args.classId))
 			.collect();
 
+		// Sort modules by their current order to get the correct sequence
+		allModules.sort((a, b) => a.order - b.order);
+
 		const movedModule = allModules.find((m) => m._id === args.moduleId);
 		if (!movedModule) return;
 
-		const oldOrder = movedModule.order;
-		const newOrder = args.newOrder;
+		// Find the current position of the moved module in the sorted array
+		const oldIndex = allModules.findIndex((m) => m._id === args.moduleId);
+		const newIndex = args.newOrder;
 
-		for (const moduleItem of allModules) {
-			let updatedOrder = moduleItem.order;
+		// Remove the moved module from its current position
+		allModules.splice(oldIndex, 1);
+		// Insert it at the new position
+		allModules.splice(newIndex, 0, movedModule);
 
-			if (moduleItem._id === args.moduleId) {
-				updatedOrder = newOrder;
-			} else if (oldOrder < newOrder) {
-				if (moduleItem.order > oldOrder && moduleItem.order <= newOrder) {
-					updatedOrder = moduleItem.order - 1;
-				}
-			} else if (oldOrder > newOrder) {
-				if (moduleItem.order >= newOrder && moduleItem.order < oldOrder) {
-					updatedOrder = moduleItem.order + 1;
-				}
-			}
-
-			await ctx.db.patch(moduleItem._id, { order: updatedOrder });
+		// Update all modules with their new order based on their position in the array
+		for (let i = 0; i < allModules.length; i++) {
+			await ctx.db.patch(allModules[i]._id, { order: i });
 		}
 	}
 });
@@ -284,3 +280,5 @@ export const updateModule = mutation({
 		return { updated: true };
 	}
 });
+
+

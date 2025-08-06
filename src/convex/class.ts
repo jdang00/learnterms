@@ -74,25 +74,21 @@ export const updateClassOrder = mutation({
 		// Only reorder classes within the same semester
 		const semesterClasses = allClasses.filter(c => c.semesterId === movedClass.semesterId);
 		
-		const oldOrder = movedClass.order;
-		const newOrder = args.newOrder;
+		// Sort classes by their current order to get the correct sequence
+		semesterClasses.sort((a, b) => a.order - b.order);
 
-		for (const classItem of semesterClasses) {
-			let updatedOrder = classItem.order;
+		// Find the current position of the moved class in the sorted array
+		const oldIndex = semesterClasses.findIndex((c) => c._id === args.classId);
+		const newIndex = args.newOrder;
 
-			if (classItem._id === args.classId) {
-				updatedOrder = newOrder;
-			} else if (oldOrder < newOrder) {
-				if (classItem.order > oldOrder && classItem.order <= newOrder) {
-					updatedOrder = classItem.order - 1;
-				}
-			} else if (oldOrder > newOrder) {
-				if (classItem.order >= newOrder && classItem.order < oldOrder) {
-					updatedOrder = classItem.order + 1;
-				}
-			}
+		// Remove the moved class from its current position
+		semesterClasses.splice(oldIndex, 1);
+		// Insert it at the new position
+		semesterClasses.splice(newIndex, 0, movedClass);
 
-			await ctx.db.patch(classItem._id, { order: updatedOrder });
+		// Update all classes with their new order based on their position in the array
+		for (let i = 0; i < semesterClasses.length; i++) {
+			await ctx.db.patch(semesterClasses[i]._id, { order: i });
 		}
 	}
 });

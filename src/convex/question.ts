@@ -26,7 +26,7 @@ export const getQuestionsByModule = query({
 			.filter((q) => q.eq(q.field('status'), 'published'))
 			.collect();
 
-		return questions;
+		return questions.sort((a, b) => a.order - b.order);
 	}
 });
 
@@ -39,7 +39,7 @@ export const getQuestionsByModuleAdmin = query({
 			.withIndex('by_moduleId', (q) => q.eq('moduleId', id))
 			.collect();
 
-		return questions;
+		return questions.sort((a, b) => a.order - b.order);
 	}
 });
 
@@ -109,6 +109,43 @@ export const deleteQuestion = mutation({
 	}
 });
 
+export const bulkDeleteQuestions = mutation({
+	args: {
+		questionIds: v.array(v.id('question')),
+		moduleId: v.id('module')
+	},
+	handler: async (ctx, args) => {
+		let deletedCount = 0;
+		const errors = [];
+
+		for (const questionId of args.questionIds) {
+			try {
+				const questionToDelete = await ctx.db.get(questionId);
+				if (!questionToDelete) {
+					errors.push(`Question ${questionId} not found`);
+					continue;
+				}
+				
+				if (questionToDelete.moduleId !== args.moduleId) {
+					errors.push(`Question ${questionId} access denied`);
+					continue;
+				}
+
+				await ctx.db.delete(questionId);
+				deletedCount++;
+			} catch (error) {
+				errors.push(`Failed to delete question ${questionId}: ${error}`);
+			}
+		}
+
+		return {
+			deletedCount,
+			errors,
+			success: errors.length === 0
+		};
+	}
+});
+
 export const updateQuestion = mutation({
 	args: {
 		questionId: v.id('question'),
@@ -172,6 +209,40 @@ export const createQuestion = mutation({
 	handler: async (ctx, args) => {
 		const id = await ctx.db.insert('question', args);
 		return id;
+	}
+});
+
+export const updateQuestionOrder = mutation({
+	args: {
+		questionId: v.id('question'),
+		newOrder: v.number(),
+		moduleId: v.id('module')
+	},
+	handler: async (ctx, args) => {
+		const allQuestions = await ctx.db
+			.query('question')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
+			.collect();
+
+		// Sort questions by their current order to get the correct sequence
+		allQuestions.sort((a, b) => a.order - b.order);
+
+		const movedQuestion = allQuestions.find((q) => q._id === args.questionId);
+		if (!movedQuestion) return;
+
+		// Find the current position of the moved question in the sorted array
+		const oldIndex = allQuestions.findIndex((q) => q._id === args.questionId);
+		const newIndex = args.newOrder;
+
+		// Remove the moved question from its current position
+		allQuestions.splice(oldIndex, 1);
+		// Insert it at the new position
+		allQuestions.splice(newIndex, 0, movedQuestion);
+
+		// Update all questions with their new order based on their position in the array
+		for (let i = 0; i < allQuestions.length; i++) {
+			await ctx.db.patch(allQuestions[i]._id, { order: i });
+		}
 	}
 });
 

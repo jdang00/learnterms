@@ -83,31 +83,90 @@
 		questionToDelete = null;
 	}
 
-	type ModuleItem = Doc<'module'>;
-	let moduleList = $state<ModuleItem[]>([]);
+	let questionList = $state<QuestionItem[]>([]);
 
-	async function handleDrop(state: DragDropState<ModuleItem>) {
+	// Bulk delete functionality
+	let selectedQuestions = $state<Set<string>>(new Set());
+	let isBulkDeleteModalOpen = $state(false);
+
+	function toggleQuestionSelection(questionId: string) {
+		const newSelected = new Set(selectedQuestions);
+		if (newSelected.has(questionId)) {
+			newSelected.delete(questionId);
+		} else {
+			newSelected.add(questionId);
+		}
+		selectedQuestions = newSelected;
+	}
+
+	function selectAllQuestions() {
+		selectedQuestions = new Set(questionList.map(q => q._id));
+	}
+
+	function deselectAllQuestions() {
+		selectedQuestions = new Set();
+	}
+
+	function openBulkDeleteModal() {
+		isBulkDeleteModalOpen = true;
+	}
+
+	function closeBulkDeleteModal() {
+		isBulkDeleteModalOpen = false;
+	}
+
+	async function confirmBulkDelete() {
+		if (selectedQuestions.size === 0) return;
+
+		try {
+			const result = await client.mutation(api.question.bulkDeleteQuestions, {
+				questionIds: Array.from(selectedQuestions) as Id<'question'>[],
+				moduleId: moduleId as Id<'module'>
+			});
+
+			if (result.success) {
+				console.log(`Successfully deleted ${result.deletedCount} questions`);
+			} else {
+				console.log('Some deletions failed:', result.errors);
+			}
+
+			selectedQuestions = new Set();
+		} catch (error) {
+			console.error('Failed to bulk delete questions', error);
+		} finally {
+			isBulkDeleteModalOpen = false;
+		}
+	}
+
+	$effect(() => {
+		if (questions.data) {
+			questionList = [...questions.data];
+		}
+	});
+
+	async function handleQuestionDrop(state: DragDropState<QuestionItem>) {
 		const { draggedItem, sourceContainer, targetContainer } = state;
 		if (!targetContainer || sourceContainer === targetContainer) return;
 
-		const sourceIndex = moduleList.findIndex((i) => i._id === draggedItem._id);
+		const sourceIndex = questionList.findIndex((i) => i._id === draggedItem._id);
 		const targetIndex = parseInt(targetContainer);
 
 		if (sourceIndex === -1 || Number.isNaN(targetIndex)) return;
 
-		const updatedList = [...moduleList];
+		const updatedList = [...questionList];
 		const [moved] = updatedList.splice(sourceIndex, 1);
 		updatedList.splice(targetIndex, 0, moved);
-		moduleList = updatedList;
+		questionList = updatedList;
 
 		try {
-			await client.mutation(api.module.updateModuleOrder, {
-				moduleId: moved._id,
+			await client.mutation(api.question.updateQuestionOrder, {
+				questionId: moved._id,
 				newOrder: targetIndex,
-				classId: moduleInfo.data?.classId as Id<'class'>
+				moduleId: moduleId as Id<'module'>
 			});
 		} catch (error) {
-			console.error('Failed to update module order:', error);
+			console.error('Failed to update question order:', error);
+			questionList = [...(questions.data || [])];
 		}
 	}
 </script>
@@ -145,10 +204,25 @@
 				</div>
 			{/if}
 
-			<button class="btn btn-primary gap-2" onclick={openAddQuestionModal}>
-				<Plus size={16} />
-				<span>Add New Question</span>
-			</button>
+			<div class="flex gap-2">
+				{#if selectedQuestions.size > 0}
+					<button class="btn btn-error gap-2" onclick={openBulkDeleteModal}>
+						<Trash2 size={16} />
+						<span>Delete Selected ({selectedQuestions.size})</span>
+					</button>
+					<button class="btn btn-ghost" onclick={deselectAllQuestions}>
+						Deselect All
+					</button>
+				{:else}
+					<button class="btn btn-ghost" onclick={selectAllQuestions}>
+						Select All
+					</button>
+				{/if}
+				<button class="btn btn-primary gap-2" onclick={openAddQuestionModal}>
+					<Plus size={16} />
+					<span>Add New Question</span>
+				</button>
+			</div>
 		</div>
 	</div>
 
@@ -173,11 +247,11 @@
 			{showTruncated ? 'Hide ' : 'Show '} Options</button
 		>
 		<div class="space-y-4">
-			{#each questions.data as questionItem, index (questionItem._id)}
+			{#each questionList as questionItem, index (questionItem._id)}
 				<div
 					use:droppable={{
 						container: index.toString(),
-						callbacks: { onDrop: handleDrop }
+						callbacks: { onDrop: handleQuestionDrop }
 					}}
 					class="relative rounded-xl bg-base-100 shadow-sm border border-base-300 p-4
               transition-shadow duration-300 hover:shadow-md hover:border-primary/30
@@ -209,6 +283,8 @@
 												type="checkbox"
 												class="checkbox checkbox-primary"
 												aria-label="Select question"
+												checked={selectedQuestions.has(questionItem._id)}
+												onclick={() => toggleQuestionSelection(questionItem._id)}
 											/>
 										</label>
 										<div
@@ -369,5 +445,13 @@
 	onCancel={cancelQuestionDelete}
 	onConfirm={confirmQuestionDelete}
 	itemName={questionToDelete?.stem}
+	itemType="question"
+/>
+
+<DeleteConfirmationModal
+	isDeleteModalOpen={isBulkDeleteModalOpen}
+	onCancel={closeBulkDeleteModal}
+	onConfirm={confirmBulkDelete}
+	itemName={`${selectedQuestions.size} selected questions`}
 	itemType="question"
 />
