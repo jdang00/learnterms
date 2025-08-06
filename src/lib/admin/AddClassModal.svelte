@@ -5,6 +5,7 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
+	import { useClerkContext } from 'svelte-clerk/client';
 
 	const client = useConvexClient();
 
@@ -294,7 +295,7 @@
 						<input
 							id="class-name"
 							type="text"
-							placeholder="e.g., Advanced Calculus"
+							placeholder="e.g., General Pharmacoloy"
 							class="input input-bordered w-full"
 							class:input-error={validationErrors.className}
 							bind:value={className}
@@ -338,7 +339,7 @@
 						<input
 							id="class-code"
 							type="text"
-							placeholder="e.g., MATH301"
+							placeholder="e.g., OPT5103"
 							class="input input-bordered w-full"
 							class:input-error={validationErrors.classCode}
 							bind:value={classCode}

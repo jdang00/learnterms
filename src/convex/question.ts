@@ -154,3 +154,31 @@ export const updateQuestion = mutation({
 		return { updated: true };
 	}
 });
+
+export const createQuestion = mutation({
+	args: {
+		moduleId: v.id('module'),
+		type: v.string(),
+		stem: v.string(),
+		options: v.array(v.object({ id: v.string(), text: v.string() })),
+		correctAnswers: v.array(v.string()),
+		explanation: v.string(),
+		aiGenerated: v.boolean(),
+		status: v.string(),
+		order: v.number(),
+		metadata: v.object({}),
+		updatedAt: v.number()
+	},
+	handler: async (ctx, args) => {
+		const id = await ctx.db.insert('question', args);
+		return id;
+	}
+});
+
+export const getAllQuestions = query({
+	args: {},
+	handler: async (ctx) => {
+		const questions = await ctx.db.query('question').collect();
+		return questions;
+	}
+});

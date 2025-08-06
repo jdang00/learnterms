@@ -326,3 +326,11 @@ export const updateClass = mutation({
 		return { updated: true };
 	}
 });
+
+export const getAllClasses = query({
+	args: {},
+	handler: async (ctx) => {
+		const classes = await ctx.db.query('class').collect();
+		return classes;
+	}
+});

@@ -266,7 +266,7 @@
 							<input
 								id="class-name"
 								type="text"
-								placeholder="e.g., Advanced Calculus"
+								placeholder="e.g., General Pharmacology"
 								class="input input-bordered w-full"
 								class:input-error={validationErrors.className}
 								bind:value={className}
@@ -310,7 +310,7 @@
 							<input
 								id="class-code"
 								type="text"
-								placeholder="e.g., MATH301"
+								placeholder="e.g., OPT5103"
 								class="input input-bordered w-full"
 								class:input-error={validationErrors.classCode}
 								bind:value={classCode}

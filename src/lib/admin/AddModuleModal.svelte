@@ -12,16 +12,65 @@
 	let moduleDescription: string = $state('');
 	let moduleStatus: string = $state('draft');
 	let isSubmitting: boolean = $state(false);
+	let validationErrors: Record<string, string> = $state({});
+	let submitError: string = $state('');
 
 	// Get current modules to calculate next order number
-	const modules = useQuery(api.module.getClassModules, {
+	const modules = useQuery(api.module.getAdminModule, {
 		id: classId as Id<'class'>
 	});
 
+	function validateField(field: string, value: string): string {
+		const trimmed = value.trim();
+		
+		switch (field) {
+			case 'moduleTitle':
+				if (!trimmed) return 'Module title is required';
+				if (trimmed.length < 2) return 'Module title must be at least 2 characters';
+				if (trimmed.length > 100) return 'Module title cannot exceed 100 characters';
+				
+				// Check for duplicate titles (case-insensitive)
+				const existingTitles = modules.data?.map(m => m.title.toLowerCase()) || [];
+				if (existingTitles.includes(trimmed.toLowerCase())) {
+					return 'A module with this title already exists';
+				}
+				break;
+
+			case 'moduleDescription':
+				if (!trimmed) return 'Description is required';
+				if (trimmed.length < 10) return 'Description must be at least 10 characters';
+				if (trimmed.length > 500) return 'Description cannot exceed 500 characters';
+				break;
+		}
+		
+		return '';
+	}
+
+	function validateOnInput(field: string, value: string) {
+		const error = validateField(field, value);
+		if (error) {
+			validationErrors[field] = error;
+		} else {
+			delete validationErrors[field];
+		}
+		validationErrors = { ...validationErrors };
+	}
+
+	const isFormValid = $derived(
+		moduleTitle.trim() && 
+		moduleDescription.trim() && 
+		Object.keys(validationErrors).length === 0
+	);
+
 	async function handleSubmit() {
-		if (!moduleTitle || !classId) return;
+		// Validate all fields first
+		validateOnInput('moduleTitle', moduleTitle);
+		validateOnInput('moduleDescription', moduleDescription);
+
+		if (!isFormValid) return;
 
 		isSubmitting = true;
+		submitError = '';
 
 		try {
 			// Calculate next order number
@@ -30,8 +79,8 @@
 				: 0;
 
 			await client.mutation(api.module.insertModule, {
-				title: moduleTitle,
-				description: moduleDescription,
+				title: moduleTitle.trim(),
+				description: moduleDescription.trim(),
 				status: moduleStatus.toLowerCase(),
 				classId: classId as Id<'class'>,
 				order: nextOrder,
@@ -43,9 +92,12 @@
 			moduleTitle = '';
 			moduleDescription = '';
 			moduleStatus = 'draft';
+			validationErrors = {};
+			submitError = '';
 			closeAddModal();
 		} catch (error) {
-			console.error('Failed to create module:', error);
+			submitError = error instanceof Error ? error.message : 'Failed to create module';
+			console.error("Failed to create module:", submitError);
 		} finally {
 			isSubmitting = false;
 		}
@@ -68,6 +120,12 @@
 			<h3 class="text-2xl font-extrabold tracking-tight">Add New Module</h3>
 		</div>
 
+		{#if submitError}
+			<div class="alert alert-error mb-6">
+				<span>❌ {submitError}</span>
+			</div>
+		{/if}
+
 		<!-- Responsive form: description snaps to top on mobile -->
 		<div class="flex flex-col gap-6">
 			<!-- Description block (first on mobile, later in grid on md+) -->
@@ -79,12 +137,32 @@
 					<AlignLeft size={18} class="text-primary/80" />
 					<span>Description</span>
 				</label>
-				<textarea
-					id="module-description"
-					class="textarea textarea-bordered w-full min-h-48"
-					bind:value={moduleDescription}
-					placeholder="Enter module description..."
-				></textarea>
+				<div class="form-control w-full">
+					<textarea
+						id="module-description"
+						class="textarea textarea-bordered w-full min-h-48"
+						class:textarea-error={validationErrors.moduleDescription}
+						bind:value={moduleDescription}
+						placeholder="Describe what this module covers..."
+						oninput={() => validateOnInput('moduleDescription', moduleDescription)}
+						maxlength="500"
+					></textarea>
+					<div class="label">
+						<span class="label-text-alt text-xs text-base-content/60">
+							10-500 characters
+						</span>
+						<span class="label-text-alt text-xs text-base-content/40">
+							{moduleDescription.length}/500
+						</span>
+					</div>
+					{#if validationErrors.moduleDescription}
+						<div class="label">
+							<span class="label-text-alt text-error text-xs">
+								{validationErrors.moduleDescription}
+							</span>
+						</div>
+					{/if}
+				</div>
 			</div>
 
 			<!-- Two-column label/field grid for md+; single column on mobile -->
@@ -104,13 +182,33 @@
 						<BookOpenText size={18} class="text-primary/80" />
 						<span>Module Title</span>
 					</label>
-					<input
-						id="module-title"
-						type="text"
-						placeholder="Enter module title..."
-						class="input input-bordered w-full"
-						bind:value={moduleTitle}
-					/>
+					<div class="form-control w-full">
+						<input
+							id="module-title"
+							type="text"
+							placeholder="e.g., Introduction to Optics"
+							class="input input-bordered w-full"
+							class:input-error={validationErrors.moduleTitle}
+							bind:value={moduleTitle}
+							oninput={() => validateOnInput('moduleTitle', moduleTitle)}
+							maxlength="100"
+						/>
+						<div class="label">
+							<span class="label-text-alt text-xs text-base-content/60">
+								2-100 characters • Must be unique
+							</span>
+							<span class="label-text-alt text-xs text-base-content/40">
+								{moduleTitle.length}/100
+							</span>
+						</div>
+						{#if validationErrors.moduleTitle}
+							<div class="label">
+								<span class="label-text-alt text-error text-xs">
+									{validationErrors.moduleTitle}
+								</span>
+							</div>
+						{/if}
+					</div>
 				</div>
 
 				<label
@@ -146,12 +244,32 @@
 					<AlignLeft size={18} class="text-primary/80" />
 					<span>Description</span>
 				</label>
-				<textarea
-					id="module-description"
-					class="textarea textarea-bordered hidden w-full min-h-48 md:block"
-					bind:value={moduleDescription}
-					placeholder="Enter module description..."
-				></textarea>
+				<div class="form-control hidden w-full md:block">
+					<textarea
+						id="module-description"
+						class="textarea textarea-bordered w-full min-h-48"
+						class:textarea-error={validationErrors.moduleDescription}
+						bind:value={moduleDescription}
+						placeholder="Describe what this module covers..."
+						oninput={() => validateOnInput('moduleDescription', moduleDescription)}
+						maxlength="500"
+					></textarea>
+					<div class="label">
+						<span class="label-text-alt text-xs text-base-content/60">
+							10-500 characters
+						</span>
+						<span class="label-text-alt text-xs text-base-content/40">
+							{moduleDescription.length}/500
+						</span>
+					</div>
+					{#if validationErrors.moduleDescription}
+						<div class="label">
+							<span class="label-text-alt text-error text-xs">
+								{validationErrors.moduleDescription}
+							</span>
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
 
@@ -162,7 +280,8 @@
 				<button
 					class="btn btn-primary gap-2"
 					onclick={handleSubmit}
-					disabled={isSubmitting || !moduleTitle}
+					disabled={isSubmitting || !isFormValid}
+					title={!isFormValid ? 'Please fill all fields correctly before creating the module' : ''}
 				>
 					{#if isSubmitting}
 						<span class="loading loading-spinner loading-sm"></span>

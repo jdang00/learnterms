@@ -29,3 +29,6 @@ tmp
 /src/routes/performance-test
 /src/routes/api/test-new-method
 /src/routes/api/test-old-method
+/src/routes/seed
+/src/lib/utils/seed.ts
+/src/lib/utils/seed-example.ts

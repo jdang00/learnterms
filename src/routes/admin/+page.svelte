@@ -4,6 +4,7 @@
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
 	import { api } from '../../convex/_generated/api.js';
+	import { useClerkContext } from 'svelte-clerk/client';
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
 	import { Pencil, Trash2, Plus, CalendarDays } from 'lucide-svelte';

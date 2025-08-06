@@ -73,6 +73,14 @@ export const getAdminModulesWithQuestionCounts = query({
 	}
 });
 
+export const getAllModules = query({
+	args: {},
+	handler: async (ctx) => {
+		const modules = await ctx.db.query('module').collect();
+		return modules;
+	}
+});
+
 export const updateModuleOrder = mutation({
 	args: {
 		moduleId: v.id('module'),
@@ -122,7 +130,59 @@ export const insertModule = mutation({
 		updatedAt: v.number()
 	},
 	handler: async (ctx, args) => {
-		const id = await ctx.db.insert('module', args);
+		// Trim whitespace from string fields
+		const trimmedTitle = args.title.trim();
+		const trimmedDescription = args.description.trim();
+		const trimmedStatus = args.status.trim().toLowerCase();
+
+		// Validation: Check required fields
+		if (!trimmedTitle) {
+			throw new Error('Module title is required and cannot be empty');
+		}
+		if (!trimmedDescription) {
+			throw new Error('Module description is required and cannot be empty');
+		}
+
+		// Validation: Length limits
+		if (trimmedTitle.length < 2) {
+			throw new Error('Module title must be at least 2 characters long');
+		}
+		if (trimmedTitle.length > 100) {
+			throw new Error('Module title cannot exceed 100 characters');
+		}
+		if (trimmedDescription.length < 10) {
+			throw new Error('Module description must be at least 10 characters long');
+		}
+		if (trimmedDescription.length > 500) {
+			throw new Error('Module description cannot exceed 500 characters');
+		}
+
+		// Validation: Status must be valid
+		const validStatuses = ['draft', 'published', 'archived'];
+		if (!validStatuses.includes(trimmedStatus)) {
+			throw new Error('Module status must be draft, published, or archived');
+		}
+
+		// Validation: Check for duplicate titles within the same class
+		const existingModules = await ctx.db
+			.query('module')
+			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.collect();
+
+		const titleExists = existingModules.some(
+			(existingModule) => existingModule.title.toLowerCase() === trimmedTitle.toLowerCase()
+		);
+		if (titleExists) {
+			throw new Error('A module with this title already exists in this class');
+		}
+
+		// Insert with trimmed values
+		const id = await ctx.db.insert('module', {
+			...args,
+			title: trimmedTitle,
+			description: trimmedDescription,
+			status: trimmedStatus
+		});
 		return id;
 	}
 });
@@ -166,10 +226,58 @@ export const updateModule = mutation({
 			throw new Error('Module not found or access denied');
 		}
 
+		// Trim whitespace from string fields
+		const trimmedTitle = args.title.trim();
+		const trimmedDescription = args.description.trim();
+		const trimmedStatus = args.status.trim().toLowerCase();
+
+		// Validation: Check required fields
+		if (!trimmedTitle) {
+			throw new Error('Module title is required and cannot be empty');
+		}
+		if (!trimmedDescription) {
+			throw new Error('Module description is required and cannot be empty');
+		}
+
+		// Validation: Length limits
+		if (trimmedTitle.length < 2) {
+			throw new Error('Module title must be at least 2 characters long');
+		}
+		if (trimmedTitle.length > 100) {
+			throw new Error('Module title cannot exceed 100 characters');
+		}
+		if (trimmedDescription.length < 10) {
+			throw new Error('Module description must be at least 10 characters long');
+		}
+		if (trimmedDescription.length > 500) {
+			throw new Error('Module description cannot exceed 500 characters');
+		}
+
+		// Validation: Status must be valid
+		const validStatuses = ['draft', 'published', 'archived'];
+		if (!validStatuses.includes(trimmedStatus)) {
+			throw new Error('Module status must be draft, published, or archived');
+		}
+
+		// Validation: Check for duplicate titles within the same class (excluding current module)
+		const existingModules = await ctx.db
+			.query('module')
+			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.collect();
+
+		const titleExists = existingModules.some(
+			(existingModule) => 
+				existingModule._id !== args.moduleId && 
+				existingModule.title.toLowerCase() === trimmedTitle.toLowerCase()
+		);
+		if (titleExists) {
+			throw new Error('A module with this title already exists in this class');
+		}
+
 		await ctx.db.patch(args.moduleId, {
-			title: args.title,
-			description: args.description,
-			status: args.status.toLowerCase(),
+			title: trimmedTitle,
+			description: trimmedDescription,
+			status: trimmedStatus,
 			updatedAt: Date.now()
 		});
 
