@@ -7,7 +7,16 @@
 	import { useClerkContext } from 'svelte-clerk/client';
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
-	import { Pencil, Trash2, Plus, CalendarDays } from 'lucide-svelte';
+	import {
+		Pencil,
+		Trash2,
+		Plus,
+		CalendarDays,
+		NotebookPen,
+		Sparkles,
+		ChartColumnIncreasing,
+		ArrowDownNarrowWide
+	} from 'lucide-svelte';
 	import EditClassModal from '$lib/admin/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
@@ -162,16 +171,64 @@
 	<div class="mb-8 flex flex-col gap-2">
 		<div class="flex flex-row justify-between items-center">
 			<div>
-				<h1 class="text-2xl font-bold text-base-content">Admin Dashboard</h1>
-				<p class="text-base-content/70">
-					Manage your learning classes. Drag and drop to reorder them.
-				</p>
+				<h1 class="text-4xl font-bold text-base-content">Admin Dashboard</h1>
 			</div>
+		</div>
 
-			<button class="btn btn-primary gap-2" onclick={openAddModal}>
-				<Plus size={16} />
-				<span>Add New Class</span>
-			</button>
+		<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12" role="list">
+			<a
+				href="/admin/library"
+				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
+				aria-label="Open Content Library"
+			>
+				<div class="rounded-md bg-base-200/70 border border-base-300 p-2">
+					<NotebookPen size={20} class="text-base-content" aria-hidden="true" />
+				</div>
+				<div class="flex-1 min-w-0">
+					<h3 class="text-base font-semibold text-base-content group-hover:text-primary">
+						Content Library
+					</h3>
+					<p class="text-sm text-base-content/70 line-clamp-2">
+						Store and access all your notes, slides, and files here
+					</p>
+				</div>
+			</a>
+
+			<a
+				href="/admin/library"
+				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
+				aria-label="Open Question Studio"
+			>
+				<div class="rounded-md bg-base-200/70 border border-base-300 p-2">
+					<Sparkles size={20} class="text-base-content" aria-hidden="true" />
+				</div>
+				<div class="flex-1 min-w-0">
+					<h3 class="text-base font-semibold text-base-content group-hover:text-primary">
+						Question Studio
+					</h3>
+					<p class="text-sm text-base-content/70 line-clamp-2">
+						Generate questions with AI and send them where they belong
+					</p>
+				</div>
+			</a>
+
+			<a
+				href="/admin/library"
+				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
+				aria-label="Open Class Progress"
+			>
+				<div class="rounded-md bg-base-200/70 border border-base-300 p-2">
+					<ChartColumnIncreasing size={20} class="text-base-content" aria-hidden="true" />
+				</div>
+				<div class="flex-1 min-w-0">
+					<h3 class="text-base font-semibold text-base-content group-hover:text-primary">
+						Class Progress
+					</h3>
+					<p class="text-sm text-base-content/70 line-clamp-2">
+						Track performance and monitor mastery over time
+					</p>
+				</div>
+			</a>
 		</div>
 
 		{#if semesters.isLoading}
@@ -184,28 +241,40 @@
 				<span>Failed to load: {semesters.error.toString()}</span>
 			</div>
 		{:else}
-			<div class="flex items-center gap-2 mt-8">
-				<button class="btn" popovertarget="popover-1" style="anchor-name: --anchor-1">
-					{currentSemester}
-				</button>
-				<ul
-					class="dropdown menu w-48 rounded-lg bg-base-100 shadow-sm border border-base-300"
-					popover
-					id="popover-1"
-					style="position-anchor: --anchor-1"
-				>
-					{#each semesters.data as semester (semester._id)}
-						<li>
-							<button
-								onclick={() => (currentSemester = semester.name)}
-								class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150"
-							>
-								<CalendarDays size={16} class="text-primary/70" />
-								<span>{semester.name}</span>
-							</button>
-						</li>
-					{/each}
-				</ul>
+			<div class="flex items-center gap-2 mt-12 justify-between">
+				<div>
+					<h1 class="font-semibold text-2xl">My Classes</h1>
+					<p class="text-sm text-base-content/70">Drag and drop to reorder classes</p>
+				</div>
+
+				<div>
+					<button class="btn btn-soft" popovertarget="popover-1" style="anchor-name: --anchor-1">
+						<ArrowDownNarrowWide size={16} />
+						{currentSemester}
+					</button>
+					<button class="btn btn-primary gap-2" onclick={openAddModal}>
+						<Plus size={16} />
+						<span>Add New Class</span>
+					</button>
+					<ul
+						class="dropdown menu w-48 rounded-lg bg-base-100 shadow-sm border border-base-300"
+						popover
+						id="popover-1"
+						style="position-anchor: --anchor-1"
+					>
+						{#each semesters.data as semester (semester._id)}
+							<li>
+								<button
+									onclick={() => (currentSemester = semester.name)}
+									class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150"
+								>
+									<CalendarDays size={16} class="text-primary/70" />
+									<span>{semester.name}</span>
+								</button>
+							</li>
+						{/each}
+					</ul>
+				</div>
 			</div>
 		{/if}
 	</div>
@@ -308,7 +377,7 @@
 								<div
 									class="md:border-l md:border-base-200 md:pl-4 flex flex-col items-end gap-2 justify-end md:justify-start"
 								>
-									<div class="dropdown dropdown-end">
+									<div class="dropdown dropdown-end t">
 										<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
 										<ul
 											tabindex="-1"
@@ -317,7 +386,7 @@
 											<li>
 												<button
 													data-edit-btn
-													class="btn btn-sm btn-ghost w-full justify-start"
+													class="btn btn-sm btn-ghost w-full justify-start font-medium"
 													type="button"
 													aria-label="Edit class"
 													onclick={() => editClass(classItem)}
@@ -329,7 +398,7 @@
 											<li>
 												<button
 													data-delete-btn
-													class="btn btn-sm btn-ghost text-error w-full justify-start"
+													class="btn btn-sm btn-ghost text-error w-full justify-start font-medium"
 													type="button"
 													aria-label="Delete class"
 													onclick={() => handleDelete(classItem._id)}

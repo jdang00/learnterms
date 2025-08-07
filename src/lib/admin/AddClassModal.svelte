@@ -5,7 +5,6 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
-	import { useClerkContext } from 'svelte-clerk/client';
 
 	const client = useConvexClient();
 
@@ -31,15 +30,15 @@
 
 	function validateField(field: string, value: string): string {
 		const trimmed = value.trim();
-		
+
 		switch (field) {
 			case 'className':
 				if (!trimmed) return 'Class name is required';
 				if (trimmed.length < 2) return 'Class name must be at least 2 characters';
 				if (trimmed.length > 100) return 'Class name cannot exceed 100 characters';
-				
+
 				// Check for duplicate names (case-insensitive)
-				const existingNames = classes.data?.map(c => c.name.toLowerCase()) || [];
+				const existingNames = classes.data?.map((c) => c.name.toLowerCase()) || [];
 				if (existingNames.includes(trimmed.toLowerCase())) {
 					return 'A class with this name already exists';
 				}
@@ -49,14 +48,14 @@
 				if (!trimmed) return 'Class code is required';
 				if (trimmed.length < 2) return 'Class code must be at least 2 characters';
 				if (trimmed.length > 20) return 'Class code cannot exceed 20 characters';
-				
+
 				const codePattern = /^[a-zA-Z0-9\-_\s]+$/;
 				if (!codePattern.test(trimmed)) {
 					return 'Code can only contain letters, numbers, hyphens, underscores, and spaces';
 				}
-				
+
 				// Check for duplicate codes (case-insensitive)
-				const existingCodes = classes.data?.map(c => c.code.toLowerCase()) || [];
+				const existingCodes = classes.data?.map((c) => c.code.toLowerCase()) || [];
 				if (existingCodes.includes(trimmed.toLowerCase())) {
 					return 'A class with this code already exists';
 				}
@@ -68,7 +67,7 @@
 				if (trimmed.length > 500) return 'Description cannot exceed 500 characters';
 				break;
 		}
-		
+
 		return '';
 	}
 
@@ -83,12 +82,12 @@
 	}
 
 	const isFormValid = $derived(
-		className.trim() && 
-		classCode.trim() && 
-		classDescription.trim() && 
-		semesterEditName && 
-		userData?.cohortId &&
-		Object.keys(validationErrors).length === 0
+		className.trim() &&
+			classCode.trim() &&
+			classDescription.trim() &&
+			semesterEditName &&
+			userData?.cohortId &&
+			Object.keys(validationErrors).length === 0
 	);
 
 	async function handleSubmit() {
@@ -139,7 +138,7 @@
 			closeAddModal();
 		} catch (error) {
 			submitError = error instanceof Error ? error.message : 'Failed to create class';
-			console.error("Failed to create class:", submitError);
+			console.error('Failed to create class:', submitError);
 		} finally {
 			isSubmitting = false;
 		}
@@ -257,9 +256,7 @@
 						maxlength="500"
 					></textarea>
 					<div class="label">
-						<span class="label-text-alt text-xs text-base-content/60">
-							10-500 characters
-						</span>
+						<span class="label-text-alt text-xs text-base-content/60"> 10-500 characters </span>
 						<span class="label-text-alt text-xs text-base-content/40">
 							{classDescription.length}/500
 						</span>
@@ -382,9 +379,7 @@
 						maxlength="500"
 					></textarea>
 					<div class="label">
-						<span class="label-text-alt text-xs text-base-content/60">
-							10-500 characters
-						</span>
+						<span class="label-text-alt text-xs text-base-content/60"> 10-500 characters </span>
 						<span class="label-text-alt text-xs text-base-content/40">
 							{classDescription.length}/500
 						</span>
