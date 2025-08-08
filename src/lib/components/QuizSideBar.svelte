@@ -16,29 +16,28 @@
 
 <div
 	class="
- hidden lg:block
- overflow-y-auto
- h-full
- border border-base-300
- rounded-xl
- p-3
- transition-all duration-200 ease-out
- {hideSidebar ? 'w-1/20' : 'w-1/4'}
- bg-base-100 backdrop-blur-md bg-opacity-80 shadow-lg
- "
+	 hidden lg:flex lg:flex-col relative
+	 overflow-y-auto
+	 h-full
+	 border border-base-300
+	 rounded-xl
+	 p-3
+	 transition-all duration-200 ease-out
+	 bg-base-100 backdrop-blur-md bg-opacity-80 shadow-lg
+	 flex-shrink-0
+	 {hideSidebar ? 'w-[72px]' : 'w-[min(22rem,30vw)] xl:w-[min(24rem,28vw)]'}
+	"
 >
 	<button
-		class="btn btn-ghost btn-md justify-self-center ms-1"
+		class="btn btn-ghost btn-square btn-sm w-9 h-9 absolute top-6 left-5"
 		onclick={() => (hideSidebar = !hideSidebar)}
+		aria-label="Toggle sidebar"
 	>
-		<PanelRight
-			size={18}
-			class="transition-transform duration-300 {hideSidebar ? 'rotate-180' : ''}"
-		/>
+		<PanelRight size={18} class="transition-transform duration-300 {hideSidebar ? 'rotate-180' : ''}" />
 	</button>
 
 	{#if !hideSidebar}
-		<div class="p-6">
+		<div class="p-4 md:p-5 lg:p-6 pt-12 pl-12 mt-8">
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
 				<a class="btn btn-ghost font-bold" href={`/classes?classId=${classId}`}>
 					<ChevronLeft size={16} /> CHAPTER {module.data.order}
@@ -58,7 +57,7 @@
 		</div>
 
 		<div class="flex flex-col justify-center m-4">
-			<div class="card bg-base-100 shadow-xl mt-12">
+			<div class="card bg-base-100 shadow-xl mt-8 lg:mt-12">
 				<div class="card-body">
 					<div class="flex flex-row flex-wrap justify-between border-b pb-2">
 						<h2 class="card-title">Solution</h2>
@@ -114,13 +113,14 @@
 			</div>
 		</div>
 	{:else}
-		<div class="mt-4 justify-self-center flex flex-col items-center space-y-4 ms-1">
+		<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
 			<div class="flex flex-col items-center space-y-4">
 				<a
-					class="font-bold text-secondary-content bg-secondary text-center w-full rounded-full"
+					class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
 					href={`/classes?classId=${classId}`}
 				>
-					{module.data.order}
+					<span class="group-hover:hidden">{module.data.order}</span>
+					<span class="hidden group-hover:inline-flex items-center justify-center"><ChevronLeft size={24} /></span>
 				</a>
 
 				<button
@@ -144,7 +144,7 @@
 			<div class="border-t border-base-300 w-full my-2"></div>
 
 			<button
-				class="btn btn-circle btn-lg btn-soft btn-error"
+				class="btn btn-circle btn-lg mt-3 btn-soft btn-error"
 				onclick={() => (qs.isResetModalOpen = true)}
 				title="Reset Progress"
 			>

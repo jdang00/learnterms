@@ -7,7 +7,8 @@
 	import NavBar from '$lib/components/NavBar.svelte';
 	import { setupConvex } from 'convex-svelte';
 	import { theme, clerkTheme } from '$lib/theme.svelte';
-	import { onMount } from 'svelte';
+    import { onMount } from 'svelte';
+    import { page } from '$app/stores';
 
 	setupConvex(PUBLIC_CONVEX_URL);
 
@@ -59,7 +60,8 @@
 			{@render children?.()}
 		</main>
 
-		<footer class="bg-base-200 text-base-content border-t border-base-300 mt-auto">
+    {#if !($page.url.pathname.startsWith('/classes') && $page.url.pathname.includes('/modules/'))}
+    <footer class="bg-base-200 text-base-content border-t border-base-300 mt-auto">
 			<div class="mx-auto w-full max-w-6xl px-4 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
 				<div class="col-span-2 sm:col-span-1 pr-8">
 					<a href="/" class="text-lg font-semibold">LearnTerms</a>
@@ -82,7 +84,7 @@
 
 				<nav aria-label="Development" class="flex flex-col space-y-1">
 					<h6 class="footer-title">Development</h6>
-					<a class="link link-hover" href="https://github.com/yourusername/learnterms" target="_blank" rel="noopener noreferrer">GitHub</a>
+					<a class="link link-hover" href="https://github.com/jdang00/learnterms" target="_blank" rel="noopener noreferrer">GitHub</a>
 					<a class="link link-hover" href="/about">About</a>
 					<a class="link link-hover" href="/contact">Contact</a>
 				</nav>
@@ -90,6 +92,7 @@
 			<div class="border-t border-base-300">
 				<p class="mx-auto max-w-6xl px-4 py-6 text-sm text-base-content/70 text-center">© {year} LearnTerms. All rights reserved.</p>
 			</div>
-		</footer>
+        </footer>
+    {/if}
 	</div>
 </ClerkProvider>

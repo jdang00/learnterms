@@ -30,7 +30,21 @@ export class QuizState {
 	// Modal state for mobile
 	isModalOpen: boolean = $state(false);
 	// Question button references for scrolling
-	questionButtons: HTMLButtonElement[] = $state([]);
+  questionButtons: HTMLButtonElement[] = $state([]);
+  private saveDebounceHandle: number | null = null;
+
+  scheduleSave(delayMs: number = 400) {
+    if (!this.saveProgressFunction) return;
+    if (this.saveDebounceHandle) {
+      clearTimeout(this.saveDebounceHandle);
+    }
+    this.saveDebounceHandle = window.setTimeout(async () => {
+      if (this.saveProgressFunction) {
+        await this.saveProgressFunction();
+      }
+      this.saveDebounceHandle = null;
+    }, delayMs);
+  }
 
 	checkAnswer(correctAnswers: string[], userAnswers: string[]) {
 		const sortedCorrect = [...correctAnswers].sort();
@@ -62,11 +76,17 @@ export class QuizState {
 	// Toggle flag for current question
 	toggleFlag() {
 		this.currentQuestionFlagged = !this.currentQuestionFlagged;
-
-		// Trigger save to update flag in database
-		if (this.saveProgressFunction) {
-			this.saveProgressFunction();
-		}
+    const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
+    if (current) {
+      if (this.currentQuestionFlagged) {
+        if (!this.liveFlaggedQuestions.includes(current._id)) {
+          this.liveFlaggedQuestions = [...this.liveFlaggedQuestions, current._id];
+        }
+      } else {
+        this.liveFlaggedQuestions = this.liveFlaggedQuestions.filter((id) => id !== current._id);
+      }
+    }
+    this.scheduleSave();
 	}
 
 	// Set flag status for current question (used when loading from database)
@@ -77,18 +97,21 @@ export class QuizState {
 	async goToNextQuestion() {
 		const filteredQuestions = this.getFilteredQuestions();
 		if (filteredQuestions && this.currentQuestionIndex < filteredQuestions.length - 1) {
-			// Save progress before changing question
-			if (this.saveProgressFunction) {
-				await this.saveProgressFunction();
-			}
+      // Optimistic: schedule save without blocking UI
+      this.scheduleSave();
 
 			this.currentQuestionIndex++;
 			this.checkResult = '';
+			this.showSolution = false;
 
-			// Load progress for the new question
+      // Optimistic: clear selections immediately
+      this.selectedAnswers = [];
+      this.eliminatedAnswers = [];
+
+      // Load progress for the new question (non-blocking)
 			const newQuestion = this.getCurrentFilteredQuestion();
 			if (newQuestion && this.loadProgressFunction) {
-				await this.loadProgressFunction(newQuestion._id);
+        void this.loadProgressFunction(newQuestion._id);
 			} else {
 				// Clear state if no load function or no question
 				this.selectedAnswers = [];
@@ -100,18 +123,21 @@ export class QuizState {
 	async goToPreviousQuestion() {
 		const filteredQuestions = this.getFilteredQuestions();
 		if (filteredQuestions && this.currentQuestionIndex > 0) {
-			// Save progress before changing question
-			if (this.saveProgressFunction) {
-				await this.saveProgressFunction();
-			}
+      // Optimistic: schedule save without blocking UI
+      this.scheduleSave();
 
 			this.currentQuestionIndex--;
 			this.checkResult = '';
+			this.showSolution = false;
 
-			// Load progress for the new question
+      // Optimistic: clear selections immediately
+      this.selectedAnswers = [];
+      this.eliminatedAnswers = [];
+
+      // Load progress for the new question (non-blocking)
 			const newQuestion = this.getCurrentFilteredQuestion();
 			if (newQuestion && this.loadProgressFunction) {
-				await this.loadProgressFunction(newQuestion._id);
+        void this.loadProgressFunction(newQuestion._id);
 			} else {
 				// Clear state if no load function or no question
 				this.selectedAnswers = [];
@@ -136,18 +162,21 @@ export class QuizState {
 	async setCurrentQuestionIndex(index: number) {
 		const currentQuestions = this.getCurrentQuestions();
 		if (currentQuestions && index >= 0 && index < currentQuestions.length) {
-			// Save progress before changing question
-			if (this.saveProgressFunction) {
-				await this.saveProgressFunction();
-			}
+      // Optimistic: schedule save without blocking UI
+      this.scheduleSave();
 
 			this.currentQuestionIndex = index;
 			this.checkResult = '';
+			this.showSolution = false;
 
-			// Load progress for the new question
+      // Optimistic: clear selections immediately
+      this.selectedAnswers = [];
+      this.eliminatedAnswers = [];
+
+      // Load progress for the new question (non-blocking)
 			const newQuestion = this.getCurrentQuestion();
 			if (newQuestion && this.loadProgressFunction) {
-				await this.loadProgressFunction(newQuestion._id);
+        void this.loadProgressFunction(newQuestion._id);
 			} else {
 				// Clear state if no load function or no question
 				this.selectedAnswers = [];
@@ -198,8 +227,10 @@ export class QuizState {
 		}
 		this.currentQuestionIndex = 0;
 		this.checkResult = '';
+		this.showSolution = false;
 		this.selectedAnswers = [];
 		this.eliminatedAnswers = [];
+    this.scheduleSave();
 	}
 
 	shuffleQuestions() {
@@ -225,6 +256,7 @@ export class QuizState {
 			this.eliminatedAnswers = [...this.eliminatedAnswers, optionId];
 			this.selectedAnswers = this.selectedAnswers.filter((id) => id !== optionId);
 		}
+    this.scheduleSave();
 	}
 
 	toggleOption(optionId: string) {
@@ -238,6 +270,12 @@ export class QuizState {
 		} else {
 			this.selectedAnswers = [...this.selectedAnswers, optionId];
 		}
+    // Optimistically mark as interacted
+    const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
+    if (current && !this.liveInteractedQuestions.includes(current._id)) {
+      this.liveInteractedQuestions = [...this.liveInteractedQuestions, current._id];
+    }
+    this.scheduleSave();
 	}
 
 	isOptionSelected(optionId: string): boolean {
@@ -257,6 +295,7 @@ export class QuizState {
 		this.showFlagged = !this.showFlagged;
 		this.currentQuestionIndex = 0;
 		this.checkResult = '';
+		this.showSolution = false;
 		this.selectedAnswers = [];
 		this.eliminatedAnswers = [];
 	}
@@ -265,6 +304,7 @@ export class QuizState {
 		this.showIncomplete = !this.showIncomplete;
 		this.currentQuestionIndex = 0;
 		this.checkResult = '';
+		this.showSolution = false;
 		this.selectedAnswers = [];
 		this.eliminatedAnswers = [];
 	}
