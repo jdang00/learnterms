@@ -20,10 +20,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 	try {
 		const user = await clerkClient.users.getUser(userId);
 		const userData = await client.query(api.users.getUserById, { id: user.id });
-		const cohortLib = await client.query(api.contentLib.getContentLibByCohort, {
-			cohortId: userData?.cohortId as Id<'cohort'>
-		});
-		return { userData, cohortLib: cohortLib };
+		let cohortLib = [] as unknown[];
+		if (userData?.cohortId) {
+			cohortLib = await client.query(api.contentLib.getContentLibByCohort, {
+				cohortId: userData.cohortId as Id<'cohort'>
+			});
+		}
+		return { userData, cohortLib };
 	} catch (error) {
 		console.error('Failed to load admin page data:', error);
 		throw error;

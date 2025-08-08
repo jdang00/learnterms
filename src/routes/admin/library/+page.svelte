@@ -78,7 +78,8 @@
 
 		try {
 			await client.mutation(api.contentLib.deleteDocument, {
-				documentId: deletingDocument._id
+				documentId: deletingDocument._id,
+				cohortId: userData?.cohortId as Id<'cohort'>
 			});
 			closeDeleteModal();
 		} catch (error) {

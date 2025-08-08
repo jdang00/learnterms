@@ -377,7 +377,7 @@
 								<div
 									class="md:border-l md:border-base-200 md:pl-4 flex flex-col items-end gap-2 justify-end md:justify-start"
 								>
-									<div class="dropdown dropdown-end t">
+									<div class="dropdown dropdown-end">
 										<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
 										<ul
 											tabindex="-1"

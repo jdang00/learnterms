@@ -18,7 +18,7 @@
 	let selectedFile: File | null = $state(null);
 	let fileInput: HTMLInputElement | null = $state(null);
 	let loadingSkeletons = $state(0);
-	let loadingInterval: NodeJS.Timeout;
+	let loadingInterval: ReturnType<typeof setInterval> | null = null;
 
 	let isEditModalOpen: boolean = $state(false);
 	let editingChunk: Doc<'chunkContent'> | null = $state(null);
@@ -151,7 +151,13 @@
 		try {
 			const formData = new FormData();
 			formData.append('pdf', selectedFile);
-			formData.append('documentId', currentDocView as string);
+			const documentId = typeof currentDocView === 'string'
+				? currentDocView
+				: (currentDocView ? String(currentDocView) : '');
+			if (!documentId) {
+				throw new Error('Invalid document id');
+			}
+			formData.append('documentId', documentId);
 
 			const response = await fetch('/api/processdoc', {
 				method: 'POST',
@@ -164,15 +170,23 @@
 			}
 
 			const result = await response.json();
-			
-			if (result.success && result.chunks) {
-				// Bulk insert the processed chunks
-				await client.mutation(api.chunkContent.bulkCreateChunks, {
-					documentId: currentDocView as Id<'contentLib'>,
-					chunks: result.chunks
-				});
-				
-				console.log(`Successfully processed PDF and created ${result.processedCount} chunks`);
+
+			if (result.success && Array.isArray(result.chunks)) {
+				let inserted = 0;
+				for (const chunk of result.chunks) {
+					await client.mutation(api.chunkContent.insertChunkContent, {
+						title: chunk.title,
+						summary: chunk.summary,
+						content: chunk.content,
+						keywords: chunk.keywords,
+						chunk_type: chunk.chunk_type,
+						documentId: currentDocView as Id<'contentLib'>,
+						metadata: {},
+						updatedAt: Date.now()
+					});
+					inserted++;
+				}
+				console.log(`Created ${inserted.toString()} chunks from PDF`);
 			} else {
 				throw new Error('Failed to process PDF - no chunks returned');
 			}
@@ -186,8 +200,9 @@
 		} finally {
 			isProcessing = false;
 			loadingSkeletons = 0;
-			if (loadingInterval) {
+			if (loadingInterval !== null) {
 				clearInterval(loadingInterval);
+				loadingInterval = null;
 			}
 		}
 	}

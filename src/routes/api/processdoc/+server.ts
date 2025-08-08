@@ -69,6 +69,9 @@ async function processPDF(request: Request) {
 		const pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
 		
 		const { GoogleGenAI, Type } = await import('@google/genai');
+		if (!GEMINI_API_KEY || GEMINI_API_KEY.trim().length === 0) {
+			return json({ error: 'GEMINI_API_KEY is not configured' }, { status: 500 });
+		}
 		const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 		
 		const contents = [
@@ -102,85 +105,68 @@ Focus on educational value - capture content that helps learning, not just forma
 			}
 		];
 		
-		const result = await ai.models.generateContent({
-			model: 'gemini-2.5-flash-lite',
-			contents: contents,
-			config: {
-				temperature: 0.3,
-				maxOutputTokens: 12288,
-				responseMimeType: 'application/json',
-				responseSchema: {
-					type: Type.ARRAY,
-					items: {
-						type: Type.OBJECT,
-						properties: {
-							title: {
-								type: Type.STRING,
-								description: 'A concise, descriptive title for the chunk of text.'
-							},
-							summary: {
-								type: Type.STRING,
-								description: 'A 1-3 sentence summary that captures the main points of the content.'
-							},
-							content: {
-								type: Type.STRING,
-								description: 'The full text content of the chunk.'
-							},
-							keywords: {
-								type: Type.ARRAY,
-								items: { type: Type.STRING },
-								description: 'An array of the 5-7 most important keywords or concepts.'
-							},
-							chunk_type: {
-								type: Type.STRING,
-								enum: ['paragraph', 'slide_group', 'diagram', 'table', 'list'],
-								description: 'The type of content.'
+		async function generateChunksWithRetry(maxAttempts = 2): Promise<ApiResponse> {
+			for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+				const result = await ai.models.generateContent({
+					model: 'gemini-2.5-flash-lite',
+					contents: contents,
+					config: {
+						temperature: 0.3,
+						maxOutputTokens: 12288,
+						responseMimeType: 'application/json',
+						responseSchema: {
+							type: Type.ARRAY,
+							items: {
+								type: Type.OBJECT,
+								properties: {
+									title: {
+										type: Type.STRING,
+										description: 'A concise, descriptive title for the chunk of text.'
+									},
+									summary: {
+										type: Type.STRING,
+										description: 'A 1-3 sentence summary that captures the main points of the content.'
+									},
+									content: {
+										type: Type.STRING,
+										description: 'The full text content of the chunk.'
+									},
+									keywords: {
+										type: Type.ARRAY,
+										items: { type: Type.STRING },
+										description: 'An array of the 5-7 most important keywords or concepts.'
+									},
+									chunk_type: {
+										type: Type.STRING,
+										enum: ['paragraph', 'slide_group', 'diagram', 'table', 'list'],
+										description: 'The type of content.'
+									}
+								},
+								required: ['title', 'summary', 'content', 'keywords', 'chunk_type']
 							}
-						},
-						required: ['title', 'summary', 'content', 'keywords', 'chunk_type']
+						}
 					}
+				});
+
+				const responseText = result.text;
+				if (!responseText) {
+					throw new Error('AI response missing expected text content.');
+				}
+
+				try {
+					return JSON.parse(responseText.trim()) as ApiResponse;
+				} catch (e) {
+					if (attempt === maxAttempts) {
+						throw new Error('Model response was invalid or truncated; failed to parse JSON after retries');
+					}
+					await new Promise((r) => setTimeout(r, 250));
 				}
 			}
-		});
-		
-		const responseText = result.text;
-		
-		if (!responseText) {
-			return json({ error: 'AI response missing expected text content.' }, { status: 500 });
+			throw new Error('Unexpected error');
 		}
-		
-		try {
-			const parsedResponse = JSON.parse(responseText.trim()) as ApiResponse;
-			return json({ 
-				success: true, 
-				chunks: parsedResponse,
-				processedCount: parsedResponse.length 
-			});
-		} catch (parseError) {
-			// Try to salvage truncated responses
-			const trimmed = responseText.trim();
-			if (!trimmed.endsWith(']')) {
-				const lastCompleteChunk = trimmed.lastIndexOf('},');
-				if (lastCompleteChunk > 0) {
-					const salvaged = trimmed.substring(0, lastCompleteChunk + 1) + '\n]';
-					try {
-						const salvagedResponse = JSON.parse(salvaged) as ApiResponse;
-						return json({ 
-							success: true, 
-							chunks: salvagedResponse,
-							processedCount: salvagedResponse.length,
-							warning: 'Response was truncated, some content may be missing'
-						});
-					} catch {
-						// Fall through to error response
-					}
-				}
-			}
-			
-			return json({
-				error: `Failed to parse response as JSON: ${(parseError as Error).message}`
-			}, { status: 500 });
-		}
+
+		const parsedResponse = await generateChunksWithRetry(2);
+		return json({ success: true, chunks: parsedResponse, processedCount: parsedResponse.length });
 	} catch (error) {
 		console.error('PDF processing error:', error);
 		return json(
@@ -202,7 +188,18 @@ async function processText(request: Request) {
 			);
 		}
 
+		const MAX_MATERIAL_LENGTH = 10000;
+		if (material.length > MAX_MATERIAL_LENGTH) {
+			return json(
+				{ error: `Input too large. Maximum allowed length is ${MAX_MATERIAL_LENGTH} characters.` },
+				{ status: 400 }
+			);
+		}
+
 		const { GoogleGenAI, Type } = await import('@google/genai');
+		if (!GEMINI_API_KEY || GEMINI_API_KEY.trim().length === 0) {
+			return json({ error: 'GEMINI_API_KEY is not configured' }, { status: 500 });
+		}
 		const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 		const prompt = `Role: You are an expert document analysis assistant.

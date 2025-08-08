@@ -1,6 +1,8 @@
 import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
 
+const APP_BASE_URL = process.env.APP_BASE_URL;
+
 interface ProcessedChunk {
 	title: string;
 	summary: string;
@@ -9,17 +11,62 @@ interface ProcessedChunk {
 	chunk_type: string;
 }
 
+type ChunkFieldInput = {
+    title: string;
+    summary: string;
+    content: string;
+    chunk_type: string;
+};
+
+function validateAndTrimChunkFields(input: ChunkFieldInput): ChunkFieldInput {
+    const title = input.title.trim();
+    const summary = input.summary.trim();
+    const content = input.content.trim();
+    const chunk_type = input.chunk_type.trim();
+
+    if (!title) {
+        throw new Error('Chunk title is required and cannot be empty');
+    }
+    if (!summary) {
+        throw new Error('Chunk summary is required and cannot be empty');
+    }
+    if (!content) {
+        throw new Error('Chunk content is required and cannot be empty');
+    }
+    if (!chunk_type) {
+        throw new Error('Chunk type is required and cannot be empty');
+    }
+
+    if (title.length < 2) {
+        throw new Error('Chunk title must be at least 2 characters long');
+    }
+    if (title.length > 200) {
+        throw new Error('Chunk title cannot exceed 200 characters');
+    }
+    if (summary.length < 10) {
+        throw new Error('Chunk summary must be at least 10 characters long');
+    }
+    if (summary.length > 1000) {
+        throw new Error('Chunk summary cannot exceed 1000 characters');
+    }
+    if (content.length < 10) {
+        throw new Error('Chunk content must be at least 10 characters long');
+    }
+
+    return { title, summary, content, chunk_type };
+}
+
 export const getChunkByDocumentId = query({
 	args: {
 		documentId: v.id('contentLib')
 	},
 	handler: async (ctx, args) => {
-		const contentLib = await ctx.db
+		const chunkContents = await ctx.db
 			.query('chunkContent')
 			.filter((q) => q.eq(q.field('documentId'), args.documentId))
 			.filter((q) => q.eq(q.field('deletedAt'), undefined))
 			.collect();
-		return contentLib;
+		return chunkContents;
 	}
 });
 
@@ -35,39 +82,12 @@ export const insertChunkContent = mutation({
 		updatedAt: v.number()
 	},
 	handler: async (ctx, args) => {
-		const trimmedTitle = args.title.trim();
-		const trimmedSummary = args.summary.trim();
-		const trimmedContent = args.content.trim();
-		const trimmedChunkType = args.chunk_type.trim();
-
-		if (!trimmedTitle) {
-			throw new Error('Chunk title is required and cannot be empty');
-		}
-		if (!trimmedSummary) {
-			throw new Error('Chunk summary is required and cannot be empty');
-		}
-		if (!trimmedContent) {
-			throw new Error('Chunk content is required and cannot be empty');
-		}
-		if (!trimmedChunkType) {
-			throw new Error('Chunk type is required and cannot be empty');
-		}
-
-		if (trimmedTitle.length < 2) {
-			throw new Error('Chunk title must be at least 2 characters long');
-		}
-		if (trimmedTitle.length > 200) {
-			throw new Error('Chunk title cannot exceed 200 characters');
-		}
-		if (trimmedSummary.length < 10) {
-			throw new Error('Chunk summary must be at least 10 characters long');
-		}
-		if (trimmedSummary.length > 1000) {
-			throw new Error('Chunk summary cannot exceed 1000 characters');
-		}
-		if (trimmedContent.length < 10) {
-			throw new Error('Chunk content must be at least 10 characters long');
-		}
+        const {
+            title: trimmedTitle,
+            summary: trimmedSummary,
+            content: trimmedContent,
+            chunk_type: trimmedChunkType
+        } = validateAndTrimChunkFields(args);
 
 		const document = await ctx.db.get(args.documentId);
 		if (!document) {
@@ -118,39 +138,12 @@ export const updateChunkContent = mutation({
 			throw new Error('Chunk not found or access denied');
 		}
 
-		const trimmedTitle = args.title.trim();
-		const trimmedSummary = args.summary.trim();
-		const trimmedContent = args.content.trim();
-		const trimmedChunkType = args.chunk_type.trim();
-
-		if (!trimmedTitle) {
-			throw new Error('Chunk title is required and cannot be empty');
-		}
-		if (!trimmedSummary) {
-			throw new Error('Chunk summary is required and cannot be empty');
-		}
-		if (!trimmedContent) {
-			throw new Error('Chunk content is required and cannot be empty');
-		}
-		if (!trimmedChunkType) {
-			throw new Error('Chunk type is required and cannot be empty');
-		}
-
-		if (trimmedTitle.length < 2) {
-			throw new Error('Chunk title must be at least 2 characters long');
-		}
-		if (trimmedTitle.length > 200) {
-			throw new Error('Chunk title cannot exceed 200 characters');
-		}
-		if (trimmedSummary.length < 10) {
-			throw new Error('Chunk summary must be at least 10 characters long');
-		}
-		if (trimmedSummary.length > 1000) {
-			throw new Error('Chunk summary cannot exceed 1000 characters');
-		}
-		if (trimmedContent.length < 10) {
-			throw new Error('Chunk content must be at least 10 characters long');
-		}
+        const {
+            title: trimmedTitle,
+            summary: trimmedSummary,
+            content: trimmedContent,
+            chunk_type: trimmedChunkType
+        } = validateAndTrimChunkFields(args);
 
 		await ctx.db.patch(args.chunkId, {
 			title: trimmedTitle,
@@ -178,7 +171,12 @@ export const processDocumentAndCreateChunks = mutation({
 		}
 
 		try {
-			const response = await fetch('/api/processdoc', {
+            if (!APP_BASE_URL) {
+                throw new Error('APP_BASE_URL environment variable not set');
+            }
+            const processDocUrl = new URL('/api/processdoc', APP_BASE_URL).toString();
+
+            const response = await fetch(processDocUrl, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -234,28 +232,20 @@ export const bulkCreateChunks = mutation({
 
 		for (const chunk of args.chunks) {
 			try {
-				const trimmedTitle = chunk.title.trim();
-				const trimmedSummary = chunk.summary.trim();
-				const trimmedContent = chunk.content.trim();
-				const trimmedChunkType = chunk.chunk_type.trim();
-
-				if (!trimmedTitle || !trimmedSummary || !trimmedContent || !trimmedChunkType) {
-					errors.push(`Chunk "${trimmedTitle || 'Unknown'}" has missing required fields`);
-					continue;
-				}
+				const { title, summary, content, chunk_type } = validateAndTrimChunkFields(chunk);
 
 				const chunkId = await ctx.db.insert('chunkContent', {
-					title: trimmedTitle,
-					summary: trimmedSummary,
-					content: trimmedContent,
+					title,
+					summary,
+					content,
 					keywords: chunk.keywords,
-					chunk_type: trimmedChunkType,
+					chunk_type,
 					documentId: args.documentId,
 					metadata: {},
 					updatedAt: Date.now()
 				});
 
-				insertedChunks.push({ chunkId, title: trimmedTitle });
+				insertedChunks.push({ chunkId, title });
 			} catch (error) {
 				errors.push(`Failed to insert chunk "${chunk.title}": ${error}`);
 			}
@@ -286,7 +276,12 @@ export const processMultipleChunks = mutation({
 
 		for (const material of args.materials) {
 			try {
-				const response = await fetch('/api/processdoc', {
+                if (!APP_BASE_URL) {
+                    throw new Error('APP_BASE_URL environment variable not set');
+                }
+                const processDocUrl = new URL('/api/processdoc', APP_BASE_URL).toString();
+
+                const response = await fetch(processDocUrl, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
