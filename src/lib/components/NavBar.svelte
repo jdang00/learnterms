@@ -43,7 +43,7 @@
 
 			{#if plan}
 				<div class="self-center">
-					<div class="badge badge-primary badge-outline rounded-full">PRO</div>
+					<div class="badge badge-primary badge-outline rounded-full hidden sm:block">PRO</div>
 				</div>
 			{/if}
 

@@ -10,6 +10,7 @@
 	import ActionButtons from '$lib/components/ActionButtons.svelte';
 	import MobileMenu from '$lib/components/MobileMenu.svelte';
 	import MobileInfo from '$lib/components/MobileInfo.svelte';
+	import ResultBanner from '$lib/components/ResultBanner.svelte';
 	import { onMount, tick } from 'svelte';
 	import { Flag, BookmarkCheck, ArrowDownNarrowWide } from 'lucide-svelte';
 
@@ -209,13 +210,14 @@
 		const currentQuestions = qs.getFilteredQuestions();
 		const index = currentQuestions.findIndex((q) => q._id === question._id);
 		if (index !== -1) {
-			await saveProgress();
+			qs.scheduleSave();
 			// Update the index and clear state for the new question
 			qs.currentQuestionIndex = index;
 			qs.checkResult = '';
+			qs.showSolution = false;
 			// Load progress for the selected question
 			if (userId) {
-				await loadProgress(question._id);
+				void loadProgress(question._id);
 			}
 		}
 	}
@@ -239,7 +241,10 @@
 	}
 
 	async function handleKeydown(event: KeyboardEvent) {
-		if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+		if (
+			event.key !== 'Tab' &&
+			(event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
+		) {
 			return;
 		}
 
@@ -247,10 +252,12 @@
 			case 'ArrowRight':
 				event.preventDefault();
 				await qs.goToNextQuestion();
+					qs.scheduleSave();
 				break;
 			case 'ArrowLeft':
 				event.preventDefault();
 				await qs.goToPreviousQuestion();
+					qs.scheduleSave();
 				break;
 			case 'Tab':
 				event.preventDefault();
@@ -261,15 +268,14 @@
 				if (currentlySelected) {
 					qs.checkAnswer(currentlySelected.correctAnswers, qs.selectedAnswers);
 				}
+					qs.scheduleSave();
 				break;
 			case 'Escape':
 				event.preventDefault();
 				qs.selectedAnswers = [];
 				qs.eliminatedAnswers = [];
 				qs.checkResult = '';
-				if (qs.saveProgressFunction) {
-					await qs.saveProgressFunction();
-				}
+					qs.scheduleSave();
 				break;
 			case 'f':
 			case 'F':
@@ -335,11 +341,15 @@
 {:else if questions.error}
 	<p>Error: {questions.error.message}</p>
 {:else if currentlySelected}
-	<div class="flex flex-col lg:flex-row h-full p-2 lg:p-4 lg:gap-8">
-		<QuizSideBar bind:qs {module} {currentlySelected} {userId} moduleId={data.moduleId} {client} classId={data.classId} />
-		<MobileInfo bind:qs {module} classId={data.classId} />
+    <div class="flex flex-col md:flex-col lg:flex-row min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] p-2 md:p-3 lg:p-4 gap-4 lg:gap-8">
+		<QuizSideBar {qs} {module} {currentlySelected} {userId} moduleId={data.moduleId} {client} classId={data.classId} />
+		<MobileInfo {module} classId={data.classId} />
 
-		<div class="w-full lg:w-3/4 flex flex-col max-w-full lg:max-w-none overflow-hidden flex-grow">
+		<div
+			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 pb-36 lg:pb-48"
+		>
+			<!-- Single shared banner instance for mobile/desktop -->
+			<ResultBanner bind:qs />
 			{#if qs.noFlags}
 				<div
 					role="alert"
@@ -368,6 +378,7 @@
 				</div>
 			{/if}
 
+
 			<QuizNavigation
 				questions={{ data: qs.getFilteredQuestions() }}
 				{handleSelect}
@@ -377,7 +388,7 @@
 				{qs}
 			/>
 
-			<div class="text-md sm:text-lg lg:text-xl p-4">
+				<div class="text-md sm:text-lg lg:text-xl p-4">
 				<div class="flex flex-row justify-between mb-4">
 					<div class="flex flex-row flex-wrap items-end">
 						<h4 class="text-lg font-semibold">{currentlySelected.stem}</h4>
@@ -411,6 +422,7 @@
 				</div>
 				<AnswerOptions bind:qs {currentlySelected} />
 				<ActionButtons {qs} {currentlySelected} />
+				
 			</div>
 		</div>
 		<MobileMenu bind:qs {currentlySelected} />
