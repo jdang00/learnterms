@@ -18,6 +18,7 @@
 	onMount(() => {
 		theme.init();
 	});
+	const year = new Date().getFullYear();
 </script>
 
 <svelte:head>
@@ -47,25 +48,48 @@
 	/>
 </svelte:head>
 
-<ClerkProvider 
+<ClerkProvider
 	publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}
 	appearance={{ baseTheme: $clerkTheme }}
 >
-	<div class="flex flex-col h-screen">
+	<div class="flex min-h-screen flex-col">
 		<NavBar />
 
-		<div class="flex flex-1 flex-col overflow-hidden">
-			<div class="flex-1 w-full overflow-y-auto">
-				{@render children?.()}
-			</div>
+		<main class="flex-1 w-full">
+			{@render children?.()}
+		</main>
 
-			<footer class="footer footer-center text-base-content p-4">
-				<aside class="flex flex-col flex-wrap justify-center lg:flex-row">
-					<p>
-						Copyright © {new Date().getFullYear()} - LearnTerms. All rights reserved.
-					</p>
-				</aside>
-			</footer>
-		</div>
+		<footer class="bg-base-200 text-base-content border-t border-base-300 mt-auto">
+			<div class="mx-auto w-full max-w-6xl px-4 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
+				<div class="col-span-2 sm:col-span-1 pr-8">
+					<a href="/" class="text-lg font-semibold">LearnTerms</a>
+					<p class="mt-2 text-sm text-base-content/70">Study smarter today—build your board prep as you learn.</p>
+				</div>
+
+				<nav aria-label="Product" class="flex flex-col space-y-1">
+					<h6 class="footer-title">Product</h6>
+					<a class="link link-hover" href="/">Features</a>
+					<a class="link link-hover" href="/pricing">Pricing</a>
+					<a class="link link-hover" href="/changelog">Changelog</a>
+				</nav>
+
+				<nav aria-label="Resources" class="flex flex-col space-y-1">
+					<h6 class="footer-title">Resources</h6>
+					<a class="link link-hover" href="/docs">Docs</a>
+					<a class="link link-hover" href="/blog">Blog</a>
+					<a class="link link-hover" href="/status">Status</a>
+				</nav>
+
+				<nav aria-label="Development" class="flex flex-col space-y-1">
+					<h6 class="footer-title">Development</h6>
+					<a class="link link-hover" href="https://github.com/yourusername/learnterms" target="_blank" rel="noopener noreferrer">GitHub</a>
+					<a class="link link-hover" href="/about">About</a>
+					<a class="link link-hover" href="/contact">Contact</a>
+				</nav>
+			</div>
+			<div class="border-t border-base-300">
+				<p class="mx-auto max-w-6xl px-4 py-6 text-sm text-base-content/70 text-center">© {year} LearnTerms. All rights reserved.</p>
+			</div>
+		</footer>
 	</div>
 </ClerkProvider>

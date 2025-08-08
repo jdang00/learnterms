@@ -14,8 +14,10 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as authQueries from "../authQueries.js";
+import type * as chunkContent from "../chunkContent.js";
 import type * as class_ from "../class.js";
 import type * as cohort from "../cohort.js";
+import type * as contentLib from "../contentLib.js";
 import type * as module from "../module.js";
 import type * as question from "../question.js";
 import type * as school from "../school.js";
@@ -33,8 +35,10 @@ import type * as users from "../users.js";
  */
 declare const fullApi: ApiFromModules<{
   authQueries: typeof authQueries;
+  chunkContent: typeof chunkContent;
   class: typeof class_;
   cohort: typeof cohort;
+  contentLib: typeof contentLib;
   module: typeof module;
   question: typeof question;
   school: typeof school;

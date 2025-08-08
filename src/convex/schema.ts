@@ -98,5 +98,24 @@ export default defineSchema({
 		updatedAt: v.number()
 	})
 		.index('by_user_question', ['userId', 'questionId'])
-		.index('by_question_user', ['questionId', 'userId'])
+		.index('by_question_user', ['questionId', 'userId']),
+	contentLib: defineTable({
+		title: v.string(),
+		description: v.optional(v.string()),
+		updatedAt: v.number(),
+		cohortId: v.id('cohort'),
+		metadata: v.optional(v.object({})),
+		deletedAt: v.optional(v.number())
+	}),
+	chunkContent: defineTable({
+		title: v.string(),
+		summary: v.string(),
+		content: v.string(),
+		keywords: v.array(v.string()),
+		chunk_type: v.string(),
+		updatedAt: v.number(),
+		documentId: v.id('contentLib'),
+		metadata: v.optional(v.object({})),
+		deletedAt: v.optional(v.number())
+	})
 });
