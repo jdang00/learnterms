@@ -29,14 +29,18 @@
 		siteName: 'LearnTerms'
 	};
 
-	type Seo = { title: string; description: string; image: string; canonical: string };
-	let seo: Seo = $derived({
+    type Seo = { title: string; description: string; image: string; canonical: string; fullUrl: string };
+    let seo: Seo = $derived({
 		title: $page.data?.seo?.title ?? defaultSeo.title,
 		description: $page.data?.seo?.description ?? defaultSeo.description,
 		image: $page.data?.seo?.image ?? defaultSeo.image,
-		canonical:
-			$page.url?.href ??
-			($page.url?.origin || 'https://learnterms.com') + $page.url.pathname + $page.url.search
+        fullUrl:
+            ($page.url?.origin || 'https://learnterms.com') +
+            ($page.url?.pathname || '/') +
+            ($page.url?.search || ''),
+        canonical:
+            ($page.url?.origin || 'https://learnterms.com') +
+            ($page.url?.pathname || '/')
 	} as Seo);
 </script>
 
@@ -46,7 +50,7 @@
 	<link rel="canonical" href={seo.canonical} />
 	<meta name="robots" content="index,follow" />
 
-	<meta property="og:url" content={seo.canonical} />
+    <meta property="og:url" content={seo.fullUrl} />
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content={defaultSeo.siteName} />
 	<meta property="og:title" content={seo.title} />
@@ -55,7 +59,7 @@
 
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta property="twitter:domain" content="learnterms.com" />
-	<meta property="twitter:url" content={seo.canonical} />
+    <meta property="twitter:url" content={seo.fullUrl} />
 	<meta name="twitter:title" content={seo.title} />
 	<meta name="twitter:description" content={seo.description} />
 	<meta name="twitter:image" content={seo.image} />

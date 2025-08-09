@@ -1,7 +1,5 @@
 import type { RequestHandler } from './$types';
 
-const origin = 'https://learnterms.com';
-
 const staticPaths = [
   '/',
   '/pricing',
@@ -16,13 +14,12 @@ const staticPaths = [
   '/join-class'
 ];
 
-export const GET: RequestHandler = async () => {
-  const urls = staticPaths
-    .map((p) => `  <url><loc>${origin}${p}</loc></url>`) 
-    .join('\n');
+export const GET: RequestHandler = async ({ url }) => {
+  const origin = url?.origin || 'https://learnterms.com';
+  const urls = staticPaths.map((p) => `  <url><loc>${origin}${p}</loc></url>`).join('\n');
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}
 </urlset>`;
 

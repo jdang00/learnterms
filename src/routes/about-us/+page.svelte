@@ -48,15 +48,14 @@
 			</p>
 		</section>
 
-		<div
-			class="aurora rounded-lg w-full text-center md:py-48 py-32 my-12 relative overflow-hidden"
-			style="background-color:#b999ff;background-image:radial-gradient(at 62% 99%, hsla(359,82%,70%,1) 0px, transparent 50%),radial-gradient(at 5% 11%, hsla(252,72%,61%,1) 0px, transparent 50%),radial-gradient(at 33% 78%, hsla(269,73%,65%,1) 0px, transparent 50%),radial-gradient(at 19% 33%, hsla(199,65%,63%,1) 0px, transparent 50%),radial-gradient(at 12% 34%, hsla(84,95%,66%,1) 0px, transparent 50%),radial-gradient(at 15% 86%, hsla(330,80%,76%,1) 0px, transparent 50%),radial-gradient(at 63% 94%, hsla(120,64%,76%,1) 0px, transparent 50%);"
+        <div
+            class="rounded-lg w-full my-12 relative overflow-hidden bg-aurora animate-aurora grid place-items-center gap-0 md:py-28 py-16 text-center not-prose"
         >
-            <h1 class="md:text-7xl text-5xl opacity-75 font-bold tracking-tight">LearnTerms</h1>
-          <p class="text-base-content/70 md:-mt-12 -mt-8 text-lg sm:text-xl md:text-2xl lg:text-3xl">
-            Smarter Studying, Simplified.
-          </p>
-		</div>
+            <h2 class="md:text-7xl text-5xl opacity-75 font-bold tracking-tight m-0 leading-tight">LearnTerms</h2>
+            <p class="text-base-content/70 text-lg sm:text-xl md:text-2xl lg:text-3xl m-0">
+                Smarter Studying, Simplified.
+            </p>
+        </div>
 
 		<section>
 			<p>
@@ -71,7 +70,7 @@
 			</p>
 		</section>
 
-		<figure class="my-12mx-12">
+		<figure class="my-12 mx-12">
 			<img
 				src="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrN7PbXjXzP0UTz89wOGJKi17DasVtufbylgkQ"
 				alt="Justin Dang coding on his laptop"
@@ -195,40 +194,4 @@
 	</div>
 </main>
 
-<style>
-	.aurora {
-		background-size: 200% 200%;
-		animation: auroraShift 18s ease-in-out infinite;
-		isolation: isolate;
-	}
-
-	@keyframes auroraShift {
-		0% {
-			background-position: 0% 50%;
-		}
-		50% {
-			background-position: 100% 50%;
-		}
-		100% {
-			background-position: 0% 50%;
-		}
-	}
-
-	.aurora::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		mix-blend-mode: overlay;
-		opacity: 0.08;
-    z-index: 0;
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-		background-size: cover;
-		background-repeat: repeat;
-	}
-
-  .gradient-text {
-    background-image: linear-gradient(90deg, rgba(255,255,255,0.98), rgba(255,255,255,0.75));
-    text-shadow: 0 1px 2px rgba(0,0,0,0.25);
-  }
-</style>
+<style></style>

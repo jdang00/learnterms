@@ -5,7 +5,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const { userId } = locals.auth();
 
 	if (userId) {
-		return redirect(307, '/classes');
+        throw redirect(307, '/classes');
 	}
     return {
         seo: {
