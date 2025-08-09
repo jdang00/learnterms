@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { PanelRight, Eye, Info, RotateCcw, ChevronLeft, Lightbulb } from 'lucide-svelte';
+    import { PanelRight, Eye, Info, RotateCcw, ChevronLeft, FastForward, Shuffle, Settings } from 'lucide-svelte';
+    import SettingsModal from '$lib/components/SettingsModal.svelte';
 
 	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
 	let hideSidebar = $state(false);
-	let isInfoModalOpen = $state(false);
+    let isInfoModalOpen = $state(false);
 	let isSolutionModalOpen = $state(false);
+    let isSettingsModalOpen = $state(false);
 
 	async function handleReset() {
 		if (userId && moduleId && client) {
@@ -38,12 +40,15 @@
 
 	{#if !hideSidebar}
 		<div class="p-4 md:p-5 lg:p-6 pt-12 pl-12 mt-8">
-			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<a class="btn btn-ghost font-bold" href={`/classes?classId=${classId}`}>
-					<ChevronLeft size={16} /> CHAPTER {module.data.order}
-				</a>
-			</h4>
-			<h2 class="font-semibold text-3xl mt-2">{module.data.title}</h2>
+            <h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
+                <a class="btn btn-ghost font-bold" href={`/classes?classId=${classId}`}>
+                    <ChevronLeft size={16} /> CHAPTER {module.data.order}
+                </a>
+            </h4>
+            <h2 class="font-semibold text-3xl mt-2 flex items-center gap-3">
+                <span class="text-3xl">{module.data?.emoji || '📘'}</span>
+                <span>{module.data.title}</span>
+            </h2>
 			<p class="text-base-content/70 mt-2">{module.data.description}</p>
 
 			<div class="mt-6">
@@ -76,41 +81,12 @@
 				</div>
 			</div>
 
-			<div class="flex flex-row mt-6 justify-center space-x-2">
-				<button class="btn btn-error btn-soft" onclick={() => (qs.isResetModalOpen = true)}>
-					Reset
-				</button>
-
-				<div class="tooltip" data-tip="Shortcuts">
-					<button class="btn btn-ghost">
-						<Lightbulb />
-					</button>
-					<div class="tooltip-content bg-base-200 text-base-content rounded p-2 shadow-md">
-						<div class="font-mono flex flex-col gap-1">
-							<div class="flex items-center gap-4 justify-between">
-								<kbd class="kbd kbd-sm">shift + s</kbd>
-								<span>Shuffle</span>
-							</div>
-							<div class="flex items-center gap-4 justify-between">
-								<kbd class="kbd kbd-sm">f</kbd>
-								<span>Flag</span>
-							</div>
-							<div class="flex items-center gap-4 justify-between">
-								<kbd class="kbd kbd-sm">enter</kbd>
-								<span>Check</span>
-							</div>
-							<div class="flex items-center gap-4 justify-between">
-								<kbd class="kbd kbd-sm">arrows</kbd>
-								<span>Navigation</span>
-							</div>
-							<div class="flex items-center gap-4 justify-between">
-								<kbd class="kbd kbd-sm">esc</kbd>
-								<span>Clear</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+            <div class="flex flex-row mt-6 justify-center">
+                <button class="btn btn-soft btn-sm" onclick={() => (isSettingsModalOpen = true)}>
+                    <Settings size={16} />
+                    <span class="ml-1 hidden sm:inline">Settings</span>
+                </button>
+            </div>
 		</div>
 	{:else}
 		<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
@@ -141,15 +117,15 @@
 				>
 			</div>
 
-			<div class="border-t border-base-300 w-full my-2"></div>
+            <div class="border-t border-base-300 w-full my-2"></div>
 
-			<button
-				class="btn btn-circle btn-lg mt-3 btn-soft btn-error"
-				onclick={() => (qs.isResetModalOpen = true)}
-				title="Reset Progress"
-			>
-				<RotateCcw />
-			</button>
+            <button
+                class="btn btn-circle btn-lg mt-3 btn-soft"
+                onclick={() => (isSettingsModalOpen = true)}
+                title="Settings"
+            >
+                <Settings />
+            </button>
 		</div>
 	{/if}
 </div>
@@ -184,6 +160,8 @@
 		<p class="py-4">{currentlySelected.explanation}</p>
 	</div>
 </dialog>
+
+<SettingsModal bind:qs bind:isOpen={isSettingsModalOpen} />
 
 <dialog class="modal max-w-full p-4" class:modal-open={qs.isResetModalOpen}>
 	<div class="modal-box">

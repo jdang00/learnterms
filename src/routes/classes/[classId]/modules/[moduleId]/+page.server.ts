@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const moduleId = params.moduleId as Id<'module'>;
 
 	try {
-		const module = await client.query(api.question.getQuestionsByModule, {
+        const module = await client.query(api.question.getQuestionsByModule, {
 			id: moduleId
 		});
 
@@ -28,11 +28,39 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			id: moduleId
 		});
 
-		const convexID = await client.query(api.users.getUserById, {
+        const convexID = await client.query(api.users.getUserById, {
 			id: userId
 		});
 
-		return { moduleInfo, module, moduleId, convexID, classId: params.classId };
+    const questionIds = (module || []).map((q: { _id: Id<'question'> }) => q._id);
+
+    let interactedQuestions: unknown[] = [];
+    let flaggedQuestions: unknown[] = [];
+    const hasValidUser = Boolean(convexID?._id);
+    const hasQuestions = questionIds.length > 0;
+
+    if (hasValidUser && hasQuestions) {
+      [interactedQuestions, flaggedQuestions] = await Promise.all([
+        client.query(api.userProgress.getUserProgressForModule, {
+          userId: convexID!._id as Id<'users'>,
+          questionIds
+        }),
+        client.query(api.userProgress.getFlaggedQuestionsForModule, {
+          userId: convexID!._id as Id<'users'>,
+          questionIds
+        })
+      ]);
+    }
+
+    return {
+      moduleInfo,
+      module,
+      moduleId,
+      convexID,
+      classId: params.classId,
+      interactedQuestions,
+      flaggedQuestions
+    };
 	} catch (error) {
 		console.error('Failed to load module page data:', error);
 		throw error;

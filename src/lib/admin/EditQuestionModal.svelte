@@ -5,7 +5,7 @@
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
-	import { DISPLAY_QUESTION_TYPES } from '../types';
+    import { DISPLAY_QUESTION_TYPES, QUESTION_TYPES } from '../types';
 
 	const client = useConvexClient();
 
@@ -15,38 +15,142 @@
 	let questionType: string = $state('multiple_choice');
 	let options: Array<{ text: string }> = $state([]);
 	let correctAnswers: string[] = $state([]);
-	let isSubmitting: boolean = $state(false);
+    let isSubmitting: boolean = $state(false);
 
-	$effect(() => {
-		if (editingQuestion) {
-			questionStem = editingQuestion.stem || '';
-			questionExplanation = editingQuestion.explanation || '';
-			questionStatus = editingQuestion.status || 'draft';
-			questionType = editingQuestion.type || 'multiple_choice';
-			options = (editingQuestion.options || []).map((opt: { id: string; text: string }) => ({
-				text: opt.text
-			}));
+    // Fill in the Blank editor state
+    type FitbMode = 'exact' | 'exact_cs' | 'contains' | 'regex';
+    type FitbAnswerRow = {
+        value: string;
+        mode: FitbMode;
+        flags: { ignorePunct: boolean; normalizeWs: boolean };
+    };
 
-			const correctAnswerIndices =
-				editingQuestion.correctAnswers
-					?.map((optionId: string) => {
-						const optionIndex = editingQuestion.options?.findIndex(
-							(opt: { id: string; text: string }) => opt.id === optionId
-						);
-						return optionIndex >= 0 ? optionIndex.toString() : '';
-					})
-					.filter((index: string) => index !== '') || [];
+    const FITB_MODE_LABELS: Record<FitbMode, string> = {
+        exact: 'Exact (case-insensitive)',
+        exact_cs: 'Exact (case-sensitive)',
+        contains: 'Contains',
+        regex: 'Regex'
+    };
 
-			correctAnswers = correctAnswerIndices;
-		}
-	});
+    let fitbAnswers: FitbAnswerRow[] = $state([
+        { value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }
+    ]);
 
-	function addOption() {
-		options = [...options, { text: '' }];
-	}
+    // Caches to preserve per-type state when switching types
+    let mcOptionsCache: Array<{ text: string }> = $state([]);
+    let mcCorrectCache: string[] = $state([]);
+    let tfCorrectCache: string = $state('');
+    let fitbAnswersCache: FitbAnswerRow[] = $state([
+        { value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }
+    ]);
 
-	function removeOption(index: number) {
-		if (options.length <= 2) return;
+    $effect(() => {
+        const eq = editingQuestion;
+        if (!eq) return;
+
+        const nextType: string = eq.type || 'multiple_choice';
+        const nextStem: string = eq.stem || '';
+        const nextExplanation: string = eq.explanation || '';
+        const nextStatus: string = eq.status || 'draft';
+
+        const nextOptions: Array<{ text: string }> = (eq.options || []).map(
+            (opt: { id: string; text: string }) => ({ text: opt.text })
+        );
+
+        const correctAnswerIndices: string[] =
+            eq.correctAnswers
+                ?.map((optionId: string) => {
+                    const optionIndex = eq.options?.findIndex(
+                        (opt: { id: string; text: string }) => opt.id === optionId
+                    );
+                    return optionIndex >= 0 ? optionIndex.toString() : '';
+                })
+                .filter((index: string) => index !== '') || [];
+
+        let nextFitbAnswers: FitbAnswerRow[] = [];
+        if (nextType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+            nextFitbAnswers = (eq.options || []).map((opt: { text: string }) => {
+                const [before, flagsPart] = opt.text.split(' | flags=');
+                const [modeMaybe, ...rest] = before.split(':');
+                const mode = (['exact', 'exact_cs', 'contains', 'regex'].includes(modeMaybe)
+                    ? (modeMaybe as FitbMode)
+                    : 'exact');
+                const value = rest.join(':');
+                const flags = {
+                    ignorePunct: !!flagsPart?.includes('ignore_punct'),
+                    normalizeWs: !!flagsPart?.includes('normalize_ws')
+                };
+                return { value, mode, flags } as FitbAnswerRow;
+            });
+            if (nextFitbAnswers.length === 0) {
+                nextFitbAnswers = [
+                    { value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }
+                ];
+            }
+        }
+
+        // Commit assignments
+        questionStem = nextStem;
+        questionExplanation = nextExplanation;
+        questionStatus = nextStatus;
+        questionType = nextType;
+        options = nextOptions;
+        correctAnswers = correctAnswerIndices;
+        if (nextType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+            fitbAnswers = nextFitbAnswers;
+        }
+
+        // Initialize caches based on loaded question type (use locals; avoid reading $state)
+        if (nextType === QUESTION_TYPES.MULTIPLE_CHOICE) {
+            mcOptionsCache = [...nextOptions];
+            mcCorrectCache = [...correctAnswerIndices];
+        } else if (nextType === QUESTION_TYPES.TRUE_FALSE) {
+            tfCorrectCache = correctAnswerIndices[0] ?? '';
+        } else if (nextType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+            fitbAnswersCache = [...(nextFitbAnswers.length ? nextFitbAnswers : fitbAnswers)];
+        }
+    });
+
+    function handleTypeChange(e: Event) {
+        const newType = (e.target as HTMLSelectElement).value as string;
+        const fromType = questionType;
+
+        // cache current state by previous type
+        if (fromType === QUESTION_TYPES.MULTIPLE_CHOICE) {
+            mcOptionsCache = [...options];
+            mcCorrectCache = [...correctAnswers];
+        } else if (fromType === QUESTION_TYPES.TRUE_FALSE) {
+            tfCorrectCache = correctAnswers[0] ?? '';
+        } else if (fromType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+            fitbAnswersCache = [...fitbAnswers];
+        }
+
+        // switch type
+        questionType = newType;
+
+        if (newType === QUESTION_TYPES.TRUE_FALSE) {
+            options = [{ text: 'True' }, { text: 'False' }];
+            correctAnswers = tfCorrectCache ? [tfCorrectCache] : [];
+        } else if (newType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+            options = [{ text: '' }];
+            fitbAnswers = fitbAnswersCache.length
+                ? [...fitbAnswersCache]
+                : [{ value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }];
+            correctAnswers = [];
+        } else if (newType === QUESTION_TYPES.MULTIPLE_CHOICE) {
+            options = mcOptionsCache.length >= 2 ? [...mcOptionsCache] : [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
+            correctAnswers = [...mcCorrectCache];
+        }
+    }
+
+    function addOption() {
+        if (questionType === QUESTION_TYPES.TRUE_FALSE || questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) return;
+        options = [...options, { text: '' }];
+    }
+
+    function removeOption(index: number) {
+        if (questionType === QUESTION_TYPES.TRUE_FALSE || questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) return;
+        if (options.length <= 2) return;
 		options = options.filter((_, i) => i !== index);
 		correctAnswers = correctAnswers
 			.filter((answerIndex) => parseInt(answerIndex) !== index)
@@ -56,20 +160,39 @@
 			});
 	}
 
-	function toggleCorrectAnswer(index: number) {
-		const indexStr = index.toString();
-		if (correctAnswers.includes(indexStr)) {
-			correctAnswers = correctAnswers.filter((id) => id !== indexStr);
-		} else {
-			correctAnswers = [...correctAnswers, indexStr];
-		}
-	}
+    function toggleCorrectAnswer(index: number) {
+        const indexStr = index.toString();
+        if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) return;
+        if (questionType === QUESTION_TYPES.TRUE_FALSE) {
+            correctAnswers = correctAnswers.includes(indexStr) ? [] : [indexStr];
+            return;
+        }
+        if (correctAnswers.includes(indexStr)) {
+            correctAnswers = correctAnswers.filter((id) => id !== indexStr);
+        } else {
+            correctAnswers = [...correctAnswers, indexStr];
+        }
+    }
 
 	async function handleSubmit() {
 		if (!questionStem || !editingQuestion) return;
 
+		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+            const sanitized = fitbAnswers.filter((r) => r.value.trim());
+            if (sanitized.length < 1) return;
+            const encoded = sanitized.map((row) => ({ text: `${row.mode}:${row.value}${row.flags.ignorePunct || row.flags.normalizeWs ? ` | flags=${[row.flags.ignorePunct ? 'ignore_punct' : '', row.flags.normalizeWs ? 'normalize_ws' : ''].filter(Boolean).join(',')}` : ''}` }));
+            options = encoded;
+            correctAnswers = encoded.map((_, i) => i.toString());
+		}
+
 		const filledOptions = options.filter((opt) => opt.text.trim());
-		if (filledOptions.length < 2) return;
+
+		if (questionType === QUESTION_TYPES.TRUE_FALSE) {
+			if (filledOptions.length !== 2) return;
+			if (correctAnswers.length !== 1) return;
+		} else if (questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
+			if (filledOptions.length < 2) return;
+		}
 
 		isSubmitting = true;
 
@@ -99,7 +222,7 @@
 	}
 </script>
 
-<dialog class="modal p-6" class:modal-open={isEditModalOpen}>
+<dialog class="modal p-8" class:modal-open={isEditModalOpen}>
 	<div class="modal-box w-full max-w-4xl rounded-2xl border border-base-300 shadow-2xl">
 		<form method="dialog">
 			<button
@@ -143,10 +266,11 @@
 						<Hash size={18} class="text-primary/80" />
 						<span>Type</span>
 					</label>
-					<select
+                    <select
 						id="question-type"
 						class="select select-bordered w-full"
-						bind:value={questionType}
+                        value={questionType}
+                        onchange={handleTypeChange}
 					>
 						{#each Object.entries(DISPLAY_QUESTION_TYPES) as [value, label] (value)}
 							<option value={value}>{label}</option>
@@ -170,43 +294,96 @@
 						<option value="archived">Archived</option>
 					</select>
 
-					<label
-						class="label m-0 flex items-center gap-2 self-start p-0 text-base font-medium text-base-content/80"
-						for="question-options"
-					>
-						<ListChecks size={18} class="text-primary/80" />
-						<span>Options</span>
-					</label>
-					<div class="space-y-3">
-						{#each options as option, index (index)}
-							<div class="flex items-center gap-3">
-								<input
-									type="checkbox"
-									class="checkbox checkbox-primary"
-									checked={correctAnswers.includes(index.toString())}
-									onchange={() => toggleCorrectAnswer(index)}
-								/>
-								<input
-									type="text"
-									class="input input-bordered flex-1"
-									bind:value={option.text}
-									placeholder="Option {index + 1}"
-								/>
-								{#if options.length > 2}
-									<button
-										type="button"
-										class="btn btn-ghost btn-sm"
-										onclick={() => removeOption(index)}
-									>
-										<X size={16} />
-									</button>
-								{/if}
-							</div>
-						{/each}
-						<button type="button" class="btn btn-ghost btn-sm" onclick={addOption}>
-							Add Option
-						</button>
-					</div>
+                    {#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
+                        <label
+                            class="label m-0 flex items-center gap-2 self-start p-0 text-base font-medium text-base-content/80"
+                            for="fitb-answers"
+                        >
+                            <ListChecks size={18} class="text-primary/80" />
+                            <span>Accepted Answers</span>
+                        </label>
+                        <div class="space-y-3">
+                            {#each fitbAnswers as row, index (index)}
+                                <div class="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto_auto] md:items-center">
+                                    <input
+                                        class="input input-bordered w-full"
+                                        placeholder="Answer {index + 1}"
+                                        value={row.value}
+                                        oninput={(e) => (fitbAnswers = fitbAnswers.map((r, i) => i === index ? { ...r, value: (e.target as HTMLInputElement).value } : r))}
+                                    />
+                                    <select
+                                        class="select select-bordered"
+                                        value={row.mode}
+                                        onchange={(e) => (fitbAnswers = fitbAnswers.map((r, i) => i === index ? { ...r, mode: (e.target as HTMLSelectElement).value as FitbMode } : r))}
+                                    >
+                                        {#each Object.entries(FITB_MODE_LABELS) as [value, label]}
+                                            <option value={value}>{label}</option>
+                                        {/each}
+                                    </select>
+                                    <div class="flex items-center gap-3">
+                                        <label class="label cursor-pointer gap-2">
+                                            <input type="checkbox" class="checkbox checkbox-sm" checked={row.flags.ignorePunct} onchange={() => (fitbAnswers = fitbAnswers.map((r, i) => i === index ? { ...r, flags: { ...r.flags, ignorePunct: !r.flags.ignorePunct } } : r))} />
+                                            <span class="text-sm">Ignore punctuation</span>
+                                        </label>
+                                        <label class="label cursor-pointer gap-2">
+                                            <input type="checkbox" class="checkbox checkbox-sm" checked={row.flags.normalizeWs} onchange={() => (fitbAnswers = fitbAnswers.map((r, i) => i === index ? { ...r, flags: { ...r.flags, normalizeWs: !r.flags.normalizeWs } } : r))} />
+                                            <span class="text-sm">Normalize whitespace</span>
+                                        </label>
+                                        {#if fitbAnswers.length > 1}
+                                            <button class="btn btn-ghost btn-sm" onclick={() => (fitbAnswers = fitbAnswers.filter((_, i) => i !== index))}>
+                                                <X size={16} />
+                                            </button>
+                                        {/if}
+                                    </div>
+                                </div>
+                            {/each}
+                            <button type="button" class="btn btn-ghost btn-sm" onclick={() => (fitbAnswers = [...fitbAnswers, { value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }])}>
+                                Add Alternative Answer
+                            </button>
+                        </div>
+                    {:else}
+                        <label
+                            class="label m-0 flex items-center gap-2 self-start p-0 text-base font-medium text-base-content/80"
+                            for="question-options"
+                        >
+                            <ListChecks size={18} class="text-primary/80" />
+                            <span>Options</span>
+                        </label>
+                        <div class="space-y-3">
+                            {#each options as option, index (index)}
+                                <div class="flex items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox checkbox-primary"
+                                        checked={correctAnswers.includes(index.toString())}
+                                        onchange={() => toggleCorrectAnswer(index)}
+                                        disabled={questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
+                                    />
+                                    <input
+                                        type="text"
+                                        class="input input-bordered flex-1"
+                                        bind:value={option.text}
+                                        disabled={questionType === QUESTION_TYPES.TRUE_FALSE}
+                                        placeholder="Option {index + 1}"
+                                    />
+                                    {#if options.length > 2 && questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
+                                        <button
+                                            type="button"
+                                            class="btn btn-ghost btn-sm"
+                                            onclick={() => removeOption(index)}
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    {/if}
+                                </div>
+                            {/each}
+                            {#if questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
+                                <button type="button" class="btn btn-ghost btn-sm" onclick={addOption}>
+                                    Add Option
+                                </button>
+                            {/if}
+                        </div>
+                    {/if}
 
 					<label
 						class="label m-0 flex items-center gap-2 self-start p-0 text-base font-medium text-base-content/80"
@@ -229,11 +406,11 @@
 					<button class="btn btn-ghost" onclick={closeEditModal} disabled={isSubmitting}
 						>Cancel</button
 					>
-					<button
-						class="btn btn-primary gap-2"
-						onclick={handleSubmit}
-						disabled={isSubmitting || !questionStem || correctAnswers.length === 0}
-					>
+                    <button
+                        class="btn btn-primary gap-2"
+                        onclick={handleSubmit}
+                        disabled={isSubmitting || !questionStem}
+                    >
 						{#if isSubmitting}
 							<span class="loading loading-spinner loading-sm"></span>
 							<span>Updating...</span>

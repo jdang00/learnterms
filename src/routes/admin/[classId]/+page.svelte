@@ -250,14 +250,14 @@
 						class="cursor-move"
 					>
 						<div class="flex flex-col h-full">
-							<div class="flex flex-row justify-between mb-4">
-								<div class="flex flex-col gap-1">
+                            <div class="flex flex-row justify-between mb-4">
+                            <div class="flex flex-col gap-1">
 									<a
 										href={`/admin/${classId}/module/${moduleItem._id}`}
 										class="font-semibold text-base-content text-left truncate hover:text-primary transition-colors cursor-pointer"
 										title={`Go to questions for ${moduleItem.title}`}
 									>
-										{moduleItem.title}
+                                    <span class="mr-2 text-xl">{moduleItem.emoji || '📘'}</span>{moduleItem.title}
 									</a>
 									<div class="text-xs text-base-content/60 flex items-center gap-1">
 										<span
@@ -267,47 +267,47 @@
 										>
 									</div>
 								</div>
-								<div class="text-xs text-base-content/60 font-mono badge rounded-full">
-									{index + 1}
-								</div>
+                            <div class="flex items-center gap-2">
+                                <div class="dropdown dropdown-end">
+                                    <button class="btn btn-ghost btn-circle btn-sm">⋮</button>
+                                    <ul
+                                        tabindex="-1"
+                                        class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+                                    >
+                                        <li>
+                                            <button
+                                                data-edit-btn
+                                                class="btn btn-sm btn-ghost w-full justify-start"
+                                                type="button"
+                                                aria-label="Edit module"
+                                                onclick={() => editModule(moduleItem)}
+                                            >
+                                                <Pencil size={16} />
+                                                <span>Edit</span>
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button
+                                                data-delete-btn
+                                                class="btn btn-sm btn-ghost text-error w-full justify-start"
+                                                type="button"
+                                                aria-label="Delete module"
+                                                onclick={() => handleModuleDelete(moduleItem._id)}
+                                            >
+                                                <Trash2 size={16} />
+                                                <span>Delete</span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
 							</div>
 							<p class="text-sm text-base-content/70 mb-4 text-left line-clamp-4">
 								{moduleItem.description || 'No description available'}
 							</p>
-							<div class="mt-auto flex justify-end">
-								<div class="dropdown dropdown-end">
-									<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
-									<ul
-										tabindex="-1"
-										class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
-									>
-										<li>
-											<button
-												data-edit-btn
-												class="btn btn-sm btn-ghost w-full justify-start"
-												type="button"
-												aria-label="Edit module"
-												onclick={() => editModule(moduleItem)}
-											>
-												<Pencil size={16} />
-												<span>Edit</span>
-											</button>
-										</li>
-										<li>
-											<button
-												data-delete-btn
-												class="btn btn-sm btn-ghost text-error w-full justify-start"
-												type="button"
-												aria-label="Delete module"
-												onclick={() => handleModuleDelete(moduleItem._id)}
-											>
-												<Trash2 size={16} />
-												<span>Delete</span>
-											</button>
-										</li>
-									</ul>
-								</div>
-							</div>
+                            <div class="mt-auto flex justify-end">
+                                <div class="text-xs text-base-content/60 font-mono badge rounded-full">{index + 1}</div>
+                            </div>
 						</div>
 					</div>
 				</div>

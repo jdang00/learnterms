@@ -49,6 +49,7 @@ export default defineSchema({
 	}),
 	module: defineTable({
 		title: v.string(),
+		emoji: v.optional(v.string()),
 		metadata: v.object({}),
 		updatedAt: v.number(),
 		deletedAt: v.optional(v.number()),

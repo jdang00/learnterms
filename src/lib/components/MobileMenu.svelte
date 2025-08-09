@@ -1,5 +1,6 @@
 <script>
 	let { qs = $bindable(), currentlySelected } = $props();
+	let isSettingsModalOpen = $state(false);
 	import {
 		Eye,
 		ArrowLeft,
@@ -8,14 +9,18 @@
 		ChevronUp,
 		Flag,
 		BookmarkCheck,
-		Shuffle
+		Shuffle,
+		Settings,
+		Check,
+		ArrowUpWideNarrow
 	} from 'lucide-svelte';
+	import SettingsModal from '$lib/components/SettingsModal.svelte';
 
 	async function handleClear() {
 		qs.selectedAnswers = [];
 		qs.eliminatedAnswers = [];
 		qs.checkResult = '';
-		
+
 		if (qs.saveProgressFunction) {
 			await qs.saveProgressFunction();
 		}
@@ -29,7 +34,7 @@
 
 	async function handleFlag() {
 		qs.toggleFlag();
-		
+
 		if (qs.saveProgressFunction) {
 			await qs.saveProgressFunction();
 		}
@@ -59,38 +64,9 @@
 <div
 	class="fixed bottom-0 left-0 w-full bg-base-100 shadow-lg border-t border-base-300 z-50 flex gap-2 items-center px-4 py-4 lg:hidden flex-wrap justify-center"
 >
-	<button class="btn btn-outline btn-sm" onclick={handleClear}>Clear</button>
-	<button class="btn btn-outline btn-success btn-sm" onclick={handleCheck}>Check</button>
-	<button
-		class="btn btn-warning btn-outline btn-sm"
-		aria-label="flag question"
-		onclick={handleFlag}
-	>
-		<Flag />
-	</button>
-	<div class="flex flex-row gap-2">
-		<button
-			class="btn btn-outline btn-sm"
-			onclick={handlePrevious}
-			disabled={!qs.canGoPrevious()}
-		>
-			<ArrowLeft />
-		</button>
-		<button
-			class="btn btn-outline btn-sm"
-			onclick={handleNext}
-			disabled={!qs.canGoNext()}
-		>
-			<ArrowRight />
-		</button>
-	</div>
-	<button class="btn modal-button lg:hidden btn-sm" onclick={() => (qs.isModalOpen = true)}
-		><Eye /></button
-	>
-
-	<div class="dropdown dropdown-top dropdown-center">
+	<div class="dropdown dropdown-top">
 		<div tabindex="0" role="button" class="btn btn-sm btn-soft btn-accent m-1">
-			Options <ChevronUp />
+			<ArrowUpWideNarrow />
 		</div>
 		<ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
 			<li>
@@ -114,7 +90,34 @@
 					{qs.showIncomplete ? 'Show All' : 'Show Incomplete'}
 				</button>
 			</li>
+			<li>
+				<button onclick={() => (isSettingsModalOpen = true)}>
+					<Settings size="16" />Settings
+				</button>
+			</li>
 		</ul>
+	</div>
+	<button class="btn btn-outline btn-sm" onclick={handleClear}>Clear</button>
+	<button class="btn btn-outline btn-success btn-sm" onclick={handleCheck}><Check /></button>
+	<button
+		class="btn btn-warning btn-outline btn-sm"
+		aria-label="flag question"
+		onclick={handleFlag}
+	>
+		<Flag />
+	</button>
+
+	<button class="btn modal-button lg:hidden btn-sm" onclick={() => (qs.isModalOpen = true)}
+		><Eye /></button
+	>
+
+	<div class="flex flex-row gap-2">
+		<button class="btn btn-outline btn-sm" onclick={handlePrevious} disabled={!qs.canGoPrevious()}>
+			<ArrowLeft />
+		</button>
+		<button class="btn btn-outline btn-sm" onclick={handleNext} disabled={!qs.canGoNext()}>
+			<ArrowRight />
+		</button>
 	</div>
 
 	<dialog class="modal max-w-full p-4" class:modal-open={qs.isModalOpen}>
@@ -129,4 +132,6 @@
 			<p class="py-4">{currentlySelected.explanation}</p>
 		</div>
 	</dialog>
-</div> 
+
+	<SettingsModal bind:qs bind:isOpen={isSettingsModalOpen} />
+</div>

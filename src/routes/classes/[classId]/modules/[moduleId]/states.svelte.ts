@@ -2,6 +2,8 @@ import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
 import type { ConvexClient } from 'convex/browser';
 
+type QuestionOption = { id: string; text: string };
+
 export class QuizState {
 	checkResult: string = $state('');
 	selectedAnswers: string[] = $state([]);
@@ -12,26 +14,25 @@ export class QuizState {
 	shuffledQuestionIds: string[] = $state([]);
 	isShuffled: boolean = $state(false);
 	showSolution = $state(false);
+  autoNextEnabled: boolean = $state(true);
 	saveProgressFunction: (() => Promise<void>) | null = $state(null);
 	loadProgressFunction: ((questionId: Id<'question'>) => Promise<void>) | null = $state(null);
 	currentQuestionFlagged: boolean = $state(false);
 	interactedQuestionsCount: number = $state(0);
 
-	// Sort functionality
 	showFlagged: boolean = $state(false);
 	showIncomplete: boolean = $state(false);
-	// Live Convex data (source of truth)
 	liveFlaggedQuestions: Id<'question'>[] = $state([]);
 	liveInteractedQuestions: Id<'question'>[] = $state([]);
-	// No flags alert state
 	noFlags: boolean = $state(false);
-	// Reset modal state
 	isResetModalOpen: boolean = $state(false);
-	// Modal state for mobile
 	isModalOpen: boolean = $state(false);
-	// Question button references for scrolling
   questionButtons: HTMLButtonElement[] = $state([]);
   private saveDebounceHandle: number | null = null;
+  private autoNextHandle: number | null = null;
+  private static readonly AUTO_NEXT_DELAY_MS = 1800;
+  optionOrderByQuestionId: Record<string, string[]> = $state({});
+  optionsShuffleEnabled: boolean = $state(false);
 
   scheduleSave(delayMs: number = 400) {
     if (!this.saveProgressFunction) return;
@@ -50,17 +51,23 @@ export class QuizState {
 		const sortedCorrect = [...correctAnswers].sort();
 		const sortedUser = [...userAnswers].sort();
 
-		if (
+		const isCorrect =
 			sortedCorrect.length === sortedUser.length &&
-			sortedCorrect.every((answer, index) => answer === sortedUser[index])
-		) {
-			this.checkResult = 'Correct!';
-		} else {
-			this.checkResult = 'Incorrect. Please try again.';
-		}
+			sortedCorrect.every((answer, index) => answer === sortedUser[index]);
+
+		const message = isCorrect ? 'Correct!' : 'Incorrect. Please try again.';
+
+		this.checkResult = '';
+		setTimeout(() => {
+			this.checkResult = message;
+			if (isCorrect) {
+				this.scheduleAutoNextIfEnabled();
+			} else {
+				this.cancelAutoNext();
+			}
+		}, 0);
 	}
 
-	// Calculate progress percentage
 	getProgressPercentage(): number {
 		if (!this.questions || this.questions.length === 0) {
 			return 0;
@@ -68,12 +75,10 @@ export class QuizState {
 		return Math.round((this.interactedQuestionsCount / this.questions.length) * 100);
 	}
 
-	// Update interacted questions count
 	setInteractedQuestionsCount(count: number) {
 		this.interactedQuestionsCount = count;
 	}
 
-	// Toggle flag for current question
 	toggleFlag() {
 		this.currentQuestionFlagged = !this.currentQuestionFlagged;
     const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
@@ -89,57 +94,50 @@ export class QuizState {
     this.scheduleSave();
 	}
 
-	// Set flag status for current question (used when loading from database)
 	setCurrentQuestionFlagged(isFlagged: boolean) {
 		this.currentQuestionFlagged = isFlagged;
 	}
 
 	async goToNextQuestion() {
+    this.cancelAutoNext();
 		const filteredQuestions = this.getFilteredQuestions();
 		if (filteredQuestions && this.currentQuestionIndex < filteredQuestions.length - 1) {
-      // Optimistic: schedule save without blocking UI
       this.scheduleSave();
 
 			this.currentQuestionIndex++;
 			this.checkResult = '';
 			this.showSolution = false;
 
-      // Optimistic: clear selections immediately
       this.selectedAnswers = [];
       this.eliminatedAnswers = [];
 
-      // Load progress for the new question (non-blocking)
 			const newQuestion = this.getCurrentFilteredQuestion();
 			if (newQuestion && this.loadProgressFunction) {
         void this.loadProgressFunction(newQuestion._id);
 			} else {
-				// Clear state if no load function or no question
 				this.selectedAnswers = [];
 				this.eliminatedAnswers = [];
-			}
 		}
+	}
 	}
 
 	async goToPreviousQuestion() {
+    this.cancelAutoNext();
 		const filteredQuestions = this.getFilteredQuestions();
 		if (filteredQuestions && this.currentQuestionIndex > 0) {
-      // Optimistic: schedule save without blocking UI
       this.scheduleSave();
 
 			this.currentQuestionIndex--;
 			this.checkResult = '';
 			this.showSolution = false;
 
-      // Optimistic: clear selections immediately
       this.selectedAnswers = [];
       this.eliminatedAnswers = [];
 
-      // Load progress for the new question (non-blocking)
 			const newQuestion = this.getCurrentFilteredQuestion();
 			if (newQuestion && this.loadProgressFunction) {
         void this.loadProgressFunction(newQuestion._id);
 			} else {
-				// Clear state if no load function or no question
 				this.selectedAnswers = [];
 				this.eliminatedAnswers = [];
 			}
@@ -148,6 +146,7 @@ export class QuizState {
 
 	setQuestions(questions: Doc<'question'>[]) {
 		this.questions = questions || [];
+    this.rebuildOptionOrders();
 	}
 
 	getCurrentQuestions(): Doc<'question'>[] {
@@ -160,25 +159,22 @@ export class QuizState {
 	}
 
 	async setCurrentQuestionIndex(index: number) {
+    this.cancelAutoNext();
 		const currentQuestions = this.getCurrentQuestions();
 		if (currentQuestions && index >= 0 && index < currentQuestions.length) {
-      // Optimistic: schedule save without blocking UI
       this.scheduleSave();
 
 			this.currentQuestionIndex = index;
 			this.checkResult = '';
 			this.showSolution = false;
 
-      // Optimistic: clear selections immediately
       this.selectedAnswers = [];
       this.eliminatedAnswers = [];
 
-      // Load progress for the new question (non-blocking)
 			const newQuestion = this.getCurrentQuestion();
 			if (newQuestion && this.loadProgressFunction) {
         void this.loadProgressFunction(newQuestion._id);
 			} else {
-				// Clear state if no load function or no question
 				this.selectedAnswers = [];
 				this.eliminatedAnswers = [];
 			}
@@ -193,7 +189,6 @@ export class QuizState {
 		this.loadProgressFunction = func;
 	}
 
-	// Update live Convex data (source of truth)
 	updateLiveFlaggedQuestions(flagged: Id<'question'>[]) {
 		this.liveFlaggedQuestions = flagged;
 	}
@@ -221,6 +216,7 @@ export class QuizState {
 	}
 
 	toggleShuffle() {
+    this.cancelAutoNext();
 		this.isShuffled = !this.isShuffled;
 		if (this.isShuffled) {
 			this.shuffleQuestions();
@@ -260,7 +256,6 @@ export class QuizState {
 	}
 
 	toggleOption(optionId: string) {
-		// Don't allow selection if eliminated
 		if (this.eliminatedAnswers.includes(optionId)) {
 			return;
 		}
@@ -270,7 +265,6 @@ export class QuizState {
 		} else {
 			this.selectedAnswers = [...this.selectedAnswers, optionId];
 		}
-    // Optimistically mark as interacted
     const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
     if (current && !this.liveInteractedQuestions.includes(current._id)) {
       this.liveInteractedQuestions = [...this.liveInteractedQuestions, current._id];
@@ -291,14 +285,29 @@ export class QuizState {
 		return currentQuestion ? currentQuestion.correctAnswers.includes(optionId) : false;
 	}
 
-	toggleSortByFlagged() {
-		this.showFlagged = !this.showFlagged;
-		this.currentQuestionIndex = 0;
-		this.checkResult = '';
-		this.showSolution = false;
-		this.selectedAnswers = [];
-		this.eliminatedAnswers = [];
-	}
+		toggleSortByFlagged() {
+			const currentQuestion = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
+			this.showFlagged = !this.showFlagged;
+			this.checkResult = '';
+			this.showSolution = false;
+			this.selectedAnswers = [];
+			this.eliminatedAnswers = [];
+
+			const filtered = this.getFilteredQuestions();
+			if (currentQuestion) {
+				const newIndex = filtered.findIndex((q) => q._id === currentQuestion._id);
+				if (newIndex !== -1) {
+					this.currentQuestionIndex = newIndex;
+					return;
+				}
+			}
+
+			if (filtered.length > 0) {
+				this.currentQuestionIndex = 0;
+			} else {
+				this.currentQuestionIndex = 0;
+			}
+		}
 
 	toggleShowIncomplete() {
 		this.showIncomplete = !this.showIncomplete;
@@ -313,7 +322,6 @@ export class QuizState {
 		let filteredQuestions = this.getCurrentQuestions();
 
 		if (this.showFlagged) {
-			// Check if there are any flagged questions
 			if (this.liveFlaggedQuestions.length === 0) {
 				return filteredQuestions;
 			}
@@ -336,13 +344,12 @@ export class QuizState {
 		if (!filteredQuestions || filteredQuestions.length === 0) {
 			return null;
 		}
-		// Ensure currentQuestionIndex is within bounds of filtered questions
 		const safeIndex = Math.min(this.currentQuestionIndex, filteredQuestions.length - 1);
 		return filteredQuestions[safeIndex] || filteredQuestions[0];
 	}
 
 	async reset(userId: Id<'users'>, moduleId: Id<'module'>, client: ConvexClient) {
-		// Clear local state
+    this.cancelAutoNext();
 		this.selectedAnswers = [];
 		this.eliminatedAnswers = [];
 		this.currentQuestionFlagged = false;
@@ -355,14 +362,107 @@ export class QuizState {
 		this.showIncomplete = false;
 		this.noFlags = false;
 
-		// Clear progress from database
 		try {
 			await client.mutation(api.userProgress.clearUserProgressForModule, {
 				userId: userId,
 				moduleId: moduleId
 			});
-		} catch (error) {
-			console.error('Error resetting progress:', error);
-		}
-	}
+    } catch (error) {
+            console.error('Error resetting progress:', error);
+    }
+  }
+
+  getOrderedOptions(question: Doc<'question'>) {
+    const originalOptions = (question.options || []) as QuestionOption[];
+    if (!this.optionsShuffleEnabled) {
+      return originalOptions;
+    }
+    let order = this.optionOrderByQuestionId[question._id];
+    if (!order || order.length === 0) {
+      const ids = originalOptions.map((o: QuestionOption) => o.id);
+      const shuffled = this.generateShuffledIds(ids);
+      this.optionOrderByQuestionId[question._id] = shuffled;
+      order = shuffled;
+    }
+    const idToOption: Record<string, QuestionOption> = {};
+    for (const option of originalOptions) {
+      idToOption[option.id] = option;
+    }
+    const ordered = order
+      .map((id) => idToOption[id])
+      .filter((opt): opt is QuestionOption => Boolean(opt));
+    if (ordered.length !== originalOptions.length) {
+      const missing = originalOptions.filter((o: QuestionOption) => !order!.includes(o.id));
+      return [...ordered, ...missing];
+    }
+    return ordered;
+  }
+
+  setOptionsShuffleEnabled(enabled: boolean) {
+    this.optionsShuffleEnabled = enabled;
+    if (enabled) {
+      this.shuffleAllOptions();
+    } else {
+      this.resetAllOptionOrdersToOriginal();
+    }
+  }
+
+  private rebuildOptionOrders() {
+    if (this.optionsShuffleEnabled) {
+      this.shuffleAllOptions();
+    } else {
+      this.resetAllOptionOrdersToOriginal();
+    }
+  }
+
+  private shuffleAllOptions() {
+    for (const question of this.questions) {
+      const ids = (question.options || []).map((o: QuestionOption) => o.id);
+      const shuffled = this.generateShuffledIds(ids);
+      this.optionOrderByQuestionId[question._id] = shuffled;
+    }
+  }
+
+  private resetAllOptionOrdersToOriginal() {
+    for (const question of this.questions) {
+      const original = (question.options || []).map((o: QuestionOption) => o.id);
+      this.optionOrderByQuestionId[question._id] = original;
+    }
+  }
+
+  private generateShuffledIds(ids: string[]): string[] {
+    const out = [...ids];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+  
+  setAutoNextEnabled(enabled: boolean) {
+    this.autoNextEnabled = enabled;
+    if (!enabled) this.cancelAutoNext();
+  }
+
+  private scheduleAutoNextIfEnabled() {
+    if (!this.autoNextEnabled) return;
+    if (!this.canGoNext()) return;
+    if (this.autoNextHandle) {
+      clearTimeout(this.autoNextHandle);
+      this.autoNextHandle = null;
+    }
+    this.autoNextHandle = window.setTimeout(async () => {
+      await this.goToNextQuestion();
+      this.scheduleSave();
+      this.autoNextHandle = null;
+    }, QuizState.AUTO_NEXT_DELAY_MS);
+  }
+
+  private cancelAutoNext() {
+    if (this.autoNextHandle) {
+      clearTimeout(this.autoNextHandle);
+      this.autoNextHandle = null;
+    }
+  }
 }
+

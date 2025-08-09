@@ -10,7 +10,7 @@
 </script>
 
 <div
-	class="flex flex-row w-full overflow-x-auto space-x-4 relative mt-6 lg:mt-0 items-center mb-6 lg:my-0 border border-base-300 !p-6 rounded-xl"
+	class="flex flex-row w-full overflow-x-auto space-x-4 relative  lg:mt-0 items-center mb-6 lg:my-0 border border-base-300 !p-6 rounded-xl"
 >
 	{#each questions.data as question, index (question._id)}
 		<div class="indicator">

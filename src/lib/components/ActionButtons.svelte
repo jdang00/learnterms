@@ -4,13 +4,19 @@
     import { Confetti } from 'svelte-confetti';
     let showConfetti = $state(false);
 
+    $effect(() => {
+        if (qs.checkResult === 'Correct!') {
+            showConfetti = false;
+            requestAnimationFrame(() => {
+                showConfetti = true;
+                setTimeout(() => (showConfetti = false), 1200);
+            });
+        }
+    });
+
     function handleCheck() {
         if (currentlySelected) {
             qs.checkAnswer(currentlySelected.correctAnswers, qs.selectedAnswers);
-            if (qs.checkResult === 'Correct!') {
-                showConfetti = true;
-                setTimeout(() => (showConfetti = false), 1200);
-            }
         }
         qs.scheduleSave?.();
     }

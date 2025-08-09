@@ -1,4 +1,4 @@
-import { query, mutation } from './_generated/server';
+import { query, mutation, action } from './_generated/server';
 import { v } from 'convex/values';
 
 function makeOptionId(stem: string, text: string, index: number): string {
@@ -212,6 +212,61 @@ export const createQuestion = mutation({
 	}
 });
 
+export const bulkInsertQuestions = mutation({
+  args: {
+    moduleId: v.id('module'),
+    questions: v.array(
+      v.object({
+        type: v.string(),
+        stem: v.string(),
+        options: v.array(v.object({ text: v.string() })),
+        correctAnswers: v.array(v.string()),
+        explanation: v.string(),
+        aiGenerated: v.boolean(),
+        status: v.string(),
+        order: v.number(),
+        metadata: v.object({}),
+        updatedAt: v.number()
+      })
+    )
+  },
+  handler: async (ctx, { moduleId, questions }) => {
+    const insertedIds: string[] = [];
+
+    for (const q of questions) {
+      const optionsWithIds = q.options.map((option, index) => ({
+        id: makeOptionId(q.stem, option.text, index),
+        text: option.text
+      }));
+
+      const correctAnswerIds = q.correctAnswers
+        .map((index) => {
+          const numIndex = parseInt(index);
+          return optionsWithIds[numIndex]?.id || '';
+        })
+        .filter((id) => id !== '');
+
+      const id = await ctx.db.insert('question', {
+        moduleId,
+        type: convertQuestionType(q.type),
+        stem: q.stem,
+        options: optionsWithIds,
+        correctAnswers: correctAnswerIds,
+        explanation: q.explanation,
+        aiGenerated: q.aiGenerated,
+        status: q.status.toLowerCase(),
+        order: q.order,
+        metadata: q.metadata,
+        updatedAt: q.updatedAt
+      });
+
+      insertedIds.push(id);
+    }
+
+    return { insertedIds, insertedCount: insertedIds.length };
+  }
+});
+
 export const updateQuestionOrder = mutation({
 	args: {
 		questionId: v.id('question'),
@@ -252,4 +307,97 @@ export const getAllQuestions = query({
 		const questions = await ctx.db.query('question').collect();
 		return questions;
 	}
+});
+
+export const generateQuestions = action({
+  args: {
+    material: v.string(),
+    model: v.string(),
+    numQuestions: v.number()
+  },
+  handler: async (ctx, { material, model, numQuestions }) => {
+    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.trim().length === 0) {
+      throw new Error('GEMINI_API_KEY is not configured');
+    }
+
+    const { GoogleGenAI, Type } = await import('@google/genai');
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+    const prompt = `Role: You are an AI assistant specializing in pharmacology and medical education creating high-quality assessment questions.
+
+Goal: Based ONLY on the provided material, generate high-quality multiple-choice questions for optometry students.
+
+Instructions:
+- Create exactly ${numQuestions} diverse multiple-choice questions.
+- Mix levels: recall, understanding, application, critical thinking.
+- Include at least 2-3 questions with multiple correct answers.
+- Prefer ocular relevance when present.
+- Do NOT include any references to the material or meta-instructions.
+- Options must be plain strings with NO leading letters, numbers, or punctuation (no prefixes like "A.", "1)", or "-").
+
+Material:
+${material}`;
+
+    const result = await ai.models.generateContent({
+      model,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        temperature: 0.7,
+        maxOutputTokens: 8192,
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              stem: { type: Type.STRING },
+              options: { type: Type.ARRAY, minItems: 3, maxItems: 6, items: { type: Type.STRING } },
+              correctAnswerIndexes: { type: Type.ARRAY, minItems: 1, items: { type: Type.NUMBER } },
+              explanation: { type: Type.STRING }
+            },
+            required: ['stem', 'options', 'correctAnswerIndexes', 'explanation'],
+            propertyOrdering: ['stem', 'options', 'correctAnswerIndexes', 'explanation']
+          }
+        }
+      }
+    });
+
+    const responseText = (result as { text?: string } | undefined)?.text;
+    if (!responseText || typeof responseText !== 'string') {
+      throw new Error('AI response missing expected text content');
+    }
+
+    let parsed: Array<{ stem: string; options: string[]; correctAnswerIndexes: number[]; explanation: string }>;
+    try {
+      parsed = JSON.parse(responseText.trim());
+      if (!Array.isArray(parsed)) throw new Error('Response is not an array');
+    } catch {
+      throw new Error('Failed to parse AI response as JSON');
+    }
+
+    const normalizeOptionText = (opt: string) => opt.replace(/^\s*(?:[A-Z]|\d+)\s*(?:[.)\]:-])\s+/, '').trim();
+
+    const now = Date.now();
+    const normalized = parsed.map((q, i) => {
+      const options = q.options.map((o) => ({ text: normalizeOptionText(o) }));
+      const validIndexes = (q.correctAnswerIndexes || [])
+        .filter((n) => Number.isInteger(n))
+        .filter((n) => n >= 0 && n < options.length)
+        .map((n) => String(n));
+      return {
+        type: 'multiple_choice',
+        stem: q.stem.trim(),
+        options,
+        correctAnswers: validIndexes,
+        explanation: q.explanation.trim(),
+        aiGenerated: true,
+        status: 'published',
+        order: i,
+        metadata: {},
+        updatedAt: now
+      };
+    });
+
+    return { questions: normalized, count: normalized.length };
+  }
 });

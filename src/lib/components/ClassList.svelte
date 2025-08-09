@@ -6,7 +6,7 @@
 	import { api } from '../../convex/_generated/api';
 	import type { ClassWithSemester } from '../types';
 
-	interface Props {
+    interface Props {
 		classes: {
 			data: ClassWithSemester[];
 			isLoading: boolean;
@@ -14,9 +14,10 @@
 		};
 		onSelectClass: (classItem: ClassWithSemester) => void;
 		title?: string;
+        variant?: 'grid' | 'list';
 	}
 
-	let { classes, onSelectClass, title = 'My Classes' }: Props = $props();
+    let { classes, onSelectClass, title = 'My Classes', variant = 'grid' }: Props = $props();
 
 	const semesters = useQuery(api.semester.getAllSemesters, {});
 
@@ -67,7 +68,7 @@
 		{/if}
 	</div>
 
-	{#if classes.isLoading}
+    {#if classes.isLoading}
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			{#each Array(4), index (index)}
 				<div class="rounded-lg bg-base-100 shadow-sm border border-base-300 p-4 animate-pulse">
@@ -98,7 +99,7 @@
 			</svg>
 			<span>Failed to load classes: {classes.error.toString()}</span>
 		</div>
-	{:else if !filteredClasses || filteredClasses.length === 0}
+    {:else if !filteredClasses || filteredClasses.length === 0}
 		<div class="rounded-lg bg-base-100 shadow-sm border border-base-300 p-8">
 			<div class="text-center py-8">
 				<div class="text-4xl mb-4">📚</div>
@@ -106,11 +107,29 @@
 				<p class="text-base-content/70">Your classes will appear here once enrolled.</p>
 			</div>
 		</div>
-	{:else}
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-			{#each filteredClasses as classItem (classItem._id)}
-				<ClassCard {classItem} onSelect={onSelectClass} />
-			{/each}
-		</div>
+    {:else}
+        {#if variant === 'grid'}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {#each filteredClasses as classItem (classItem._id)}
+                    <ClassCard {classItem} onSelect={onSelectClass} />
+                {/each}
+            </div>
+        {:else}
+            <ul class="list">
+                {#each filteredClasses as classItem (classItem._id)}
+                    <li class="list-row">
+                        <button class="btn btn-ghost w-full justify-start gap-3" onclick={() => onSelectClass(classItem)}>
+                            <div class="list-col-grow text-left">
+                                <div class="font-medium truncate">{classItem.name}</div>
+                                <div class="text-xs text-base-content/60">{classItem.code}</div>
+                            </div>
+                            {#if classItem.semester?.name}
+                                <span class="badge badge-soft badge-sm">{classItem.semester.name}</span>
+                            {/if}
+                        </button>
+                    </li>
+                {/each}
+            </ul>
+        {/if}
 	{/if}
 </div>
