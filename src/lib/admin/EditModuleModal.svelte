@@ -1,7 +1,8 @@
 <script lang="ts">
 	let { isEditModalOpen, closeEditModal, editingModule, classId } = $props();
 
-	import { X, BookOpenText, AlignLeft, Hash } from 'lucide-svelte';
+import { X, BookOpenText, AlignLeft, Hash, Laugh } from 'lucide-svelte';
+import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
@@ -10,6 +11,7 @@
 
 	let moduleTitle: string = $state('');
 	let moduleDescription: string = $state('');
+	let moduleEmoji: string = $state('');
 	let moduleStatus: string = $state('draft');
 	let isSubmitting: boolean = $state(false);
 	let validationErrors: Record<string, string> = $state({});
@@ -20,6 +22,7 @@
 			moduleTitle = editingModule.title;
 			moduleDescription = editingModule.description || '';
 			moduleStatus = editingModule.status;
+			moduleEmoji = (editingModule as any).emoji || '';
 		}
 	});
 
@@ -38,6 +41,11 @@
 				if (trimmed.length < 10) return 'Description must be at least 10 characters';
 				if (trimmed.length > 500) return 'Description cannot exceed 500 characters';
 				break;
+
+            case 'moduleEmoji':
+                if (!trimmed) return '';
+                if (!isSingleEmoji(trimmed)) return 'Enter a single valid emoji';
+                break;
 		}
 		
 		return '';
@@ -62,9 +70,9 @@
 	async function handleSubmit() {
 		if (!editingModule) return;
 
-		// Validate all fields first
 		validateOnInput('moduleTitle', moduleTitle);
 		validateOnInput('moduleDescription', moduleDescription);
+		validateOnInput('moduleEmoji', moduleEmoji);
 
 		if (!isFormValid) return;
 
@@ -72,10 +80,11 @@
 		submitError = '';
 
 		try {
-			await client.mutation(api.module.updateModule, {
+            await client.mutation(api.module.updateModule, {
 				moduleId: editingModule._id,
 				classId: classId as Id<'class'>,
 				title: moduleTitle.trim(),
+                emoji: sanitizeEmoji(moduleEmoji) || undefined,
 				description: moduleDescription.trim(),
 				status: moduleStatus
 			});
@@ -119,9 +128,7 @@
 				<span>No module selected for editing.</span>
 			</div>
 		{:else}
-			<!-- Responsive form: description snaps to top on mobile -->
 			<div class="flex flex-col gap-6">
-				<!-- Description block (first on mobile, later in grid on md+) -->
 				<div class="md:hidden">
 					<label
 						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80"
@@ -138,7 +145,6 @@
 					></textarea>
 				</div>
 
-				<!-- Two-column label/field grid for md+; single column on mobile -->
 				<div class="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-[auto_1fr]">
 					<label
 						class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
@@ -223,6 +229,39 @@
 						bind:value={moduleDescription}
 						placeholder="Enter module description..."
 					></textarea>
+
+					<label
+						class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
+						for="module-emoji"
+					>
+						<Laugh size={18} class="text-primary/80" />
+						<span>Emoji</span>
+					</label>
+					<div class="md:contents">
+						<label
+							for="module-emoji"
+							class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+						>
+							<Laugh size={18} class="text-primary/80" />
+							<span>Emoji</span>
+						</label>
+						<div class="form-control w-full">
+							<input
+								id="module-emoji"
+								type="text"
+								placeholder="e.g., 📘"
+								class="input input-bordered w-28"
+								bind:value={moduleEmoji}
+								oninput={() => validateOnInput('moduleEmoji', moduleEmoji)}
+								maxlength="8"
+							/>
+							{#if validationErrors.moduleEmoji}
+								<div class="label">
+									<span class="label-text-alt text-error text-xs">{validationErrors.moduleEmoji}</span>
+								</div>
+							{/if}
+						</div>
+					</div>
 				</div>
 			</div>
 

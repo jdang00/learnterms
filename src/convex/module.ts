@@ -1,6 +1,15 @@
 import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
 
+function containsOnlyEmoji(input: string): boolean {
+  const allowedJoiners = new Set(['\u200d', '\ufe0f']);
+  for (const ch of Array.from(input)) {
+    if (allowedJoiners.has(ch)) continue;
+    if (!/\p{Extended_Pictographic}/u.test(ch)) return false;
+  }
+  return true;
+}
+
 export const getClassModules = query({
 	// Enter class ID
 	args: { id: v.id('class') },
@@ -118,6 +127,7 @@ export const updateModuleOrder = mutation({
 export const insertModule = mutation({
 	args: {
 		title: v.string(),
+    emoji: v.optional(v.string()),
 		description: v.string(),
 		status: v.string(),
 		classId: v.id('class'),
@@ -126,12 +136,11 @@ export const insertModule = mutation({
 		updatedAt: v.number()
 	},
 	handler: async (ctx, args) => {
-		// Trim whitespace from string fields
 		const trimmedTitle = args.title.trim();
+    const trimmedEmoji = args.emoji?.trim();
 		const trimmedDescription = args.description.trim();
 		const trimmedStatus = args.status.trim().toLowerCase();
 
-		// Validation: Check required fields
 		if (!trimmedTitle) {
 			throw new Error('Module title is required and cannot be empty');
 		}
@@ -139,7 +148,6 @@ export const insertModule = mutation({
 			throw new Error('Module description is required and cannot be empty');
 		}
 
-		// Validation: Length limits
 		if (trimmedTitle.length < 2) {
 			throw new Error('Module title must be at least 2 characters long');
 		}
@@ -153,13 +161,21 @@ export const insertModule = mutation({
 			throw new Error('Module description cannot exceed 500 characters');
 		}
 
-		// Validation: Status must be valid
+    if (trimmedEmoji != null && trimmedEmoji.length > 0) {
+      const emojiCharCount = Array.from(trimmedEmoji).length;
+      if (emojiCharCount > 8) {
+        throw new Error('Emoji must be at most 8 characters');
+      }
+      if (!containsOnlyEmoji(trimmedEmoji)) {
+        throw new Error('Please enter only emoji characters');
+      }
+    }
+
 		const validStatuses = ['draft', 'published', 'archived'];
 		if (!validStatuses.includes(trimmedStatus)) {
 			throw new Error('Module status must be draft, published, or archived');
 		}
 
-		// Validation: Check for duplicate titles within the same class
 		const existingModules = await ctx.db
 			.query('module')
 			.filter((q) => q.eq(q.field('classId'), args.classId))
@@ -172,10 +188,10 @@ export const insertModule = mutation({
 			throw new Error('A module with this title already exists in this class');
 		}
 
-		// Insert with trimmed values
 		const id = await ctx.db.insert('module', {
 			...args,
 			title: trimmedTitle,
+      emoji: trimmedEmoji,
 			description: trimmedDescription,
 			status: trimmedStatus
 		});
@@ -213,6 +229,7 @@ export const updateModule = mutation({
 		moduleId: v.id('module'),
 		classId: v.id('class'),
 		title: v.string(),
+    emoji: v.optional(v.string()),
 		description: v.string(),
 		status: v.string()
 	},
@@ -222,12 +239,11 @@ export const updateModule = mutation({
 			throw new Error('Module not found or access denied');
 		}
 
-		// Trim whitespace from string fields
 		const trimmedTitle = args.title.trim();
+    const trimmedEmoji = args.emoji?.trim();
 		const trimmedDescription = args.description.trim();
 		const trimmedStatus = args.status.trim().toLowerCase();
 
-		// Validation: Check required fields
 		if (!trimmedTitle) {
 			throw new Error('Module title is required and cannot be empty');
 		}
@@ -235,7 +251,6 @@ export const updateModule = mutation({
 			throw new Error('Module description is required and cannot be empty');
 		}
 
-		// Validation: Length limits
 		if (trimmedTitle.length < 2) {
 			throw new Error('Module title must be at least 2 characters long');
 		}
@@ -249,13 +264,21 @@ export const updateModule = mutation({
 			throw new Error('Module description cannot exceed 500 characters');
 		}
 
-		// Validation: Status must be valid
+    if (trimmedEmoji != null && trimmedEmoji.length > 0) {
+      const emojiCharCount = Array.from(trimmedEmoji).length;
+      if (emojiCharCount > 8) {
+        throw new Error('Emoji must be at most 8 characters');
+      }
+      if (!containsOnlyEmoji(trimmedEmoji)) {
+        throw new Error('Please enter only emoji characters');
+      }
+    }
+
 		const validStatuses = ['draft', 'published', 'archived'];
 		if (!validStatuses.includes(trimmedStatus)) {
 			throw new Error('Module status must be draft, published, or archived');
 		}
 
-		// Validation: Check for duplicate titles within the same class (excluding current module)
 		const existingModules = await ctx.db
 			.query('module')
 			.filter((q) => q.eq(q.field('classId'), args.classId))
@@ -272,6 +295,7 @@ export const updateModule = mutation({
 
 		await ctx.db.patch(args.moduleId, {
 			title: trimmedTitle,
+      emoji: trimmedEmoji,
 			description: trimmedDescription,
 			status: trimmedStatus,
 			updatedAt: Date.now()

@@ -32,7 +32,28 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			id: userId
 		});
 
-		return { moduleInfo, module, moduleId, convexID, classId: params.classId };
+    const questionIds = (module || []).map((q: { _id: Id<'question'> }) => q._id);
+
+    const [interactedQuestions, flaggedQuestions] = await Promise.all([
+      client.query(api.userProgress.getUserProgressForModule, {
+        userId: convexID?._id as Id<'users'>,
+        questionIds
+      }),
+      client.query(api.userProgress.getFlaggedQuestionsForModule, {
+        userId: convexID?._id as Id<'users'>,
+        questionIds
+      })
+    ]);
+
+    return {
+      moduleInfo,
+      module,
+      moduleId,
+      convexID,
+      classId: params.classId,
+      interactedQuestions,
+      flaggedQuestions
+    };
 	} catch (error) {
 		console.error('Failed to load module page data:', error);
 		throw error;

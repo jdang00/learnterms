@@ -4,7 +4,6 @@
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
 	import { api } from '../../convex/_generated/api.js';
-	import { useClerkContext } from 'svelte-clerk/client';
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
 	import {
@@ -195,7 +194,7 @@
 			</a>
 
 			<a
-				href="/admin/library"
+				href="/admin/question-studio"
 				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Question Studio"
 			>
@@ -355,28 +354,6 @@
 								</div>
 
 								<div class="flex items-center gap-2 sm:shrink-0">
-									<span
-										class="badge badge-xs rounded-full badge-soft font-mono text-xs"
-										title="Semester"
-									>
-										{classItem.semester?.name || 'No semester'}
-									</span>
-								</div>
-							</div>
-
-							<!-- Body: details + controls -->
-							<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-								<!-- Details -->
-								<div class="md:col-span-2 space-y-2">
-									<p class="text-sm text-base-content/70">
-										{classItem.description || 'No description available'}
-									</p>
-								</div>
-
-								<!-- Controls -->
-								<div
-									class="md:border-l md:border-base-200 md:pl-4 flex flex-col items-end gap-2 justify-end md:justify-start"
-								>
 									<div class="dropdown dropdown-end">
 										<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
 										<ul
@@ -409,6 +386,28 @@
 											</li>
 										</ul>
 									</div>
+								</div>
+							</div>
+
+							<!-- Body: details + controls -->
+							<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+								<!-- Details -->
+								<div class="md:col-span-2 space-y-2">
+									<p class="text-sm text-base-content/70">
+										{classItem.description || 'No description available'}
+									</p>
+								</div>
+
+								<!-- Controls -->
+								<div
+									class="md:border-l md:border-base-200 md:pl-4 flex flex-col items-end gap-2 justify-end md:justify-start"
+								>
+									<span
+										class="badge badge-xs rounded-full badge-soft font-mono text-xs"
+										title="Semester"
+									>
+										{classItem.semester?.name || 'No semester'}
+									</span>
 								</div>
 							</div>
 						</div>

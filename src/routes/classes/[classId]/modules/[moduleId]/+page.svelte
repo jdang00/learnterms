@@ -34,15 +34,12 @@
 			return;
 		}
 
-		// Use the current question's flag state
 		const isFlagged = qs.currentQuestionFlagged;
 
-		// Only save if user has actually interacted with the question or flagged it
 		const hasSelectedAnswers = qs.selectedAnswers.length > 0;
 		const hasEliminatedAnswers = qs.eliminatedAnswers.length > 0;
 
 		if (!hasSelectedAnswers && !hasEliminatedAnswers && !isFlagged) {
-			// No interactions and not flagged - check if we need to delete existing record
 			try {
 				const existingProgress = await client.query(api.userProgress.checkExistingRecord, {
 					userId: userId,
@@ -50,7 +47,6 @@
 				});
 
 				if (existingProgress) {
-					// Delete the record since there are no interactions and not flagged
 					await client.mutation(api.userProgress.deleteUserProgress, {
 						userId: userId,
 						questionId: currentQuestion._id
@@ -63,20 +59,17 @@
 		}
 
 		try {
-			// Check if there's existing progress to compare against
 			const existingProgress = await client.query(api.userProgress.checkExistingRecord, {
 				userId: userId,
 				questionId: currentQuestion._id
 			});
 
-			// Compare current state with saved state
 			const currentSelected = qs.selectedAnswers.sort();
 			const currentEliminated = qs.eliminatedAnswers.sort();
 			const savedSelected = (existingProgress?.selectedOptions || []).sort();
 			const savedEliminated = (existingProgress?.eliminatedOptions || []).sort();
 			const savedFlagged = existingProgress?.isFlagged || false;
 
-			// Check if arrays are equal (same length and same elements)
 			const selectedChanged =
 				currentSelected.length !== savedSelected.length ||
 				!currentSelected.every((val, index) => val === savedSelected[index]);
@@ -85,9 +78,8 @@
 				!currentEliminated.every((val, index) => val === savedEliminated[index]);
 			const flagChanged = isFlagged !== savedFlagged;
 
-			// Only update if there are actual changes
 			if (!selectedChanged && !eliminatedChanged && !flagChanged) {
-				return; // No changes, skip update
+				return;
 			}
 
 			await client.mutation(api.userProgress.saveUserProgress, {
@@ -115,19 +107,16 @@
 			});
 
 			if (savedProgress) {
-				// Restore saved progress
 				qs.selectedAnswers = savedProgress.selectedOptions || [];
 				qs.eliminatedAnswers = savedProgress.eliminatedOptions || [];
 				qs.setCurrentQuestionFlagged(savedProgress.isFlagged || false);
 			} else {
-				// Clear any existing state for new questions
 				qs.selectedAnswers = [];
 				qs.eliminatedAnswers = [];
 				qs.setCurrentQuestionFlagged(false);
 			}
 		} catch (error) {
 			console.error('Failed to load progress:', error);
-			// Fallback to empty state
 			qs.selectedAnswers = [];
 			qs.eliminatedAnswers = [];
 			qs.setCurrentQuestionFlagged(false);
@@ -146,7 +135,6 @@
 		{ initialData: data.moduleInfo }
 	);
 
-	// Get interacted questions from database
 	const interactedQuestions = useQuery(
 		api.userProgress.getUserProgressForModule,
 		{
@@ -154,11 +142,10 @@
 			questionIds: questions.data?.map((q) => q._id) || []
 		},
 		{
-			initialData: []
+			initialData: data.interactedQuestions || []
 		}
 	);
 
-	// Get flagged questions from database
 	const flaggedQuestions = useQuery(
 		api.userProgress.getFlaggedQuestionsForModule,
 		{
@@ -166,11 +153,10 @@
 			questionIds: questions.data?.map((q) => q._id) || []
 		},
 		{
-			initialData: []
+			initialData: data.flaggedQuestions || []
 		}
 	);
 
-	// Update live Convex data (source of truth)
 	$effect(() => {
 		if (interactedQuestions.data) {
 			qs.setInteractedQuestionsCount(interactedQuestions.data.length);
@@ -184,7 +170,6 @@
 		}
 	});
 
-	// Set the save progress function in QuizState
 	$effect(() => {
 		qs.setSaveProgressFunction(saveProgress);
 		qs.setLoadProgressFunction(loadProgress);
@@ -193,7 +178,6 @@
 	$effect(() => {
 		if (questions.data && questions.data.length > 0) {
 			qs.setQuestions(questions.data);
-			// Load progress for the first question when questions are loaded
 			const currentQuestion = qs.getCurrentQuestion();
 			if (currentQuestion && userId) {
 				loadProgress(currentQuestion._id);
@@ -211,11 +195,9 @@
 		const index = currentQuestions.findIndex((q) => q._id === question._id);
 		if (index !== -1) {
 			qs.scheduleSave();
-			// Update the index and clear state for the new question
 			qs.currentQuestionIndex = index;
 			qs.checkResult = '';
 			qs.showSolution = false;
-			// Load progress for the selected question
 			if (userId) {
 				void loadProgress(question._id);
 			}
@@ -223,17 +205,24 @@
 	}
 
 	async function handleFilterToggle(filterType: 'flagged' | 'incomplete') {
-		// Save current progress before changing filter
 		await saveProgress();
 
-		// Toggle the appropriate filter
 		if (filterType === 'flagged') {
+			const prev = qs.getCurrentFilteredQuestion() || qs.getCurrentQuestion();
 			qs.toggleSortByFlagged();
+			const nowFlagged = qs.showFlagged;
+			if (nowFlagged && qs.liveFlaggedQuestions.length === 0) {
+				qs.noFlags = true;
+				qs.showFlagged = false;
+				if (prev) {
+					const idx = qs.getFilteredQuestions().findIndex((q) => q._id === prev._id);
+					if (idx !== -1) qs.currentQuestionIndex = idx;
+				}
+			}
 		} else {
 			qs.toggleShowIncomplete();
 		}
 
-		// Load progress for the first question in the filtered set
 		const firstFilteredQuestion = qs.getCurrentFilteredQuestion();
 		if (firstFilteredQuestion && userId) {
 			await loadProgress(firstFilteredQuestion._id);
@@ -252,12 +241,12 @@
 			case 'ArrowRight':
 				event.preventDefault();
 				await qs.goToNextQuestion();
-					qs.scheduleSave();
+				qs.scheduleSave();
 				break;
 			case 'ArrowLeft':
 				event.preventDefault();
 				await qs.goToPreviousQuestion();
-					qs.scheduleSave();
+				qs.scheduleSave();
 				break;
 			case 'Tab':
 				event.preventDefault();
@@ -268,14 +257,14 @@
 				if (currentlySelected) {
 					qs.checkAnswer(currentlySelected.correctAnswers, qs.selectedAnswers);
 				}
-					qs.scheduleSave();
+				qs.scheduleSave();
 				break;
 			case 'Escape':
 				event.preventDefault();
 				qs.selectedAnswers = [];
 				qs.eliminatedAnswers = [];
 				qs.checkResult = '';
-					qs.scheduleSave();
+				qs.scheduleSave();
 				break;
 			case 'f':
 			case 'F':
@@ -297,7 +286,6 @@
 		return () => document.removeEventListener('keydown', handleKeydown);
 	});
 
-	// Handle no flags logic
 	$effect(() => {
 		if (qs.showFlagged && qs.liveFlaggedQuestions.length === 0) {
 			qs.noFlags = true;
@@ -305,14 +293,13 @@
 		}
 	});
 
-	// Scroll to the currently selected question whenever it changes
 	$effect(() => {
 		void qs.currentQuestionIndex;
 		tick().then(() => {
 			const filteredQuestions = qs.getFilteredQuestions();
 			const currentQuestion = qs.getCurrentFilteredQuestion();
 			if (currentQuestion && filteredQuestions.length > 0) {
-				const index = filteredQuestions.findIndex(q => q._id === currentQuestion._id);
+				const index = filteredQuestions.findIndex((q) => q._id === currentQuestion._id);
 				if (index > -1 && qs.questionButtons && qs.questionButtons[index]) {
 					qs.questionButtons[index].scrollIntoView({
 						behavior: 'smooth',
@@ -324,7 +311,6 @@
 		});
 	});
 
-	// Auto-dismiss no flags alert after 3 seconds
 	$effect(() => {
 		if (qs.noFlags) {
 			const timer = setTimeout(() => {
@@ -341,33 +327,30 @@
 {:else if questions.error}
 	<p>Error: {questions.error.message}</p>
 {:else if currentlySelected}
-    <div class="flex flex-col md:flex-col lg:flex-row min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] p-2 md:p-3 lg:p-4 gap-4 lg:gap-8">
-		<QuizSideBar {qs} {module} {currentlySelected} {userId} moduleId={data.moduleId} {client} classId={data.classId} />
+	<div
+		class="flex flex-col md:flex-col lg:flex-row min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] p-2 md:p-3 lg:p-4 gap-4 lg:gap-8"
+	>
+		<QuizSideBar
+			{qs}
+			{module}
+			{currentlySelected}
+			{userId}
+			moduleId={data.moduleId}
+			{client}
+			classId={data.classId}
+		/>
 		<MobileInfo {module} classId={data.classId} />
 
 		<div
 			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 pb-36 lg:pb-48"
 		>
-			<!-- Single shared banner instance for mobile/desktop -->
 			<ResultBanner bind:qs />
 			{#if qs.noFlags}
 				<div
 					role="alert"
 					class="alert alert-warning fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-11/12 sm:w-max max-w-xs sm:max-w-sm md:max-w-md p-4 text-center"
 				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-6 w-6 shrink-0 stroke-current inline-block align-middle mr-2"
-						fill="none"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-						/>
-					</svg>
+					<Flag size="16" />
 					<span class="align-middle">No Questions Flagged.</span>
 					<button
 						class="btn btn-sm btn-ghost btn-warning"
@@ -378,7 +361,6 @@
 				</div>
 			{/if}
 
-
 			<QuizNavigation
 				questions={{ data: qs.getFilteredQuestions() }}
 				{handleSelect}
@@ -388,7 +370,7 @@
 				{qs}
 			/>
 
-				<div class="text-md sm:text-lg lg:text-xl p-4">
+			<div class="text-md sm:text-lg lg:text-xl p-4">
 				<div class="flex flex-row justify-between mb-4">
 					<div class="flex flex-row flex-wrap items-end">
 						<h4 class="text-lg font-semibold">{currentlySelected.stem}</h4>
@@ -422,7 +404,6 @@
 				</div>
 				<AnswerOptions bind:qs {currentlySelected} />
 				<ActionButtons {qs} {currentlySelected} />
-				
 			</div>
 		</div>
 		<MobileMenu bind:qs {currentlySelected} />

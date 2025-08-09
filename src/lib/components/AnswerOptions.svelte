@@ -14,8 +14,8 @@
 
 </script>
 
-<div class="flex flex-col justify-start {compact ? 'space-y-3' : 'space-y-2 md:space-y-3 lg:space-y-4'}">
-	{#each currentlySelected.options as option (option.id)}
+    <div class="flex flex-col justify-start {compact ? 'space-y-3' : 'space-y-2 md:space-y-3 lg:space-y-4'}">
+		{#each qs.getOrderedOptions(currentlySelected) as option, i (option.id)}
         <label
             class="label cursor-pointer rounded-full flex items-center border-base-300 bg-base-200 transition-colors
             {compact ? 'border p-1.5 md:p-2' : 'border-2 p-2 md:p-3'}
@@ -32,10 +32,10 @@
 				disabled={qs.isOptionEliminated(option.id) || qs.showSolution}
 			/>
             <span
-                class="flex-grow text-wrap break-words {compact ? 'ml-2 md:ml-3 my-2 md:my-3 text-xs md:text-sm' : 'ml-3 md:ml-4 my-3 text-sm md:text-base'}
-                {qs.isOptionEliminated(option.id) ? 'line-through opacity-50' : ''}"
+                class="flex-grow text-wrap break-words {compact ? 'ml-2 md:ml-3 my-2 md:my-3 text-xs md:text-sm' : 'ml-3 md:ml-4 my-3 text-sm md:text-base'}"
             >
-				{option.text}
+                <span class="font-semibold mr-2 select-none">{String.fromCharCode(65 + i)}.</span>
+                <span class="{qs.isOptionEliminated(option.id) ? 'line-through opacity-50' : ''}">{option.text}</span>
 			</span>
 
             <div class="flex items-center justify-center {compact ? 'w-10 md:w-12 mr-1 md:mr-2' : 'w-12 md:w-16 mr-2 md:mr-4'}">

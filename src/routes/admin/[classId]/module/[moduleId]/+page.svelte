@@ -196,8 +196,11 @@
 					</div>
 				</div>
 			{:else}
-				<div>
-					<h1 class="text-2xl font-bold text-base-content">{moduleInfo.data.title}</h1>
+                <div>
+                    <h1 class="text-2xl font-bold text-base-content flex items-center gap-3">
+                        <span class="text-3xl">{moduleInfo.data?.emoji || '📘'}</span>
+                        <span>{moduleInfo.data.title}</span>
+                    </h1>
 					<p class="text-base-content/70">
 						Manage questions for {moduleInfo.data.title}. Drag and drop to reorder them.
 					</p>
