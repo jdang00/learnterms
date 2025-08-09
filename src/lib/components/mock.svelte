@@ -47,7 +47,8 @@
         },
         isOptionSelected: (id: string) => qs.selectedAnswers.includes(id),
         isOptionEliminated: (id: string) => qs.eliminatedAnswers.includes(id),
-        isCorrect: (id: string) => question.correctAnswers.includes(id)
+        isCorrect: (id: string) => question.correctAnswers.includes(id),
+        getOrderedOptions: (q: Question) => q.options
     });
 
     function handleCheck() {
