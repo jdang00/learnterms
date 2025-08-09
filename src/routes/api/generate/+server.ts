@@ -25,6 +25,24 @@ export const POST: RequestHandler = async ({ request }) => {
             );
         }
 
+        // Validate model and numQuestions
+        const ALLOWED_MODELS = new Set(['gemini-2.5-pro', 'gemini-2.5-flash-lite']);
+        if (!ALLOWED_MODELS.has(model)) {
+            return json(
+                { error: `Invalid 'model'. Allowed: ${Array.from(ALLOWED_MODELS).join(', ')}` },
+                { status: 400 }
+            );
+        }
+
+        const n = Number(numQuestions);
+        const nInt = Math.floor(n);
+        if (!Number.isFinite(n) || nInt !== n || nInt < 1 || nInt > 50) {
+            return json(
+                { error: "Invalid 'numQuestions'. Provide an integer between 1 and 50." },
+                { status: 400 }
+            );
+        }
+
         if (!PUBLIC_CONVEX_URL) {
             return json({ error: 'Convex URL not configured' }, { status: 500 });
         }
@@ -33,7 +51,7 @@ export const POST: RequestHandler = async ({ request }) => {
         const { questions, count } = await client.action(api.question.generateQuestions, {
             material,
             model,
-            numQuestions
+            numQuestions: nInt
         });
 
         return json({ success: true, questions, count });

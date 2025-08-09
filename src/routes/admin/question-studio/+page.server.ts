@@ -1,6 +1,5 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { clerkClient } from 'svelte-clerk/server';
 import { ConvexHttpClient } from 'convex/browser';
 import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import { api } from '../../../convex/_generated/api';
@@ -18,8 +17,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		return redirect(307, '/sign-in');
 	}
 	try {
-		const user = await clerkClient.users.getUser(userId);
-		const userData = await client.query(api.users.getUserById, { id: user.id });
+    const userData = await client.query(api.users.getUserById, { id: userId });
 		let cohortLib;
 		if (userData?.cohortId) {
 			cohortLib = await client.query(api.contentLib.getContentLibByCohort, {

@@ -379,8 +379,10 @@ export class QuizState {
     }
     let order = this.optionOrderByQuestionId[question._id];
     if (!order || order.length === 0) {
-      order = originalOptions.map((o: QuestionOption) => o.id);
-      this.optionOrderByQuestionId[question._id] = order;
+      const ids = originalOptions.map((o: QuestionOption) => o.id);
+      const shuffled = this.generateShuffledIds(ids);
+      this.optionOrderByQuestionId[question._id] = shuffled;
+      order = shuffled;
     }
     const idToOption: Record<string, QuestionOption> = {};
     for (const option of originalOptions) {

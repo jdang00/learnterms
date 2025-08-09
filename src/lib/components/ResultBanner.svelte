@@ -7,17 +7,40 @@
 
   let visible = $state(false);
   let timer: number | null = null;
+  let rafId: number | null = null;
 
   $effect(() => {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+    }
+
     const result = qs?.checkResult;
-    if (!result || result.trim() === '') return;
-    if (timer) clearTimeout(timer);
-    // Reset visibility before showing again to ensure retrigger on same text
+    if (!result || result.trim() === '') {
+      visible = false;
+      return () => {};
+    }
+
     visible = false;
-    requestAnimationFrame(() => {
+    rafId = requestAnimationFrame(() => {
       visible = true;
       timer = window.setTimeout(() => (visible = false), durationMs);
     });
+
+    return () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      if (timer !== null) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
   });
 </script>
 

@@ -54,12 +54,13 @@
 	}
 
 	function removeOne(i: number) {
-		generated = generated.filter((_, idx) => idx !== i).map((q, idx) => ({ ...q, order: idx }));
-		const s = new Set<number>();
-		generated.forEach((_, idx) => {
-			if (selected.has(idx)) s.add(idx);
-		});
-		selected = s;
+    generated = generated.filter((_, idx) => idx !== i).map((q, idx) => ({ ...q, order: idx }));
+    const remapped = new Set<number>();
+    selected.forEach((idx) => {
+        if (idx === i) return;
+        remapped.add(idx > i ? idx - 1 : idx);
+    });
+    selected = remapped;
 	}
 
 	async function generate() {

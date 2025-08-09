@@ -135,27 +135,33 @@
 		{ initialData: data.moduleInfo }
 	);
 
-	const interactedQuestions = useQuery(
-		api.userProgress.getUserProgressForModule,
-		{
-			userId: userId!,
-			questionIds: questions.data?.map((q) => q._id) || []
-		},
-		{
-			initialData: data.interactedQuestions || []
-		}
-	);
+    const interactedQuestions: { data: any; isLoading: boolean; error: any } =
+        userId && questions.data
+            ? useQuery(
+                  api.userProgress.getUserProgressForModule,
+                  {
+                      userId: userId,
+                      questionIds: questions.data.map((q) => q._id)
+                  },
+                  {
+                      initialData: data.interactedQuestions || []
+                  }
+              )
+            : { data: data.interactedQuestions || [], isLoading: false, error: null };
 
-	const flaggedQuestions = useQuery(
-		api.userProgress.getFlaggedQuestionsForModule,
-		{
-			userId: userId!,
-			questionIds: questions.data?.map((q) => q._id) || []
-		},
-		{
-			initialData: data.flaggedQuestions || []
-		}
-	);
+    const flaggedQuestions: { data: any; isLoading: boolean; error: any } =
+        userId && questions.data
+            ? useQuery(
+                  api.userProgress.getFlaggedQuestionsForModule,
+                  {
+                      userId: userId,
+                      questionIds: questions.data.map((q) => q._id)
+                  },
+                  {
+                      initialData: data.flaggedQuestions || []
+                  }
+              )
+            : { data: data.flaggedQuestions || [], isLoading: false, error: null };
 
 	$effect(() => {
 		if (interactedQuestions.data) {

@@ -129,20 +129,23 @@
     async function handleSubmit() {
 		if (!questionStem || !moduleId) return;
 
-        const filledOptions = options.filter((opt) => opt.text.trim());
-        if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
             // Build encoded options from fitbAnswers
             const sanitized = fitbAnswers.filter((r) => r.value.trim());
             if (sanitized.length < 1) return;
             const encoded = sanitized.map((row) => ({ text: encodeFitbAnswer(row) }));
             options = encoded;
             correctAnswers = encoded.map((_, i) => i.toString());
-        } else if (questionType === QUESTION_TYPES.TRUE_FALSE) {
-            if (filledOptions.length !== 2) return;
-            if (correctAnswers.length !== 1) return;
-        } else {
-            if (filledOptions.length < 2) return;
-        }
+		}
+
+		const filledOptions = options.filter((opt) => opt.text.trim());
+
+		if (questionType === QUESTION_TYPES.TRUE_FALSE) {
+			if (filledOptions.length !== 2) return;
+			if (correctAnswers.length !== 1) return;
+		} else if (questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
+			if (filledOptions.length < 2) return;
+		}
 
 		isSubmitting = true;
 
