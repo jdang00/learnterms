@@ -20,33 +20,49 @@
 		theme.init();
 	});
 	const year = new Date().getFullYear();
+
+	const defaultSeo = {
+		title: 'LearnTerms',
+		description: 'Smarter Studying, Simplified. Adaptive learning powered by AI.',
+		image:
+			'https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w',
+		siteName: 'LearnTerms'
+	};
+
+    type Seo = { title: string; description: string; image: string; canonical: string; fullUrl: string };
+    let seo: Seo = $derived({
+		title: $page.data?.seo?.title ?? defaultSeo.title,
+		description: $page.data?.seo?.description ?? defaultSeo.description,
+		image: $page.data?.seo?.image ?? defaultSeo.image,
+        fullUrl:
+            ($page.url?.origin || 'https://learnterms.com') +
+            ($page.url?.pathname || '/') +
+            ($page.url?.search || ''),
+        canonical:
+            ($page.url?.origin || 'https://learnterms.com') +
+            ($page.url?.pathname || '/')
+	} as Seo);
 </script>
 
 <svelte:head>
-	<title>LearnTerms</title>
-	<meta
-		name="description"
-		content="Smarter Studying, Simplified. Adaptive learning powered by AI."
-	/>
+	<title>{seo.title}</title>
+	<meta name="description" content={seo.description} />
+	<link rel="canonical" href={seo.canonical} />
+	<meta name="robots" content="index,follow" />
 
-	<meta property="og:url" content="https://learnterms.com" />
+    <meta property="og:url" content={seo.fullUrl} />
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="LearnTerms" />
-	<meta property="og:description" content="Smarter Studying, Simplified." />
-	<meta
-		property="og:image"
-		content="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w"
-	/>
+	<meta property="og:site_name" content={defaultSeo.siteName} />
+	<meta property="og:title" content={seo.title} />
+	<meta property="og:description" content={seo.description} />
+	<meta property="og:image" content={seo.image} />
 
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta property="twitter:domain" content="learnterms.com" />
-	<meta property="twitter:url" content="https://learnterms.com" />
-	<meta name="twitter:title" content="LearnTerms" />
-	<meta name="twitter:description" content="Learn terms the fast and easy way. Free forever." />
-	<meta
-		name="twitter:image"
-		content="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w"
-	/>
+    <meta property="twitter:url" content={seo.fullUrl} />
+	<meta name="twitter:title" content={seo.title} />
+	<meta name="twitter:description" content={seo.description} />
+	<meta name="twitter:image" content={seo.image} />
 </svelte:head>
 
 <ClerkProvider
@@ -85,7 +101,7 @@
 				<nav aria-label="Development" class="flex flex-col space-y-1">
 					<h6 class="footer-title">Development</h6>
 					<a class="link link-hover" href="https://github.com/jdang00/learnterms" target="_blank" rel="noopener noreferrer">GitHub</a>
-					<a class="link link-hover" href="/about">About</a>
+					<a class="link link-hover" href="/about-us">About Us</a>
 					<a class="link link-hover" href="/contact">Contact</a>
 				</nav>
 			</div>

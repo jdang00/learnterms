@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Check, Trash2 } from 'lucide-svelte';
+	import { Check, Trash2 } from 'lucide-svelte';
 	export interface Props {
 		material?: string;
 		wordCount?: number;
@@ -54,19 +54,19 @@
 	}
 
 	function removeOne(i: number) {
-    generated = generated.filter((_, idx) => idx !== i).map((q, idx) => ({ ...q, order: idx }));
-    const remapped = new Set<number>();
-    selected.forEach((idx) => {
-        if (idx === i) return;
-        remapped.add(idx > i ? idx - 1 : idx);
-    });
-    selected = remapped;
+		generated = generated.filter((_, idx) => idx !== i).map((q, idx) => ({ ...q, order: idx }));
+		const remapped = new Set<number>();
+		selected.forEach((idx) => {
+			if (idx === i) return;
+			remapped.add(idx > i ? idx - 1 : idx);
+		});
+		selected = remapped;
 	}
 
 	async function generate() {
 		if (!canGenerate || !material.trim()) return;
 		isGenerating = true;
-    try {
+		try {
 			const res = await fetch('/api/generate', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -156,8 +156,8 @@
 							class="select select-bordered select-sm w-36"
 							bind:value={model}
 						>
-						<option value="gemini-2.5-pro">gemini-2.5-pro</option>
-						<option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+							<option value="gemini-2.5-pro">gemini-2.5-pro</option>
+							<option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
 						</select>
 					</div>
 					<div class="form-control w-28 shrink-0">
@@ -195,25 +195,44 @@
 			<div class="flex items-center justify-between mb-3">
 				<div class="text-sm text-base-content/70">Generated: {generated.length}</div>
 				<div class="flex items-center gap-2">
-					<button class="btn btn-ghost btn-xs" onclick={() => toggleSelectAll(true)}>Select all</button>
-					<button class="btn btn-ghost btn-xs" onclick={() => toggleSelectAll(false)}>Clear all</button>
+					<button class="btn btn-ghost btn-xs" onclick={() => toggleSelectAll(true)}
+						>Select all</button
+					>
+					<button class="btn btn-ghost btn-xs" onclick={() => toggleSelectAll(false)}
+						>Clear all</button
+					>
 				</div>
 			</div>
-            <div class="grid grid-cols-1 gap-3 max-h-[50vh] overflow-auto pr-1">
-				{#each generated as q, i}
-                    <div class={`border rounded-lg p-3 ${selected.has(i) ? 'border-primary' : 'border-base-300'} bg-base-100`}>
+			<div class="grid grid-cols-1 gap-3 max-h-[50vh] overflow-auto pr-1">
+				{#each generated as q, i (i)}
+					<div
+						class={`border rounded-lg p-3 ${selected.has(i) ? 'border-primary' : 'border-base-300'} bg-base-100`}
+					>
 						<div class="flex items-start justify-between gap-3">
 							<label class="label cursor-pointer gap-2">
-								<input type="checkbox" class="checkbox checkbox-sm" checked={selected.has(i)} onchange={() => toggleOne(i)} />
-                                <span class="label-text text-sm break-words whitespace-pre-wrap max-w-full">{q.stem}</span>
+								<input
+									type="checkbox"
+									class="checkbox checkbox-sm"
+									checked={selected.has(i)}
+									onchange={() => toggleOne(i)}
+								/>
+								<span class="label-text text-sm break-words whitespace-pre-wrap max-w-full"
+									>{q.stem}</span
+								>
 							</label>
-							<button class="btn btn-ghost btn-xs" title="Remove" onclick={() => removeOne(i)}><Trash2 size={14} /></button>
+							<button class="btn btn-ghost btn-xs" title="Remove" onclick={() => removeOne(i)}
+								><Trash2 size={14} /></button
+							>
 						</div>
-                        <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-							{#each q.options as opt, oi}
-                                <div class="flex items-start gap-2 p-2 rounded-md border border-base-200 break-words">
-									<div class="font-mono text-xs w-6 text-center">{String.fromCharCode('A'.charCodeAt(0) + oi)}</div>
-                                    <div class="flex-1 text-sm break-words whitespace-pre-wrap">{opt.text}</div>
+						<div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+							{#each q.options as opt, oi (oi)}
+								<div
+									class="flex items-start gap-2 p-2 rounded-md border border-base-200 break-words"
+								>
+									<div class="font-mono text-xs w-6 text-center">
+										{String.fromCharCode('A'.charCodeAt(0) + oi)}
+									</div>
+									<div class="flex-1 text-sm break-words whitespace-pre-wrap">{opt.text}</div>
 									{#if q.correctAnswers.includes(String(oi))}
 										<div class="text-success" title="Correct"><Check size={16} /></div>
 									{/if}
@@ -222,7 +241,7 @@
 						</div>
 						<div class="mt-2 text-sm text-base-content/70">
 							<span class="font-medium">Explanation:</span>
-                            <span class="ms-1 break-words whitespace-pre-wrap">{q.explanation}</span>
+							<span class="ms-1 break-words whitespace-pre-wrap">{q.explanation}</span>
 						</div>
 					</div>
 				{/each}
@@ -230,49 +249,70 @@
 		{/if}
 	</div>
 
-    <div class="p-4 border-t border-base-300 flex items-center justify-between gap-3">
-        <div class="w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <div class="flex-1 text-xs text-base-content/70">
-                {#if charCount === 0}
-                    Add content to enable generation.
-                {:else if !canGenerate}
-                    Select a class and module to enable generation.
-                {:else}
-                    {qualityTip}
-                {/if}
-            </div>
-            {#if generated.length === 0}
-                <div class="flex items-center gap-2 sm:ml-auto">
-                    <button class="btn btn-primary" disabled={isDisabled} onclick={generate}>
-                        {#if isGenerating}
-                            <span class="loading loading-spinner loading-sm"></span>
-                            Generating...
-                        {:else}
-                            Generate Questions
-                        {/if}
-                    </button>
-                </div>
-            {:else}
-                <div class="flex items-center gap-2 sm:ml-auto">
-                    <button class="btn btn-ghost" onclick={() => { generated = []; selected = new Set(); }}>Discard</button>
-                    <button class="btn btn-outline" disabled={isGenerating} onclick={generate}>
-                        {#if isGenerating}
-                            <span class="loading loading-spinner loading-sm"></span>
-                            Regenerating...
-                        {:else}
-                            Regenerate
-                        {/if}
-                    </button>
-                    <button class="btn btn-primary" disabled={isAdding || selected.size === 0} onclick={async () => { if (!onAddSelected) return; isAdding = true; try { const picked = generated.filter((_, i) => selected.has(i)); await onAddSelected({ questions: picked }); generated = []; selected = new Set(); } finally { isAdding = false; } }}>
-                        {#if isAdding}
-                            <span class="loading loading-spinner loading-sm"></span>
-                            Adding...
-                        {:else}
-                            Add Selected
-                        {/if}
-                    </button>
-                </div>
-            {/if}
-        </div>
+	<div class="p-4 border-t border-base-300 flex items-center justify-between gap-3">
+		<div class="w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+			<div class="flex-1 text-xs text-base-content/70">
+				{#if charCount === 0}
+					Add content to enable generation.
+				{:else if !canGenerate}
+					Select a class and module to enable generation.
+				{:else}
+					{qualityTip}
+				{/if}
+			</div>
+			{#if generated.length === 0}
+				<div class="flex items-center gap-2 sm:ml-auto">
+					<button class="btn btn-primary" disabled={isDisabled} onclick={generate}>
+						{#if isGenerating}
+							<span class="loading loading-spinner loading-sm"></span>
+							Generating...
+						{:else}
+							Generate Questions
+						{/if}
+					</button>
+				</div>
+			{:else}
+				<div class="flex items-center gap-2 sm:ml-auto">
+					<button
+						class="btn btn-ghost"
+						onclick={() => {
+							generated = [];
+							selected = new Set();
+						}}>Discard</button
+					>
+					<button class="btn btn-outline" disabled={isGenerating} onclick={generate}>
+						{#if isGenerating}
+							<span class="loading loading-spinner loading-sm"></span>
+							Regenerating...
+						{:else}
+							Regenerate
+						{/if}
+					</button>
+					<button
+						class="btn btn-primary"
+						disabled={isAdding || selected.size === 0}
+						onclick={async () => {
+							if (!onAddSelected) return;
+							isAdding = true;
+							try {
+								const picked = generated.filter((_, i) => selected.has(i));
+								await onAddSelected({ questions: picked });
+								generated = [];
+								selected = new Set();
+							} finally {
+								isAdding = false;
+							}
+						}}
+					>
+						{#if isAdding}
+							<span class="loading loading-spinner loading-sm"></span>
+							Adding...
+						{:else}
+							Add Selected
+						{/if}
+					</button>
+				</div>
+			{/if}
+		</div>
 	</div>
 </div>
