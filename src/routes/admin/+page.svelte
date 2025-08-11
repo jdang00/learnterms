@@ -14,7 +14,7 @@
 		NotebookPen,
 		Sparkles,
 		ChartColumnIncreasing,
-		ArrowDownNarrowWide
+		ChevronDownIcon
 	} from 'lucide-svelte';
 	import EditClassModal from '$lib/admin/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
@@ -166,22 +166,23 @@
 	}
 </script>
 
-<div class="min-h-screen p-8 max-w-7xl mx-auto">
-	<div class="mb-8 flex flex-col gap-2">
+<div class="min-h-screen p-8 mb-24 max-w-7xl mx-auto">
+	<div class=" flex flex-col gap-2">
 		<div class="flex flex-row justify-between items-center">
 			<div>
 				<h1 class="text-4xl font-bold text-base-content">Admin Dashboard</h1>
+				<p class="text-base-content/70">{userData?.schoolName} - {userData?.cohortName}</p>
 			</div>
 		</div>
 
-		<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12" role="list">
+		<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8" role="list">
 			<a
 				href="/admin/library"
 				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Content Library"
 			>
-				<div class="rounded-md bg-base-200/70 border border-base-300 p-2">
-					<NotebookPen size={20} class="text-base-content" aria-hidden="true" />
+				<div class="rounded-md border bg-primary-content border-base-300 p-2">
+					<NotebookPen size={20} class="text-primary" aria-hidden="true" />
 				</div>
 				<div class="flex-1 min-w-0">
 					<h3 class="text-base font-semibold text-base-content group-hover:text-primary">
@@ -198,8 +199,8 @@
 				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Question Studio"
 			>
-				<div class="rounded-md bg-base-200/70 border border-base-300 p-2">
-					<Sparkles size={20} class="text-base-content" aria-hidden="true" />
+				<div class="rounded-md bg-primary-content border border-base-300 p-2">
+					<Sparkles size={20} class="text-primary" aria-hidden="true" />
 				</div>
 				<div class="flex-1 min-w-0">
 					<h3 class="text-base font-semibold text-base-content group-hover:text-primary">
@@ -216,8 +217,8 @@
 				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Class Progress"
 			>
-				<div class="rounded-md bg-base-200/70 border border-base-300 p-2">
-					<ChartColumnIncreasing size={20} class="text-base-content" aria-hidden="true" />
+				<div class="rounded-md bg-primary-content border border-base-300 p-2">
+					<ChartColumnIncreasing size={20} class="text-primary" aria-hidden="true" />
 				</div>
 				<div class="flex-1 min-w-0">
 					<h3 class="text-base font-semibold text-base-content group-hover:text-primary">
@@ -230,6 +231,17 @@
 			</a>
 		</div>
 
+		<div class="flex flex-row justify-between mt-12">
+			<div>
+				<h1 class="font-semibold text-2xl">My Classes</h1>
+				<p class="text-sm text-base-content/70">Drag and drop to reorder classes</p>
+			</div>
+			<button class="btn btn-primary gap-2" onclick={openAddModal}>
+				<Plus size={16} />
+				<span>Add New Class</span>
+			</button>
+		</div>
+
 		{#if semesters.isLoading}
 			<div class="mb-4 flex items-center gap-3 text-base-content/70">
 				<span class="loading loading-spinner loading-md"></span>
@@ -240,21 +252,17 @@
 				<span>Failed to load: {semesters.error.toString()}</span>
 			</div>
 		{:else}
-			<div class="flex items-center gap-2 mt-12 justify-between">
+			<div class="flex items-center mt-4 mb-4 justify-between">
 				<div>
-					<h1 class="font-semibold text-2xl">My Classes</h1>
-					<p class="text-sm text-base-content/70">Drag and drop to reorder classes</p>
-				</div>
-
-				<div>
-					<button class="btn btn-soft" popovertarget="popover-1" style="anchor-name: --anchor-1">
-						<ArrowDownNarrowWide size={16} />
+					<button
+						class="btn btn-outline btn-sm"
+						popovertarget="popover-1"
+						style="anchor-name: --anchor-1"
+					>
 						{currentSemester}
+						<ChevronDownIcon size={16} />
 					</button>
-					<button class="btn btn-primary gap-2" onclick={openAddModal}>
-						<Plus size={16} />
-						<span>Add New Class</span>
-					</button>
+
 					<ul
 						class="dropdown menu w-48 rounded-lg bg-base-100 shadow-sm border border-base-300"
 						popover
@@ -267,7 +275,7 @@
 									onclick={() => (currentSemester = semester.name)}
 									class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150"
 								>
-									<CalendarDays size={16} class="text-primary/70" />
+									<CalendarDays size={16} />
 									<span>{semester.name}</span>
 								</button>
 							</li>
@@ -296,7 +304,7 @@
 		</div>
 	{:else}
 		<div class="mx-auto max-w-8xl justify-center">
-			<div class="rounded-xl bg-base-100 p-4 shadow-sm border border-base-300">
+			<div class="rounded-xl bg-base-200 p-4 shadow-md border border-base-300">
 				<div class="space-y-3">
 					{#each filteredClassList as classItem, index (classItem._id)}
 						<div
@@ -343,10 +351,16 @@
 
 											<div class="mt-1 flex flex-wrap items-center gap-2 sm:mt-0">
 												<span
-													class="text-xs text-base-content/60 font-mono px-2 py-0.5 rounded bg-base-200"
+													class=" badge-secondary rounded-full font-mono badge badge-soft badge-sm"
 													title={classItem.code}
 												>
 													{classItem.code}
+												</span>
+												<span
+													class="badge rounded-full badge-soft font-mono badge-sm"
+													title="Semester"
+												>
+													{classItem.semester?.name || 'No semester'}
 												</span>
 											</div>
 										</div>
@@ -396,18 +410,6 @@
 									<p class="text-sm text-base-content/70">
 										{classItem.description || 'No description available'}
 									</p>
-								</div>
-
-								<!-- Controls -->
-								<div
-									class="md:border-l md:border-base-200 md:pl-4 flex flex-col items-end gap-2 justify-end md:justify-start"
-								>
-									<span
-										class="badge badge-xs rounded-full badge-soft font-mono text-xs"
-										title="Semester"
-									>
-										{classItem.semester?.name || 'No semester'}
-									</span>
 								</div>
 							</div>
 						</div>

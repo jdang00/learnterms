@@ -69,7 +69,6 @@
 				questionId: questionToDelete._id as Id<'question'>,
 				moduleId: moduleId as Id<'module'>
 			});
-			console.log('Question deleted successfully');
 		} catch (error) {
 			console.error('Failed to delete question', error);
 		} finally {

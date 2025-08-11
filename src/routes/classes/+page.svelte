@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { useQuery, useConvexClient } from 'convex-svelte';
+	import { useQuery } from 'convex-svelte';
 	import type { PageData } from './$types';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
@@ -103,7 +103,7 @@
 	}
 </script>
 
-<main class="min-h-screen p-8">
+<main class="min-h-screen p-8 mb-56">
 	<div class="mb-8 flex flex-col gap-2">
 		{#if user === undefined}
 			<div class="skeleton h-8 w-64 mb-2"></div>

@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { action, internalQuery, mutation, query } from './_generated/server';
+import { action, internalQuery, mutation } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Doc } from './_generated/dataModel';
 
@@ -68,14 +68,6 @@ export const createCohort = mutation({
 	handler: async (ctx, args) => {
 		const id = await ctx.db.insert('cohort', args);
 		return id;
-	}
-});
-
-export const getAllCohorts = query({
-	args: {},
-	handler: async (ctx) => {
-		const cohorts = await ctx.db.query('cohort').collect();
-		return cohorts;
 	}
 });
 

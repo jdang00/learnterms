@@ -82,14 +82,6 @@ export const getAdminModulesWithQuestionCounts = query({
 	}
 });
 
-export const getAllModules = query({
-	args: {},
-	handler: async (ctx) => {
-		const modules = await ctx.db.query('module').collect();
-		return modules;
-	}
-});
-
 export const updateModuleOrder = mutation({
 	args: {
 		moduleId: v.id('module'),

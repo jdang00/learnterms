@@ -58,7 +58,7 @@ export default defineSchema({
 		description: v.string(),
 		status: v.string()
 	}).index('by_classId', ['classId']),
-	question: defineTable({
+    question: defineTable({
 		metadata: v.object({}),
 		updatedAt: v.number(),
 		deletedAt: v.optional(v.number()),
@@ -68,7 +68,7 @@ export default defineSchema({
 		stem: v.string(),
 		options: v.array(v.object({ id: v.string(), text: v.string() })),
 		correctAnswers: v.array(v.string()),
-		explanation: v.string(),
+        explanation: v.optional(v.string()),
 		aiGenerated: v.boolean(),
 		status: v.string()
 	}).index('by_moduleId', ['moduleId']),

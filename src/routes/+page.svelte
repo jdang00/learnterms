@@ -36,7 +36,7 @@
     });
 </script>
 
-<main class="flex flex-col items-center mt-6 sm:mt-10 mb-56">
+<div class="flex flex-col items-center mt-6 sm:mt-10 mb-56">
 	<div class="w-full max-w-5xl mx-auto px-4 sm:px-12">
         <div class="w-full text-center text-base-content/70 h-6 overflow-hidden" aria-hidden="true">
             <p class="transition-opacity duration-300 ease-in-out" class:opacity-0={fading}>
@@ -132,7 +132,8 @@
 
 
 		
-</main>
+	</div>
+	</div>
 
 <style>
 	@media (prefers-reduced-motion: reduce) {
