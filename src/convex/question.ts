@@ -389,7 +389,7 @@ ${material}`;
         stem: q.stem.trim(),
         options,
         correctAnswers: validIndexes,
-        explanation: q.explanation.trim(),
+        explanation: (typeof q.explanation === 'string' ? q.explanation.trim() : ''),
         aiGenerated: true,
         status: 'published',
         order: i,

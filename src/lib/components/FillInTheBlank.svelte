@@ -6,15 +6,15 @@
     let inputText: string = $state('');
     let inputEl: HTMLInputElement | null = null;
 
-    const correctOption = $derived(() => {
-        if (!currentlySelected || !currentlySelected.options) return null;
-        const id = (currentlySelected.correctAnswers && currentlySelected.correctAnswers[0]) || '';
-        return ((currentlySelected.options || []) as Option[]).find((o) => o.id === id) || null;
+    const correctRaw = $derived(() => {
+        const first = (currentlySelected?.correctAnswers && currentlySelected.correctAnswers[0]) || '';
+        const opts = (currentlySelected?.options || []) as Option[];
+        const fromOption = opts.find((o) => o.id === first)?.text;
+        return String(fromOption ?? first ?? '');
     });
 
     const displayAnswer = $derived(() => {
-        const opt = correctOption();
-        const raw = opt ? String(opt.text || '') : '';
+        const raw = correctRaw();
         return raw.startsWith('exact:') ? raw.slice(6) : raw;
     });
 
