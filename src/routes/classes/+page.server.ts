@@ -5,6 +5,7 @@ import { ConvexHttpClient } from 'convex/browser';
 import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import { api } from '../../convex/_generated/api';
 
+
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!PUBLIC_CONVEX_URL) {
 		throw new Error('PUBLIC_CONVEX_URL is not configured');
@@ -13,9 +14,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const { userId } = locals.auth();
 
+
 	if (!userId) {
 		return redirect(307, '/sign-in');
 	}
+
+
+
 	try {
 		const user = await clerkClient.users.getUser(userId);
 		const userData = await client.query(api.users.getUserById, { id: user.id });
@@ -30,7 +35,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 			return redirect(307, '/join-class');
 		}
 
-		console.log(userData);
 
 		return { userData };
 	} catch (error) {

@@ -4,15 +4,17 @@
 	import { api } from '../../../../../convex/_generated/api.js';
 	import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 	import QuizSideBar from '$lib/components/QuizSideBar.svelte';
-	import QuizNavigation from '$lib/components/QuizNavigation.svelte';
-	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
+    import QuizNavigation from '$lib/components/QuizNavigation.svelte';
+    import AnswerOptions from '$lib/components/AnswerOptions.svelte';
+    import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
 	import { QuizState } from './states.svelte';
 	import ActionButtons from '$lib/components/ActionButtons.svelte';
 	import MobileMenu from '$lib/components/MobileMenu.svelte';
 	import MobileInfo from '$lib/components/MobileInfo.svelte';
 	import ResultBanner from '$lib/components/ResultBanner.svelte';
 	import { onMount, tick } from 'svelte';
-	import { Flag, BookmarkCheck, ArrowDownNarrowWide } from 'lucide-svelte';
+    import { Flag, BookmarkCheck, ArrowDownNarrowWide } from 'lucide-svelte';
+    import { QUESTION_TYPES } from '$lib/utils/questionType';
 
 	let { data }: { data: PageData } = $props();
 
@@ -141,7 +143,7 @@
                   api.userProgress.getUserProgressForModule,
                   {
                       userId: userId,
-                      questionIds: questions.data.map((q) => q._id)
+                      questionIds: ((questions.data as Doc<'question'>[]).map((q) => q._id as Id<'question'>)) as Id<'question'>[]
                   },
                   {
                       initialData: data.interactedQuestions || []
@@ -155,7 +157,7 @@
                   api.userProgress.getFlaggedQuestionsForModule,
                   {
                       userId: userId,
-                      questionIds: questions.data.map((q) => q._id)
+                      questionIds: ((questions.data as Doc<'question'>[]).map((q) => q._id as Id<'question'>)) as Id<'question'>[]
                   },
                   {
                       initialData: data.flaggedQuestions || []
@@ -237,7 +239,7 @@
 
 	async function handleKeydown(event: KeyboardEvent) {
 		if (
-			event.key !== 'Tab' &&
+			!['Tab', 'ArrowLeft', 'ArrowRight'].includes(event.key) &&
 			(event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
 		) {
 			return;
@@ -378,12 +380,14 @@
 
 			<div class="text-md sm:text-lg lg:text-xl p-4">
 				<div class="flex flex-row justify-between mb-4">
-					<div class="flex flex-row flex-wrap items-end">
-						<h4 class="text-lg font-semibold">{currentlySelected.stem}</h4>
-						<span class="text-base-content/70 font-medium text-xs ms-2 mb-1 sm:mt-0">
-							Pick {currentlySelected.correctAnswers.length}.
-						</span>
-					</div>
+					{#if currentlySelected.type !== QUESTION_TYPES.FILL_IN_THE_BLANK}
+						<div class="flex flex-row flex-wrap items-end">
+							<h4 class="text-lg font-semibold">{currentlySelected.stem}</h4>
+							<span class="text-base-content/70 font-medium text-xs ms-2 mb-1 sm:mt-0">
+								Pick {currentlySelected.correctAnswers.length}.
+							</span>
+						</div>
+					{/if}
 
 					<div class="dropdown dropdown-end lg:block hidden">
 						<div tabindex="0" role="button" class="btn btn-soft btn-accent m-1 btn-circle">
@@ -407,8 +411,12 @@
 							</li>
 						</ul>
 					</div>
-				</div>
-				<AnswerOptions bind:qs {currentlySelected} />
+                </div>
+                {#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}
+                    <FillInTheBlank bind:qs {currentlySelected} />
+                {:else}
+                    <AnswerOptions bind:qs {currentlySelected} />
+                {/if}
 				<ActionButtons {qs} {currentlySelected} />
 			</div>
 		</div>

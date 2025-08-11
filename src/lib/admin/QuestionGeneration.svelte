@@ -239,10 +239,14 @@
 								</div>
 							{/each}
 						</div>
-						<div class="mt-2 text-sm text-base-content/70">
-							<span class="font-medium">Explanation:</span>
-							<span class="ms-1 break-words whitespace-pre-wrap">{q.explanation}</span>
-						</div>
+                        <div class="mt-2 text-sm text-base-content/70">
+                            <span class="font-medium">Explanation:</span>
+                            {#if typeof q.explanation === 'string' && q.explanation.trim().length > 0}
+                                <span class="ms-1 break-words whitespace-pre-wrap">{q.explanation}</span>
+                            {:else}
+                                <span class="ms-1 text-base-content/50">No explanation</span>
+                            {/if}
+                        </div>
 					</div>
 				{/each}
 			</div>

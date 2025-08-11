@@ -323,10 +323,4 @@ export const updateClass = mutation({
 	}
 });
 
-export const getAllClasses = query({
-	args: {},
-	handler: async (ctx) => {
-		const classes = await ctx.db.query('class').collect();
-		return classes;
-	}
-});
+ 

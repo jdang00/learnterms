@@ -209,7 +209,9 @@ $effect(() => {
                     </div>
                     <div class="mt-3 text-sm text-base-content/70">
                         <span class="font-medium">Explanation:</span>
-                        <span class="ms-1">{q.explanation}</span>
+                        {#if q.explanation}
+                            <span class="ms-1">{q.explanation}</span>
+                        {/if}
                     </div>
                 </div>
                 {/each}

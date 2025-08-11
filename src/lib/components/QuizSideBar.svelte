@@ -42,7 +42,7 @@
 		<div class="p-4 md:p-5 lg:p-6 pt-12 pl-12 mt-8">
             <h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
                 <a class="btn btn-ghost font-bold" href={`/classes?classId=${classId}`}>
-                    <ChevronLeft size={16} /> CHAPTER {module.data.order}
+                    <ChevronLeft size={16} /> MODULE {module.data.order + 1}
                 </a>
             </h4>
             <h2 class="font-semibold text-3xl mt-2 flex items-center gap-3">
@@ -62,24 +62,26 @@
 		</div>
 
 		<div class="flex flex-col justify-center m-4">
-			<div class="card bg-base-100 shadow-xl mt-8 lg:mt-12">
-				<div class="card-body">
-					<div class="flex flex-row flex-wrap justify-between border-b pb-2">
-						<h2 class="card-title">Solution</h2>
-						<div class="flex flex-row">
-							<kbd class="kbd kbd-sm hidden xl:block self-center me-1">tab</kbd>
-							<button class="btn btn-ghost btn-circle" onclick={() => qs.handleSolution()}>
-								<Eye />
-							</button>
-						</div>
-					</div>
-					<p
-						class={`mt-2 transition-all duration-300 ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
-					>
-						{currentlySelected.explanation}
-					</p>
-				</div>
-			</div>
+            {#if typeof currentlySelected.explanation === 'string' && (() => { const t = currentlySelected.explanation.trim().toLowerCase(); return t.length > 0 && t !== 'undefined' && t !== 'null'; })()}
+                <div class="card bg-base-100 shadow-xl mt-8 lg:mt-12">
+                    <div class="card-body">
+                        <div class="flex flex-row flex-wrap justify-between border-b pb-2">
+                            <h2 class="card-title">Solution</h2>
+                            <div class="flex flex-row">
+                                <kbd class="kbd kbd-sm hidden xl:block self-center me-1">tab</kbd>
+                                <button class="btn btn-ghost btn-circle" onclick={() => qs.handleSolution()}>
+                                    <Eye />
+                                </button>
+                            </div>
+                        </div>
+                        <p
+                            class={`mt-2 transition-all duration-300 ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
+                        >
+                            {currentlySelected.explanation}
+                        </p>
+                    </div>
+                </div>
+            {/if}
 
             <div class="flex flex-row mt-6 justify-center">
                 <button class="btn btn-soft btn-sm" onclick={() => (isSettingsModalOpen = true)}>
@@ -138,9 +140,9 @@
 				onclick={() => (isInfoModalOpen = false)}>✕</button
 			>
 		</form>
-		<h3 class="font-bold">Chapter Information</h3>
+		<h3 class="font-bold">Module Information</h3>
 		<p class="py-4"></p>
-		<p class="font-2xl font-semibold">Chapter {module.data.order}: {module.data.title}</p>
+		<p class="font-2xl font-semibold">Module {module.data.order + 1}: {module.data.title}</p>
 		<p class="text-base-content/70">{module.data.description}</p>
 		<div class="modal-action">
 			<button class="btn" onclick={() => (isInfoModalOpen = false)}>Close</button>
@@ -156,8 +158,10 @@
 				onclick={() => (isSolutionModalOpen = false)}>✕</button
 			>
 		</form>
-		<h3 class="text-lg font-bold">Solution</h3>
-		<p class="py-4">{currentlySelected.explanation}</p>
+    <h3 class="text-lg font-bold">Solution</h3>
+    {#if typeof currentlySelected.explanation === 'string' && currentlySelected.explanation.trim().length > 0}
+    <p class="py-4">{currentlySelected.explanation}</p>
+    {/if}
 	</div>
 </dialog>
 

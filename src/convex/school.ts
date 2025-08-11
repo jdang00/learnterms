@@ -1,15 +1,6 @@
 import { query, internalQuery, mutation } from './_generated/server';
 import { v } from 'convex/values';
 
-export const getAllSchools = query({
-	args: {},
-	handler: async (ctx) => {
-		const schools = await ctx.db.query('school').collect();
-
-		return schools;
-	}
-});
-
 export const getSchoolById = query({
 	args: { id: v.id('school') },
 	handler: async (ctx, args) => {
