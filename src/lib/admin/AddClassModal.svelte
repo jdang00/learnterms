@@ -5,6 +5,7 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
+    import { pickDefaultSemesterName } from '$lib/utils/semester';
 
 	const client = useConvexClient();
 
@@ -22,9 +23,8 @@
 	});
 
 	$effect(() => {
-		if (semesters.data && semesters.data.length > 0) {
-			// Default to currently viewed semester, fallback to first semester
-			semesterEditName = currentSemester || semesters.data[0].name;
+		if (semesters.data) {
+			semesterEditName = pickDefaultSemesterName(semesters.data, currentSemester);
 		}
 	});
 

@@ -5,6 +5,7 @@
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
+    import { pickDefaultSemesterName } from '$lib/utils/semester';
 
 	const client = useConvexClient();
 
@@ -28,8 +29,8 @@
 
 	// Set default semester if none is set
 	$effect(() => {
-		if (isEditModalOpen && !semesterEditName && semesters.data && semesters.data.length > 0) {
-			semesterEditName = semesters.data[0].name;
+		if (isEditModalOpen && !semesterEditName && semesters.data) {
+			semesterEditName = pickDefaultSemesterName(semesters.data);
 		}
 	});
 

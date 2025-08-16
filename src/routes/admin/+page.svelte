@@ -19,6 +19,7 @@
 	import EditClassModal from '$lib/admin/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
+    import { pickDefaultSemesterName } from '$lib/utils/semester';
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
@@ -136,8 +137,8 @@
 	let currentSemester = $state('');
 
 	$effect(() => {
-		if (semesters.data && semesters.data.length > 0 && !currentSemester) {
-			currentSemester = semesters.data[0].name;
+		if (semesters.data && !currentSemester) {
+			currentSemester = pickDefaultSemesterName(semesters.data);
 		}
 	});
 
