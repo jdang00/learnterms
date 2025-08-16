@@ -333,6 +333,9 @@ Instructions:
 - Include at least 2-3 questions with multiple correct answers.
 - Prefer ocular relevance when present.
 - Do NOT include any references to the material or meta-instructions.
+- Stems and explanations must be self-contained and must not mention or quote the source material.
+- Do not use phrases like: "the material", "the text", "the passage", "the document", "the slides", "the notes", "according to", "as stated", "as mentioned".
+- Explanations must justify the correct answer and why distractors are incorrect without referencing the source.
 - Options must be plain strings with NO leading letters, numbers, or punctuation (no prefixes like "A.", "1)", or "-").
 
 Material:

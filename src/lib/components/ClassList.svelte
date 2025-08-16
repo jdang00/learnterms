@@ -5,6 +5,7 @@
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { ClassWithSemester } from '../types';
+    import { pickDefaultSemesterName } from '../utils/semester';
 
     interface Props {
 		classes: {
@@ -24,8 +25,8 @@
 	let currentSemester = $state('');
 
 	$effect(() => {
-		if (semesters.data && semesters.data.length > 0 && !currentSemester) {
-			currentSemester = semesters.data[0].name;
+		if (semesters.data && !currentSemester) {
+			currentSemester = pickDefaultSemesterName(semesters.data);
 		}
 	});
 
