@@ -33,7 +33,14 @@
 	let editKeywords: string = $state('');
 	let editChunkType: string = $state('');
 
-	const keywordColors = ['badge-primary', 'badge-secondary', 'badge-accent', 'badge-info', 'badge-success', 'badge-warning'];
+	const keywordColors = [
+		'badge-primary',
+		'badge-secondary',
+		'badge-accent',
+		'badge-info',
+		'badge-success',
+		'badge-warning'
+	];
 
 	function openEdit(chunk: Doc<'chunkContent'>) {
 		editingChunk = chunk;
@@ -104,7 +111,7 @@
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
-		
+
 		if (!file) {
 			selectedFile = null;
 			return;
@@ -151,9 +158,12 @@
 		try {
 			const formData = new FormData();
 			formData.append('pdf', selectedFile);
-			const documentId = typeof currentDocView === 'string'
-				? currentDocView
-				: (currentDocView ? String(currentDocView) : '');
+			const documentId =
+				typeof currentDocView === 'string'
+					? currentDocView
+					: currentDocView
+						? String(currentDocView)
+						: '';
 			if (!documentId) {
 				throw new Error('Invalid document id');
 			}
@@ -190,11 +200,10 @@
 			} else {
 				throw new Error('Failed to process PDF - no chunks returned');
 			}
-			
+
 			// Reset form
 			selectedFile = null;
 			if (fileInput) fileInput.value = '';
-			
 		} catch (error) {
 			processingError = error instanceof Error ? error.message : 'Failed to process PDF';
 		} finally {
@@ -206,16 +215,18 @@
 			}
 		}
 	}
-
-
 </script>
 
-<div class="border border-base-300 mt-12 rounded-lg shadow-sm bg-base-100 p-8" in:fade={{ duration: 180 }} out:fade={{ duration: 120 }}>
-    <div class="flex flex-row justify-between">
-        <h2 class="text-2xl font-semibold">{currentDocument.title}</h2>
-    </div>
+<div
+	class="border border-base-300 mt-12 rounded-lg shadow-sm bg-base-100 p-8"
+	in:fade={{ duration: 180 }}
+	out:fade={{ duration: 120 }}
+>
+	<div class="flex flex-row justify-between">
+		<h2 class="text-2xl font-semibold">{currentDocument.title}</h2>
+	</div>
 
-		{#if getDocumentChunks.isLoading || isProcessing}
+	{#if getDocumentChunks.isLoading || isProcessing}
 		<!-- Dynamic Processing Loading -->
 		<div class="mt-6" in:fade={{ duration: 150 }}>
 			{#if isProcessing}
@@ -229,10 +240,10 @@
 			{:else}
 				<div class="skeleton h-8 w-48 mb-6"></div>
 			{/if}
-			
+
 			<div class="space-y-4">
 				{#each Array(isProcessing ? loadingSkeletons : 3) as _, index}
-					<div 
+					<div
 						class="card bg-base-100 border border-base-300 {isProcessing ? 'animate-pulse' : ''}"
 						style="animation-delay: {index * 200}ms"
 						in:fly={{ y: 8, duration: 180, delay: index * 40, opacity: 0.2 }}
@@ -254,7 +265,7 @@
 						</div>
 					</div>
 				{/each}
-				
+
 				{#if isProcessing && loadingSkeletons < 8}
 					<div class="flex items-center justify-center py-4">
 						<div class="flex items-center gap-2 text-sm text-base-content/60">
@@ -273,7 +284,9 @@
 		<!-- Empty State with PDF Upload -->
 		<div class="flex flex-col items-center justify-center py-12 mt-6" in:fade={{ duration: 150 }}>
 			<div class="text-center mb-8">
-				<div class="w-24 h-24 mx-auto bg-base-200 rounded-full flex items-center justify-center mb-4">
+				<div
+					class="w-24 h-24 mx-auto bg-base-200 rounded-full flex items-center justify-center mb-4"
+				>
 					<FileText class="w-12 h-12 text-base-content/40" />
 				</div>
 				<h3 class="text-xl font-semibold mb-2">No content chunks yet</h3>
@@ -283,12 +296,15 @@
 			</div>
 
 			<!-- PDF Upload Card -->
-			<div class="card bg-base-100 border border-base-300 shadow-md w-full max-w-md" in:scale={{ duration: 180, start: 0.96 }}>
+			<div
+				class="card bg-base-100 border border-base-300 shadow-md w-full max-w-md"
+				in:scale={{ duration: 180, start: 0.96 }}
+			>
 				<div class="card-body">
 					<h4 class="font-semibold mb-4 text-center">Upload PDF Document</h4>
-					
+
 					<div class="form-control">
-						<label 
+						<label
 							class="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-primary/30 rounded-xl cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-200"
 							for="pdf-upload"
 						>
@@ -299,7 +315,9 @@
 								{#if selectedFile}
 									<div class="text-center">
 										<p class="text-lg font-semibold text-success mb-1">{selectedFile.name}</p>
-										<p class="text-sm text-base-content/60">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB PDF file</p>
+										<p class="text-sm text-base-content/60">
+											{(selectedFile.size / 1024 / 1024).toFixed(2)} MB PDF file
+										</p>
 									</div>
 								{:else}
 									<div class="text-center">
@@ -310,26 +328,26 @@
 								{/if}
 							</div>
 						</label>
-						<input 
+						<input
 							id="pdf-upload"
-							type="file" 
+							type="file"
 							accept=".pdf,application/pdf"
-							class="hidden" 
+							class="hidden"
 							bind:this={fileInput}
 							onchange={handleFileSelect}
 							disabled={isProcessing}
 						/>
 					</div>
-					
+
 					{#if processingError}
 						<div class="alert alert-error alert-sm mt-4">
 							<span class="text-sm">{processingError}</span>
 						</div>
 					{/if}
-					
+
 					{#if selectedFile}
-						<button 
-							class="btn btn-primary btn-block mt-4" 
+						<button
+							class="btn btn-primary btn-block mt-4"
 							onclick={processPDF}
 							disabled={isProcessing}
 						>
@@ -351,20 +369,27 @@
 			<div class="flex justify-between items-center mb-6">
 				<div>
 					<h3 class="text-xl font-semibold">Content Chunks</h3>
-					<p class="text-sm text-base-content/70">{getDocumentChunks.data.length} chunks extracted</p>
+					<p class="text-sm text-base-content/70">
+						{getDocumentChunks.data.length} chunks extracted
+					</p>
 				</div>
 				<!-- Upload action removed per request -->
 			</div>
-			
+
 			<div class="grid gap-4">
 				{#each getDocumentChunks.data as chunk (chunk._id)}
-					<div class="card bg-base-100 border border-base-300 hover:border-primary/30 hover:shadow-lg transition-all duration-200" in:fly={{ y: 10, duration: 180 }}>
+					<div
+						class="card bg-base-100 border border-base-300 hover:border-primary/30 hover:shadow-lg transition-all duration-200"
+						in:fly={{ y: 10, duration: 180 }}
+					>
 						<div class="card-body p-6">
 							<div class="flex justify-between items-start gap-4">
 								<div class="flex-1 min-w-0">
 									<div class="flex items-center gap-2 mb-2">
 										<h4 class="font-semibold text-lg truncate">{chunk.title}</h4>
-										<div class="badge badge-soft badge-primary badge-sm capitalize">{chunk.chunk_type}</div>
+										<div class="badge badge-soft badge-primary badge-sm capitalize">
+											{chunk.chunk_type}
+										</div>
 									</div>
 									<p class="text-base-content/80 text-sm mb-3 line-clamp-2">{chunk.summary}</p>
 									<div class="flex flex-wrap gap-1">
@@ -379,16 +404,26 @@
 								<div class="dropdown dropdown-end">
 									<div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-square">
 										<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-											<path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+											<path
+												d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
+											/>
 										</svg>
 									</div>
-									<ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-44 z-20 border border-base-300">
-											<li><button class="text-sm" onclick={() => openEdit(chunk)}>Edit chunk</button></li>
-											<li><button class="text-sm text-error" onclick={() => openDelete(chunk)}>Delete chunk</button></li>
+									<ul
+										class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-44 z-20 border border-base-300"
+									>
+										<li>
+											<button class="text-sm" onclick={() => openEdit(chunk)}>Edit chunk</button>
+										</li>
+										<li>
+											<button class="text-sm text-error" onclick={() => openDelete(chunk)}
+												>Delete chunk</button
+											>
+										</li>
 									</ul>
 								</div>
 							</div>
-							
+
 							<div class="mt-4">
 								<details class="collapse collapse-arrow bg-base-200">
 									<summary class="collapse-title text-sm font-medium">View full content</summary>
@@ -409,108 +444,167 @@
 
 <!-- Edit Chunk Modal -->
 <dialog class="modal p-6" class:modal-open={isEditModalOpen}>
-    <div class="modal-box w-full max-w-3xl rounded-2xl border border-base-300 shadow-2xl">
-        <form method="dialog">
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4" onclick={closeEdit} aria-label="Close">
-                ✕
-            </button>
-        </form>
+	<div class="modal-box w-full max-w-3xl rounded-2xl border border-base-300 shadow-2xl">
+		<form method="dialog">
+			<button
+				class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4"
+				onclick={closeEdit}
+				aria-label="Close"
+			>
+				✕
+			</button>
+		</form>
 
-        <div class="mb-6 flex items-center gap-2">
-            <h3 class="text-2xl font-extrabold tracking-tight">Edit Chunk</h3>
-        </div>
+		<div class="mb-6 flex items-center gap-2">
+			<h3 class="text-2xl font-extrabold tracking-tight">Edit Chunk</h3>
+		</div>
 
-        {#if submitError}
-            <div class="alert alert-error mb-6"><span>❌ {submitError}</span></div>
-        {/if}
+		{#if submitError}
+			<div class="alert alert-error mb-6"><span>❌ {submitError}</span></div>
+		{/if}
 
-        {#if editingChunk}
-            <div class="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-[auto_1fr]">
-                <label class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex" for="chunk-title">
-                    <FileText size={18} class="text-primary/80" />
-                    <span>Title</span>
-                </label>
-                <div class="md:contents">
-                    <label for="chunk-title" class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden">
-                        <FileText size={18} class="text-primary/80" />
-                        <span>Title</span>
-                    </label>
-                    <div class="form-control w-full">
-                        <input id="chunk-title" type="text" class="input input-bordered w-full" bind:value={editTitle} maxlength="200" />
-                    </div>
-                </div>
+		{#if editingChunk}
+			<div class="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-[auto_1fr]">
+				<label
+					class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
+					for="chunk-title"
+				>
+					<FileText size={18} class="text-primary/80" />
+					<span>Title</span>
+				</label>
+				<div class="md:contents">
+					<label
+						for="chunk-title"
+						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+					>
+						<FileText size={18} class="text-primary/80" />
+						<span>Title</span>
+					</label>
+					<div class="form-control w-full">
+						<input
+							id="chunk-title"
+							type="text"
+							class="input input-bordered w-full"
+							bind:value={editTitle}
+							maxlength="200"
+						/>
+					</div>
+				</div>
 
-                <label class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex" for="chunk-type">
-                    <Type size={18} class="text-primary/80" />
-                    <span>Chunk Type</span>
-                </label>
-                <div class="md:contents">
-                    <label for="chunk-type" class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden">
-                        <Type size={18} class="text-primary/80" />
-                        <span>Chunk Type</span>
-                    </label>
-                    <div class="form-control w-full">
-                        <input id="chunk-type" type="text" class="input input-bordered w-full" bind:value={editChunkType} />
-                    </div>
-                </div>
+				<label
+					class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
+					for="chunk-type"
+				>
+					<Type size={18} class="text-primary/80" />
+					<span>Chunk Type</span>
+				</label>
+				<div class="md:contents">
+					<label
+						for="chunk-type"
+						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+					>
+						<Type size={18} class="text-primary/80" />
+						<span>Chunk Type</span>
+					</label>
+					<div class="form-control w-full">
+						<input
+							id="chunk-type"
+							type="text"
+							class="input input-bordered w-full"
+							bind:value={editChunkType}
+						/>
+					</div>
+				</div>
 
-                <label class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex" for="chunk-keywords">
-                    <Tags size={18} class="text-primary/80" />
-                    <span>Keywords</span>
-                </label>
-                <div class="md:contents">
-                    <label for="chunk-keywords" class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden">
-                        <Tags size={18} class="text-primary/80" />
-                        <span>Keywords (comma separated)</span>
-                    </label>
-                    <div class="form-control w-full">
-                        <input id="chunk-keywords" type="text" class="input input-bordered w-full" bind:value={editKeywords} />
-                        <div class="label">
-                            <span class="label-text-alt text-xs text-base-content/60">Comma separated</span>
-                        </div>
-                    </div>
-                </div>
+				<label
+					class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
+					for="chunk-keywords"
+				>
+					<Tags size={18} class="text-primary/80" />
+					<span>Keywords</span>
+				</label>
+				<div class="md:contents">
+					<label
+						for="chunk-keywords"
+						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+					>
+						<Tags size={18} class="text-primary/80" />
+						<span>Keywords (comma separated)</span>
+					</label>
+					<div class="form-control w-full">
+						<input
+							id="chunk-keywords"
+							type="text"
+							class="input input-bordered w-full"
+							bind:value={editKeywords}
+						/>
+						<div class="label">
+							<span class="label-text-alt text-xs text-base-content/60">Comma separated</span>
+						</div>
+					</div>
+				</div>
 
-                <label class="label m-0 hidden items-center gap-2 self-start p-0 text-base font-medium text-base-content/80 md:flex" for="chunk-summary">
-                    <AlignLeft size={18} class="text-primary/80" />
-                    <span>Summary</span>
-                </label>
-                <div class="form-control md:block">
-                    <label for="chunk-summary" class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden">
-                        <AlignLeft size={18} class="text-primary/80" />
-                        <span>Summary</span>
-                    </label>
-                    <textarea id="chunk-summary" class="textarea textarea-bordered w-full min-h-40" bind:value={editSummary} maxlength="1000"></textarea>
-                </div>
+				<label
+					class="label m-0 hidden items-center gap-2 self-start p-0 text-base font-medium text-base-content/80 md:flex"
+					for="chunk-summary"
+				>
+					<AlignLeft size={18} class="text-primary/80" />
+					<span>Summary</span>
+				</label>
+				<div class="form-control md:block">
+					<label
+						for="chunk-summary"
+						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+					>
+						<AlignLeft size={18} class="text-primary/80" />
+						<span>Summary</span>
+					</label>
+					<textarea
+						id="chunk-summary"
+						class="textarea textarea-bordered w-full min-h-40"
+						bind:value={editSummary}
+						maxlength="1000"
+					></textarea>
+				</div>
 
-                <label class="label m-0 hidden items-center gap-2 self-start p-0 text-base font-medium text-base-content/80 md:flex" for="chunk-content">
-                    <FileText size={18} class="text-primary/80" />
-                    <span>Content</span>
-                </label>
-                <div class="form-control md:block">
-                    <label for="chunk-content" class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden">
-                        <FileText size={18} class="text-primary/80" />
-                        <span>Content</span>
-                    </label>
-                    <textarea id="chunk-content" class="textarea textarea-bordered w-full min-h-72" bind:value={editContent}></textarea>
-                </div>
-            </div>
-        {/if}
+				<label
+					class="label m-0 hidden items-center gap-2 self-start p-0 text-base font-medium text-base-content/80 md:flex"
+					for="chunk-content"
+				>
+					<FileText size={18} class="text-primary/80" />
+					<span>Content</span>
+				</label>
+				<div class="form-control md:block">
+					<label
+						for="chunk-content"
+						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+					>
+						<FileText size={18} class="text-primary/80" />
+						<span>Content</span>
+					</label>
+					<textarea
+						id="chunk-content"
+						class="textarea textarea-bordered w-full min-h-72"
+						bind:value={editContent}
+					></textarea>
+				</div>
+			</div>
+		{/if}
 
-        <div class="modal-action mt-8">
-            <form method="dialog" class="flex gap-3">
-                <button class="btn btn-ghost" onclick={closeEdit} disabled={isSubmitting}>Cancel</button>
-                <button class="btn btn-primary gap-2" onclick={saveEdit} disabled={isSubmitting}>
-                    {#if isSubmitting}
-                        <span class="loading loading-spinner loading-sm"></span>
-                        <span>Saving...</span>
-                    {:else}
-                        <span>Save Changes</span>
-                    {/if}
-                </button>
-            </form>
-        </div>
-    </div>
+		<div class="modal-action mt-8">
+			<form method="dialog" class="flex gap-3">
+				<button class="btn btn-ghost" onclick={closeEdit} disabled={isSubmitting}>Cancel</button>
+				<button class="btn btn-primary gap-2" onclick={saveEdit} disabled={isSubmitting}>
+					{#if isSubmitting}
+						<span class="loading loading-spinner loading-sm"></span>
+						<span>Saving...</span>
+					{:else}
+						<span>Save Changes</span>
+					{/if}
+				</button>
+			</form>
+		</div>
+	</div>
 </dialog>
 
 <!-- Delete Chunk Modal -->

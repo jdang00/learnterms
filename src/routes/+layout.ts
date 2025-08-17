@@ -5,7 +5,5 @@ export const csr = true;
 export const trailingSlash = 'never';
 
 export const load: LayoutLoad = async ({ data }) => {
-  return { ...data };
+	return { ...data };
 };
-
-

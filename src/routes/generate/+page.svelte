@@ -104,9 +104,9 @@ Penicillins and other B-lactam antibiotics ß-lactam antibiotics are so-called b
 				const isCorrect = q.correct_answers.includes(letter);
 				textContent += `  [${isCorrect ? 'X' : ' '}] ${opt}\n`;
 			});
-            if (q.explanation && q.explanation.trim().length > 0) {
-                textContent += `\nExplanation: ${q.explanation}\n`;
-            }
+			if (q.explanation && q.explanation.trim().length > 0) {
+				textContent += `\nExplanation: ${q.explanation}\n`;
+			}
 			textContent += '--------------------------------------------------\n\n';
 		});
 

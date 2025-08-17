@@ -20,19 +20,22 @@ type ApiResponse = Chunk[];
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const contentType = request.headers.get('content-type');
-		
+
 		// Handle multipart/form-data (PDF upload)
 		if (contentType?.includes('multipart/form-data')) {
 			return await processPDF(request);
 		}
-		
+
 		// Handle JSON (text material)
 		if (contentType?.includes('application/json')) {
 			return await processText(request);
 		}
-		
+
 		return json(
-			{ error: 'Unsupported content type. Use multipart/form-data for PDFs or application/json for text.' },
+			{
+				error:
+					'Unsupported content type. Use multipart/form-data for PDFs or application/json for text.'
+			},
 			{ status: 400 }
 		);
 	} catch (error) {
@@ -49,33 +52,27 @@ async function processPDF(request: Request) {
 	try {
 		const formData = await request.formData();
 		const pdfFile = formData.get('pdf') as File;
-		
+
 		if (!pdfFile) {
-			return json(
-				{ error: 'No PDF file provided' },
-				{ status: 400 }
-			);
+			return json({ error: 'No PDF file provided' }, { status: 400 });
 		}
-		
+
 		if (pdfFile.type !== 'application/pdf') {
-			return json(
-				{ error: 'File must be a PDF' },
-				{ status: 400 }
-			);
+			return json({ error: 'File must be a PDF' }, { status: 400 });
 		}
-		
+
 		// Convert PDF to buffer
 		const pdfBuffer = await pdfFile.arrayBuffer();
 		const pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
-		
+
 		const { GoogleGenAI, Type } = await import('@google/genai');
 		if (!GEMINI_API_KEY || GEMINI_API_KEY.trim().length === 0) {
 			return json({ error: 'GEMINI_API_KEY is not configured' }, { status: 500 });
 		}
 		const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-		
+
 		const contents = [
-			{ 
+			{
 				text: `Role: You are an expert document analysis assistant.
 
 Goal: Analyze this PDF and create meaningful content chunks. Handle both academic papers and lecture slides appropriately.
@@ -95,7 +92,7 @@ Instructions:
    - 3-5 relevant keywords
    - Content type: 'paragraph' (text), 'slide_group' (slides), 'diagram' (images), 'table', 'list'
 
-Focus on educational value - capture content that helps learning, not just formatting.` 
+Focus on educational value - capture content that helps learning, not just formatting.`
 			},
 			{
 				inlineData: {
@@ -104,7 +101,7 @@ Focus on educational value - capture content that helps learning, not just forma
 				}
 			}
 		];
-		
+
 		async function generateChunksWithRetry(maxAttempts = 2): Promise<ApiResponse> {
 			for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 				const result = await ai.models.generateContent({
@@ -125,7 +122,8 @@ Focus on educational value - capture content that helps learning, not just forma
 									},
 									summary: {
 										type: Type.STRING,
-										description: 'A 1-3 sentence summary that captures the main points of the content.'
+										description:
+											'A 1-3 sentence summary that captures the main points of the content.'
 									},
 									content: {
 										type: Type.STRING,
@@ -157,7 +155,9 @@ Focus on educational value - capture content that helps learning, not just forma
 					return JSON.parse(responseText.trim()) as ApiResponse;
 				} catch (e) {
 					if (attempt === maxAttempts) {
-						throw new Error('Model response was invalid or truncated; failed to parse JSON after retries');
+						throw new Error(
+							'Model response was invalid or truncated; failed to parse JSON after retries'
+						);
 					}
 					await new Promise((r) => setTimeout(r, 250));
 				}
@@ -169,10 +169,7 @@ Focus on educational value - capture content that helps learning, not just forma
 		return json({ success: true, chunks: parsedResponse, processedCount: parsedResponse.length });
 	} catch (error) {
 		console.error('PDF processing error:', error);
-		return json(
-			{ error: `Error processing PDF: ${(error as Error).message}` },
-			{ status: 500 }
-		);
+		return json({ error: `Error processing PDF: ${(error as Error).message}` }, { status: 500 });
 	}
 }
 
@@ -270,21 +267,21 @@ ${material}`;
 
 		try {
 			const parsedResponse = JSON.parse(responseText.trim()) as ApiResponse;
-			return json({ 
-				success: true, 
+			return json({
+				success: true,
 				chunks: parsedResponse,
-				processedCount: parsedResponse.length 
+				processedCount: parsedResponse.length
 			});
 		} catch (parseError) {
-			return json({
-				error: `Failed to parse response as JSON: ${(parseError as Error).message}`
-			}, { status: 500 });
+			return json(
+				{
+					error: `Failed to parse response as JSON: ${(parseError as Error).message}`
+				},
+				{ status: 500 }
+			);
 		}
 	} catch (error) {
 		console.error('Text processing error:', error);
-		return json(
-			{ error: `Error processing text: ${(error as Error).message}` },
-			{ status: 500 }
-		);
+		return json({ error: `Error processing text: ${(error as Error).message}` }, { status: 500 });
 	}
 }

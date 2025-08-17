@@ -29,9 +29,10 @@
 				if (trimmed.length > 100) return 'Document title cannot exceed 100 characters';
 
 				// Check for duplicate titles (case-insensitive)
-				const existingTitles = !documents.isLoading && documents.data
-					? documents.data.map((d) => d.title.toLowerCase())
-					: [];
+				const existingTitles =
+					!documents.isLoading && documents.data
+						? documents.data.map((d) => d.title.toLowerCase())
+						: [];
 				if (existingTitles.includes(trimmed.toLowerCase())) {
 					return 'A document with this title already exists';
 				}

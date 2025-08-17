@@ -10,7 +10,7 @@
 </script>
 
 <div
-	class="flex flex-row w-full overflow-x-auto space-x-4 relative  lg:mt-0 items-center mb-6 lg:my-0 border border-base-300 !p-6 rounded-xl"
+	class="flex flex-row w-full overflow-x-auto space-x-4 relative lg:mt-0 items-center mb-6 lg:my-0 border border-base-300 !p-6 rounded-xl"
 >
 	{#each questions.data as question, index (question._id)}
 		<div class="indicator">
@@ -23,9 +23,7 @@
 				bind:this={qs.questionButtons[index]}
 				class="btn btn-circle btn-soft {currentlySelected._id === question._id
 					? 'btn-primary'
-					: 'btn-outline'} {interactedQuestions.includes(question._id)
-					? 'btn-accent'
-					: ''}"
+					: 'btn-outline'} {interactedQuestions.includes(question._id) ? 'btn-accent' : ''}"
 				onclick={() => handleSelect(question)}>{index + 1}</button
 			>
 		</div>

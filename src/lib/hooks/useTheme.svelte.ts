@@ -13,4 +13,4 @@ export function useTheme() {
 			set: (mode: ThemeMode) => theme.set(mode)
 		};
 	}
-} 
+}

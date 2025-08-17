@@ -99,7 +99,7 @@
 	}
 
 	function selectAllQuestions() {
-		selectedQuestions = new Set(questionList.map(q => q._id));
+		selectedQuestions = new Set(questionList.map((q) => q._id));
 	}
 
 	function deselectAllQuestions() {
@@ -195,11 +195,11 @@
 					</div>
 				</div>
 			{:else}
-                <div>
-                    <h1 class="text-2xl font-bold text-base-content flex items-center gap-3">
-                        <span class="text-3xl">{moduleInfo.data?.emoji || '📘'}</span>
-                        <span>{moduleInfo.data.title}</span>
-                    </h1>
+				<div>
+					<h1 class="text-2xl font-bold text-base-content flex items-center gap-3">
+						<span class="text-3xl">{moduleInfo.data?.emoji || '📘'}</span>
+						<span>{moduleInfo.data.title}</span>
+					</h1>
 					<p class="text-base-content/70">
 						Manage questions for {moduleInfo.data.title}. Drag and drop to reorder them.
 					</p>
@@ -212,13 +212,9 @@
 						<Trash2 size={16} />
 						<span>Delete Selected ({selectedQuestions.size})</span>
 					</button>
-					<button class="btn btn-ghost" onclick={deselectAllQuestions}>
-						Deselect All
-					</button>
+					<button class="btn btn-ghost" onclick={deselectAllQuestions}> Deselect All </button>
 				{:else}
-					<button class="btn btn-ghost" onclick={selectAllQuestions}>
-						Select All
-					</button>
+					<button class="btn btn-ghost" onclick={selectAllQuestions}> Select All </button>
 				{/if}
 				<button class="btn btn-primary gap-2" onclick={openAddQuestionModal}>
 					<Plus size={16} />

@@ -4,14 +4,12 @@
 
 <h2>Navigation</h2>
 <ul>
-  <li>Use the sidebar to switch modules.</li>
-  <li>Follow breadcrumbs to go back.</li>
+	<li>Use the sidebar to switch modules.</li>
+	<li>Follow breadcrumbs to go back.</li>
 </ul>
 
 <h2>Practice</h2>
 <ul>
-  <li>Answer questions to build mastery.</li>
-  <li>Track progress in the module view.</li>
+	<li>Answer questions to build mastery.</li>
+	<li>Track progress in the module view.</li>
 </ul>
-
-

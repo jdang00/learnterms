@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Check, Trash2 } from 'lucide-svelte';
+	import { resolveProduct, defaultProductModelId, productModelOptions } from '$lib/config/generation';
 	export interface Props {
 		material?: string;
 		wordCount?: number;
@@ -19,8 +20,10 @@
 
 	let isGenerating = $state(false);
 	let isAdding = $state(false);
-	let model = $state('gemini-2.5-pro');
+	let productModelId = $state(defaultProductModelId);
 	let questions = $state('10');
+	let customPrompt = $state('');
+	let resolved = $derived(resolveProduct(productModelId));
 
 	type GeneratedQuestionInput = {
 		type: string;
@@ -70,7 +73,12 @@
 			const res = await fetch('/api/generate', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ material, model, numQuestions: parseInt(questions) })
+				body: JSON.stringify({
+					material,
+					productModelId,
+					numQuestions: parseInt(questions),
+					customPrompt
+				})
 			});
 			const data = await res.json();
 			if (!res.ok) {
@@ -121,6 +129,7 @@
 		<div class="min-w-40">
 			<h2 class="text-lg font-semibold">Question Generation</h2>
 			<p class="text-sm text-base-content/70">Prepare and generate questions</p>
+			<div class="mt-1 text-xs text-base-content/60">Model: <span class="badge badge-outline">{resolved.label}</span></div>
 		</div>
 
 		<div class="stats stats-vertical sm:stats-horizontal bg-base-100 border border-base-300 me-4">
@@ -146,27 +155,14 @@
 					></progress>
 				</div>
 
-				<div class="flex flex-row gap-2 me-4">
-					<div class="form-control w-36 shrink-0">
-						<label class="label" for="gen-model-top"
-							><span class="label-text text-xs">Model</span></label
-						>
-						<select
-							id="gen-model-top"
-							class="select select-bordered select-sm w-36"
-							bind:value={model}
-						>
-							<option value="gemini-2.5-pro">gemini-2.5-pro</option>
-							<option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
-						</select>
-					</div>
-					<div class="form-control w-28 shrink-0">
+				<div class="flex flex-wrap items-start gap-2 sm:me-4 w-full">
+					<div class="form-control w-full sm:w-28 shrink-0">
 						<label class="label" for="gen-num-top"
 							><span class="label-text text-xs">Questions</span></label
 						>
 						<select
 							id="gen-num-top"
-							class="select select-bordered select-sm w-28"
+							class="select select-bordered select-sm w-full sm:w-28"
 							bind:value={questions}
 						>
 							<option value="5">5</option>
@@ -180,6 +176,35 @@
 	</div>
 
 	<div class="p-4 overflow-x-hidden">
+		<div class="mb-4 grid grid-cols-1 gap-2">
+			<div class="collapse collapse-arrow bg-base-100 border border-base-300">
+				<input type="checkbox" />
+				<div class="collapse-title text-sm">Advanced options (optional)</div>
+				<div class="collapse-content">
+					<div class="grid gap-3">
+						<div class="form-control w-full sm:w-60">
+							<label class="label" for="product-model"><span class="label-text">Model</span></label>
+							<select id="product-model" class="select select-bordered w-full" bind:value={productModelId}>
+								{#each productModelOptions as o (o.value)}
+									<option value={o.value}>{o.label}</option>
+								{/each}
+							</select>
+							<div class="label"><span class="label-text-alt text-[10px]">Focus: {resolved.focus}</span></div>
+						</div>
+						<div class="form-control">
+							<label class="label" for="custom-prompt"><span class="label-text">Custom prompt</span></label>
+							<input
+								id="custom-prompt"
+								type="text"
+								class="input input-bordered w-full"
+								placeholder="One-sentence guidance (e.g., emphasize ocular pharmacology)"
+								bind:value={customPrompt}
+							/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 		{#if generated.length === 0}
 			<div class="form-control">
 				<label class="label" for="material-preview">
@@ -208,8 +233,8 @@
 					<div
 						class={`border rounded-lg p-3 ${selected.has(i) ? 'border-primary' : 'border-base-300'} bg-base-100`}
 					>
-						<div class="flex items-start justify-between gap-3">
-							<label class="label cursor-pointer gap-2">
+						<div class="flex items-start justify-between gap-2">
+							<label class="label cursor-pointer gap-2 flex-1">
 								<input
 									type="checkbox"
 									class="checkbox checkbox-sm"
@@ -220,15 +245,13 @@
 									>{q.stem}</span
 								>
 							</label>
-							<button class="btn btn-ghost btn-xs" title="Remove" onclick={() => removeOne(i)}
+							<button class="btn btn-ghost btn-xs shrink-0" title="Remove" onclick={() => removeOne(i)}
 								><Trash2 size={14} /></button
 							>
 						</div>
 						<div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
 							{#each q.options as opt, oi (oi)}
-								<div
-									class="flex items-start gap-2 p-2 rounded-md border border-base-200 break-words"
-								>
+								<div class="flex items-start gap-2 p-2 rounded-md border border-base-200 break-words">
 									<div class="font-mono text-xs w-6 text-center">
 										{String.fromCharCode('A'.charCodeAt(0) + oi)}
 									</div>
@@ -239,14 +262,14 @@
 								</div>
 							{/each}
 						</div>
-                        <div class="mt-2 text-sm text-base-content/70">
-                            <span class="font-medium">Explanation:</span>
-                            {#if typeof q.explanation === 'string' && q.explanation.trim().length > 0}
-                                <span class="ms-1 break-words whitespace-pre-wrap">{q.explanation}</span>
-                            {:else}
-                                <span class="ms-1 text-base-content/50">No explanation</span>
-                            {/if}
-                        </div>
+						<div class="mt-2 text-sm text-base-content/70">
+							<span class="font-medium">Explanation:</span>
+							{#if typeof q.explanation === 'string' && q.explanation.trim().length > 0}
+								<span class="ms-1 break-words whitespace-pre-wrap">{q.explanation}</span>
+							{:else}
+								<span class="ms-1 text-base-content/50">No explanation</span>
+							{/if}
+						</div>
 					</div>
 				{/each}
 			</div>
@@ -265,8 +288,8 @@
 				{/if}
 			</div>
 			{#if generated.length === 0}
-				<div class="flex items-center gap-2 sm:ml-auto">
-					<button class="btn btn-primary" disabled={isDisabled} onclick={generate}>
+				<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:ml-auto w-full sm:w-auto">
+					<button class="btn btn-primary w-full sm:w-auto" disabled={isDisabled} onclick={generate}>
 						{#if isGenerating}
 							<span class="loading loading-spinner loading-sm"></span>
 							Generating...
@@ -276,15 +299,15 @@
 					</button>
 				</div>
 			{:else}
-				<div class="flex items-center gap-2 sm:ml-auto">
+				<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:ml-auto w-full sm:w-auto">
 					<button
-						class="btn btn-ghost"
+						class="btn btn-ghost w-full sm:w-auto"
 						onclick={() => {
 							generated = [];
 							selected = new Set();
 						}}>Discard</button
 					>
-					<button class="btn btn-outline" disabled={isGenerating} onclick={generate}>
+					<button class="btn btn-outline w-full sm:w-auto" disabled={isGenerating} onclick={generate}>
 						{#if isGenerating}
 							<span class="loading loading-spinner loading-sm"></span>
 							Regenerating...
@@ -293,7 +316,7 @@
 						{/if}
 					</button>
 					<button
-						class="btn btn-primary"
+						class="btn btn-primary w-full sm:w-auto"
 						disabled={isAdding || selected.size === 0}
 						onclick={async () => {
 							if (!onAddSelected) return;

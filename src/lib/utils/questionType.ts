@@ -16,4 +16,4 @@ export function convertToDisplayFormat(type: string): string {
 }
 
 export { QUESTION_TYPES, DISPLAY_QUESTION_TYPES };
-export type { QuestionType }; 
+export type { QuestionType };

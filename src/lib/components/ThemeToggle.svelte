@@ -23,8 +23,10 @@
 	};
 </script>
 
-<button 
-	class="btn {variantClasses[variant as keyof typeof variantClasses]} {sizeClasses[size as keyof typeof sizeClasses]} relative overflow-hidden {className}"
+<button
+	class="btn {variantClasses[variant as keyof typeof variantClasses]} {sizeClasses[
+		size as keyof typeof sizeClasses
+	]} relative overflow-hidden {className}"
 	onclick={() => theme.toggle()}
 	aria-label="Toggle theme"
 >
@@ -42,4 +44,4 @@
 	>
 		<Moon size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} />
 	</div>
-</button> 
+</button>

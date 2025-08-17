@@ -37,11 +37,12 @@
 				if (trimmed.length > 100) return 'Document title cannot exceed 100 characters';
 
 				// Check for duplicate titles (case-insensitive, excluding current document)
-				const existingTitles = !documents.isLoading && !documents.error && documents.data
-					? documents.data
-						.filter((d) => d._id !== editingDocument?._id)
-						.map((d) => d.title.toLowerCase())
-					: [];
+				const existingTitles =
+					!documents.isLoading && !documents.error && documents.data
+						? documents.data
+								.filter((d) => d._id !== editingDocument?._id)
+								.map((d) => d.title.toLowerCase())
+						: [];
 				if (existingTitles.includes(trimmed.toLowerCase())) {
 					return 'A document with this title already exists';
 				}
@@ -67,9 +68,7 @@
 	}
 
 	const isFormValid = $derived(
-		documentTitle.trim() &&
-			userData?.cohortId &&
-			Object.keys(validationErrors).length === 0
+		documentTitle.trim() && userData?.cohortId && Object.keys(validationErrors).length === 0
 	);
 
 	async function handleSubmit() {
@@ -159,7 +158,9 @@
 							maxlength="500"
 						></textarea>
 						<div class="label">
-							<span class="label-text-alt text-xs text-base-content/60">Optional • 10-500 characters</span>
+							<span class="label-text-alt text-xs text-base-content/60"
+								>Optional • 10-500 characters</span
+							>
 							<span class="label-text-alt text-xs text-base-content/40">
 								{documentDescription.length}/500
 							</span>
@@ -238,7 +239,9 @@
 							maxlength="500"
 						></textarea>
 						<div class="label">
-							<span class="label-text-alt text-xs text-base-content/60">Optional • 10-500 characters</span>
+							<span class="label-text-alt text-xs text-base-content/60"
+								>Optional • 10-500 characters</span
+							>
 							<span class="label-text-alt text-xs text-base-content/40">
 								{documentDescription.length}/500
 							</span>

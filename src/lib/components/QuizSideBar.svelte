@@ -1,12 +1,21 @@
 <script lang="ts">
-    import { PanelRight, Eye, Info, RotateCcw, ChevronLeft, FastForward, Shuffle, Settings } from 'lucide-svelte';
-    import SettingsModal from '$lib/components/SettingsModal.svelte';
+	import {
+		PanelRight,
+		Eye,
+		Info,
+		RotateCcw,
+		ChevronLeft,
+		FastForward,
+		Shuffle,
+		Settings
+	} from 'lucide-svelte';
+	import SettingsModal from '$lib/components/SettingsModal.svelte';
 
 	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
 	let hideSidebar = $state(false);
-    let isInfoModalOpen = $state(false);
+	let isInfoModalOpen = $state(false);
 	let isSolutionModalOpen = $state(false);
-    let isSettingsModalOpen = $state(false);
+	let isSettingsModalOpen = $state(false);
 
 	async function handleReset() {
 		if (userId && moduleId && client) {
@@ -35,20 +44,23 @@
 		onclick={() => (hideSidebar = !hideSidebar)}
 		aria-label="Toggle sidebar"
 	>
-		<PanelRight size={18} class="transition-transform duration-300 {hideSidebar ? 'rotate-180' : ''}" />
+		<PanelRight
+			size={18}
+			class="transition-transform duration-300 {hideSidebar ? 'rotate-180' : ''}"
+		/>
 	</button>
 
 	{#if !hideSidebar}
 		<div class="p-4 md:p-5 lg:p-6 pt-12 pl-12 mt-8">
-            <h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-                <a class="btn btn-ghost font-bold" href={`/classes?classId=${classId}`}>
-                    <ChevronLeft size={16} /> MODULE {module.data.order + 1}
-                </a>
-            </h4>
-            <h2 class="font-semibold text-3xl mt-2 flex items-center gap-3">
-                <span class="text-3xl">{module.data?.emoji || '📘'}</span>
-                <span>{module.data.title}</span>
-            </h2>
+			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
+				<a class="btn btn-ghost font-bold" href={`/classes?classId=${classId}`}>
+					<ChevronLeft size={16} /> MODULE {module.data.order + 1}
+				</a>
+			</h4>
+			<h2 class="font-semibold text-3xl mt-2 flex items-center gap-3">
+				<span class="text-3xl">{module.data?.emoji || '📘'}</span>
+				<span>{module.data.title}</span>
+			</h2>
 			<p class="text-base-content/70 mt-2">{module.data.description}</p>
 
 			<div class="mt-6">
@@ -62,33 +74,36 @@
 		</div>
 
 		<div class="flex flex-col justify-center m-4">
-            {#if typeof currentlySelected.explanation === 'string' && (() => { const t = currentlySelected.explanation.trim().toLowerCase(); return t.length > 0 && t !== 'undefined' && t !== 'null'; })()}
-                <div class="card bg-base-100 shadow-xl mt-8 lg:mt-12">
-                    <div class="card-body">
-                        <div class="flex flex-row flex-wrap justify-between border-b pb-2">
-                            <h2 class="card-title">Solution</h2>
-                            <div class="flex flex-row">
-                                <kbd class="kbd kbd-sm hidden xl:block self-center me-1">tab</kbd>
-                                <button class="btn btn-ghost btn-circle" onclick={() => qs.handleSolution()}>
-                                    <Eye />
-                                </button>
-                            </div>
-                        </div>
-                        <p
-                            class={`mt-2 transition-all duration-300 ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
-                        >
-                            {currentlySelected.explanation}
-                        </p>
-                    </div>
-                </div>
-            {/if}
+			{#if typeof currentlySelected.explanation === 'string' && (() => {
+					const t = currentlySelected.explanation.trim().toLowerCase();
+					return t.length > 0 && t !== 'undefined' && t !== 'null';
+				})()}
+				<div class="card bg-base-100 shadow-xl mt-8 lg:mt-12">
+					<div class="card-body">
+						<div class="flex flex-row flex-wrap justify-between border-b pb-2">
+							<h2 class="card-title">Solution</h2>
+							<div class="flex flex-row">
+								<kbd class="kbd kbd-sm hidden xl:block self-center me-1">tab</kbd>
+								<button class="btn btn-ghost btn-circle" onclick={() => qs.handleSolution()}>
+									<Eye />
+								</button>
+							</div>
+						</div>
+						<p
+							class={`mt-2 transition-all duration-300 ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
+						>
+							{currentlySelected.explanation}
+						</p>
+					</div>
+				</div>
+			{/if}
 
-            <div class="flex flex-row mt-6 justify-center">
-                <button class="btn btn-soft btn-sm" onclick={() => (isSettingsModalOpen = true)}>
-                    <Settings size={16} />
-                    <span class="ml-1 hidden sm:inline">Settings</span>
-                </button>
-            </div>
+			<div class="flex flex-row mt-6 justify-center">
+				<button class="btn btn-soft btn-sm" onclick={() => (isSettingsModalOpen = true)}>
+					<Settings size={16} />
+					<span class="ml-1 hidden sm:inline">Settings</span>
+				</button>
+			</div>
 		</div>
 	{:else}
 		<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
@@ -98,7 +113,9 @@
 					href={`/classes?classId=${classId}`}
 				>
 					<span class="group-hover:hidden">{module.data.order}</span>
-					<span class="hidden group-hover:inline-flex items-center justify-center"><ChevronLeft size={24} /></span>
+					<span class="hidden group-hover:inline-flex items-center justify-center"
+						><ChevronLeft size={24} /></span
+					>
 				</a>
 
 				<button
@@ -119,15 +136,15 @@
 				>
 			</div>
 
-            <div class="border-t border-base-300 w-full my-2"></div>
+			<div class="border-t border-base-300 w-full my-2"></div>
 
-            <button
-                class="btn btn-circle btn-lg mt-3 btn-soft"
-                onclick={() => (isSettingsModalOpen = true)}
-                title="Settings"
-            >
-                <Settings />
-            </button>
+			<button
+				class="btn btn-circle btn-lg mt-3 btn-soft"
+				onclick={() => (isSettingsModalOpen = true)}
+				title="Settings"
+			>
+				<Settings />
+			</button>
 		</div>
 	{/if}
 </div>
@@ -158,10 +175,10 @@
 				onclick={() => (isSolutionModalOpen = false)}>✕</button
 			>
 		</form>
-    <h3 class="text-lg font-bold">Solution</h3>
-    {#if typeof currentlySelected.explanation === 'string' && currentlySelected.explanation.trim().length > 0}
-    <p class="py-4">{currentlySelected.explanation}</p>
-    {/if}
+		<h3 class="text-lg font-bold">Solution</h3>
+		{#if typeof currentlySelected.explanation === 'string' && currentlySelected.explanation.trim().length > 0}
+			<p class="py-4">{currentlySelected.explanation}</p>
+		{/if}
 	</div>
 </dialog>
 

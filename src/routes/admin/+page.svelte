@@ -19,7 +19,7 @@
 	import EditClassModal from '$lib/admin/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
-    import { pickDefaultSemesterName } from '$lib/utils/semester';
+	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
@@ -142,6 +142,10 @@
 		}
 	});
 
+	$effect(() => {
+		if (currentSemester) setLastSemesterName(currentSemester);
+	});
+
 	const filteredClassList = $derived(
 		!classList || !currentSemester
 			? classList
@@ -213,10 +217,11 @@
 				</div>
 			</a>
 
-			<a
-				href="/admin/library"
-				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
-				aria-label="Open Class Progress"
+			<div
+				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4 opacity-60 cursor-not-allowed pointer-events-none select-none"
+				aria-label="Class Progress (coming soon)"
+				aria-disabled="true"
+				title="Coming soon"
 			>
 				<div class="rounded-md bg-primary-content border border-base-300 p-2">
 					<ChartColumnIncreasing size={20} class="text-primary" aria-hidden="true" />
@@ -229,7 +234,7 @@
 						Track performance and monitor mastery over time
 					</p>
 				</div>
-			</a>
+			</div>
 		</div>
 
 		<div class="flex flex-row justify-between mt-12">

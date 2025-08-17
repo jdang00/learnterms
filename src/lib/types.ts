@@ -40,4 +40,4 @@ export const DISPLAY_QUESTION_TYPES = {
 	[QUESTION_TYPES.FILL_IN_THE_BLANK]: 'Fill in the Blank'
 } as const;
 
-export type QuestionType = typeof QUESTION_TYPES[keyof typeof QUESTION_TYPES];
+export type QuestionType = (typeof QUESTION_TYPES)[keyof typeof QUESTION_TYPES];
