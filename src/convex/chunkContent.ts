@@ -12,48 +12,48 @@ interface ProcessedChunk {
 }
 
 type ChunkFieldInput = {
-    title: string;
-    summary: string;
-    content: string;
-    chunk_type: string;
+	title: string;
+	summary: string;
+	content: string;
+	chunk_type: string;
 };
 
 function validateAndTrimChunkFields(input: ChunkFieldInput): ChunkFieldInput {
-    const title = input.title.trim();
-    const summary = input.summary.trim();
-    const content = input.content.trim();
-    const chunk_type = input.chunk_type.trim();
+	const title = input.title.trim();
+	const summary = input.summary.trim();
+	const content = input.content.trim();
+	const chunk_type = input.chunk_type.trim();
 
-    if (!title) {
-        throw new Error('Chunk title is required and cannot be empty');
-    }
-    if (!summary) {
-        throw new Error('Chunk summary is required and cannot be empty');
-    }
-    if (!content) {
-        throw new Error('Chunk content is required and cannot be empty');
-    }
-    if (!chunk_type) {
-        throw new Error('Chunk type is required and cannot be empty');
-    }
+	if (!title) {
+		throw new Error('Chunk title is required and cannot be empty');
+	}
+	if (!summary) {
+		throw new Error('Chunk summary is required and cannot be empty');
+	}
+	if (!content) {
+		throw new Error('Chunk content is required and cannot be empty');
+	}
+	if (!chunk_type) {
+		throw new Error('Chunk type is required and cannot be empty');
+	}
 
-    if (title.length < 2) {
-        throw new Error('Chunk title must be at least 2 characters long');
-    }
-    if (title.length > 200) {
-        throw new Error('Chunk title cannot exceed 200 characters');
-    }
-    if (summary.length < 10) {
-        throw new Error('Chunk summary must be at least 10 characters long');
-    }
-    if (summary.length > 1000) {
-        throw new Error('Chunk summary cannot exceed 1000 characters');
-    }
-    if (content.length < 10) {
-        throw new Error('Chunk content must be at least 10 characters long');
-    }
+	if (title.length < 2) {
+		throw new Error('Chunk title must be at least 2 characters long');
+	}
+	if (title.length > 200) {
+		throw new Error('Chunk title cannot exceed 200 characters');
+	}
+	if (summary.length < 10) {
+		throw new Error('Chunk summary must be at least 10 characters long');
+	}
+	if (summary.length > 1000) {
+		throw new Error('Chunk summary cannot exceed 1000 characters');
+	}
+	if (content.length < 10) {
+		throw new Error('Chunk content must be at least 10 characters long');
+	}
 
-    return { title, summary, content, chunk_type };
+	return { title, summary, content, chunk_type };
 }
 
 export const getChunkByDocumentId = query({
@@ -63,7 +63,7 @@ export const getChunkByDocumentId = query({
 	handler: async (ctx, args) => {
 		const chunkContents = await ctx.db
 			.query('chunkContent')
-			.filter((q) => q.eq(q.field('documentId'), args.documentId))
+			.withIndex('by_documentId', (q) => q.eq('documentId', args.documentId))
 			.filter((q) => q.eq(q.field('deletedAt'), undefined))
 			.collect();
 		return chunkContents;
@@ -82,12 +82,12 @@ export const insertChunkContent = mutation({
 		updatedAt: v.number()
 	},
 	handler: async (ctx, args) => {
-        const {
-            title: trimmedTitle,
-            summary: trimmedSummary,
-            content: trimmedContent,
-            chunk_type: trimmedChunkType
-        } = validateAndTrimChunkFields(args);
+		const {
+			title: trimmedTitle,
+			summary: trimmedSummary,
+			content: trimmedContent,
+			chunk_type: trimmedChunkType
+		} = validateAndTrimChunkFields(args);
 
 		const document = await ctx.db.get(args.documentId);
 		if (!document) {
@@ -138,12 +138,12 @@ export const updateChunkContent = mutation({
 			throw new Error('Chunk not found or access denied');
 		}
 
-        const {
-            title: trimmedTitle,
-            summary: trimmedSummary,
-            content: trimmedContent,
-            chunk_type: trimmedChunkType
-        } = validateAndTrimChunkFields(args);
+		const {
+			title: trimmedTitle,
+			summary: trimmedSummary,
+			content: trimmedContent,
+			chunk_type: trimmedChunkType
+		} = validateAndTrimChunkFields(args);
 
 		await ctx.db.patch(args.chunkId, {
 			title: trimmedTitle,
@@ -171,12 +171,12 @@ export const processDocumentAndCreateChunks = mutation({
 		}
 
 		try {
-            if (!APP_BASE_URL) {
-                throw new Error('APP_BASE_URL environment variable not set');
-            }
-            const processDocUrl = new URL('/api/processdoc', APP_BASE_URL).toString();
+			if (!APP_BASE_URL) {
+				throw new Error('APP_BASE_URL environment variable not set');
+			}
+			const processDocUrl = new URL('/api/processdoc', APP_BASE_URL).toString();
 
-            const response = await fetch(processDocUrl, {
+			const response = await fetch(processDocUrl, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -213,13 +213,15 @@ export const processDocumentAndCreateChunks = mutation({
 export const bulkCreateChunks = mutation({
 	args: {
 		documentId: v.id('contentLib'),
-		chunks: v.array(v.object({
-			title: v.string(),
-			summary: v.string(),
-			content: v.string(),
-			keywords: v.array(v.string()),
-			chunk_type: v.string()
-		}))
+		chunks: v.array(
+			v.object({
+				title: v.string(),
+				summary: v.string(),
+				content: v.string(),
+				keywords: v.array(v.string()),
+				chunk_type: v.string()
+			})
+		)
 	},
 	handler: async (ctx, args) => {
 		const document = await ctx.db.get(args.documentId);
@@ -276,12 +278,12 @@ export const processMultipleChunks = mutation({
 
 		for (const material of args.materials) {
 			try {
-                if (!APP_BASE_URL) {
-                    throw new Error('APP_BASE_URL environment variable not set');
-                }
-                const processDocUrl = new URL('/api/processdoc', APP_BASE_URL).toString();
+				if (!APP_BASE_URL) {
+					throw new Error('APP_BASE_URL environment variable not set');
+				}
+				const processDocUrl = new URL('/api/processdoc', APP_BASE_URL).toString();
 
-                const response = await fetch(processDocUrl, {
+				const response = await fetch(processDocUrl, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'

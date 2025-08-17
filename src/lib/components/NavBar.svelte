@@ -26,7 +26,6 @@
 					/>
 				</svg>
 			</div>
-
 		</div>
 		<a class="btn btn-ghost text-xl" href="/"
 			>LearnTerms <span class="text-xs font-mono text-base-content/70">v3beta</span>

@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		return redirect(307, '/sign-in');
 	}
 	try {
-    const userData = await client.query(api.users.getUserById, { id: userId });
+		const userData = await client.query(api.users.getUserById, { id: userId });
 		let cohortLib;
 		if (userData?.cohortId) {
 			cohortLib = await client.query(api.contentLib.getContentLibByCohort, {

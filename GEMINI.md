@@ -1,4 +1,3 @@
-
 # Gemini Codebase Guide
 
 This document provides a set of optimized instructions for Gemini to effectively interact with the LearnTerms codebase. By following these guidelines, Gemini can understand and modify the code in a way that is consistent with the existing patterns and technologies.

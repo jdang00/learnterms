@@ -5,7 +5,7 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
-    import { pickDefaultSemesterName } from '$lib/utils/semester';
+	import { pickDefaultSemesterName } from '$lib/utils/semester';
 
 	const client = useConvexClient();
 

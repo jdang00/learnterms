@@ -8,13 +8,11 @@ The new architecture is built around a modular, component-based system using Sve
 
 ## Key Features
 
-*   **AI-Generated Questions**: The platform's AI engine analyzes course materials to create relevant practice questions, ensuring that students are studying the most important content.
-*   **Personalized Learning Paths**: LearnTerms adapts to each student's learning style, tracking their progress and recommending the most effective study materials and exercises.
-*   **Modern, Component-Based UI**: The user interface is built with Svelte 5 and Daisy UI, providing a clean, intuitive, and responsive experience across all devices.
-*   **Scalable, Real-Time Backend**: The new backend is powered by Convex, a modern, real-time database that enables seamless data synchronization and a more interactive user experience.
-*   **Legacy System**: The legacy system, which is still partially in use, is built on Supabase and provides a foundation for the new architecture.
-
-
+- **AI-Generated Questions**: The platform's AI engine analyzes course materials to create relevant practice questions, ensuring that students are studying the most important content.
+- **Personalized Learning Paths**: LearnTerms adapts to each student's learning style, tracking their progress and recommending the most effective study materials and exercises.
+- **Modern, Component-Based UI**: The user interface is built with Svelte 5 and Daisy UI, providing a clean, intuitive, and responsive experience across all devices.
+- **Scalable, Real-Time Backend**: The new backend is powered by Convex, a modern, real-time database that enables seamless data synchronization and a more interactive user experience.
+- **Legacy System**: The legacy system, which is still partially in use, is built on Supabase and provides a foundation for the new architecture.
 
 ## User Experience
 
@@ -24,8 +22,8 @@ The LearnTerms user experience is designed to be simple, intuitive, and engaging
 
 Our marketing efforts are focused on highlighting the benefits of the new LearnTerms platform, including:
 
-*   **Smarter, More Effective Studying**: Our AI-powered platform helps students study more efficiently and effectively.
-*   **Personalized Learning**: We provide a customized learning experience for each student, adapting to their unique needs and learning style.
-*   **Proven Results**: Our platform is backed by data and has been shown to improve student outcomes.
+- **Smarter, More Effective Studying**: Our AI-powered platform helps students study more efficiently and effectively.
+- **Personalized Learning**: We provide a customized learning experience for each student, adapting to their unique needs and learning style.
+- **Proven Results**: Our platform is backed by data and has been shown to improve student outcomes.
 
 By emphasizing these key benefits, we aim to attract and retain a loyal user base of students who are committed to academic excellence.

@@ -128,10 +128,10 @@
 					onclick={() => (qs.isModalOpen = false)}>✕</button
 				>
 			</form>
-            <h3 class="text-lg font-bold">Solution</h3>
-            {#if typeof currentlySelected.explanation === 'string' && currentlySelected.explanation.trim().length > 0}
-            <p class="py-4">{currentlySelected.explanation}</p>
-            {/if}
+			<h3 class="text-lg font-bold">Solution</h3>
+			{#if typeof currentlySelected.explanation === 'string' && currentlySelected.explanation.trim().length > 0}
+				<p class="py-4">{currentlySelected.explanation}</p>
+			{/if}
 		</div>
 	</dialog>
 

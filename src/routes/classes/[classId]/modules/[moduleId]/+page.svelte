@@ -4,17 +4,17 @@
 	import { api } from '../../../../../convex/_generated/api.js';
 	import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 	import QuizSideBar from '$lib/components/QuizSideBar.svelte';
-    import QuizNavigation from '$lib/components/QuizNavigation.svelte';
-    import AnswerOptions from '$lib/components/AnswerOptions.svelte';
-    import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
+	import QuizNavigation from '$lib/components/QuizNavigation.svelte';
+	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
+	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
 	import { QuizState } from './states.svelte';
 	import ActionButtons from '$lib/components/ActionButtons.svelte';
 	import MobileMenu from '$lib/components/MobileMenu.svelte';
 	import MobileInfo from '$lib/components/MobileInfo.svelte';
 	import ResultBanner from '$lib/components/ResultBanner.svelte';
 	import { onMount, tick } from 'svelte';
-    import { Flag, BookmarkCheck, ArrowDownNarrowWide } from 'lucide-svelte';
-    import { QUESTION_TYPES } from '$lib/utils/questionType';
+	import { Flag, BookmarkCheck, ArrowDownNarrowWide } from 'lucide-svelte';
+	import { QUESTION_TYPES } from '$lib/utils/questionType';
 
 	let { data }: { data: PageData } = $props();
 
@@ -86,6 +86,7 @@
 
 			await client.mutation(api.userProgress.saveUserProgress, {
 				userId: userId,
+				classId: data.classId as Id<'class'>,
 				questionId: currentQuestion._id,
 				selectedOptions: qs.selectedAnswers,
 				eliminatedOptions: qs.eliminatedAnswers,
@@ -137,33 +138,37 @@
 		{ initialData: data.moduleInfo }
 	);
 
-    const interactedQuestions: { data: any; isLoading: boolean; error: any } =
-        userId && questions.data
-            ? useQuery(
-                  api.userProgress.getUserProgressForModule,
-                  {
-                      userId: userId,
-                      questionIds: ((questions.data as Doc<'question'>[]).map((q) => q._id as Id<'question'>)) as Id<'question'>[]
-                  },
-                  {
-                      initialData: data.interactedQuestions || []
-                  }
-              )
-            : { data: data.interactedQuestions || [], isLoading: false, error: null };
+	const interactedQuestions: { data: any; isLoading: boolean; error: any } =
+		userId && questions.data
+			? useQuery(
+					api.userProgress.getUserProgressForModule,
+					{
+						userId: userId,
+						questionIds: (questions.data as Doc<'question'>[]).map(
+							(q) => q._id as Id<'question'>
+						) as Id<'question'>[]
+					},
+					{
+						initialData: data.interactedQuestions || []
+					}
+				)
+			: { data: data.interactedQuestions || [], isLoading: false, error: null };
 
-    const flaggedQuestions: { data: any; isLoading: boolean; error: any } =
-        userId && questions.data
-            ? useQuery(
-                  api.userProgress.getFlaggedQuestionsForModule,
-                  {
-                      userId: userId,
-                      questionIds: ((questions.data as Doc<'question'>[]).map((q) => q._id as Id<'question'>)) as Id<'question'>[]
-                  },
-                  {
-                      initialData: data.flaggedQuestions || []
-                  }
-              )
-            : { data: data.flaggedQuestions || [], isLoading: false, error: null };
+	const flaggedQuestions: { data: any; isLoading: boolean; error: any } =
+		userId && questions.data
+			? useQuery(
+					api.userProgress.getFlaggedQuestionsForModule,
+					{
+						userId: userId,
+						questionIds: (questions.data as Doc<'question'>[]).map(
+							(q) => q._id as Id<'question'>
+						) as Id<'question'>[]
+					},
+					{
+						initialData: data.flaggedQuestions || []
+					}
+				)
+			: { data: data.flaggedQuestions || [], isLoading: false, error: null };
 
 	$effect(() => {
 		if (interactedQuestions.data) {
@@ -411,12 +416,12 @@
 							</li>
 						</ul>
 					</div>
-                </div>
-                {#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}
-                    <FillInTheBlank bind:qs {currentlySelected} />
-                {:else}
-                    <AnswerOptions bind:qs {currentlySelected} />
-                {/if}
+				</div>
+				{#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}
+					<FillInTheBlank bind:qs {currentlySelected} />
+				{:else}
+					<AnswerOptions bind:qs {currentlySelected} />
+				{/if}
 				<ActionButtons {qs} {currentlySelected} />
 			</div>
 		</div>

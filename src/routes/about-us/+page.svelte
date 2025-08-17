@@ -48,14 +48,16 @@
 			</p>
 		</section>
 
-        <div
-            class="rounded-lg w-full my-12 relative overflow-hidden bg-aurora animate-aurora grid place-items-center gap-0 md:py-28 py-16 text-center not-prose"
-        >
-            <h2 class="md:text-7xl text-5xl opacity-75 font-bold tracking-tight m-0 leading-tight">LearnTerms</h2>
-            <p class="text-base-content/70 text-lg sm:text-xl md:text-2xl lg:text-3xl m-0">
-                Smarter Studying, Simplified.
-            </p>
-        </div>
+		<div
+			class="rounded-lg w-full my-12 relative overflow-hidden bg-aurora animate-aurora grid place-items-center gap-0 md:py-28 py-16 text-center not-prose"
+		>
+			<h2 class="md:text-7xl text-5xl opacity-75 font-bold tracking-tight m-0 leading-tight">
+				LearnTerms
+			</h2>
+			<p class="text-base-content/70 text-lg sm:text-xl md:text-2xl lg:text-3xl m-0">
+				Smarter Studying, Simplified.
+			</p>
+		</div>
 
 		<section>
 			<p>
@@ -93,8 +95,8 @@
 				engaging with learning that actually matters. So LearnTerms was born out of this frustration
 				and waste. The platform runs on the belief that studying should be targeted, not tedious.
 				Its tools exist to strip away noise, break complex material into meaningful, digestible
-				chunks, and give learners a clear path from <em>I’ve seen this before”</em> to <em>“I can explain it
-				without notes”</em>.
+				chunks, and give learners a clear path from <em>I’ve seen this before”</em> to
+				<em>“I can explain it without notes”</em>.
 			</p>
 		</section>
 
@@ -145,8 +147,9 @@
 			<p>
 				LearnTerms started as a personal solution to a problem I faced every day. It’s grown into a
 				platform that can help entire cohorts work smarter. Every update, feature, and design comes
-				back to a single question: <em>Will this help students master their material faster and with
-				more confidence?</em>
+				back to a single question: <em
+					>Will this help students master their material faster and with more confidence?</em
+				>
 			</p>
 		</section>
 

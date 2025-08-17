@@ -46,7 +46,7 @@ export default defineSchema({
 		code: v.string(),
 		description: v.string(),
 		order: v.number()
-	}),
+	}).index('by_cohortId', ['cohortId']),
 	module: defineTable({
 		title: v.string(),
 		emoji: v.optional(v.string()),
@@ -58,7 +58,7 @@ export default defineSchema({
 		description: v.string(),
 		status: v.string()
 	}).index('by_classId', ['classId']),
-    question: defineTable({
+	question: defineTable({
 		metadata: v.object({}),
 		updatedAt: v.number(),
 		deletedAt: v.optional(v.number()),
@@ -68,10 +68,10 @@ export default defineSchema({
 		stem: v.string(),
 		options: v.array(v.object({ id: v.string(), text: v.string() })),
 		correctAnswers: v.array(v.string()),
-        explanation: v.optional(v.string()),
+		explanation: v.optional(v.string()),
 		aiGenerated: v.boolean(),
 		status: v.string()
-	}).index('by_moduleId', ['moduleId']),
+	}).index('by_moduleId', ['moduleId']).index('by_moduleId_order', ['moduleId', 'order']),
 	questionMedia: defineTable({
 		url: v.string(),
 		type: v.string(),
@@ -87,6 +87,7 @@ export default defineSchema({
 	}),
 	userProgress: defineTable({
 		userId: v.id('users'),
+		classId: v.id('class'),
 		questionId: v.id('question'),
 		selectedOptions: v.array(v.string()),
 		eliminatedOptions: v.array(v.string()),
@@ -99,7 +100,8 @@ export default defineSchema({
 		updatedAt: v.number()
 	})
 		.index('by_user_question', ['userId', 'questionId'])
-		.index('by_question_user', ['questionId', 'userId']),
+		.index('by_question_user', ['questionId', 'userId'])
+		.index('by_user_class', ['userId', 'classId']),
 	contentLib: defineTable({
 		title: v.string(),
 		description: v.optional(v.string()),
@@ -107,7 +109,7 @@ export default defineSchema({
 		cohortId: v.id('cohort'),
 		metadata: v.optional(v.object({})),
 		deletedAt: v.optional(v.number())
-	}),
+	}).index('by_cohortId', ['cohortId']),
 	chunkContent: defineTable({
 		title: v.string(),
 		summary: v.string(),
@@ -118,5 +120,5 @@ export default defineSchema({
 		documentId: v.id('contentLib'),
 		metadata: v.optional(v.object({})),
 		deletedAt: v.optional(v.number())
-	})
+	}).index('by_documentId', ['documentId'])
 });

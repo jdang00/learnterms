@@ -2,7 +2,11 @@ import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
 import type { Doc } from './_generated/dataModel';
 
-const getUserProgressRecords = async (ctx: any, userId: string, questionIds: string[]): Promise<Doc<'userProgress'>[]> => {
+const getUserProgressRecords = async (
+	ctx: any,
+	userId: string,
+	questionIds: string[]
+): Promise<Doc<'userProgress'>[]> => {
 	return await ctx.db
 		.query('userProgress')
 		.filter((q: any) =>
@@ -34,9 +38,19 @@ export const getProgressForClass = query({
 		classId: v.id('class')
 	},
 	handler: async (ctx, args) => {
+		const progressRecords = await ctx.db
+			.query('userProgress')
+			.withIndex('by_user_class', (q) => q.eq('userId', args.userId).eq('classId', args.classId))
+			.collect();
+
+		const progressMap = new Map();
+		progressRecords.forEach((record) => {
+			progressMap.set(record.questionId, record);
+		});
+
 		const modules = await ctx.db
 			.query('module')
-			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
 			.collect();
 
 		if (modules.length === 0) {
@@ -52,16 +66,6 @@ export const getProgressForClass = query({
 				.collect();
 			questionsByModule.set(module._id, questions);
 		}
-
-		const progressRecords = await ctx.db
-			.query('userProgress')
-			.withIndex('by_user_question', (q) => q.eq('userId', args.userId))
-			.collect();
-
-		const progressMap = new Map();
-		progressRecords.forEach((record) => {
-			progressMap.set(record.questionId, record);
-		});
 
 		const moduleProgress: Record<
 			string,
@@ -139,10 +143,8 @@ export const getUserProgressForModule = query({
 		const records = await getUserProgressRecords(ctx, args.userId, args.questionIds);
 
 		const interactedQuestions = records
-			.filter(record =>
-				record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0
-			)
-			.map(record => record.questionId);
+			.filter((record) => record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0)
+			.map((record) => record.questionId);
 
 		return interactedQuestions;
 	}
@@ -157,8 +159,8 @@ export const getFlaggedQuestionsForModule = query({
 		const records = await getUserProgressRecords(ctx, args.userId, args.questionIds);
 
 		const flaggedQuestions = records
-			.filter(record => record.isFlagged === true)
-			.map(record => record.questionId);
+			.filter((record) => record.isFlagged === true)
+			.map((record) => record.questionId);
 
 		return flaggedQuestions;
 	}
@@ -167,6 +169,7 @@ export const getFlaggedQuestionsForModule = query({
 export const saveUserProgress = mutation({
 	args: {
 		userId: v.id('users'),
+		classId: v.id('class'),
 		questionId: v.id('question'),
 		selectedOptions: v.optional(v.array(v.string())),
 		eliminatedOptions: v.optional(v.array(v.string())),
@@ -198,6 +201,7 @@ export const saveUserProgress = mutation({
 			// Create new record
 			return await ctx.db.insert('userProgress', {
 				userId: args.userId,
+				classId: args.classId,
 				questionId: args.questionId,
 				selectedOptions: args.selectedOptions ?? [],
 				eliminatedOptions: args.eliminatedOptions ?? [],
@@ -259,7 +263,3 @@ export const clearUserProgressForModule = mutation({
 		return deletedCount;
 	}
 });
-
-
-
-

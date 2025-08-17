@@ -56,7 +56,7 @@ LearnTerms is released under the **MIT License**. See [LICENSE](./LICENSE) for f
 
 2. **Official Hosted Deployment**  
    While the code is free, hosting and operating the service incurs infrastructure costs. The official LearnTerms platform offers:
-   - **Free Tier**: Core features, community support, and basic analytics at no cost.  
+   - **Free Tier**: Core features, community support, and basic analytics at no cost.
    - **Pro Plan**: Advanced analytics, priority support, team/collaboration tools, and higher usage limits.
 
-To use the hosted service, [create an account]([https://www.learnterms.app/signup](https://accounts.learnterms.com/sign-up)) and select the Free or Pro plan that suits your needs.
+To use the hosted service, [create an account](<[https://www.learnterms.app/signup](https://accounts.learnterms.com/sign-up)>) and select the Free or Pro plan that suits your needs.

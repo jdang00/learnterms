@@ -160,20 +160,21 @@ async function getAuthenticatedUser(token: string): Promise<AuthenticatedUser> {
 		if (parts.length !== 3) {
 			throw new Error('Invalid JWT format');
 		}
-		
-		const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/') + '=='.slice((4 - parts[1].length % 4) % 4);
+
+		const payload =
+			parts[1].replace(/-/g, '+').replace(/_/g, '/') + '=='.slice((4 - (parts[1].length % 4)) % 4);
 		const decoded: JWTPayload = JSON.parse(atob(payload));
-		
+
 		// Check expiration
 		const now = Math.floor(Date.now() / 1000);
 		if (decoded.exp < now) {
 			throw new Error('JWT token has expired');
 		}
-		
+
 		// Fetch user data from Clerk API
 		const userResponse = await fetch(`${CLERK_API_BASE}/users/${decoded.sub}`, {
 			headers: {
-				'Authorization': `Bearer ${CLERK_SECRET_KEY}`,
+				Authorization: `Bearer ${CLERK_SECRET_KEY}`,
 				'Content-Type': 'application/json'
 			}
 		});
@@ -183,7 +184,7 @@ async function getAuthenticatedUser(token: string): Promise<AuthenticatedUser> {
 		}
 
 		const clerkUser: ClerkUser = await userResponse.json();
-		
+
 		const authenticatedUser: AuthenticatedUser = {
 			clerkUserId: decoded.sub,
 			email: clerkUser.email_addresses[0]?.email_address || null,
@@ -195,12 +196,13 @@ async function getAuthenticatedUser(token: string): Promise<AuthenticatedUser> {
 			createAccess: clerkUser.public_metadata.create,
 			publicMetadata: clerkUser.public_metadata,
 			privateMetadata: clerkUser.private_metadata,
-			isAdmin: (clerkUser.public_metadata.role === 'admin' || clerkUser.public_metadata.role === 'teacher'),
-			isStudent: (clerkUser.public_metadata.role === 'student'),
+			isAdmin:
+				clerkUser.public_metadata.role === 'admin' || clerkUser.public_metadata.role === 'teacher',
+			isStudent: clerkUser.public_metadata.role === 'student',
 			sessionId: decoded.sid,
 			expiresAt: decoded.exp
 		};
-		
+
 		return authenticatedUser;
 	} catch (error) {
 		console.error('Authentication failed:', error);
@@ -208,15 +210,13 @@ async function getAuthenticatedUser(token: string): Promise<AuthenticatedUser> {
 	}
 }
 
-
-
 // Single comprehensive authentication action
 export const authenticateUser = action({
 	args: { token: v.string() },
 	handler: async (ctx: any, args: { token: string }): Promise<AuthResult> => {
 		try {
 			const user = await getAuthenticatedUser(args.token);
-			
+
 			return {
 				authenticated: true,
 				user: {
@@ -255,9 +255,12 @@ export const authenticateUser = action({
 });
 
 // Simplified wrapper factory
-const createAuthWrapper = (type: 'query' | 'mutation', roleCheck?: (user: AuthenticatedUser) => boolean) => {
+const createAuthWrapper = (
+	type: 'query' | 'mutation',
+	roleCheck?: (user: AuthenticatedUser) => boolean
+) => {
 	const wrapper = type === 'query' ? query : mutation;
-	
+
 	return (queryDef: { args: any; handler: (ctx: any, args: any) => Promise<any> }) => {
 		return wrapper({
 			...queryDef,
@@ -265,12 +268,18 @@ const createAuthWrapper = (type: 'query' | 'mutation', roleCheck?: (user: Authen
 				if (!args.userData) {
 					throw new Error(`Pre-authenticated user data is required for ${type}`);
 				}
-				
+
 				if (roleCheck && !roleCheck(args.userData)) {
-					const roleName = type.includes('admin') ? 'admin' : type.includes('student') ? 'student' : 'user';
-					throw new Error(`Access denied. ${roleName} access required, your role: ${args.userData.role}`);
+					const roleName = type.includes('admin')
+						? 'admin'
+						: type.includes('student')
+							? 'student'
+							: 'user';
+					throw new Error(
+						`Access denied. ${roleName} access required, your role: ${args.userData.role}`
+					);
 				}
-				
+
 				return await queryDef.handler({ ...ctx, user: args.userData }, args);
 			}
 		});
@@ -289,7 +298,7 @@ export const getAuthenticatedUserInfo = userQuery({
 	args: { userData: v.any() },
 	handler: async (ctx, args) => {
 		return {
-			message: "User authenticated with Clerk API!",
+			message: 'User authenticated with Clerk API!',
 			user: {
 				clerkUserId: ctx.user.clerkUserId,
 				name: ctx.user.name,
@@ -316,7 +325,7 @@ export const getUserData = userQuery({
 
 		if (!userRecord) {
 			return {
-				message: "User not found in database",
+				message: 'User not found in database',
 				user: {
 					clerkUserId: ctx.user.clerkUserId,
 					name: ctx.user.name,
@@ -346,7 +355,7 @@ export const getUserData = userQuery({
 		}
 
 		return {
-			message: "User data retrieved from database",
+			message: 'User data retrieved from database',
 			user: {
 				clerkUserId: ctx.user.clerkUserId,
 				name: ctx.user.name,
@@ -358,30 +367,34 @@ export const getUserData = userQuery({
 				dbName: userRecord.name
 			},
 			hasDbRecord: true,
-			cohort: cohort ? {
-				id: cohort._id,
-				name: cohort.name,
-				description: cohort.description,
-				startYear: cohort.startYear,
-				endYear: cohort.endYear,
-				classCode: cohort.classCode,
-				pic_url: cohort.pic_url
-			} : null,
-			school: school ? {
-				id: school._id,
-				name: school.name,
-				description: school.description
-			} : null,
+			cohort: cohort
+				? {
+						id: cohort._id,
+						name: cohort.name,
+						description: cohort.description,
+						startYear: cohort.startYear,
+						endYear: cohort.endYear,
+						classCode: cohort.classCode,
+						pic_url: cohort.pic_url
+					}
+				: null,
+			school: school
+				? {
+						id: school._id,
+						name: school.name,
+						description: school.description
+					}
+				: null,
 			timestamp: Date.now()
 		};
 	}
 });
 
 // Export the auth wrappers for use in other files
-export { 
-	userQuery,      // Query with pre-authenticated user data
-	userMutation,   // Mutation with pre-authenticated user data
-	adminQuery,     // Admin query with pre-authenticated user data
-	adminMutation,  // Admin mutation with pre-authenticated user data
-	studentQuery    // Student query with pre-authenticated user data
+export {
+	userQuery, // Query with pre-authenticated user data
+	userMutation, // Mutation with pre-authenticated user data
+	adminQuery, // Admin query with pre-authenticated user data
+	adminMutation, // Admin mutation with pre-authenticated user data
+	studentQuery // Student query with pre-authenticated user data
 };

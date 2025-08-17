@@ -1,8 +1,8 @@
 <script lang="ts">
 	let { isEditModalOpen, closeEditModal, editingModule, classId } = $props();
 
-import { X, BookOpenText, AlignLeft, Hash, Laugh } from 'lucide-svelte';
-import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
+	import { X, BookOpenText, AlignLeft, Hash, Laugh } from 'lucide-svelte';
+	import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
@@ -28,7 +28,7 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 
 	function validateField(field: string, value: string): string {
 		const trimmed = value.trim();
-		
+
 		switch (field) {
 			case 'moduleTitle':
 				if (!trimmed) return 'Module title is required';
@@ -42,12 +42,12 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 				if (trimmed.length > 500) return 'Description cannot exceed 500 characters';
 				break;
 
-            case 'moduleEmoji':
-                if (!trimmed) return '';
-                if (!isSingleEmoji(trimmed)) return 'Enter a single valid emoji';
-                break;
+			case 'moduleEmoji':
+				if (!trimmed) return '';
+				if (!isSingleEmoji(trimmed)) return 'Enter a single valid emoji';
+				break;
 		}
-		
+
 		return '';
 	}
 
@@ -62,9 +62,7 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 	}
 
 	const isFormValid = $derived(
-		moduleTitle.trim() && 
-		moduleDescription.trim() && 
-		Object.keys(validationErrors).length === 0
+		moduleTitle.trim() && moduleDescription.trim() && Object.keys(validationErrors).length === 0
 	);
 
 	async function handleSubmit() {
@@ -80,11 +78,11 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 		submitError = '';
 
 		try {
-            await client.mutation(api.module.updateModule, {
+			await client.mutation(api.module.updateModule, {
 				moduleId: editingModule._id,
 				classId: classId as Id<'class'>,
 				title: moduleTitle.trim(),
-                emoji: sanitizeEmoji(moduleEmoji) || undefined,
+				emoji: sanitizeEmoji(moduleEmoji) || undefined,
 				description: moduleDescription.trim(),
 				status: moduleStatus
 			});
@@ -94,7 +92,7 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 			closeEditModal();
 		} catch (error) {
 			submitError = error instanceof Error ? error.message : 'Failed to update module';
-			console.error("Failed to update module:", submitError);
+			console.error('Failed to update module:', submitError);
 		} finally {
 			isSubmitting = false;
 		}
@@ -257,7 +255,9 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 							/>
 							{#if validationErrors.moduleEmoji}
 								<div class="label">
-									<span class="label-text-alt text-error text-xs">{validationErrors.moduleEmoji}</span>
+									<span class="label-text-alt text-error text-xs"
+										>{validationErrors.moduleEmoji}</span
+									>
 								</div>
 							{/if}
 						</div>

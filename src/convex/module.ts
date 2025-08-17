@@ -2,12 +2,12 @@ import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
 
 function containsOnlyEmoji(input: string): boolean {
-  const allowedJoiners = new Set(['\u200d', '\ufe0f']);
-  for (const ch of Array.from(input)) {
-    if (allowedJoiners.has(ch)) continue;
-    if (!/\p{Extended_Pictographic}/u.test(ch)) return false;
-  }
-  return true;
+	const allowedJoiners = new Set(['\u200d', '\ufe0f']);
+	for (const ch of Array.from(input)) {
+		if (allowedJoiners.has(ch)) continue;
+		if (!/\p{Extended_Pictographic}/u.test(ch)) return false;
+	}
+	return true;
 }
 
 export const getClassModules = query({
@@ -16,7 +16,7 @@ export const getClassModules = query({
 	handler: async (ctx, args) => {
 		const modules = await ctx.db
 			.query('module')
-			.filter((q) => q.eq(q.field('classId'), args.id))
+			.withIndex('by_classId', (q) => q.eq('classId', args.id))
 			.filter((q) => q.eq(q.field('status'), 'published'))
 			.collect();
 
@@ -30,7 +30,7 @@ export const getAdminModule = query({
 	handler: async (ctx, args) => {
 		const modules = await ctx.db
 			.query('module')
-			.filter((q) => q.eq(q.field('classId'), args.id))
+			.withIndex('by_classId', (q) => q.eq('classId', args.id))
 			.collect();
 
 		return modules.sort((a, b) => a.order - b.order);
@@ -51,7 +51,7 @@ export const getModuleQuestionCount = query({
 			.query('question')
 			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
 			.collect();
-		
+
 		return questions.length;
 	}
 });
@@ -61,7 +61,7 @@ export const getAdminModulesWithQuestionCounts = query({
 	handler: async (ctx, args) => {
 		const modules = await ctx.db
 			.query('module')
-			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
 			.collect();
 
 		const modulesWithCounts = await Promise.all(
@@ -70,7 +70,7 @@ export const getAdminModulesWithQuestionCounts = query({
 					.query('question')
 					.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
 					.collect();
-				
+
 				return {
 					...module,
 					questionCount: questions.length
@@ -91,7 +91,7 @@ export const updateModuleOrder = mutation({
 	handler: async (ctx, args) => {
 		const allModules = await ctx.db
 			.query('module')
-			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
 			.collect();
 
 		// Sort modules by their current order to get the correct sequence
@@ -119,7 +119,7 @@ export const updateModuleOrder = mutation({
 export const insertModule = mutation({
 	args: {
 		title: v.string(),
-    emoji: v.optional(v.string()),
+		emoji: v.optional(v.string()),
 		description: v.string(),
 		status: v.string(),
 		classId: v.id('class'),
@@ -129,7 +129,7 @@ export const insertModule = mutation({
 	},
 	handler: async (ctx, args) => {
 		const trimmedTitle = args.title.trim();
-    const trimmedEmoji = args.emoji?.trim();
+		const trimmedEmoji = args.emoji?.trim();
 		const trimmedDescription = args.description.trim();
 		const trimmedStatus = args.status.trim().toLowerCase();
 
@@ -153,15 +153,15 @@ export const insertModule = mutation({
 			throw new Error('Module description cannot exceed 500 characters');
 		}
 
-    if (trimmedEmoji != null && trimmedEmoji.length > 0) {
-      const emojiCharCount = Array.from(trimmedEmoji).length;
-      if (emojiCharCount > 8) {
-        throw new Error('Emoji must be at most 8 characters');
-      }
-      if (!containsOnlyEmoji(trimmedEmoji)) {
-        throw new Error('Please enter only emoji characters');
-      }
-    }
+		if (trimmedEmoji != null && trimmedEmoji.length > 0) {
+			const emojiCharCount = Array.from(trimmedEmoji).length;
+			if (emojiCharCount > 8) {
+				throw new Error('Emoji must be at most 8 characters');
+			}
+			if (!containsOnlyEmoji(trimmedEmoji)) {
+				throw new Error('Please enter only emoji characters');
+			}
+		}
 
 		const validStatuses = ['draft', 'published', 'archived'];
 		if (!validStatuses.includes(trimmedStatus)) {
@@ -170,7 +170,7 @@ export const insertModule = mutation({
 
 		const existingModules = await ctx.db
 			.query('module')
-			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
 			.collect();
 
 		const titleExists = existingModules.some(
@@ -183,7 +183,7 @@ export const insertModule = mutation({
 		const id = await ctx.db.insert('module', {
 			...args,
 			title: trimmedTitle,
-      emoji: trimmedEmoji,
+			emoji: trimmedEmoji,
 			description: trimmedDescription,
 			status: trimmedStatus
 		});
@@ -221,7 +221,7 @@ export const updateModule = mutation({
 		moduleId: v.id('module'),
 		classId: v.id('class'),
 		title: v.string(),
-    emoji: v.optional(v.string()),
+		emoji: v.optional(v.string()),
 		description: v.string(),
 		status: v.string()
 	},
@@ -232,7 +232,7 @@ export const updateModule = mutation({
 		}
 
 		const trimmedTitle = args.title.trim();
-    const trimmedEmoji = args.emoji?.trim();
+		const trimmedEmoji = args.emoji?.trim();
 		const trimmedDescription = args.description.trim();
 		const trimmedStatus = args.status.trim().toLowerCase();
 
@@ -256,15 +256,15 @@ export const updateModule = mutation({
 			throw new Error('Module description cannot exceed 500 characters');
 		}
 
-    if (trimmedEmoji != null && trimmedEmoji.length > 0) {
-      const emojiCharCount = Array.from(trimmedEmoji).length;
-      if (emojiCharCount > 8) {
-        throw new Error('Emoji must be at most 8 characters');
-      }
-      if (!containsOnlyEmoji(trimmedEmoji)) {
-        throw new Error('Please enter only emoji characters');
-      }
-    }
+		if (trimmedEmoji != null && trimmedEmoji.length > 0) {
+			const emojiCharCount = Array.from(trimmedEmoji).length;
+			if (emojiCharCount > 8) {
+				throw new Error('Emoji must be at most 8 characters');
+			}
+			if (!containsOnlyEmoji(trimmedEmoji)) {
+				throw new Error('Please enter only emoji characters');
+			}
+		}
 
 		const validStatuses = ['draft', 'published', 'archived'];
 		if (!validStatuses.includes(trimmedStatus)) {
@@ -273,12 +273,12 @@ export const updateModule = mutation({
 
 		const existingModules = await ctx.db
 			.query('module')
-			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
 			.collect();
 
 		const titleExists = existingModules.some(
-			(existingModule) => 
-				existingModule._id !== args.moduleId && 
+			(existingModule) =>
+				existingModule._id !== args.moduleId &&
 				existingModule.title.toLowerCase() === trimmedTitle.toLowerCase()
 		);
 		if (titleExists) {
@@ -287,7 +287,7 @@ export const updateModule = mutation({
 
 		await ctx.db.patch(args.moduleId, {
 			title: trimmedTitle,
-      emoji: trimmedEmoji,
+			emoji: trimmedEmoji,
 			description: trimmedDescription,
 			status: trimmedStatus,
 			updatedAt: Date.now()
@@ -296,5 +296,3 @@ export const updateModule = mutation({
 		return { updated: true };
 	}
 });
-
-

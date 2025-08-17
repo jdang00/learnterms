@@ -3,11 +3,11 @@ import { v } from 'convex/values';
 
 // Get user classes by their UserId and looking up their school and cohort
 export const getUserClasses = query({
-	args: { id: v.string() },
+	args: { id: v.id('cohort') },
 	handler: async (ctx, args) => {
 		const classes = await ctx.db
 			.query('class')
-			.filter((q) => q.eq(q.field('cohortId'), args.id))
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.id))
 			.collect();
 
 		// Get semester information for each class
@@ -37,7 +37,7 @@ export const getClassContentCounts = query({
 	handler: async (ctx, args) => {
 		const modules = await ctx.db
 			.query('module')
-			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
 			.collect();
 
 		let totalQuestions = 0;
@@ -65,15 +65,15 @@ export const updateClassOrder = mutation({
 	handler: async (ctx, args) => {
 		const allClasses = await ctx.db
 			.query('class')
-			.filter((q) => q.eq(q.field('cohortId'), args.cohortId))
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
 			.collect();
 
 		const movedClass = allClasses.find((c) => c._id === args.classId);
 		if (!movedClass) return;
 
 		// Only reorder classes within the same semester
-		const semesterClasses = allClasses.filter(c => c.semesterId === movedClass.semesterId);
-		
+		const semesterClasses = allClasses.filter((c) => c.semesterId === movedClass.semesterId);
+
 		// Sort classes by their current order to get the correct sequence
 		semesterClasses.sort((a, b) => a.order - b.order);
 
@@ -144,13 +144,15 @@ export const insertClass = mutation({
 		// Validation: Class code format (alphanumeric, hyphens, underscores only)
 		const codePattern = /^[a-zA-Z0-9\-_\s]+$/;
 		if (!codePattern.test(trimmedCode)) {
-			throw new Error('Class code can only contain letters, numbers, hyphens, underscores, and spaces');
+			throw new Error(
+				'Class code can only contain letters, numbers, hyphens, underscores, and spaces'
+			);
 		}
 
 		// Validation: Check for duplicates within the same cohort
 		const existingClasses = await ctx.db
 			.query('class')
-			.filter((q) => q.eq(q.field('cohortId'), args.cohortId))
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
 			.collect();
 
 		const nameExists = existingClasses.some(
@@ -197,7 +199,7 @@ export const deleteClass = mutation({
 
 		const modules = await ctx.db
 			.query('module')
-			.filter((q) => q.eq(q.field('classId'), args.classId))
+			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
 			.collect();
 
 		let totalQuestionsDeleted = 0;
@@ -214,12 +216,12 @@ export const deleteClass = mutation({
 
 			await ctx.db.delete(module._id);
 		}
-		
+
 		await ctx.db.delete(args.classId);
-		return { 
-			deleted: true, 
-			modulesDeleted: modules.length, 
-			questionsDeleted: totalQuestionsDeleted 
+		return {
+			deleted: true,
+			modulesDeleted: modules.length,
+			questionsDeleted: totalQuestionsDeleted
 		};
 	}
 });
@@ -278,18 +280,20 @@ export const updateClass = mutation({
 		// Validation: Class code format (alphanumeric, hyphens, underscores only)
 		const codePattern = /^[a-zA-Z0-9\-_\s]+$/;
 		if (!codePattern.test(trimmedCode)) {
-			throw new Error('Class code can only contain letters, numbers, hyphens, underscores, and spaces');
+			throw new Error(
+				'Class code can only contain letters, numbers, hyphens, underscores, and spaces'
+			);
 		}
 
 		// Validation: Check for duplicates within the same cohort (excluding current class)
 		const existingClasses = await ctx.db
 			.query('class')
-			.filter((q) => q.eq(q.field('cohortId'), args.cohortId))
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
 			.collect();
 
 		const nameExists = existingClasses.some(
-			(existingClass) => 
-				existingClass._id !== args.classId && 
+			(existingClass) =>
+				existingClass._id !== args.classId &&
 				existingClass.name.toLowerCase() === trimmedName.toLowerCase()
 		);
 		if (nameExists) {
@@ -297,8 +301,8 @@ export const updateClass = mutation({
 		}
 
 		const codeExists = existingClasses.some(
-			(existingClass) => 
-				existingClass._id !== args.classId && 
+			(existingClass) =>
+				existingClass._id !== args.classId &&
 				existingClass.code.toLowerCase() === trimmedCode.toLowerCase()
 		);
 		if (codeExists) {
@@ -310,7 +314,7 @@ export const updateClass = mutation({
 		if (!semester) {
 			throw new Error('Selected semester does not exist');
 		}
-		
+
 		await ctx.db.patch(args.classId, {
 			name: trimmedName,
 			code: trimmedCode,
@@ -318,9 +322,7 @@ export const updateClass = mutation({
 			semesterId: args.semesterId,
 			updatedAt: Date.now()
 		});
-		
+
 		return { updated: true };
 	}
 });
-
- 

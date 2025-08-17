@@ -3,9 +3,7 @@
 
 	const ctx = useClerkContext();
 
-	const admin = $derived(
-		ctx.user?.publicMetadata.role === 'admin'
-	);
+	const admin = $derived(ctx.user?.publicMetadata.role === 'admin');
 	const contributor = $derived(ctx.user?.publicMetadata.create === 'contributor');
 	const userRole = $derived(
 		ctx.user?.publicMetadata.role === 'student' || ctx.user?.publicMetadata.role === 'user'
@@ -23,24 +21,24 @@
 		actions?: QuickAction[];
 	}
 
-    let { title = 'Quick Actions', actions = [] }: Props = $props();
+	let { title = 'Quick Actions', actions = [] }: Props = $props();
 
-    let finalActions: QuickAction[] = $state([]);
+	let finalActions: QuickAction[] = $state([]);
 
-    $effect(() => {
-        if (actions.length > 0) {
-            finalActions = actions;
-            return;
-        }
-        const computed: QuickAction[] = [];
-        if (admin || contributor) {
-            computed.push({ title: 'Admin Dashboard', icon: '✏️', href: '/admin' });
-        }
-        if (userRole) {
-            computed.push({ title: 'My Dashboard', icon: '🏠', href: '/classes' });
-        }
-        finalActions = computed;
-    });
+	$effect(() => {
+		if (actions.length > 0) {
+			finalActions = actions;
+			return;
+		}
+		const computed: QuickAction[] = [];
+		if (admin || contributor) {
+			computed.push({ title: 'Admin Dashboard', icon: '✏️', href: '/admin' });
+		}
+		if (userRole) {
+			computed.push({ title: 'My Dashboard', icon: '🏠', href: '/classes' });
+		}
+		finalActions = computed;
+	});
 </script>
 
 <div class="lg:col-span-1">

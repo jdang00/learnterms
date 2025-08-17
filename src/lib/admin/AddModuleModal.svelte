@@ -1,8 +1,8 @@
 <script lang="ts">
 	let { isAddModalOpen, closeAddModal, classId } = $props();
 
-import { X, BookOpenText, AlignLeft, Hash, Laugh } from 'lucide-svelte';
-import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
+	import { X, BookOpenText, AlignLeft, Hash, Laugh } from 'lucide-svelte';
+	import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
@@ -24,15 +24,15 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 
 	function validateField(field: string, value: string): string {
 		const trimmed = value.trim();
-		
+
 		switch (field) {
 			case 'moduleTitle':
 				if (!trimmed) return 'Module title is required';
 				if (trimmed.length < 2) return 'Module title must be at least 2 characters';
 				if (trimmed.length > 100) return 'Module title cannot exceed 100 characters';
-				
+
 				// Check for duplicate titles (case-insensitive)
-				const existingTitles = modules.data?.map(m => m.title.toLowerCase()) || [];
+				const existingTitles = modules.data?.map((m) => m.title.toLowerCase()) || [];
 				if (existingTitles.includes(trimmed.toLowerCase())) {
 					return 'A module with this title already exists';
 				}
@@ -44,12 +44,12 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 				if (trimmed.length > 500) return 'Description cannot exceed 500 characters';
 				break;
 
-            case 'moduleEmoji':
-                if (!trimmed) return '';
-                if (!isSingleEmoji(trimmed)) return 'Enter a single valid emoji';
-                break;
+			case 'moduleEmoji':
+				if (!trimmed) return '';
+				if (!isSingleEmoji(trimmed)) return 'Enter a single valid emoji';
+				break;
 		}
-		
+
 		return '';
 	}
 
@@ -64,9 +64,7 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 	}
 
 	const isFormValid = $derived(
-		moduleTitle.trim() && 
-		moduleDescription.trim() && 
-		Object.keys(validationErrors).length === 0
+		moduleTitle.trim() && moduleDescription.trim() && Object.keys(validationErrors).length === 0
 	);
 
 	async function handleSubmit() {
@@ -85,9 +83,9 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 				? Math.max(...modules.data.map((m) => m.order)) + 1
 				: 0;
 
-            await client.mutation(api.module.insertModule, {
+			await client.mutation(api.module.insertModule, {
 				title: moduleTitle.trim(),
-                emoji: sanitizeEmoji(moduleEmoji) || undefined,
+				emoji: sanitizeEmoji(moduleEmoji) || undefined,
 				description: moduleDescription.trim(),
 				status: moduleStatus.toLowerCase(),
 				classId: classId as Id<'class'>,
@@ -106,7 +104,7 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 			closeAddModal();
 		} catch (error) {
 			submitError = error instanceof Error ? error.message : 'Failed to create module';
-			console.error("Failed to create module:", submitError);
+			console.error('Failed to create module:', submitError);
 		} finally {
 			isSubmitting = false;
 		}
@@ -157,9 +155,7 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 						maxlength="500"
 					></textarea>
 					<div class="label">
-						<span class="label-text-alt text-xs text-base-content/60">
-							10-500 characters
-						</span>
+						<span class="label-text-alt text-xs text-base-content/60"> 10-500 characters </span>
 						<span class="label-text-alt text-xs text-base-content/40">
 							{moduleDescription.length}/500
 						</span>
@@ -176,12 +172,18 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 
 			<!-- Two-column grid; include Emoji row first so columns align across rows -->
 			<div class="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-[auto_1fr] items-center">
-				<label class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex" for="module-emoji">
+				<label
+					class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
+					for="module-emoji"
+				>
 					<Laugh size={18} class="text-primary/80" />
 					<span>Emoji</span>
 				</label>
 				<div class="md:contents">
-					<label for="module-emoji" class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden">
+					<label
+						for="module-emoji"
+						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+					>
 						<Laugh size={18} class="text-primary/80" />
 						<span>Emoji</span>
 					</label>
@@ -197,7 +199,8 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 						/>
 						{#if validationErrors.moduleEmoji}
 							<div class="label">
-								<span class="label-text-alt text-error text-xs">{validationErrors.moduleEmoji}</span>
+								<span class="label-text-alt text-error text-xs">{validationErrors.moduleEmoji}</span
+								>
 							</div>
 						{/if}
 					</div>
@@ -291,9 +294,7 @@ import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 						maxlength="500"
 					></textarea>
 					<div class="label">
-						<span class="label-text-alt text-xs text-base-content/60">
-							10-500 characters
-						</span>
+						<span class="label-text-alt text-xs text-base-content/60"> 10-500 characters </span>
 						<span class="label-text-alt text-xs text-base-content/40">
 							{moduleDescription.length}/500
 						</span>

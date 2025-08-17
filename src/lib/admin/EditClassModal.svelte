@@ -5,7 +5,7 @@
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
-    import { pickDefaultSemesterName } from '$lib/utils/semester';
+	import { pickDefaultSemesterName } from '$lib/utils/semester';
 
 	const client = useConvexClient();
 
@@ -36,7 +36,7 @@
 
 	function validateField(field: string, value: string): string {
 		const trimmed = value.trim();
-		
+
 		switch (field) {
 			case 'className':
 				if (!trimmed) return 'Class name is required';
@@ -48,7 +48,7 @@
 				if (!trimmed) return 'Class code is required';
 				if (trimmed.length < 2) return 'Class code must be at least 2 characters';
 				if (trimmed.length > 20) return 'Class code cannot exceed 20 characters';
-				
+
 				const codePattern = /^[a-zA-Z0-9\-_\s]+$/;
 				if (!codePattern.test(trimmed)) {
 					return 'Code can only contain letters, numbers, hyphens, underscores, and spaces';
@@ -61,7 +61,7 @@
 				if (trimmed.length > 500) return 'Description cannot exceed 500 characters';
 				break;
 		}
-		
+
 		return '';
 	}
 
@@ -76,12 +76,12 @@
 	}
 
 	const isFormValid = $derived(
-		className.trim() && 
-		classCode.trim() && 
-		classDescription.trim() && 
-		semesterEditName && 
-		userData?.cohortId &&
-		Object.keys(validationErrors).length === 0
+		className.trim() &&
+			classCode.trim() &&
+			classDescription.trim() &&
+			semesterEditName &&
+			userData?.cohortId &&
+			Object.keys(validationErrors).length === 0
 	);
 
 	async function handleSubmit() {
@@ -120,7 +120,7 @@
 			closeEditModal();
 		} catch (error) {
 			submitError = error instanceof Error ? error.message : 'Failed to update class';
-			console.error("Failed to update class:", submitError);
+			console.error('Failed to update class:', submitError);
 		} finally {
 			isSubmitting = false;
 		}
@@ -275,9 +275,9 @@
 								maxlength="100"
 							/>
 							<div class="label">
-															<span class="label-text-alt text-xs text-base-content/60">
-								2-100 characters • Must be unique
-							</span>
+								<span class="label-text-alt text-xs text-base-content/60">
+									2-100 characters • Must be unique
+								</span>
 								<span class="label-text-alt text-xs text-base-content/40">
 									{className.length}/100
 								</span>
@@ -354,9 +354,7 @@
 							maxlength="500"
 						></textarea>
 						<div class="label">
-							<span class="label-text-alt text-xs text-base-content/60">
-								10-500 characters
-							</span>
+							<span class="label-text-alt text-xs text-base-content/60"> 10-500 characters </span>
 							<span class="label-text-alt text-xs text-base-content/40">
 								{classDescription.length}/500
 							</span>

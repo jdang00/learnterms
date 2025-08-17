@@ -8,7 +8,7 @@ export const getContentLibByCohort = query({
 	handler: async (ctx, args) => {
 		const contentLib = await ctx.db
 			.query('contentLib')
-			.filter((q) => q.eq(q.field('cohortId'), args.cohortId))
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
 			.filter((q) => q.eq(q.field('deletedAt'), undefined))
 			.collect();
 		return contentLib;
@@ -20,7 +20,7 @@ export const insertDocument = mutation({
 		title: v.string(),
 		description: v.optional(v.string()),
 		cohortId: v.id('cohort'),
-        metadata: v.optional(v.object({}))
+		metadata: v.optional(v.object({}))
 	},
 	handler: async (ctx, args) => {
 		const id = await ctx.db.insert('contentLib', { ...args, updatedAt: Date.now() });
@@ -70,18 +70,18 @@ export const updateDocument = mutation({
 
 export const deleteDocument = mutation({
 	args: {
-        documentId: v.id('contentLib'),
-        cohortId: v.id('cohort')
+		documentId: v.id('contentLib'),
+		cohortId: v.id('cohort')
 	},
 	handler: async (ctx, args) => {
 		const document = await ctx.db.get(args.documentId);
-        if (!document) {
-            throw new Error('Document not found');
-        }
+		if (!document) {
+			throw new Error('Document not found');
+		}
 
-        if (document.cohortId !== args.cohortId) {
-            throw new Error('Access denied: document does not belong to the specified cohort');
-        }
+		if (document.cohortId !== args.cohortId) {
+			throw new Error('Access denied: document does not belong to the specified cohort');
+		}
 
 		await ctx.db.patch(args.documentId, {
 			deletedAt: Date.now()
