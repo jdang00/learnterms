@@ -10,6 +10,10 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 
+	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
+
+	injectSpeedInsights();
+
 	setupConvex(PUBLIC_CONVEX_URL);
 
 	injectAnalytics();

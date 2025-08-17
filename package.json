@@ -50,6 +50,7 @@
 		"@thisux/sveltednd": "^0.0.20",
 		"@uploadthing/svelte": "^7.3.2",
 		"@vercel/analytics": "^1.5.0",
+		"@vercel/speed-insights": "^1.2.0",
 		"convex": "^1.25.4",
 		"convex-helpers": "^0.1.101",
 		"convex-svelte": "^0.0.11",
