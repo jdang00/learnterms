@@ -11,6 +11,7 @@
         "@thisux/sveltednd": "^0.0.20",
         "@uploadthing/svelte": "^7.3.2",
         "@vercel/analytics": "^1.5.0",
+        "@vercel/speed-insights": "^1.2.0",
         "convex": "^1.25.4",
         "convex-helpers": "^0.1.101",
         "convex-svelte": "^0.0.11",
@@ -323,6 +324,8 @@
     "@uploadthing/svelte": ["@uploadthing/svelte@7.3.2", "", { "dependencies": { "@uploadthing/shared": "7.1.9", "file-selector": "0.6.0" }, "peerDependencies": { "svelte": "^4.0.0 || ^5.0.0", "uploadthing": "^7.2.0" } }, "sha512-aCJAJz3WgFH/iacATtNNGwyQt/sQRr972IqYVgN/zO9ydrZdc75NeK6zNnfnUll1TJqkctlY631zfBreU+2gmA=="],
 
     "@vercel/analytics": ["@vercel/analytics@1.5.0", "", { "peerDependencies": { "@remix-run/react": "^2", "@sveltejs/kit": "^1 || ^2", "next": ">= 13", "react": "^18 || ^19 || ^19.0.0-rc", "svelte": ">= 4", "vue": "^3", "vue-router": "^4" }, "optionalPeers": ["@remix-run/react", "next", "vue", "vue-router"] }, "sha512-MYsBzfPki4gthY5HnYN7jgInhAZ7Ac1cYDoRWFomwGHWEX7odTEzbtg9kf/QSo7XEsEAqlQugA6gJ2WS2DEa3g=="],
+
+    "@vercel/speed-insights": ["@vercel/speed-insights@1.2.0", "", { "peerDependencies": { "@sveltejs/kit": "^1 || ^2", "next": ">= 13", "react": "^18 || ^19 || ^19.0.0-rc", "svelte": ">= 4", "vue": "^3", "vue-router": "^4" }, "optionalPeers": ["@sveltejs/kit", "next", "react", "svelte", "vue", "vue-router"] }, "sha512-y9GVzrUJ2xmgtQlzFP2KhVRoCglwfRQgjyfY607aU0hh0Un6d0OUyrJkjuAlsV18qR4zfoFPs/BiIj9YDS6Wzw=="],
 
     "acorn": ["acorn@8.15.0", "", { "bin": "bin/acorn" }, "sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg=="],
 
