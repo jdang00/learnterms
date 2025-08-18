@@ -324,3 +324,57 @@ export const processMultipleChunks = mutation({
 		};
 	}
 });
+
+export const processPdfUrlAndCreateChunks = mutation({
+	args: {
+		documentId: v.id('contentLib'),
+		pdfUrl: v.string(),
+		fileKey: v.optional(v.string())
+	},
+	handler: async (ctx, args) => {
+		const document = await ctx.db.get(args.documentId);
+		if (!document) {
+			throw new Error('Document not found');
+		}
+
+		if (!APP_BASE_URL) {
+			throw new Error('APP_BASE_URL environment variable not set');
+		}
+
+		const processDocUrl = new URL('/api/processdoc', APP_BASE_URL).toString();
+
+		const response = await fetch(processDocUrl, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ pdfUrl: args.pdfUrl, fileKey: args.fileKey })
+		});
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			throw new Error(`API call failed: ${response.status} - ${errorText}`);
+		}
+
+		const result = (await response.json()) as { success?: boolean; chunks?: ProcessedChunk[] };
+		if (!result.success || !Array.isArray(result.chunks)) {
+			throw new Error('Failed to process PDF - no chunks returned');
+		}
+
+		const insertedIds: string[] = [];
+		for (const chunk of result.chunks) {
+			const { title, summary, content, chunk_type } = validateAndTrimChunkFields(chunk);
+			const id = await ctx.db.insert('chunkContent', {
+				title,
+				summary,
+				content,
+				keywords: chunk.keywords,
+				chunk_type,
+				documentId: args.documentId,
+				metadata: {},
+				updatedAt: Date.now()
+			});
+			insertedIds.push(id);
+		}
+
+		return { success: true, processedCount: insertedIds.length, insertedIds };
+	}
+});

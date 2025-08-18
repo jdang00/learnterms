@@ -20,7 +20,14 @@ export const insertDocument = mutation({
 		title: v.string(),
 		description: v.optional(v.string()),
 		cohortId: v.id('cohort'),
-		metadata: v.optional(v.object({}))
+		metadata: v.optional(
+			v.object({
+				originalFileName: v.optional(v.string()),
+				sizeBytes: v.optional(v.number()),
+				uploadthingKey: v.optional(v.string()),
+				uploadthingUrl: v.optional(v.string())
+			})
+		)
 	},
 	handler: async (ctx, args) => {
 		const id = await ctx.db.insert('contentLib', { ...args, updatedAt: Date.now() });

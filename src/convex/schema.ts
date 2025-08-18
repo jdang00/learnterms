@@ -107,7 +107,14 @@ export default defineSchema({
 		description: v.optional(v.string()),
 		updatedAt: v.number(),
 		cohortId: v.id('cohort'),
-		metadata: v.optional(v.object({})),
+		metadata: v.optional(
+			v.object({
+				originalFileName: v.optional(v.string()),
+				sizeBytes: v.optional(v.number()),
+				uploadthingKey: v.optional(v.string()),
+				uploadthingUrl: v.optional(v.string())
+			})
+		),
 		deletedAt: v.optional(v.number())
 	}).index('by_cohortId', ['cohortId']),
 	chunkContent: defineTable({

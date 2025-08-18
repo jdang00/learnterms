@@ -6,6 +6,8 @@
 	import { Upload, FileText, AlignLeft, Type, Tags } from 'lucide-svelte';
 	import { fade, fly, scale } from 'svelte/transition';
 	import DeleteConfirmationModal from './DeleteConfirmationModal.svelte';
+	import { createUploader } from '$lib/utils/uploadthing';
+	import { UploadDropzone } from '@uploadthing/svelte';
 
 	const client = useConvexClient();
 
@@ -108,113 +110,140 @@
 		}
 	}
 
-	function handleFileSelect(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const file = target.files?.[0];
 
-		if (!file) {
-			selectedFile = null;
-			return;
-		}
+	const uploader = createUploader('pdfUploader', {
+		onClientUploadComplete: async (res) => {
+			try {
+				isProcessing = true;
+				processingError = '';
+				loadingSkeletons = 0;
+				loadingInterval = setInterval(() => {
+					if (loadingSkeletons < 8) loadingSkeletons++;
+				}, 800);
 
-		// Validate file type
-		if (file.type !== 'application/pdf') {
-			processingError = 'Please select a PDF file only';
-			selectedFile = null;
-			target.value = '';
-			return;
-		}
-
-		// Validate file size (max 10MB)
-		const maxSize = 10 * 1024 * 1024; // 10MB
-		if (file.size > maxSize) {
-			processingError = 'File size must be less than 10MB';
-			selectedFile = null;
-			target.value = '';
-			return;
-		}
-
-		selectedFile = file;
-		processingError = '';
-	}
-
-	async function processPDF() {
-		if (!selectedFile) {
-			processingError = 'Please select a PDF file';
-			return;
-		}
-
-		isProcessing = true;
-		processingError = '';
-		loadingSkeletons = 0;
-
-		// Start the progressive skeleton loading animation
-		loadingInterval = setInterval(() => {
-			if (loadingSkeletons < 8) {
-				loadingSkeletons++;
-			}
-		}, 800); // Add a new skeleton every 800ms
-
-		try {
-			const formData = new FormData();
-			formData.append('pdf', selectedFile);
-			const documentId =
-				typeof currentDocView === 'string'
-					? currentDocView
-					: currentDocView
-						? String(currentDocView)
-						: '';
-			if (!documentId) {
-				throw new Error('Invalid document id');
-			}
-			formData.append('documentId', documentId);
-
-			const response = await fetch('/api/processdoc', {
-				method: 'POST',
-				body: formData
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || 'Failed to process PDF');
-			}
-
-			const result = await response.json();
-
-			if (result.success && Array.isArray(result.chunks)) {
-				let inserted = 0;
-				for (const chunk of result.chunks) {
-					await client.mutation(api.chunkContent.insertChunkContent, {
-						title: chunk.title,
-						summary: chunk.summary,
-						content: chunk.content,
-						keywords: chunk.keywords,
-						chunk_type: chunk.chunk_type,
-						documentId: currentDocView as Id<'contentLib'>,
-						metadata: {},
-						updatedAt: Date.now()
-					});
-					inserted++;
+				const uploaded = Array.isArray(res) ? res[0] : null;
+				const pdfUrl = uploaded?.ufsUrl || uploaded?.url;
+				const fileKey = (uploaded as any)?.key || (uploaded as any)?.fileKey;
+				if (!pdfUrl) {
+					throw new Error('Upload complete but missing file URL');
 				}
-				console.log(`Created ${inserted.toString()} chunks from PDF`);
-			} else {
-				throw new Error('Failed to process PDF - no chunks returned');
-			}
 
-			// Reset form
-			selectedFile = null;
-			if (fileInput) fileInput.value = '';
-		} catch (error) {
-			processingError = error instanceof Error ? error.message : 'Failed to process PDF';
-		} finally {
+				const response = await fetch('/api/processdoc', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ pdfUrl, fileKey })
+				});
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.error || 'Failed to process PDF');
+				}
+				const result = await response.json();
+				if (result.success && Array.isArray(result.chunks)) {
+					let inserted = 0;
+					for (const chunk of result.chunks) {
+						await client.mutation(api.chunkContent.insertChunkContent, {
+							title: chunk.title,
+							summary: chunk.summary,
+							content: chunk.content,
+							keywords: chunk.keywords,
+							chunk_type: chunk.chunk_type,
+							documentId: currentDocView as Id<'contentLib'>,
+							metadata: {},
+							updatedAt: Date.now()
+						});
+						inserted++;
+					}
+					console.log(`Created ${inserted.toString()} chunks from PDF`);
+				} else {
+					throw new Error('Failed to process PDF - no chunks returned');
+				}
+			} catch (e) {
+				processingError = e instanceof Error ? e.message : 'Upload/processing failed';
+			} finally {
+				isProcessing = false;
+				loadingSkeletons = 0;
+				if (loadingInterval !== null) {
+					clearInterval(loadingInterval);
+					loadingInterval = null;
+				}
+			}
+		},
+		onUploadError: (error: Error) => {
+			processingError = error.message;
+		}
+	});
+
+	// If navigated here with ?processing=1, show the processing skeleton until chunks appear
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const params = new URLSearchParams(window.location.search);
+		const shouldShowProcessing = params.get('processing') === '1';
+		const incomingPdfUrl = params.get('pdfUrl');
+		const incomingFileKey = params.get('fileKey');
+		if (shouldShowProcessing && !isProcessing) {
+			isProcessing = true;
+			processingError = '';
+			loadingSkeletons = 0;
+			if (loadingInterval !== null) clearInterval(loadingInterval);
+			loadingInterval = setInterval(() => {
+				if (loadingSkeletons < 8) loadingSkeletons++;
+			}, 800);
+
+			// Kick off processing now that we're on the chunks page
+			if (incomingPdfUrl) {
+				fetch('/api/processdoc', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ pdfUrl: incomingPdfUrl, fileKey: incomingFileKey ?? undefined })
+				})
+					.then(async (r) => {
+						if (!r.ok) {
+							const e = await r.json().catch(() => ({}));
+							throw new Error(e.error || 'Failed to process PDF');
+						}
+						const result = await r.json();
+						if (result.success && Array.isArray(result.chunks)) {
+							for (const chunk of result.chunks) {
+								await client.mutation(api.chunkContent.insertChunkContent, {
+									title: chunk.title,
+									summary: chunk.summary,
+									content: chunk.content,
+									keywords: chunk.keywords,
+									chunk_type: chunk.chunk_type,
+									documentId: currentDocView as Id<'contentLib'>,
+									metadata: {},
+									updatedAt: Date.now()
+								});
+							}
+						}
+					})
+					.catch((e) => {
+						processingError = e instanceof Error ? e.message : 'Processing failed';
+					});
+			}
+		}
+	});
+
+	// Stop the skeleton once chunks arrive, and remove the processing param
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		if (isProcessing && getDocumentChunks?.data && getDocumentChunks.data.length > 0) {
 			isProcessing = false;
 			loadingSkeletons = 0;
 			if (loadingInterval !== null) {
 				clearInterval(loadingInterval);
 				loadingInterval = null;
 			}
+			const params = new URLSearchParams(window.location.search);
+			if (params.has('processing') || params.has('pdfUrl') || params.has('fileKey')) {
+				params.delete('processing');
+				params.delete('pdfUrl');
+				params.delete('fileKey');
+				const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+				history.replaceState({}, '', newUrl);
+			}
 		}
-	}
+	});
 </script>
 
 <div
@@ -295,70 +324,19 @@
 				</p>
 			</div>
 
-			<!-- PDF Upload Card -->
-			<div
-				class="card bg-base-100 border border-base-300 shadow-md w-full max-w-md"
-				in:scale={{ duration: 180, start: 0.96 }}
-			>
+			<!-- PDF Upload Card (UploadThing) -->
+			<div class="card bg-base-100 border border-base-300 shadow-md w-full max-w-md" in:scale={{ duration: 180, start: 0.96 }}>
 				<div class="card-body">
 					<h4 class="font-semibold mb-4 text-center">Upload PDF Document</h4>
-
-					<div class="form-control">
-						<label
-							class="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-primary/30 rounded-xl cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-200"
-							for="pdf-upload"
-						>
-							<div class="flex flex-col items-center justify-center space-y-4">
-								<div class="p-4 bg-primary/10 rounded-full">
-									<Upload class="w-12 h-12 text-primary" />
-								</div>
-								{#if selectedFile}
-									<div class="text-center">
-										<p class="text-lg font-semibold text-success mb-1">{selectedFile.name}</p>
-										<p class="text-sm text-base-content/60">
-											{(selectedFile.size / 1024 / 1024).toFixed(2)} MB PDF file
-										</p>
-									</div>
-								{:else}
-									<div class="text-center">
-										<p class="text-lg font-semibold mb-2">Drop your PDF here</p>
-										<p class="text-base text-base-content/80 mb-1">or click to browse files</p>
-										<p class="text-sm text-base-content/60">Maximum file size: 10MB</p>
-									</div>
-								{/if}
-							</div>
-						</label>
-						<input
-							id="pdf-upload"
-							type="file"
-							accept=".pdf,application/pdf"
-							class="hidden"
-							bind:this={fileInput}
-							onchange={handleFileSelect}
-							disabled={isProcessing}
-						/>
-					</div>
-
+					<div class="ut-flex ut-flex-col ut-items-center ut-justify-center ut-gap-4">
+						<span class="ut-text-center ut-text-4xl ut-font-bold">
+						</span>
+						<UploadDropzone {uploader} />
+					  </div>
 					{#if processingError}
 						<div class="alert alert-error alert-sm mt-4">
 							<span class="text-sm">{processingError}</span>
 						</div>
-					{/if}
-
-					{#if selectedFile}
-						<button
-							class="btn btn-primary btn-block mt-4"
-							onclick={processPDF}
-							disabled={isProcessing}
-						>
-							{#if isProcessing}
-								<span class="loading loading-spinner loading-sm"></span>
-								Processing PDF...
-							{:else}
-								<FileText class="w-4 h-4" />
-								Process Document
-							{/if}
-						</button>
 					{/if}
 				</div>
 			</div>
