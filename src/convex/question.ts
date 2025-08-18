@@ -67,7 +67,15 @@ export const insertQuestion = mutation({
 		aiGenerated: v.boolean(),
 		status: v.string(),
 		order: v.number(),
-		metadata: v.object({}),
+		metadata: v.object({
+			generation: v.optional(
+				v.object({
+					model: v.string(),
+					focus: v.string(),
+					customPromptUsed: v.boolean()
+				})
+			)
+		}),
 		updatedAt: v.number()
 	},
 	handler: async (ctx, args) => {
@@ -203,7 +211,15 @@ export const createQuestion = mutation({
 		aiGenerated: v.boolean(),
 		status: v.string(),
 		order: v.number(),
-		metadata: v.object({}),
+		metadata: v.object({
+			generation: v.optional(
+				v.object({
+					model: v.string(),
+					focus: v.string(),
+					customPromptUsed: v.boolean()
+				})
+			)
+		}),
 		updatedAt: v.number()
 	},
 	handler: async (ctx, args) => {
@@ -225,7 +241,15 @@ export const bulkInsertQuestions = mutation({
 				aiGenerated: v.boolean(),
 				status: v.string(),
 				order: v.number(),
-				metadata: v.object({}),
+				metadata: v.object({
+					generation: v.optional(
+						v.object({
+							model: v.string(),
+							focus: v.string(),
+							customPromptUsed: v.boolean()
+						})
+					)
+				}),
 				updatedAt: v.number()
 			})
 		)

@@ -59,7 +59,15 @@ export default defineSchema({
 		status: v.string()
 	}).index('by_classId', ['classId']),
 	question: defineTable({
-		metadata: v.object({}),
+		metadata: v.object({
+			generation: v.optional(
+				v.object({
+					model: v.string(),
+					focus: v.string(),
+					customPromptUsed: v.boolean()
+				})
+			)
+		}),
 		updatedAt: v.number(),
 		deletedAt: v.optional(v.number()),
 		moduleId: v.id('module'),
