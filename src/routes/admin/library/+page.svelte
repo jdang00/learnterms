@@ -23,6 +23,22 @@
 		{ initialData: data.cohortLib }
 	);
 
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const params = new URLSearchParams(window.location.search);
+		const openId = params.get('open');
+		if (!openId) return;
+		const target = userContentLib?.data?.find?.((d) => d._id === openId);
+		if (target) {
+			docView = true;
+			currentDocView = openId;
+			currentDocument = target;
+			params.delete('open');
+			const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+			history.replaceState({}, '', newUrl);
+		}
+	});
+
 	let isAddModalOpen: boolean = $state(false);
 	let isEditModalOpen: boolean = $state(false);
 	let editingDocument: Doc<'contentLib'> | null = $state(null);
