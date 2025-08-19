@@ -138,48 +138,59 @@
 		{ initialData: data.moduleInfo }
 	);
 
-	const interactedQuestions: { data: any; isLoading: boolean; error: any } =
-		userId && questions.data
-			? useQuery(
-					api.userProgress.getUserProgressForModule,
-					{
-						userId: userId,
-						questionIds: (questions.data as Doc<'question'>[]).map(
-							(q) => q._id as Id<'question'>
-						) as Id<'question'>[]
-					},
-					{
-						initialData: data.interactedQuestions || []
-					}
-				)
-			: { data: data.interactedQuestions || [], isLoading: false, error: null };
+	let stableQuestionIds: Id<'question'>[] = $state([]);
+	$effect(() => {
+		if (questions.data) {
+			const next = (questions.data as Doc<'question'>[]).map((q) => q._id as Id<'question'>);
+			if (stableQuestionIds.length !== next.length || stableQuestionIds.some((id, i) => id !== next[i])) {
+				stableQuestionIds = next;
+			}
+		}
+	});
 
-	const flaggedQuestions: { data: any; isLoading: boolean; error: any } =
-		userId && questions.data
-			? useQuery(
-					api.userProgress.getFlaggedQuestionsForModule,
-					{
-						userId: userId,
-						questionIds: (questions.data as Doc<'question'>[]).map(
-							(q) => q._id as Id<'question'>
-						) as Id<'question'>[]
-					},
-					{
-						initialData: data.flaggedQuestions || []
-					}
-				)
-			: { data: data.flaggedQuestions || [], isLoading: false, error: null };
+	let moduleProgress: { data: { interactedQuestionIds: Id<'question'>[]; flaggedQuestionIds: Id<'question'>[] } | undefined; isLoading: boolean; error: any } = $state({
+		data: {
+			interactedQuestionIds: (data.interactedQuestions as Id<'question'>[]) || [],
+			flaggedQuestionIds: (data.flaggedQuestions as Id<'question'>[]) || []
+		},
+		isLoading: false,
+		error: null
+	});
 
 	$effect(() => {
-		if (interactedQuestions.data) {
-			qs.setInteractedQuestionsCount(interactedQuestions.data.length);
-			qs.updateLiveInteractedQuestions(interactedQuestions.data);
+		if (userId && questions.data) {
+			const query = useQuery(
+				api.userProgress.getUserProgressForModule,
+				{
+					userId: userId,
+					classId: data.classId as Id<'class'>,
+					questionIds: stableQuestionIds
+				},
+				{
+					initialData: {
+						interactedQuestionIds: (data.interactedQuestions as Id<'question'>[]) || [],
+						flaggedQuestionIds: (data.flaggedQuestions as Id<'question'>[]) || []
+					}
+				}
+			);
+			moduleProgress = query;
+		} else {
+			moduleProgress = {
+				data: {
+					interactedQuestionIds: (data.interactedQuestions as Id<'question'>[]) || [],
+					flaggedQuestionIds: (data.flaggedQuestions as Id<'question'>[]) || []
+				},
+				isLoading: false,
+				error: null
+			};
 		}
 	});
 
 	$effect(() => {
-		if (flaggedQuestions.data) {
-			qs.updateLiveFlaggedQuestions(flaggedQuestions.data);
+		if (moduleProgress.data) {
+			qs.setInteractedQuestionsCount(moduleProgress.data.interactedQuestionIds.length);
+			qs.updateLiveInteractedQuestions(moduleProgress.data.interactedQuestionIds);
+			qs.updateLiveFlaggedQuestions(moduleProgress.data.flaggedQuestionIds);
 		}
 	});
 
@@ -378,8 +389,8 @@
 				questions={{ data: qs.getFilteredQuestions() }}
 				{handleSelect}
 				{currentlySelected}
-				interactedQuestions={interactedQuestions.data || []}
-				flags={flaggedQuestions.data || []}
+				interactedQuestions={qs.liveInteractedQuestions}
+				flags={qs.liveFlaggedQuestions}
 				{qs}
 			/>
 

@@ -21,9 +21,6 @@ export type ModuleProgress = {
 	masteredQuestions: number;
 	completionPercentage: number;
 	masteryPercentage: number;
-	interactedQuestionIds: string[];
-	flaggedQuestionIds: string[];
-	masteredQuestionIds: string[];
 };
 
 export type ClassProgress = Record<string, ModuleProgress>;

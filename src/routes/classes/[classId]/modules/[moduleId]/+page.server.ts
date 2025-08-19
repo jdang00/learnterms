@@ -40,16 +40,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const hasQuestions = questionIds.length > 0;
 
 		if (hasValidUser && hasQuestions) {
-			[interactedQuestions, flaggedQuestions] = await Promise.all([
-				client.query(api.userProgress.getUserProgressForModule, {
-					userId: convexID!._id as Id<'users'>,
-					questionIds
-				}),
-				client.query(api.userProgress.getFlaggedQuestionsForModule, {
-					userId: convexID!._id as Id<'users'>,
-					questionIds
-				})
-			]);
+			const combined = await client.query(api.userProgress.getUserProgressForModule, {
+				userId: convexID!._id as Id<'users'>,
+				classId: params.classId as Id<'class'>,
+				questionIds
+			});
+			interactedQuestions = combined.interactedQuestionIds;
+			flaggedQuestions = combined.flaggedQuestionIds;
 		}
 
 		return {

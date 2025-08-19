@@ -1,21 +1,23 @@
 import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
-import type { Doc } from './_generated/dataModel';
+import type { Doc, Id } from './_generated/dataModel';
+import type { QueryCtx } from './_generated/server';
 
 const getUserProgressRecords = async (
-	ctx: any,
-	userId: string,
-	questionIds: string[]
+	ctx: QueryCtx,
+	userId: Id<'users'>,
+	classId: Id<'class'>,
+	questionIds: Id<'question'>[]
 ): Promise<Doc<'userProgress'>[]> => {
-	return await ctx.db
+	const recordsForUserAndClass = await ctx.db
 		.query('userProgress')
-		.filter((q: any) =>
-			q.and(
-				q.eq(q.field('userId'), userId),
-				q.or(...questionIds.map((id) => q.eq(q.field('questionId'), id)))
-			)
-		)
+		.withIndex('by_user_class', (q) => q.eq('userId', userId).eq('classId', classId))
 		.collect();
+
+	if (questionIds.length === 0) return [];
+
+	const idSet = new Set(questionIds);
+	return recordsForUserAndClass.filter((r) => idSet.has(r.questionId));
 };
 
 export const checkExistingRecord = query({
@@ -78,9 +80,6 @@ export const getProgressForClass = query({
 				masteredQuestions: number;
 				completionPercentage: number;
 				masteryPercentage: number;
-				interactedQuestionIds: string[];
-				flaggedQuestionIds: string[];
-				masteredQuestionIds: string[];
 			}
 		> = {};
 
@@ -91,24 +90,18 @@ export const getProgressForClass = query({
 			let interactedQuestions = 0;
 			let flaggedQuestions = 0;
 			let masteredQuestions = 0;
-			const interactedQuestionIds = [];
-			const flaggedQuestionIds = [];
-			const masteredQuestionIds = [];
 
 			for (const question of moduleQuestions) {
 				const progress = progressMap.get(question._id);
 				if (progress) {
 					if (progress.selectedOptions.length > 0 || progress.eliminatedOptions.length > 0) {
 						interactedQuestions++;
-						interactedQuestionIds.push(question._id);
 					}
 					if (progress.isFlagged) {
 						flaggedQuestions++;
-						flaggedQuestionIds.push(question._id);
 					}
 					if (progress.isMastered) {
 						masteredQuestions++;
-						masteredQuestionIds.push(question._id);
 					}
 				}
 			}
@@ -123,10 +116,7 @@ export const getProgressForClass = query({
 				completionPercentage:
 					totalQuestions > 0 ? Math.round((interactedQuestions / totalQuestions) * 100) : 0,
 				masteryPercentage:
-					totalQuestions > 0 ? Math.round((masteredQuestions / totalQuestions) * 100) : 0,
-				interactedQuestionIds,
-				flaggedQuestionIds,
-				masteredQuestionIds
+					totalQuestions > 0 ? Math.round((masteredQuestions / totalQuestions) * 100) : 0
 			};
 		}
 
@@ -137,32 +127,21 @@ export const getProgressForClass = query({
 export const getUserProgressForModule = query({
 	args: {
 		userId: v.id('users'),
+		classId: v.id('class'),
 		questionIds: v.array(v.id('question'))
 	},
 	handler: async (ctx, args) => {
-		const records = await getUserProgressRecords(ctx, args.userId, args.questionIds);
+		const records = await getUserProgressRecords(ctx, args.userId, args.classId, args.questionIds);
 
-		const interactedQuestions = records
+		const interactedQuestionIds = records
 			.filter((record) => record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0)
 			.map((record) => record.questionId);
 
-		return interactedQuestions;
-	}
-});
-
-export const getFlaggedQuestionsForModule = query({
-	args: {
-		userId: v.id('users'),
-		questionIds: v.array(v.id('question'))
-	},
-	handler: async (ctx, args) => {
-		const records = await getUserProgressRecords(ctx, args.userId, args.questionIds);
-
-		const flaggedQuestions = records
+		const flaggedQuestionIds = records
 			.filter((record) => record.isFlagged === true)
 			.map((record) => record.questionId);
 
-		return flaggedQuestions;
+		return { interactedQuestionIds, flaggedQuestionIds };
 	}
 });
 
