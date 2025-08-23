@@ -16,6 +16,38 @@ function convertQuestionType(type: string): string {
 	return type.toLowerCase().replace(/\s+/g, '_');
 }
 
+function computeSearchText(input: {
+	stem: string;
+	explanation?: string | null;
+	type: string;
+	status: string;
+	aiGenerated: boolean;
+	options: Array<{ id?: string; text: string }>;
+	correctAnswers: Array<string>;
+	metadata?: { generation?: { model: string; focus: string; customPromptUsed: boolean } };
+}): string {
+	const parts: Array<string> = [];
+	parts.push(input.stem || '');
+	if (input.explanation) parts.push(input.explanation);
+	parts.push(convertQuestionType(input.type));
+	parts.push((input.status || '').toLowerCase());
+	parts.push(input.aiGenerated ? 'ai' : 'user');
+	for (const opt of input.options || []) parts.push(opt.text || '');
+	if (input.correctAnswers && input.correctAnswers.length > 0)
+		parts.push(input.correctAnswers.join(' '));
+	if (input.metadata?.generation) {
+		const g = input.metadata.generation;
+		parts.push(g.model || '');
+		parts.push(g.focus || '');
+		if (g.customPromptUsed) parts.push('custom');
+	}
+	return parts
+		.join(' ')
+		.replace(/\s+/g, ' ')
+		.trim()
+		.toLowerCase();
+}
+
 export const getQuestionsByModule = query({
 	// match the schema: moduleId is an id("module")
 	args: { id: v.id('module') },
@@ -91,11 +123,23 @@ export const insertQuestion = mutation({
 			})
 			.filter((id) => id !== '');
 
+		const searchText = computeSearchText({
+			stem: args.stem,
+			explanation: args.explanation,
+			type: args.type,
+			status: args.status,
+			aiGenerated: args.aiGenerated,
+			options: optionsWithIds,
+			correctAnswers: correctAnswerIds,
+			metadata: args.metadata
+		});
+
 		const id = await ctx.db.insert('question', {
 			...args,
 			type: convertQuestionType(args.type),
 			options: optionsWithIds,
-			correctAnswers: correctAnswerIds
+			correctAnswers: correctAnswerIds,
+			searchText
 		});
 		return id;
 	}
@@ -186,6 +230,17 @@ export const updateQuestion = mutation({
 			})
 			.filter((id) => id !== '');
 
+		const searchText = computeSearchText({
+			stem: args.stem,
+			explanation: args.explanation,
+			type: args.type,
+			status: args.status,
+			aiGenerated: questionToUpdate.aiGenerated,
+			options: optionsWithIds,
+			correctAnswers: correctAnswerIds,
+			metadata: questionToUpdate.metadata
+		});
+
 		await ctx.db.patch(args.questionId, {
 			type: convertQuestionType(args.type),
 			stem: args.stem,
@@ -193,7 +248,8 @@ export const updateQuestion = mutation({
 			correctAnswers: correctAnswerIds,
 			explanation: args.explanation,
 			status: args.status.toLowerCase(),
-			updatedAt: Date.now()
+			updatedAt: Date.now(),
+			searchText
 		});
 
 		return { updated: true };
@@ -223,7 +279,17 @@ export const createQuestion = mutation({
 		updatedAt: v.number()
 	},
 	handler: async (ctx, args) => {
-		const id = await ctx.db.insert('question', args);
+		const searchText = computeSearchText({
+			stem: args.stem,
+			explanation: args.explanation,
+			type: args.type,
+			status: args.status,
+			aiGenerated: args.aiGenerated,
+			options: args.options,
+			correctAnswers: args.correctAnswers,
+			metadata: args.metadata
+		});
+		const id = await ctx.db.insert('question', { ...args, searchText });
 		return id;
 	}
 });
@@ -281,7 +347,17 @@ export const bulkInsertQuestions = mutation({
 				status: q.status.toLowerCase(),
 				order: q.order,
 				metadata: q.metadata,
-				updatedAt: q.updatedAt
+				updatedAt: q.updatedAt,
+				searchText: computeSearchText({
+					stem: q.stem,
+					explanation: q.explanation,
+					type: q.type,
+					status: q.status,
+					aiGenerated: q.aiGenerated,
+					options: optionsWithIds,
+					correctAnswers: correctAnswerIds,
+					metadata: q.metadata
+				})
 			});
 
 			insertedIds.push(id);
@@ -330,6 +406,87 @@ export const getAllQuestions = query({
 	handler: async (ctx) => {
 		const questions = await ctx.db.query('question').collect();
 		return questions;
+	}
+});
+
+export const searchQuestionsByModuleAdmin = query({
+	args: { id: v.id('module'), query: v.string(), limit: v.optional(v.number()) },
+	handler: async (ctx, { id, query, limit }) => {
+		const trimmed = query.trim().toLowerCase();
+		if (trimmed.length === 0) {
+			const results = await ctx.db
+				.query('question')
+				.withIndex('by_moduleId_order', (q) => q.eq('moduleId', id))
+				.collect();
+			return results;
+		}
+		const max = Math.min(Math.max(limit ?? 200, 1), 1000);
+		const results = await ctx.db
+			.query('question')
+			.withSearchIndex('by_moduleId_searchText', (q) =>
+				q.search('searchText', trimmed).eq('moduleId', id)
+			)
+			.take(max);
+		return results;
+	}
+});
+
+export const backfillQuestionSearchTextForModule = mutation({
+	args: { moduleId: v.id('module') },
+	handler: async (ctx, { moduleId }) => {
+		const items = await ctx.db
+			.query('question')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', moduleId))
+			.collect();
+		let updated = 0;
+		for (const q of items) {
+			const searchText = computeSearchText({
+				stem: q.stem,
+				explanation: q.explanation ?? '',
+				type: q.type,
+				status: q.status,
+				aiGenerated: q.aiGenerated,
+				options: q.options,
+				correctAnswers: q.correctAnswers,
+				metadata: q.metadata
+			});
+			if (q.searchText !== searchText) {
+				await ctx.db.patch(q._id, { searchText });
+				updated += 1;
+			}
+		}
+		return { updated };
+	}
+});
+
+export const backfillSearchTextForAllModules = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const modules = await ctx.db.query('module').collect();
+		let totalUpdated = 0;
+		for (const m of modules) {
+			const items = await ctx.db
+				.query('question')
+				.withIndex('by_moduleId', (q) => q.eq('moduleId', m._id))
+				.collect();
+			for (const q of items) {
+				const searchText = computeSearchText({
+					stem: q.stem,
+					explanation: q.explanation ?? '',
+					type: q.type,
+					status: q.status,
+					aiGenerated: q.aiGenerated,
+					options: q.options,
+					correctAnswers: q.correctAnswers,
+					metadata: q.metadata
+				});
+				if (q.searchText !== searchText) {
+					await ctx.db.patch(q._id, { searchText });
+					totalUpdated += 1;
+				}
+			}
+		}
+		return { updated: totalUpdated };
 	}
 });
 
@@ -396,9 +553,47 @@ ${material}`;
 			}
 		});
 
-		const responseText = (result as { text?: string } | undefined)?.text;
-		if (!responseText || typeof responseText !== 'string') {
-			throw new Error('AI response missing expected text content');
+		// Handle different response formats from Google AI SDK
+		let responseText: string;
+
+		if (result && typeof result === 'object') {
+			// Try different response structures
+			if ('text' in result && typeof result.text === 'string') {
+				responseText = result.text;
+			} else if ('response' in result && result.response && typeof result.response === 'object') {
+				const response = result.response as Record<string, unknown>;
+
+				if (response.candidates && Array.isArray(response.candidates) && response.candidates[0] && typeof response.candidates[0] === 'object') {
+					const candidate = response.candidates[0] as Record<string, unknown>;
+					if (candidate.content && typeof candidate.content === 'object') {
+						const content = candidate.content as Record<string, unknown>;
+						if (content.parts && Array.isArray(content.parts) && content.parts[0] && typeof content.parts[0] === 'object') {
+							const part = content.parts[0] as Record<string, unknown>;
+							if (part.text && typeof part.text === 'string') {
+								responseText = part.text;
+							} else {
+								throw new Error('AI response missing text content in parts');
+							}
+						} else {
+							throw new Error('AI response missing parts in candidates content');
+						}
+					} else {
+						throw new Error('AI response missing content in candidates');
+					}
+				} else if ('text' in response && typeof response.text === 'string') {
+					responseText = response.text;
+				} else {
+					throw new Error('AI response missing expected text content in response structure');
+				}
+			} else {
+				throw new Error('AI response missing expected text content - unknown structure');
+			}
+		} else {
+			throw new Error('AI response is not a valid object');
+		}
+
+		if (!responseText || typeof responseText !== 'string' || responseText.trim().length === 0) {
+			throw new Error('AI response text is empty or invalid');
 		}
 
 		let parsed: Array<{
@@ -409,15 +604,35 @@ ${material}`;
 		}>;
 		try {
 			parsed = JSON.parse(responseText.trim());
-			if (!Array.isArray(parsed)) throw new Error('Response is not an array');
-		} catch {
-			throw new Error('Failed to parse AI response as JSON');
+			if (!Array.isArray(parsed)) {
+				throw new Error('Response is not an array');
+			}
+		} catch (parseError) {
+			throw new Error(`Failed to parse AI response as JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
 		}
 
 		const normalizeOptionText = (opt: string) =>
 			opt.replace(/^\s*(?:[A-Z]|\d+)\s*(?:[.)\]:-])\s+/, '').trim();
 
 		const now = Date.now();
+
+		// Validate each question has required fields
+		for (let i = 0; i < parsed.length; i++) {
+			const q = parsed[i];
+			if (!q.stem || typeof q.stem !== 'string') {
+				throw new Error(`Question ${i + 1} missing or invalid stem`);
+			}
+			if (!Array.isArray(q.options) || q.options.length < 2) {
+				throw new Error(`Question ${i + 1} missing or insufficient options`);
+			}
+			if (!Array.isArray(q.correctAnswerIndexes) || q.correctAnswerIndexes.length === 0) {
+				throw new Error(`Question ${i + 1} missing correct answer indexes`);
+			}
+			if (!q.explanation || typeof q.explanation !== 'string') {
+				throw new Error(`Question ${i + 1} missing or invalid explanation`);
+			}
+		}
+
 		const normalized = parsed.map((q, i) => {
 			const options = q.options.map((o) => ({ text: normalizeOptionText(o) }));
 			const validIndexes = (q.correctAnswerIndexes || [])

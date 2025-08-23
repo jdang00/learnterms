@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeft } from 'lucide-svelte';
+	import { ArrowLeft, CalendarDays, ChevronDown } from 'lucide-svelte';
 	import QuestionsGeneration from '$lib/admin/QuestionGeneration.svelte';
 	import DocumentBrowser from '$lib/admin/DocumentBrowser.svelte';
 	import type { PageData } from './$types';
@@ -8,6 +8,7 @@
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { Check } from 'lucide-svelte';
 	import type { ClassWithSemester } from '$lib/types';
+	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
@@ -25,6 +26,10 @@
 		error: null,
 		data: []
 	});
+
+	// Semester selection
+	const semesters = useQuery(api.semester.getAllSemesters, {});
+	let currentSemester = $state('');
 
 	type GeneratedQuestionInput = {
 		type: string;
@@ -98,146 +103,191 @@
 			modules = { isLoading: false, error: null, data: [] };
 		}
 	});
+
+	// Semester initialization and persistence
+	$effect(() => {
+		if (semesters.data && !currentSemester) {
+			currentSemester = pickDefaultSemesterName(semesters.data);
+		}
+	});
+
+	$effect(() => {
+		if (currentSemester) setLastSemesterName(currentSemester);
+	});
+
+	// Clear class and module selection when semester changes
+	$effect(() => {
+		if (currentSemester !== (selectedClass as ClassWithSemester)?.semester?.name) {
+			selectedClass = null;
+			selectedModuleId = null;
+			selectedModuleTitle = '';
+		}
+	});
+
+	// Filter classes by selected semester
+	const filteredClasses = $derived(
+		!classes.data || !currentSemester
+			? classes.data
+			: classes.data.filter((c) => (c as ClassWithSemester).semester?.name === currentSemester)
+	);
 </script>
 
-<div class="min-h-screen p-8 max-w-7xl mx-auto flex flex-col w-full">
+<div class="min-h-screen p-4 sm:p-6 lg:p-10 max-w-full mx-auto flex flex-col w-full">
 	<a class="btn mb-4 btn-ghost self-start" href="/admin"><ArrowLeft size={16} />Back</a>
 	<h1 class="text-3xl font-bold text-base-content">Question Studio</h1>
 	<p class="text-base text-base-content/70">Create or generate questions with your documents.</p>
 
-	<div class="mt-6">
-		<div class="card bg-base-100 border border-base-300 rounded-xl">
-			<div class="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-				<div class="form-control">
-					<div class="label"><span class="label-text">Class</span></div>
-					<select
-						id="select-class"
-						class="select select-bordered w-full"
-						aria-label="Class"
-						disabled={classes.isLoading}
-						onchange={(e) => {
-							const id = (e.target as HTMLSelectElement).value as Id<'class'>;
-							const cls = (classes.data || []).find((c) => c._id === id) as ClassWithSemester | undefined;
-							selectedClass = cls ?? null;
-							selectedModuleId = null;
-							selectedModuleTitle = '';
-						}}
-					>
-						<option disabled selected={selectedClass == null} value="">Select a class</option>
-						{#each classes.data || [] as c (c._id)}
-							<option value={c._id} selected={selectedClass?._id === c._id}>
-								{c.name}{c.code ? ` (${c.code})` : ''}
-							</option>
-						{/each}
-					</select>
-				</div>
-				<div class="form-control">
-					<div class="label"><span class="label-text">Module</span></div>
-					<select
-						id="select-module"
-						class="select select-bordered w-full"
-						aria-label="Module"
-						disabled={!selectedClass || modules.isLoading || !modules.data || modules.data.length === 0}
-						onchange={(e) => {
-							const id = (e.target as HTMLSelectElement).value as Id<'module'>;
-							const m = (modules.data || []).find((mm) => mm._id === id);
-							selectedModuleId = m?._id ?? null;
-							selectedModuleTitle = m?.title ?? '';
-						}}
-					>
-						<option disabled selected={selectedModuleId == null} value="">Select a module</option>
-						{#if modules.isLoading}
-							<option value="">Loading modules...</option>
-						{:else if modules.error}
-							<option value="">Error loading modules</option>
-						{:else if modules.data && modules.data.length > 0}
-							{#each modules.data as m (m._id)}
-								<option value={m._id} selected={selectedModuleId === m._id}>{m.title}</option>
-							{/each}
-						{:else if selectedClass}
-							<option value="">No modules</option>
+	<!-- Compact Selection Bar -->
+	<div class="mt-4">
+		<div class="card bg-base-100 border border-base-300 rounded-lg">
+			<div class="p-4">
+				<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+					<!-- Semester Selection -->
+					<div class="form-control">
+						<div class="label">
+							<span class="label-text font-medium text-sm">Semester</span>
+						</div>
+						{#if semesters.data}
+							<div class="flex items-center gap-2">
+								<button
+									class="btn btn-outline btn-xs flex-1 justify-between"
+									popovertarget="semester-popover"
+									style="anchor-name: --semester-anchor"
+									disabled={semesters.isLoading}
+								>
+									<div class="flex items-center gap-2">
+										<CalendarDays size={14} />
+										<span class="text-sm truncate">{currentSemester || 'Select semester'}</span>
+									</div>
+									<ChevronDown size={12} />
+								</button>
+
+								<ul
+									class="dropdown menu w-48 rounded-lg bg-base-100 shadow-lg border border-base-300"
+									popover
+									id="semester-popover"
+									style="position-anchor: --semester-anchor"
+								>
+									{#each semesters.data as semester (semester._id)}
+										<li>
+											<button
+												onclick={() => {
+													currentSemester = semester.name;
+													selectedClass = null;
+													selectedModuleId = null;
+													selectedModuleTitle = '';
+												}}
+												class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150 text-sm"
+											>
+												<CalendarDays size={14} />
+												<span>{semester.name}</span>
+											</button>
+										</li>
+									{/each}
+								</ul>
+							</div>
+						{:else}
+							<div class="text-xs text-base-content/60">Loading...</div>
 						{/if}
-					</select>
-				</div>
-				<div class="form-control">
-					<div class="label"><span class="label-text">Destination</span></div>
-					<div class="text-sm text-base-content/70">
-						{selectedClass ? selectedClass.name : '—'} • {selectedModuleTitle || '—'}
+					</div>
+
+					<!-- Class Selection -->
+					<div class="form-control">
+						<div class="label"><span class="label-text text-sm">Class</span></div>
+						<select
+							id="select-class"
+							class="select select-bordered select-sm w-full"
+							aria-label="Class"
+							disabled={classes.isLoading || !currentSemester}
+							onchange={(e) => {
+								const id = (e.target as HTMLSelectElement).value as Id<'class'>;
+								const cls = (filteredClasses || []).find((c) => c._id === id) as ClassWithSemester | undefined;
+								selectedClass = cls ?? null;
+								selectedModuleId = null;
+								selectedModuleTitle = '';
+							}}
+						>
+							<option disabled selected={selectedClass == null} value="">Select a class</option>
+							{#each filteredClasses || [] as c (c._id)}
+								<option value={c._id} selected={selectedClass?._id === c._id}>
+									{c.name}{c.code ? ` (${c.code})` : ''}
+								</option>
+							{/each}
+						</select>
+					</div>
+
+					<!-- Module Selection -->
+					<div class="form-control">
+						<div class="label"><span class="label-text text-sm">Module</span></div>
+						<select
+							id="select-module"
+							class="select select-bordered select-sm w-full"
+							aria-label="Module"
+							disabled={!selectedClass || modules.isLoading || !modules.data || modules.data.length === 0}
+							onchange={(e) => {
+								const id = (e.target as HTMLSelectElement).value as Id<'module'>;
+								const m = (modules.data || []).find((mm) => mm._id === id);
+								selectedModuleId = m?._id ?? null;
+								selectedModuleTitle = m?.title ?? '';
+							}}
+						>
+							<option disabled selected={selectedModuleId == null} value="">Select a module</option>
+							{#if modules.isLoading}
+								<option value="">Loading modules...</option>
+							{:else if modules.error}
+								<option value="">Error loading modules</option>
+							{:else if modules.data && modules.data.length > 0}
+								{#each modules.data as m (m._id)}
+									<option value={m._id} selected={selectedModuleId === m._id}>{m.title}</option>
+								{/each}
+							{:else if selectedClass}
+								<option value="">No modules</option>
+							{/if}
+						</select>
+					</div>
+
+					<!-- Destination Summary -->
+					<div class="form-control col-span-2 lg:col-span-1">
+						<div class="label"><span class="label-text text-sm">Destination</span></div>
+						<div class="text-xs text-base-content/70 bg-base-200 rounded px-3 py-2 min-h-8 truncate">
+							{selectedClass ? selectedClass.name : '—'} • {selectedModuleTitle || '—'}
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4 flex-1 min-h-0">
-		<div class="card bg-base-100 border border-base-300 rounded-xl h-full">
-			<DocumentBrowser
-				cohortId={userData?.cohortId as Id<'cohort'>}
-				initialLib={userContentLib.data}
-				bind:selectedText
-			/>
-		</div>
-		<div class="card bg-base-100 border border-base-300 rounded-xl h-full">
-			<QuestionsGeneration
-				material={selectedText}
-				{wordCount}
-				{charCount}
-				canGenerate={Boolean(selectedClass && selectedModuleId)}
-				destinationSummary={selectedClass && selectedModuleId
-					? `${selectedClass.name} • ${selectedModuleTitle}`
-					: ''}
-				onAddSelected={async ({ questions }: { questions: GeneratedQuestionInput[] }) => {
-					generatedQuestions = questions;
-					await saveGenerated();
-				}}
-			/>
-		</div>
-	</div>
-	{#if generatedQuestions.length > 0}
-		<div class="mt-4 flex items-center gap-3">
-			<div class="text-sm text-base-content/70">Generated: {generatedQuestions.length}</div>
-			<button class="btn btn-primary btn-sm" disabled={isSaving} onclick={saveGenerated}>
-				{#if isSaving}
-					<span class="loading loading-spinner loading-xs"></span>
-					Saving...
-				{:else}
-					Save to Module
-				{/if}
-			</button>
-			<button
-				class="btn btn-ghost btn-sm"
-				onclick={() => {
-					generatedQuestions = [];
-				}}>Clear</button>
+	<div class="grid grid-cols-1 2xl:grid-cols-6 gap-6 lg:gap-10 mt-6 flex-1">
+		<!-- Document Browser - More spacious column -->
+		<div class="2xl:col-span-2">
+			<div class="card bg-base-100 border border-base-300 rounded-xl min-h-96">
+				<DocumentBrowser
+					cohortId={userData?.cohortId as Id<'cohort'>}
+					initialLib={userContentLib.data}
+					bind:selectedText
+				/>
+			</div>
 		</div>
 
-		<div class="mt-4 grid grid-cols-1 gap-4">
-			{#each generatedQuestions as q, i}
-				<div class="border border-base-300 rounded-lg p-4 bg-base-100">
-					<div class="flex items-start justify-between gap-3">
-						<div class="text-sm text-base-content/70">#{i + 1}</div>
-						<button class="btn btn-ghost btn-xs" onclick={() => removeGenerated(i)}>Remove</button>
-					</div>
-					<div class="mt-2 font-medium">{q.stem}</div>
-					<div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-						{#each q.options as opt, oi}
-							<div class="flex items-start gap-2 p-2 rounded-md border border-base-200">
-								<div class="font-mono text-xs w-6 text-center">{optionLetter(oi)}</div>
-								<div class="flex-1 text-sm">{opt.text}</div>
-								{#if q.correctAnswers.includes(String(oi))}
-									<div class="text-success" title="Correct"><Check size={16} /></div>
-								{/if}
-							</div>
-						{/each}
-					</div>
-					<div class="mt-3 text-sm text-base-content/70">
-						<span class="font-medium">Explanation:</span>
-						{#if q.explanation}
-							<span class="ms-1">{q.explanation}</span>
-						{/if}
-					</div>
-				</div>
-			{/each}
+		<!-- Question Generation - Very spacious column -->
+		<div class="2xl:col-span-4">
+			<div class="card bg-base-100 border border-base-300 rounded-xl min-h-96">
+				<QuestionsGeneration
+					material={selectedText}
+					{wordCount}
+					{charCount}
+					canGenerate={Boolean(selectedClass && selectedModuleId)}
+					destinationSummary={selectedClass && selectedModuleId
+						? `${selectedClass.name} • ${selectedModuleTitle}`
+						: ''}
+					onAddSelected={async ({ questions }: { questions: GeneratedQuestionInput[] }) => {
+						generatedQuestions = questions;
+						await saveGenerated();
+					}}
+				/>
+			</div>
 		</div>
-	{/if}
+	</div>
+
 </div>

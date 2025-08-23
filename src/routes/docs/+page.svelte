@@ -2,11 +2,10 @@
 <p class="lead">LearnTerms helps you study faster and smarter—without needing a manual.</p>
 
 <p>
-	The LearnTerms study platform is designed to be used without an instruction manual: you don’t need
-	documentation to get started. But if you want the most high-yield experience out of the service,
-	reading the docs will reveal you not necessarily with the how but the why of LearnTerms. By
-	understanding the design intentions and ethos of the platform, you can enhance the way you study
-	and get better results.
+	LearnTerms is designed to be intuitive. You don’t need a manual to get started. If you want the
+	most high-yield experience, these docs will give you more than just the how. They will explain the
+	why. By understanding the principles and intentions behind the platform, you can align with its
+	design and get better results from your study time.
 </p>
 
 <p>
