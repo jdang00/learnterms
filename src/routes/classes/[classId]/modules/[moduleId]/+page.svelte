@@ -383,8 +383,6 @@
 				questions={{ data: qs.getFilteredQuestions() }}
 				{handleSelect}
 				{currentlySelected}
-				interactedQuestions={qs.liveInteractedQuestions}
-				flags={qs.liveFlaggedQuestions}
 				{qs}
 			/>
 

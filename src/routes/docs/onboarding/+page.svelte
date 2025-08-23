@@ -19,7 +19,7 @@
 	<li>Click <strong>Confirm and Join.</strong></li>
 </ol>
 
-<p>That's it! You'll now see your cohort's classes, modules, and questions, nearly organized by semester.</p>
+<p>That's it! You'll now see your cohort's classes, modules, and questions, neatly organized by semester.</p>
 
 <h2>Navigating the Dashboard</h2>
 

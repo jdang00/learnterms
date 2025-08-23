@@ -172,9 +172,9 @@
 </script>
 
 <div class="min-h-screen p-8 max-w-7xl mx-auto">
-	<a class="btn mb-4 btn-ghost" href="/admin/{moduleInfo.data?.classId}">
-		<ArrowLeft size={16} />Back</a
-	>
+	<a class="btn mb-4 btn-ghost" href={`/admin/${moduleInfo.data?.classId || ''}`}>
+		<ArrowLeft size={16} />Back
+	</a>
 
 	<div class="mb-8 flex flex-col gap-2">
 		<div class="flex flex-row justify-between items-center gap-3">

@@ -137,6 +137,7 @@ export const insertQuestion = mutation({
 		const id = await ctx.db.insert('question', {
 			...args,
 			type: convertQuestionType(args.type),
+			status: args.status.toLowerCase(),
 			options: optionsWithIds,
 			correctAnswers: correctAnswerIds,
 			searchText
