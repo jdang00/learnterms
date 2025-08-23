@@ -131,6 +131,8 @@ export const getUserProgressForModule = query({
 		questionIds: v.array(v.id('question'))
 	},
 	handler: async (ctx, args) => {
+		console.log(`[getUserProgressForModule] CALL #${Date.now()} - userId: ${args.userId}, classId: ${args.classId}, questionIds: ${args.questionIds.length}`);
+
 		const records = await getUserProgressRecords(ctx, args.userId, args.classId, args.questionIds);
 
 		const interactedQuestionIds = records
@@ -141,6 +143,7 @@ export const getUserProgressForModule = query({
 			.filter((record) => record.isFlagged === true)
 			.map((record) => record.questionId);
 
+		console.log(`[getUserProgressForModule] RESULT - interacted: ${interactedQuestionIds.length}, flagged: ${flaggedQuestionIds.length}`);
 		return { interactedQuestionIds, flaggedQuestionIds };
 	}
 });

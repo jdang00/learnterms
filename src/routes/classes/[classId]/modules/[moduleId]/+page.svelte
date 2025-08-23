@@ -150,10 +150,10 @@
 
 	let moduleProgress: { data: { interactedQuestionIds: Id<'question'>[]; flaggedQuestionIds: Id<'question'>[] } | undefined; isLoading: boolean; error: any } = $state({
 		data: {
-			interactedQuestionIds: (data.interactedQuestions as Id<'question'>[]) || [],
-			flaggedQuestionIds: (data.flaggedQuestions as Id<'question'>[]) || []
+			interactedQuestionIds: [],
+			flaggedQuestionIds: []
 		},
-		isLoading: false,
+		isLoading: true,
 		error: null
 	});
 
@@ -165,20 +165,14 @@
 					userId: userId,
 					classId: data.classId as Id<'class'>,
 					questionIds: stableQuestionIds
-				},
-				{
-					initialData: {
-						interactedQuestionIds: (data.interactedQuestions as Id<'question'>[]) || [],
-						flaggedQuestionIds: (data.flaggedQuestions as Id<'question'>[]) || []
-					}
 				}
 			);
 			moduleProgress = query;
 		} else {
 			moduleProgress = {
 				data: {
-					interactedQuestionIds: (data.interactedQuestions as Id<'question'>[]) || [],
-					flaggedQuestionIds: (data.flaggedQuestions as Id<'question'>[]) || []
+					interactedQuestionIds: [],
+					flaggedQuestionIds: []
 				},
 				isLoading: false,
 				error: null
@@ -389,8 +383,6 @@
 				questions={{ data: qs.getFilteredQuestions() }}
 				{handleSelect}
 				{currentlySelected}
-				interactedQuestions={qs.liveInteractedQuestions}
-				flags={qs.liveFlaggedQuestions}
 				{qs}
 			/>
 

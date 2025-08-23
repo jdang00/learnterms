@@ -13,13 +13,15 @@ export const docsNav: DocsNavSection[] = [
 		title: 'Overview',
 		items: [
 			{ title: 'Introduction', path: '/docs' },
-			{ title: 'Getting started', path: '/docs/getting-started' },
-			{ title: 'LearnTerms Generation Models', path: '/docs/lt-models' }
+			{ title: 'Onboarding', path: '/docs/onboarding' }
 		]
 	},
 	{
 		title: 'Admin',
-		items: [{ title: 'Content Library', path: '/docs/admin/content-library' }]
+		items: [
+			{ title: 'Content Library', path: '/docs/admin/content-library' },
+			{ title: 'LearnTerms Generation Models', path: '/docs/lt-models' }
+		]
 	},
 	{
 		title: 'Students',

@@ -19,8 +19,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	try {
 		const user = await clerkClient.users.getUser(userId);
 		const userData = await client.query(api.users.getUserById, { id: user.id });
-		const questions = await client.query(api.question.getQuestionsByModuleAdmin, {
-			id: moduleId as Id<'module'>
+		const questions = await client.query(api.question.searchQuestionsByModuleAdmin, {
+			id: moduleId as Id<'module'>,
+			query: ''
 		});
 		return { userData, questions, moduleId };
 	} catch (error) {

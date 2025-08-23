@@ -78,8 +78,15 @@ export default defineSchema({
 		correctAnswers: v.array(v.string()),
 		explanation: v.optional(v.string()),
 		aiGenerated: v.boolean(),
-		status: v.string()
-	}).index('by_moduleId', ['moduleId']).index('by_moduleId_order', ['moduleId', 'order']),
+		status: v.string(),
+		searchText: v.optional(v.string())
+	})
+		.index('by_moduleId', ['moduleId'])
+		.index('by_moduleId_order', ['moduleId', 'order'])
+		.searchIndex('by_moduleId_searchText', {
+			searchField: 'searchText',
+			filterFields: ['moduleId']
+		}),
 	questionMedia: defineTable({
 		url: v.string(),
 		type: v.string(),

@@ -34,29 +34,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 		const questionIds = (module || []).map((q: { _id: Id<'question'> }) => q._id);
 
-		let interactedQuestions: unknown[] = [];
-		let flaggedQuestions: unknown[] = [];
-		const hasValidUser = Boolean(convexID?._id);
-		const hasQuestions = questionIds.length > 0;
-
-		if (hasValidUser && hasQuestions) {
-			const combined = await client.query(api.userProgress.getUserProgressForModule, {
-				userId: convexID!._id as Id<'users'>,
-				classId: params.classId as Id<'class'>,
-				questionIds
-			});
-			interactedQuestions = combined.interactedQuestionIds;
-			flaggedQuestions = combined.flaggedQuestionIds;
-		}
+		// Removed server-side progress fetching to avoid double execution
+		// Progress is now fetched client-side only
 
 		return {
 			moduleInfo,
 			module,
 			moduleId,
 			convexID,
-			classId: params.classId,
-			interactedQuestions,
-			flaggedQuestions
+			classId: params.classId
 		};
 	} catch (error) {
 		console.error('Failed to load module page data:', error);

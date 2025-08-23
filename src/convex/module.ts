@@ -296,3 +296,11 @@ export const updateModule = mutation({
 		return { updated: true };
 	}
 });
+
+export const getAllModules = query({
+	args: {},
+	handler: async (ctx) => {
+		const modules = await ctx.db.query('module').collect();
+		return modules;
+	}
+});
