@@ -1,5 +1,7 @@
 import { query, mutation, action } from './_generated/server';
+import { authCreateMutation } from './authQueries';
 import { v } from 'convex/values';
+import { authQuery } from './authQueries';
 
 function makeOptionId(stem: string, text: string, index: number): string {
 	const input = `${stem}|${text}|${index}`;
@@ -48,7 +50,7 @@ function computeSearchText(input: {
 		.toLowerCase();
 }
 
-export const getQuestionsByModule = query({
+export const getQuestionsByModule = authQuery({
 	// match the schema: moduleId is an id("module")
 	args: { id: v.id('module') },
 	handler: async (ctx, { id }) => {
@@ -62,8 +64,7 @@ export const getQuestionsByModule = query({
 	}
 });
 
-export const getQuestionsByModuleAdmin = query({
-	// match the schema: moduleId is an id("module")
+export const getQuestionsByModuleAdmin = authQuery({
 	args: { id: v.id('module') },
 	handler: async (ctx, { id }) => {
 		const questions = await ctx.db
@@ -75,7 +76,7 @@ export const getQuestionsByModuleAdmin = query({
 	}
 });
 
-export const getFirstQuestionInModule = query({
+export const getFirstQuestionInModule = authQuery({
 	// Enter module ID
 	args: { id: v.id('module') },
 	handler: async (ctx, args) => {
@@ -88,7 +89,7 @@ export const getFirstQuestionInModule = query({
 	}
 });
 
-export const insertQuestion = mutation({
+export const insertQuestion = authCreateMutation({
 	args: {
 		moduleId: v.id('module'),
 		type: v.string(),
@@ -146,7 +147,7 @@ export const insertQuestion = mutation({
 	}
 });
 
-export const deleteQuestion = mutation({
+export const deleteQuestion = authCreateMutation({
 	args: {
 		questionId: v.id('question'),
 		moduleId: v.id('module')
@@ -162,7 +163,7 @@ export const deleteQuestion = mutation({
 	}
 });
 
-export const bulkDeleteQuestions = mutation({
+export const bulkDeleteQuestions = authCreateMutation({
 	args: {
 		questionIds: v.array(v.id('question')),
 		moduleId: v.id('module')
@@ -199,7 +200,7 @@ export const bulkDeleteQuestions = mutation({
 	}
 });
 
-export const updateQuestion = mutation({
+export const updateQuestion = authCreateMutation({
 	args: {
 		questionId: v.id('question'),
 		moduleId: v.id('module'),
@@ -257,7 +258,7 @@ export const updateQuestion = mutation({
 	}
 });
 
-export const createQuestion = mutation({
+export const createQuestion = authCreateMutation({
 	args: {
 		moduleId: v.id('module'),
 		type: v.string(),
@@ -295,7 +296,7 @@ export const createQuestion = mutation({
 	}
 });
 
-export const bulkInsertQuestions = mutation({
+export const bulkInsertQuestions = authCreateMutation({
 	args: {
 		moduleId: v.id('module'),
 		questions: v.array(
@@ -368,7 +369,7 @@ export const bulkInsertQuestions = mutation({
 	}
 });
 
-export const updateQuestionOrder = mutation({
+export const updateQuestionOrder = authCreateMutation({
 	args: {
 		questionId: v.id('question'),
 		newOrder: v.number(),
@@ -402,7 +403,7 @@ export const updateQuestionOrder = mutation({
 	}
 });
 
-export const getAllQuestions = query({
+export const getAllQuestions = authQuery({
 	args: {},
 	handler: async (ctx) => {
 		const questions = await ctx.db.query('question').collect();
@@ -410,7 +411,7 @@ export const getAllQuestions = query({
 	}
 });
 
-export const searchQuestionsByModuleAdmin = query({
+export const searchQuestionsByModuleAdmin = authQuery({
 	args: { id: v.id('module'), query: v.string(), limit: v.optional(v.number()) },
 	handler: async (ctx, { id, query, limit }) => {
 		const trimmed = query.trim().toLowerCase();

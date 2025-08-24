@@ -1,5 +1,6 @@
 import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
+import { authQuery } from './authQueries';
 import type { Doc, Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
 
@@ -20,7 +21,7 @@ const getUserProgressRecords = async (
 	return recordsForUserAndClass.filter((r) => idSet.has(r.questionId));
 };
 
-export const checkExistingRecord = query({
+export const checkExistingRecord = authQuery({
 	args: { userId: v.id('users'), questionId: v.id('question') },
 	handler: async (ctx, args) => {
 		const record = await ctx.db
@@ -34,7 +35,7 @@ export const checkExistingRecord = query({
 	}
 });
 
-export const getProgressForClass = query({
+export const getProgressForClass = authQuery({
 	args: {
 		userId: v.id('users'),
 		classId: v.id('class')
@@ -124,14 +125,13 @@ export const getProgressForClass = query({
 	}
 });
 
-export const getUserProgressForModule = query({
+export const getUserProgressForModule = authQuery({
 	args: {
 		userId: v.id('users'),
 		classId: v.id('class'),
 		questionIds: v.array(v.id('question'))
 	},
 	handler: async (ctx, args) => {
-		console.log(`[getUserProgressForModule] CALL #${Date.now()} - userId: ${args.userId}, classId: ${args.classId}, questionIds: ${args.questionIds.length}`);
 
 		const records = await getUserProgressRecords(ctx, args.userId, args.classId, args.questionIds);
 
@@ -143,7 +143,6 @@ export const getUserProgressForModule = query({
 			.filter((record) => record.isFlagged === true)
 			.map((record) => record.questionId);
 
-		console.log(`[getUserProgressForModule] RESULT - interacted: ${interactedQuestionIds.length}, flagged: ${flaggedQuestionIds.length}`);
 		return { interactedQuestionIds, flaggedQuestionIds };
 	}
 });

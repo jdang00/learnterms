@@ -5,7 +5,7 @@
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import NavBar from '$lib/components/NavBar.svelte';
-	import { setupConvex } from 'convex-svelte';
+	import { setupConvex, useConvexClient } from 'convex-svelte';
 	import { theme, clerkTheme } from '$lib/theme.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
@@ -18,7 +18,10 @@
 
 	injectAnalytics();
 
-	const { children }: { children: Snippet } = $props();
+	const { data, children } = $props();
+
+	const convexClient = useConvexClient();
+	convexClient.setAuth(async () => (data?.token ? (data.token as string) : undefined));
 
 	onMount(() => {
 		theme.init();

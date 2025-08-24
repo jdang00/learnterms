@@ -9,20 +9,41 @@
 	import EditModuleModal from '$lib/admin/EditModuleModal.svelte';
 	import AddModuleModal from '$lib/admin/AddModuleModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
+	import { useClerkContext } from 'svelte-clerk';
 
 	let { data }: { data: PageData } = $props();
-	const userData = data.userData;
 	const classId = data.classId;
 
 	const modules = useQuery(
 		api.module.getAdminModulesWithQuestionCounts,
-		{ classId: classId as Id<'class'> },
-		{ initialData: data.modules }
+		{ classId: classId as Id<'class'> }
 	);
 
 	const classInfo = useQuery(api.class.getClassById, { id: classId as Id<'class'> });
 
 	const client = useConvexClient();
+
+	const clerk = useClerkContext();
+	const clerkUser = $derived(clerk.user);
+	const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
+	let userDataQuery = $state<{ isLoading: boolean; error: any; data?: Doc<'users'> | null }>({
+		isLoading: true,
+		error: null,
+		data: undefined
+	});
+	let userData: Doc<'users'> | null = $state(null);
+	$effect(() => {
+		if (clerkUser) {
+			userDataQuery = useQuery(api.users.getUserById, { id: clerkUser.id });
+		} else {
+			userDataQuery = { isLoading: true, error: null, data: undefined };
+		}
+	});
+	$effect(() => {
+		if (userDataQuery.data !== undefined) {
+			userData = (userDataQuery.data as Doc<'users'> | null) ?? null;
+		}
+	});
 
 	type ClassItem = Doc<'class'>;
 	let classList = $state<ClassItem[]>([]);
@@ -40,6 +61,7 @@
 
 	async function confirmDelete() {
 		if (!classToDelete) return;
+		if (!userData || !userData.cohortId) return;
 
 		const prev = [...classList];
 		classList = classList.filter((c) => c._id !== classToDelete!._id);
@@ -47,7 +69,7 @@
 		try {
 			await client.mutation(api.class.deleteClass, {
 				classId: classToDelete!._id as Id<'class'>,
-				cohortId: userData?.cohortId as Id<'cohort'>
+				cohortId: userData.cohortId as Id<'cohort'>
 			});
 		} catch (error) {
 			console.error('Failed to delete class:', error);
@@ -196,10 +218,12 @@
 			{/if}
 
 			<div class="flex gap-2">
-				<button class="btn btn-primary gap-2" onclick={openAddModuleModal}>
-					<Plus size={16} />
-					<span>Add New Module</span>
-				</button>
+				{#if admin}
+					<button class="btn btn-primary gap-2" onclick={openAddModuleModal}>
+						<Plus size={16} />
+						<span>Add New Module</span>
+					</button>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -254,18 +278,17 @@
 										href={`/admin/${classId}/module/${moduleItem._id}`}
 										class="font-semibold text-base-content text-left truncate hover:text-primary transition-colors cursor-pointer"
 										title={`Go to questions for ${moduleItem.title}`}
-									>
-										<span class="mr-2 text-xl">{moduleItem.emoji || '📘'}</span>{moduleItem.title}
-									</a>
-									<div class="text-xs text-base-content/60 flex items-center gap-1">
-										<span
-											>{moduleItem.questionCount} question{moduleItem.questionCount === 1
-												? ''
-												: 's'}</span
 										>
-									</div>
+										<span class="mr-2 text-xl">{moduleItem.emoji || '📘'}</span>{moduleItem.title}
+										</a>
+										<div class="text-xs text-base-content/60 flex items-center gap-1">
+											<span>
+												{moduleItem.questionCount} question{moduleItem.questionCount === 1 ? '' : 's'}
+											</span>
+										</div>
 								</div>
 								<div class="flex items-center gap-2">
+									{#if admin}
 									<div class="dropdown dropdown-end">
 										<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
 										<ul
@@ -298,6 +321,7 @@
 											</li>
 										</ul>
 									</div>
+									{/if}
 								</div>
 							</div>
 							<p class="text-sm text-base-content/70 mb-4 text-left line-clamp-4">

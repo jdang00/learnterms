@@ -9,9 +9,9 @@
 	import { Check } from 'lucide-svelte';
 	import type { ClassWithSemester } from '$lib/types';
 	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
+	import { useClerkContext } from 'svelte-clerk';
 
 	let { data }: { data: PageData } = $props();
-	const userData = data.userData;
 	const client = useConvexClient();
 	let selectedText: string = $state('');
 	let charCount: number = $derived(selectedText.length);
@@ -25,6 +25,23 @@
 		isLoading: false,
 		error: null,
 		data: []
+	});
+
+	// Clerk + Convex user
+	const clerk = useClerkContext();
+	const clerkUser = $derived(clerk.user);
+	let convexUser = $state<{ isLoading: boolean; error: any; data?: Doc<'users'> | null }>({
+		isLoading: true,
+		error: null,
+		data: undefined
+	});
+	$effect(() => {
+		if (clerkUser) {
+			const q = useQuery(api.users.getUserById, { id: clerkUser.id });
+			convexUser = q;
+		} else {
+			convexUser = { isLoading: true, error: null, data: undefined };
+		}
 	});
 
 	// Semester selection
@@ -70,13 +87,20 @@
 		return String.fromCharCode('A'.charCodeAt(0) + i);
 	}
 
-	const userContentLib = useQuery(
-		api.contentLib.getContentLibByCohort,
-		{
-			cohortId: userData?.cohortId as Id<'cohort'>
-		},
-		{ initialData: data.cohortLib }
-	);
+	let userContentLib = $state<{ isLoading: boolean; error: any; data?: Doc<'contentLib'>[] }>({
+		isLoading: false,
+		error: null,
+		data: []
+	});
+	$effect(() => {
+		const cohortId = convexUser.data?.cohortId as Id<'cohort'> | undefined;
+		if (cohortId) {
+			const q = useQuery(api.contentLib.getContentLibByCohort, { cohortId });
+			userContentLib = q;
+		} else {
+			userContentLib = { isLoading: true, error: null, data: [] };
+		}
+	});
 
 	let classes = $state<{ isLoading: boolean; error: any; data?: Doc<'class'>[] }>({
 		isLoading: false,
@@ -85,9 +109,10 @@
 	});
 
 	$effect(() => {
-		if (userData?.cohortId) {
+		const cohortId = convexUser.data?.cohortId as Id<'cohort'> | undefined;
+		if (cohortId) {
 			const q = useQuery(api.class.getUserClasses, {
-				id: userData.cohortId as Id<'cohort'>
+				id: cohortId
 			});
 			classes = q;
 		} else {
@@ -262,11 +287,19 @@
 		<!-- Document Browser - More spacious column -->
 		<div class="2xl:col-span-2">
 			<div class="card bg-base-100 border border-base-300 rounded-xl min-h-96">
-				<DocumentBrowser
-					cohortId={userData?.cohortId as Id<'cohort'>}
-					initialLib={userContentLib.data}
-					bind:selectedText
-				/>
+				{#if convexUser.data?.cohortId}
+					<DocumentBrowser
+						cohortId={convexUser.data.cohortId as Id<'cohort'>}
+						initialLib={userContentLib.data}
+						bind:selectedText
+					/>
+				{:else}
+					<div class="p-6 space-y-2">
+						{#each Array(6) as _}
+							<div class="skeleton h-10 w-full"></div>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		</div>
 

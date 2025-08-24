@@ -1,5 +1,6 @@
 import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
+import { authQuery } from './authQueries';
 
 const APP_BASE_URL = process.env.APP_BASE_URL;
 
@@ -56,7 +57,7 @@ function validateAndTrimChunkFields(input: ChunkFieldInput): ChunkFieldInput {
 	return { title, summary, content, chunk_type };
 }
 
-export const getChunkByDocumentId = query({
+export const getChunkByDocumentId = authQuery({
 	args: {
 		documentId: v.id('contentLib')
 	},

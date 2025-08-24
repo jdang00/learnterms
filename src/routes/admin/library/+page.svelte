@@ -10,18 +10,39 @@
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
+	import { useClerkContext } from 'svelte-clerk';
 
 	let { data }: { data: PageData } = $props();
-	const userData = data.userData;
 	const client = useConvexClient();
 
-	const userContentLib = useQuery(
-		api.contentLib.getContentLibByCohort,
-		{
-			cohortId: userData?.cohortId as Id<'cohort'>
-		},
-		{ initialData: data.cohortLib }
-	);
+	const clerk = useClerkContext();
+	const clerkUser = $derived(clerk.user);
+	let userDataQuery = $state<{ isLoading: boolean; error: any; data?: Doc<'users'> | null }>({
+		isLoading: true,
+		error: null,
+		data: undefined
+	});
+	$effect(() => {
+		if (clerkUser) {
+			userDataQuery = useQuery(api.users.getUserById, { id: clerkUser.id });
+		} else {
+			userDataQuery = { isLoading: true, error: null, data: undefined };
+		}
+	});
+
+	let userContentLib = $state<{ isLoading: boolean; error: any; data?: Doc<'contentLib'>[] }>({
+		isLoading: true,
+		error: null,
+		data: []
+	});
+	$effect(() => {
+		const cohortId = userDataQuery.data?.cohortId as Id<'cohort'> | undefined;
+		if (cohortId) {
+			userContentLib = useQuery(api.contentLib.getContentLibByCohort, { cohortId });
+		} else {
+			userContentLib = { isLoading: true, error: null, data: [] };
+		}
+	});
 
 	$effect(() => {
 		if (typeof window === 'undefined') return;
@@ -92,9 +113,11 @@
 		deleteError = '';
 
 		try {
+			const cohortId = userDataQuery.data?.cohortId as Id<'cohort'> | undefined;
+			if (!cohortId) throw new Error('Missing cohort');
 			await client.mutation(api.contentLib.deleteDocument, {
 				documentId: deletingDocument._id,
-				cohortId: userData?.cohortId as Id<'cohort'>
+				cohortId
 			});
 			closeDeleteModal();
 		} catch (error) {
@@ -175,7 +198,7 @@
 							<tr>
 								<td colspan="5" class="text-center">Error loading content library</td>
 							</tr>
-						{:else if userContentLib.data.length === 0}
+						{:else if !userContentLib.data || userContentLib.data.length === 0}
 							<tr>
 								<td colspan="5" class="text-center text-base-content/70"
 									>Create your first document!</td
@@ -195,9 +218,9 @@
 												onclick={() => handledocView(doc._id, doc)}
 											>
 												{doc.title}</button
-											>
-										</div></td
-									>
+												>
+											</div></td
+										>
 									<td class="text-base-content/70"
 										>{doc.description ? doc.description : 'No description'}</td
 									>
@@ -245,9 +268,9 @@
 			</div>
 		</div>
 
-		<AddDocumentModal {isAddModalOpen} {closeAddModal} {userData} />
+		<AddDocumentModal {isAddModalOpen} {closeAddModal} userData={userDataQuery.data} />
 
-		<EditDocumentModal {isEditModalOpen} {closeEditModal} {editingDocument} {userData} />
+		<EditDocumentModal {isEditModalOpen} {closeEditModal} {editingDocument} userData={userDataQuery.data} />
 
 		<DeleteConfirmationModal
 			{isDeleteModalOpen}

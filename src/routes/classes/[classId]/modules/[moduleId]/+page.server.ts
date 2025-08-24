@@ -9,13 +9,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!PUBLIC_CONVEX_URL) {
 		throw new Error('PUBLIC_CONVEX_URL is not configured');
 	}
-	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
 
-	const { userId } = locals.auth();
+	const auth = locals.auth();
+	const userId = auth.userId;
 
 	if (!userId) {
 		return redirect(307, '/sign-in');
 	}
+
+	const token = await auth.getToken({ template: "convex" });
+	
+	if (!token) {
+		return redirect(307, '/sign-in');
+	}
+
+	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
+	client.setAuth(token); 
 
 	const moduleId = params.moduleId as Id<'module'>;
 
@@ -31,11 +40,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const convexID = await client.query(api.users.getUserById, {
 			id: userId
 		});
-
-		const questionIds = (module || []).map((q: { _id: Id<'question'> }) => q._id);
-
-		// Removed server-side progress fetching to avoid double execution
-		// Progress is now fetched client-side only
 
 		return {
 			moduleInfo,

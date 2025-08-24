@@ -1,7 +1,8 @@
 import { query, mutation } from './_generated/server';
+import { authQuery } from './authQueries';
 import { v } from 'convex/values';
 
-export const getAllSemesters = query({
+export const getAllSemesters = authQuery({
 	args: {},
 	handler: async (ctx) => {
 		const semesters = ctx.db.query('semester').collect();

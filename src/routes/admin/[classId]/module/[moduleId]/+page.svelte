@@ -10,6 +10,7 @@
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
+	import { useClerkContext } from 'svelte-clerk';
 
 	let { data }: { data: PageData } = $props();
 	const moduleId = data.moduleId;
@@ -17,13 +18,16 @@
 	let search = $state('');
 	const questions = useQuery(
 		api.question.searchQuestionsByModuleAdmin,
-		() => ({ id: moduleId as Id<'module'>, query: search }),
-		{ initialData: data.questions }
+		() => ({ id: moduleId as Id<'module'>, query: search })
 	);
 
 	const moduleInfo = useQuery(api.module.getModuleById, { id: moduleId as Id<'module'> });
 
 	const client = useConvexClient();
+	const clerk = useClerkContext();
+	const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
+	const contributor = $derived(clerk.user?.publicMetadata.create === 'contributor');
+	const canEdit = $derived(admin || contributor);
 
 	let showTruncated = $state(true);
 
@@ -202,7 +206,7 @@
 						<span>{moduleInfo.data.title}</span>
 					</h1>
 					<p class="text-base-content/70">
-						Manage questions for {moduleInfo.data.title}. Drag and drop to reorder them.
+						Manage questions for {moduleInfo.data.title}. {#if admin}Drag and drop to reorder them.{/if}
 					</p>
 				</div>
 			{/if}
@@ -215,19 +219,21 @@
 						<button class="btn btn-ghost btn-xs" onclick={() => (search = '')}>Clear</button>
 					{/if}
 				</label>
-				{#if selectedQuestions.size > 0}
+				{#if canEdit && selectedQuestions.size > 0}
 					<button class="btn btn-error gap-2" onclick={openBulkDeleteModal}>
 						<Trash2 size={16} />
 						<span>Delete Selected ({selectedQuestions.size})</span>
 					</button>
 					<button class="btn btn-ghost" onclick={deselectAllQuestions}> Deselect All </button>
-				{:else}
+				{:else if canEdit}
 					<button class="btn btn-ghost" onclick={selectAllQuestions}> Select All </button>
 				{/if}
-				<button class="btn btn-primary gap-2" onclick={openAddQuestionModal}>
-					<Plus size={16} />
-					<span>Add New Question</span>
-				</button>
+				{#if canEdit}
+					<button class="btn btn-primary gap-2" onclick={openAddQuestionModal}>
+						<Plus size={16} />
+						<span>Add New Question</span>
+					</button>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -345,38 +351,40 @@
 									</div>
 								</div>
 
-								<div class="dropdown dropdown-end">
-									<button class="btn btn-ghost btn-circle m-1">⋮</button>
-									<ul
-										tabindex="-1"
-										class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
-									>
-										<li>
-											<button
-												data-edit-btn
-												class="btn btn-sm btn-ghost w-full justify-start"
-												type="button"
-												aria-label="Edit question"
-												onclick={() => editQuestion(questionItem)}
-											>
-												<Pencil size={16} />
-												<span>Edit</span>
-											</button>
-										</li>
-										<li>
-											<button
-												data-delete-btn
-												class="btn btn-sm btn-ghost text-error w-full justify-start"
-												type="button"
-												aria-label="Delete question"
-												onclick={() => handleQuestionDelete(questionItem._id)}
-											>
-												<Trash2 size={16} />
-												<span>Delete</span>
-											</button>
-										</li>
-									</ul>
-								</div>
+								{#if canEdit}
+									<div class="dropdown dropdown-end">
+										<button class="btn btn-ghost btn-circle m-1">⋮</button>
+										<ul
+											tabindex="-1"
+											class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+										>
+											<li>
+												<button
+													data-edit-btn
+													class="btn btn-sm btn-ghost w-full justify-start"
+													type="button"
+													aria-label="Edit question"
+													onclick={() => editQuestion(questionItem)}
+												>
+													<Pencil size={16} />
+													<span>Edit</span>
+												</button>
+											</li>
+											<li>
+												<button
+													data-delete-btn
+													class="btn btn-sm btn-ghost text-error w-full justify-start"
+													type="button"
+													aria-label="Delete question"
+													onclick={() => handleQuestionDelete(questionItem._id)}
+												>
+													<Trash2 size={16} />
+													<span>Delete</span>
+												</button>
+											</li>
+										</ul>
+									</div>
+								{/if}
 							</div>
 
 							<div class="flex flex-row gap-3">

@@ -1,4 +1,4 @@
-import { query, mutation } from './_generated/server';
+import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
 
 function containsOnlyEmoji(input: string): boolean {
@@ -10,7 +10,7 @@ function containsOnlyEmoji(input: string): boolean {
 	return true;
 }
 
-export const getClassModules = query({
+export const getClassModules = authQuery({
 	// Enter class ID
 	args: { id: v.id('class') },
 	handler: async (ctx, args) => {
@@ -24,7 +24,7 @@ export const getClassModules = query({
 	}
 });
 
-export const getAdminModule = query({
+export const getAdminModule = authQuery({
 	// Enter class ID
 	args: { id: v.id('class') },
 	handler: async (ctx, args) => {
@@ -37,14 +37,14 @@ export const getAdminModule = query({
 	}
 });
 
-export const getModuleById = query({
+export const getModuleById = authQuery({
 	args: { id: v.id('module') },
 	handler: async (ctx, args) => {
 		return await ctx.db.get(args.id);
 	}
 });
 
-export const getModuleQuestionCount = query({
+export const getModuleQuestionCount = authQuery({
 	args: { moduleId: v.id('module') },
 	handler: async (ctx, args) => {
 		const questions = await ctx.db
@@ -56,7 +56,7 @@ export const getModuleQuestionCount = query({
 	}
 });
 
-export const getAdminModulesWithQuestionCounts = query({
+export const getAdminModulesWithQuestionCounts = authQuery({
 	args: { classId: v.id('class') },
 	handler: async (ctx, args) => {
 		const modules = await ctx.db
@@ -82,7 +82,7 @@ export const getAdminModulesWithQuestionCounts = query({
 	}
 });
 
-export const updateModuleOrder = mutation({
+export const updateModuleOrder = authAdminMutation({
 	args: {
 		moduleId: v.id('module'),
 		newOrder: v.number(),
@@ -116,7 +116,7 @@ export const updateModuleOrder = mutation({
 	}
 });
 
-export const insertModule = mutation({
+export const insertModule = authAdminMutation({
 	args: {
 		title: v.string(),
 		emoji: v.optional(v.string()),
@@ -191,7 +191,7 @@ export const insertModule = mutation({
 	}
 });
 
-export const deleteModule = mutation({
+export const deleteModule = authAdminMutation({
 	args: {
 		moduleId: v.id('module'),
 		classId: v.id('class')
@@ -216,7 +216,7 @@ export const deleteModule = mutation({
 	}
 });
 
-export const updateModule = mutation({
+export const updateModule = authAdminMutation({
 	args: {
 		moduleId: v.id('module'),
 		classId: v.id('class'),
@@ -297,7 +297,7 @@ export const updateModule = mutation({
 	}
 });
 
-export const getAllModules = query({
+export const getAllModules = authQuery({
 	args: {},
 	handler: async (ctx) => {
 		const modules = await ctx.db.query('module').collect();
