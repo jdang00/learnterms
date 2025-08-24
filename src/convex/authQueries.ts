@@ -13,13 +13,7 @@ export const authQuery = customQuery(query, {
 	}
 });
 
-export const listUsers = authQuery({
-	args: {},
-	handler: async (ctx) => {
-		const users = await ctx.db.query('users').collect();
-		return users;
-	}
-});
+
 
 // Generic admin-only query builder
 export const authAdminQuery = customQuery(query, {

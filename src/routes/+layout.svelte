@@ -19,10 +19,9 @@
 	injectAnalytics();
 
 	const { data, children } = $props();
-	console.log("data", data.initialState);
 
 	const convexClient = useConvexClient();
-	convexClient.setAuth(async () => data.token as string);
+	convexClient.setAuth(async () => (data?.token ? (data.token as string) : undefined));
 
 	onMount(() => {
 		theme.init();
