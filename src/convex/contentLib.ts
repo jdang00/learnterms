@@ -1,7 +1,8 @@
 import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
+import { authQuery } from './authQueries';
 
-export const getContentLibByCohort = query({
+export const getContentLibByCohort = authQuery({
 	args: {
 		cohortId: v.id('cohort')
 	},

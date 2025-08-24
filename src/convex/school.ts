@@ -1,7 +1,8 @@
-import { query, internalQuery, mutation } from './_generated/server';
+import { internalQuery, mutation } from './_generated/server';
+import { authQuery } from './authQueries';
 import { v } from 'convex/values';
 
-export const getSchoolById = query({
+export const getSchoolById = authQuery({
 	args: { id: v.id('school') },
 	handler: async (ctx, args) => {
 		return await ctx.db.get(args.id);

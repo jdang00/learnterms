@@ -19,6 +19,7 @@
 	import EditClassModal from '$lib/admin/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
+	import { useClerkContext } from 'svelte-clerk/client';
 	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
 
 	let { data }: { data: PageData } = $props();
@@ -29,6 +30,9 @@
 	});
 
 	const client = useConvexClient();
+
+	const clerk = useClerkContext();
+	const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
 
 	type ClassItem = Doc<'class'> & {
 		semester?: {
@@ -242,10 +246,12 @@
 				<h1 class="font-semibold text-2xl">My Classes</h1>
 				<p class="text-sm text-base-content/70">Drag and drop to reorder classes</p>
 			</div>
-			<button class="btn btn-primary gap-2" onclick={openAddModal}>
-				<Plus size={16} />
-				<span>Add New Class</span>
-			</button>
+			{#if admin}
+				<button class="btn btn-primary gap-2" onclick={openAddModal}>
+					<Plus size={16} />
+					<span>Add New Class</span>
+				</button>
+			{/if}
 		</div>
 
 		{#if semesters.isLoading}
@@ -373,6 +379,7 @@
 									</a>
 								</div>
 
+								{#if admin}
 								<div class="flex items-center gap-2 sm:shrink-0">
 									<div class="dropdown dropdown-end">
 										<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
@@ -407,6 +414,7 @@
 										</ul>
 									</div>
 								</div>
+								{/if}
 							</div>
 
 							<!-- Body: details + controls -->

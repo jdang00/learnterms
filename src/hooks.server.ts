@@ -30,4 +30,13 @@ const protectAdmin: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle = sequence(withClerkHandler(), protectAdmin);
+const protectClasses: Handle = async ({ event, resolve }) => {
+	const url = new URL(event.request.url);
+	if (url.pathname === '/classes' || url.pathname.startsWith('/classes/')) {
+		const { userId } = event.locals.auth();
+		if (!userId) throw redirect(307, '/');
+	}
+	return resolve(event);
+};
+
+export const handle = sequence(withClerkHandler(), protectClasses, protectAdmin);

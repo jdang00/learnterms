@@ -15,8 +15,7 @@
 
 	const docs = useQuery(
 		api.contentLib.getContentLibByCohort,
-		{ cohortId },
-		{ initialData: initialLib }
+		{ cohortId }
 	);
 
 	let selectedDocId: Id<'contentLib'> | null = $state(null);

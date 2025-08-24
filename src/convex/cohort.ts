@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { action, internalQuery, mutation } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Doc } from './_generated/dataModel';
+import { authQuery } from './authQueries';
 
 export const validateCohortCode = action({
 	args: { code: v.string() },
@@ -78,5 +79,27 @@ export const deleteCohort = mutation({
 	handler: async (ctx, args) => {
 		await ctx.db.delete(args.cohortId);
 		return { deleted: true };
+	}
+});
+
+export const listCohortsWithSchools = authQuery({
+	args: {},
+	handler: async (ctx) => {
+		const meta = ctx.identity?.public_metadata;
+		const viewVal =
+			meta && typeof meta === 'object' && !Array.isArray(meta)
+				? (meta as Record<string, unknown>).view
+				: undefined;
+		const view = typeof viewVal === 'string' ? viewVal : undefined;
+		if (view !== 'developer') throw new Error('Unauthorized');
+
+		const cohorts = await ctx.db.query('cohort').collect();
+		const result = await Promise.all(
+			cohorts.map(async (cohort) => {
+				const school = await ctx.db.get(cohort.schoolId);
+				return { _id: cohort._id, name: cohort.name, schoolName: school?.name ?? '' };
+			})
+		);
+		return result;
 	}
 });

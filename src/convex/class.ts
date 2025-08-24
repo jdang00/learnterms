@@ -1,8 +1,8 @@
-import { query, mutation } from './_generated/server';
+import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
 
 // Get user classes by their UserId and looking up their school and cohort
-export const getUserClasses = query({
+export const getUserClasses = authQuery({
 	args: { id: v.id('cohort') },
 	handler: async (ctx, args) => {
 		const classes = await ctx.db
@@ -25,14 +25,14 @@ export const getUserClasses = query({
 	}
 });
 
-export const getClassById = query({
+export const getClassById = authQuery({
 	args: { id: v.id('class') },
 	handler: async (ctx, args) => {
 		return await ctx.db.get(args.id);
 	}
 });
 
-export const getClassContentCounts = query({
+export const getClassContentCounts = authQuery({
 	args: { classId: v.id('class') },
 	handler: async (ctx, args) => {
 		const modules = await ctx.db
@@ -56,7 +56,7 @@ export const getClassContentCounts = query({
 	}
 });
 
-export const updateClassOrder = mutation({
+export const updateClassOrder = authAdminMutation({
 	args: {
 		classId: v.id('class'),
 		newOrder: v.number(),
@@ -93,7 +93,7 @@ export const updateClassOrder = mutation({
 	}
 });
 
-export const insertClass = mutation({
+export const insertClass = authAdminMutation({
 	args: {
 		name: v.string(),
 		metadata: v.object({}),
@@ -186,7 +186,7 @@ export const insertClass = mutation({
 	}
 });
 
-export const deleteClass = mutation({
+export const deleteClass = authAdminMutation({
 	args: {
 		classId: v.id('class'),
 		cohortId: v.id('cohort')
@@ -226,7 +226,7 @@ export const deleteClass = mutation({
 	}
 });
 
-export const updateClass = mutation({
+export const updateClass = authAdminMutation({
 	args: {
 		classId: v.id('class'),
 		cohortId: v.id('cohort'),
