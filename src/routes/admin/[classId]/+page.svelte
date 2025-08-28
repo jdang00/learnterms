@@ -190,7 +190,7 @@
 <div class="min-h-screen p-8 max-w-7xl mx-auto">
 	<a class="btn mb-4 btn-ghost" href="/admin"><ArrowLeft size={16} />Back</a>
 	<div class="mb-8 flex flex-col gap-2">
-		<div class="flex flex-row justify-between items-center">
+		<div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
 			{#if classInfo.isLoading}
 				<div class="flex items-center justify-center p-8">
 					<div class="text-base-content/70">Loading class...</div>
@@ -210,14 +210,14 @@
 				</div>
 			{:else}
 				<div>
-					<h1 class="text-2xl font-bold text-base-content">{classInfo.data.name}</h1>
-					<p class="text-base-content/70">
-						Manage your learning modules for {classInfo.data.code}. Drag and drop to reorder them.
+					<h1 class="text-xl sm:text-2xl font-bold text-base-content">{classInfo.data.name}</h1>
+					<p class="text-sm sm:text-base text-base-content/70">
+						Manage your learning modules for {classInfo.data.code}. {#if admin}Drag and drop to reorder them.{/if}
 					</p>
 				</div>
 			{/if}
 
-			<div class="flex gap-2">
+			<div class="flex gap-2 self-start sm:self-auto">
 				{#if admin}
 					<button class="btn btn-primary gap-2" onclick={openAddModuleModal}>
 						<Plus size={16} />

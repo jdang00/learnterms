@@ -1,6 +1,5 @@
 <script lang="ts">
 	import '../app.css';
-	import type { Snippet } from 'svelte';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';

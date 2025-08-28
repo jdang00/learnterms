@@ -181,7 +181,7 @@
 	</a>
 
 	<div class="mb-8 flex flex-col gap-2">
-		<div class="flex flex-row justify-between items-center gap-3">
+		<div class="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start">
 			{#if moduleInfo.isLoading}
 				<div class="flex items-center justify-center p-8">
 					<div class="text-base-content/70">Loading module...</div>
@@ -201,46 +201,75 @@
 				</div>
 			{:else}
 				<div>
-					<h1 class="text-2xl font-bold text-base-content flex items-center gap-3">
-						<span class="text-3xl">{moduleInfo.data?.emoji || '📘'}</span>
+					<h1 class="text-xl sm:text-2xl font-bold text-base-content flex items-center gap-2 sm:gap-3">
+						<span class="text-2xl sm:text-3xl">{moduleInfo.data?.emoji || '📘'}</span>
 						<span>{moduleInfo.data.title}</span>
 					</h1>
-					<p class="text-base-content/70">
+					<p class="text-sm sm:text-base text-base-content/70">
 						Manage questions for {moduleInfo.data.title}. {#if admin}Drag and drop to reorder them.{/if}
 					</p>
 				</div>
 			{/if}
 
-			<div class="flex gap-2 items-center">
-				<label class="input input-bordered flex items-center gap-2 w-80">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 opacity-70"><path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd" /></svg>
-					<input type="text" class="grow" placeholder="Search questions..." bind:value={search} />
-					{#if search}
-						<button class="btn btn-ghost btn-xs" onclick={() => (search = '')}>Clear</button>
-					{/if}
-				</label>
-				{#if canEdit && selectedQuestions.size > 0}
-					<button class="btn btn-error gap-2" onclick={openBulkDeleteModal}>
-						<Trash2 size={16} />
-						<span>Delete Selected ({selectedQuestions.size})</span>
-					</button>
-					<button class="btn btn-ghost" onclick={deselectAllQuestions}> Deselect All </button>
-				{:else if canEdit}
-					<button class="btn btn-ghost" onclick={selectAllQuestions}> Select All </button>
-				{/if}
-				{#if canEdit}
-					<button class="btn btn-primary gap-2" onclick={openAddQuestionModal}>
-						<Plus size={16} />
-						<span>Add New Question</span>
-					</button>
-				{/if}
-			</div>
+			{#if canEdit}
+				<button class="btn btn-primary gap-2" onclick={openAddQuestionModal}>
+					<Plus size={16} />
+					<span class="hidden sm:inline">Add New Question</span>
+					<span class="sm:hidden">Add Question</span>
+				</button>
+			{/if}
 		</div>
 	</div>
 
 	{#if questions.isLoading}
-		<div class="flex items-center justify-center p-8">
-			<div class="text-base-content/70">Loading questions...</div>
+		<div class="space-y-4">
+			{#each Array(5) as _}
+				<div class="rounded-xl bg-base-100 shadow-sm border border-base-300 p-4">
+					<div class="flex flex-col gap-4">
+						<!-- Header skeleton -->
+						<div class="flex items-start justify-between gap-3">
+							<div class="flex items-start gap-3">
+								<div class="flex items-center gap-2">
+									<div class="skeleton h-5 w-5 rounded"></div>
+									<div class="skeleton h-6 w-8 rounded-full"></div>
+								</div>
+								<div class="flex flex-col gap-2">
+									<div class="skeleton h-6 w-3/4"></div>
+									<div class="flex gap-2">
+										<div class="skeleton h-5 w-16"></div>
+										<div class="skeleton h-5 w-20"></div>
+										<div class="skeleton h-5 w-14"></div>
+									</div>
+								</div>
+							</div>
+							<div class="skeleton h-8 w-8 rounded-full"></div>
+						</div>
+
+						<!-- Options skeleton -->
+						<div class="flex flex-col gap-3 sm:flex-row">
+							<div class="rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1">
+								<div class="skeleton h-4 w-16 mb-2"></div>
+								<div class="space-y-2">
+									<div class="skeleton h-8 w-full"></div>
+									<div class="skeleton h-8 w-5/6"></div>
+									<div class="skeleton h-8 w-4/6"></div>
+									<div class="skeleton h-8 w-3/6"></div>
+								</div>
+							</div>
+
+							<!-- Explanation skeleton -->
+							<div class="rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1">
+								<div class="skeleton h-4 w-24 mb-2"></div>
+								<div class="space-y-2">
+									<div class="skeleton h-4 w-full"></div>
+									<div class="skeleton h-4 w-5/6"></div>
+									<div class="skeleton h-4 w-4/6"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			{/each}
 		</div>
 	{:else if questions.error != null}
 		<div class="flex items-center justify-center p-8">
@@ -255,9 +284,39 @@
 			</div>
 		</div>
 	{:else}
-		<button class="btn mb-4" onclick={() => (showTruncated = !showTruncated)}>
-			{showTruncated ? 'Hide ' : 'Show '} Options</button
-		>
+		<!-- Question Management Controls -->
+		<div class="mb-6 p-4 bg-base-200/30 border border-base-300 rounded-lg">
+			<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+				<!-- Search on the left -->
+				<label class="input input-bordered flex items-center gap-2 w-full lg:w-80">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 opacity-70"><path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd" /></svg>
+					<input type="text" class="grow" placeholder="Search questions..." bind:value={search} />
+					{#if search}
+						<button class="btn btn-ghost btn-xs" onclick={() => (search = '')}>Clear</button>
+					{/if}
+				</label>
+
+				<!-- Controls on the right -->
+				<div class="flex flex-wrap items-center gap-2 lg:justify-end">
+					<button class="btn btn-outline gap-2" onclick={() => (showTruncated = !showTruncated)}>
+						<span class="hidden sm:inline">{showTruncated ? 'Hide' : 'Show'} Options</span>
+						<span class="sm:hidden">{showTruncated ? 'Hide' : 'Show'}</span>
+					</button>
+
+					{#if canEdit && selectedQuestions.size > 0}
+						<button class="btn btn-error gap-2" onclick={openBulkDeleteModal}>
+							<Trash2 size={16} />
+							<span class="hidden sm:inline">Delete Selected ({selectedQuestions.size})</span>
+							<span class="sm:hidden">Delete ({selectedQuestions.size})</span>
+						</button>
+						<button class="btn btn-ghost" onclick={deselectAllQuestions}>Deselect All</button>
+					{:else if canEdit}
+						<button class="btn btn-ghost" onclick={selectAllQuestions}>Select All</button>
+					{/if}
+				</div>
+			</div>
+		</div>
+
 		<div class="space-y-4">
 			{#each questionList as questionItem, index (questionItem._id)}
 				<div
@@ -387,11 +446,11 @@
 								{/if}
 							</div>
 
-							<div class="flex flex-row gap-3">
-								{#if showTruncated}
+							{#if showTruncated}
+								<div class="flex flex-col gap-3 sm:flex-row">
 									<!-- Options -->
 									{#if questionItem.options?.length}
-										<div class="rounded-lg border border-base-300 bg-base-200/40 p-3 w-3/4">
+										<div class="rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1">
 											<div
 												class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2"
 											>
@@ -420,7 +479,7 @@
 									<!-- Explanation -->
 									{#if questionItem.explanation}
 										<div
-											class="prose prose-sm max-w-none text-base-content/80 rounded-lg border border-base-300 bg-base-200/40 p-3 w-1/4"
+											class="prose prose-sm max-w-none text-base-content/80 rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1"
 										>
 											<div
 												class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2"
@@ -430,8 +489,8 @@
 											<p class="m-0">{questionItem.explanation}</p>
 										</div>
 									{/if}
-								{/if}
-							</div>
+								</div>
+							{/if}
 						</div>
 					</div>
 				</div>

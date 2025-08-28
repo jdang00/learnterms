@@ -13,8 +13,10 @@
 	let isSubmitting: boolean = $state(false);
 	let submitError: string = $state('');
 
-	const documents = useQuery(api.contentLib.getContentLibByCohort, {
-		cohortId: userData?.cohortId as Id<'cohort'>
+	const documents = $derived(() => {
+		const cohortId = userData?.cohortId as Id<'cohort'> | undefined;
+		if (!cohortId) return { isLoading: true, error: null, data: [] };
+		return useQuery(api.contentLib.getContentLibByCohort, { cohortId });
 	});
 
 	function toBaseTitle(name: string): string {
@@ -24,9 +26,10 @@
 	}
 
 	function generateUniqueTitle(base: string): string {
+		const docQuery = documents();
 		const existing = new Set(
-			!documents.isLoading && documents.data
-				? documents.data.map((d) => d.title.toLowerCase())
+			!docQuery.isLoading && docQuery.data
+				? docQuery.data.map((d) => d.title.toLowerCase())
 				: []
 		);
 		if (!existing.has(base.toLowerCase())) return base;
