@@ -12,8 +12,6 @@
 
 	const chunks = useQuery(api.chunkContent.getChunkByDocumentId, () => ({ documentId }));
 
-	// Removed debug $inspect/console statements
-
 	let selectedChunkIds = $state(new Set<Id<'chunkContent'>>());
 
 	function toggleSelect(id: Id<'chunkContent'>) {
@@ -99,7 +97,7 @@
 								>
 							</div>
 							<div class="mt-1">
-								<div class="tooltip tooltip-left" data-tip={chunk.summary}>
+								<div class="tooltip tooltip-right" data-tip={chunk.summary}>
 									<span class="badge badge-ghost badge-xs">Summary</span>
 								</div>
 							</div>

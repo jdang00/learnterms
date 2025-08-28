@@ -132,7 +132,6 @@ export const getUserProgressForModule = authQuery({
 		questionIds: v.array(v.id('question'))
 	},
 	handler: async (ctx, args) => {
-
 		const records = await getUserProgressRecords(ctx, args.userId, args.classId, args.questionIds);
 
 		const interactedQuestionIds = records

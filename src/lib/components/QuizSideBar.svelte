@@ -112,7 +112,7 @@
 					class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
 					href={`/classes?classId=${classId}`}
 				>
-					<span class="group-hover:hidden">{module.data.order}</span>
+					<span class="group-hover:hidden">{module.data.order + 1}</span>
 					<span class="hidden group-hover:inline-flex items-center justify-center"
 						><ChevronLeft size={24} /></span
 					>

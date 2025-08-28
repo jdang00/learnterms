@@ -14,7 +14,9 @@
 		NotebookPen,
 		Sparkles,
 		ChartColumnIncreasing,
-		ChevronDownIcon
+		ChevronDownIcon,
+		GripVertical,
+		X
 	} from 'lucide-svelte';
 	import EditClassModal from '$lib/admin/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
@@ -26,7 +28,7 @@
 	const userData = data.userData;
 
 	const classes = useQuery(api.class.getUserClasses, {
-		id: (userData?.cohortId as Id<'cohort'>) || ''
+		id: (userData?.cohortId as Id<'cohort'>)
 	});
 
 	const client = useConvexClient();
@@ -139,6 +141,7 @@
 
 	const semesters = useQuery(api.semester.getAllSemesters, {});
 	let currentSemester = $state('');
+	let viewMode = $state<'normal' | 'reorder'>('normal');
 
 	$effect(() => {
 		if (semesters.data && !currentSemester) {
@@ -155,6 +158,12 @@
 			? classList
 			: classList.filter((c) => c.semester?.name === currentSemester)
 	);
+
+	// Exit reorder view when semester changes
+	$effect(() => {
+		currentSemester; // Track semester changes
+		viewMode = 'normal';
+	});
 
 	function editClass(classItem: ClassItem) {
 		editingClass = classItem;
@@ -177,9 +186,9 @@
 
 <div class="min-h-screen p-8 mb-24 max-w-7xl mx-auto">
 	<div class=" flex flex-col gap-2">
-		<div class="flex flex-row justify-between items-center">
+		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 			<div>
-				<h1 class="text-4xl font-bold text-base-content">Admin Dashboard</h1>
+				<h1 class="text-3xl sm:text-4xl font-bold text-base-content">Admin Dashboard</h1>
 				<p class="text-base-content/70">{userData?.schoolName} - {userData?.cohortName}</p>
 			</div>
 		</div>
@@ -241,10 +250,21 @@
 			</div>
 		</div>
 
-		<div class="flex flex-row justify-between mt-12">
+		<div class="flex flex-row justify-between items-start mt-12">
 			<div>
-				<h1 class="font-semibold text-2xl">My Classes</h1>
-				<p class="text-sm text-base-content/70">Drag and drop to reorder classes</p>
+				<h1 class="font-semibold text-2xl flex items-center gap-2">
+					My Classes
+					{#if viewMode === 'reorder'}
+						<span class="badge badge-info badge-sm">Reorder Mode</span>
+					{/if}
+				</h1>
+				<p class="text-sm text-base-content/70">
+					{#if viewMode === 'reorder'}
+						Drag and drop classes to reorder them
+					{:else}
+						Click "Reorder" to enable drag-and-drop reordering
+					{/if}
+				</p>
 			</div>
 			{#if admin}
 				<button class="btn btn-primary gap-2" onclick={openAddModal}>
@@ -266,34 +286,37 @@
 		{:else}
 			<div class="flex items-center mt-4 mb-4 justify-between">
 				<div>
-					<button
-						class="btn btn-outline btn-sm"
-						popovertarget="popover-1"
-						style="anchor-name: --anchor-1"
-					>
-						{currentSemester}
-						<ChevronDownIcon size={16} />
-					</button>
-
-					<ul
-						class="dropdown menu w-48 rounded-lg bg-base-100 shadow-sm border border-base-300"
-						popover
-						id="popover-1"
-						style="position-anchor: --anchor-1"
-					>
-						{#each semesters.data as semester (semester._id)}
-							<li>
-								<button
-									onclick={() => (currentSemester = semester.name)}
-									class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150"
-								>
-									<CalendarDays size={16} />
-									<span>{semester.name}</span>
-								</button>
-							</li>
-						{/each}
-					</ul>
+					<details class="dropdown">
+						<summary class="btn btn-outline btn-sm">
+							{currentSemester}
+							<ChevronDownIcon size={16} />
+						</summary>
+						<ul class="menu dropdown-content w-48 rounded-lg bg-base-100 shadow-sm border border-base-300">
+							{#each semesters.data as semester (semester._id)}
+								<li>
+									<button
+										onclick={() => (currentSemester = semester.name)}
+										class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150"
+									>
+										<CalendarDays size={16} />
+										<span>{semester.name}</span>
+									</button>
+								</li>
+							{/each}
+						</ul>
+					</details>
 				</div>
+
+				{#if viewMode === 'reorder'}
+					<button class="btn btn-ghost gap-2 btn-circle" onclick={() => viewMode = 'normal'}>
+						<span><X size={16} /></span>
+					</button>
+				{:else}
+					<button class="btn btn-outline gap-2 btn-sm" onclick={() => viewMode = 'reorder'}>
+						<GripVertical size={16} />
+						<span>Reorder</span>
+					</button>
+				{/if}
 			</div>
 		{/if}
 	</div>
@@ -315,9 +338,111 @@
 			</div>
 		</div>
 	{:else}
-		<div class="mx-auto max-w-8xl justify-center">
-			<div class="rounded-xl bg-base-200 p-4 shadow-md border border-base-300">
-				<div class="space-y-3">
+		<!-- Normal View -->
+		{#if viewMode === 'normal'}
+			<div class="mx-auto max-w-8xl justify-center">
+				<div class="rounded-xl bg-base-200 p-4 shadow-md border border-base-300">
+					<div class="space-y-3">
+						{#each filteredClassList as classItem (classItem._id)}
+							<div
+								class="rounded-lg bg-base-100 p-4 shadow-sm border border-base-300
+								transition-all duration-200 hover:shadow-md hover:border-primary"
+								aria-label={`Class card: ${classItem.name}`}
+							>
+								<div
+									class="mb-3 flex flex-col gap-2 border-b border-base-200 pb-3 sm:flex-row sm:items-start sm:justify-between"
+								>
+									<div class="flex-1 min-w-0">
+										<a
+											data-select-btn
+											class="interactive group flex w-full items-start gap-2 text-left focus:outline-none focus-visible:ring focus-visible:ring-primary/40 sm:items-center"
+											href="admin/{classItem._id}"
+											title={classItem.name}
+											style="min-height:44px"
+										>
+											<div class="min-w-0 flex-1">
+												<h3
+													class="truncate text-lg font-semibold text-base-content group-hover:text-primary"
+												>
+													{classItem.name}
+												</h3>
+
+												<div class="mt-1 flex flex-wrap items-center gap-2 sm:mt-0">
+													<span
+														class=" badge-secondary rounded-full font-mono badge badge-soft badge-sm"
+														title={classItem.code}
+													>
+														{classItem.code}
+													</span>
+													<span
+														class="badge rounded-full badge-soft font-mono badge-sm"
+														title="Semester"
+													>
+														{classItem.semester?.name || 'No semester'}
+													</span>
+												</div>
+											</div>
+										</a>
+									</div>
+
+									{#if admin}
+									<div class="flex items-center gap-2 sm:shrink-0">
+										<div class="dropdown dropdown-end">
+											<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
+											<ul
+												tabindex="-1"
+												class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+											>
+												<li>
+													<button
+														data-edit-btn
+														class="btn btn-sm btn-ghost w-full justify-start font-medium"
+														type="button"
+														aria-label="Edit class"
+														onclick={() => editClass(classItem)}
+													>
+														<Pencil size={16} />
+														<span>Edit</span>
+													</button>
+												</li>
+												<li>
+													<button
+														data-delete-btn
+														class="btn btn-sm btn-ghost text-error w-full justify-start font-medium"
+														type="button"
+														aria-label="Delete class"
+														onclick={() => handleDelete(classItem._id)}
+													>
+														<Trash2 size={16} />
+														<span>Delete</span>
+													</button>
+												</li>
+											</ul>
+										</div>
+									</div>
+									{/if}
+								</div>
+
+								<!-- Body: details -->
+								<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+									<!-- Details -->
+									<div class="md:col-span-2 space-y-2">
+										<p class="text-sm text-base-content/70">
+											{classItem.description || 'No description available'}
+										</p>
+									</div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Reorder View -->
+		{#if viewMode === 'reorder'}
+			<div class="bg-base-200 rounded-xl p-6 border border-base-300">
+				<div class="space-y-4">
 					{#each filteredClassList as classItem, index (classItem._id)}
 						<div
 							use:droppable={{
@@ -329,108 +454,45 @@
 								dragData: classItem,
 								interactive: [
 									'[data-delete-btn]',
-									'[data-select-btn]',
-									'[data-view-btn]',
 									'[data-edit-btn]',
 									'.interactive'
 								]
 							}}
-							animate:flip={{ duration: 200 }}
-							in:fade={{ duration: 150 }}
-							out:fade={{ duration: 150 }}
-							class="rounded-lg bg-base-100 p-4 shadow-sm border border-base-300
-                     transition-all duration-200 hover:shadow-md hover:border-primary
-                     svelte-dnd-touch-feedback"
-							aria-label={`Class card: ${classItem.name}`}
+							class="flex items-center gap-4 p-4 bg-base-100 rounded-lg border border-base-300 shadow-sm hover:shadow-md transition-all duration-200 svelte-dnd-touch-feedback"
+							animate:flip={{ duration: 300 }}
 						>
-							<div
-								class="mb-3 flex flex-col gap-2 border-b border-base-200 pb-3 sm:flex-row sm:items-start sm:justify-between"
-							>
-								<div class="flex-1 min-w-0">
-									<a
-										data-select-btn
-										class="interactive group flex w-full items-start gap-2 text-left focus:outline-none focus-visible:ring focus-visible:ring-primary/40 sm:items-center"
-										href="admin/{classItem._id}"
-										title={classItem.name}
-										style="min-height:44px"
-									>
-										<div class="min-w-0 flex-1">
-											<h3
-												class="truncate text-lg font-semibold text-base-content group-hover:text-primary"
-											>
-												{classItem.name}
-											</h3>
-
-											<div class="mt-1 flex flex-wrap items-center gap-2 sm:mt-0">
-												<span
-													class=" badge-secondary rounded-full font-mono badge badge-soft badge-sm"
-													title={classItem.code}
-												>
-													{classItem.code}
-												</span>
-												<span
-													class="badge rounded-full badge-soft font-mono badge-sm"
-													title="Semester"
-												>
-													{classItem.semester?.name || 'No semester'}
-												</span>
-											</div>
-										</div>
-									</a>
-								</div>
-
-								{#if admin}
-								<div class="flex items-center gap-2 sm:shrink-0">
-									<div class="dropdown dropdown-end">
-										<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
-										<ul
-											tabindex="-1"
-											class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
-										>
-											<li>
-												<button
-													data-edit-btn
-													class="btn btn-sm btn-ghost w-full justify-start font-medium"
-													type="button"
-													aria-label="Edit class"
-													onclick={() => editClass(classItem)}
-												>
-													<Pencil size={16} />
-													<span>Edit</span>
-												</button>
-											</li>
-											<li>
-												<button
-													data-delete-btn
-													class="btn btn-sm btn-ghost text-error w-full justify-start font-medium"
-													type="button"
-													aria-label="Delete class"
-													onclick={() => handleDelete(classItem._id)}
-												>
-													<Trash2 size={16} />
-													<span>Delete</span>
-												</button>
-											</li>
-										</ul>
-									</div>
-								</div>
-								{/if}
+							<!-- Drag Handle -->
+							<div class="flex items-center justify-center w-10 h-10 rounded-md bg-base-200 hover:bg-base-300 transition-colors cursor-move">
+								<GripVertical size={18} class="text-base-content/70" />
 							</div>
 
-							<!-- Body: details + controls -->
-							<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-								<!-- Details -->
-								<div class="md:col-span-2 space-y-2">
-									<p class="text-sm text-base-content/70">
-										{classItem.description || 'No description available'}
-									</p>
+							<!-- Class Info -->
+							<div class="flex-1 min-w-0">
+								<div class="flex items-center gap-3">
+									<h3 class="font-semibold text-lg text-base-content truncate">
+										{classItem.name}
+									</h3>
+									<span class="badge badge-secondary badge-sm font-mono">
+										{classItem.code}
+									</span>
+									<span class="badge badge-soft badge-sm font-mono">
+										{classItem.semester?.name || 'No semester'}
+									</span>
 								</div>
+								<p class="text-sm text-base-content/70 mt-1 line-clamp-2">
+									{classItem.description || 'No description available'}
+								</p>
+							</div>
+
+							<!-- Order Indicator -->
+							<div class="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+								{index + 1}
 							</div>
 						</div>
 					{/each}
 				</div>
 			</div>
-		</div>
+		{/if}
 	{/if}
 </div>
 

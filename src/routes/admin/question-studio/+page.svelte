@@ -87,21 +87,6 @@
 		return String.fromCharCode('A'.charCodeAt(0) + i);
 	}
 
-	let userContentLib = $state<{ isLoading: boolean; error: any; data?: Doc<'contentLib'>[] }>({
-		isLoading: false,
-		error: null,
-		data: []
-	});
-	$effect(() => {
-		const cohortId = convexUser.data?.cohortId as Id<'cohort'> | undefined;
-		if (cohortId) {
-			const q = useQuery(api.contentLib.getContentLibByCohort, { cohortId });
-			userContentLib = q;
-		} else {
-			userContentLib = { isLoading: true, error: null, data: [] };
-		}
-	});
-
 	let classes = $state<{ isLoading: boolean; error: any; data?: Doc<'class'>[] }>({
 		isLoading: false,
 		error: null,
@@ -166,7 +151,8 @@
 	<div class="mt-4">
 		<div class="card bg-base-100 border border-base-300 rounded-lg">
 			<div class="p-4">
-				<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+				<!-- Mobile: Stack vertically, Desktop: Grid layout -->
+				<div class="flex flex-col gap-4 lg:grid lg:grid-cols-4 lg:gap-4">
 					<!-- Semester Selection -->
 					<div class="form-control">
 						<div class="label">
@@ -174,42 +160,33 @@
 						</div>
 						{#if semesters.data}
 							<div class="flex items-center gap-2">
-								<button
-									class="btn btn-outline btn-xs flex-1 justify-between"
-									popovertarget="semester-popover"
-									style="anchor-name: --semester-anchor"
-									disabled={semesters.isLoading}
-								>
-									<div class="flex items-center gap-2">
-										<CalendarDays size={14} />
-										<span class="text-sm truncate">{currentSemester || 'Select semester'}</span>
+								<div class="dropdown flex-1">
+									<div tabindex="0" role="button" class="btn btn-outline btn-sm flex-1 justify-between">
+										<div class="flex items-center gap-2">
+											<CalendarDays size={14} />
+											<span class="text-sm truncate">{currentSemester || 'Select semester'}</span>
+										</div>
+										<ChevronDown size={12} />
 									</div>
-									<ChevronDown size={12} />
-								</button>
-
-								<ul
-									class="dropdown menu w-48 rounded-lg bg-base-100 shadow-lg border border-base-300"
-									popover
-									id="semester-popover"
-									style="position-anchor: --semester-anchor"
-								>
-									{#each semesters.data as semester (semester._id)}
-										<li>
-											<button
-												onclick={() => {
-													currentSemester = semester.name;
-													selectedClass = null;
-													selectedModuleId = null;
-													selectedModuleTitle = '';
-												}}
-												class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150 text-sm"
-											>
-												<CalendarDays size={14} />
-												<span>{semester.name}</span>
-											</button>
-										</li>
-									{/each}
-								</ul>
+									<ul tabindex="0" class="dropdown-content menu menu-lg bg-base-100 rounded-box z-1 w-80 p-2 shadow-sm">
+										{#each semesters.data as semester (semester._id)}
+											<li>
+												<button
+													onclick={() => {
+														currentSemester = semester.name;
+														selectedClass = null;
+														selectedModuleId = null;
+														selectedModuleTitle = '';
+													}}
+													class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150 text-sm w-full text-left"
+												>
+													<CalendarDays size={14} />
+													<span>{semester.name}</span>
+												</button>
+											</li>
+										{/each}
+									</ul>
+								</div>
 							</div>
 						{:else}
 							<div class="text-xs text-base-content/60">Loading...</div>
@@ -219,60 +196,80 @@
 					<!-- Class Selection -->
 					<div class="form-control">
 						<div class="label"><span class="label-text text-sm">Class</span></div>
-						<select
-							id="select-class"
-							class="select select-bordered select-sm w-full"
-							aria-label="Class"
-							disabled={classes.isLoading || !currentSemester}
-							onchange={(e) => {
-								const id = (e.target as HTMLSelectElement).value as Id<'class'>;
-								const cls = (filteredClasses || []).find((c) => c._id === id) as ClassWithSemester | undefined;
-								selectedClass = cls ?? null;
-								selectedModuleId = null;
-								selectedModuleTitle = '';
-							}}
-						>
-							<option disabled selected={selectedClass == null} value="">Select a class</option>
-							{#each filteredClasses || [] as c (c._id)}
-								<option value={c._id} selected={selectedClass?._id === c._id}>
-									{c.name}{c.code ? ` (${c.code})` : ''}
-								</option>
-							{/each}
-						</select>
+						{#if classes.isLoading || !currentSemester}
+							<div class="text-xs text-base-content/60">Loading...</div>
+						{:else}
+							<div class="flex items-center gap-2">
+								<div class="dropdown flex-1">
+									<div tabindex="0" role="button" class="btn btn-outline btn-sm flex-1 justify-between">
+										<span class="text-sm truncate">
+											{selectedClass ? `${selectedClass.name}${selectedClass.code ? ` (${selectedClass.code})` : ''}` : 'Select a class'}
+										</span>
+										<ChevronDown size={12} />
+									</div>
+									<ul tabindex="-1" class="dropdown-content menu menu-lg bg-base-100 rounded-box z-1 w-80 p-2 shadow-sm">
+										{#each filteredClasses || [] as c (c._id)}
+											<li>
+												<button
+													onclick={() => {
+														selectedClass = c as ClassWithSemester;
+														selectedModuleId = null;
+														selectedModuleTitle = '';
+													}}
+													class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150 text-sm w-full text-left"
+												>
+													<span>{c.name}{c.code ? ` (${c.code})` : ''}</span>
+												</button>
+											</li>
+										{/each}
+									</ul>
+								</div>
+							</div>
+						{/if}
 					</div>
 
 					<!-- Module Selection -->
 					<div class="form-control">
 						<div class="label"><span class="label-text text-sm">Module</span></div>
-						<select
-							id="select-module"
-							class="select select-bordered select-sm w-full"
-							aria-label="Module"
-							disabled={!selectedClass || modules.isLoading || !modules.data || modules.data.length === 0}
-							onchange={(e) => {
-								const id = (e.target as HTMLSelectElement).value as Id<'module'>;
-								const m = (modules.data || []).find((mm) => mm._id === id);
-								selectedModuleId = m?._id ?? null;
-								selectedModuleTitle = m?.title ?? '';
-							}}
-						>
-							<option disabled selected={selectedModuleId == null} value="">Select a module</option>
-							{#if modules.isLoading}
-								<option value="">Loading modules...</option>
-							{:else if modules.error}
-								<option value="">Error loading modules</option>
-							{:else if modules.data && modules.data.length > 0}
-								{#each modules.data as m (m._id)}
-									<option value={m._id} selected={selectedModuleId === m._id}>{m.title}</option>
-								{/each}
-							{:else if selectedClass}
-								<option value="">No modules</option>
-							{/if}
-						</select>
+						{#if !selectedClass}
+							<div class="text-xs text-base-content/60">Select a class first</div>
+						{:else if modules.isLoading}
+							<div class="text-xs text-base-content/60">Loading modules...</div>
+						{:else if modules.error}
+							<div class="text-xs text-error">Error loading modules</div>
+						{:else if modules.data && modules.data.length > 0}
+							<div class="flex items-center gap-2">
+								<div class="dropdown flex-1">
+									<div tabindex="0" role="button" class="btn btn-outline btn-sm flex-1 justify-between">
+										<span class="text-sm truncate">
+											{selectedModuleId ? selectedModuleTitle : 'Select a module'}
+										</span>
+										<ChevronDown size={12} />
+									</div>
+									<ul tabindex="0" class="dropdown-content menu menu-lg bg-base-100 rounded-box z-1 w-80 p-2 shadow-sm">
+										{#each modules.data as m (m._id)}
+											<li>
+												<button
+													onclick={() => {
+														selectedModuleId = m._id;
+														selectedModuleTitle = m.title;
+													}}
+													class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150 text-sm w-full text-left"
+												>
+													<span>{m.title}</span>
+												</button>
+											</li>
+										{/each}
+									</ul>
+								</div>
+							</div>
+						{:else}
+							<div class="text-xs text-base-content/60">No modules</div>
+						{/if}
 					</div>
 
 					<!-- Destination Summary -->
-					<div class="form-control col-span-2 lg:col-span-1">
+					<div class="form-control">
 						<div class="label"><span class="label-text text-sm">Destination</span></div>
 						<div class="text-xs text-base-content/70 bg-base-200 rounded px-3 py-2 min-h-8 truncate">
 							{selectedClass ? selectedClass.name : '—'} • {selectedModuleTitle || '—'}
@@ -287,18 +284,39 @@
 		<!-- Document Browser - More spacious column -->
 		<div class="2xl:col-span-2">
 			<div class="card bg-base-100 border border-base-300 rounded-xl min-h-96">
-				{#if convexUser.data?.cohortId}
-					<DocumentBrowser
-						cohortId={convexUser.data.cohortId as Id<'cohort'>}
-						initialLib={userContentLib.data}
-						bind:selectedText
-					/>
-				{:else}
+				{#if convexUser.isLoading}
 					<div class="p-6 space-y-2">
+						<div class="text-sm text-base-content/70 mb-4">Loading user data...</div>
 						{#each Array(6) as _}
 							<div class="skeleton h-10 w-full"></div>
 						{/each}
 					</div>
+				{:else if convexUser.error}
+					<div class="p-6">
+						<div class="alert alert-error">
+							<span>Error loading user data: {convexUser.error.toString()}</span>
+						</div>
+					</div>
+				{:else if convexUser.data && !convexUser.data.cohortId}
+					<div class="p-6">
+						<div class="alert alert-warning">
+							<span>No cohort assigned. Please contact an administrator to assign you to a cohort.</span>
+						</div>
+					</div>
+				{:else if !convexUser.isLoading && !convexUser.error && !convexUser.data}
+					<div class="p-6">
+						<div class="alert alert-error">
+							<span>Account not found in database. Please contact an administrator to complete your account setup.</span>
+							<div class="mt-2 text-xs opacity-70">
+								User ID: {clerkUser?.id}
+							</div>
+						</div>
+					</div>
+				{:else}
+					<DocumentBrowser
+						cohortId={convexUser.data!.cohortId as Id<'cohort'>}
+						bind:selectedText
+					/>
 				{/if}
 			</div>
 		</div>
