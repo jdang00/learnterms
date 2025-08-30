@@ -1,11 +1,13 @@
 <script lang="ts">
 	let { isEditModalOpen, closeEditModal, editingQuestion, moduleId } = $props();
 
-	import { X, MessageSquare, Hash, ListChecks, Lightbulb } from 'lucide-svelte';
+	import { X } from 'lucide-svelte';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { DISPLAY_QUESTION_TYPES, QUESTION_TYPES } from '../types';
+	import { createUploader } from '$lib/utils/uploadthing';
+	import { UploadDropzone } from '@uploadthing/svelte';
 
 	const client = useConvexClient();
 
@@ -16,6 +18,87 @@
 	let options: Array<{ text: string }> = $state([]);
 	let correctAnswers: string[] = $state([]);
 	let isSubmitting: boolean = $state(false);
+	let mediaError: string = $state('');
+	let mediaList: Array<{
+		_id: string;
+		url: string;
+		altText: string;
+		caption?: string;
+		order: number;
+	}> = $state([]);
+
+	const mediaUploader = createUploader('questionMediaUploader', {
+		onClientUploadComplete: async (res) => {
+			try {
+				const f = Array.isArray(res) ? res[0] : null;
+				if (!f || !editingQuestion) return;
+				const url = (f as any)?.ufsUrl ?? (f as any)?.url;
+				const key = (f as any)?.key ?? (f as any)?.fileKey;
+				const name = (f as any)?.name ?? '';
+				const size = Number((f as any)?.size ?? 0);
+				const mime = (f as any)?.type ?? '';
+				if (!url) throw new Error('Missing file URL');
+				await client.mutation((api as any).questionMedia.create, {
+					questionId: editingQuestion._id as Id<'question'>,
+					url,
+					mediaType: 'image',
+					mimeType: mime || 'image/*',
+					altText: name || '',
+					order: mediaList.length,
+					metadata: { uploadthingKey: key, sizeBytes: size, originalFileName: name }
+				});
+				await refreshMedia();
+				mediaError = '';
+			} catch (e) {
+				mediaError = e instanceof Error ? e.message : 'Upload failed';
+			}
+		},
+		onUploadError: (error: Error) => {
+			mediaError = error.message;
+		}
+	});
+
+	async function refreshMedia() {
+		if (!editingQuestion) return;
+		const r = await client.query((api as any).questionMedia.getByQuestionId, {
+			questionId: editingQuestion._id as Id<'question'>
+		});
+		mediaList = (r || []).sort((a: any, b: any) => a.order - b.order);
+	}
+
+	$effect(() => {
+		if (editingQuestion) {
+			void refreshMedia();
+		}
+	});
+
+	async function removeMedia(id: string) {
+		const res = await client.mutation((api as any).questionMedia.softDelete, { mediaId: id });
+		try {
+			const key = (res as any)?.fileKey;
+			if (typeof key === 'string' && key.length > 0) {
+				await fetch('/api/processdoc', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ pdfUrl: undefined, fileKey: key })
+				});
+			}
+		} catch {}
+		await refreshMedia();
+	}
+
+	async function saveMediaMeta(id: string, alt: string, caption: string) {
+		await client.mutation((api as any).questionMedia.update, {
+			mediaId: id,
+			altText: alt,
+			caption
+		});
+		await refreshMedia();
+	}
+
+	function handleMediaMetaChange(id: string, alt: string, caption: string) {
+		saveMediaMeta(id, alt, caption);
+	}
 
 	// Fill in the Blank editor state
 	type FitbMode = 'exact' | 'exact_cs' | 'contains' | 'regex';
@@ -256,200 +339,223 @@
 				<span>No question selected for editing.</span>
 			</div>
 		{:else}
-			<div class="flex flex-col gap-6">
-				<div class="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-[auto_1fr]">
-					<label
-						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80"
-						for="question-stem"
-					>
-						<MessageSquare size={18} class="text-primary/80" />
-						<span>Question</span>
-					</label>
-					<textarea
-						id="question-stem"
-						class="textarea textarea-bordered w-full min-h-24"
-						bind:value={questionStem}
-						placeholder="Enter your question..."
-					></textarea>
+			<div class="space-y-6">
+				<!-- Question Stem and Type -->
+				<div class="card bg-base-200/50 border border-base-300">
+					<div class="card-body space-y-4">
+						<div class="grid grid-cols-[150px_1fr] items-center gap-4">
+							<label for="question-stem" class="font-semibold">Question</label>
+							<textarea
+								id="question-stem"
+								class="textarea textarea-bordered w-full min-h-24"
+								bind:value={questionStem}
+								placeholder="Enter your question..."
+							></textarea>
+						</div>
+						<div class="grid grid-cols-[150px_1fr] items-center gap-4">
+							<label for="question-type" class="font-semibold">Type</label>
+							<select
+								id="question-type"
+								class="select select-bordered w-full"
+								value={questionType}
+								onchange={handleTypeChange}
+							>
+								{#each Object.entries(DISPLAY_QUESTION_TYPES) as [value, label] (value)}
+									<option {value}>{label}</option>
+								{/each}
+							</select>
+						</div>
+						<div class="grid grid-cols-[150px_1fr] items-center gap-4">
+							<label for="question-status" class="font-semibold">Status</label>
+							<select
+								id="question-status"
+								class="select select-bordered w-full"
+								bind:value={questionStatus}
+							>
+								<option value="draft">Draft</option>
+								<option value="published">Published</option>
+								<option value="archived">Archived</option>
+							</select>
+						</div>
+					</div>
+				</div>
 
-					<label
-						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80"
-						for="question-type"
-					>
-						<Hash size={18} class="text-primary/80" />
-						<span>Type</span>
-					</label>
-					<select
-						id="question-type"
-						class="select select-bordered w-full"
-						value={questionType}
-						onchange={handleTypeChange}
-					>
-						{#each Object.entries(DISPLAY_QUESTION_TYPES) as [value, label] (value)}
-							<option {value}>{label}</option>
-						{/each}
-					</select>
-
-					<label
-						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80"
-						for="question-status"
-					>
-						<Hash size={18} class="text-primary/80" />
-						<span>Status</span>
-					</label>
-					<select
-						id="question-status"
-						class="select select-bordered w-full"
-						bind:value={questionStatus}
-					>
-						<option value="draft">Draft</option>
-						<option value="published">Published</option>
-						<option value="archived">Archived</option>
-					</select>
-
-					{#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
-						<label
-							class="label m-0 flex items-center gap-2 self-start p-0 text-base font-medium text-base-content/80"
-							for="fitb-answers"
-						>
-							<ListChecks size={18} class="text-primary/80" />
-							<span>Accepted Answers</span>
-						</label>
-						<div class="space-y-3">
-							{#each fitbAnswers as row, index (index)}
-								<div class="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto_auto] md:items-center">
-									<input
-										class="input input-bordered w-full"
-										placeholder="Answer {index + 1}"
-										value={row.value}
-										oninput={(e) =>
-											(fitbAnswers = fitbAnswers.map((r, i) =>
-												i === index ? { ...r, value: (e.target as HTMLInputElement).value } : r
-											))}
-									/>
-									<select
-										class="select select-bordered"
-										value={row.mode}
-										onchange={(e) =>
-											(fitbAnswers = fitbAnswers.map((r, i) =>
-												i === index
-													? { ...r, mode: (e.target as HTMLSelectElement).value as FitbMode }
-													: r
-											))}
-									>
-										{#each Object.entries(FITB_MODE_LABELS) as [value, label]}
-											<option {value}>{label}</option>
-										{/each}
-									</select>
+				<!-- Options / Answers -->
+				<div class="card bg-base-200/50 border border-base-300">
+					<div class="card-body">
+						<h4 class="card-title mb-4">Options & Answers</h4>
+						{#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
+							<div class="space-y-4">
+								{#each fitbAnswers as row, index (index)}
+									<div class="p-3 rounded-lg border border-base-300 bg-base-100">
+										<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+											<input
+												class="input input-bordered w-full"
+												placeholder="Answer {index + 1}"
+												bind:value={row.value}
+											/>
+											<select class="select select-bordered w-full" bind:value={row.mode}>
+												{#each Object.entries(FITB_MODE_LABELS) as [value, label], index (index)}
+													<option {value}>{label}</option>
+												{/each}
+											</select>
+										</div>
+										<div class="flex items-center gap-4 mt-3">
+											<label class="label cursor-pointer gap-2 text-sm">
+												<input
+													type="checkbox"
+													class="checkbox checkbox-sm"
+													bind:checked={row.flags.ignorePunct}
+												/>
+												<span>Ignore Punctuation</span>
+											</label>
+											<label class="label cursor-pointer gap-2 text-sm">
+												<input
+													type="checkbox"
+													class="checkbox checkbox-sm"
+													bind:checked={row.flags.normalizeWs}
+												/>
+												<span>Normalize Whitespace</span>
+											</label>
+											<div class="flex-grow"></div>
+											{#if fitbAnswers.length > 1}
+												<button
+													class="btn btn-ghost btn-sm btn-circle"
+													onclick={() => (fitbAnswers = fitbAnswers.filter((_, i) => i !== index))}
+												>
+													<X size={16} />
+												</button>
+											{/if}
+										</div>
+									</div>
+								{/each}
+								<button
+									type="button"
+									class="btn btn-sm btn-outline mt-2"
+									onclick={() =>
+										(fitbAnswers = [
+											...fitbAnswers,
+											{
+												value: '',
+												mode: 'exact',
+												flags: { ignorePunct: false, normalizeWs: false }
+											}
+										])}
+								>
+									Add Alternative Answer
+								</button>
+							</div>
+						{:else}
+							<div class="space-y-3">
+								{#each options as option, index (index)}
 									<div class="flex items-center gap-3">
-										<label class="label cursor-pointer gap-2">
-											<input
-												type="checkbox"
-												class="checkbox checkbox-sm"
-												checked={row.flags.ignorePunct}
-												onchange={() =>
-													(fitbAnswers = fitbAnswers.map((r, i) =>
-														i === index
-															? { ...r, flags: { ...r.flags, ignorePunct: !r.flags.ignorePunct } }
-															: r
-													))}
-											/>
-											<span class="text-sm">Ignore punctuation</span>
-										</label>
-										<label class="label cursor-pointer gap-2">
-											<input
-												type="checkbox"
-												class="checkbox checkbox-sm"
-												checked={row.flags.normalizeWs}
-												onchange={() =>
-													(fitbAnswers = fitbAnswers.map((r, i) =>
-														i === index
-															? { ...r, flags: { ...r.flags, normalizeWs: !r.flags.normalizeWs } }
-															: r
-													))}
-											/>
-											<span class="text-sm">Normalize whitespace</span>
-										</label>
-										{#if fitbAnswers.length > 1}
+										<input
+											type="checkbox"
+											class="checkbox checkbox-primary"
+											checked={correctAnswers.includes(index.toString())}
+											onchange={() => toggleCorrectAnswer(index)}
+											disabled={questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
+										/>
+										<input
+											type="text"
+											class="input input-bordered flex-1"
+											bind:value={option.text}
+											disabled={questionType === QUESTION_TYPES.TRUE_FALSE}
+											placeholder="Option {index + 1}"
+										/>
+										{#if options.length > 2 && questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
 											<button
-												class="btn btn-ghost btn-sm"
-												onclick={() => (fitbAnswers = fitbAnswers.filter((_, i) => i !== index))}
+												type="button"
+												class="btn btn-ghost btn-sm btn-circle"
+												onclick={() => removeOption(index)}
 											>
 												<X size={16} />
 											</button>
 										{/if}
 									</div>
-								</div>
-							{/each}
-							<button
-								type="button"
-								class="btn btn-ghost btn-sm"
-								onclick={() =>
-									(fitbAnswers = [
-										...fitbAnswers,
-										{ value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }
-									])}
-							>
-								Add Alternative Answer
-							</button>
-						</div>
-					{:else}
-						<label
-							class="label m-0 flex items-center gap-2 self-start p-0 text-base font-medium text-base-content/80"
-							for="question-options"
-						>
-							<ListChecks size={18} class="text-primary/80" />
-							<span>Options</span>
-						</label>
-						<div class="space-y-3">
-							{#each options as option, index (index)}
-								<div class="flex items-center gap-3">
-									<input
-										type="checkbox"
-										class="checkbox checkbox-primary"
-										checked={correctAnswers.includes(index.toString())}
-										onchange={() => toggleCorrectAnswer(index)}
-										disabled={questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
-									/>
-									<input
-										type="text"
-										class="input input-bordered flex-1"
-										bind:value={option.text}
-										disabled={questionType === QUESTION_TYPES.TRUE_FALSE}
-										placeholder="Option {index + 1}"
-									/>
-									{#if options.length > 2 && questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
-										<button
-											type="button"
-											class="btn btn-ghost btn-sm"
-											onclick={() => removeOption(index)}
-										>
-											<X size={16} />
-										</button>
-									{/if}
-								</div>
-							{/each}
-							{#if questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
-								<button type="button" class="btn btn-ghost btn-sm" onclick={addOption}>
-									Add Option
-								</button>
-							{/if}
-						</div>
-					{/if}
+								{/each}
+								{#if questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
+									<button type="button" class="btn btn-sm btn-outline mt-2" onclick={addOption}>
+										Add Option
+									</button>
+								{/if}
+							</div>
+						{/if}
+					</div>
+				</div>
 
-					<label
-						class="label m-0 flex items-center gap-2 self-start p-0 text-base font-medium text-base-content/80"
-						for="question-explanation"
-					>
-						<Lightbulb size={18} class="text-primary/80" />
-						<span>Explanation</span>
-					</label>
-					<textarea
-						id="question-explanation"
-						class="textarea textarea-bordered w-full min-h-24"
-						bind:value={questionExplanation}
-						placeholder="Enter explanation (optional)..."
-					></textarea>
+				<!-- Explanation -->
+				<div class="card bg-base-200/50 border border-base-300">
+					<div class="card-body">
+						<div class="grid grid-cols-[150px_1fr] items-center gap-4">
+							<label for="question-explanation" class="font-semibold">Explanation</label>
+							<textarea
+								id="question-explanation"
+								class="textarea textarea-bordered w-full min-h-24"
+								bind:value={questionExplanation}
+								placeholder="Enter explanation (optional)..."
+							></textarea>
+						</div>
+					</div>
+				</div>
+
+				<!-- Media Management -->
+				<div class="card bg-base-200/50 border border-base-300">
+					<div class="card-body">
+						<h4 class="card-title mb-4">Attachments</h4>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div>
+								<UploadDropzone
+									uploader={mediaUploader}
+									aria-label="Upload image attachment"
+									appearance={{
+										container: 'p-2 rounded-lg border-dashed',
+										label: 'text-sm',
+										allowedContent: 'text-[11px] opacity-70'
+									}}
+								/>
+								{#if mediaError}
+									<div class="alert alert-error alert-sm mt-3">
+										<span class="text-sm">{mediaError}</span>
+									</div>
+								{/if}
+							</div>
+							<div class="space-y-4">
+								{#if mediaList.length > 0}
+									<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+										{#each mediaList as m (m._id)}
+											<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
+												<img src={m.url} alt={m.altText} class="w-full h-24 object-cover" />
+												<div class="p-3 space-y-2">
+													<input
+														class="input input-bordered input-sm w-full"
+														placeholder="Alt text"
+														bind:value={m.altText}
+														oninput={() => handleMediaMetaChange(m._id, m.altText, m.caption || '')}
+													/>
+													<input
+														class="input input-bordered input-sm w-full"
+														placeholder="Caption (optional)"
+														bind:value={m.caption}
+														oninput={() => handleMediaMetaChange(m._id, m.altText, m.caption || '')}
+													/>
+													<div class="flex justify-between items-center pt-1">
+														<span class="text-xs opacity-60">Order: {m.order}</span>
+														<button
+															class="btn btn-ghost btn-xs text-error"
+															onclick={() => removeMedia(m._id)}>Remove</button
+														>
+													</div>
+												</div>
+											</div>
+										{/each}
+									</div>
+								{:else}
+									<div class="text-center text-base-content/60 p-8">No attachments yet.</div>
+								{/if}
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 

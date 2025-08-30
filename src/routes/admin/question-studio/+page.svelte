@@ -246,7 +246,7 @@
 										</span>
 										<ChevronDown size={12} />
 									</div>
-									<ul tabindex="0" class="dropdown-content menu menu-lg bg-base-100 rounded-box z-1 w-80 p-2 shadow-sm">
+									<ul tabindex="-1" class="dropdown-content menu menu-lg bg-base-100 rounded-box z-1 w-80 p-2 shadow-sm">
 										{#each modules.data as m (m._id)}
 											<li>
 												<button

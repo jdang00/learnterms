@@ -2,9 +2,9 @@
 	let { isAddModalOpen, closeAddModal, userData } = $props();
 
 	import { X } from 'lucide-svelte';
-	import { useConvexClient, useQuery } from 'convex-svelte';
+	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
-	import type { Id } from '../../convex/_generated/dataModel';
+	import type { Id, Doc } from '../../convex/_generated/dataModel';
 	import { createUploader } from '$lib/utils/uploadthing';
 	import { UploadDropzone } from '@uploadthing/svelte';
 
@@ -13,25 +13,14 @@
 	let isSubmitting: boolean = $state(false);
 	let submitError: string = $state('');
 
-	const documents = $derived(() => {
-		const cohortId = userData?.cohortId as Id<'cohort'> | undefined;
-		if (!cohortId) return { isLoading: true, error: null, data: [] };
-		return useQuery(api.contentLib.getContentLibByCohort, { cohortId });
-	});
-
 	function toBaseTitle(name: string): string {
 		const withoutExt = name.replace(/\.[^/.]+$/, '');
 		const trimmed = withoutExt.trim();
 		return trimmed.length === 0 ? 'Untitled Document' : trimmed.slice(0, 100);
 	}
 
-	function generateUniqueTitle(base: string): string {
-		const docQuery = documents();
-		const existing = new Set(
-			!docQuery.isLoading && docQuery.data
-				? docQuery.data.map((d) => d.title.toLowerCase())
-				: []
-		);
+	function generateUniqueTitleFromExisting(base: string, existingTitlesLower: string[]): string {
+		const existing = new Set(existingTitlesLower);
 		if (!existing.has(base.toLowerCase())) return base;
 		for (let i = 2; i < 1000; i++) {
 			const candidate = `${base} (${i})`;
@@ -51,7 +40,17 @@
 				const sizeBytes = Number((file as any)?.size ?? 0);
 				const sizeMB = sizeBytes > 0 ? (sizeBytes / 1024 / 1024).toFixed(2) : undefined;
 				const base = toBaseTitle(fileName);
-				const title = generateUniqueTitle(base);
+				let existingTitlesLower: string[] = [];
+				try {
+					const cohortId = userData?.cohortId as Id<'cohort'> | undefined;
+					if (cohortId) {
+						const existingDocs = (await client.query(api.contentLib.getContentLibByCohort, {
+							cohortId
+						})) as Doc<'contentLib'>[];
+						existingTitlesLower = existingDocs.map((d) => d.title.toLowerCase());
+					}
+				} catch {}
+				const title = generateUniqueTitleFromExisting(base, existingTitlesLower);
 				const description = sizeMB
 					? `${fileName} • ${sizeMB} MB • uploaded via UploadThing`
 					: `${fileName} • uploaded via UploadThing`;
@@ -126,16 +125,22 @@
 				<h4 class="font-semibold mb-4 text-center">Upload Document</h4>
 				<div class="ut-flex ut-flex-col ut-items-center ut-justify-center ut-gap-4">
 					<UploadDropzone {uploader} />
+					<p class="text-sm text-base-content/70 mt-2 text-center">
+						Max file size: 20MB. PDFs only.<br />Optimized for up to 100 pages/slides.
+					</p>
 				</div>
 				{#if submitError}
-					<div class="alert alert-error alert-sm mt-4"><span class="text-sm">{submitError}</span></div>
+					<div class="alert alert-error alert-sm mt-4">
+						<span class="text-sm">{submitError}</span>
+					</div>
 				{/if}
 			</div>
 		</div>
 
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
-				<button class="btn btn-ghost" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button>
+				<button class="btn btn-ghost" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button
+				>
 			</form>
 		</div>
 	</div>

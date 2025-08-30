@@ -157,9 +157,12 @@ export const POST: RequestHandler = async ({ request }) => {
         return json({ success: true, chunks, processedCount: chunks.length });
       }
 
-      if (typeof body.pdfUrl === 'string') {
-        const base64 = await fetchPdfAsBase64(body.pdfUrl);
-        const chunks = await generateFromPdfBase64(base64);
+      if (typeof body.pdfUrl === 'string' || (body.fileKey && !body.pdfUrl)) {
+        let chunks: Chunk[] = [];
+        if (typeof body.pdfUrl === 'string') {
+          const base64 = await fetchPdfAsBase64(body.pdfUrl);
+          chunks = await generateFromPdfBase64(base64);
+        }
 
         if (body.fileKey) {
           try {

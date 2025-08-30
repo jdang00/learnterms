@@ -20,6 +20,7 @@ import type * as cohort from "../cohort.js";
 import type * as contentLib from "../contentLib.js";
 import type * as module from "../module.js";
 import type * as question from "../question.js";
+import type * as questionMedia from "../questionMedia.js";
 import type * as school from "../school.js";
 import type * as semester from "../semester.js";
 import type * as userProgress from "../userProgress.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   contentLib: typeof contentLib;
   module: typeof module;
   question: typeof question;
+  questionMedia: typeof questionMedia;
   school: typeof school;
   semester: typeof semester;
   userProgress: typeof userProgress;

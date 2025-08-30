@@ -98,8 +98,12 @@ export default defineSchema({
 		altText: v.string(),
 		caption: v.optional(v.string()),
 		order: v.number(),
-		metadata: v.object({})
-	}),
+		metadata: v.object({
+			uploadthingKey: v.optional(v.string()),
+			sizeBytes: v.optional(v.number()),
+			originalFileName: v.optional(v.string())
+		})
+	}).index('by_questionId', ['questionId']),
 	userProgress: defineTable({
 		userId: v.id('users'),
 		classId: v.id('class'),
