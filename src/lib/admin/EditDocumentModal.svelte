@@ -15,10 +15,23 @@
 	let submitError: string = $state('');
 
 	// Get current documents to check for duplicates (excluding current document)
-	const documents = $derived(() => {
+	let documents: { isLoading: boolean; error: any; data: Doc<'contentLib'>[] | undefined } = $state({
+		isLoading: true,
+		error: null,
+		data: []
+	});
+
+	$effect(() => {
 		const cohortId = userData?.cohortId as Id<'cohort'> | undefined;
-		if (!cohortId) return { isLoading: true, error: null, data: [] };
-		return useQuery(api.contentLib.getContentLibByCohort, { cohortId });
+		if (cohortId) {
+			documents = useQuery(api.contentLib.getContentLibByCohort, { cohortId }) as unknown as {
+				isLoading: boolean;
+				error: any;
+				data: Doc<'contentLib'>[] | undefined;
+			};
+		} else {
+			documents = { isLoading: true, error: null, data: [] };
+		}
 	});
 
 	// Reset form when editingDocument changes
@@ -39,10 +52,9 @@
 				if (trimmed.length > 100) return 'Document title cannot exceed 100 characters';
 
 				// Check for duplicate titles (case-insensitive, excluding current document)
-				const docQuery = documents();
 				const existingTitles =
-					!docQuery.isLoading && !docQuery.error && docQuery.data
-						? docQuery.data
+					!documents.isLoading && !documents.error && documents.data
+						? documents.data
 								.filter((d) => d._id !== editingDocument?._id)
 								.map((d) => d.title.toLowerCase())
 						: [];

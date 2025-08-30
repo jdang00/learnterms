@@ -19,13 +19,22 @@ export const ourFileRouter = {
 		console.log('file url', file.ufsUrl);
 	}),
 	pdfUploader: f({
-		blob: {
-			maxFileSize: '64MB',
+		pdf: {
+			maxFileSize: '20MB',
 			maxFileCount: 1
 		}
 	}).onUploadComplete(async ({ file }) => {
 		console.log('file url', file.ufsUrl);
 		console.log('file key', file.key);
+	}),
+	questionMediaUploader: f({
+		image: {
+			maxFileSize: '8MB',
+			maxFileCount: 1
+		}
+	}).onUploadComplete(async ({ file }) => {
+		console.log('question media url', file.ufsUrl);
+		console.log('question media key', file.key);
 	})
 } satisfies FileRouter;
 

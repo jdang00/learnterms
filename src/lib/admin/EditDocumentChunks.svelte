@@ -3,7 +3,7 @@
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
-	import { Upload, FileText, AlignLeft, Type, Tags } from 'lucide-svelte';
+	import { FileText, AlignLeft, Type, Tags } from 'lucide-svelte';
 	import { fade, fly, scale } from 'svelte/transition';
 	import DeleteConfirmationModal from './DeleteConfirmationModal.svelte';
 	import { createUploader } from '$lib/utils/uploadthing';
@@ -17,8 +17,7 @@
 
 	let isProcessing = $state(false);
 	let processingError = $state('');
-	let selectedFile: File | null = $state(null);
-	let fileInput: HTMLInputElement | null = $state(null);
+
 	let loadingSkeletons = $state(0);
 	let loadingInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -109,7 +108,6 @@
 			console.error('Failed to delete chunk:', error);
 		}
 	}
-
 
 	const uploader = createUploader('pdfUploader', {
 		onClientUploadComplete: async (res) => {
@@ -271,7 +269,7 @@
 			{/if}
 
 			<div class="space-y-4">
-				{#each Array(isProcessing ? loadingSkeletons : 3) as _, index}
+				{#each Array(isProcessing ? loadingSkeletons : 3), index (index)}
 					<div
 						class="card bg-base-100 border border-base-300 {isProcessing ? 'animate-pulse' : ''}"
 						style="animation-delay: {index * 200}ms"
@@ -325,14 +323,16 @@
 			</div>
 
 			<!-- PDF Upload Card (UploadThing) -->
-			<div class="card bg-base-100 border border-base-300 shadow-md w-full max-w-md" in:scale={{ duration: 180, start: 0.96 }}>
+			<div
+				class="card bg-base-100 border border-base-300 shadow-md w-full max-w-md"
+				in:scale={{ duration: 180, start: 0.96 }}
+			>
 				<div class="card-body">
 					<h4 class="font-semibold mb-4 text-center">Upload PDF Document</h4>
 					<div class="ut-flex ut-flex-col ut-items-center ut-justify-center ut-gap-4">
-						<span class="ut-text-center ut-text-4xl ut-font-bold">
-						</span>
+						<span class="ut-text-center ut-text-4xl ut-font-bold"> </span>
 						<UploadDropzone {uploader} />
-					  </div>
+					</div>
 					{#if processingError}
 						<div class="alert alert-error alert-sm mt-4">
 							<span class="text-sm">{processingError}</span>
@@ -371,7 +371,7 @@
 									</div>
 									<p class="text-base-content/80 text-sm mb-3 line-clamp-2">{chunk.summary}</p>
 									<div class="flex flex-wrap gap-1">
-										{#each chunk.keywords.slice(0, 4) as keyword}
+										{#each chunk.keywords.slice(0, 4) as keyword, index (index)}
 											<span class="badge badge-soft badge-secondary badge-xs">{keyword}</span>
 										{/each}
 										{#if chunk.keywords.length > 4}

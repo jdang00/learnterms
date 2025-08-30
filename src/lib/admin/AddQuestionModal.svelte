@@ -6,6 +6,8 @@
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { DISPLAY_QUESTION_TYPES, QUESTION_TYPES } from '../types';
+	import { createUploader } from '$lib/utils/uploadthing';
+	import { UploadDropzone } from '@uploadthing/svelte';
 
 	const client = useConvexClient();
 
@@ -21,6 +23,51 @@
 	]);
 	let correctAnswers: string[] = $state([]);
 	let isSubmitting: boolean = $state(false);
+	let mediaError: string = $state('');
+	let queuedMedia: Array<{
+		url: string;
+		key?: string;
+		name?: string;
+		sizeBytes?: number;
+		mimeType?: string;
+	}> = $state([]);
+
+	function mediaTypeFromMime(mime: string | undefined): string {
+		const t = mime || '';
+		if (t.startsWith('image/')) return 'image';
+		if (t.startsWith('video/')) return 'video';
+		if (t.startsWith('audio/')) return 'audio';
+		return 'file';
+	}
+
+	const mediaUploader = createUploader('questionMediaUploader', {
+		onClientUploadComplete: async (res) => {
+			try {
+				const f = Array.isArray(res) ? res[0] : null;
+				if (!f) return;
+				const url = (f as any)?.ufsUrl ?? (f as any)?.url;
+				const key = (f as any)?.key ?? (f as any)?.fileKey;
+				const name = (f as any)?.name ?? '';
+				const size = Number((f as any)?.size ?? 0);
+				const mime = (f as any)?.type ?? '';
+				if (!url) throw new Error('Missing file URL');
+				queuedMedia = [
+					...queuedMedia,
+					{ url, key, name, sizeBytes: size || undefined, mimeType: mime || undefined }
+				];
+				mediaError = '';
+			} catch (e) {
+				mediaError = e instanceof Error ? e.message : 'Upload failed';
+			}
+		},
+		onUploadError: (error: Error) => {
+			mediaError = error.message;
+		}
+	});
+
+	function removeQueuedMedia(index: number) {
+		queuedMedia = queuedMedia.filter((_, i) => i !== index);
+	}
 
 	// Fill in the Blank editor state
 	type FitbMode = 'exact' | 'exact_cs' | 'contains' | 'regex';
@@ -167,7 +214,7 @@
 				.filter((index) => index < filledOptions.length)
 				.map((index) => index.toString());
 
-			await client.mutation(api.question.insertQuestion, {
+			const questionId = await client.mutation(api.question.insertQuestion, {
 				moduleId: moduleId as Id<'module'>,
 				type: questionType,
 				stem: questionStem,
@@ -181,12 +228,33 @@
 				updatedAt: Date.now()
 			});
 
+			if (questionId && queuedMedia.length > 0) {
+				for (let i = 0; i < queuedMedia.length; i++) {
+					const m = queuedMedia[i];
+					await client.mutation((api as any).questionMedia.create, {
+						questionId: questionId as Id<'question'>,
+						url: m.url,
+						mediaType: mediaTypeFromMime(m.mimeType),
+						mimeType: m.mimeType || 'application/octet-stream',
+						altText: m.name || '',
+						caption: undefined,
+						order: i,
+						metadata: {
+							uploadthingKey: m.key,
+							sizeBytes: m.sizeBytes,
+							originalFileName: m.name
+						}
+					});
+				}
+			}
+
 			questionStem = '';
 			questionExplanation = '';
 			questionStatus = 'draft';
 			questionType = 'multiple_choice';
 			options = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
 			correctAnswers = [];
+			queuedMedia = [];
 			closeAddModal();
 		} catch (error) {
 			console.error('Failed to create question', error);
@@ -286,7 +354,7 @@
 									onchange={(e) =>
 										updateFitbMode(index, (e.target as HTMLSelectElement).value as FitbMode)}
 								>
-									{#each Object.entries(FITB_MODE_LABELS) as [value, label]}
+									{#each Object.entries(FITB_MODE_LABELS) as [value, label] (value)}
 										<option {value}>{label}</option>
 									{/each}
 								</select>
@@ -378,6 +446,51 @@
 					bind:value={questionExplanation}
 					placeholder="Enter explanation (optional)..."
 				></textarea>
+			</div>
+		</div>
+
+		<!-- Media Upload -->
+		<div class="mt-4">
+			<div class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80">
+				<span>Attachments</span>
+			</div>
+			<div class="card bg-base-100 border border-base-300 shadow-sm">
+				<div class="card-body">
+					<div class="flex justify-center">
+						<div class="w-full max-w-xs">
+							<UploadDropzone
+								uploader={mediaUploader}
+								aria-label="Upload image attachment"
+								appearance={{
+									container: 'rounded-lg',
+									label: 'text-sm',
+									allowedContent: 'text-[11px] opacity-70'
+								}}
+							/>
+						</div>
+					</div>
+					{#if mediaError}
+						<div class="alert alert-error alert-sm mt-3">
+							<span class="text-sm">{mediaError}</span>
+						</div>
+					{/if}
+					{#if queuedMedia.length > 0}
+						<div class="mt-3 grid grid-cols-2 gap-3">
+							{#each queuedMedia as m, idx (idx)}
+								<div class="border border-base-300 rounded-lg overflow-hidden">
+									<img src={m.url} alt={m.name} class="w-full h-24 object-cover" />
+									<div class="flex items-center justify-between p-2 text-xs">
+										<div class="truncate">
+											<span class="font-medium">{m.name || 'Uploaded'}</span>
+											<span class="opacity-60 ml-2">{m.mimeType}</span>
+										</div>
+										<button class="btn btn-ghost btn-xs" onclick={() => removeQueuedMedia(idx)}>Remove</button>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
 
