@@ -1,4 +1,4 @@
-import { query, mutation, action } from './_generated/server';
+import { mutation, action } from './_generated/server';
 import { authCreateMutation } from './authQueries';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
@@ -403,6 +403,63 @@ export const updateQuestionOrder = authCreateMutation({
 	}
 });
 
+export const moveQuestionsToModule = authCreateMutation({
+    args: {
+        sourceModuleId: v.id('module'),
+        targetModuleId: v.id('module'),
+        questionIds: v.array(v.id('question'))
+    },
+    handler: async (ctx, args) => {
+        if (args.sourceModuleId === args.targetModuleId) {
+            return { moved: 0, errors: [], success: true };
+        }
+
+        const targetQuestions = await ctx.db
+            .query('question')
+            .withIndex('by_moduleId', (q) => q.eq('moduleId', args.targetModuleId))
+            .collect();
+
+        let nextOrder = targetQuestions.length > 0
+            ? Math.max(...targetQuestions.map((q) => q.order)) + 1
+            : 0;
+
+        const errors: string[] = [];
+        let moved = 0;
+
+        for (const qid of args.questionIds) {
+            const q = await ctx.db.get(qid);
+            if (!q) {
+                errors.push(`Question ${qid} not found`);
+                continue;
+            }
+            if (q.moduleId !== args.sourceModuleId) {
+                errors.push(`Question ${qid} not in source module`);
+                continue;
+            }
+            await ctx.db.patch(qid, {
+                moduleId: args.targetModuleId,
+                order: nextOrder,
+                updatedAt: Date.now()
+            });
+            moved += 1;
+            nextOrder += 1;
+        }
+
+        // Reorder remaining questions in source module to keep contiguous order values
+        const remaining = await ctx.db
+            .query('question')
+            .withIndex('by_moduleId', (q) => q.eq('moduleId', args.sourceModuleId))
+            .collect();
+        remaining.sort((a, b) => a.order - b.order);
+        for (let i = 0; i < remaining.length; i++) {
+            const item = remaining[i];
+            if (item.order !== i) await ctx.db.patch(item._id, { order: i });
+        }
+
+        return { moved, errors, success: errors.length === 0 };
+    }
+});
+
 export const getAllQuestions = authQuery({
 	args: {},
 	handler: async (ctx) => {
@@ -412,15 +469,24 @@ export const getAllQuestions = authQuery({
 });
 
 export const searchQuestionsByModuleAdmin = authQuery({
-	args: { id: v.id('module'), query: v.string(), limit: v.optional(v.number()) },
-	handler: async (ctx, { id, query, limit }) => {
+	args: { id: v.id('module'), query: v.string(), limit: v.optional(v.number()), sort: v.optional(v.string()) },
+	handler: async (ctx, { id, query, limit, sort }) => {
 		const trimmed = query.trim().toLowerCase();
 		if (trimmed.length === 0) {
-			const results = await ctx.db
-				.query('question')
-				.withIndex('by_moduleId_order', (q) => q.eq('moduleId', id))
-				.collect();
-			return results;
+			if ((sort || 'order') === 'created_desc') {
+				const results = await ctx.db
+					.query('question')
+					.withIndex('by_moduleId', (q) => q.eq('moduleId', id))
+					.order('desc')
+					.collect();
+				return results;
+			} else {
+				const results = await ctx.db
+					.query('question')
+					.withIndex('by_moduleId_order', (q) => q.eq('moduleId', id))
+					.collect();
+				return results;
+			}
 		}
 		const max = Math.min(Math.max(limit ?? 200, 1), 1000);
 		const results = await ctx.db
@@ -429,7 +495,10 @@ export const searchQuestionsByModuleAdmin = authQuery({
 				q.search('searchText', trimmed).eq('moduleId', id)
 			)
 			.take(max);
-		return results;
+		if ((sort || 'order') === 'created_desc') {
+			return results.sort((a, b) => (b._creationTime || 0) - (a._creationTime || 0));
+		}
+		return results.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 	}
 });
 

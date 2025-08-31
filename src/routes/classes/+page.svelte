@@ -195,11 +195,7 @@
 					{:else}
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 							{#each modules.data as module (module._id)}
-								<ModuleCard
-									{module}
-									classId={selectedClass._id}
-									progress={classProgress?.data?.[module._id]}
-								/>
+								<ModuleCard {module} classId={selectedClass._id} />
 							{/each}
 						</div>
 					{/if}

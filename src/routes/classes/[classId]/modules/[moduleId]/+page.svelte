@@ -3,18 +3,14 @@
 	import type { PageData } from './$types';
 	import { api } from '../../../../../convex/_generated/api.js';
 	import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
-	import QuizSideBar from '$lib/components/QuizSideBar.svelte';
-	import QuizNavigation from '$lib/components/QuizNavigation.svelte';
-	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
-	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
 	import { QuizState } from './states.svelte';
-	import ActionButtons from '$lib/components/ActionButtons.svelte';
-	import MobileMenu from '$lib/components/MobileMenu.svelte';
-	import MobileInfo from '$lib/components/MobileInfo.svelte';
-	import ResultBanner from '$lib/components/ResultBanner.svelte';
+	import MainQuiz from '$lib/components/MainQuiz.svelte';
+	import QuizListView from '$lib/components/QuizListView.svelte';
+	import ModuleInfo from '$lib/components/ModuleInfo.svelte';
 	import { onMount, tick } from 'svelte';
-	import { Flag, BookmarkCheck, ArrowDownNarrowWide } from 'lucide-svelte';
-	import { QUESTION_TYPES } from '$lib/utils/questionType';
+	import { Maximize, Minimize } from 'lucide-svelte';
+	import { slide, fade, scale } from 'svelte/transition';
+	import { cubicInOut } from 'svelte/easing';
 
 	let { data }: { data: PageData } = $props();
 
@@ -142,13 +138,22 @@
 	$effect(() => {
 		if (questions.data) {
 			const next = (questions.data as Doc<'question'>[]).map((q) => q._id as Id<'question'>);
-			if (stableQuestionIds.length !== next.length || stableQuestionIds.some((id, i) => id !== next[i])) {
+			if (
+				stableQuestionIds.length !== next.length ||
+				stableQuestionIds.some((id, i) => id !== next[i])
+			) {
 				stableQuestionIds = next;
 			}
 		}
 	});
 
-	let moduleProgress: { data: { interactedQuestionIds: Id<'question'>[]; flaggedQuestionIds: Id<'question'>[] } | undefined; isLoading: boolean; error: any } = $state({
+	let moduleProgress: {
+		data:
+			| { interactedQuestionIds: Id<'question'>[]; flaggedQuestionIds: Id<'question'>[] }
+			| undefined;
+		isLoading: boolean;
+		error: any;
+	} = $state({
 		data: {
 			interactedQuestionIds: [],
 			flaggedQuestionIds: []
@@ -159,14 +164,11 @@
 
 	$effect(() => {
 		if (userId && questions.data) {
-			const query = useQuery(
-				api.userProgress.getUserProgressForModule,
-				{
-					userId: userId,
-					classId: data.classId as Id<'class'>,
-					questionIds: stableQuestionIds
-				}
-			);
+			const query = useQuery(api.userProgress.getUserProgressForModule, {
+				userId: userId,
+				classId: data.classId as Id<'class'>,
+				questionIds: stableQuestionIds
+			});
 			moduleProgress = query;
 		} else {
 			moduleProgress = {
@@ -340,96 +342,77 @@
 	});
 </script>
 
-{#if questions.isLoading}
-	<p>Loading...</p>
-{:else if questions.error}
-	<p>Error: {questions.error.message}</p>
-{:else if currentlySelected}
+<div
+	class="bg-base-300 {qs.fullscreenEnabled ? '' : 'pt-3 sm:pt-4'} transition-all duration-500 ease-in-out"
+	transition:fade={{ duration: 300, easing: cubicInOut }}
+>
 	<div
-		class="flex flex-col md:flex-col lg:flex-row min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] p-2 md:p-3 lg:p-4 gap-4 lg:gap-8"
+		class="{qs.fullscreenEnabled ? 'w-full' : 'max-w-7xl mx-auto relative px-2 sm:px-4'} transition-all duration-500 ease-in-out"
 	>
-		<QuizSideBar
+		<MainQuiz
 			{qs}
-			{module}
+			{questions}
 			{currentlySelected}
 			{userId}
-			moduleId={data.moduleId}
+			{data}
+			{handleSelect}
+			{handleFilterToggle}
 			{client}
-			classId={data.classId}
+			{module}
 		/>
-		<MobileInfo {module} classId={data.classId} />
 
-		<div
-			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 pb-36 lg:pb-48"
-		>
-			<ResultBanner bind:qs />
-			{#if qs.noFlags}
-				<div
-					role="alert"
-					class="alert alert-warning fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-11/12 sm:w-max max-w-xs sm:max-w-sm md:max-w-md p-4 text-center"
+		{#if !qs.fullscreenEnabled}
+			<div
+				transition:scale={{ duration: 300, easing: cubicInOut, start: 0.8 }}
+				class="transition-all duration-300 ease-in-out"
+			>
+				<button
+					class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 btn btn-circle btn-sm sm:btn-md btn-ghost z-40 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95"
+					onclick={() => qs.fullscreenEnabled = !qs.fullscreenEnabled}
+					aria-label="Enter fullscreen"
 				>
-					<Flag size="16" />
-					<span class="align-middle">No Questions Flagged.</span>
-					<button
-						class="btn btn-sm btn-ghost btn-warning"
-						onclick={() => {
-							qs.noFlags = false;
-						}}>X</button
-					>
-				</div>
-			{/if}
-
-			<QuizNavigation
-				questions={{ data: qs.getFilteredQuestions() }}
-				{handleSelect}
-				{currentlySelected}
-				{qs}
-			/>
-
-			<div class="text-md sm:text-lg lg:text-xl p-4">
-				<div class="flex flex-row justify-between mb-4">
-					{#if currentlySelected.type !== QUESTION_TYPES.FILL_IN_THE_BLANK}
-						<div class="flex flex-row flex-wrap items-end">
-							<h4 class="text-lg font-semibold">{currentlySelected.stem}</h4>
-							<span class="text-base-content/70 font-medium text-xs ms-2 mb-1 sm:mt-0">
-								Pick {currentlySelected.correctAnswers.length}.
-							</span>
-						</div>
-					{/if}
-
-					<div class="dropdown dropdown-end lg:block hidden">
-						<div tabindex="0" role="button" class="btn btn-soft btn-accent m-1 btn-circle">
-							<ArrowDownNarrowWide />
-						</div>
-						<ul
-							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow-sm"
-						>
-							<li>
-								<button onclick={() => handleFilterToggle('flagged')}>
-									<Flag size="16" />
-									{qs.showFlagged ? 'Show All' : 'Show Flagged'}
-								</button>
-							</li>
-							<li>
-								<button onclick={() => handleFilterToggle('incomplete')}>
-									<BookmarkCheck size="16" />
-									{qs.showIncomplete ? 'Show All' : 'Show Incomplete'}
-								</button>
-							</li>
-						</ul>
-					</div>
-				</div>
-				{#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}
-					<FillInTheBlank bind:qs {currentlySelected} />
-				{:else}
-					<AnswerOptions bind:qs {currentlySelected} />
-				{/if}
-				<ActionButtons {qs} {currentlySelected} />
+					<Maximize size="18" class="sm:w-5 sm:h-5 transition-transform duration-200" />
+				</button>
 			</div>
-		</div>
-		<MobileMenu bind:qs {currentlySelected} />
+		{/if}
 	</div>
-{:else}
-	<p>No questions available.</p>
+
+	{#if qs.fullscreenEnabled}
+		<div
+			transition:scale={{ duration: 300, easing: cubicInOut, start: 0.8 }}
+			class="transition-all duration-300 ease-in-out"
+		>
+			<button
+				class="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 btn btn-circle btn-sm sm:btn-md btn-ghost z-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95"
+				onclick={() => qs.fullscreenEnabled = !qs.fullscreenEnabled}
+				aria-label="Exit fullscreen"
+			>
+				<Minimize size="18" class="sm:w-5 sm:h-5 transition-transform duration-200" />
+			</button>
+		</div>
+	{/if}
+</div>
+
+{#if !qs.fullscreenEnabled}
+	<div
+		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
+		class="transition-all duration-400 ease-in-out"
+	>
+		<ModuleInfo {module} classId={data.classId as Id<'class'>} progressPercentage={qs.getProgressPercentage()} />
+	</div>
+{/if}
+
+{#if !qs.fullscreenEnabled}
+	{#if questions.isLoading}
+		<p transition:fade={{ duration: 200 }} class="transition-all duration-200 ease-in-out">Loading...</p>
+	{:else if questions.error}
+		<p transition:fade={{ duration: 200 }} class="transition-all duration-200 ease-in-out">Error: {questions.error.message}</p>
+	{:else}
+		<div
+			transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y', delay: 100 }}
+			class="mx-auto max-w-5xl mt-8 sm:mt-12 px-2 sm:px-0 transition-all duration-400 ease-in-out"
+		>
+			<QuizListView questions={questions.data} />
+		</div>
+	{/if}
 {/if}

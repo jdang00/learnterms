@@ -23,7 +23,7 @@
 		onSelect?: (module: Module) => void;
 	}
 
-	let { module, classId, progress, onSelect }: Props = $props();
+	let { module, classId, onSelect }: Props = $props();
 </script>
 
 <div in:fade={{ duration: 300 }} class="relative">
@@ -38,11 +38,6 @@
 							<span class="text-xl leading-none">{module.emoji || '📘'}</span>
 							<span class="truncate">{module.title}</span>
 						</h2>
-						{#if progress}
-							<div class="text-xs text-base-content/60 font-mono badge rounded-full">
-								{progress.interactedQuestions}/{progress.totalQuestions}
-							</div>
-						{/if}
 					</div>
 					<p class="text-sm text-base-content/70 mb-4 text-left line-clamp-4">
 						{module.description || 'No description available'}
@@ -66,11 +61,6 @@
 							<span class="text-xl leading-none">{module.emoji || '📘'}</span>
 							<span class="truncate">{module.title}</span>
 						</h2>
-						{#if progress}
-							<div class="text-xs text-base-content/60 font-mono badge rounded-full">
-								{progress.interactedQuestions}/{progress.totalQuestions}
-							</div>
-						{/if}
 					</div>
 					<p class="text-sm text-base-content/70 mb-4 text-left line-clamp-4">
 						{module.description || 'No description available'}

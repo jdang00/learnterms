@@ -40,8 +40,17 @@
 		return 'file';
 	}
 
+	// Function to safely update media state
+	function addMediaItem(mediaItem: typeof queuedMedia[0]) {
+		queuedMedia = [...queuedMedia, mediaItem];
+	}
+
+	function setMediaError(error: string) {
+		mediaError = error;
+	}
+
 	const mediaUploader = createUploader('questionMediaUploader', {
-		onClientUploadComplete: async (res) => {
+		onClientUploadComplete: (res) => {
 			try {
 				const f = Array.isArray(res) ? res[0] : null;
 				if (!f) return;
@@ -50,18 +59,26 @@
 				const name = (f as any)?.name ?? '';
 				const size = Number((f as any)?.size ?? 0);
 				const mime = (f as any)?.type ?? '';
-				if (!url) throw new Error('Missing file URL');
-				queuedMedia = [
-					...queuedMedia,
-					{ url, key, name, sizeBytes: size || undefined, mimeType: mime || undefined }
-				];
-				mediaError = '';
+
+				if (!url) {
+					setMediaError('Missing file URL');
+					return;
+				}
+
+				addMediaItem({
+					url,
+					key,
+					name,
+					sizeBytes: size || undefined,
+					mimeType: mime || undefined
+				});
+				setMediaError('');
 			} catch (e) {
-				mediaError = e instanceof Error ? e.message : 'Upload failed';
+				setMediaError(e instanceof Error ? e.message : 'Upload failed');
 			}
 		},
 		onUploadError: (error: Error) => {
-			mediaError = error.message;
+			setMediaError(error.message);
 		}
 	});
 
@@ -206,7 +223,7 @@
 
 		try {
 			const nextOrder = questions.data?.length
-				? Math.max(...questions.data.map((q) => q.order)) + 1
+				? Math.max(...(questions.data.map((q) => q.order || 0))) + 1
 				: 0;
 
 			const filteredCorrectAnswers = correctAnswers
@@ -220,7 +237,7 @@
 				stem: questionStem,
 				options: filledOptions,
 				correctAnswers: filteredCorrectAnswers,
-				explanation: questionExplanation,
+				explanation: questionExplanation || '',
 				aiGenerated: false,
 				status: questionStatus.toLowerCase(),
 				order: nextOrder,
@@ -237,12 +254,12 @@
 						mediaType: mediaTypeFromMime(m.mimeType),
 						mimeType: m.mimeType || 'application/octet-stream',
 						altText: m.name || '',
-						caption: undefined,
+						caption: '',
 						order: i,
 						metadata: {
-							uploadthingKey: m.key,
-							sizeBytes: m.sizeBytes,
-							originalFileName: m.name
+							uploadthingKey: m.key || '',
+							sizeBytes: m.sizeBytes || 0,
+							originalFileName: m.name || ''
 						}
 					});
 				}
