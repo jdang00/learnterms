@@ -33,6 +33,7 @@ export class QuizState {
 	private static readonly AUTO_NEXT_DELAY_MS = 1800;
 	optionOrderByQuestionId: Record<string, string[]> = $state({});
 	optionsShuffleEnabled: boolean = $state(false);
+	fullscreenEnabled: boolean = $state(false);
 
 	scheduleSave(delayMs: number = 400) {
 		if (!this.saveProgressFunction) return;

@@ -62,7 +62,7 @@
 </script>
 
 <div
-	class="fixed bottom-0 left-0 w-full bg-base-100 shadow-lg border-t border-base-300 z-50 flex gap-2 items-center px-4 py-4 lg:hidden flex-wrap justify-center"
+	class="fixed bottom-0 left-0 w-full bg-base-100 shadow-lg border-t border-base-300 z-50 flex gap-2 items-center px-4 py-4 md:hidden flex-wrap justify-center"
 >
 	<div class="dropdown dropdown-top">
 		<div tabindex="0" role="button" class="btn btn-sm btn-soft btn-accent m-1">

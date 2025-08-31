@@ -1,14 +1,6 @@
 <script lang="ts">
-	let {
-		questions,
-		handleSelect,
-		currentlySelected,
-		interactedQuestions = [],
-		flags = [],
-		qs
-	} = $props();
+	let { questions, handleSelect, currentlySelected, qs } = $props();
 
-	// Use client-side progress data from QuizState instead of server props
 	let reactiveInteractedQuestions = $derived(qs?.liveInteractedQuestions || []);
 	let reactiveFlags = $derived(qs?.liveFlaggedQuestions || []);
 </script>

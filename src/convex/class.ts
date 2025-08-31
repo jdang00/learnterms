@@ -32,6 +32,14 @@ export const getClassById = authQuery({
 	}
 });
 
+export const getAllClasses = authQuery({
+	args: {},
+	handler: async (ctx) => {
+		const classes = await ctx.db.query('class').collect();
+		return classes.sort((a, b) => a.order - b.order);
+	}
+});
+
 export const getClassContentCounts = authQuery({
 	args: { classId: v.id('class') },
 	handler: async (ctx, args) => {

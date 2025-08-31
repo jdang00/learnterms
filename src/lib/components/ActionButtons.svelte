@@ -50,9 +50,7 @@
 </script>
 
 <div
-	class="hidden md:flex fixed left-1/2 -translate-x-1/2 z-[60]
-           items-center gap-2 px-4 md:px-5 lg:px-6 py-4 md:py-5 rounded-full
-            backdrop-blur-md border border-base-300 shadow-xl bottom-8 md:bottom-10"
+	class="hidden md:inline-flex items-center gap-2 px-3 sm:px-4 md:px-5 lg:px-6 py-3 sm:py-4 md:py-5 rounded-full backdrop-blur-md border border-base-300 shadow-xl w-auto left-1/2 -translate-x-1/2 {qs.fullscreenEnabled ? 'absolute bottom-4' : 'relative mt-4 sm:mt-6'}"
 >
 	<button class="btn btn-sm btn-outline" onclick={handleClear}>Clear</button>
 	<div class="relative inline-block">
@@ -89,5 +87,3 @@
 		<ArrowRight />
 	</button>
 </div>
-
-<!-- banner is rendered at page level via ResultBanner to avoid overlap with MobileMenu -->

@@ -6,9 +6,11 @@
 	import { api } from '../../../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
 	import { Pencil, Trash2, Plus, ArrowLeft } from 'lucide-svelte';
+	import { ArrowRightLeft } from 'lucide-svelte';
 	import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
+	import MoveQuestionsModal from '$lib/admin/MoveQuestionsModal.svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 	import { useClerkContext } from 'svelte-clerk';
 
@@ -16,10 +18,31 @@
 	const moduleId = data.moduleId;
 
 	let search = $state('');
-	const questions = useQuery(
-		api.question.searchQuestionsByModuleAdmin,
-		() => ({ id: moduleId as Id<'module'>, query: search })
-	);
+	let searchInput = $state('');
+	let sortMode: 'order' | 'created_desc' = $state('order');
+
+	// Debounce search input to prevent excessive queries
+	let searchTimeout: number | null = null;
+
+	// Use a function to handle debounced search
+	function updateSearch() {
+		if (searchTimeout) clearTimeout(searchTimeout);
+		searchTimeout = setTimeout(() => {
+			search = searchInput;
+		}, 300);
+	}
+	const questions = useQuery(api.question.searchQuestionsByModuleAdmin, () => ({
+		id: moduleId as Id<'module'>,
+		query: search,
+		sort: sortMode
+	}));
+
+	// Cleanup timeout on component unmount
+	$effect(() => {
+		return () => {
+			if (searchTimeout) clearTimeout(searchTimeout);
+		};
+	});
 
 	const moduleInfo = useQuery(api.module.getModuleById, { id: moduleId as Id<'module'> });
 
@@ -92,6 +115,8 @@
 	// Bulk delete functionality
 	let selectedQuestions = $state<Set<string>>(new Set());
 	let isBulkDeleteModalOpen = $state(false);
+	let isMoveModalOpen = $state(false);
+	let moveQuestionIds = $state<string[]>([]);
 
 	function toggleQuestionSelection(questionId: string) {
 		const newSelected = new Set(selectedQuestions);
@@ -139,6 +164,25 @@
 			console.error('Failed to bulk delete questions', error);
 		} finally {
 			isBulkDeleteModalOpen = false;
+		}
+	}
+
+	function openMoveModalForSelected() {
+		if (selectedQuestions.size === 0) return;
+		moveQuestionIds = Array.from(selectedQuestions);
+		isMoveModalOpen = true;
+	}
+
+	function openMoveModalForOne(id: string) {
+		moveQuestionIds = [id];
+		isMoveModalOpen = true;
+	}
+
+	function handleCloseMoveModal(success?: boolean) {
+		isMoveModalOpen = false;
+		moveQuestionIds = [];
+		if (success) {
+			selectedQuestions = new Set();
 		}
 	}
 
@@ -201,7 +245,9 @@
 				</div>
 			{:else}
 				<div>
-					<h1 class="text-xl sm:text-2xl font-bold text-base-content flex items-center gap-2 sm:gap-3">
+					<h1
+						class="text-xl sm:text-2xl font-bold text-base-content flex items-center gap-2 sm:gap-3"
+					>
 						<span class="text-2xl sm:text-3xl">{moduleInfo.data?.emoji || '📘'}</span>
 						<span>{moduleInfo.data.title}</span>
 					</h1>
@@ -221,12 +267,81 @@
 		</div>
 	</div>
 
+	<!-- Question Management Controls - Always visible -->
+	<div class="mb-6 p-4 bg-base-200/30 border border-base-300 rounded-lg">
+		<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+			<!-- Search on the left -->
+			<label class="input input-bordered flex items-center gap-2 w-full lg:w-80">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 16 16"
+					fill="currentColor"
+					class="w-4 h-4 opacity-70"
+					><path
+						fill-rule="evenodd"
+						d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+						clip-rule="evenodd"
+					/></svg
+				>
+				<input
+					type="text"
+					class="grow"
+					placeholder="Search questions..."
+					value={searchInput}
+					oninput={(e) => {
+						searchInput = (e.target as HTMLInputElement).value;
+						updateSearch();
+					}}
+				/>
+				{#if searchInput}
+					<button class="btn btn-ghost btn-xs" onclick={() => {
+						searchInput = '';
+						search = '';
+						if (searchTimeout) {
+							clearTimeout(searchTimeout);
+							searchTimeout = null;
+						}
+					}}>Clear</button>
+				{/if}
+			</label>
+
+			<!-- Controls on the right -->
+			<div class="flex flex-wrap items-center gap-2 lg:justify-end">
+				<button class="btn btn-outline gap-2" onclick={() => (showTruncated = !showTruncated)}>
+					<span class="hidden sm:inline">{showTruncated ? 'Hide' : 'Show'} Options</span>
+					<span class="sm:hidden">{showTruncated ? 'Hide' : 'Show'}</span>
+				</button>
+
+				<div class="join">
+					<button class={`btn btn-ghost join-item ${sortMode === 'order' ? 'btn-active' : ''}`} onclick={() => (sortMode = sortMode === 'order' ? 'created_desc' : 'order')}>
+						{sortMode === 'order' ? 'Normal order' : 'Last created'}
+					</button>
+				</div>
+
+				{#if canEdit && selectedQuestions.size > 0}
+					<button class="btn btn-secondary gap-2" onclick={openMoveModalForSelected}>
+						<ArrowRightLeft size={16} />
+						<span class="hidden sm:inline">{selectedQuestions.size}</span>
+						<span class="sm:hidden">Move ({selectedQuestions.size})</span>
+					</button>
+					<button class="btn btn-error gap-2" onclick={openBulkDeleteModal}>
+						<Trash2 size={16} />
+						<span class="hidden sm:inline">{selectedQuestions.size}</span>
+						<span class="sm:hidden">Delete ({selectedQuestions.size})</span>
+					</button>
+					<button class="btn btn-ghost" onclick={deselectAllQuestions}>Deselect All</button>
+				{:else if canEdit && questions.data && questions.data.length > 0}
+					<button class="btn btn-ghost" onclick={selectAllQuestions}>Select All</button>
+				{/if}
+			</div>
+		</div>
+	</div>
+
 	{#if questions.isLoading}
 		<div class="space-y-4">
-			{#each Array(5) as _}
+			{#each Array(5), index (index)}
 				<div class="rounded-xl bg-base-100 shadow-sm border border-base-300 p-4">
 					<div class="flex flex-col gap-4">
-						<!-- Header skeleton -->
 						<div class="flex items-start justify-between gap-3">
 							<div class="flex items-start gap-3">
 								<div class="flex items-center gap-2">
@@ -245,7 +360,6 @@
 							<div class="skeleton h-8 w-8 rounded-full"></div>
 						</div>
 
-						<!-- Options skeleton -->
 						<div class="flex flex-col gap-3 sm:flex-row">
 							<div class="rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1">
 								<div class="skeleton h-4 w-16 mb-2"></div>
@@ -257,7 +371,6 @@
 								</div>
 							</div>
 
-							<!-- Explanation skeleton -->
 							<div class="rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1">
 								<div class="skeleton h-4 w-24 mb-2"></div>
 								<div class="space-y-2">
@@ -279,43 +392,27 @@
 		<div class="flex items-center justify-center p-8">
 			<div class="text-center">
 				<div class="text-4xl mb-4">📚</div>
-				<h3 class="text-lg font-semibold mb-2 text-base-content">No questions found</h3>
-				<p class="text-base-content/70">No questions available for the selected module.</p>
+				<h3 class="text-lg font-semibold mb-2 text-base-content">
+					{search ? 'No questions match your search' : 'No questions found'}
+				</h3>
+				<p class="text-base-content/70">
+					{search ? 'Try adjusting your search terms or clear the search to see all questions.' : 'No questions available for the selected module.'}
+				</p>
+				{#if search}
+					<button class="btn btn-primary mt-4" onclick={() => {
+						searchInput = '';
+						search = '';
+						if (searchTimeout) {
+							clearTimeout(searchTimeout);
+							searchTimeout = null;
+						}
+					}}>
+						Clear Search
+					</button>
+				{/if}
 			</div>
 		</div>
 	{:else}
-		<!-- Question Management Controls -->
-		<div class="mb-6 p-4 bg-base-200/30 border border-base-300 rounded-lg">
-			<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-				<!-- Search on the left -->
-				<label class="input input-bordered flex items-center gap-2 w-full lg:w-80">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 opacity-70"><path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd" /></svg>
-					<input type="text" class="grow" placeholder="Search questions..." bind:value={search} />
-					{#if search}
-						<button class="btn btn-ghost btn-xs" onclick={() => (search = '')}>Clear</button>
-					{/if}
-				</label>
-
-				<!-- Controls on the right -->
-				<div class="flex flex-wrap items-center gap-2 lg:justify-end">
-					<button class="btn btn-outline gap-2" onclick={() => (showTruncated = !showTruncated)}>
-						<span class="hidden sm:inline">{showTruncated ? 'Hide' : 'Show'} Options</span>
-						<span class="sm:hidden">{showTruncated ? 'Hide' : 'Show'}</span>
-					</button>
-
-					{#if canEdit && selectedQuestions.size > 0}
-						<button class="btn btn-error gap-2" onclick={openBulkDeleteModal}>
-							<Trash2 size={16} />
-							<span class="hidden sm:inline">Delete Selected ({selectedQuestions.size})</span>
-							<span class="sm:hidden">Delete ({selectedQuestions.size})</span>
-						</button>
-						<button class="btn btn-ghost" onclick={deselectAllQuestions}>Deselect All</button>
-					{:else if canEdit}
-						<button class="btn btn-ghost" onclick={selectAllQuestions}>Select All</button>
-					{/if}
-				</div>
-			</div>
-		</div>
 
 		<div class="space-y-4">
 			{#each questionList as questionItem, index (questionItem._id)}
@@ -335,6 +432,7 @@
 							dragData: questionItem,
 							interactive: [
 								'[data-delete-btn]',
+								'[data-move-btn]',
 								'[data-view-btn]',
 								'[data-edit-btn]',
 								'.interactive',
@@ -417,6 +515,18 @@
 											tabindex="-1"
 											class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
 										>
+											<li>
+												<button
+													data-move-btn
+													class="btn btn-sm btn-ghost w-full justify-start"
+													type="button"
+													aria-label="Move question"
+													onclick={() => openMoveModalForOne(questionItem._id)}
+												>
+													<ArrowRightLeft size={16} />
+													<span>Move</span>
+												</button>
+											</li>
 											<li>
 												<button
 													data-edit-btn
@@ -527,4 +637,11 @@
 	onConfirm={confirmBulkDelete}
 	itemName={`${selectedQuestions.size} selected questions`}
 	itemType="question"
+/>
+
+<MoveQuestionsModal
+	isOpen={isMoveModalOpen}
+	onClose={handleCloseMoveModal}
+	sourceModuleId={moduleId}
+	selectedQuestionIds={moveQuestionIds}
 />
