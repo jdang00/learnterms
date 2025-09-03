@@ -43,11 +43,7 @@ function computeSearchText(input: {
 		parts.push(g.focus || '');
 		if (g.customPromptUsed) parts.push('custom');
 	}
-	return parts
-		.join(' ')
-		.replace(/\s+/g, ' ')
-		.trim()
-		.toLowerCase();
+	return parts.join(' ').replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
 export const getQuestionsByModule = authQuery({
@@ -404,60 +400,59 @@ export const updateQuestionOrder = authCreateMutation({
 });
 
 export const moveQuestionsToModule = authCreateMutation({
-    args: {
-        sourceModuleId: v.id('module'),
-        targetModuleId: v.id('module'),
-        questionIds: v.array(v.id('question'))
-    },
-    handler: async (ctx, args) => {
-        if (args.sourceModuleId === args.targetModuleId) {
-            return { moved: 0, errors: [], success: true };
-        }
+	args: {
+		sourceModuleId: v.id('module'),
+		targetModuleId: v.id('module'),
+		questionIds: v.array(v.id('question'))
+	},
+	handler: async (ctx, args) => {
+		if (args.sourceModuleId === args.targetModuleId) {
+			return { moved: 0, errors: [], success: true };
+		}
 
-        const targetQuestions = await ctx.db
-            .query('question')
-            .withIndex('by_moduleId', (q) => q.eq('moduleId', args.targetModuleId))
-            .collect();
+		const targetQuestions = await ctx.db
+			.query('question')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.targetModuleId))
+			.collect();
 
-        let nextOrder = targetQuestions.length > 0
-            ? Math.max(...targetQuestions.map((q) => q.order)) + 1
-            : 0;
+		let nextOrder =
+			targetQuestions.length > 0 ? Math.max(...targetQuestions.map((q) => q.order)) + 1 : 0;
 
-        const errors: string[] = [];
-        let moved = 0;
+		const errors: string[] = [];
+		let moved = 0;
 
-        for (const qid of args.questionIds) {
-            const q = await ctx.db.get(qid);
-            if (!q) {
-                errors.push(`Question ${qid} not found`);
-                continue;
-            }
-            if (q.moduleId !== args.sourceModuleId) {
-                errors.push(`Question ${qid} not in source module`);
-                continue;
-            }
-            await ctx.db.patch(qid, {
-                moduleId: args.targetModuleId,
-                order: nextOrder,
-                updatedAt: Date.now()
-            });
-            moved += 1;
-            nextOrder += 1;
-        }
+		for (const qid of args.questionIds) {
+			const q = await ctx.db.get(qid);
+			if (!q) {
+				errors.push(`Question ${qid} not found`);
+				continue;
+			}
+			if (q.moduleId !== args.sourceModuleId) {
+				errors.push(`Question ${qid} not in source module`);
+				continue;
+			}
+			await ctx.db.patch(qid, {
+				moduleId: args.targetModuleId,
+				order: nextOrder,
+				updatedAt: Date.now()
+			});
+			moved += 1;
+			nextOrder += 1;
+		}
 
-        // Reorder remaining questions in source module to keep contiguous order values
-        const remaining = await ctx.db
-            .query('question')
-            .withIndex('by_moduleId', (q) => q.eq('moduleId', args.sourceModuleId))
-            .collect();
-        remaining.sort((a, b) => a.order - b.order);
-        for (let i = 0; i < remaining.length; i++) {
-            const item = remaining[i];
-            if (item.order !== i) await ctx.db.patch(item._id, { order: i });
-        }
+		// Reorder remaining questions in source module to keep contiguous order values
+		const remaining = await ctx.db
+			.query('question')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.sourceModuleId))
+			.collect();
+		remaining.sort((a, b) => a.order - b.order);
+		for (let i = 0; i < remaining.length; i++) {
+			const item = remaining[i];
+			if (item.order !== i) await ctx.db.patch(item._id, { order: i });
+		}
 
-        return { moved, errors, success: errors.length === 0 };
-    }
+		return { moved, errors, success: errors.length === 0 };
+	}
 });
 
 export const getAllQuestions = authQuery({
@@ -469,7 +464,12 @@ export const getAllQuestions = authQuery({
 });
 
 export const searchQuestionsByModuleAdmin = authQuery({
-	args: { id: v.id('module'), query: v.string(), limit: v.optional(v.number()), sort: v.optional(v.string()) },
+	args: {
+		id: v.id('module'),
+		query: v.string(),
+		limit: v.optional(v.number()),
+		sort: v.optional(v.string())
+	},
 	handler: async (ctx, { id, query, limit, sort }) => {
 		const trimmed = query.trim().toLowerCase();
 		if (trimmed.length === 0) {
@@ -578,8 +578,18 @@ export const generateQuestions = action({
 		const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 		const focusLabel = (focus || 'optometry').toLowerCase();
-		const audience = focusLabel === 'optometry' ? 'optometry students' : focusLabel === 'pharmacy' ? 'pharmacy students' : 'health sciences students';
-		const domainHint = focusLabel === 'optometry' ? '- Prefer ocular relevance when present.' : focusLabel === 'pharmacy' ? '- Prefer pharmacotherapy relevance for patient care when present.' : '';
+		const audience =
+			focusLabel === 'optometry'
+				? 'optometry students'
+				: focusLabel === 'pharmacy'
+					? 'pharmacy students'
+					: 'health sciences students';
+		const domainHint =
+			focusLabel === 'optometry'
+				? '- Prefer ocular relevance when present.'
+				: focusLabel === 'pharmacy'
+					? '- Prefer pharmacotherapy relevance for patient care when present. If the material has structure or mechanism of action content, create questions about its details and/or mechanism of action.'
+					: '';
 		const extra = (customPrompt || '').trim();
 		const prompt = `Role: You are an AI assistant specializing in medical education creating high-quality assessment questions.
 
@@ -588,11 +598,12 @@ Goal: Based ONLY on the provided material, generate high-quality multiple-choice
 Instructions:
 - Create exactly ${numQuestions} diverse multiple-choice questions.
 - Mix levels: recall, understanding, application, critical thinking.
-- Include at least 2-3 questions with multiple correct answers.
+- Include at least 3-4 questions with multiple correct answers.
+- When generating questions with multiple correct answers, never indicate to select all that apply. Do not use ("Select 3, Select all that apply, etc").
 ${domainHint}
 - Do NOT include any references to the material or meta-instructions.
 - Stems and explanations must be self-contained and must not mention or quote the source material.
-- Do not use phrases like: "the material", "the text", "the passage", "the document", "the slides", "the notes", "according to", "as stated", "as mentioned".
+- Do not use phrases like: "the material", "the text", "the passage", "the document", "the slides", "the notes", "according to", "as stated", "as mentioned" in either the question, the options or the explanations.
 - Explanations must justify the correct answer and why distractors are incorrect without referencing the source.
 - Options must be plain strings with NO leading letters, numbers, or punctuation (no prefixes like "A.", "1)", or "-").
 ${extra ? `\nAdditional guidance:\n${extra}\n` : ''}
@@ -634,11 +645,21 @@ ${material}`;
 			} else if ('response' in result && result.response && typeof result.response === 'object') {
 				const response = result.response as Record<string, unknown>;
 
-				if (response.candidates && Array.isArray(response.candidates) && response.candidates[0] && typeof response.candidates[0] === 'object') {
+				if (
+					response.candidates &&
+					Array.isArray(response.candidates) &&
+					response.candidates[0] &&
+					typeof response.candidates[0] === 'object'
+				) {
 					const candidate = response.candidates[0] as Record<string, unknown>;
 					if (candidate.content && typeof candidate.content === 'object') {
 						const content = candidate.content as Record<string, unknown>;
-						if (content.parts && Array.isArray(content.parts) && content.parts[0] && typeof content.parts[0] === 'object') {
+						if (
+							content.parts &&
+							Array.isArray(content.parts) &&
+							content.parts[0] &&
+							typeof content.parts[0] === 'object'
+						) {
 							const part = content.parts[0] as Record<string, unknown>;
 							if (part.text && typeof part.text === 'string') {
 								responseText = part.text;
@@ -679,7 +700,9 @@ ${material}`;
 				throw new Error('Response is not an array');
 			}
 		} catch (parseError) {
-			throw new Error(`Failed to parse AI response as JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+			throw new Error(
+				`Failed to parse AI response as JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`
+			);
 		}
 
 		const normalizeOptionText = (opt: string) =>

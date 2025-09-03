@@ -80,9 +80,11 @@
 				<div class="flex flex-row justify-between mb-4">
 					{#if currentlySelected.type !== QUESTION_TYPES.FILL_IN_THE_BLANK}
 						<div class="flex flex-row flex-wrap items-end gap-1 sm:gap-2">
-							<h4 class="text-base sm:text-lg font-semibold leading-tight">{currentlySelected.stem}</h4>
-							<span class="text-base-content/70 font-medium text-xs ms-1 sm:ms-2 mb-1 sm:mt-0 shrink-0">
-								Pick {currentlySelected.correctAnswers.length}.
+							<h4 class="text-base sm:text-lg font-semibold leading-tight">
+								{currentlySelected.stem}
+							</h4>
+							<span class="text-base-content/70 font-medium text-base sm:text-lg leading-tight">
+								Select {currentlySelected.correctAnswers.length}.
 							</span>
 						</div>
 					{/if}
