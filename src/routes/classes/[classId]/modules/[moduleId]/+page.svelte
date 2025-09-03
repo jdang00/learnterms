@@ -343,12 +343,23 @@
 </script>
 
 <div
-	class="bg-base-300 {qs.fullscreenEnabled ? '' : 'pt-3 sm:pt-4'} transition-all duration-500 ease-in-out"
+	class="bg-base-300 {qs.fullscreenEnabled
+		? ''
+		: 'pt-3 sm:pt-4'} transition-all duration-500 ease-in-out"
 	transition:fade={{ duration: 300, easing: cubicInOut }}
 >
 	<div
-		class="{qs.fullscreenEnabled ? 'w-full' : 'max-w-7xl mx-auto relative px-2 sm:px-4'} transition-all duration-500 ease-in-out"
+		class="{qs.fullscreenEnabled
+			? 'w-full'
+			: 'max-w-7xl mx-auto relative px-2 sm:px-4'} transition-all duration-500 ease-in-out"
 	>
+		{#if !qs.fullscreenEnabled}
+			<p class="text-center mb-3">
+				<button onclick={() => (qs.fullscreenEnabled = true)} class="underline hover:text-primary"
+					>Maximize</button
+				> to enter fullscreen
+			</p>
+		{/if}
 		<MainQuiz
 			{qs}
 			{questions}
@@ -367,8 +378,8 @@
 				class="transition-all duration-300 ease-in-out"
 			>
 				<button
-					class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 btn btn-circle btn-sm sm:btn-md btn-ghost z-40 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95"
-					onclick={() => qs.fullscreenEnabled = !qs.fullscreenEnabled}
+					class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 btn btn-circle btn-sm sm:btn-md btn-ghost z-40 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 border border-primary"
+					onclick={() => (qs.fullscreenEnabled = !qs.fullscreenEnabled)}
 					aria-label="Enter fullscreen"
 				>
 					<Maximize size="18" class="sm:w-5 sm:h-5 transition-transform duration-200" />
@@ -383,8 +394,8 @@
 			class="transition-all duration-300 ease-in-out"
 		>
 			<button
-				class="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 btn btn-circle btn-sm sm:btn-md btn-ghost z-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95"
-				onclick={() => qs.fullscreenEnabled = !qs.fullscreenEnabled}
+				class="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 btn btn-circle btn-sm sm:btn-md btn-ghost z-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 border border-primary"
+				onclick={() => (qs.fullscreenEnabled = !qs.fullscreenEnabled)}
 				aria-label="Exit fullscreen"
 			>
 				<Minimize size="18" class="sm:w-5 sm:h-5 transition-transform duration-200" />
@@ -398,15 +409,23 @@
 		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 		class="transition-all duration-400 ease-in-out"
 	>
-		<ModuleInfo {module} classId={data.classId as Id<'class'>} progressPercentage={qs.getProgressPercentage()} />
+		<ModuleInfo
+			{module}
+			classId={data.classId as Id<'class'>}
+			progressPercentage={qs.getProgressPercentage()}
+		/>
 	</div>
 {/if}
 
 {#if !qs.fullscreenEnabled}
 	{#if questions.isLoading}
-		<p transition:fade={{ duration: 200 }} class="transition-all duration-200 ease-in-out">Loading...</p>
+		<p transition:fade={{ duration: 200 }} class="transition-all duration-200 ease-in-out">
+			Loading...
+		</p>
 	{:else if questions.error}
-		<p transition:fade={{ duration: 200 }} class="transition-all duration-200 ease-in-out">Error: {questions.error.message}</p>
+		<p transition:fade={{ duration: 200 }} class="transition-all duration-200 ease-in-out">
+			Error: {questions.error.message}
+		</p>
 	{:else}
 		<div
 			transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y', delay: 100 }}
