@@ -29,5 +29,6 @@ tmp
 /src/routes/seed
 /src/lib/utils/seed.ts
 /src/lib/utils/seed-example.ts
+/stc/routes/error-demo
 
 .cursor

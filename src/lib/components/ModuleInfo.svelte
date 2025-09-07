@@ -1,22 +1,40 @@
 <script lang="ts">
 	import { ChevronLeft } from 'lucide-svelte';
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
+	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
 
 	let {
 		module,
 		classId,
-		progressPercentage
+		progressPercentage,
+		suppressAuthErrors = false
 	}: {
 		module: { data?: Doc<'module'> | null; isLoading: boolean; error: any };
 		classId: Id<'class'>;
 		progressPercentage: number;
+		suppressAuthErrors?: boolean;
 	} = $props();
+
+	function isAuthError(error: any): boolean {
+		if (!error) return false;
+		const message = error.message || error.toString();
+		const patterns = ['unauthorized', 'authentication', 'not authenticated', 'session expired', 'token expired', 'invalid token', 'jwt', 'access denied', 'forbidden'];
+		return patterns.some(pattern => message.toLowerCase().includes(pattern));
+	}
+
+	let shouldShowError = $derived(module.error && !(suppressAuthErrors && isAuthError(module.error)));
 </script>
 
 {#if module.isLoading}
 	<p>Loading...</p>
-{:else if module.error}
-	<p>Error: {module.error.message}</p>
+{:else if shouldShowError}
+	<ErrorBoundary
+		error={module.error}
+		title="Module Loading Error"
+		message="Unable to load module information."
+		suppressIfOtherAuthErrors={suppressAuthErrors}
+		class="mb-4"
+	/>
 {:else}
 	<div class="mx-auto max-w-5xl mt-8 sm:mt-12 px-2 sm:px-0">
 		<div class="p-4 md:p-5 lg:p-6 pt-8 sm:pt-12 pl-8 sm:pl-12 mt-4 sm:mt-8">

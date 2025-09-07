@@ -7,6 +7,7 @@
 	import MobileMenu from '$lib/components/MobileMenu.svelte';
 	import MobileInfo from '$lib/components/MobileInfo.svelte';
 	import ResultBanner from '$lib/components/ResultBanner.svelte';
+	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
 	import { Flag, BookmarkCheck, ArrowDownNarrowWide, Maximize, Minimize } from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { slide, fade, scale } from 'svelte/transition';
@@ -21,14 +22,24 @@
 		handleSelect,
 		handleFilterToggle,
 		client,
-		module
+		module,
+		suppressAuthErrors = false
 	} = $props();
+
+	function isAuthError(error: any): boolean {
+		if (!error) return false;
+		const message = error.message || error.toString();
+		const patterns = ['unauthorized', 'authentication', 'not authenticated', 'session expired', 'token expired', 'invalid token', 'jwt', 'access denied', 'forbidden'];
+		return patterns.some(pattern => message.toLowerCase().includes(pattern));
+	}
+
+	let shouldShowError = $derived(questions.error && !(suppressAuthErrors && isAuthError(questions.error)));
 </script>
 
 {#if questions.isLoading}
 	<p>Loading...</p>
-{:else if questions.error}
-	<p>Error: {questions.error.message}</p>
+{:else if shouldShowError}
+	<ErrorDisplay error={questions.error} showReload={true} class="mb-4" />
 {:else if currentlySelected}
 	<div
 		class="flex flex-col md:flex-col lg:flex-row bg-base-100 {qs.fullscreenEnabled

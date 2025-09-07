@@ -184,32 +184,8 @@
 		</div>
 
 		<div class="flex flex-col justify-center m-4">
-			{#if typeof currentlySelected.explanation === 'string' && (() => {
-					const t = currentlySelected.explanation.trim().toLowerCase();
-					return t.length > 0 && t !== 'undefined' && t !== 'null';
-				})()}
-				<div class="card bg-base-100 shadow-xl mt-8 lg:mt-12">
-					<div class="card-body">
-						<div class="flex flex-row flex-wrap justify-between border-b pb-2">
-							<h2 class="card-title">Solution</h2>
-							<div class="flex flex-row">
-								<kbd class="kbd kbd-sm hidden xl:block self-center me-1">tab</kbd>
-								<button class="btn btn-ghost btn-circle" onclick={() => qs.handleSolution()}>
-									<Eye />
-								</button>
-							</div>
-						</div>
-						<p
-							class={`mt-2 transition-all duration-300 ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
-						>
-							{currentlySelected.explanation}
-						</p>
-					</div>
-				</div>
-			{/if}
-
 			{#if media && media.data && media.data.length > 0}
-				<div class="card bg-base-100 shadow-xl mt-6">
+				<div class="card bg-base-100 shadow-xl mt-8 lg:mt-12">
 					<div class="card-body">
 						<h3 class="card-title">Attachments</h3>
 						<div class="grid grid-cols-2 gap-3 mt-2">
@@ -260,6 +236,30 @@
 								</button>
 							{/each}
 						</div>
+					</div>
+				</div>
+			{/if}
+
+			{#if typeof currentlySelected.explanation === 'string' && (() => {
+					const t = currentlySelected.explanation.trim().toLowerCase();
+					return t.length > 0 && t !== 'undefined' && t !== 'null';
+				})()}
+				<div class="card bg-base-100 shadow-xl mt-6">
+					<div class="card-body">
+						<div class="flex flex-row flex-wrap justify-between border-b pb-2">
+							<h2 class="card-title">Solution</h2>
+							<div class="flex flex-row">
+								<kbd class="kbd kbd-sm hidden xl:block self-center me-1">tab</kbd>
+								<button class="btn btn-ghost btn-circle" onclick={() => qs.handleSolution()}>
+									<Eye />
+								</button>
+							</div>
+						</div>
+						<p
+							class={`mt-2 transition-all duration-300 ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
+						>
+							{currentlySelected.explanation}
+						</p>
 					</div>
 				</div>
 			{/if}
