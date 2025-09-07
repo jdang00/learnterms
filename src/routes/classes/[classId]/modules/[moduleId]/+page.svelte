@@ -7,6 +7,7 @@
 	import MainQuiz from '$lib/components/MainQuiz.svelte';
 	import QuizListView from '$lib/components/QuizListView.svelte';
 	import ModuleInfo from '$lib/components/ModuleInfo.svelte';
+	import QuizErrorHandler from '$lib/components/QuizErrorHandler.svelte';
 	import { onMount, tick } from 'svelte';
 	import { Maximize, Minimize } from 'lucide-svelte';
 	import { slide, fade, scale } from 'svelte/transition';
@@ -370,7 +371,19 @@
 			{handleFilterToggle}
 			{client}
 			{module}
+			suppressAuthErrors={true}
 		/>
+
+		{#if !qs.fullscreenEnabled}
+			<div class="mt-4">
+				<QuizErrorHandler
+					{questions}
+					{module}
+					{moduleProgress}
+					className="max-w-2xl mx-auto"
+				/>
+			</div>
+		{/if}
 
 		{#if !qs.fullscreenEnabled}
 			<div
@@ -413,6 +426,7 @@
 			{module}
 			classId={data.classId as Id<'class'>}
 			progressPercentage={qs.getProgressPercentage()}
+			suppressAuthErrors={true}
 		/>
 	</div>
 {/if}
@@ -421,10 +435,6 @@
 	{#if questions.isLoading}
 		<p transition:fade={{ duration: 200 }} class="transition-all duration-200 ease-in-out">
 			Loading...
-		</p>
-	{:else if questions.error}
-		<p transition:fade={{ duration: 200 }} class="transition-all duration-200 ease-in-out">
-			Error: {questions.error.message}
 		</p>
 	{:else}
 		<div
