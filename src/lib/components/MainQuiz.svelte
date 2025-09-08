@@ -29,11 +29,23 @@
 	function isAuthError(error: any): boolean {
 		if (!error) return false;
 		const message = error.message || error.toString();
-		const patterns = ['unauthorized', 'authentication', 'not authenticated', 'session expired', 'token expired', 'invalid token', 'jwt', 'access denied', 'forbidden'];
-		return patterns.some(pattern => message.toLowerCase().includes(pattern));
+		const patterns = [
+			'unauthorized',
+			'authentication',
+			'not authenticated',
+			'session expired',
+			'token expired',
+			'invalid token',
+			'jwt',
+			'access denied',
+			'forbidden'
+		];
+		return patterns.some((pattern) => message.toLowerCase().includes(pattern));
 	}
 
-	let shouldShowError = $derived(questions.error && !(suppressAuthErrors && isAuthError(questions.error)));
+	let shouldShowError = $derived(
+		questions.error && !(suppressAuthErrors && isAuthError(questions.error))
+	);
 </script>
 
 {#if questions.isLoading}
@@ -44,7 +56,7 @@
 	<div
 		class="flex flex-col md:flex-col lg:flex-row bg-base-100 {qs.fullscreenEnabled
 			? ' min-h-[calc(100vh-3rem)] sm:min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)]'
-			: 'max-h-[36rem] sm:max-h-[42rem]'} pt-2 md:pt-3 lg:p-4 gap-3 sm:gap-4 lg:gap-8 rounded-t-xl transition-all duration-500 ease-in-out"
+			: 'h-[24rem] sm:h-[28rem] overflow-hidden'} pt-2 md:pt-3 lg:p-4 gap-3 sm:gap-4 lg:gap-8 rounded-t-xl transition-all duration-500 ease-in-out"
 		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 	>
 		{#if qs.fullscreenEnabled}
@@ -61,7 +73,7 @@
 		{/if}
 
 		<div
-			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 pb-24 sm:pb-36 lg:pb-48"
+			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full {qs.fullscreenEnabled ? 'pb-24 sm:pb-36 lg:pb-48' : 'pb-4'} relative"
 		>
 			<ResultBanner bind:qs />
 			{#if qs.noFlags}

@@ -341,6 +341,20 @@
 			return () => clearTimeout(timer);
 		}
 	});
+
+	let showFullscreenHint = $state(false);
+	let showFocusTip = $state(true);
+	$effect(() => {
+		if (!qs.fullscreenEnabled) {
+			showFullscreenHint = true;
+			const t = setTimeout(() => (showFullscreenHint = false), 2500);
+			const tipTimer = setTimeout(() => (showFocusTip = false), 8000);
+			return () => clearTimeout(t);
+		} else {
+			showFullscreenHint = false;
+			showFocusTip = false;
+		}
+	});
 </script>
 
 <div
@@ -354,13 +368,15 @@
 			? 'w-full'
 			: 'max-w-7xl mx-auto relative px-2 sm:px-4'} transition-all duration-500 ease-in-out"
 	>
-		{#if !qs.fullscreenEnabled}
-			<p class="text-center mb-3">
-				<button onclick={() => (qs.fullscreenEnabled = true)} class="underline hover:text-primary"
-					>Maximize</button
-				> to enter fullscreen
-			</p>
+		{#if !qs.fullscreenEnabled && showFocusTip}
+			<div class="alert shadow-sm mb-3 sm:mb-4 max-w-3xl mx-auto flex justify-between">
+				<div>
+					<span>Tip: Click the button in the bottom-right to enter <b>focus mode</b> for a distraction-free view.</span>
+				</div>
+				<button class="btn btn-ghost" onclick={() => (showFocusTip = false)}>Got it</button>
+			</div>
 		{/if}
+
 		<MainQuiz
 			{qs}
 			{questions}
@@ -390,24 +406,28 @@
 				transition:scale={{ duration: 300, easing: cubicInOut, start: 0.8 }}
 				class="transition-all duration-300 ease-in-out"
 			>
-				<button
-					class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 btn btn-circle btn-sm sm:btn-md btn-ghost z-40 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 border border-primary"
-					onclick={() => (qs.fullscreenEnabled = !qs.fullscreenEnabled)}
-					aria-label="Enter fullscreen"
-				>
-					<Maximize size="18" class="sm:w-5 sm:h-5 transition-transform duration-200" />
-				</button>
+				<div class="tooltip tooltip-left absolute bottom-3 right-3 sm:bottom-4 sm:right-4" data-tip="Enter focus mode">
+					<div class="relative">
+						<button
+							class="btn btn-circle btn-sm sm:btn-md btn-ghost z-40 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 border border-primary"
+							onclick={() => (qs.fullscreenEnabled = !qs.fullscreenEnabled)}
+							aria-label="Enter fullscreen"
+						>
+							<Maximize size="18" class="sm:w-5 sm:h-5 transition-transform duration-200" />
+						</button>
+						{#if showFullscreenHint}
+							<span class="pointer-events-none absolute inset-0 -m-1 rounded-full animate-ping bg-primary/30"></span>
+						{/if}
+					</div>
+				</div>
 			</div>
 		{/if}
 	</div>
 
 	{#if qs.fullscreenEnabled}
-		<div
-			transition:scale={{ duration: 300, easing: cubicInOut, start: 0.8 }}
-			class="transition-all duration-300 ease-in-out"
-		>
+		<div class="tooltip tooltip-left fixed bottom-3 right-3 sm:bottom-4 sm:right-4" data-tip="Exit focus mode">
 			<button
-				class="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 btn btn-circle btn-sm sm:btn-md btn-ghost z-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 border border-primary"
+				class="btn btn-circle btn-sm sm:btn-md btn-ghost z-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 border border-primary"
 				onclick={() => (qs.fullscreenEnabled = !qs.fullscreenEnabled)}
 				aria-label="Exit fullscreen"
 			>

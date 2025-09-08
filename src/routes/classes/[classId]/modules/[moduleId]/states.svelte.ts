@@ -69,6 +69,73 @@ export class QuizState {
 		}, 0);
 	}
 
+	checkFillInTheBlank(userText: string, question?: Doc<'question'> | null) {
+		const q = question ?? this.getCurrentQuestion();
+		if (!q) return;
+		const options = (q.options || []) as QuestionOption[];
+		const correctIds = (q.correctAnswers || []) as string[];
+		const encodedAnswers = correctIds
+			.map((id) => options.find((o) => o.id === id)?.text)
+			.filter((t): t is string => Boolean(t));
+
+		type FitbMode = 'exact' | 'exact_cs' | 'contains' | 'regex';
+		function isFitbMode(s: string): s is FitbMode {
+			return s === 'exact' || s === 'exact_cs' || s === 'contains' || s === 'regex';
+		}
+
+		function normalizeForFlags(text: string, ignorePunct: boolean, normalizeWs: boolean, toLower: boolean): string {
+			let out = String(text || '')
+				.normalize('NFD')
+				.replace(/[\u0300-\u036f]/g, '');
+			if (toLower) out = out.toLowerCase();
+			if (ignorePunct) out = out.replace(/[^a-z0-9\s]/gi, '');
+			if (normalizeWs) out = out.replace(/\s+/g, ' ');
+			return out.trim();
+		}
+
+		function safeRegex(pattern: string): RegExp | null {
+			try {
+				return new RegExp(pattern);
+			} catch {
+				return null;
+			}
+		}
+
+		let isAnyMatch = false;
+		for (const encoded of encodedAnswers) {
+			const [before, flagsPart] = String(encoded || '').split(' | flags=');
+			const firstColon = before.indexOf(':');
+			let mode: FitbMode = 'exact';
+			let value = before;
+			if (firstColon > -1) {
+				const maybe = before.slice(0, firstColon);
+				if (isFitbMode(maybe)) {
+					mode = maybe;
+					value = before.slice(firstColon + 1);
+				}
+			}
+			const ignorePunct = (flagsPart || '').includes('ignore_punct');
+			const normalizeWs = (flagsPart || '').includes('normalize_ws');
+			if (mode === 'regex') {
+				const re = safeRegex(value);
+				if (re && re.test(userText)) { isAnyMatch = true; break; }
+				continue;
+			}
+			const lowerInsensitive = mode !== 'exact_cs';
+			const u = normalizeForFlags(userText, ignorePunct, normalizeWs, lowerInsensitive);
+			const v = normalizeForFlags(value, ignorePunct, normalizeWs, lowerInsensitive);
+			if (mode === 'contains') {
+				if (u.includes(v)) { isAnyMatch = true; break; }
+			} else {
+				if (u === v) { isAnyMatch = true; break; }
+			}
+		}
+
+		this.selectedAnswers = userText ? [userText] : [];
+		this.checkAnswer(isAnyMatch ? ['1'] : ['0'], ['1']);
+		this.scheduleSave();
+	}
+
 	getProgressPercentage(): number {
 		if (!this.questions || this.questions.length === 0) {
 			return 0;

@@ -144,9 +144,9 @@
 	 p-3
 	 transition-all duration-200 ease-out
 	 bg-base-100 backdrop-blur-md bg-opacity-80 shadow-lg
-	 flex-shrink-0
+	 flex-shrink-0 h-full
 	 {hideSidebar ? 'w-[72px]' : 'w-[min(22rem,30vw)] xl:w-[min(24rem,28vw)]'}
-	{qs.fullscreenEnabled ? 'h-full' : ''}
+
 	"
 >
 	<button
