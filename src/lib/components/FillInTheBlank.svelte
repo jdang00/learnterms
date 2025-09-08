@@ -15,7 +15,15 @@
 
 	const displayAnswer = $derived(() => {
 		const raw = correctRaw();
-		return raw.startsWith('exact:') ? raw.slice(6) : raw;
+		const [before] = String(raw || '').split(' | flags=');
+		const firstColon = before.indexOf(':');
+		if (firstColon > -1) {
+			const maybe = before.slice(0, firstColon);
+			if (['exact', 'exact_cs', 'contains', 'regex'].includes(maybe)) {
+				return before.slice(firstColon + 1);
+			}
+		}
+		return before;
 	});
 
 	function normalizeAnswer(text: string): string {
@@ -41,12 +49,9 @@
 		tick().then(() => inputEl?.focus());
 	});
 
+
 	function handleEnter() {
-		const normalizedUser = normalizeAnswer(inputText);
-		const normalizedCorrect = normalizeAnswer(String(displayAnswer() || ''));
-		qs.selectedAnswers = inputText ? [inputText] : [];
-		qs.checkAnswer([normalizedCorrect], [normalizedUser]);
-		qs.scheduleSave?.();
+		qs.checkFillInTheBlank(inputText ?? '', currentlySelected);
 	}
 
 	function handleToggleSolution() {
