@@ -273,6 +273,16 @@ export class QuizState {
 		return currentQuestions[this.currentQuestionIndex] || currentQuestions[0];
 	}
 
+	sanitizeStateForCurrentQuestion() {
+		const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
+		if (!current) return;
+		const options = (current.options || []) as QuestionOption[];
+		if (!options || options.length === 0) return;
+		const validIds = options.map((o) => o.id);
+		this.selectedAnswers = this.selectedAnswers.filter((id) => validIds.includes(id));
+		this.eliminatedAnswers = this.eliminatedAnswers.filter((id) => validIds.includes(id));
+	}
+
 	canGoNext() {
 		const currentQuestions = this.getFilteredQuestions();
 		return currentQuestions && this.currentQuestionIndex < currentQuestions.length - 1;
@@ -349,7 +359,7 @@ export class QuizState {
 	}
 
 	isCorrect(optionId: string): boolean {
-		const currentQuestion = this.getCurrentQuestion();
+		const currentQuestion = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
 		return currentQuestion ? currentQuestion.correctAnswers.includes(optionId) : false;
 	}
 
@@ -473,6 +483,13 @@ export class QuizState {
 		} else {
 			this.resetAllOptionOrdersToOriginal();
 		}
+		if (typeof window !== 'undefined') {
+			try {
+				window.localStorage.setItem('lt:optionsShuffleEnabled', String(enabled));
+			} catch {
+				/* no-op */
+			}
+		}
 	}
 
 	private rebuildOptionOrders() {
@@ -510,6 +527,13 @@ export class QuizState {
 	setAutoNextEnabled(enabled: boolean) {
 		this.autoNextEnabled = enabled;
 		if (!enabled) this.cancelAutoNext();
+		if (typeof window !== 'undefined') {
+			try {
+				window.localStorage.setItem('lt:autoNextEnabled', String(enabled));
+			} catch {
+				/* no-op */
+			}
+		}
 	}
 
 	private scheduleAutoNextIfEnabled() {
@@ -530,6 +554,22 @@ export class QuizState {
 		if (this.autoNextHandle) {
 			clearTimeout(this.autoNextHandle);
 			this.autoNextHandle = null;
+		}
+	}
+
+	loadUserPreferencesFromStorage() {
+		if (typeof window === 'undefined') return;
+		try {
+			const auto = window.localStorage.getItem('lt:autoNextEnabled');
+			if (auto !== null) {
+				this.autoNextEnabled = auto === 'true';
+			}
+			const shuffle = window.localStorage.getItem('lt:optionsShuffleEnabled');
+			if (shuffle !== null) {
+				this.setOptionsShuffleEnabled(shuffle === 'true');
+			}
+		} catch {
+			/* no-op */
 		}
 	}
 }

@@ -11,7 +11,7 @@
 	import ModuleCard from '../../lib/components/ModuleCard.svelte';
 	import Sidebar from '../../lib/components/Sidebar.svelte';
 	import ClassList from '../../lib/components/ClassList.svelte';
-	import type { ClassWithSemester, ClassProgress } from '../../lib/types';
+import type { ClassWithSemester } from '../../lib/types';
 	import { useClerkContext } from 'svelte-clerk/client';
 	const ctx = useClerkContext();
 	const name = $derived(ctx.user?.firstName);
@@ -42,8 +42,7 @@
 		data: []
 	});
 
-	let classProgress: { data: ClassProgress | undefined; isLoading: boolean; error: any } | null =
-		$state(null);
+// removed unused classProgress subscription
 
 	const userDataQuery = userData?.clerkUserId
 		? useQuery(api.users.getUserById, {
@@ -60,17 +59,7 @@
 		}
 	});
 
-	$effect(() => {
-		if (selectedClass && currentView === 'modules' && userDataQuery.data?._id) {
-			const progressQuery = useQuery(api.userProgress.getProgressForClass, {
-				userId: userDataQuery.data._id as Id<'users'>,
-				classId: selectedClass._id
-			});
-			classProgress = progressQuery;
-		} else {
-			classProgress = null;
-		}
-	});
+// removed live getProgressForClass subscription to avoid unnecessary refresh bandwidth
 
 	$effect(() => {
 		if (isNavigatingBack) return;
