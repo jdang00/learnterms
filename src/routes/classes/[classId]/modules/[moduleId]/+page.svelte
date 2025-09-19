@@ -302,6 +302,31 @@
 					qs.toggleShuffle();
 				}
 				break;
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+			case '0': {
+				if (!currentlySelected) break;
+				if (qs.showSolution) break;
+				if (String(currentlySelected.type) === 'fill_in_the_blank') break;
+				const options = qs.getOrderedOptions(currentlySelected) || [];
+				let idx = event.key === '0' ? 9 : parseInt(event.key, 10) - 1;
+				if (idx >= 0 && idx < options.length) {
+					event.preventDefault();
+					const opt = options[idx];
+					if (opt && opt.id) {
+						qs.toggleOption(opt.id);
+						qs.scheduleSave();
+					}
+				}
+				break;
+			}
 		}
 	}
 
