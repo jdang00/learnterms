@@ -21,6 +21,11 @@
 
 	let qs = $state(new QuizState());
 
+	// Load persisted user preferences (auto next, shuffle options)
+	$effect(() => {
+		qs.loadUserPreferencesFromStorage?.();
+	});
+
 	async function saveProgress() {
 		if (!userId) {
 			return;

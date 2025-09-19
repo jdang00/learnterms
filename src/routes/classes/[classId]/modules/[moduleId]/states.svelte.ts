@@ -483,6 +483,13 @@ export class QuizState {
 		} else {
 			this.resetAllOptionOrdersToOriginal();
 		}
+		if (typeof window !== 'undefined') {
+			try {
+				window.localStorage.setItem('lt:optionsShuffleEnabled', String(enabled));
+			} catch {
+				/* no-op */
+			}
+		}
 	}
 
 	private rebuildOptionOrders() {
@@ -520,6 +527,13 @@ export class QuizState {
 	setAutoNextEnabled(enabled: boolean) {
 		this.autoNextEnabled = enabled;
 		if (!enabled) this.cancelAutoNext();
+		if (typeof window !== 'undefined') {
+			try {
+				window.localStorage.setItem('lt:autoNextEnabled', String(enabled));
+			} catch {
+				/* no-op */
+			}
+		}
 	}
 
 	private scheduleAutoNextIfEnabled() {
@@ -540,6 +554,22 @@ export class QuizState {
 		if (this.autoNextHandle) {
 			clearTimeout(this.autoNextHandle);
 			this.autoNextHandle = null;
+		}
+	}
+
+	loadUserPreferencesFromStorage() {
+		if (typeof window === 'undefined') return;
+		try {
+			const auto = window.localStorage.getItem('lt:autoNextEnabled');
+			if (auto !== null) {
+				this.autoNextEnabled = auto === 'true';
+			}
+			const shuffle = window.localStorage.getItem('lt:optionsShuffleEnabled');
+			if (shuffle !== null) {
+				this.setOptionsShuffleEnabled(shuffle === 'true');
+			}
+		} catch {
+			/* no-op */
 		}
 	}
 }
