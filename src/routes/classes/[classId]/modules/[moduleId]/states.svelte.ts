@@ -273,6 +273,16 @@ export class QuizState {
 		return currentQuestions[this.currentQuestionIndex] || currentQuestions[0];
 	}
 
+	sanitizeStateForCurrentQuestion() {
+		const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
+		if (!current) return;
+		const options = (current.options || []) as QuestionOption[];
+		if (!options || options.length === 0) return;
+		const validIds = options.map((o) => o.id);
+		this.selectedAnswers = this.selectedAnswers.filter((id) => validIds.includes(id));
+		this.eliminatedAnswers = this.eliminatedAnswers.filter((id) => validIds.includes(id));
+	}
+
 	canGoNext() {
 		const currentQuestions = this.getFilteredQuestions();
 		return currentQuestions && this.currentQuestionIndex < currentQuestions.length - 1;
@@ -349,7 +359,7 @@ export class QuizState {
 	}
 
 	isCorrect(optionId: string): boolean {
-		const currentQuestion = this.getCurrentQuestion();
+		const currentQuestion = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
 		return currentQuestion ? currentQuestion.correctAnswers.includes(optionId) : false;
 	}
 

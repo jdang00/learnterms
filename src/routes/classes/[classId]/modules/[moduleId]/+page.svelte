@@ -23,13 +23,12 @@
 
 	async function saveProgress() {
 		if (!userId) {
-			console.warn('User not logged in, skipping progress save');
 			return;
 		}
 
+		qs.sanitizeStateForCurrentQuestion();
 		const currentQuestion = qs.getCurrentQuestion();
 		if (!currentQuestion) {
-			console.warn('No current question available');
 			return;
 		}
 
@@ -52,7 +51,7 @@
 					});
 				}
 			} catch (error) {
-				console.error('Failed to delete progress:', error);
+				return;
 			}
 			return;
 		}
@@ -90,13 +89,12 @@
 				isFlagged: isFlagged
 			});
 		} catch (error) {
-			console.error('Failed to save progress:', error);
+			return;
 		}
 	}
 
 	async function loadProgress(questionId: Id<'question'>) {
 		if (!userId) {
-			console.warn('User not logged in, skipping progress load');
 			return;
 		}
 
@@ -110,13 +108,13 @@
 				qs.selectedAnswers = savedProgress.selectedOptions || [];
 				qs.eliminatedAnswers = savedProgress.eliminatedOptions || [];
 				qs.setCurrentQuestionFlagged(savedProgress.isFlagged || false);
+				qs.sanitizeStateForCurrentQuestion();
 			} else {
 				qs.selectedAnswers = [];
 				qs.eliminatedAnswers = [];
 				qs.setCurrentQuestionFlagged(false);
 			}
 		} catch (error) {
-			console.error('Failed to load progress:', error);
 			qs.selectedAnswers = [];
 			qs.eliminatedAnswers = [];
 			qs.setCurrentQuestionFlagged(false);
@@ -371,7 +369,10 @@
 		{#if !qs.fullscreenEnabled && showFocusTip}
 			<div class="alert shadow-sm mb-3 sm:mb-4 max-w-3xl mx-auto flex justify-between">
 				<div>
-					<span>Tip: Click the button in the bottom-right to enter <b>focus mode</b> for a distraction-free view.</span>
+					<span
+						>Tip: Click the button in the bottom-right to enter <b>focus mode</b> for a distraction-free
+						view.</span
+					>
 				</div>
 				<button class="btn btn-ghost" onclick={() => (showFocusTip = false)}>Got it</button>
 			</div>
@@ -392,12 +393,7 @@
 
 		{#if !qs.fullscreenEnabled}
 			<div class="mt-4">
-				<QuizErrorHandler
-					{questions}
-					{module}
-					{moduleProgress}
-					className="max-w-2xl mx-auto"
-				/>
+				<QuizErrorHandler {questions} {module} {moduleProgress} className="max-w-2xl mx-auto" />
 			</div>
 		{/if}
 
@@ -406,7 +402,10 @@
 				transition:scale={{ duration: 300, easing: cubicInOut, start: 0.8 }}
 				class="transition-all duration-300 ease-in-out"
 			>
-				<div class="tooltip tooltip-left absolute bottom-3 right-3 sm:bottom-4 sm:right-4" data-tip="Enter focus mode">
+				<div
+					class="tooltip tooltip-left absolute bottom-3 right-3 sm:bottom-4 sm:right-4"
+					data-tip="Enter focus mode"
+				>
 					<div class="relative">
 						<button
 							class="btn btn-circle btn-sm sm:btn-md btn-ghost z-40 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 border border-primary"
@@ -416,7 +415,9 @@
 							<Maximize size="18" class="sm:w-5 sm:h-5 transition-transform duration-200" />
 						</button>
 						{#if showFullscreenHint}
-							<span class="pointer-events-none absolute inset-0 -m-1 rounded-full animate-ping bg-primary/30"></span>
+							<span
+								class="pointer-events-none absolute inset-0 -m-1 rounded-full animate-ping bg-primary/30"
+							></span>
 						{/if}
 					</div>
 				</div>
@@ -425,7 +426,10 @@
 	</div>
 
 	{#if qs.fullscreenEnabled}
-		<div class="tooltip tooltip-left fixed bottom-3 right-3 sm:bottom-4 sm:right-4" data-tip="Exit focus mode">
+		<div
+			class="tooltip tooltip-left fixed bottom-3 right-3 sm:bottom-4 sm:right-4"
+			data-tip="Exit focus mode"
+		>
 			<button
 				class="btn btn-circle btn-sm sm:btn-md btn-ghost z-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 border border-primary"
 				onclick={() => (qs.fullscreenEnabled = !qs.fullscreenEnabled)}
