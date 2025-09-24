@@ -1,4 +1,4 @@
-import { query, mutation } from './_generated/server';
+import {  mutation } from './_generated/server';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
 
@@ -10,7 +10,7 @@ export const getContentLibByCohort = authQuery({
 		const contentLib = await ctx.db
 			.query('contentLib')
 			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
-			.filter((q) => q.eq(q.field('deletedAt'), undefined))
+			.filter((q) => q.eq(q.field('deletedAt'), undefined)).order('desc')
 			.collect();
 		return contentLib;
 	}

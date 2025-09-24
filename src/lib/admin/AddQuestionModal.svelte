@@ -30,6 +30,7 @@
 		name?: string;
 		sizeBytes?: number;
 		mimeType?: string;
+		showOnSolution?: boolean;
 	}> = $state([]);
 
 	function mediaTypeFromMime(mime: string | undefined): string {
@@ -70,7 +71,8 @@
 					key,
 					name,
 					sizeBytes: size || undefined,
-					mimeType: mime || undefined
+					mimeType: mime || undefined,
+					showOnSolution: true
 				});
 				setMediaError('');
 			} catch (e) {
@@ -256,6 +258,7 @@
 						altText: m.name || '',
 						caption: '',
 						order: i,
+							showOnSolution: m.showOnSolution ?? true,
 						metadata: {
 							uploadthingKey: m.key || '',
 							sizeBytes: m.sizeBytes || 0,
@@ -501,7 +504,13 @@
 											<span class="font-medium">{m.name || 'Uploaded'}</span>
 											<span class="opacity-60 ml-2">{m.mimeType}</span>
 										</div>
+									<div class="flex items-center gap-2">
+										<label class="label cursor-pointer gap-1">
+											<input type="checkbox" class="checkbox checkbox-xs" bind:checked={m.showOnSolution} />
+											<span>Show on solution</span>
+										</label>
 										<button class="btn btn-ghost btn-xs" onclick={() => removeQueuedMedia(idx)}>Remove</button>
+									</div>
 									</div>
 								</div>
 							{/each}

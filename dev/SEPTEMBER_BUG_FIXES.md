@@ -1,4 +1,4 @@
-# September LearnTerms Bug Fixes
+# September LearnTerms Update
 
 This document captures the immediate September bug fixes with two views for each change:
 
@@ -84,6 +84,40 @@ This document captures the immediate September bug fixes with two views for each
 - This cleans things up now while keeping the door open for a richer class progress view later.
 
 ---
+
+## 6) Attachment visibility: blur until solution reveal
+
+### Technical
+- Added `showOnSolution?: boolean` to Convex `questionMedia` docs to control per-attachment visibility.
+- Updated Convex:
+  - `questionMedia.create` accepts optional `showOnSolution` and defaults to `true`.
+  - `questionMedia.update` accepts optional `showOnSolution` and patches it.
+- Admin UI:
+  - `EditQuestionModal.svelte` includes a "Show on solution" checkbox for each attachment and persists via `questionMedia.update`.
+  - `AddQuestionModal.svelte` shows the same toggle for queued uploads and passes it to `questionMedia.create`.
+- Quiz UI:
+  - `QuizSideBar.svelte` applies `blur-md` when `!qs.showSolution && (attachment.showOnSolution ?? true)` for grid, compact, and full modal images.
+- Key files: `src/convex/schema.ts`, `src/convex/questionMedia.ts`, `src/lib/admin/AddQuestionModal.svelte`, `src/lib/admin/EditQuestionModal.svelte`, `src/lib/components/QuizSideBar.svelte`.
+
+### General
+- Attachments are now blurred by default and automatically unblur when you reveal the solution.
+- Authors can opt specific attachments out of this behavior with a simple toggle.
+
+---
+
+## 7) Quick controls in non-fullscreen quiz header
+
+### Technical
+- Added a compact control bar above the "Back to Module" link in `ModuleInfo.svelte` when not in fullscreen:
+  - Begin quiz anchor linking to `#quiz-top` near the quiz container
+  - Reset progress button that opens the existing reset modal via `qs.isResetModalOpen = true`
+  - Toggles for `Auto next` and `Shuffle options` wired to `qs.setAutoNextEnabled` and `qs.setOptionsShuffleEnabled`
+- Passed `qs` into `ModuleInfo` from the module page and inserted a hidden `#quiz-top` anchor in `MainQuiz.svelte`.
+- Styling follows DaisyUI (soft buttons, toggles, bordered container) to match existing patterns.
+
+### General
+- You now have quick access to Begin, Reset, Auto-next, and Shuffle right above the module header in non-fullscreen view.
+- Keeps the layout tidy and consistent with the rest of the app.
 
 ## Notes
 - All changes preserve existing defaults and UI patterns (DaisyUI, Svelte 5 runes), focus on minimal surface area, and favor the database as the source of truth.

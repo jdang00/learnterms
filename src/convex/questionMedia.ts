@@ -24,6 +24,7 @@ export const create = authCreateMutation({
     altText: v.string(),
     caption: v.optional(v.string()),
     order: v.optional(v.number()),
+    showOnSolution: v.optional(v.boolean()),
     metadata: v.optional(
       v.object({
         uploadthingKey: v.optional(v.string()),
@@ -68,6 +69,7 @@ export const create = authCreateMutation({
       altText: args.altText,
       caption: args.caption,
       order,
+      showOnSolution: args.showOnSolution ?? true,
       metadata: args.metadata ?? {}
     });
     return id;
@@ -94,7 +96,8 @@ export const update = authCreateMutation({
     mediaId: v.id('questionMedia'),
     altText: v.optional(v.string()),
     caption: v.optional(v.string()),
-    order: v.optional(v.number())
+    order: v.optional(v.number()),
+    showOnSolution: v.optional(v.boolean())
   },
   handler: async ({ db }, args) => {
     const media = await db.get(args.mediaId);
@@ -105,6 +108,7 @@ export const update = authCreateMutation({
       altText: args.altText ?? media.altText,
       caption: args.caption ?? media.caption,
       order: args.order ?? media.order,
+      showOnSolution: args.showOnSolution ?? media.showOnSolution,
       updatedAt: Date.now()
     });
     return { updated: true };

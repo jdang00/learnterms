@@ -98,6 +98,7 @@ export default defineSchema({
 		altText: v.string(),
 		caption: v.optional(v.string()),
 		order: v.number(),
+		showOnSolution: v.optional(v.boolean()),
 		metadata: v.object({
 			uploadthingKey: v.optional(v.string()),
 			sizeBytes: v.optional(v.number()),

@@ -227,9 +227,10 @@
 									<td>{doc.updatedAt ? new Date(doc.updatedAt).toLocaleString() : 'Never'}</td>
 									<td>
 										<div class="dropdown dropdown-end">
-											<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
+									<button class="btn btn-ghost btn-circle btn-sm interactive" tabindex="0" aria-haspopup="menu" aria-label="Open menu">⋮</button>
 											<ul
-												tabindex="-1"
+										tabindex="0"
+										role="menu"
 												class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow-xl border border-base-300"
 											>
 												<li>

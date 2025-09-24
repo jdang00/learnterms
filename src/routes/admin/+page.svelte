@@ -387,12 +387,13 @@
 
 									{#if admin}
 									<div class="flex items-center gap-2 sm:shrink-0">
-										<div class="dropdown dropdown-end">
-											<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
-											<ul
-												tabindex="-1"
-												class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
-											>
+								<div class="dropdown dropdown-end">
+									<button class="btn btn-ghost btn-circle btn-sm interactive" tabindex="0" aria-haspopup="menu" aria-label="Open menu">⋮</button>
+									<ul
+										tabindex="0"
+										role="menu"
+										class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+									>
 												<li>
 													<button
 														data-edit-btn

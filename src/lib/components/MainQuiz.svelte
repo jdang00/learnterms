@@ -8,10 +8,11 @@
 	import MobileInfo from '$lib/components/MobileInfo.svelte';
 	import ResultBanner from '$lib/components/ResultBanner.svelte';
 	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
-	import { Flag, BookmarkCheck, ArrowDownNarrowWide, Maximize, Minimize } from 'lucide-svelte';
+	import { Flag, BookmarkCheck, ArrowDownNarrowWide, Maximize, Minimize, Pencil } from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { slide, fade, scale } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
+	import { useClerkContext } from 'svelte-clerk/client';
 
 	let {
 		qs,
@@ -25,6 +26,12 @@
 		module,
 		suppressAuthErrors = false
 	} = $props();
+
+	const clerk = useClerkContext();
+	const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
+	const contributor = $derived(clerk.user?.publicMetadata.create === 'contributor');
+	const canEdit = $derived(admin || contributor);
+
 
 	function isAuthError(error: any): boolean {
 		if (!error) return false;
@@ -53,12 +60,13 @@
 {:else if shouldShowError}
 	<ErrorDisplay error={questions.error} showReload={true} class="mb-4" />
 {:else if currentlySelected}
-	<div
+<div
 		class="flex flex-col md:flex-col lg:flex-row bg-base-100 {qs.fullscreenEnabled
 			? ' min-h-[calc(100vh-3rem)] sm:min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)]'
 			: 'h-[24rem] sm:h-[28rem] overflow-hidden'} pt-2 md:pt-3 lg:p-4 gap-3 sm:gap-4 lg:gap-8 rounded-t-xl transition-all duration-500 ease-in-out"
 		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 	>
+		<span id="quiz-top" aria-hidden="true"></span>
 		{#if qs.fullscreenEnabled}
 			<QuizSideBar
 				{qs}
@@ -112,27 +120,40 @@
 						</div>
 					{/if}
 
-					<div class="dropdown dropdown-end lg:block hidden">
-						<div tabindex="0" role="button" class="btn btn-soft btn-accent m-1 btn-circle">
-							<ArrowDownNarrowWide />
+					<div class="lg:flex hidden items-center gap-2">
+						{#if canEdit && currentlySelected}
+							<a
+								class="btn btn-soft btn-secondary m-1 btn-circle"
+							href={`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`}
+							target="_blank"
+							rel="noopener noreferrer"
+								title="Edit"
+							>
+								<Pencil size="16" />
+							</a>
+						{/if}
+						<div class="dropdown dropdown-end">
+							<div tabindex="0" role="button" class="btn btn-soft btn-accent m-1 btn-circle">
+								<ArrowDownNarrowWide />
+							</div>
+							<ul
+								tabindex="-1"
+								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow-sm"
+							>
+								<li>
+									<button onclick={() => handleFilterToggle('flagged')}>
+										<Flag size="16" />
+										{qs.showFlagged ? 'Show All' : 'Show Flagged'}
+									</button>
+								</li>
+								<li>
+									<button onclick={() => handleFilterToggle('incomplete')}>
+										<BookmarkCheck size="16" />
+										{qs.showIncomplete ? 'Show All' : 'Show Incomplete'}
+									</button>
+								</li>
+							</ul>
 						</div>
-						<ul
-							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow-sm"
-						>
-							<li>
-								<button onclick={() => handleFilterToggle('flagged')}>
-									<Flag size="16" />
-									{qs.showFlagged ? 'Show All' : 'Show Flagged'}
-								</button>
-							</li>
-							<li>
-								<button onclick={() => handleFilterToggle('incomplete')}>
-									<BookmarkCheck size="16" />
-									{qs.showIncomplete ? 'Show All' : 'Show Incomplete'}
-								</button>
-							</li>
-						</ul>
 					</div>
 				</div>
 				{#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}
@@ -149,7 +170,7 @@
 				transition:slide={{ duration: 300, easing: cubicInOut, axis: 'y' }}
 				class="transition-all duration-300 ease-in-out"
 			>
-				<MobileMenu bind:qs {currentlySelected} />
+						<MobileMenu bind:qs {currentlySelected} classId={data.classId} moduleId={data.moduleId} />
 			</div>
 		{/if}
 	</div>
