@@ -11,18 +11,22 @@
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import MoveQuestionsModal from '$lib/admin/MoveQuestionsModal.svelte';
-	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
+import { convertToDisplayFormat } from '$lib/utils/questionType.js';
+import { goto } from '$app/navigation';
 	import { useClerkContext } from 'svelte-clerk';
 
 	let { data }: { data: PageData } = $props();
 	const moduleId = data.moduleId;
+
+	import { page } from '$app/stores';
+	let editParam = $derived($page.url.searchParams.get('edit'));
 
 	let search = $state('');
 	let searchInput = $state('');
 	let sortMode: 'order' | 'created_desc' = $state('order');
 
 	// Debounce search input to prevent excessive queries
-	let searchTimeout: number | null = null;
+	let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Use a function to handle debounced search
 	function updateSearch() {
@@ -68,10 +72,19 @@
 		isEditQuestionModalOpen = true;
 	}
 
-	function closeEditQuestionModal() {
-		isEditQuestionModalOpen = false;
-		editingQuestion = null;
-	}
+async function closeEditQuestionModal() {
+    // Clear ?edit first to avoid auto-open race from the $effect
+    try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('edit')) {
+            url.searchParams.delete('edit');
+            const newPath = url.pathname + (url.search ? `?${url.searchParams.toString()}` : '');
+            await goto(newPath, { replaceState: true, noScroll: true });
+        }
+    } catch {}
+    isEditQuestionModalOpen = false;
+    editingQuestion = null;
+}
 
 	function openAddQuestionModal() {
 		isAddQuestionModalOpen = true;
@@ -187,6 +200,14 @@
 	}
 
 	$effect(() => {
+		// Auto-open edit modal if ?edit=<questionId> is present
+		if (!isEditQuestionModalOpen && questions.data && editParam) {
+			const found = questions.data.find((q) => q._id === editParam);
+			if (found) {
+				editingQuestion = found as QuestionItem;
+				isEditQuestionModalOpen = true;
+			}
+		}
 		if (questions.data) {
 			questionList = [...questions.data];
 		}
@@ -443,7 +464,6 @@
 						class="cursor-move"
 					>
 						<div class="flex flex-col gap-4">
-							<!-- Header row: Checkbox + Title + Index badge -->
 							<div class="flex items-start justify-between gap-3">
 								<div class="flex items-start gap-3">
 									<div class="flex items-center gap-2">
@@ -509,12 +529,13 @@
 								</div>
 
 								{#if canEdit}
-									<div class="dropdown dropdown-end">
-										<button class="btn btn-ghost btn-circle m-1">⋮</button>
-										<ul
-											tabindex="-1"
-											class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
-										>
+						<div class="dropdown dropdown-end">
+							<button class="btn btn-ghost btn-circle m-1 interactive" tabindex="0" aria-haspopup="menu" aria-label="Open menu">⋮</button>
+							<ul
+								tabindex="0"
+								role="menu"
+								class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+							>
 											<li>
 												<button
 													data-move-btn

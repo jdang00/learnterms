@@ -1,5 +1,5 @@
 <script>
-	let { qs = $bindable(), currentlySelected } = $props();
+    let { qs = $bindable(), currentlySelected, classId, moduleId } = $props();
 	let isSettingsModalOpen = $state(false);
 	import {
 		Eye,
@@ -11,10 +11,17 @@
 		BookmarkCheck,
 		Shuffle,
 		Settings,
-		Check,
-		ArrowUpWideNarrow
+        Check,
+        ArrowUpWideNarrow,
+        Pencil
 	} from 'lucide-svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
+    import { useClerkContext } from 'svelte-clerk/client';
+
+    const clerk = useClerkContext();
+    const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
+    const contributor = $derived(clerk.user?.publicMetadata.create === 'contributor');
+    const canEdit = $derived(admin || contributor);
 
 	async function handleClear() {
 		qs.selectedAnswers = [];
@@ -90,6 +97,13 @@
 					{qs.showIncomplete ? 'Show All' : 'Show Incomplete'}
 				</button>
 			</li>
+            {#if canEdit && currentlySelected}
+            <li>
+                <a href={`/admin/${classId}/module/${moduleId}?edit=${currentlySelected._id}`} target="_blank" rel="noopener noreferrer">
+                    <Pencil size="16" /> Edit
+                </a>
+            </li>
+            {/if}
 			<li>
 				<button onclick={() => (isSettingsModalOpen = true)}>
 					<Settings size="16" />Settings

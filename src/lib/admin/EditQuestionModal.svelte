@@ -25,6 +25,7 @@
 		altText: string;
 		caption?: string;
 		order: number;
+		showOnSolution?: boolean;
 	}> = $state([]);
 
 	const mediaUploader = createUploader('questionMediaUploader', {
@@ -45,6 +46,7 @@
 					mimeType: mime || 'image/*',
 					altText: name || '',
 					order: mediaList.length,
+					showOnSolution: true,
 					metadata: { uploadthingKey: key, sizeBytes: size, originalFileName: name }
 				});
 				await refreshMedia();
@@ -87,17 +89,18 @@
 		await refreshMedia();
 	}
 
-	async function saveMediaMeta(id: string, alt: string, caption: string) {
+	async function saveMediaMeta(id: string, alt: string, caption: string, showOnSolution?: boolean) {
 		await client.mutation((api as any).questionMedia.update, {
 			mediaId: id,
 			altText: alt,
-			caption
+			caption,
+			showOnSolution
 		});
 		await refreshMedia();
 	}
 
-	function handleMediaMetaChange(id: string, alt: string, caption: string) {
-		saveMediaMeta(id, alt, caption);
+	function handleMediaMetaChange(id: string, alt: string, caption: string, showOnSolution?: boolean) {
+		saveMediaMeta(id, alt, caption, showOnSolution);
 	}
 
 	// Fill in the Blank editor state
@@ -309,7 +312,7 @@
 				status: questionStatus
 			});
 
-			closeEditModal();
+			    closeEditModal();
 		} catch (error) {
 			console.error('Failed to update question', error);
 		} finally {
@@ -527,18 +530,27 @@
 											<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
 												<img src={m.url} alt={m.altText} class="w-full h-24 object-cover" />
 												<div class="p-3 space-y-2">
-													<input
+									<input
 														class="input input-bordered input-sm w-full"
 														placeholder="Alt text"
 														bind:value={m.altText}
-														oninput={() => handleMediaMetaChange(m._id, m.altText, m.caption || '')}
+										oninput={() => handleMediaMetaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
 													/>
 													<input
 														class="input input-bordered input-sm w-full"
 														placeholder="Caption (optional)"
 														bind:value={m.caption}
-														oninput={() => handleMediaMetaChange(m._id, m.altText, m.caption || '')}
+										oninput={() => handleMediaMetaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
 													/>
+									<label class="label cursor-pointer gap-2 text-sm">
+										<input
+											type="checkbox"
+											class="checkbox checkbox-sm"
+											bind:checked={m.showOnSolution}
+											onchange={() => handleMediaMetaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+										/>
+										<span>Show on solution</span>
+									</label>
 													<div class="flex justify-between items-center pt-1">
 														<span class="text-xs opacity-60">Order: {m.order}</span>
 														<button
@@ -564,7 +576,8 @@
 					<button class="btn btn-ghost" onclick={closeEditModal} disabled={isSubmitting}
 						>Cancel</button
 					>
-					<button
+			<button
+				type="button"
 						class="btn btn-primary gap-2"
 						onclick={handleSubmit}
 						disabled={isSubmitting || !questionStem}

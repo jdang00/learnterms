@@ -290,9 +290,10 @@
 								<div class="flex items-center gap-2">
 									{#if admin}
 									<div class="dropdown dropdown-end">
-										<button class="btn btn-ghost btn-circle btn-sm">⋮</button>
+									<button class="btn btn-ghost btn-circle btn-sm interactive" tabindex="0" aria-haspopup="menu" aria-label="Open menu">⋮</button>
 										<ul
-											tabindex="-1"
+										tabindex="0"
+										role="menu"
 											class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
 										>
 											<li>

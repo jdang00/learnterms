@@ -253,6 +253,13 @@
 		}
 	}
 
+	async function handleResetModalConfirm() {
+		if (userId && data.moduleId && client) {
+			await qs.reset(userId, data.moduleId as Id<'module'>, client);
+			qs.isResetModalOpen = false;
+		}
+	}
+
 	async function handleKeydown(event: KeyboardEvent) {
 		if (
 			!['Tab', 'ArrowLeft', 'ArrowRight'].includes(event.key) &&
@@ -481,6 +488,7 @@
 			classId={data.classId as Id<'class'>}
 			progressPercentage={qs.getProgressPercentage()}
 			suppressAuthErrors={true}
+			qs={qs}
 		/>
 	</div>
 {/if}
@@ -499,3 +507,27 @@
 		</div>
 	{/if}
 {/if}
+
+<!-- Global Reset Modal at page root to ensure highest stacking context -->
+<dialog class="modal max-w-full p-4 z-[1000]" class:modal-open={qs.isResetModalOpen}>
+	<div class="modal-box">
+		<form method="dialog">
+			<button
+				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+				onclick={() => (qs.isResetModalOpen = false)}
+			>
+				✕
+			</button>
+		</form>
+		<h3 class="text-lg font-bold">Reset Progress</h3>
+		<p class="py-4">
+			Do you want to start over? All current progress for this module will be lost.
+		</p>
+		<div class="flex justify-end space-x-2">
+			<button class="btn btn-outline" onclick={() => (qs.isResetModalOpen = false)}>
+				Cancel
+			</button>
+			<button class="btn btn-error" onclick={() => handleResetModalConfirm()}>Reset</button>
+		</div>
+	</div>
+</dialog>

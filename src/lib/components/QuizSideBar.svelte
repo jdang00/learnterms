@@ -16,6 +16,7 @@
 		url: string;
 		altText: string;
 		caption?: string;
+		showOnSolution?: boolean;
 	} | null>(null);
 	let attachmentZoom = $state(1);
 	let panX = $state(0);
@@ -26,7 +27,7 @@
 	let showCompactAttachments = $state(false);
 
 	let media: {
-		data: Array<{ _id: string; url: string; altText: string; caption?: string }>;
+		data: Array<{ _id: string; url: string; altText: string; caption?: string; showOnSolution?: boolean }>;
 		isLoading: boolean;
 		error: any;
 	} = $state({
@@ -110,6 +111,7 @@
 		url: string;
 		altText: string;
 		caption?: string;
+		showOnSolution?: boolean;
 	}) {
 		selectedAttachment = attachment;
 		attachmentZoom = 1;
@@ -140,7 +142,7 @@
 	 hidden lg:flex lg:flex-col relative
 	 overflow-y-auto
 	 border border-base-300
-	 rounded-xl
+	 rounded-4xl
 	 p-3
 	 transition-all duration-200 ease-out
 	 bg-base-100 backdrop-blur-md bg-opacity-80 shadow-lg
@@ -203,11 +205,12 @@
 									tabindex="0"
 								>
 									<div class="relative overflow-hidden">
-										<img
-											src={m.url}
-											alt={m.altText}
-											class="w-full h-28 object-cover group-hover:brightness-110 group-hover:scale-105 transition-all duration-200"
-										/>
+								<img
+									src={m.url}
+									alt={m.altText}
+									class:blur-md={!qs.showSolution && (m.showOnSolution ?? true)}
+									class="w-full h-28 object-cover group-hover:brightness-110 group-hover:scale-105 transition-all duration-200"
+								/>
 										<div
 											class="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-200"
 										></div>
@@ -404,10 +407,11 @@
 							aria-label={`View attachment: ${attachment.altText}`}
 						>
 							<div class="relative">
-								<img
+									<img
 									src={attachment.url}
 									alt={attachment.altText}
-									class="w-full h-20 object-cover group-hover:brightness-110 transition-all duration-200"
+										class:blur-md={!qs.showSolution && (attachment.showOnSolution ?? true)}
+										class="w-full h-20 object-cover group-hover:brightness-110 transition-all duration-200"
 								/>
 								<div
 									class="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-200"
@@ -469,7 +473,7 @@
 
 <SettingsModal bind:qs bind:isOpen={isSettingsModalOpen} />
 
-<dialog class="modal max-w-full p-4" class:modal-open={qs.isResetModalOpen}>
+<dialog class="modal max-w-full p-4 z-[1000]" class:modal-open={qs.isResetModalOpen}>
 	<div class="modal-box">
 		<form method="dialog">
 			<button
@@ -538,10 +542,11 @@
 						tabindex="0"
 						role="button"
 					>
-						<img
+								<img
 							src={selectedAttachment.url}
 							alt={selectedAttachment.altText}
-							class="max-w-full max-h-full object-contain absolute inset-0 m-auto select-none"
+									class:blur-md={!qs.showSolution && (selectedAttachment?.showOnSolution ?? true)}
+									class="max-w-full max-h-full object-contain absolute inset-0 m-auto select-none"
 							style="transform: scale({attachmentZoom ||
 								1}) translate({panX}px, {panY}px); transform-origin: center; transition: transform 0.1s ease-out;"
 							draggable="false"
