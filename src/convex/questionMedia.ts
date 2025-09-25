@@ -69,7 +69,7 @@ export const create = authCreateMutation({
       altText: args.altText,
       caption: args.caption,
       order,
-      showOnSolution: args.showOnSolution ?? true,
+      showOnSolution: args.showOnSolution ?? false,
       metadata: args.metadata ?? {}
     });
     return id;

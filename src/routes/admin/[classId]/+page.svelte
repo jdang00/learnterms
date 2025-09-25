@@ -14,10 +14,9 @@
 	let { data }: { data: PageData } = $props();
 	const classId = data.classId;
 
-	const modules = useQuery(
-		api.module.getAdminModulesWithQuestionCounts,
-		{ classId: classId as Id<'class'> }
-	);
+	const modules = useQuery(api.module.getAdminModulesWithQuestionCounts, {
+		classId: classId as Id<'class'>
+	});
 
 	const classInfo = useQuery(api.class.getClassById, { id: classId as Id<'class'> });
 
@@ -212,7 +211,8 @@
 				<div>
 					<h1 class="text-xl sm:text-2xl font-bold text-base-content">{classInfo.data.name}</h1>
 					<p class="text-sm sm:text-base text-base-content/70">
-						Manage your learning modules for {classInfo.data.code}. {#if admin}Drag and drop to reorder them.{/if}
+						Manage your learning modules for {classInfo.data.code}. {#if admin}Drag and drop to
+							reorder them.{/if}
 					</p>
 				</div>
 			{/if}
@@ -276,52 +276,58 @@
 								<div class="flex flex-col gap-1">
 									<a
 										href={`/admin/${classId}/module/${moduleItem._id}`}
-										class="font-semibold text-base-content text-left truncate hover:text-primary transition-colors cursor-pointer"
+										class="font-semibold text-base-content text-left hover:text-primary transition-colors cursor-pointer"
 										title={`Go to questions for ${moduleItem.title}`}
-										>
-										<span class="mr-2 text-xl">{moduleItem.emoji || '📘'}</span>{moduleItem.title}
-										</a>
-										<div class="text-xs text-base-content/60 flex items-center gap-1">
-											<span>
-												{moduleItem.questionCount} question{moduleItem.questionCount === 1 ? '' : 's'}
-											</span>
-										</div>
+									>
+										<span class="mr-2 text-xl">{moduleItem.emoji || '📘'}</span>
+										<div class="hyphens-auto">{moduleItem.title}</div>
+									</a>
+									<div class="text-xs text-base-content/60 flex items-center gap-1">
+										<span>
+											{moduleItem.questionCount} question{moduleItem.questionCount === 1 ? '' : 's'}
+										</span>
+									</div>
 								</div>
 								<div class="flex items-center gap-2">
 									{#if admin}
-									<div class="dropdown dropdown-end">
-									<button class="btn btn-ghost btn-circle btn-sm interactive" tabindex="0" aria-haspopup="menu" aria-label="Open menu">⋮</button>
-										<ul
-										tabindex="0"
-										role="menu"
-											class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
-										>
-											<li>
-												<button
-													data-edit-btn
-													class="btn btn-sm btn-ghost w-full justify-start"
-													type="button"
-													aria-label="Edit module"
-													onclick={() => editModule(moduleItem)}
-												>
-													<Pencil size={16} />
-													<span>Edit</span>
-												</button>
-											</li>
-											<li>
-												<button
-													data-delete-btn
-													class="btn btn-sm btn-ghost text-error w-full justify-start"
-													type="button"
-													aria-label="Delete module"
-													onclick={() => handleModuleDelete(moduleItem._id)}
-												>
-													<Trash2 size={16} />
-													<span>Delete</span>
-												</button>
-											</li>
-										</ul>
-									</div>
+										<div class="dropdown dropdown-end">
+											<button
+												class="btn btn-ghost btn-circle btn-sm interactive"
+												tabindex="0"
+												aria-haspopup="menu"
+												aria-label="Open menu">⋮</button
+											>
+											<ul
+												tabindex="0"
+												role="menu"
+												class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+											>
+												<li>
+													<button
+														data-edit-btn
+														class="btn btn-sm btn-ghost w-full justify-start"
+														type="button"
+														aria-label="Edit module"
+														onclick={() => editModule(moduleItem)}
+													>
+														<Pencil size={16} />
+														<span>Edit</span>
+													</button>
+												</li>
+												<li>
+													<button
+														data-delete-btn
+														class="btn btn-sm btn-ghost text-error w-full justify-start"
+														type="button"
+														aria-label="Delete module"
+														onclick={() => handleModuleDelete(moduleItem._id)}
+													>
+														<Trash2 size={16} />
+														<span>Delete</span>
+													</button>
+												</li>
+											</ul>
+										</div>
 									{/if}
 								</div>
 							</div>

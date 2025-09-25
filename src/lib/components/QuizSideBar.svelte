@@ -27,7 +27,13 @@
 	let showCompactAttachments = $state(false);
 
 	let media: {
-		data: Array<{ _id: string; url: string; altText: string; caption?: string; showOnSolution?: boolean }>;
+		data: Array<{
+			_id: string;
+			url: string;
+			altText: string;
+			caption?: string;
+			showOnSolution?: boolean;
+		}>;
 		isLoading: boolean;
 		error: any;
 	} = $state({
@@ -140,10 +146,10 @@
 <div
 	class="
 	 hidden lg:flex lg:flex-col relative
-	 overflow-y-auto
+	 overflow-y-auto overflow-x-hidden
 	 border border-base-300
 	 rounded-4xl
-	 p-3
+	 p-3 px-4
 	 transition-all duration-200 ease-out
 	 bg-base-100 backdrop-blur-md bg-opacity-80 shadow-lg
 	 flex-shrink-0 h-full
@@ -152,7 +158,7 @@
 	"
 >
 	<button
-		class="btn btn-ghost btn-square btn-sm w-9 h-9 absolute top-6 left-5"
+		class="btn btn-ghost btn-square btn-sm rounded-full w-9 h-9 absolute top-6 left-5"
 		onclick={() => (hideSidebar = !hideSidebar)}
 		aria-label="Toggle sidebar"
 	>
@@ -163,17 +169,17 @@
 	</button>
 
 	{#if !hideSidebar}
-		<div class="p-4 md:p-5 lg:p-6 pt-12 pl-12 mt-8">
+		<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
 				<a class="btn btn-ghost font-bold" href={`/classes?classId=${classId}`}>
 					<ChevronLeft size={16} /> MODULE {module.data.order + 1}
 				</a>
 			</h4>
-			<h2 class="font-semibold text-3xl mt-2 flex items-center gap-3">
+			<h2 class="font-semibold text-3xl mt-2 flex items-center gap-3 min-w-0">
 				<span class="text-3xl">{module.data?.emoji || '📘'}</span>
-				<span>{module.data.title}</span>
+				<span class="hyphens-auto break-words">{module.data.title}</span>
 			</h2>
-			<p class="text-base-content/70 mt-2">{module.data.description}</p>
+			<p class="text-base-content/70 mt-2 break-words hyphens-auto">{module.data.description}</p>
 
 			<div class="mt-6">
 				<p class="text-base-content/60 mb-2">{qs.getProgressPercentage()}% done.</p>
@@ -205,33 +211,19 @@
 									tabindex="0"
 								>
 									<div class="relative overflow-hidden">
-								<img
-									src={m.url}
-									alt={m.altText}
-									class:blur-md={!qs.showSolution && (m.showOnSolution ?? true)}
-									class="w-full h-28 object-cover group-hover:brightness-110 group-hover:scale-105 transition-all duration-200"
-								/>
+										<img
+											src={m.url}
+											alt={m.altText}
+									class:blur-md={!qs.showSolution && (m.showOnSolution ?? false)}
+											class="w-full h-28 object-cover group-hover:brightness-110 group-hover:scale-105 transition-all duration-200"
+										/>
 										<div
 											class="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-200"
 										></div>
-										<div
-											class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-										>
-											<div class="bg-primary/90 text-primary-content rounded-full p-1">
-												<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
-													></path>
-												</svg>
-											</div>
-										</div>
 									</div>
 									{#if m.caption}
 										<div
-											class="p-2 text-xs text-base-content/70 group-hover:text-base-content/90 transition-colors duration-200"
+											class="p-2 text-xs text-base-content/70 group-hover:text-base-content/90 transition-colors duration-200 break-words hyphens-auto"
 										>
 											{m.caption}
 										</div>
@@ -259,7 +251,7 @@
 							</div>
 						</div>
 						<p
-							class={`mt-2 transition-all duration-300 ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
+							class={`mt-2 break-words hyphens-auto transition-all duration-300 ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
 						>
 							{currentlySelected.explanation}
 						</p>
@@ -326,7 +318,6 @@
 							</span>
 						{/if}
 
-						<!-- Tooltip on hover -->
 						<div
 							class="absolute left-full ml-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10"
 						>
@@ -352,7 +343,6 @@
 		</div>
 	{/if}
 
-	<!-- Compact Attachment Viewer for Collapsed Sidebar -->
 	{#if showCompactAttachments && media && media.data && media.data.length > 1}
 		<div
 			class="fixed inset-0 z-40 flex items-center justify-center"
@@ -407,11 +397,11 @@
 							aria-label={`View attachment: ${attachment.altText}`}
 						>
 							<div class="relative">
-									<img
+								<img
 									src={attachment.url}
 									alt={attachment.altText}
-										class:blur-md={!qs.showSolution && (attachment.showOnSolution ?? true)}
-										class="w-full h-20 object-cover group-hover:brightness-110 transition-all duration-200"
+									class:blur-md={!qs.showSolution && (attachment.showOnSolution ?? false)}
+									class="w-full h-20 object-cover group-hover:brightness-110 transition-all duration-200"
 								/>
 								<div
 									class="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-200"
@@ -437,6 +427,8 @@
 		</div>
 	{/if}
 </div>
+
+ 
 
 <dialog class="modal max-w-full p-4" class:modal-open={isInfoModalOpen}>
 	<div class="modal-box">
@@ -542,11 +534,11 @@
 						tabindex="0"
 						role="button"
 					>
-								<img
+						<img
 							src={selectedAttachment.url}
 							alt={selectedAttachment.altText}
-									class:blur-md={!qs.showSolution && (selectedAttachment?.showOnSolution ?? true)}
-									class="max-w-full max-h-full object-contain absolute inset-0 m-auto select-none"
+							class:blur-md={!qs.showSolution && (selectedAttachment?.showOnSolution ?? true)}
+							class="max-w-full max-h-full object-contain absolute inset-0 m-auto select-none"
 							style="transform: scale({attachmentZoom ||
 								1}) translate({panX}px, {panY}px); transform-origin: center; transition: transform 0.1s ease-out;"
 							draggable="false"

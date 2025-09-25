@@ -378,16 +378,13 @@
 	});
 
 	let showFullscreenHint = $state(false);
-	let showFocusTip = $state(true);
 	$effect(() => {
 		if (!qs.fullscreenEnabled) {
 			showFullscreenHint = true;
 			const t = setTimeout(() => (showFullscreenHint = false), 2500);
-			const tipTimer = setTimeout(() => (showFocusTip = false), 8000);
 			return () => clearTimeout(t);
 		} else {
 			showFullscreenHint = false;
-			showFocusTip = false;
 		}
 	});
 </script>
@@ -403,17 +400,7 @@
 			? 'w-full'
 			: 'max-w-7xl mx-auto relative px-2 sm:px-4'} transition-all duration-500 ease-in-out"
 	>
-		{#if !qs.fullscreenEnabled && showFocusTip}
-			<div class="alert shadow-sm mb-3 sm:mb-4 max-w-3xl mx-auto flex justify-between">
-				<div>
-					<span
-						>Tip: Click the button in the bottom-right to enter <b>focus mode</b> for a distraction-free
-						view.</span
-					>
-				</div>
-				<button class="btn btn-ghost" onclick={() => (showFocusTip = false)}>Got it</button>
-			</div>
-		{/if}
+
 
 		<MainQuiz
 			{qs}

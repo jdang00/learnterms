@@ -106,3 +106,36 @@ export const joinCohort = mutation({
 		return { success: true };
 	}
 });
+
+export const switchCohort = mutation({
+    args: {
+        cohortId: v.id('cohort')
+    },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new Error('Unauthorized');
+
+        const meta = identity.public_metadata as Record<string, unknown> | undefined;
+        const viewVal = meta ? (meta as Record<string, unknown>).view : undefined;
+        const view = typeof viewVal === 'string' ? viewVal : undefined;
+        if (view !== 'developer') throw new Error('Unauthorized');
+
+        const clerkUserId = identity.subject;
+
+        const user = await ctx.db
+            .query('users')
+            .filter((q) => q.eq(q.field('clerkUserId'), clerkUserId))
+            .first();
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        await ctx.db.patch(user._id, {
+            cohortId: args.cohortId,
+            updatedAt: Date.now()
+        });
+
+        return { success: true };
+    }
+});

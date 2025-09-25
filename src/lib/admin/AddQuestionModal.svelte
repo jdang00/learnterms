@@ -72,7 +72,7 @@
 					name,
 					sizeBytes: size || undefined,
 					mimeType: mime || undefined,
-					showOnSolution: true
+					showOnSolution: false
 				});
 				setMediaError('');
 			} catch (e) {
@@ -148,6 +148,27 @@
 		} else {
 			correctAnswers = [...correctAnswers, indexStr];
 		}
+	}
+
+	function shuffleOptions() {
+		if (
+			questionType === QUESTION_TYPES.TRUE_FALSE ||
+			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK
+		)
+			return;
+		const pairs = options.map((opt, idx) => ({ opt, idx }));
+		for (let i = pairs.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+		}
+		const oldCorrect = new Set(correctAnswers.map((s) => parseInt(s)));
+		const nextOptions = pairs.map((p) => ({ text: p.opt.text }));
+		const nextCorrect: string[] = [];
+		pairs.forEach((p, newIndex) => {
+			if (oldCorrect.has(p.idx)) nextCorrect.push(newIndex.toString());
+		});
+		options = nextOptions;
+		correctAnswers = nextCorrect;
 	}
 
 	function handleTypeChange() {
@@ -258,7 +279,7 @@
 						altText: m.name || '',
 						caption: '',
 						order: i,
-							showOnSolution: m.showOnSolution ?? true,
+							showOnSolution: m.showOnSolution ?? false,
 						metadata: {
 							uploadthingKey: m.key || '',
 							sizeBytes: m.sizeBytes || 0,
@@ -445,11 +466,16 @@
 								{/if}
 							</div>
 						{/each}
-						{#if questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
+					{#if questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
+						<div class="flex items-center gap-2">
 							<button type="button" class="btn btn-ghost btn-sm" onclick={addOption}>
 								Add Option
 							</button>
-						{/if}
+							<button type="button" class="btn btn-ghost btn-sm" onclick={shuffleOptions}>
+								Shuffle Options
+							</button>
+						</div>
+					{/if}
 					</div>
 				{/if}
 

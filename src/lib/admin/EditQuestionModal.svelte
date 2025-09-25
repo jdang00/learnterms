@@ -46,7 +46,7 @@
 					mimeType: mime || 'image/*',
 					altText: name || '',
 					order: mediaList.length,
-					showOnSolution: true,
+					showOnSolution: false,
 					metadata: { uploadthingKey: key, sizeBytes: size, originalFileName: name }
 				});
 				await refreshMedia();
@@ -271,6 +271,27 @@
 		}
 	}
 
+	function shuffleOptions() {
+		if (
+			questionType === QUESTION_TYPES.TRUE_FALSE ||
+			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK
+		)
+			return;
+		const pairs = options.map((opt, idx) => ({ opt, idx }));
+		for (let i = pairs.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+		}
+		const oldCorrect = new Set(correctAnswers.map((s) => parseInt(s)));
+		const nextOptions = pairs.map((p) => ({ text: p.opt.text }));
+		const nextCorrect: string[] = [];
+		pairs.forEach((p, newIndex) => {
+			if (oldCorrect.has(p.idx)) nextCorrect.push(newIndex.toString());
+		});
+		options = nextOptions;
+		correctAnswers = nextCorrect;
+	}
+
 	async function handleSubmit() {
 		if (!questionStem || !editingQuestion) return;
 
@@ -477,11 +498,16 @@
 										{/if}
 									</div>
 								{/each}
-								{#if questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
-									<button type="button" class="btn btn-sm btn-outline mt-2" onclick={addOption}>
-										Add Option
-									</button>
-								{/if}
+						{#if questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
+							<div class="flex items-center gap-2 mt-2">
+								<button type="button" class="btn btn-sm btn-outline" onclick={addOption}>
+									Add Option
+								</button>
+								<button type="button" class="btn btn-sm btn-outline" onclick={shuffleOptions}>
+									Shuffle Options
+								</button>
+							</div>
+						{/if}
 							</div>
 						{/if}
 					</div>
