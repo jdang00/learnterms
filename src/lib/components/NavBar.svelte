@@ -13,16 +13,9 @@
 
 	const client = useConvexClient();
 
-	let userDataQuery: any = undefined;
+	let userDataQuery: any = $state(undefined);
 	let cohortsList: any = $state(undefined);
-
-	// Initialize selectedCohortId from localStorage
 	let selectedCohortId = $state('');
-
-	// Load from localStorage after component mount
-	$effect(() => {
-		selectedCohortId = typeof window !== 'undefined' ? localStorage.getItem('selectedCohortId') || '' : '';
-	});
 
 	$effect(() => {
 		if (user) {
@@ -38,39 +31,26 @@
 		}
 	});
 
-	// Sync with database only if user data exists and differs
+	// Reflect database cohort to selection
 	$effect(() => {
-		if (userDataQuery && !userDataQuery.isLoading && userDataQuery.data?.cohortId && selectedCohortId) {
-			const dbCohortId = userDataQuery.data.cohortId as string;
-			// Only update if database has a different value AND we already have a selection
-			if (dbCohortId !== selectedCohortId) {
-				selectedCohortId = dbCohortId;
-				localStorage.setItem('selectedCohortId', dbCohortId);
-			}
+		if (userDataQuery && !userDataQuery.isLoading) {
+			const dbCohortId = userDataQuery?.data?.cohortId as string | undefined;
+			selectedCohortId = dbCohortId || '';
 		}
 	});
 
-	// Clear localStorage when user logs out
 	$effect(() => {
 		if (!user) {
-			localStorage.removeItem('selectedCohortId');
 			selectedCohortId = '';
 		}
 	});
 
 	async function handleCohortChange(cohortIdStr: string) {
 		if (!user) return;
-
-		localStorage.setItem('selectedCohortId', cohortIdStr);
 		selectedCohortId = cohortIdStr;
-
-		localStorage.getItem('selectedCohortId'); 
-
-		await client.mutation(api.cohort.joinCohort, {
-			clerkUserId: user.id,
+		await client.mutation(api.authQueries.switchCohort, {
 			cohortId: cohortIdStr as Id<'cohort'>
 		});
-
 		setTimeout(() => location.reload(), 10);
 	}
 </script>
@@ -96,7 +76,7 @@
 			</div>
 		</div>
 		<a class="btn btn-ghost text-xl" href="/"
-			>LearnTerms <span class="text-xs font-mono text-base-content/70">v3beta</span>
+			>LearnTerms 
 		</a>
 	</div>
 
@@ -107,7 +87,7 @@
 	{#if dev}
 		<div class="navbar-center hidden lg:flex">
 			<div class="dropdown">
-				<div tabindex="0" role="button" class="btn btn-ghost btn-sm px-56">
+				<div tabindex="0" role="button" class="btn btn-ghost btn-sm">
 					{#if selectedCohortId && cohortsList && !cohortsList.isLoading && cohortsList.data}
 						{@const selectedCohort = cohortsList.data.find((c: any) => c._id === selectedCohortId)}
 						{#if selectedCohort}
@@ -116,7 +96,20 @@
 							Select cohort…
 						{/if}
 					{:else}
-						Select cohort…
+						{#if userDataQuery && !userDataQuery.isLoading && userDataQuery.data?.cohortId}
+							{#if cohortsList && !cohortsList.isLoading && cohortsList.data}
+								{@const selectedCohort = cohortsList.data.find((c: any) => c._id === userDataQuery.data.cohortId)}
+								{#if selectedCohort}
+									{selectedCohort.name} — {selectedCohort.schoolName}
+								{:else}
+									Select cohort…
+								{/if}
+							{:else}
+								Select cohort…
+							{/if}
+						{:else}
+							Select cohort…
+						{/if}
 					{/if}
 				</div>
 				<ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-box z-[1]  p-2 shadow">

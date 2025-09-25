@@ -1,27 +1,46 @@
-<script>
+<script lang="ts">
     let { qs = $bindable(), currentlySelected, classId, moduleId } = $props();
-	let isSettingsModalOpen = $state(false);
-	import {
-		Eye,
-		ArrowLeft,
-		ArrowRight,
-		ListRestart,
-		ChevronUp,
-		Flag,
-		BookmarkCheck,
-		Shuffle,
-		Settings,
+    let isSettingsModalOpen = $state(false);
+    import {
+        Eye,
+        ArrowLeft,
+        ArrowRight,
+        ListRestart,
+        ChevronUp,
+        Flag,
+        BookmarkCheck,
+        Shuffle,
+        Settings,
         Check,
         ArrowUpWideNarrow,
-        Pencil
-	} from 'lucide-svelte';
-	import SettingsModal from '$lib/components/SettingsModal.svelte';
+        Pencil,
+        Paperclip
+    } from 'lucide-svelte';
+    import SettingsModal from '$lib/components/SettingsModal.svelte';
     import { useClerkContext } from 'svelte-clerk/client';
+    import { useQuery } from 'convex-svelte';
+    import { api } from '../../convex/_generated/api.js';
+    import type { Doc } from '../../convex/_generated/dataModel';
 
     const clerk = useClerkContext();
     const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
     const contributor = $derived(clerk.user?.publicMetadata.create === 'contributor');
     const canEdit = $derived(admin || contributor);
+
+    let showAttachments = $state(false);
+    let isAttachmentViewerOpen = $state(false);
+    let selectedAttachment = $state<Doc<'questionMedia'> | null>(null);
+    let media: { data: Array<Doc<'questionMedia'>>; isLoading: boolean; error: any } = $state({ data: [], isLoading: false, error: null });
+
+    $effect(() => {
+        const qid = currentlySelected?._id;
+        if (qid) {
+            const q = useQuery((api as any).questionMedia.getByQuestionId, { questionId: qid });
+            media = q as unknown as typeof media;
+        } else {
+            media = { data: [], isLoading: false, error: null } as typeof media;
+        }
+    });
 
 	async function handleClear() {
 		qs.selectedAnswers = [];
@@ -66,6 +85,26 @@
 	function handleShowIncomplete() {
 		qs.toggleShowIncomplete();
 	}
+
+    function openAttachments() {
+        if (media && media.data && media.data.length > 0) {
+            if (media.data.length === 1) {
+                selectedAttachment = media.data[0];
+                isAttachmentViewerOpen = true;
+            } else {
+                showAttachments = true;
+            }
+        }
+    }
+
+    function closeAttachmentsGrid() {
+        showAttachments = false;
+    }
+
+    function handleAttachmentClick(attachment: Doc<'questionMedia'>) {
+        selectedAttachment = attachment;
+        isAttachmentViewerOpen = true;
+    }
 </script>
 
 <div
@@ -125,6 +164,12 @@
 		><Eye /></button
 	>
 
+    {#if media && media.data && media.data.length > 0}
+    <button class="btn btn-soft btn-info btn-sm" onclick={openAttachments} aria-label="View attachments">
+        <Paperclip />
+    </button>
+    {/if}
+
 	<div class="flex flex-row gap-2">
 		<button class="btn btn-outline btn-sm" onclick={handlePrevious} disabled={!qs.canGoPrevious()}>
 			<ArrowLeft />
@@ -148,6 +193,54 @@
 			{/if}
 		</div>
 	</dialog>
+
+    <dialog class="modal max-w-full p-4" class:modal-open={showAttachments}>
+        <div class="modal-box max-w-sm w-full">
+            <form method="dialog">
+                <button
+                    class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                    onclick={closeAttachmentsGrid}>✕</button>
+            </form>
+            <h3 class="font-semibold text-lg">Attachments {media?.data ? `(${media.data.length})` : ''}</h3>
+            <div class="grid grid-cols-2 gap-3 mt-3">
+                {#each media.data as attachment (attachment._id)}
+                    <button
+                        class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                        onclick={() => { handleAttachmentClick(attachment); closeAttachmentsGrid(); }}
+                        aria-label={`View attachment: ${attachment.altText}`}
+                    >
+                        <div class="relative">
+                            <img src={attachment.url} alt={attachment.altText} class="w-full h-24 object-cover group-hover:brightness-110 transition-all duration-200" />
+                            {#if attachment.caption}
+                                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                                    <p class="text-white text-xs truncate">{attachment.caption}</p>
+                                </div>
+                            {/if}
+                        </div>
+                    </button>
+                {/each}
+            </div>
+        </div>
+    </dialog>
+
+    <dialog class="modal max-w-full p-4" class:modal-open={isAttachmentViewerOpen}>
+        <div class="modal-box max-w-4xl w-full">
+            <form method="dialog">
+                <button
+                    class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                    onclick={() => { isAttachmentViewerOpen = false; selectedAttachment = null; }}>✕</button>
+            </form>
+            {#if selectedAttachment}
+                <h3 class="font-bold text-lg mb-3">{selectedAttachment.altText}</h3>
+                <img src={selectedAttachment.url} alt={selectedAttachment.altText} class="w-full max-h-[70vh] object-contain" />
+                {#if selectedAttachment.caption}
+                    <div class="mt-3">
+                        <p class="text-sm text-base-content/70">{selectedAttachment.caption}</p>
+                    </div>
+                {/if}
+            {/if}
+        </div>
+    </dialog>
 
 	<SettingsModal bind:qs bind:isOpen={isSettingsModalOpen} />
 </div>

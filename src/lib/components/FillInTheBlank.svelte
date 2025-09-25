@@ -26,6 +26,30 @@
 		return before;
 	});
 
+	function decodeFitb(text: string): string {
+		const [before] = String(text || '').split(' | flags=');
+		const firstColon = before.indexOf(':');
+		if (firstColon > -1) {
+			const maybe = before.slice(0, firstColon);
+			if (['exact', 'exact_cs', 'contains', 'regex'].includes(maybe)) {
+				return before.slice(firstColon + 1);
+			}
+		}
+		return before;
+	}
+
+	const alternateAnswers = $derived(() => {
+		const answers = (currentlySelected?.correctAnswers || []) as Array<string>;
+		const opts = (currentlySelected?.options || []) as Option[];
+		const texts: string[] = answers.map((a) => {
+			const fromOption = opts.find((o) => o.id === a)?.text;
+			return String(fromOption ?? a ?? '');
+		});
+		const decoded = texts.map((t) => decodeFitb(t)).filter((t) => t.length > 0);
+		if (decoded.length <= 1) return [] as string[];
+		return decoded.slice(1);
+	});
+
 	function normalizeAnswer(text: string): string {
 		return (text || '')
 			.normalize('NFD')
@@ -88,7 +112,17 @@
 
 	<div class="card bg-base-100 w-72 sm:w-80 shadow-md mt-6 border border-base-content/10">
 		<div class="card-body">
-			<h3 class="text-lg font-semibold mb-8 {qs.showSolution ? '' : 'blur'}">{displayAnswer()}</h3>
+			<h3 class="text-lg font-semibold mb-2 {qs.showSolution ? '' : 'blur'}">{displayAnswer()}</h3>
+			{#if qs.showSolution && alternateAnswers().length > 0}
+				<div class="mt-2">
+					<p class="text-sm opacity-70">Alternate answers:</p>
+					<ul class="mt-1 list-disc list-inside text-sm opacity-80">
+						{#each alternateAnswers() as a, i (i)}
+							<li>{a}</li>
+						{/each}
+					</ul>
+				</div>
+			{/if}
 			<button class="btn" onclick={handleToggleSolution} aria-label="toggle solution">
 				<Eye />
 			</button>
