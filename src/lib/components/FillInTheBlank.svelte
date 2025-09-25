@@ -84,7 +84,7 @@
 </script>
 
 <div class="flex flex-col items-center p-4 w-full">
-	<p class="text-center text-base sm:text-lg mb-2">{currentlySelected.stem}</p>
+	<p class="text-center text-base sm:text-lg mb-2 whitespace-pre-line">{currentlySelected.stem}</p>
 	<div class="flex items-center mt-4 mb-6">
 		<input
 			type="text"
@@ -93,6 +93,7 @@
 			value={inputText}
 			oninput={(e) => {
 				inputText = (e.target as HTMLInputElement).value;
+				qs.selectedAnswers = inputText ? [inputText] : [];
 			}}
 			onkeydown={(e) => {
 				if (e.key === 'Enter') {

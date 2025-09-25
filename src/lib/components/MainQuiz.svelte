@@ -53,6 +53,8 @@
 	let shouldShowError = $derived(
 		questions.error && !(suppressAuthErrors && isAuthError(questions.error))
 	);
+
+
 </script>
 
 {#if questions.isLoading}
@@ -111,9 +113,9 @@
 				<div class="flex flex-row justify-between mb-4">
 					{#if currentlySelected.type !== QUESTION_TYPES.FILL_IN_THE_BLANK}
 						<div class="flex flex-row flex-wrap items-end gap-1 sm:gap-2">
-							<h4 class="text-base sm:text-lg font-semibold leading-tight">
+							<div class="text-base sm:text-lg font-semibold leading-tight whitespace-pre-line">
 								{currentlySelected.stem}
-							</h4>
+							  </div>
 							<span class="text-base-content/70 font-medium text-base sm:text-lg leading-tight">
 								Select {currentlySelected.correctAnswers.length}.
 							</span>
