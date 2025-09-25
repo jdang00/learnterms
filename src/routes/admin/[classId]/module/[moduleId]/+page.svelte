@@ -11,8 +11,8 @@
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import MoveQuestionsModal from '$lib/admin/MoveQuestionsModal.svelte';
-import { convertToDisplayFormat } from '$lib/utils/questionType.js';
-import { goto } from '$app/navigation';
+	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
+	import { goto } from '$app/navigation';
 	import { useClerkContext } from 'svelte-clerk';
 
 	let { data }: { data: PageData } = $props();
@@ -72,19 +72,19 @@ import { goto } from '$app/navigation';
 		isEditQuestionModalOpen = true;
 	}
 
-async function closeEditQuestionModal() {
-    // Clear ?edit first to avoid auto-open race from the $effect
-    try {
-        const url = new URL(window.location.href);
-        if (url.searchParams.has('edit')) {
-            url.searchParams.delete('edit');
-            const newPath = url.pathname + (url.search ? `?${url.searchParams.toString()}` : '');
-            await goto(newPath, { replaceState: true, noScroll: true });
-        }
-    } catch {}
-    isEditQuestionModalOpen = false;
-    editingQuestion = null;
-}
+	async function closeEditQuestionModal() {
+		// Clear ?edit first to avoid auto-open race from the $effect
+		try {
+			const url = new URL(window.location.href);
+			if (url.searchParams.has('edit')) {
+				url.searchParams.delete('edit');
+				const newPath = url.pathname + (url.search ? `?${url.searchParams.toString()}` : '');
+				await goto(newPath, { replaceState: true, noScroll: true });
+			}
+		} catch {}
+		isEditQuestionModalOpen = false;
+		editingQuestion = null;
+	}
 
 	function openAddQuestionModal() {
 		isAddQuestionModalOpen = true;
@@ -315,14 +315,17 @@ async function closeEditQuestionModal() {
 					}}
 				/>
 				{#if searchInput}
-					<button class="btn btn-ghost btn-xs" onclick={() => {
-						searchInput = '';
-						search = '';
-						if (searchTimeout) {
-							clearTimeout(searchTimeout);
-							searchTimeout = null;
-						}
-					}}>Clear</button>
+					<button
+						class="btn btn-ghost btn-xs"
+						onclick={() => {
+							searchInput = '';
+							search = '';
+							if (searchTimeout) {
+								clearTimeout(searchTimeout);
+								searchTimeout = null;
+							}
+						}}>Clear</button
+					>
 				{/if}
 			</label>
 
@@ -334,7 +337,10 @@ async function closeEditQuestionModal() {
 				</button>
 
 				<div class="join">
-					<button class={`btn btn-ghost join-item ${sortMode === 'order' ? 'btn-active' : ''}`} onclick={() => (sortMode = sortMode === 'order' ? 'created_desc' : 'order')}>
+					<button
+						class={`btn btn-ghost join-item ${sortMode === 'order' ? 'btn-active' : ''}`}
+						onclick={() => (sortMode = sortMode === 'order' ? 'created_desc' : 'order')}
+					>
 						{sortMode === 'order' ? 'Normal order' : 'Last created'}
 					</button>
 				</div>
@@ -417,24 +423,28 @@ async function closeEditQuestionModal() {
 					{search ? 'No questions match your search' : 'No questions found'}
 				</h3>
 				<p class="text-base-content/70">
-					{search ? 'Try adjusting your search terms or clear the search to see all questions.' : 'No questions available for the selected module.'}
+					{search
+						? 'Try adjusting your search terms or clear the search to see all questions.'
+						: 'No questions available for the selected module.'}
 				</p>
 				{#if search}
-					<button class="btn btn-primary mt-4" onclick={() => {
-						searchInput = '';
-						search = '';
-						if (searchTimeout) {
-							clearTimeout(searchTimeout);
-							searchTimeout = null;
-						}
-					}}>
+					<button
+						class="btn btn-primary mt-4"
+						onclick={() => {
+							searchInput = '';
+							search = '';
+							if (searchTimeout) {
+								clearTimeout(searchTimeout);
+								searchTimeout = null;
+							}
+						}}
+					>
 						Clear Search
 					</button>
 				{/if}
 			</div>
 		</div>
 	{:else}
-
 		<div class="space-y-4">
 			{#each questionList as questionItem, index (questionItem._id)}
 				<div
@@ -486,7 +496,7 @@ async function closeEditQuestionModal() {
 
 									<div class="flex flex-col">
 										<h3
-											class="card-title text-base-content text-left leading-snug line-clamp-2"
+											class="card-title text-base-content text-left whitespace-pre-line mb-3"
 											title={questionItem.stem}
 										>
 											{questionItem.stem}
@@ -529,13 +539,18 @@ async function closeEditQuestionModal() {
 								</div>
 
 								{#if canEdit}
-						<div class="dropdown dropdown-end">
-							<button class="btn btn-ghost btn-circle m-1 interactive" tabindex="0" aria-haspopup="menu" aria-label="Open menu">⋮</button>
-							<ul
-								tabindex="0"
-								role="menu"
-								class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
-							>
+									<div class="dropdown dropdown-end">
+										<button
+											class="btn btn-ghost btn-circle m-1 interactive"
+											tabindex="0"
+											aria-haspopup="menu"
+											aria-label="Open menu">⋮</button
+										>
+										<ul
+											tabindex="0"
+											role="menu"
+											class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+										>
 											<li>
 												<button
 													data-move-btn

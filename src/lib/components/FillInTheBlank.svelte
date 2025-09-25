@@ -50,29 +50,10 @@
 		return decoded.slice(1);
 	});
 
-	function normalizeAnswer(text: string): string {
-		return (text || '')
-			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
-			.toLowerCase()
-			.replace(/[^a-z0-9\s]/g, '')
-			.replace(/\s+/g, ' ')
-			.trim();
-	}
-
-	function hasExplanation(expl: unknown): boolean {
-		if (typeof expl !== 'string') return false;
-		const t = expl.trim().toLowerCase();
-		if (t.length === 0) return false;
-		if (t === 'undefined' || t === 'null') return false;
-		return true;
-	}
-
 	$effect(() => {
 		inputText = qs.selectedAnswers && qs.selectedAnswers[0] ? qs.selectedAnswers[0] : '';
 		tick().then(() => inputEl?.focus());
 	});
-
 
 	function handleEnter() {
 		qs.checkFillInTheBlank(inputText ?? '', currentlySelected);
@@ -84,7 +65,9 @@
 </script>
 
 <div class="flex flex-col items-center p-4 w-full">
-	<p class="text-center text-base sm:text-lg mb-2 whitespace-pre-line">{currentlySelected.stem}</p>
+	<p class="text-base sm:text-lg mb-4 whitespace-pre-line text-left">
+		{currentlySelected.stem}
+	</p>
 	<div class="flex items-center mt-4 mb-6">
 		<input
 			type="text"
