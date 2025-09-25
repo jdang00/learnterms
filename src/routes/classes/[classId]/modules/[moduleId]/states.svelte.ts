@@ -48,7 +48,11 @@ export class QuizState {
 		}, delayMs);
 	}
 
-	checkAnswer(correctAnswers: string[], userAnswers: string[]) {
+	checkAnswer(
+		correctAnswers: string[],
+		userAnswers: string[],
+		options?: { autoNextOnCorrect?: boolean }
+	) {
 		const sortedCorrect = [...correctAnswers].sort();
 		const sortedUser = [...userAnswers].sort();
 
@@ -62,7 +66,12 @@ export class QuizState {
 		setTimeout(() => {
 			this.checkResult = message;
 			if (isCorrect) {
-				this.scheduleAutoNextIfEnabled();
+				const shouldAutoNext = options?.autoNextOnCorrect ?? true;
+				if (shouldAutoNext) {
+					this.scheduleAutoNextIfEnabled();
+				} else {
+					this.cancelAutoNext();
+				}
 			} else {
 				this.cancelAutoNext();
 			}
@@ -132,7 +141,7 @@ export class QuizState {
 		}
 
 		this.selectedAnswers = userText ? [userText] : [];
-		this.checkAnswer(isAnyMatch ? ['1'] : ['0'], ['1']);
+		this.checkAnswer(isAnyMatch ? ['1'] : ['0'], ['1'], { autoNextOnCorrect: false });
 		this.scheduleSave();
 	}
 
@@ -276,6 +285,7 @@ export class QuizState {
 	sanitizeStateForCurrentQuestion() {
 		const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
 		if (!current) return;
+		if (String(current.type) === 'fill_in_the_blank') return;
 		const options = (current.options || []) as QuestionOption[];
 		if (!options || options.length === 0) return;
 		const validIds = options.map((o) => o.id);
