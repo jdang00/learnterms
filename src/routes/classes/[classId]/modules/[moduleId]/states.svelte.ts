@@ -148,9 +148,14 @@ export class QuizState {
 	checkMatching(question?: Doc<'question'> | null) {
 		const q = question ?? this.getCurrentQuestion();
 		if (!q) return;
-		const correct = new Set((q.correctAnswers || []) as string[]);
-		const user = new Set(this.selectedAnswers || []);
-		const isCorrect = correct.size === user.size && [...correct].every((v) => user.has(v));
+
+		const correctAnswers = (q.correctAnswers || []) as string[];
+		const userAnswers = this.selectedAnswers || [];
+
+		// Check if user answers match correct answers exactly
+		const isCorrect = correctAnswers.length === userAnswers.length &&
+			correctAnswers.every(answer => userAnswers.includes(answer));
+
 		this.checkAnswer(isCorrect ? ['1'] : ['0'], ['1'], { autoNextOnCorrect: false });
 	}
 

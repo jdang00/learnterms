@@ -107,18 +107,27 @@ export const insertQuestion = authCreateMutation({
 		}),
 		updatedAt: v.number()
 	},
-	handler: async (ctx, args) => {
+    handler: async (ctx, args) => {
 		const optionsWithIds = args.options.map((option, index) => ({
 			id: makeOptionId(args.stem, option.text, index),
 			text: option.text
 		}));
 
-		const correctAnswerIds = args.correctAnswers
-			.map((index) => {
-				const numIndex = parseInt(index);
-				return optionsWithIds[numIndex]?.id || '';
-			})
-			.filter((id) => id !== '');
+        const isMatching = convertQuestionType(args.type) === 'matching';
+        if (isMatching) {
+            const hasPairs = (args.correctAnswers || []).every((s) => String(s).includes('::'));
+            if (!hasPairs) {
+                throw new Error('Matching questions must use pair-formatted correctAnswers (promptId::answerId)');
+            }
+        }
+        const correctAnswerIds = isMatching
+            ? args.correctAnswers
+            : args.correctAnswers
+                  .map((index) => {
+                      const numIndex = parseInt(index);
+                      return optionsWithIds[numIndex]?.id || '';
+                  })
+                  .filter((id) => id !== '');
 
 		const searchText = computeSearchText({
 			stem: args.stem,
@@ -207,7 +216,7 @@ export const updateQuestion = authCreateMutation({
 		explanation: v.string(),
 		status: v.string()
 	},
-	handler: async (ctx, args) => {
+    handler: async (ctx, args) => {
 		const questionToUpdate = await ctx.db.get(args.questionId);
 		if (!questionToUpdate || questionToUpdate.moduleId !== args.moduleId) {
 			throw new Error('Question not found or access denied');
@@ -218,15 +227,46 @@ export const updateQuestion = authCreateMutation({
 			text: option.text
 		}));
 
-		const correctAnswerIds = args.correctAnswers
-			.map((correctAnswer) => {
-				const numIndex = parseInt(correctAnswer);
-				if (!isNaN(numIndex) && numIndex >= 0 && numIndex < optionsWithIds.length) {
-					return optionsWithIds[numIndex].id;
-				}
-				return correctAnswer;
-			})
-			.filter((id) => id !== '');
+        const isMatching = convertQuestionType(args.type) === 'matching';
+        if (isMatching) {
+            const hasPairs = (args.correctAnswers || []).every((s) => String(s).includes('::'));
+            if (!hasPairs) {
+                throw new Error('Matching questions must use pair-formatted correctAnswers (promptId::answerId)');
+            }
+        }
+        let correctAnswerIds: string[];
+        if (isMatching) {
+            const oldIdToText: Record<string, string> = {};
+            for (const opt of questionToUpdate.options || []) {
+                oldIdToText[opt.id] = opt.text;
+            }
+            const textToNewId: Record<string, string> = {};
+            for (const opt of optionsWithIds) {
+                textToNewId[opt.text] = opt.id;
+            }
+            correctAnswerIds = (args.correctAnswers || [])
+                .map((pair) => {
+                    const [oldPromptId, oldAnswerId] = String(pair).split('::');
+                    const promptText = oldIdToText[oldPromptId];
+                    const answerText = oldIdToText[oldAnswerId];
+                    if (!promptText || !answerText) return '';
+                    const newPromptId = textToNewId[promptText];
+                    const newAnswerId = textToNewId[answerText];
+                    if (!newPromptId || !newAnswerId) return '';
+                    return `${newPromptId}::${newAnswerId}`;
+                })
+                .filter((s) => s !== '');
+        } else {
+            correctAnswerIds = args.correctAnswers
+                .map((correctAnswer) => {
+                    const numIndex = parseInt(correctAnswer);
+                    if (!isNaN(numIndex) && numIndex >= 0 && numIndex < optionsWithIds.length) {
+                        return optionsWithIds[numIndex].id;
+                    }
+                    return correctAnswer;
+                })
+                .filter((id) => id !== '');
+        }
 
 		const searchText = computeSearchText({
 			stem: args.stem,
@@ -276,7 +316,14 @@ export const createQuestion = authCreateMutation({
 		}),
 		updatedAt: v.number()
 	},
-	handler: async (ctx, args) => {
+    handler: async (ctx, args) => {
+        const isMatching = convertQuestionType(args.type) === 'matching';
+        if (isMatching) {
+            const hasPairs = (args.correctAnswers || []).every((s) => String(s).includes('::'));
+            if (!hasPairs) {
+                throw new Error('Matching questions must use pair-formatted correctAnswers (promptId::answerId)');
+            }
+        }
 		const searchText = computeSearchText({
 			stem: args.stem,
 			explanation: args.explanation,
@@ -318,25 +365,33 @@ export const bulkInsertQuestions = authCreateMutation({
 			})
 		)
 	},
-	handler: async (ctx, { moduleId, questions }) => {
+    handler: async (ctx, { moduleId, questions }) => {
 		const insertedIds: string[] = [];
 
-		for (const q of questions) {
+        for (const q of questions) {
+            const isMatching = convertQuestionType(q.type) === 'matching';
+            if (isMatching) {
+                const hasPairs = (q.correctAnswers || []).every((s) => String(s).includes('::'));
+                if (!hasPairs) {
+                    throw new Error('Matching questions must use pair-formatted correctAnswers (promptId::answerId)');
+                }
+            }
 			const optionsWithIds = q.options.map((option, index) => ({
 				id: makeOptionId(q.stem, option.text, index),
 				text: option.text
 			}));
-
-			const correctAnswerIds = q.correctAnswers
-				.map((index) => {
-					const numIndex = parseInt(index);
-					return optionsWithIds[numIndex]?.id || '';
-				})
-				.filter((id) => id !== '');
+            const correctAnswerIds = isMatching
+                ? q.correctAnswers
+                : q.correctAnswers
+                      .map((index) => {
+                          const numIndex = parseInt(index);
+                          return optionsWithIds[numIndex]?.id || '';
+                      })
+                      .filter((id) => id !== '');
 
 			const id = await ctx.db.insert('question', {
 				moduleId,
-				type: convertQuestionType(q.type),
+                type: convertQuestionType(q.type),
 				stem: q.stem,
 				options: optionsWithIds,
 				correctAnswers: correctAnswerIds,
@@ -651,6 +706,49 @@ export const backfillSearchTextForAllModules = mutation({
 		}
 		return { updated: totalUpdated };
 	}
+});
+
+export const repairMatchingPairsForModule = authCreateMutation({
+    args: { moduleId: v.id('module') },
+    handler: async (ctx, { moduleId }) => {
+        const items = await ctx.db
+            .query('question')
+            .withIndex('by_moduleId', (q) => q.eq('moduleId', moduleId))
+            .collect();
+
+        let updated = 0;
+        for (const q of items) {
+            if (q.type !== 'matching') continue;
+            const hasPairs = (q.correctAnswers || []).some((s: string) => String(s).includes('::'));
+            if (hasPairs) continue;
+
+            const prompts = (q.options || []).filter((o) => o.text.startsWith('prompt:'));
+            const answers = (q.options || []).filter((o) => o.text.startsWith('answer:'));
+            const n = Math.min(prompts.length, answers.length);
+            if (n === 0) continue;
+
+            const pairs: string[] = [];
+            for (let i = 0; i < n; i++) {
+                pairs.push(`${prompts[i].id}::${answers[i].id}`);
+            }
+
+            const searchText = computeSearchText({
+                stem: q.stem,
+                explanation: q.explanation ?? '',
+                type: q.type,
+                status: q.status,
+                aiGenerated: q.aiGenerated,
+                options: q.options,
+                correctAnswers: pairs,
+                metadata: q.metadata
+            });
+
+            await ctx.db.patch(q._id, { correctAnswers: pairs, searchText, updatedAt: Date.now() });
+            updated += 1;
+        }
+
+        return { updated };
+    }
 });
 
 export const generateQuestions = action({
