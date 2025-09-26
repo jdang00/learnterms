@@ -49,6 +49,10 @@
         shuffledAnswers = out;
     });
 
+    $effect(() => {
+        console.log(`[Matching] selectedAnswers changed: ${JSON.stringify(qs.selectedAnswers)}`);
+    });
+
     function getPromptLabel(text: string): string {
         return text.startsWith('prompt:') ? text.slice('prompt:'.length).trim() : text;
     }
@@ -56,13 +60,17 @@
     function getUserSelectionForPrompt(promptId: string): string | undefined {
         const prefix = `${promptId}::`;
         const found = (qs.selectedAnswers || []).find((s: string) => s.startsWith(prefix));
+        console.log(`[Matching] getUserSelectionForPrompt: promptId=${promptId}, selectedAnswers=${JSON.stringify(qs.selectedAnswers)}, found=${found}, result=${found ? found.split('::')[1] : 'undefined'}`);
         return found ? found.split('::')[1] : undefined;
     }
 
     function setUserSelection(promptId: string, answerId: string) {
         const prefix = `${promptId}::`;
         const others = (qs.selectedAnswers || []).filter((s: string) => !s.startsWith(prefix));
-        qs.selectedAnswers = [...others, `${promptId}::${answerId}`];
+        const newSelection = `${promptId}::${answerId}`;
+        console.log(`[Matching] setUserSelection: promptId=${promptId}, answerId=${answerId}, oldSelectedAnswers=${JSON.stringify(qs.selectedAnswers)}, newSelection=${newSelection}`);
+        qs.selectedAnswers = [...others, newSelection];
+        console.log(`[Matching] setUserSelection: updated selectedAnswers=${JSON.stringify(qs.selectedAnswers)}`);
         qs.scheduleSave?.();
     }
 
@@ -77,6 +85,7 @@
 
     function correctAnswerIdForPrompt(promptId: string): string | undefined {
         const pair = (currentlySelected?.correctAnswers || []).find((cid: string) => String(cid).startsWith(`${promptId}::`));
+        console.log(`[Matching] correctAnswerIdForPrompt: promptId=${promptId}, correctAnswers=${JSON.stringify(currentlySelected?.correctAnswers)}, pair=${pair}, result=${pair ? String(pair).split('::')[1] : 'undefined'}`);
         return pair ? String(pair).split('::')[1] : undefined;
     }
 

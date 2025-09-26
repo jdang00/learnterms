@@ -948,7 +948,6 @@ function removeMatchingAnswer(index: number) {
                                 <div class="space-y-3">
                                     {#each matchingPrompts as p, i (i)}
                                         <div class="flex items-center gap-2">
-                                            <span class="badge badge-outline">prompt:</span>
                                             <input
                                                 class="input input-bordered flex-1"
                                                 placeholder="Prompt {i + 1}"
@@ -970,7 +969,6 @@ function removeMatchingAnswer(index: number) {
                                 <div class="space-y-3">
                                     {#each matchingAnswers as a, i (i)}
                                         <div class="flex items-center gap-2">
-                                            <span class="badge badge-outline">answer:</span>
                                             <input
                                                 class="input input-bordered flex-1"
                                                 placeholder="Answer {i + 1}"
