@@ -41,3 +41,22 @@
 @utility animate-aurora {
 	animation: auroraShift 18s ease-in-out infinite;
 }
+
+.tiptap p.is-editor-empty:first-child::before {
+	color: #adb5bd;
+	content: attr(data-placeholder);
+	float: left;
+	height: 0;
+	pointer-events: none;
+}
+
+/* TipTap content styling */
+.tiptap-content > ul {
+	list-style-type: disc;
+	margin-left: 1rem;
+}
+
+.tiptap-content > ol {
+	list-style-type: decimal;
+	margin-left: 1rem;
+}

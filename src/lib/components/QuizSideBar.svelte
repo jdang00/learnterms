@@ -177,7 +177,7 @@
 			</h4>
 			<h2 class="font-semibold text-3xl mt-2 flex items-center gap-3 min-w-0">
 				<span class="text-3xl">{module.data?.emoji || '📘'}</span>
-				<span class="hyphens-auto break-words">{module.data.title}</span>
+				<span class="whitespace-pre-line">{module.data.title}</span>
 			</h2>
 			<p class="text-base-content/70 mt-2 break-words hyphens-auto">{module.data.description}</p>
 
@@ -250,11 +250,11 @@
 								</button>
 							</div>
 						</div>
-						<p
-							class={`mt-2 break-words hyphens-auto transition-all duration-300 ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
+						<div
+							class={`mt-2 break-words hyphens-auto transition-all duration-300 tiptap-content ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
 						>
-							{currentlySelected.explanation}
-						</p>
+							{@html currentlySelected.explanation}
+						</div>
 					</div>
 				</div>
 			{/if}
@@ -458,7 +458,7 @@
 		</form>
 		<h3 class="text-lg font-bold">Solution</h3>
 		{#if typeof currentlySelected.explanation === 'string' && currentlySelected.explanation.trim().length > 0}
-			<p class="py-4">{currentlySelected.explanation}</p>
+			<div class="py-4 tiptap-content">{@html currentlySelected.explanation}</div>
 		{/if}
 	</div>
 </dialog>

@@ -29,8 +29,8 @@
               </div>
 
               <div class="flex flex-col min-w-0 flex-1">
-                <h3 class="card-title text-base-content text-left leading-snug line-clamp-2 sm:line-clamp-3 text-sm sm:text-base" title={questionItem.stem}>
-                  {questionItem.stem}
+                <h3 class="card-title text-base-content text-left leading-snug line-clamp-2 sm:line-clamp-3 text-sm sm:text-base tiptap-content" title={questionItem.stem}>
+                  {@html questionItem.stem}
                 </h3>
 
                 <div class="mt-1 flex flex-wrap items-center gap-2">
@@ -55,7 +55,7 @@
                   {#each questionItem.options as option (option.id)}
                     <li class="rounded-lg">
                       <div class="flex items-center justify-between rounded-lg px-3 py-2 sm:px-2 sm:py-1.5 hover:bg-base-200 active:bg-base-300 transition-colors touch-manipulation min-h-[44px]">
-                        <span class="text-sm text-base-content/80 {questionItem.correctAnswers?.includes(option.id) ? 'font-semibold text-success' : ''} leading-relaxed">{option.text}</span>
+                        <span class="text-sm text-base-content/80 {questionItem.correctAnswers?.includes(option.id) ? 'font-semibold text-success' : ''} leading-relaxed tiptap-content">{@html option.text}</span>
                       </div>
                     </li>
                   {/each}

@@ -42,8 +42,8 @@
 					: 'ml-3 md:ml-4 my-3 text-sm md:text-base'}"
 			>
 				<span class="font-semibold mr-2 select-none">{String.fromCharCode(65 + i)}.</span>
-				<span class={qs.isOptionEliminated(option.id) ? 'line-through opacity-50' : ''}
-					>{option.text}</span
+				<span class="{qs.isOptionEliminated(option.id) ? 'line-through opacity-50' : ''} tiptap-content"
+					>{@html option.text}</span
 				>
 			</span>
 

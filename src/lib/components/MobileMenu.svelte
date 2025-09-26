@@ -189,7 +189,7 @@
 			</form>
 			<h3 class="text-lg font-bold">Solution</h3>
 			{#if typeof currentlySelected.explanation === 'string' && currentlySelected.explanation.trim().length > 0}
-				<p class="py-4">{currentlySelected.explanation}</p>
+				<div class="py-4 tiptap-content">{@html currentlySelected.explanation}</div>
 			{/if}
 		</div>
 	</dialog>
