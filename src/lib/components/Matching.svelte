@@ -26,11 +26,26 @@
 
     $effect(() => {
         const answerOpts = answers();
+        if (answerOpts.length <= 1) {
+            shuffledAnswers = answerOpts;
+            return;
+        }
+
+        const answersInPromptOrder = prompts()
+            .map((prompt) => correctAnswerIdForPrompt(prompt.id))
+            .map((answerId) => answerOpts.find((opt) => opt.id === answerId))
+            .filter((opt): opt is Option => Boolean(opt));
+
         let out = fisherYates(answerOpts);
-        const sameOrder = out.length === answerOpts.length && out.every((o, i) => o.id === answerOpts[i].id);
-        if (sameOrder && out.length > 1) {
+
+        const matchesOriginalOrder = out.length === answerOpts.length && out.every((o, i) => o.id === answerOpts[i].id);
+        const matchesPromptOrder =
+            answersInPromptOrder.length === out.length && out.every((o, i) => o.id === answersInPromptOrder[i].id);
+
+        if ((matchesOriginalOrder || matchesPromptOrder) && out.length > 1) {
             out = [...out.slice(1), out[0]];
         }
+
         shuffledAnswers = out;
     });
 
