@@ -3,6 +3,7 @@
 	import QuizNavigation from '$lib/components/QuizNavigation.svelte';
 	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
 	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
+	import Matching from '$lib/components/Matching.svelte';
 	import ActionButtons from '$lib/components/ActionButtons.svelte';
 	import MobileMenu from '$lib/components/MobileMenu.svelte';
 	import MobileInfo from '$lib/components/MobileInfo.svelte';
@@ -167,6 +168,8 @@
 
 				{#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}
 					<FillInTheBlank bind:qs {currentlySelected} />
+				{:else if currentlySelected.type === QUESTION_TYPES.MATCHING}
+					<Matching bind:qs {currentlySelected} />
 				{:else}
 				<div class="text-base-content/70 font-medium text-base sm:text-lg leading-tight my-3 ms-2">
 					Select {currentlySelected.correctAnswers.length}.

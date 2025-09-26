@@ -20,6 +20,8 @@
 			if (currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK) {
 				const text = qs.selectedAnswers && qs.selectedAnswers[0] ? qs.selectedAnswers[0] : '';
 				qs.checkFillInTheBlank(text, currentlySelected);
+			} else if (currentlySelected.type === QUESTION_TYPES.MATCHING) {
+				qs.checkMatching(currentlySelected);
 			} else {
 				qs.checkAnswer(currentlySelected.correctAnswers, qs.selectedAnswers);
 			}

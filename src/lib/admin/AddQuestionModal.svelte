@@ -178,6 +178,11 @@
 			label: 'Fill in the Blank',
 			icon: Edit3
 		},
+		{
+			value: QUESTION_TYPES.MATCHING,
+			label: 'Matching',
+			icon: ListChecks
+		},
 	]);
 
 	const statusOptions = $derived([
@@ -383,6 +388,25 @@
 		return 'file';
 	}
 
+// Matching editor state (two-column UI)
+let matchingPrompts: string[] = $state(['', '']);
+let matchingAnswers: string[] = $state(['', '']);
+
+function addMatchingPrompt() {
+    matchingPrompts = [...matchingPrompts, ''];
+}
+function removeMatchingPrompt(index: number) {
+    if (matchingPrompts.length <= 1) return;
+    matchingPrompts = matchingPrompts.filter((_, i) => i !== index);
+}
+function addMatchingAnswer() {
+    matchingAnswers = [...matchingAnswers, ''];
+}
+function removeMatchingAnswer(index: number) {
+    if (matchingAnswers.length <= 1) return;
+    matchingAnswers = matchingAnswers.filter((_, i) => i !== index);
+}
+
 	// Function to safely update media state
 	function addMediaItem(mediaItem: (typeof queuedMedia)[0]) {
 		queuedMedia = [...queuedMedia, mediaItem];
@@ -455,8 +479,9 @@
 
 	function addOption() {
 		if (
-			questionType === QUESTION_TYPES.TRUE_FALSE ||
-			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK
+        questionType === QUESTION_TYPES.TRUE_FALSE ||
+        questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+        questionType === QUESTION_TYPES.MATCHING
 		)
 			return;
 		options = [...options, { text: '' }];
@@ -464,8 +489,9 @@
 
 	function removeOption(index: number) {
 		if (
-			questionType === QUESTION_TYPES.TRUE_FALSE ||
-			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK
+        questionType === QUESTION_TYPES.TRUE_FALSE ||
+        questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+        questionType === QUESTION_TYPES.MATCHING
 		)
 			return;
 		if (options.length <= 2) return;
@@ -480,7 +506,7 @@
 
 	function toggleCorrectAnswer(index: number) {
 		const indexStr = index.toString();
-		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) return;
+    if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK || questionType === QUESTION_TYPES.MATCHING) return;
 		if (questionType === QUESTION_TYPES.TRUE_FALSE) {
 			correctAnswers = correctAnswers.includes(indexStr) ? [] : [indexStr];
 			return;
@@ -494,8 +520,9 @@
 
 	function shuffleOptions() {
 		if (
-			questionType === QUESTION_TYPES.TRUE_FALSE ||
-			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK
+        questionType === QUESTION_TYPES.TRUE_FALSE ||
+        questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+        questionType === QUESTION_TYPES.MATCHING
 		)
 			return;
 		const pairs = options.map((opt, idx) => ({ opt, idx }));
@@ -526,6 +553,10 @@
 		} else if (questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
 			options = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
 			correctAnswers = [];
+    } else if (questionType === QUESTION_TYPES.MATCHING) {
+        matchingPrompts = ['', ''];
+        matchingAnswers = ['', ''];
+        correctAnswers = [];
 		}
 	}
 
@@ -575,6 +606,102 @@
 			correctAnswers = encoded.map((_, i) => i.toString());
 		}
 
+    if (questionType === QUESTION_TYPES.MATCHING) {
+        const rawPrompts = matchingPrompts.map((t) => t.trim()).filter((t) => t.length > 0);
+        const rawAnswers = matchingAnswers.map((t) => t.trim()).filter((t) => t.length > 0);
+        if (rawPrompts.length === 0 || rawAnswers.length === 0) return;
+
+        function makeOptionId(stem: string, text: string, index: number): string {
+            const input = `${stem}|${text}|${index}`;
+            let hash = 0;
+            for (let i = 0; i < input.length; i++) {
+                const char = input.charCodeAt(i);
+                hash = (hash << 5) - hash + char;
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(36).padStart(8, '0').slice(0, 8);
+        }
+
+        const promptOptions = rawPrompts.map((text, i) => {
+            const full = `prompt:${text}`;
+            return { id: makeOptionId(questionStem, full, i), text: full };
+        });
+        const answersOffset = promptOptions.length;
+        const answerOptions = rawAnswers.map((text, i) => {
+            const full = `answer:${text}`;
+            return { id: makeOptionId(questionStem, full, answersOffset + i), text: full };
+        });
+
+        const n = Math.min(promptOptions.length, answerOptions.length);
+        const mappings = Array.from({ length: n }, (_, i) => `${promptOptions[i].id}::${answerOptions[i].id}`);
+
+        const nextOrder = questions.data?.length
+            ? Math.max(...questions.data.map((q) => q.order || 0)) + 1
+            : 0;
+
+        isSubmitting = true;
+        try {
+            const questionId = await client.mutation(api.question.createQuestion, {
+                moduleId: moduleId as Id<'module'>,
+                type: QUESTION_TYPES.MATCHING,
+                stem: questionStem,
+                options: [...promptOptions, ...answerOptions],
+                correctAnswers: mappings,
+                explanation: questionExplanation || '',
+                aiGenerated: false,
+                status: questionStatus.toLowerCase(),
+                order: nextOrder,
+                metadata: {},
+                updatedAt: Date.now()
+            });
+
+            if (questionId && queuedMedia.length > 0) {
+                for (let i = 0; i < queuedMedia.length; i++) {
+                    const m = queuedMedia[i];
+                    await client.mutation((api as any).questionMedia.create, {
+                        questionId: questionId as Id<'question'>,
+                        url: m.url,
+                        mediaType: mediaTypeFromMime(m.mimeType),
+                        mimeType: m.mimeType || 'application/octet-stream',
+                        altText: m.name || '',
+                        caption: '',
+                        order: i,
+                        showOnSolution: m.showOnSolution ?? false,
+                        metadata: {
+                            uploadthingKey: m.key || '',
+                            sizeBytes: m.sizeBytes || 0,
+                            originalFileName: m.name || ''
+                        }
+                    });
+                }
+            }
+
+            questionStem = '';
+            questionStemText = '';
+            questionExplanation = '';
+            questionExplanationText = '';
+            questionStatus = 'draft';
+            questionType = 'multiple_choice';
+            options = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
+            correctAnswers = [];
+            queuedMedia = [];
+            matchingPrompts = ['', ''];
+            matchingAnswers = ['', ''];
+            if ($editor) {
+                $editor.commands.setContent('');
+            }
+            if ($explanationEditor) {
+                $explanationEditor.commands.setContent('');
+            }
+            closeAddModal();
+            return;
+        } catch (error) {
+            console.error('Failed to create matching question', error);
+        } finally {
+            isSubmitting = false;
+        }
+    }
+
 		const filledOptions = options.filter((opt) => opt.text.trim());
 
 		if (questionType === QUESTION_TYPES.TRUE_FALSE) {
@@ -582,6 +709,10 @@
 			if (correctAnswers.length !== 1) return;
 		} else if (questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
 			if (filledOptions.length < 2) return;
+		} else if (questionType === QUESTION_TYPES.MATCHING) {
+			const hasPrompt = filledOptions.some((o) => o.text.startsWith('prompt:'));
+			const numAnswers = filledOptions.filter((o) => !o.text.startsWith('prompt:')).length;
+			if (!hasPrompt || numAnswers === 0) return;
 		}
 
 		isSubmitting = true;
@@ -753,7 +884,7 @@
 						Options & Answers
 					</h6>
 
-					{#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
+                    {#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
 						<div class="space-y-4">
 							{#each fitbAnswers as row, index (index)}
 								<div class="p-3 rounded-lg border border-base-300 bg-base-100">
@@ -810,7 +941,54 @@
 								Add Alternative Answer
 							</button>
 						</div>
-					{:else}
+                    {:else if questionType === QUESTION_TYPES.MATCHING}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h6 class="text-sm font-semibold mb-2">Prompts</h6>
+                                <div class="space-y-3">
+                                    {#each matchingPrompts as p, i (i)}
+                                        <div class="flex items-center gap-2">
+                                            <span class="badge badge-outline">prompt:</span>
+                                            <input
+                                                class="input input-bordered flex-1"
+                                                placeholder="Prompt {i + 1}"
+                                                value={p}
+                                                oninput={(e) => matchingPrompts = matchingPrompts.map((v, idx) => idx === i ? (e.target as HTMLInputElement).value : v)}
+                                            />
+                                            {#if matchingPrompts.length > 1}
+                                                <button class="btn btn-ghost btn-sm btn-circle" onclick={() => removeMatchingPrompt(i)}>
+                                                    <X size={16} />
+                                                </button>
+                                            {/if}
+                                        </div>
+                                    {/each}
+                                    <button class="btn btn-sm btn-outline" type="button" onclick={addMatchingPrompt}>Add Prompt</button>
+                                </div>
+                            </div>
+                            <div>
+                                <h6 class="text-sm font-semibold mb-2">Possible Answers</h6>
+                                <div class="space-y-3">
+                                    {#each matchingAnswers as a, i (i)}
+                                        <div class="flex items-center gap-2">
+                                            <span class="badge badge-outline">answer:</span>
+                                            <input
+                                                class="input input-bordered flex-1"
+                                                placeholder="Answer {i + 1}"
+                                                value={a}
+                                                oninput={(e) => matchingAnswers = matchingAnswers.map((v, idx) => idx === i ? (e.target as HTMLInputElement).value : v)}
+                                            />
+                                            {#if matchingAnswers.length > 1}
+                                                <button class="btn btn-ghost btn-sm btn-circle" onclick={() => removeMatchingAnswer(i)}>
+                                                    <X size={16} />
+                                                </button>
+                                            {/if}
+                                        </div>
+                                    {/each}
+                                    <button class="btn btn-sm btn-outline" type="button" onclick={addMatchingAnswer}>Add Answer</button>
+                                </div>
+                            </div>
+                        </div>
+                    {:else}
 						<div class="space-y-3">
 							{#each options as option, index (index)}
 								<div class="flex items-center gap-3">

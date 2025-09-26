@@ -1,7 +1,30 @@
 <script lang="ts">
 	let { isEditModalOpen, closeEditModal, editingQuestion, moduleId } = $props();
 
-	import { X, MessageSquare, Hash, ListChecks, Lightbulb, Bold, Italic, Type, FileText, CheckCircle, Archive, CheckSquare, ToggleLeft, Edit3, Underline as UnderlineIcon, Strikethrough as StrikethroughIcon, Code as CodeIcon, Quote as QuoteIcon, List as ListIcon, ListOrdered as ListOrderedIcon, Link as LinkIcon, Highlighter as HighlighterIcon } from 'lucide-svelte';
+	import {
+		X,
+		MessageSquare,
+		Hash,
+		ListChecks,
+		Lightbulb,
+		Bold,
+		Italic,
+		Type,
+		FileText,
+		CheckCircle,
+		Archive,
+		CheckSquare,
+		ToggleLeft,
+		Edit3,
+		Underline as UnderlineIcon,
+		Strikethrough as StrikethroughIcon,
+		Code as CodeIcon,
+		Quote as QuoteIcon,
+		List as ListIcon,
+		ListOrdered as ListOrderedIcon,
+		Link as LinkIcon,
+		Highlighter as HighlighterIcon
+	} from 'lucide-svelte';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
@@ -26,7 +49,7 @@
 	let mediaError: string = $state('');
 	let mediaList: Array<{
 		_id: string;
-		url: string;
+		url: string;	
 		altText: string;
 		caption?: string;
 		order: number;
@@ -35,6 +58,7 @@
 
 	// Track which question we've populated to avoid repopulating
 	let populatedQuestionId: string = $state('');
+	let populatedFormId: string = $state('');
 
 	onMount(() => {
 		editor = createEditor({
@@ -42,9 +66,9 @@
 			content: '',
 			editorProps: {
 				attributes: {
-					class: 'prose prose-sm max-w-none focus:outline-none min-h-12 p-3',
-				},
-			},
+					class: 'prose prose-sm max-w-none focus:outline-none min-h-12 p-3'
+				}
+			}
 		});
 
 		explanationEditor = createEditor({
@@ -52,9 +76,9 @@
 			content: '',
 			editorProps: {
 				attributes: {
-					class: 'prose prose-sm max-w-none focus:outline-none min-h-24 p-3',
-				},
-			},
+					class: 'prose prose-sm max-w-none focus:outline-none min-h-24 p-3'
+				}
+			}
 		});
 	});
 
@@ -117,68 +141,68 @@
 			name: 'bold',
 			command: toggleBold,
 			icon: Bold,
-			active: () => isActive('bold'),
+			active: () => isActive('bold')
 		},
 		{
 			name: 'italic',
 			command: toggleItalic,
 			icon: Italic,
-			active: () => isActive('italic'),
+			active: () => isActive('italic')
 		},
 		{
 			name: 'underline',
 			command: toggleUnderline,
 			icon: UnderlineIcon,
-			active: () => isActive('underline'),
+			active: () => isActive('underline')
 		},
 		{
 			name: 'strike',
 			command: toggleStrike,
 			icon: StrikethroughIcon,
-			active: () => isActive('strike'),
+			active: () => isActive('strike')
 		},
 		{
 			name: 'code',
 			command: toggleCode,
 			icon: CodeIcon,
-			active: () => isActive('code'),
+			active: () => isActive('code')
 		},
 		{
 			name: 'highlight',
 			command: toggleHighlight,
 			icon: HighlighterIcon,
-			active: () => isActive('highlight'),
+			active: () => isActive('highlight')
 		},
 		{
 			name: 'link',
 			command: isActive('link') ? unsetLink : setLink,
 			icon: LinkIcon,
-			active: () => isActive('link'),
+			active: () => isActive('link')
 		},
 		{
 			name: 'blockquote',
 			command: toggleBlockquote,
 			icon: QuoteIcon,
-			active: () => isActive('blockquote'),
+			active: () => isActive('blockquote')
 		},
 		{
 			name: 'bullet-list',
 			command: toggleBulletList,
 			icon: ListIcon,
-			active: () => isActive('bulletList'),
+			active: () => isActive('bulletList')
 		},
 		{
 			name: 'ordered-list',
 			command: toggleOrderedList,
 			icon: ListOrderedIcon,
-			active: () => isActive('orderedList'),
+			active: () => isActive('orderedList')
 		},
 		{
 			name: 'paragraph',
 			command: setParagraph,
 			icon: Type,
-			active: () => isActive('paragraph'),
-		},
+			active: () => isActive('paragraph')
+		}
 	]);
 
 	const questionTypeOptions = $derived([
@@ -197,6 +221,11 @@
 			label: 'Fill in the Blank',
 			icon: Edit3
 		},
+		{
+			value: QUESTION_TYPES.MATCHING,
+			label: 'Matching',
+			icon: ListChecks
+		}
 	]);
 
 	const statusOptions = $derived([
@@ -217,7 +246,7 @@
 			label: 'Archived',
 			icon: Archive,
 			colorClass: 'btn-error btn-soft'
-		},
+		}
 	]);
 
 	// Explanation editor toolbar functions
@@ -272,75 +301,76 @@
 		$explanationEditor.chain().focus().setParagraph().run();
 	};
 
-	const isExplanationActive = (name: string, attrs = {}) => $explanationEditor?.isActive(name, attrs) ?? false;
+	const isExplanationActive = (name: string, attrs = {}) =>
+		$explanationEditor?.isActive(name, attrs) ?? false;
 
 	const explanationMenuItems = $derived([
 		{
 			name: 'bold',
 			command: toggleExplanationBold,
 			icon: Bold,
-			active: () => isExplanationActive('bold'),
+			active: () => isExplanationActive('bold')
 		},
 		{
 			name: 'italic',
 			command: toggleExplanationItalic,
 			icon: Italic,
-			active: () => isExplanationActive('italic'),
+			active: () => isExplanationActive('italic')
 		},
 		{
 			name: 'underline',
 			command: toggleExplanationUnderline,
 			icon: UnderlineIcon,
-			active: () => isExplanationActive('underline'),
+			active: () => isExplanationActive('underline')
 		},
 		{
 			name: 'strike',
 			command: toggleExplanationStrike,
 			icon: StrikethroughIcon,
-			active: () => isExplanationActive('strike'),
+			active: () => isExplanationActive('strike')
 		},
 		{
 			name: 'code',
 			command: toggleExplanationCode,
 			icon: CodeIcon,
-			active: () => isExplanationActive('code'),
+			active: () => isExplanationActive('code')
 		},
 		{
 			name: 'highlight',
 			command: toggleExplanationHighlight,
 			icon: HighlighterIcon,
-			active: () => isExplanationActive('highlight'),
+			active: () => isExplanationActive('highlight')
 		},
 		{
 			name: 'link',
 			command: isExplanationActive('link') ? unsetExplanationLink : setExplanationLink,
 			icon: LinkIcon,
-			active: () => isExplanationActive('link'),
+			active: () => isExplanationActive('link')
 		},
 		{
 			name: 'blockquote',
 			command: toggleExplanationBlockquote,
 			icon: QuoteIcon,
-			active: () => isExplanationActive('blockquote'),
+			active: () => isExplanationActive('blockquote')
 		},
 		{
 			name: 'bullet-list',
 			command: toggleExplanationBulletList,
 			icon: ListIcon,
-			active: () => isExplanationActive('bulletList'),
+			active: () => isExplanationActive('bulletList')
 		},
 		{
 			name: 'ordered-list',
 			command: toggleExplanationOrderedList,
 			icon: ListOrderedIcon,
-			active: () => isExplanationActive('orderedList'),
+			active: () => isExplanationActive('orderedList')
 		},
 		{
 			name: 'paragraph',
 			command: setExplanationParagraph,
 			icon: Type,
-			active: () => isExplanationActive('paragraph'),
-		},
+			active: () => isExplanationActive('paragraph')
+		}
 	]);
 
 	const mediaUploader = createUploader('questionMediaUploader', {
@@ -414,7 +444,12 @@
 		await refreshMedia();
 	}
 
-	function handleMediaMetaChange(id: string, alt: string, caption: string, showOnSolution?: boolean) {
+	function handleMediaMetaChange(
+		id: string,
+		alt: string,
+		caption: string,
+		showOnSolution?: boolean
+	) {
 		saveMediaMeta(id, alt, caption, showOnSolution);
 	}
 
@@ -444,16 +479,17 @@
 	let fitbAnswersCache: FitbAnswerRow[] = $state([
 		{ value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }
 	]);
+	// Matching caches
+	let matchingPrompts: string[] = $state(['']);
+	let matchingAnswers: string[] = $state(['']);
 
 	$effect(() => {
 		const eq = editingQuestion;
-		if (!eq) return;
+		if (!eq || !isEditModalOpen) return;
+		if (populatedFormId === eq._id) return;
 
 		const nextType: string = eq.type || 'multiple_choice';
-		const nextStem: string = eq.stem || '';
-		const nextExplanation: string = eq.explanation || '';
 		const nextStatus: string = eq.status || 'draft';
-
 		const nextOptions: Array<{ text: string }> = (eq.options || []).map(
 			(opt: { id: string; text: string }) => ({ text: opt.text })
 		);
@@ -490,7 +526,19 @@
 			}
 		}
 
-		// Commit assignments
+		if (nextType === QUESTION_TYPES.MATCHING) {
+			const opts = (eq.options || []) as Array<{ id: string; text: string }>;
+			matchingPrompts = opts
+				.filter((o) => o.text.startsWith('prompt:'))
+				.map((o) => o.text.slice('prompt:'.length));
+			matchingAnswers = opts
+				.filter((o) => o.text.startsWith('answer:'))
+				.map((o) => o.text.slice('answer:'.length));
+			if (matchingPrompts.length === 0) matchingPrompts = [''];
+			if (matchingAnswers.length === 0) matchingAnswers = [''];
+		}
+
+		// One-time assignments
 		questionStatus = nextStatus;
 		questionType = nextType;
 		options = nextOptions;
@@ -499,20 +547,33 @@
 			fitbAnswers = nextFitbAnswers;
 		}
 
-		// Initialize caches based on loaded question type (use locals; avoid reading $state)
 		if (nextType === QUESTION_TYPES.MULTIPLE_CHOICE) {
 			mcOptionsCache = [...nextOptions];
 			mcCorrectCache = [...correctAnswerIndices];
 		} else if (nextType === QUESTION_TYPES.TRUE_FALSE) {
 			tfCorrectCache = correctAnswerIndices[0] ?? '';
 		} else if (nextType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
-			fitbAnswersCache = [...(nextFitbAnswers.length ? nextFitbAnswers : fitbAnswers)];
+			fitbAnswersCache = [...nextFitbAnswers];
+		}
+
+		populatedFormId = eq._id;
+	});
+
+	$effect(() => {
+		if (!isEditModalOpen) {
+			populatedFormId = '';
+			populatedQuestionId = '';
 		}
 	});
 
 	// Populate editors when editingQuestion becomes available
 	$effect(() => {
-		if (editingQuestion && $editor && $explanationEditor && editingQuestion._id !== populatedQuestionId) {
+		if (
+			editingQuestion &&
+			$editor &&
+			$explanationEditor &&
+			editingQuestion._id !== populatedQuestionId
+		) {
 			// Mark that we've populated this question
 			populatedQuestionId = editingQuestion._id;
 
@@ -554,6 +615,11 @@
 					? [...mcOptionsCache]
 					: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
 			correctAnswers = [...mcCorrectCache];
+		} else if (newType === QUESTION_TYPES.MATCHING) {
+			// No generic options list; matching has its own two-column UI.
+			// Initialize if empty
+			if (!matchingPrompts || matchingPrompts.length === 0) matchingPrompts = [''];
+			if (!matchingAnswers || matchingAnswers.length === 0) matchingAnswers = [''];
 		}
 	}
 
@@ -636,6 +702,43 @@
 			correctAnswers = encoded.map((_, i) => i.toString());
 		}
 
+		if (questionType === QUESTION_TYPES.MATCHING) {
+			const rawPrompts = matchingPrompts.map((t) => t.trim()).filter((t) => t.length > 0);
+			const rawAnswers = matchingAnswers.map((t) => t.trim()).filter((t) => t.length > 0);
+			if (rawPrompts.length === 0 || rawAnswers.length === 0) return;
+
+			function makeOptionId(stem: string, text: string, index: number): string {
+				const input = `${stem}|${text}|${index}`;
+				let hash = 0;
+				for (let i = 0; i < input.length; i++) {
+					const char = input.charCodeAt(i);
+					hash = (hash << 5) - hash + char;
+					hash = hash & hash;
+				}
+				return Math.abs(hash).toString(36).padStart(8, '0').slice(0, 8);
+			}
+
+			const promptOptions = rawPrompts.map((text, i) => {
+				const full = `prompt:${text}`;
+				return { id: makeOptionId(finalStem, full, i), text: full };
+			});
+			const answersOffset = promptOptions.length;
+			const answerOptions = rawAnswers.map((text, i) => {
+				const full = `answer:${text}`;
+				return { id: makeOptionId(finalStem, full, answersOffset + i), text: full };
+			});
+
+			const n = Math.min(promptOptions.length, answerOptions.length);
+			const mappings = Array.from(
+				{ length: n },
+				(_, i) => `${promptOptions[i].id}::${answerOptions[i].id}`
+			);
+
+			// Replace options and keep correctAnswers as pair ids so server stores them intact
+			options = [...promptOptions, ...answerOptions].map((o) => ({ text: o.text }));
+			correctAnswers = mappings;
+		}
+
 		const filledOptions = options.filter((opt) => opt.text.trim());
 
 		if (questionType === QUESTION_TYPES.TRUE_FALSE) {
@@ -648,10 +751,13 @@
 		isSubmitting = true;
 
 		try {
-			const filteredCorrectAnswers = correctAnswers
-				.map((index) => parseInt(index))
-				.filter((index) => index < filledOptions.length)
-				.map((index) => index.toString());
+			const filteredCorrectAnswers =
+				questionType === QUESTION_TYPES.MATCHING
+					? correctAnswers
+					: correctAnswers
+							.map((index) => parseInt(index))
+							.filter((index) => index < filledOptions.length)
+							.map((index) => index.toString());
 
 			await client.mutation(api.question.updateQuestion, {
 				questionId: editingQuestion._id,
@@ -664,7 +770,7 @@
 				status: questionStatus
 			});
 
-			    closeEditModal();
+			closeEditModal();
 		} catch (error) {
 			console.error('Failed to update question', error);
 		} finally {
@@ -726,7 +832,11 @@
 						</label>
 						<div class="join join-vertical sm:join-horizontal w-full">
 							{#each questionTypeOptions as option (option.value)}
-								<label class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {questionType === option.value ? 'btn-active' : ''}">
+								<label
+									class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {questionType === option.value
+										? 'btn-active'
+										: ''}"
+								>
 									<input
 										type="radio"
 										name="question-type"
@@ -749,7 +859,12 @@
 						</label>
 						<div class="join join-vertical sm:join-horizontal w-full">
 							{#each statusOptions as option (option.value)}
-								<label class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {option.colorClass} {questionStatus === option.value ? 'btn-active' : ''}">
+								<label
+									class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {option.colorClass} {questionStatus ===
+									option.value
+										? 'btn-active'
+										: ''}"
+								>
 									<input
 										type="radio"
 										name="question-status"
@@ -767,7 +882,6 @@
 			</div>
 
 			<div class="space-y-6">
-
 				<!-- Options & Answers -->
 				<div class="card bg-base-200/50 border border-base-300">
 					<div class="card-body">
@@ -836,6 +950,75 @@
 									Add Alternative Answer
 								</button>
 							</div>
+						{:else if questionType === QUESTION_TYPES.MATCHING}
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+								<div>
+									<h6 class="text-sm font-semibold mb-2">Prompts</h6>
+									<div class="space-y-3">
+										{#each matchingPrompts as p, i (i)}
+											<div class="flex items-center gap-2">
+												<input
+													class="input input-bordered flex-1"
+													placeholder="Prompt {i + 1}"
+													value={p}
+													oninput={(e) =>
+														(matchingPrompts = matchingPrompts.map((v, idx) =>
+															idx === i ? (e.target as HTMLInputElement).value : v
+														))}
+												/>
+												{#if matchingPrompts.length > 1}
+													<button
+														class="btn btn-ghost btn-sm btn-circle"
+														onclick={() =>
+															(matchingPrompts = matchingPrompts.filter((_, idx) => idx !== i))}
+													>
+														<X size={16} />
+													</button>
+												{/if}
+											</div>
+										{/each}
+										<button
+											class="btn btn-sm btn-outline"
+											type="button"
+											onclick={() => (matchingPrompts = [...matchingPrompts, ''])}
+											>Add Prompt</button
+										>
+									</div>
+								</div>
+								<div>
+									<h6 class="text-sm font-semibold mb-2">Possible Answers</h6>
+									<div class="space-y-3">
+										{#each matchingAnswers as a, i (i)}
+											<div class="flex items-center gap-2">
+												<input
+													class="input input-bordered flex-1"
+													placeholder="Answer {i + 1}"
+													value={a}
+													oninput={(e) =>
+														(matchingAnswers = matchingAnswers.map((v, idx) =>
+															idx === i ? (e.target as HTMLInputElement).value : v
+														))}
+												/>
+												{#if matchingAnswers.length > 1}
+													<button
+														class="btn btn-ghost btn-sm btn-circle"
+														onclick={() =>
+															(matchingAnswers = matchingAnswers.filter((_, idx) => idx !== i))}
+													>
+														<X size={16} />
+													</button>
+												{/if}
+											</div>
+										{/each}
+										<button
+											class="btn btn-sm btn-outline"
+											type="button"
+											onclick={() => (matchingAnswers = [...matchingAnswers, ''])}
+											>Add Answer</button
+										>
+									</div>
+								</div>
+							</div>
 						{:else}
 							<div class="space-y-3">
 								{#each options as option, index (index)}
@@ -865,16 +1048,16 @@
 										{/if}
 									</div>
 								{/each}
-						{#if questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
-							<div class="flex items-center gap-2 mt-2">
-								<button type="button" class="btn btn-sm btn-outline" onclick={addOption}>
-									Add Option
-								</button>
-								<button type="button" class="btn btn-sm btn-outline" onclick={shuffleOptions}>
-									Shuffle Options
-								</button>
-							</div>
-						{/if}
+								{#if questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
+									<div class="flex items-center gap-2 mt-2">
+										<button type="button" class="btn btn-sm btn-outline" onclick={addOption}>
+											Add Option
+										</button>
+										<button type="button" class="btn btn-sm btn-outline" onclick={shuffleOptions}>
+											Shuffle Options
+										</button>
+									</div>
+								{/if}
 							</div>
 						{/if}
 					</div>
@@ -937,20 +1120,38 @@
 												class="input input-bordered input-sm w-full"
 												placeholder="Alt text"
 												bind:value={m.altText}
-												oninput={() => handleMediaMetaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+												oninput={() =>
+													handleMediaMetaChange(
+														m._id,
+														m.altText,
+														m.caption || '',
+														m.showOnSolution
+													)}
 											/>
 											<input
 												class="input input-bordered input-sm w-full"
 												placeholder="Caption (optional)"
 												bind:value={m.caption}
-												oninput={() => handleMediaMetaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+												oninput={() =>
+													handleMediaMetaChange(
+														m._id,
+														m.altText,
+														m.caption || '',
+														m.showOnSolution
+													)}
 											/>
 											<label class="label cursor-pointer gap-2 text-sm">
 												<input
 													type="checkbox"
 													class="checkbox checkbox-sm"
 													bind:checked={m.showOnSolution}
-													onchange={() => handleMediaMetaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+													onchange={() =>
+														handleMediaMetaChange(
+															m._id,
+															m.altText,
+															m.caption || '',
+															m.showOnSolution
+														)}
 												/>
 												<span>Show on solution</span>
 											</label>
@@ -974,12 +1175,10 @@
 
 			<div class="modal-action mt-8">
 				<form method="dialog" class="flex gap-3">
-					<button class="btn btn-ghost" onclick={closeEditModal} disabled={isSubmitting}>Cancel</button>
-					<button
-						class="btn btn-primary gap-2"
-						onclick={handleSubmit}
-						disabled={isSubmitting}
+					<button class="btn btn-ghost" onclick={closeEditModal} disabled={isSubmitting}
+						>Cancel</button
 					>
+					<button class="btn btn-primary gap-2" onclick={handleSubmit} disabled={isSubmitting}>
 						{#if isSubmitting}
 							<span class="loading loading-spinner loading-sm"></span>
 							<span>Updating...</span>
