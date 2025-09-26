@@ -65,9 +65,9 @@
 </script>
 
 <div class="flex flex-col items-center p-4 w-full">
-	<p class="text-base sm:text-lg mb-4 whitespace-pre-line text-left">
-		{currentlySelected.stem}
-	</p>
+	<div class="text-base sm:text-lg mb-4 text-left font-medium tiptap-content whitespace-pre-line">
+		{@html currentlySelected.stem}
+	</div>
 	<div class="flex items-center mt-4 mb-6">
 		<input
 			type="text"

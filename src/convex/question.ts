@@ -455,6 +455,98 @@ export const moveQuestionsToModule = authCreateMutation({
 	}
 });
 
+export const duplicateQuestion = authCreateMutation({
+	args: { questionId: v.id('question') },
+	handler: async (ctx, { questionId }) => {
+		const original = await ctx.db.get(questionId);
+		if (!original) {
+			throw new Error('Question not found');
+		}
+
+		const lastInModule = await ctx.db
+			.query('question')
+			.withIndex('by_moduleId_order', (q) => q.eq('moduleId', original.moduleId))
+			.order('desc')
+			.first();
+
+		const nextOrder = lastInModule ? (lastInModule.order ?? 0) + 1 : 0;
+
+		const id = await ctx.db.insert('question', {
+			moduleId: original.moduleId,
+			type: original.type,
+			stem: original.stem,
+			options: original.options,
+			correctAnswers: original.correctAnswers,
+			explanation: original.explanation,
+			aiGenerated: original.aiGenerated,
+			status: original.status,
+			order: nextOrder,
+			metadata: original.metadata,
+			updatedAt: Date.now(),
+			searchText: computeSearchText({
+				stem: original.stem,
+				explanation: original.explanation,
+				type: original.type,
+				status: original.status,
+				aiGenerated: original.aiGenerated,
+				options: original.options,
+				correctAnswers: original.correctAnswers,
+				metadata: original.metadata
+			})
+		});
+
+		return id;
+	}
+});
+
+export const duplicateQuestionMany = authCreateMutation({
+	args: { questionId: v.id('question'), count: v.number() },
+	handler: async (ctx, { questionId, count }) => {
+		const original = await ctx.db.get(questionId);
+		if (!original) {
+			throw new Error('Question not found');
+		}
+		const n = Math.max(1, Math.min(10, count));
+
+		const lastInModule = await ctx.db
+			.query('question')
+			.withIndex('by_moduleId_order', (q) => q.eq('moduleId', original.moduleId))
+			.order('desc')
+			.first();
+
+		const nextOrder = lastInModule ? (lastInModule.order ?? 0) + 1 : 0;
+		const insertedIds: string[] = [];
+		for (let i = 0; i < n; i++) {
+			const id = await ctx.db.insert('question', {
+				moduleId: original.moduleId,
+				type: original.type,
+				stem: original.stem,
+				options: original.options,
+				correctAnswers: original.correctAnswers,
+				explanation: original.explanation,
+				aiGenerated: original.aiGenerated,
+				status: original.status,
+				order: nextOrder + i,
+				metadata: original.metadata,
+				updatedAt: Date.now(),
+				searchText: computeSearchText({
+					stem: original.stem,
+					explanation: original.explanation,
+					type: original.type,
+					status: original.status,
+					aiGenerated: original.aiGenerated,
+					options: original.options,
+					correctAnswers: original.correctAnswers,
+					metadata: original.metadata
+				})
+			});
+			insertedIds.push(id);
+		}
+
+		return { insertedIds, insertedCount: insertedIds.length };
+	}
+});
+
 export const getAllQuestions = authQuery({
 	args: {},
 	handler: async (ctx) => {

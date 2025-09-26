@@ -5,9 +5,10 @@
 	import type { Id, Doc } from '../../../../../convex/_generated/dataModel';
 	import { api } from '../../../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-	import { Pencil, Trash2, Plus, ArrowLeft } from 'lucide-svelte';
+import { Pencil, Trash2, Plus, ArrowLeft, Copy } from 'lucide-svelte';
 	import { ArrowRightLeft } from 'lucide-svelte';
-	import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
+import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
+import DuplicateQuestionModal from '$lib/admin/DuplicateQuestionModal.svelte';
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import MoveQuestionsModal from '$lib/admin/MoveQuestionsModal.svelte';
@@ -64,6 +65,9 @@
 	let isDeleteQuestionModalOpen = $state(false);
 	let editingQuestion = $state<QuestionItem | null>(null);
 	let questionToDelete = $state<QuestionItem | null>(null);
+let isDuplicateModalOpen = $state(false);
+let duplicateTarget = $state<QuestionItem | null>(null);
+let recentlyAddedIds = $state<Set<string>>(new Set());
 
 	type QuestionItem = Doc<'question'>;
 
@@ -238,6 +242,42 @@
 			questionList = [...(questions.data || [])];
 		}
 	}
+
+function openDuplicateModalForOne(id: string) {
+	const found = questions.data?.find((q) => q._id === id) as QuestionItem | undefined;
+	if (!found) return;
+	duplicateTarget = found;
+	isDuplicateModalOpen = true;
+}
+
+function cancelDuplicateModal() {
+	isDuplicateModalOpen = false;
+	duplicateTarget = null;
+}
+
+async function confirmDuplicateModal(count: number) {
+	if (!duplicateTarget) return;
+	try {
+		const result = await client.mutation(api.question.duplicateQuestionMany, {
+			questionId: duplicateTarget._id as Id<'question'>,
+			count
+		});
+		if (result?.insertedIds && Array.isArray(result.insertedIds)) {
+			const next = new Set(recentlyAddedIds);
+			for (const id of result.insertedIds) next.add(id);
+			recentlyAddedIds = next;
+			setTimeout(() => {
+				recentlyAddedIds = new Set();
+			}, 2000);
+		}
+		console.log('Duplicated ' + String(result.insertedCount) + ' copies');
+	} catch (error) {
+		console.error('Failed to duplicate questions');
+	} finally {
+		isDuplicateModalOpen = false;
+		duplicateTarget = null;
+	}
+}
 </script>
 
 <div class="min-h-screen p-8 max-w-7xl mx-auto">
@@ -452,9 +492,9 @@
 						container: index.toString(),
 						callbacks: { onDrop: handleQuestionDrop }
 					}}
-					class="relative rounded-xl bg-base-100 shadow-sm border border-base-300 p-4
+					class={`relative rounded-xl bg-base-100 shadow-sm border p-4
               transition-shadow duration-300 hover:shadow-md hover:border-primary/30
-              svelte-dnd-touch-feedback"
+              svelte-dnd-touch-feedback ${recentlyAddedIds.has(questionItem._id) ? 'border-success/70 ring-2 ring-success/30' : 'border-base-300'}`}
 					animate:flip={{ duration: 300 }}
 				>
 					<div
@@ -466,6 +506,7 @@
 								'[data-move-btn]',
 								'[data-view-btn]',
 								'[data-edit-btn]',
+							'[data-duplicate-btn]',
 								'.interactive',
 								'input[type="checkbox"]',
 								'label'
@@ -496,10 +537,10 @@
 
 									<div class="flex flex-col">
 										<h3
-											class="card-title text-base-content text-left whitespace-pre-line mb-3"
+											class="card-title text-base-content text-left mb-3 tiptap-content"
 											title={questionItem.stem}
 										>
-											{questionItem.stem}
+											{@html questionItem.stem}
 										</h3>
 
 										<div class="mt-1 flex flex-wrap items-center gap-2">
@@ -575,6 +616,18 @@
 													<span>Edit</span>
 												</button>
 											</li>
+									<li>
+										<button
+											data-duplicate-btn
+											class="btn btn-sm btn-ghost w-full justify-start"
+											type="button"
+											aria-label="Duplicate question"
+											onclick={() => openDuplicateModalForOne(questionItem._id)}
+										>
+											<Copy size={16} />
+											<span>Duplicate</span>
+										</button>
+									</li>
 											<li>
 												<button
 													data-delete-btn
@@ -613,7 +666,7 @@
 															<span
 																class="text-sm {questionItem.correctAnswers.includes(option.id)
 																	? 'text-base-content/80'
-																	: 'text-base-content/50'}">{option.text}</span
+																	: 'text-base-content/50'} tiptap-content">{@html option.text}</span
 															>
 														</div>
 													</li>
@@ -625,14 +678,14 @@
 									<!-- Explanation -->
 									{#if questionItem.explanation}
 										<div
-											class="prose prose-sm max-w-none text-base-content/80 rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1"
+											class="text-base-content/80 rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1"
 										>
 											<div
 												class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2"
 											>
 												EXPLANATION
 											</div>
-											<p class="m-0">{questionItem.explanation}</p>
+											<div class="m-0 tiptap-content">{@html questionItem.explanation}</div>
 										</div>
 									{/if}
 								</div>
@@ -680,4 +733,11 @@
 	onClose={handleCloseMoveModal}
 	sourceModuleId={moduleId}
 	selectedQuestionIds={moveQuestionIds}
+/>
+
+<DuplicateQuestionModal
+	isOpen={isDuplicateModalOpen}
+	onCancel={cancelDuplicateModal}
+	onConfirm={confirmDuplicateModal}
+	itemName={duplicateTarget?.stem}
 />

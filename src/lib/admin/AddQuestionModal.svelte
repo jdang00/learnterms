@@ -1,18 +1,360 @@
 <script lang="ts">
 	let { isAddModalOpen, closeAddModal, moduleId } = $props();
 
-	import { X, MessageSquare, Hash, ListChecks, Lightbulb } from 'lucide-svelte';
+	import { X, MessageSquare, Hash, ListChecks, Lightbulb, Bold, Italic, Type, FileText, CheckCircle, Archive, CheckSquare, ToggleLeft, Edit3, Underline as UnderlineIcon, Strikethrough as StrikethroughIcon, Code as CodeIcon, Quote as QuoteIcon, List as ListIcon, ListOrdered as ListOrderedIcon, Link as LinkIcon, Highlighter as HighlighterIcon } from 'lucide-svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { DISPLAY_QUESTION_TYPES, QUESTION_TYPES } from '../types';
 	import { createUploader } from '$lib/utils/uploadthing';
 	import { UploadDropzone } from '@uploadthing/svelte';
+	import { onMount } from 'svelte';
+	import type { Readable } from 'svelte/store';
+	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
+	import { getEditorExtensions } from '../config/tiptap';
+
+	let editor = $state() as Readable<Editor>;
+	let explanationEditor = $state() as Readable<Editor>;
+
+	onMount(() => {
+		editor = createEditor({
+			extensions: getEditorExtensions(),
+			content: questionStem || '',
+			editorProps: {
+				attributes: {
+					class: 'prose prose-sm max-w-none focus:outline-none min-h-12 p-3',
+				},
+			},
+		});
+
+		explanationEditor = createEditor({
+			extensions: getEditorExtensions(),
+			content: questionExplanation || '',
+			editorProps: {
+				attributes: {
+					class: 'prose prose-sm max-w-none focus:outline-none min-h-24 p-3',
+				},
+			},
+		});
+	});
+
+	// Toolbar functions
+	const toggleBold = () => {
+		$editor.chain().focus().toggleBold().run();
+	};
+
+	const toggleItalic = () => {
+		$editor.chain().focus().toggleItalic().run();
+	};
+
+	const toggleUnderline = () => {
+		$editor.chain().focus().toggleUnderline().run();
+	};
+
+	const toggleStrike = () => {
+		$editor.chain().focus().toggleStrike().run();
+	};
+
+	const toggleCode = () => {
+		$editor.chain().focus().toggleCode().run();
+	};
+
+	const toggleBlockquote = () => {
+		$editor.chain().focus().toggleBlockquote().run();
+	};
+
+	const toggleBulletList = () => {
+		$editor.chain().focus().toggleBulletList().run();
+	};
+
+	const toggleOrderedList = () => {
+		$editor.chain().focus().toggleOrderedList().run();
+	};
+
+	const setLink = () => {
+		const url = prompt('Enter URL:');
+		if (url) {
+			$editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+		}
+	};
+
+	const unsetLink = () => {
+		$editor.chain().focus().extendMarkRange('link').unsetLink().run();
+	};
+
+
+	const toggleHighlight = () => {
+		$editor.chain().focus().toggleHighlight().run();
+	};
+
+	const setParagraph = () => {
+		$editor.chain().focus().setParagraph().run();
+	};
+
+	const isActive = (name: string, attrs = {}) => $editor?.isActive(name, attrs) ?? false;
+
+	const menuItems = $derived([
+		{
+			name: 'bold',
+			command: toggleBold,
+			icon: Bold,
+			active: () => isActive('bold'),
+		},
+		{
+			name: 'italic',
+			command: toggleItalic,
+			icon: Italic,
+			active: () => isActive('italic'),
+		},
+		{
+			name: 'underline',
+			command: toggleUnderline,
+			icon: UnderlineIcon,
+			active: () => isActive('underline'),
+		},
+		{
+			name: 'strike',
+			command: toggleStrike,
+			icon: StrikethroughIcon,
+			active: () => isActive('strike'),
+		},
+		{
+			name: 'code',
+			command: toggleCode,
+			icon: CodeIcon,
+			active: () => isActive('code'),
+		},
+		{
+			name: 'highlight',
+			command: toggleHighlight,
+			icon: HighlighterIcon,
+			active: () => isActive('highlight'),
+		},
+		{
+			name: 'link',
+			command: isActive('link') ? unsetLink : setLink,
+			icon: LinkIcon,
+			active: () => isActive('link'),
+		},
+		{
+			name: 'blockquote',
+			command: toggleBlockquote,
+			icon: QuoteIcon,
+			active: () => isActive('blockquote'),
+		},
+		{
+			name: 'bullet-list',
+			command: toggleBulletList,
+			icon: ListIcon,
+			active: () => isActive('bulletList'),
+		},
+		{
+			name: 'ordered-list',
+			command: toggleOrderedList,
+			icon: ListOrderedIcon,
+			active: () => isActive('orderedList'),
+		},
+		{
+			name: 'paragraph',
+			command: setParagraph,
+			icon: Type,
+			active: () => isActive('paragraph'),
+		},
+	]);
+
+	const questionTypeOptions = $derived([
+		{
+			value: QUESTION_TYPES.MULTIPLE_CHOICE,
+			label: 'Multiple Choice',
+			icon: CheckSquare
+		},
+		{
+			value: QUESTION_TYPES.TRUE_FALSE,
+			label: 'True/False',
+			icon: ToggleLeft
+		},
+		{
+			value: QUESTION_TYPES.FILL_IN_THE_BLANK,
+			label: 'Fill in the Blank',
+			icon: Edit3
+		},
+	]);
+
+	const statusOptions = $derived([
+		{
+			value: 'published',
+			label: 'Published',
+			icon: CheckCircle,
+			colorClass: 'btn-success btn-soft'
+		},
+		{
+			value: 'draft',
+			label: 'Draft',
+			icon: FileText,
+			colorClass: 'btn-info btn-soft'
+		},
+		{
+			value: 'archived',
+			label: 'Archived',
+			icon: Archive,
+			colorClass: 'btn-error btn-soft'
+		},
+	]);
+
+	// Explanation editor toolbar functions
+	const toggleExplanationBold = () => {
+		$explanationEditor.chain().focus().toggleBold().run();
+	};
+
+	const toggleExplanationItalic = () => {
+		$explanationEditor.chain().focus().toggleItalic().run();
+	};
+
+	const toggleExplanationUnderline = () => {
+		$explanationEditor.chain().focus().toggleUnderline().run();
+	};
+
+	const toggleExplanationStrike = () => {
+		$explanationEditor.chain().focus().toggleStrike().run();
+	};
+
+	const toggleExplanationCode = () => {
+		$explanationEditor.chain().focus().toggleCode().run();
+	};
+
+	const toggleExplanationBlockquote = () => {
+		$explanationEditor.chain().focus().toggleBlockquote().run();
+	};
+
+	const toggleExplanationBulletList = () => {
+		$explanationEditor.chain().focus().toggleBulletList().run();
+	};
+
+	const toggleExplanationOrderedList = () => {
+		$explanationEditor.chain().focus().toggleOrderedList().run();
+	};
+
+	const setExplanationLink = () => {
+		const url = prompt('Enter URL:');
+		if (url) {
+			$explanationEditor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+		}
+	};
+
+	const unsetExplanationLink = () => {
+		$explanationEditor.chain().focus().extendMarkRange('link').unsetLink().run();
+	};
+
+
+	const toggleExplanationHighlight = () => {
+		$explanationEditor.chain().focus().toggleHighlight().run();
+	};
+
+	const setExplanationParagraph = () => {
+		$explanationEditor.chain().focus().setParagraph().run();
+	};
+
+	const isExplanationActive = (name: string, attrs = {}) => $explanationEditor?.isActive(name, attrs) ?? false;
+
+	const explanationMenuItems = $derived([
+		{
+			name: 'bold',
+			command: toggleExplanationBold,
+			icon: Bold,
+			active: () => isExplanationActive('bold'),
+		},
+		{
+			name: 'italic',
+			command: toggleExplanationItalic,
+			icon: Italic,
+			active: () => isExplanationActive('italic'),
+		},
+		{
+			name: 'underline',
+			command: toggleExplanationUnderline,
+			icon: UnderlineIcon,
+			active: () => isExplanationActive('underline'),
+		},
+		{
+			name: 'strike',
+			command: toggleExplanationStrike,
+			icon: StrikethroughIcon,
+			active: () => isExplanationActive('strike'),
+		},
+		{
+			name: 'code',
+			command: toggleExplanationCode,
+			icon: CodeIcon,
+			active: () => isExplanationActive('code'),
+		},
+		{
+			name: 'highlight',
+			command: toggleExplanationHighlight,
+			icon: HighlighterIcon,
+			active: () => isExplanationActive('highlight'),
+		},
+		{
+			name: 'link',
+			command: isExplanationActive('link') ? unsetExplanationLink : setExplanationLink,
+			icon: LinkIcon,
+			active: () => isExplanationActive('link'),
+		},
+		{
+			name: 'blockquote',
+			command: toggleExplanationBlockquote,
+			icon: QuoteIcon,
+			active: () => isExplanationActive('blockquote'),
+		},
+		{
+			name: 'bullet-list',
+			command: toggleExplanationBulletList,
+			icon: ListIcon,
+			active: () => isExplanationActive('bulletList'),
+		},
+		{
+			name: 'ordered-list',
+			command: toggleExplanationOrderedList,
+			icon: ListOrderedIcon,
+			active: () => isExplanationActive('orderedList'),
+		},
+		{
+			name: 'paragraph',
+			command: setExplanationParagraph,
+			icon: Type,
+			active: () => isExplanationActive('paragraph'),
+		},
+	]);
+
+	// Update questionStem and questionStemText when editor content changes
+	$effect(() => {
+		if ($editor) {
+			const updateStem = () => {
+				questionStem = $editor.getHTML();
+				questionStemText = $editor.getText();
+			};
+			$editor.on('update', updateStem);
+			return () => $editor.off('update', updateStem);
+		}
+	});
+
+	// Update questionExplanation and questionExplanationText when explanation editor content changes
+	$effect(() => {
+		if ($explanationEditor) {
+			const updateExplanation = () => {
+				questionExplanation = $explanationEditor.getHTML();
+				questionExplanationText = $explanationEditor.getText();
+			};
+			$explanationEditor.on('update', updateExplanation);
+			return () => $explanationEditor.off('update', updateExplanation);
+		}
+	});
 
 	const client = useConvexClient();
 
 	let questionStem: string = $state('');
+	let questionStemText: string = $state('');
 	let questionExplanation: string = $state('');
+	let questionExplanationText: string = $state('');
 	let questionStatus: string = $state('draft');
 	let questionType: string = $state('multiple_choice');
 	let options: Array<{ text: string }> = $state([
@@ -42,7 +384,7 @@
 	}
 
 	// Function to safely update media state
-	function addMediaItem(mediaItem: typeof queuedMedia[0]) {
+	function addMediaItem(mediaItem: (typeof queuedMedia)[0]) {
 		queuedMedia = [...queuedMedia, mediaItem];
 	}
 
@@ -246,7 +588,7 @@
 
 		try {
 			const nextOrder = questions.data?.length
-				? Math.max(...(questions.data.map((q) => q.order || 0))) + 1
+				? Math.max(...questions.data.map((q) => q.order || 0)) + 1
 				: 0;
 
 			const filteredCorrectAnswers = correctAnswers
@@ -279,7 +621,7 @@
 						altText: m.name || '',
 						caption: '',
 						order: i,
-							showOnSolution: m.showOnSolution ?? false,
+						showOnSolution: m.showOnSolution ?? false,
 						metadata: {
 							uploadthingKey: m.key || '',
 							sizeBytes: m.sizeBytes || 0,
@@ -290,12 +632,21 @@
 			}
 
 			questionStem = '';
+			questionStemText = '';
 			questionExplanation = '';
+			questionExplanationText = '';
 			questionStatus = 'draft';
 			questionType = 'multiple_choice';
 			options = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
 			correctAnswers = [];
 			queuedMedia = [];
+			// Reset editor content
+			if ($editor) {
+				$editor.commands.setContent('');
+			}
+			if ($explanationEditor) {
+				$explanationEditor.commands.setContent('');
+			}
 			closeAddModal();
 		} catch (error) {
 			console.error('Failed to create question', error);
@@ -317,191 +668,222 @@
 			</button>
 		</form>
 
-		<div class="mb-6 flex items-center gap-2">
+		<div class="mb-8 mt-6 flex items-center gap-2">
 			<h3 class="text-2xl font-extrabold tracking-tight">Add New Question</h3>
 		</div>
 
-		<div class="flex flex-col gap-6">
-			<div class="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-[auto_1fr]">
-				<label
-					class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80"
-					for="question-stem"
-				>
-					<MessageSquare size={18} class="text-primary/80" />
-					<span>Question</span>
-				</label>
-				<textarea
-					id="question-stem"
-					class="textarea textarea-bordered w-full min-h-12"
-					bind:value={questionStem}
-					placeholder="Enter your question..."
-				></textarea>
-
-				<label
-					class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80"
-					for="question-type"
-				>
-					<Hash size={18} class="text-primary/80" />
-					<span>Type</span>
-				</label>
-				<select
-					id="question-type"
-					class="select select-bordered w-full"
-					bind:value={questionType}
-					onchange={handleTypeChange}
-				>
-					{#each Object.entries(DISPLAY_QUESTION_TYPES) as [value, label] (value)}
-						<option {value}>{label}</option>
-					{/each}
-				</select>
-
-				<label
-					class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80"
-					for="question-status"
-				>
-					<Hash size={18} class="text-primary/80" />
-					<span>Status</span>
-				</label>
-				<select
-					id="question-status"
-					class="select select-bordered w-full"
-					bind:value={questionStatus}
-				>
-					<option value="draft">Draft</option>
-					<option value="published">Published</option>
-					<option value="archived">Archived</option>
-				</select>
-
-				{#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
-					<label
-						class="label m-0 flex items-center gap-2 self-start p-0 text-base font-medium text-base-content/80"
-						for="fitb-answers"
-					>
-						<ListChecks size={18} class="text-primary/80" />
-						<span>Accepted Answers</span>
+		<!-- Question Controls -->
+		<div class="space-y-4 mb-6">
+			<div class="flex flex-col gap-4">
+				<div class="flex flex-col gap-2">
+					<label for="question-stem" class="font-semibold flex items-center gap-2 text-sm">
+						<MessageSquare size={16} class="text-primary/80" />
+						Question
 					</label>
-					<div class="space-y-3">
-						{#each fitbAnswers as row, index (index)}
-							<div class="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto_auto] md:items-center">
-								<input
-									class="input input-bordered w-full"
-									placeholder="Answer {index + 1}"
-									value={row.value}
-									oninput={(e) => updateFitbValue(index, (e.target as HTMLInputElement).value)}
-								/>
-								<select
-									class="select select-bordered"
-									value={row.mode}
-									onchange={(e) =>
-										updateFitbMode(index, (e.target as HTMLSelectElement).value as FitbMode)}
+					<div class="border border-base-300 rounded-lg overflow-hidden">
+						<div class="bg-base-200 border-b border-base-300 p-2 flex gap-1">
+							{#each menuItems as item (item.name)}
+								<button
+									type="button"
+									class="btn btn-ghost btn-xs gap-1 {item.active() ? 'btn-active' : ''}"
+									onclick={item.command}
+									title={item.name}
 								>
-									{#each Object.entries(FITB_MODE_LABELS) as [value, label] (value)}
-										<option {value}>{label}</option>
-									{/each}
-								</select>
+									<item.icon size={14} />
+								</button>
+							{/each}
+						</div>
+						<EditorContent editor={$editor} class="min-h-12" />
+					</div>
+				</div>
+
+				<div class="flex flex-col gap-2">
+					<label for="question-type" class="font-semibold flex items-center gap-2 text-sm">
+						<Hash size={16} class="text-primary/80" />
+						Type
+					</label>
+					<div class="join join-vertical sm:join-horizontal w-full">
+						{#each questionTypeOptions as option (option.value)}
+							<label class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {questionType === option.value ? 'btn-active' : ''}">
+								<input
+									type="radio"
+									name="question-type"
+									class="hidden"
+									value={option.value}
+									bind:group={questionType}
+									onchange={handleTypeChange}
+								/>
+								<option.icon size={14} />
+								{option.label}
+							</label>
+						{/each}
+					</div>
+				</div>
+
+				<div class="flex flex-col gap-2">
+					<label for="question-status" class="font-semibold flex items-center gap-2 text-sm">
+						<Hash size={16} class="text-primary/80" />
+						Status
+					</label>
+					<div class="join join-vertical sm:join-horizontal w-full">
+						{#each statusOptions as option (option.value)}
+							<label class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {option.colorClass} {questionStatus === option.value ? 'btn-active' : ''}">
+								<input
+									type="radio"
+									name="question-status"
+									class="hidden"
+									value={option.value}
+									bind:group={questionStatus}
+								/>
+								<option.icon size={14} />
+								{option.label}
+							</label>
+						{/each}
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="space-y-6">
+			<!-- Options & Answers -->
+			<div class="card bg-base-200/50 border border-base-300">
+				<div class="card-body">
+					<h6 class="font-semibold mb-4 flex items-center gap-2 text-sm">
+						<ListChecks size={16} class="text-primary/80" />
+						Options & Answers
+					</h6>
+
+					{#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
+						<div class="space-y-4">
+							{#each fitbAnswers as row, index (index)}
+								<div class="p-3 rounded-lg border border-base-300 bg-base-100">
+									<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+										<input
+											class="input input-bordered w-full"
+											placeholder="Answer {index + 1}"
+											value={row.value}
+											oninput={(e) => updateFitbValue(index, (e.target as HTMLInputElement).value)}
+										/>
+										<select
+											class="select select-bordered"
+											value={row.mode}
+											onchange={(e) =>
+												updateFitbMode(index, (e.target as HTMLSelectElement).value as FitbMode)}
+										>
+											{#each Object.entries(FITB_MODE_LABELS) as [value, label] (value)}
+												<option {value}>{label}</option>
+											{/each}
+										</select>
+									</div>
+									<div class="flex items-center gap-4 mt-3">
+										<label class="label cursor-pointer gap-2 text-sm">
+											<input
+												type="checkbox"
+												class="checkbox checkbox-sm"
+												checked={row.flags.ignorePunct}
+												onchange={() => toggleFitbFlag(index, 'ignorePunct')}
+											/>
+											<span>Ignore Punctuation</span>
+										</label>
+										<label class="label cursor-pointer gap-2 text-sm">
+											<input
+												type="checkbox"
+												class="checkbox checkbox-sm"
+												checked={row.flags.normalizeWs}
+												onchange={() => toggleFitbFlag(index, 'normalizeWs')}
+											/>
+											<span>Normalize Whitespace</span>
+										</label>
+										<div class="flex-grow"></div>
+										{#if fitbAnswers.length > 1}
+											<button
+												class="btn btn-ghost btn-sm btn-circle"
+												onclick={() => removeFitbRow(index)}
+											>
+												<X size={16} />
+											</button>
+										{/if}
+									</div>
+								</div>
+							{/each}
+							<button type="button" class="btn btn-sm btn-outline" onclick={addFitbRow}>
+								Add Alternative Answer
+							</button>
+						</div>
+					{:else}
+						<div class="space-y-3">
+							{#each options as option, index (index)}
 								<div class="flex items-center gap-3">
-									<label class="label cursor-pointer gap-2">
-										<input
-											type="checkbox"
-											class="checkbox checkbox-sm"
-											checked={row.flags.ignorePunct}
-											onchange={() => toggleFitbFlag(index, 'ignorePunct')}
-										/>
-										<span class="text-sm">Ignore punctuation</span>
-									</label>
-									<label class="label cursor-pointer gap-2">
-										<input
-											type="checkbox"
-											class="checkbox checkbox-sm"
-											checked={row.flags.normalizeWs}
-											onchange={() => toggleFitbFlag(index, 'normalizeWs')}
-										/>
-										<span class="text-sm">Normalize whitespace</span>
-									</label>
-									{#if fitbAnswers.length > 1}
-										<button class="btn btn-ghost btn-sm" onclick={() => removeFitbRow(index)}>
+									<input
+										type="checkbox"
+										class="checkbox checkbox-primary"
+										checked={correctAnswers.includes(index.toString())}
+										onchange={() => toggleCorrectAnswer(index)}
+										disabled={questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
+									/>
+									<input
+										type="text"
+										class="input input-bordered flex-1 rounded-lg"
+										bind:value={option.text}
+										disabled={questionType === QUESTION_TYPES.TRUE_FALSE}
+										placeholder="Option {index + 1}"
+									/>
+									{#if options.length > 2 && questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
+										<button
+											type="button"
+											class="btn btn-ghost btn-sm btn-circle"
+											onclick={() => removeOption(index)}
+										>
 											<X size={16} />
 										</button>
 									{/if}
 								</div>
-							</div>
-						{/each}
-						<button type="button" class="btn btn-ghost btn-sm" onclick={addFitbRow}>
-							Add Alternative Answer
-						</button>
-					</div>
-				{:else}
-					<label
-						class="label m-0 flex items-center gap-2 self-start p-0 text-base font-medium text-base-content/80"
-						for="question-options"
-					>
-						<ListChecks size={18} class="text-primary/80" />
-						<span>Options</span>
-					</label>
-					<div class="space-y-3">
-						{#each options as option, index (index)}
-							<div class="flex items-center gap-3">
-								<input
-									type="checkbox"
-									class="checkbox checkbox-primary"
-									checked={correctAnswers.includes(index.toString())}
-									onchange={() => toggleCorrectAnswer(index)}
-									disabled={questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
-								/>
-								<input
-									type="text"
-									class="input input-bordered flex-1"
-									bind:value={option.text}
-									disabled={questionType === QUESTION_TYPES.TRUE_FALSE}
-									placeholder="Option {index + 1}"
-								/>
-								{#if options.length > 2 && questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
-									<button
-										type="button"
-										class="btn btn-ghost btn-sm"
-										onclick={() => removeOption(index)}
-									>
-										<X size={16} />
+							{/each}
+							{#if questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
+								<div class="flex items-center gap-2">
+									<button type="button" class="btn btn-sm btn-outline" onclick={addOption}>
+										Add Option
 									</button>
-								{/if}
-							</div>
-						{/each}
-					{#if questionType !== QUESTION_TYPES.TRUE_FALSE && questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK}
-						<div class="flex items-center gap-2">
-							<button type="button" class="btn btn-ghost btn-sm" onclick={addOption}>
-								Add Option
-							</button>
-							<button type="button" class="btn btn-ghost btn-sm" onclick={shuffleOptions}>
-								Shuffle Options
-							</button>
+									<button type="button" class="btn btn-sm btn-outline" onclick={shuffleOptions}>
+										Shuffle Options
+									</button>
+								</div>
+							{/if}
 						</div>
 					{/if}
-					</div>
-				{/if}
+				</div>
+			</div>
 
-				<label
-					class="label m-0 flex items-center gap-2 self-start p-0 text-base font-medium text-base-content/80"
-					for="question-explanation"
-				>
-					<Lightbulb size={18} class="text-primary/80" />
-					<span>Explanation</span>
-				</label>
-				<textarea
-					id="question-explanation"
-					class="textarea textarea-bordered w-full min-h-24"
-					bind:value={questionExplanation}
-					placeholder="Enter explanation (optional)..."
-				></textarea>
+			<!-- Explanation -->
+			<div class="card bg-base-200/50 border border-base-300">
+				<div class="card-body">
+					<h6 class="font-semibold mb-4 flex items-center gap-2 text-sm">
+						<Lightbulb size={16} class="text-primary/80" />
+						Explanation
+					</h6>
+					<div class="border border-base-300 rounded-lg overflow-hidden">
+						<div class="bg-base-200 border-b border-base-300 p-2 flex gap-1">
+							{#each explanationMenuItems as item (item.name)}
+								<button
+									type="button"
+									class="btn btn-ghost btn-sm gap-1 {item.active() ? 'btn-active' : ''}"
+									onclick={item.command}
+									title={item.name}
+								>
+									<item.icon size={16} />
+								</button>
+							{/each}
+						</div>
+						<EditorContent editor={$explanationEditor} class="min-h-24" />
+					</div>
+				</div>
 			</div>
 		</div>
 
-		<!-- Media Upload -->
-		<div class="mt-4">
-			<div class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80">
-				<span>Attachments</span>
-			</div>
-			<div class="card bg-base-100 border border-base-300 shadow-sm">
+			<!-- Media Upload -->
+			<div class="card bg-base-200/50 border border-base-300">
 				<div class="card-body">
+					<h6 class="font-semibold mb-4 text-sm">Attachments</h6>
 					<div class="flex justify-center">
 						<div class="w-full max-w-xs">
 							<UploadDropzone
@@ -521,35 +903,40 @@
 						</div>
 					{/if}
 					{#if queuedMedia.length > 0}
-						<div class="mt-3 grid grid-cols-2 gap-3">
+						<div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
 							{#each queuedMedia as m, idx (idx)}
-								<div class="border border-base-300 rounded-lg overflow-hidden">
+								<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
 									<img src={m.url} alt={m.name} class="w-full h-24 object-cover" />
-									<div class="flex items-center justify-between p-2 text-xs">
-										<div class="truncate">
-											<span class="font-medium">{m.name || 'Uploaded'}</span>
-											<span class="opacity-60 ml-2">{m.mimeType}</span>
-										</div>
-									<div class="flex items-center gap-2">
-										<label class="label cursor-pointer gap-1">
-											<input type="checkbox" class="checkbox checkbox-xs" bind:checked={m.showOnSolution} />
+									<div class="p-3 space-y-2">
+										<input
+											class="input input-bordered input-sm w-full"
+											placeholder="Alt text"
+											bind:value={m.name}
+										/>
+										<label class="label cursor-pointer gap-2 text-sm">
+											<input
+												type="checkbox"
+												class="checkbox checkbox-sm"
+												bind:checked={m.showOnSolution}
+											/>
 											<span>Show on solution</span>
 										</label>
-										<button class="btn btn-ghost btn-xs" onclick={() => removeQueuedMedia(idx)}>Remove</button>
-									</div>
+										<div class="flex justify-end">
+											<button class="btn btn-ghost btn-xs text-error" onclick={() => removeQueuedMedia(idx)}>Remove</button>
+										</div>
 									</div>
 								</div>
 							{/each}
 						</div>
+					{:else}
+						<div class="text-center text-base-content/60 p-8">No attachments yet.</div>
 					{/if}
 				</div>
 			</div>
-		</div>
 
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
-				<button class="btn btn-ghost" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button
-				>
+				<button class="btn btn-ghost" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button>
 				<button
 					class="btn btn-primary gap-2"
 					onclick={handleSubmit}

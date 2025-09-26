@@ -8,7 +8,14 @@
 	import MobileInfo from '$lib/components/MobileInfo.svelte';
 	import ResultBanner from '$lib/components/ResultBanner.svelte';
 	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
-	import { Flag, BookmarkCheck, ArrowDownNarrowWide, Maximize, Minimize, Pencil } from 'lucide-svelte';
+	import {
+		Flag,
+		BookmarkCheck,
+		ArrowDownNarrowWide,
+		Maximize,
+		Minimize,
+		Pencil
+	} from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { slide, fade, scale } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
@@ -32,7 +39,6 @@
 	const contributor = $derived(clerk.user?.publicMetadata.create === 'contributor');
 	const canEdit = $derived(admin || contributor);
 
-
 	function isAuthError(error: any): boolean {
 		if (!error) return false;
 		const message = error.message || error.toString();
@@ -53,8 +59,6 @@
 	let shouldShowError = $derived(
 		questions.error && !(suppressAuthErrors && isAuthError(questions.error))
 	);
-
-
 </script>
 
 {#if questions.isLoading}
@@ -62,7 +66,7 @@
 {:else if shouldShowError}
 	<ErrorDisplay error={questions.error} showReload={true} class="mb-4" />
 {:else if currentlySelected}
-<div
+	<div
 		class="flex flex-col md:flex-col lg:flex-row bg-base-100 {qs.fullscreenEnabled
 			? ' min-h-[calc(100vh-3rem)] sm:min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)]'
 			: 'h-[24rem] sm:h-[28rem] overflow-hidden'} pt-2 md:pt-3 lg:p-4 gap-3 sm:gap-4 lg:gap-8 rounded-t-xl transition-all duration-500 ease-in-out"
@@ -83,7 +87,9 @@
 		{/if}
 
 		<div
-			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full {qs.fullscreenEnabled ? 'pb-24 sm:pb-36 lg:pb-48' : 'pb-4'} relative"
+			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full {qs.fullscreenEnabled
+				? 'pb-24 sm:pb-36 lg:pb-48'
+				: 'pb-4'} relative"
 		>
 			<ResultBanner bind:qs />
 			{#if qs.noFlags}
@@ -109,16 +115,13 @@
 				{qs}
 			/>
 
-			<div class="text-md sm:text-lg lg:text-xl p-3 sm:p-4">
-				<div class="flex flex-row justify-between mb-4">
+			<div class="text-md sm:text-lg lg:text-xl p-4 sm:pe-4">
+				<div class="flex flex-row justify-between">
 					{#if currentlySelected.type !== QUESTION_TYPES.FILL_IN_THE_BLANK}
-						<div class="flex flex-row flex-wrap items-end gap-1 sm:gap-2">
-							<div class="text-base sm:text-lg font-semibold leading-tight whitespace-pre-line">
-								{currentlySelected.stem}
-							  </div>
-							<span class="text-base-content/70 font-medium text-base sm:text-lg leading-tight">
-								Select {currentlySelected.correctAnswers.length}.
-							</span>
+						<div class="items-end gap-1 sm:gap-2 self-center">
+							<div class="text-base sm:text-xl leading-tight tiptap-content font-medium ms-2">
+								{@html currentlySelected.stem}
+							</div>
 						</div>
 					{/if}
 
@@ -126,9 +129,9 @@
 						{#if canEdit && currentlySelected}
 							<a
 								class="btn btn-soft btn-secondary m-1 btn-circle"
-							href={`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`}
-							target="_blank"
-							rel="noopener noreferrer"
+								href={`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`}
+								target="_blank"
+								rel="noopener noreferrer"
 								title="Edit"
 							>
 								<Pencil size="16" />
@@ -158,9 +161,16 @@
 						</div>
 					</div>
 				</div>
+
+
+			
+
 				{#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}
 					<FillInTheBlank bind:qs {currentlySelected} />
 				{:else}
+				<div class="text-base-content/70 font-medium text-base sm:text-lg leading-tight my-3 ms-2">
+					Select {currentlySelected.correctAnswers.length}.
+				</div>
 					<AnswerOptions bind:qs {currentlySelected} />
 				{/if}
 
@@ -172,7 +182,7 @@
 				transition:slide={{ duration: 300, easing: cubicInOut, axis: 'y' }}
 				class="transition-all duration-300 ease-in-out"
 			>
-						<MobileMenu bind:qs {currentlySelected} classId={data.classId} moduleId={data.moduleId} />
+				<MobileMenu bind:qs {currentlySelected} classId={data.classId} moduleId={data.moduleId} />
 			</div>
 		{/if}
 	</div>
