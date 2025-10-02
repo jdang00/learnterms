@@ -8,7 +8,8 @@
 	import QuizListView from '$lib/components/QuizListView.svelte';
 	import ModuleInfo from '$lib/components/ModuleInfo.svelte';
 	import QuizErrorHandler from '$lib/components/QuizErrorHandler.svelte';
-	import { onMount, tick } from 'svelte';
+import { onMount, tick } from 'svelte';
+ 
 	import { Maximize, Minimize } from 'lucide-svelte';
 	import { slide, fade, scale } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
@@ -59,6 +60,11 @@
 				return;
 			}
 			return;
+		}
+
+		// Mark locally so navigation accent updates immediately
+		if (hasSelectedAnswers || hasEliminatedAnswers || isFlagged) {
+			qs.markCurrentQuestionInteracted?.();
 		}
 
 		try {
@@ -208,6 +214,8 @@
 			}
 		}
 	});
+
+ 
 
 	let currentlySelected = $derived(
 		qs.getCurrentFilteredQuestion() ||

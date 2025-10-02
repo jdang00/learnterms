@@ -49,7 +49,7 @@ import DuplicateQuestionModal from '$lib/admin/DuplicateQuestionModal.svelte';
 		};
 	});
 
-	const moduleInfo = useQuery(api.module.getModuleById, { id: moduleId as Id<'module'> });
+const moduleInfo = useQuery(api.module.getModuleById, { id: moduleId as Id<'module'> });
 
 	const client = useConvexClient();
 	const clerk = useClerkContext();
@@ -592,6 +592,7 @@ async function confirmDuplicateModal(count: number) {
 											role="menu"
 											class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
 										>
+                                    
 											<li>
 												<button
 													data-move-btn
@@ -644,7 +645,7 @@ async function confirmDuplicateModal(count: number) {
 									</div>
 								{/if}
 							</div>
-
+                    
 							{#if showTruncated}
 								<div class="flex flex-col gap-3 sm:flex-row">
 									<!-- Options -->

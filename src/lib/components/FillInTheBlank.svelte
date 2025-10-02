@@ -77,6 +77,9 @@
 			oninput={(e) => {
 				inputText = (e.target as HTMLInputElement).value;
 				qs.selectedAnswers = inputText ? [inputText] : [];
+				if (qs.selectedAnswers.length > 0) {
+					qs.markCurrentQuestionInteracted?.();
+				}
 			}}
 			onkeydown={(e) => {
 				if (e.key === 'Enter') {

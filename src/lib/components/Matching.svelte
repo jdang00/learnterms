@@ -71,6 +71,7 @@
         console.log(`[Matching] setUserSelection: promptId=${promptId}, answerId=${answerId}, oldSelectedAnswers=${JSON.stringify(qs.selectedAnswers)}, newSelection=${newSelection}`);
         qs.selectedAnswers = [...others, newSelection];
         console.log(`[Matching] setUserSelection: updated selectedAnswers=${JSON.stringify(qs.selectedAnswers)}`);
+        qs.markCurrentQuestionInteracted?.();
         qs.scheduleSave?.();
     }
 
