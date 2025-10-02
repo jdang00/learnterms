@@ -141,6 +141,9 @@ export class QuizState {
 		}
 
 		this.selectedAnswers = userText ? [userText] : [];
+		if (this.selectedAnswers.length > 0) {
+			this.markCurrentQuestionInteracted();
+		}
 		this.checkAnswer(isAnyMatch ? ['1'] : ['0'], ['1'], { autoNextOnCorrect: false });
 		this.scheduleSave();
 	}
@@ -155,6 +158,10 @@ export class QuizState {
 		// Check if user answers match correct answers exactly
 		const isCorrect = correctAnswers.length === userAnswers.length &&
 			correctAnswers.every(answer => userAnswers.includes(answer));
+
+		if (userAnswers.length > 0) {
+			this.markCurrentQuestionInteracted();
+		}
 
 		this.checkAnswer(isCorrect ? ['1'] : ['0'], ['1'], { autoNextOnCorrect: false });
 	}
@@ -354,10 +361,11 @@ export class QuizState {
 			this.eliminatedAnswers = [...this.eliminatedAnswers, optionId];
 			this.selectedAnswers = this.selectedAnswers.filter((id) => id !== optionId);
 		}
+		this.markCurrentQuestionInteracted();
 		this.scheduleSave();
 	}
 
-	toggleOption(optionId: string) {
+		toggleOption(optionId: string) {
 		if (this.eliminatedAnswers.includes(optionId)) {
 			return;
 		}
@@ -367,10 +375,7 @@ export class QuizState {
 		} else {
 			this.selectedAnswers = [...this.selectedAnswers, optionId];
 		}
-		const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
-		if (current && !this.liveInteractedQuestions.includes(current._id)) {
-			this.liveInteractedQuestions = [...this.liveInteractedQuestions, current._id];
-		}
+			this.markCurrentQuestionInteracted();
 		this.scheduleSave();
 	}
 
@@ -594,6 +599,15 @@ export class QuizState {
 			}
 		} catch {
 			/* no-op */
+		}
+	}
+
+	markCurrentQuestionInteracted() {
+		const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
+		if (!current) return;
+		if (!this.liveInteractedQuestions.includes(current._id)) {
+			this.liveInteractedQuestions = [...this.liveInteractedQuestions, current._id];
+			this.interactedQuestionsCount = this.liveInteractedQuestions.length;
 		}
 	}
 }

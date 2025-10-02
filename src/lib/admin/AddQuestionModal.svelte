@@ -1,11 +1,34 @@
 <script lang="ts">
 	let { isAddModalOpen, closeAddModal, moduleId } = $props();
 
-	import { X, MessageSquare, Hash, ListChecks, Lightbulb, Bold, Italic, Type, FileText, CheckCircle, Archive, CheckSquare, ToggleLeft, Edit3, Underline as UnderlineIcon, Strikethrough as StrikethroughIcon, Code as CodeIcon, Quote as QuoteIcon, List as ListIcon, ListOrdered as ListOrderedIcon, Link as LinkIcon, Highlighter as HighlighterIcon } from 'lucide-svelte';
+	import {
+		X,
+		MessageSquare,
+		Hash,
+		ListChecks,
+		Lightbulb,
+		Bold,
+		Italic,
+		Type,
+		FileText,
+		CheckCircle,
+		Archive,
+		CheckSquare,
+		ToggleLeft,
+		Edit3,
+		Underline as UnderlineIcon,
+		Strikethrough as StrikethroughIcon,
+		Code as CodeIcon,
+		Quote as QuoteIcon,
+		List as ListIcon,
+		ListOrdered as ListOrderedIcon,
+		Link as LinkIcon,
+		Highlighter as HighlighterIcon
+	} from 'lucide-svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
-	import { DISPLAY_QUESTION_TYPES, QUESTION_TYPES } from '../types';
+	import { QUESTION_TYPES } from '../types';
 	import { createUploader } from '$lib/utils/uploadthing';
 	import { UploadDropzone } from '@uploadthing/svelte';
 	import { onMount } from 'svelte';
@@ -22,9 +45,9 @@
 			content: questionStem || '',
 			editorProps: {
 				attributes: {
-					class: 'prose prose-sm max-w-none focus:outline-none min-h-12 p-3',
-				},
-			},
+					class: 'prose prose-sm max-w-none focus:outline-none min-h-12 p-3'
+				}
+			}
 		});
 
 		explanationEditor = createEditor({
@@ -32,9 +55,9 @@
 			content: questionExplanation || '',
 			editorProps: {
 				attributes: {
-					class: 'prose prose-sm max-w-none focus:outline-none min-h-24 p-3',
-				},
-			},
+					class: 'prose prose-sm max-w-none focus:outline-none min-h-24 p-3'
+				}
+			}
 		});
 	});
 
@@ -82,7 +105,6 @@
 		$editor.chain().focus().extendMarkRange('link').unsetLink().run();
 	};
 
-
 	const toggleHighlight = () => {
 		$editor.chain().focus().toggleHighlight().run();
 	};
@@ -98,68 +120,68 @@
 			name: 'bold',
 			command: toggleBold,
 			icon: Bold,
-			active: () => isActive('bold'),
+			active: () => isActive('bold')
 		},
 		{
 			name: 'italic',
 			command: toggleItalic,
 			icon: Italic,
-			active: () => isActive('italic'),
+			active: () => isActive('italic')
 		},
 		{
 			name: 'underline',
 			command: toggleUnderline,
 			icon: UnderlineIcon,
-			active: () => isActive('underline'),
+			active: () => isActive('underline')
 		},
 		{
 			name: 'strike',
 			command: toggleStrike,
 			icon: StrikethroughIcon,
-			active: () => isActive('strike'),
+			active: () => isActive('strike')
 		},
 		{
 			name: 'code',
 			command: toggleCode,
 			icon: CodeIcon,
-			active: () => isActive('code'),
+			active: () => isActive('code')
 		},
 		{
 			name: 'highlight',
 			command: toggleHighlight,
 			icon: HighlighterIcon,
-			active: () => isActive('highlight'),
+			active: () => isActive('highlight')
 		},
 		{
 			name: 'link',
 			command: isActive('link') ? unsetLink : setLink,
 			icon: LinkIcon,
-			active: () => isActive('link'),
+			active: () => isActive('link')
 		},
 		{
 			name: 'blockquote',
 			command: toggleBlockquote,
 			icon: QuoteIcon,
-			active: () => isActive('blockquote'),
+			active: () => isActive('blockquote')
 		},
 		{
 			name: 'bullet-list',
 			command: toggleBulletList,
 			icon: ListIcon,
-			active: () => isActive('bulletList'),
+			active: () => isActive('bulletList')
 		},
 		{
 			name: 'ordered-list',
 			command: toggleOrderedList,
 			icon: ListOrderedIcon,
-			active: () => isActive('orderedList'),
+			active: () => isActive('orderedList')
 		},
 		{
 			name: 'paragraph',
 			command: setParagraph,
 			icon: Type,
-			active: () => isActive('paragraph'),
-		},
+			active: () => isActive('paragraph')
+		}
 	]);
 
 	const questionTypeOptions = $derived([
@@ -182,7 +204,7 @@
 			value: QUESTION_TYPES.MATCHING,
 			label: 'Matching',
 			icon: ListChecks
-		},
+		}
 	]);
 
 	const statusOptions = $derived([
@@ -203,7 +225,7 @@
 			label: 'Archived',
 			icon: Archive,
 			colorClass: 'btn-error btn-soft'
-		},
+		}
 	]);
 
 	// Explanation editor toolbar functions
@@ -250,7 +272,6 @@
 		$explanationEditor.chain().focus().extendMarkRange('link').unsetLink().run();
 	};
 
-
 	const toggleExplanationHighlight = () => {
 		$explanationEditor.chain().focus().toggleHighlight().run();
 	};
@@ -259,75 +280,76 @@
 		$explanationEditor.chain().focus().setParagraph().run();
 	};
 
-	const isExplanationActive = (name: string, attrs = {}) => $explanationEditor?.isActive(name, attrs) ?? false;
+	const isExplanationActive = (name: string, attrs = {}) =>
+		$explanationEditor?.isActive(name, attrs) ?? false;
 
 	const explanationMenuItems = $derived([
 		{
 			name: 'bold',
 			command: toggleExplanationBold,
 			icon: Bold,
-			active: () => isExplanationActive('bold'),
+			active: () => isExplanationActive('bold')
 		},
 		{
 			name: 'italic',
 			command: toggleExplanationItalic,
 			icon: Italic,
-			active: () => isExplanationActive('italic'),
+			active: () => isExplanationActive('italic')
 		},
 		{
 			name: 'underline',
 			command: toggleExplanationUnderline,
 			icon: UnderlineIcon,
-			active: () => isExplanationActive('underline'),
+			active: () => isExplanationActive('underline')
 		},
 		{
 			name: 'strike',
 			command: toggleExplanationStrike,
 			icon: StrikethroughIcon,
-			active: () => isExplanationActive('strike'),
+			active: () => isExplanationActive('strike')
 		},
 		{
 			name: 'code',
 			command: toggleExplanationCode,
 			icon: CodeIcon,
-			active: () => isExplanationActive('code'),
+			active: () => isExplanationActive('code')
 		},
 		{
 			name: 'highlight',
 			command: toggleExplanationHighlight,
 			icon: HighlighterIcon,
-			active: () => isExplanationActive('highlight'),
+			active: () => isExplanationActive('highlight')
 		},
 		{
 			name: 'link',
 			command: isExplanationActive('link') ? unsetExplanationLink : setExplanationLink,
 			icon: LinkIcon,
-			active: () => isExplanationActive('link'),
+			active: () => isExplanationActive('link')
 		},
 		{
 			name: 'blockquote',
 			command: toggleExplanationBlockquote,
 			icon: QuoteIcon,
-			active: () => isExplanationActive('blockquote'),
+			active: () => isExplanationActive('blockquote')
 		},
 		{
 			name: 'bullet-list',
 			command: toggleExplanationBulletList,
 			icon: ListIcon,
-			active: () => isExplanationActive('bulletList'),
+			active: () => isExplanationActive('bulletList')
 		},
 		{
 			name: 'ordered-list',
 			command: toggleExplanationOrderedList,
 			icon: ListOrderedIcon,
-			active: () => isExplanationActive('orderedList'),
+			active: () => isExplanationActive('orderedList')
 		},
 		{
 			name: 'paragraph',
 			command: setExplanationParagraph,
 			icon: Type,
-			active: () => isExplanationActive('paragraph'),
-		},
+			active: () => isExplanationActive('paragraph')
+		}
 	]);
 
 	// Update questionStem and questionStemText when editor content changes
@@ -388,24 +410,24 @@
 		return 'file';
 	}
 
-// Matching editor state (two-column UI)
-let matchingPrompts: string[] = $state(['', '']);
-let matchingAnswers: string[] = $state(['', '']);
+	// Matching editor state (two-column UI)
+	let matchingPrompts: string[] = $state(['', '']);
+	let matchingAnswers: string[] = $state(['', '']);
 
-function addMatchingPrompt() {
-    matchingPrompts = [...matchingPrompts, ''];
-}
-function removeMatchingPrompt(index: number) {
-    if (matchingPrompts.length <= 1) return;
-    matchingPrompts = matchingPrompts.filter((_, i) => i !== index);
-}
-function addMatchingAnswer() {
-    matchingAnswers = [...matchingAnswers, ''];
-}
-function removeMatchingAnswer(index: number) {
-    if (matchingAnswers.length <= 1) return;
-    matchingAnswers = matchingAnswers.filter((_, i) => i !== index);
-}
+	function addMatchingPrompt() {
+		matchingPrompts = [...matchingPrompts, ''];
+	}
+	function removeMatchingPrompt(index: number) {
+		if (matchingPrompts.length <= 1) return;
+		matchingPrompts = matchingPrompts.filter((_, i) => i !== index);
+	}
+	function addMatchingAnswer() {
+		matchingAnswers = [...matchingAnswers, ''];
+	}
+	function removeMatchingAnswer(index: number) {
+		if (matchingAnswers.length <= 1) return;
+		matchingAnswers = matchingAnswers.filter((_, i) => i !== index);
+	}
 
 	// Function to safely update media state
 	function addMediaItem(mediaItem: (typeof queuedMedia)[0]) {
@@ -479,9 +501,9 @@ function removeMatchingAnswer(index: number) {
 
 	function addOption() {
 		if (
-        questionType === QUESTION_TYPES.TRUE_FALSE ||
-        questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
-        questionType === QUESTION_TYPES.MATCHING
+			questionType === QUESTION_TYPES.TRUE_FALSE ||
+			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+			questionType === QUESTION_TYPES.MATCHING
 		)
 			return;
 		options = [...options, { text: '' }];
@@ -489,9 +511,9 @@ function removeMatchingAnswer(index: number) {
 
 	function removeOption(index: number) {
 		if (
-        questionType === QUESTION_TYPES.TRUE_FALSE ||
-        questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
-        questionType === QUESTION_TYPES.MATCHING
+			questionType === QUESTION_TYPES.TRUE_FALSE ||
+			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+			questionType === QUESTION_TYPES.MATCHING
 		)
 			return;
 		if (options.length <= 2) return;
@@ -506,7 +528,11 @@ function removeMatchingAnswer(index: number) {
 
 	function toggleCorrectAnswer(index: number) {
 		const indexStr = index.toString();
-    if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK || questionType === QUESTION_TYPES.MATCHING) return;
+		if (
+			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+			questionType === QUESTION_TYPES.MATCHING
+		)
+			return;
 		if (questionType === QUESTION_TYPES.TRUE_FALSE) {
 			correctAnswers = correctAnswers.includes(indexStr) ? [] : [indexStr];
 			return;
@@ -520,9 +546,9 @@ function removeMatchingAnswer(index: number) {
 
 	function shuffleOptions() {
 		if (
-        questionType === QUESTION_TYPES.TRUE_FALSE ||
-        questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
-        questionType === QUESTION_TYPES.MATCHING
+			questionType === QUESTION_TYPES.TRUE_FALSE ||
+			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+			questionType === QUESTION_TYPES.MATCHING
 		)
 			return;
 		const pairs = options.map((opt, idx) => ({ opt, idx }));
@@ -553,10 +579,10 @@ function removeMatchingAnswer(index: number) {
 		} else if (questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
 			options = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
 			correctAnswers = [];
-    } else if (questionType === QUESTION_TYPES.MATCHING) {
-        matchingPrompts = ['', ''];
-        matchingAnswers = ['', ''];
-        correctAnswers = [];
+		} else if (questionType === QUESTION_TYPES.MATCHING) {
+			matchingPrompts = ['', ''];
+			matchingAnswers = ['', ''];
+			correctAnswers = [];
 		}
 	}
 
@@ -606,101 +632,104 @@ function removeMatchingAnswer(index: number) {
 			correctAnswers = encoded.map((_, i) => i.toString());
 		}
 
-    if (questionType === QUESTION_TYPES.MATCHING) {
-        const rawPrompts = matchingPrompts.map((t) => t.trim()).filter((t) => t.length > 0);
-        const rawAnswers = matchingAnswers.map((t) => t.trim()).filter((t) => t.length > 0);
-        if (rawPrompts.length === 0 || rawAnswers.length === 0) return;
+		if (questionType === QUESTION_TYPES.MATCHING) {
+			const rawPrompts = matchingPrompts.map((t) => t.trim()).filter((t) => t.length > 0);
+			const rawAnswers = matchingAnswers.map((t) => t.trim()).filter((t) => t.length > 0);
+			if (rawPrompts.length === 0 || rawAnswers.length === 0) return;
 
-        function makeOptionId(stem: string, text: string, index: number): string {
-            const input = `${stem}|${text}|${index}`;
-            let hash = 0;
-            for (let i = 0; i < input.length; i++) {
-                const char = input.charCodeAt(i);
-                hash = (hash << 5) - hash + char;
-                hash = hash & hash;
-            }
-            return Math.abs(hash).toString(36).padStart(8, '0').slice(0, 8);
-        }
+			function makeOptionId(stem: string, text: string, index: number): string {
+				const input = `${stem}|${text}|${index}`;
+				let hash = 0;
+				for (let i = 0; i < input.length; i++) {
+					const char = input.charCodeAt(i);
+					hash = (hash << 5) - hash + char;
+					hash = hash & hash;
+				}
+				return Math.abs(hash).toString(36).padStart(8, '0').slice(0, 8);
+			}
 
-        const promptOptions = rawPrompts.map((text, i) => {
-            const full = `prompt:${text}`;
-            return { id: makeOptionId(questionStem, full, i), text: full };
-        });
-        const answersOffset = promptOptions.length;
-        const answerOptions = rawAnswers.map((text, i) => {
-            const full = `answer:${text}`;
-            return { id: makeOptionId(questionStem, full, answersOffset + i), text: full };
-        });
+			const promptOptions = rawPrompts.map((text, i) => {
+				const full = `prompt:${text}`;
+				return { id: makeOptionId(questionStem, full, i), text: full };
+			});
+			const answersOffset = promptOptions.length;
+			const answerOptions = rawAnswers.map((text, i) => {
+				const full = `answer:${text}`;
+				return { id: makeOptionId(questionStem, full, answersOffset + i), text: full };
+			});
 
-        const n = Math.min(promptOptions.length, answerOptions.length);
-        const mappings = Array.from({ length: n }, (_, i) => `${promptOptions[i].id}::${answerOptions[i].id}`);
+			const n = Math.min(promptOptions.length, answerOptions.length);
+			const mappings = Array.from(
+				{ length: n },
+				(_, i) => `${promptOptions[i].id}::${answerOptions[i].id}`
+			);
 
-        const nextOrder = questions.data?.length
-            ? Math.max(...questions.data.map((q) => q.order || 0)) + 1
-            : 0;
+			const nextOrder = questions.data?.length
+				? Math.max(...questions.data.map((q) => q.order || 0)) + 1
+				: 0;
 
-        isSubmitting = true;
-        try {
-            const questionId = await client.mutation(api.question.createQuestion, {
-                moduleId: moduleId as Id<'module'>,
-                type: QUESTION_TYPES.MATCHING,
-                stem: questionStem,
-                options: [...promptOptions, ...answerOptions],
-                correctAnswers: mappings,
-                explanation: questionExplanation || '',
-                aiGenerated: false,
-                status: questionStatus.toLowerCase(),
-                order: nextOrder,
-                metadata: {},
-                updatedAt: Date.now()
-            });
+			isSubmitting = true;
+			try {
+				const questionId = await client.mutation(api.question.createQuestion, {
+					moduleId: moduleId as Id<'module'>,
+					type: QUESTION_TYPES.MATCHING,
+					stem: questionStem,
+					options: [...promptOptions, ...answerOptions],
+					correctAnswers: mappings,
+					explanation: questionExplanation || '',
+					aiGenerated: false,
+					status: questionStatus.toLowerCase(),
+					order: nextOrder,
+					metadata: {},
+					updatedAt: Date.now()
+				});
 
-            if (questionId && queuedMedia.length > 0) {
-                for (let i = 0; i < queuedMedia.length; i++) {
-                    const m = queuedMedia[i];
-                    await client.mutation((api as any).questionMedia.create, {
-                        questionId: questionId as Id<'question'>,
-                        url: m.url,
-                        mediaType: mediaTypeFromMime(m.mimeType),
-                        mimeType: m.mimeType || 'application/octet-stream',
-                        altText: m.name || '',
-                        caption: '',
-                        order: i,
-                        showOnSolution: m.showOnSolution ?? false,
-                        metadata: {
-                            uploadthingKey: m.key || '',
-                            sizeBytes: m.sizeBytes || 0,
-                            originalFileName: m.name || ''
-                        }
-                    });
-                }
-            }
+				if (questionId && queuedMedia.length > 0) {
+					for (let i = 0; i < queuedMedia.length; i++) {
+						const m = queuedMedia[i];
+						await client.mutation((api as any).questionMedia.create, {
+							questionId: questionId as Id<'question'>,
+							url: m.url,
+							mediaType: mediaTypeFromMime(m.mimeType),
+							mimeType: m.mimeType || 'application/octet-stream',
+							altText: m.name || '',
+							caption: '',
+							order: i,
+							showOnSolution: m.showOnSolution ?? false,
+							metadata: {
+								uploadthingKey: m.key || '',
+								sizeBytes: m.sizeBytes || 0,
+								originalFileName: m.name || ''
+							}
+						});
+					}
+				}
 
-            questionStem = '';
-            questionStemText = '';
-            questionExplanation = '';
-            questionExplanationText = '';
-            questionStatus = 'draft';
-            questionType = 'multiple_choice';
-            options = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
-            correctAnswers = [];
-            queuedMedia = [];
-            matchingPrompts = ['', ''];
-            matchingAnswers = ['', ''];
-            if ($editor) {
-                $editor.commands.setContent('');
-            }
-            if ($explanationEditor) {
-                $explanationEditor.commands.setContent('');
-            }
-            closeAddModal();
-            return;
-        } catch (error) {
-            console.error('Failed to create matching question', error);
-        } finally {
-            isSubmitting = false;
-        }
-    }
+				questionStem = '';
+				questionStemText = '';
+				questionExplanation = '';
+				questionExplanationText = '';
+				questionStatus = 'draft';
+				questionType = 'multiple_choice';
+				options = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
+				correctAnswers = [];
+				queuedMedia = [];
+				matchingPrompts = ['', ''];
+				matchingAnswers = ['', ''];
+				if ($editor) {
+					$editor.commands.setContent('');
+				}
+				if ($explanationEditor) {
+					$explanationEditor.commands.setContent('');
+				}
+				closeAddModal();
+				return;
+			} catch (error) {
+				console.error('Failed to create matching question', error);
+			} finally {
+				isSubmitting = false;
+			}
+		}
 
 		const filledOptions = options.filter((opt) => opt.text.trim());
 
@@ -835,7 +864,11 @@ function removeMatchingAnswer(index: number) {
 					</label>
 					<div class="join join-vertical sm:join-horizontal w-full">
 						{#each questionTypeOptions as option (option.value)}
-							<label class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {questionType === option.value ? 'btn-active' : ''}">
+							<label
+								class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {questionType === option.value
+									? 'btn-active'
+									: ''}"
+							>
 								<input
 									type="radio"
 									name="question-type"
@@ -858,7 +891,12 @@ function removeMatchingAnswer(index: number) {
 					</label>
 					<div class="join join-vertical sm:join-horizontal w-full">
 						{#each statusOptions as option (option.value)}
-							<label class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {option.colorClass} {questionStatus === option.value ? 'btn-active' : ''}">
+							<label
+								class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {option.colorClass} {questionStatus ===
+								option.value
+									? 'btn-active'
+									: ''}"
+							>
 								<input
 									type="radio"
 									name="question-status"
@@ -884,7 +922,7 @@ function removeMatchingAnswer(index: number) {
 						Options & Answers
 					</h6>
 
-                    {#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
+					{#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
 						<div class="space-y-4">
 							{#each fitbAnswers as row, index (index)}
 								<div class="p-3 rounded-lg border border-base-300 bg-base-100">
@@ -941,52 +979,68 @@ function removeMatchingAnswer(index: number) {
 								Add Alternative Answer
 							</button>
 						</div>
-                    {:else if questionType === QUESTION_TYPES.MATCHING}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h6 class="text-sm font-semibold mb-2">Prompts</h6>
-                                <div class="space-y-3">
-                                    {#each matchingPrompts as p, i (i)}
-                                        <div class="flex items-center gap-2">
-                                            <input
-                                                class="input input-bordered flex-1"
-                                                placeholder="Prompt {i + 1}"
-                                                value={p}
-                                                oninput={(e) => matchingPrompts = matchingPrompts.map((v, idx) => idx === i ? (e.target as HTMLInputElement).value : v)}
-                                            />
-                                            {#if matchingPrompts.length > 1}
-                                                <button class="btn btn-ghost btn-sm btn-circle" onclick={() => removeMatchingPrompt(i)}>
-                                                    <X size={16} />
-                                                </button>
-                                            {/if}
-                                        </div>
-                                    {/each}
-                                    <button class="btn btn-sm btn-outline" type="button" onclick={addMatchingPrompt}>Add Prompt</button>
-                                </div>
-                            </div>
-                            <div>
-                                <h6 class="text-sm font-semibold mb-2">Possible Answers</h6>
-                                <div class="space-y-3">
-                                    {#each matchingAnswers as a, i (i)}
-                                        <div class="flex items-center gap-2">
-                                            <input
-                                                class="input input-bordered flex-1"
-                                                placeholder="Answer {i + 1}"
-                                                value={a}
-                                                oninput={(e) => matchingAnswers = matchingAnswers.map((v, idx) => idx === i ? (e.target as HTMLInputElement).value : v)}
-                                            />
-                                            {#if matchingAnswers.length > 1}
-                                                <button class="btn btn-ghost btn-sm btn-circle" onclick={() => removeMatchingAnswer(i)}>
-                                                    <X size={16} />
-                                                </button>
-                                            {/if}
-                                        </div>
-                                    {/each}
-                                    <button class="btn btn-sm btn-outline" type="button" onclick={addMatchingAnswer}>Add Answer</button>
-                                </div>
-                            </div>
-                        </div>
-                    {:else}
+					{:else if questionType === QUESTION_TYPES.MATCHING}
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div>
+								<h6 class="text-sm font-semibold mb-2">Prompts</h6>
+								<div class="space-y-3">
+									{#each matchingPrompts as p, i (i)}
+										<div class="flex items-center gap-2">
+											<input
+												class="input input-bordered flex-1"
+												placeholder="Prompt {i + 1}"
+												value={p}
+												oninput={(e) =>
+													(matchingPrompts = matchingPrompts.map((v, idx) =>
+														idx === i ? (e.target as HTMLInputElement).value : v
+													))}
+											/>
+											{#if matchingPrompts.length > 1}
+												<button
+													class="btn btn-ghost btn-sm btn-circle"
+													onclick={() => removeMatchingPrompt(i)}
+												>
+													<X size={16} />
+												</button>
+											{/if}
+										</div>
+									{/each}
+									<button class="btn btn-sm btn-outline" type="button" onclick={addMatchingPrompt}
+										>Add Prompt</button
+									>
+								</div>
+							</div>
+							<div>
+								<h6 class="text-sm font-semibold mb-2">Possible Answers</h6>
+								<div class="space-y-3">
+									{#each matchingAnswers as a, i (i)}
+										<div class="flex items-center gap-2">
+											<input
+												class="input input-bordered flex-1"
+												placeholder="Answer {i + 1}"
+												value={a}
+												oninput={(e) =>
+													(matchingAnswers = matchingAnswers.map((v, idx) =>
+														idx === i ? (e.target as HTMLInputElement).value : v
+													))}
+											/>
+											{#if matchingAnswers.length > 1}
+												<button
+													class="btn btn-ghost btn-sm btn-circle"
+													onclick={() => removeMatchingAnswer(i)}
+												>
+													<X size={16} />
+												</button>
+											{/if}
+										</div>
+									{/each}
+									<button class="btn btn-sm btn-outline" type="button" onclick={addMatchingAnswer}
+										>Add Answer</button
+									>
+								</div>
+							</div>
+						</div>
+					{:else}
 						<div class="space-y-3">
 							{#each options as option, index (index)}
 								<div class="flex items-center gap-3">
@@ -1056,63 +1110,67 @@ function removeMatchingAnswer(index: number) {
 			</div>
 		</div>
 
-			<!-- Media Upload -->
-			<div class="card bg-base-200/50 border border-base-300">
-				<div class="card-body">
-					<h6 class="font-semibold mb-4 text-sm">Attachments</h6>
-					<div class="flex justify-center">
-						<div class="w-full max-w-xs">
-							<UploadDropzone
-								uploader={mediaUploader}
-								aria-label="Upload image attachment"
-								appearance={{
-									container: 'rounded-lg',
-									label: 'text-sm',
-									allowedContent: 'text-[11px] opacity-70'
-								}}
-							/>
-						</div>
+		<!-- Media Upload -->
+		<div class="card bg-base-200/50 border border-base-300">
+			<div class="card-body">
+				<h6 class="font-semibold mb-4 text-sm">Attachments</h6>
+				<div class="flex justify-center">
+					<div class="w-full max-w-xs">
+						<UploadDropzone
+							uploader={mediaUploader}
+							aria-label="Upload image attachment"
+							appearance={{
+								container: 'rounded-lg',
+								label: 'text-sm',
+								allowedContent: 'text-[11px] opacity-70'
+							}}
+						/>
 					</div>
-					{#if mediaError}
-						<div class="alert alert-error alert-sm mt-3">
-							<span class="text-sm">{mediaError}</span>
-						</div>
-					{/if}
-					{#if queuedMedia.length > 0}
-						<div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-							{#each queuedMedia as m, idx (idx)}
-								<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
-									<img src={m.url} alt={m.name} class="w-full h-24 object-cover" />
-									<div class="p-3 space-y-2">
+				</div>
+				{#if mediaError}
+					<div class="alert alert-error alert-sm mt-3">
+						<span class="text-sm">{mediaError}</span>
+					</div>
+				{/if}
+				{#if queuedMedia.length > 0}
+					<div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+						{#each queuedMedia as m, idx (idx)}
+							<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
+								<img src={m.url} alt={m.name} class="w-full h-24 object-cover" />
+								<div class="p-3 space-y-2">
+									<input
+										class="input input-bordered input-sm w-full"
+										placeholder="Alt text"
+										bind:value={m.name}
+									/>
+									<label class="label cursor-pointer gap-2 text-sm">
 										<input
-											class="input input-bordered input-sm w-full"
-											placeholder="Alt text"
-											bind:value={m.name}
+											type="checkbox"
+											class="checkbox checkbox-sm"
+											bind:checked={m.showOnSolution}
 										/>
-										<label class="label cursor-pointer gap-2 text-sm">
-											<input
-												type="checkbox"
-												class="checkbox checkbox-sm"
-												bind:checked={m.showOnSolution}
-											/>
-											<span>Show on solution</span>
-										</label>
-										<div class="flex justify-end">
-											<button class="btn btn-ghost btn-xs text-error" onclick={() => removeQueuedMedia(idx)}>Remove</button>
-										</div>
+										<span>Show on solution</span>
+									</label>
+									<div class="flex justify-end">
+										<button
+											class="btn btn-ghost btn-xs text-error"
+											onclick={() => removeQueuedMedia(idx)}>Remove</button
+										>
 									</div>
 								</div>
-							{/each}
-						</div>
-					{:else}
-						<div class="text-center text-base-content/60 p-8">No attachments yet.</div>
-					{/if}
-				</div>
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<div class="text-center text-base-content/60 p-8">No attachments yet.</div>
+				{/if}
 			</div>
+		</div>
 
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
-				<button class="btn btn-ghost" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button>
+				<button class="btn btn-ghost" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button
+				>
 				<button
 					class="btn btn-primary gap-2"
 					onclick={handleSubmit}
