@@ -85,6 +85,8 @@
 				if (e.key === 'Enter') {
 					e.preventDefault();
 					handleEnter();
+				} else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+					e.stopPropagation();
 				}
 			}}
 			disabled={qs.showSolution}
