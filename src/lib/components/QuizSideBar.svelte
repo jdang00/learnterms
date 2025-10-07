@@ -537,7 +537,7 @@
 						<img
 							src={selectedAttachment.url}
 							alt={selectedAttachment.altText}
-							class:blur-md={!qs.showSolution && (selectedAttachment?.showOnSolution ?? true)}
+							class:blur-md={!qs.showSolution && (selectedAttachment?.showOnSolution ?? false)}
 							class="max-w-full max-h-full object-contain absolute inset-0 m-auto select-none"
 							style="transform: scale({attachmentZoom ||
 								1}) translate({panX}px, {panY}px); transform-origin: center; transition: transform 0.1s ease-out;"
