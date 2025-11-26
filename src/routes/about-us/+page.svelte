@@ -2,13 +2,13 @@
 	<title>LearnTerms — About Us</title>
 	<meta
 		name="description"
-		content="LearnTerms helps students achieve mastery faster by turning dense course materials into clear, targeted, and class-aligned study experiences."
+		content="LearnTerms helps students master dense course material by turning scattered notes into clear, class-aligned study tools."
 	/>
 	<meta name="robots" content="index,follow" />
 	<meta property="og:title" content="LearnTerms — About Us" />
 	<meta
 		property="og:description"
-		content="LearnTerms helps students achieve mastery faster by turning dense course materials into clear, targeted, and class-aligned study experiences."
+		content="LearnTerms helps students master dense course material by turning scattered notes into clear, class-aligned study tools."
 	/>
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://learnterms.com/about-us" />
@@ -20,7 +20,7 @@
 			"@type": "AboutPage",
 			"name": "LearnTerms — About Us",
 			"url": "https://learnterms.com/about-us",
-			"description": "LearnTerms helps students achieve mastery faster by turning dense course materials into clear, targeted, and class-aligned study experiences.",
+			"description": "LearnTerms helps students master dense course material by turning scattered notes into clear, class-aligned study tools.",
 			"inLanguage": "en",
 			"isAccessibleForFree": true,
 			"dateModified": "2025-08-09",
@@ -41,10 +41,10 @@
 	<div class="prose max-w-none mt-6 prose-lg">
 		<section>
 			<p>
-				LearnTerms’s mission is to help students achieve mastery faster by turning dense course
-				materials into clear, targeted, and class-aligned study experiences. We want to empower
-				students to learn through a framework that is consistent, collaborative, and contextual,
-				while reducing the noise and building for the future.
+				LearnTerms exists to fix a simple problem: studying for high-volume classes is messy. Our
+				mission is to take dense, scattered course materials and turn them into a study experience
+				that actually matches your class schedule. No noise, just the content you need to know,
+				organized the way you need to learn it.
 			</p>
 		</section>
 
@@ -61,14 +61,15 @@
 
 		<section>
 			<p>
-				My name is Justin Dang, and I’m a full time student at the Northeastern State University
-				Oklahoma College of Optometry. I’m the solo developer on LearnTerms, building and spreading
-				its message in my free time. While working for my undergraduate degree in computer science,
-				I studied AI and human computer interaction. When I came to optometry school, the content
-				and pace of learning was dramatically different than anything I was used to. Because of
-				this, I started building tools for myself to make digesting and comprehending classes a
-				little easier. After sharing these tools with the class, LearnTerms was born and its goal of
-				helping students still persists stronger than ever.
+				My name is Justin Dang. I’m a full-time student at the Northeastern State University
+				Oklahoma College of Optometry and the solo developer behind LearnTerms. Before this, I
+				studied Computer Science, focusing on AI and Human-Computer Interaction.
+			</p>
+			<p>
+				When I started optometry school, the sheer volume of information hit me hard. The pace was
+				completely different from undergrad. I realized I needed a better way to keep up, so I
+				started coding tools to help me digest my own lectures. I shared them with a few classmates,
+				and eventually, LearnTerms was born.
 			</p>
 		</section>
 
@@ -87,57 +88,56 @@
 
 		<section>
 			<p>
-				The speed and scope of higher education, especially in healthcare programs, is relentless
-				and vast. New topics stack on each other before the last ones have a chance to stick. Notes
-				pile up in shared drives, PDF libraries, endless slideshows. The tools that students rely on
-				are either too broad to match the class sequence or too scattered to build lasting mastery.
-				The result is students spending precious hours sifting through clutter instead of deeply
-				engaging with learning that actually matters. So LearnTerms was born out of this frustration
-				and waste. The platform runs on the belief that studying should be targeted, not tedious.
-				Its tools exist to strip away noise, break complex material into meaningful, digestible
-				chunks, and give learners a clear path from <em>I’ve seen this before”</em> to
-				<em>“I can explain it without notes”</em>.
+				In healthcare programs, new topics stack up before you’ve even finished the previous ones.
+				We deal with endless slideshows, shared drives, and PDF libraries. The generic study tools
+				out there are either too broad or too disorganized to handle that specific curriculum
+				structure.
+			</p>
+			<p>
+				I found myself spending hours just organizing files instead of actually learning. I built
+				LearnTerms to stop that waste. The platform strips away the clutter and breaks complex
+				material into digestible chunks. The goal is to create a clear path from <em
+					>"I've seen this slide"</em
+				>
+				to <em>"I can explain this concept without looking."</em>
 			</p>
 		</section>
 
 		<section>
 			<p>
-				Another important reason this platform exists is that it believes learning is better in
-				community. Cohorts, when given the right structure, can move as a unit: sharing insights,
-				closing gaps, and raising the floor for everyone. LearnTerms builds for that dynamic from
-				the ground up, giving programs the tools to structure content the way you understand it in
-				school: semesters, classes, modules. This allows students to see exactly what they need,
-				exactly when they need it.
+				I also believe that no one should study alone. When a cohort has the right structure,
+				everyone lifts each other up. If one person figures out a concept, everyone should benefit.
+				LearnTerms mirrors the way we actually go through school—by semesters, classes, and
+				modules—so you see exactly what you need, right when the professor is teaching it.
 			</p>
 		</section>
 
 		<section>
-			<h2>How LearnTerms is built</h2>
+			<h2>How It's Built</h2>
 			<p>
-				The product philosophy is practical and opinionated. The best tools are the ones that solve
-				your problems while being something you actually want to use. I have 5 core pillars for
-				development:
+				My philosophy is practical. The best tools are the ones that get out of your way. I follow 5
+				core pillars:
 			</p>
 			<ul>
 				<li>
-					<strong>Simplicity is scalable:</strong> I start simple and add complexity only when it buys
-					real learning value.
+					<strong>Simplicity scales:</strong> I start simple. I only add complexity if it actually helps
+					you learn better.
 				</li>
 				<li>
-					<strong>Learner first design:</strong> Every experience answers: “What should I do next to
-					learn faster?”
+					<strong>Learner-first design:</strong> Every feature answers one question: “Does this help
+					me learn faster?”
 				</li>
 				<li>
-					<strong>Evidence over hype:</strong> AI and new tech are tools, not a pitch. I test, measure,
-					and keep what works.
+					<strong>Evidence over hype:</strong> AI is a tool, not a sales pitch. I test features myself;
+					if they don't work, I cut them.
 				</li>
 				<li>
-					<strong>Clarity beats cleverness:</strong> Language, UI, and user experience should be boringly
-					clear.
+					<strong>Clarity beats cleverness:</strong> The interface should be boringly clear. You're here
+					to study, not figure out a UI.
 				</li>
 				<li>
-					<strong>Fast and adaptive:</strong> Rolling releases help make the site better, so that micro
-					enhancements add up to huge improvements over time.
+					<strong>Fast and adaptive:</strong> I push updates constantly. Small tweaks add up to huge
+					improvements over time.
 				</li>
 			</ul>
 		</section>
@@ -145,39 +145,27 @@
 		<section>
 			<h2>Looking Ahead</h2>
 			<p>
-				LearnTerms started as a personal solution to a problem I faced every day. It’s grown into a
-				platform that can help entire cohorts work smarter. Every update, feature, and design comes
-				back to a single question: <em
-					>Will this help students master their material faster and with more confidence?</em
-				>
+				LearnTerms started as a hack to solve my own problem. It has grown into a platform that
+				helps entire cohorts work smarter. Every update comes back to that single goal: helping us
+				master material faster so we can be better practitioners.
 			</p>
 		</section>
 
 		<section>
 			<h2>My Commitment</h2>
 			<p>
-				Unlike virtually every study tool that you get to choose to use, I’m not some big corporate
-				company or a big group of people working on this. My intention is to continue listening to
-				students, testing ideas in the real classroom, and not building things that don’t directly
-				serve learning. The goal isn’t to be the biggest study platform. It’s to be the most
-				effective.
+				Unlike most study tools, this isn't run by a big corporation or a VC-backed team. It’s just
+				me. My commitment is to keep listening to students and testing ideas in real classrooms. I’m
+				not trying to be the biggest platform; I’m trying to be the most effective one.
 			</p>
 		</section>
 
 		<section>
 			<h2>An Invitation</h2>
 			<p>
-				If you’re a student, educator, or program/cohort leader, I invite you to explore LearnTerms
-				and see how it can fit into your workflow. Share your feedback, and challenge the ideas.
-				Help shape a tool that’s built for your reality, not for some marketing page.
-			</p>
-		</section>
-
-		<section>
-			<p>
-				At the end of the day, I see LearnTerms as more than flashcards and question banks. It’s
-				about creating something that empowers peers to focus, gain clarity, and treat mastery as a
-				habit, not a hope.
+				If you’re a student, educator, or cohort leader, give LearnTerms a try. See how it fits into
+				your workflow. If you have feedback, tell me. You can help shape a tool built for our
+				reality, not just another marketing page.
 			</p>
 		</section>
 
