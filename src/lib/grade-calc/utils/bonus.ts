@@ -15,6 +15,7 @@ export function computeQuizAverageWithReplacement(
 	if (!quizzes || quizzes.type !== 'group') return null;
 	const quizInputs = (userInputs[quizzes.id] as any)?.instances;
 	if (!quizInputs) return null;
+	const totalExpected = quizzes.instances?.length ?? quizInputs.length;
 	const finalId = quizzes.replacementRule?.enabled ? quizzes.replacementRule.sourceComponentId : null;
 	if (finalId) {
 		const finalComp = course.components.find((c) => c.id === finalId);
@@ -22,7 +23,7 @@ export function computeQuizAverageWithReplacement(
 		const finalMax: number | undefined = finalComp?.maxScore ?? undefined;
 		const preview = computeReplacementForGroup(quizzes, quizInputs, finalScore, finalMax ?? null);
 		const values = preview.percentages;
-		if (values.length === 0) return null;
+		if (values.length === 0 || values.length < totalExpected) return null;
 		return values.reduce((a, b) => a + b, 0) / values.length;
 	}
 	const max = quizzes.instances?.[0]?.maxScore ?? 100;
@@ -33,7 +34,7 @@ export function computeQuizAverageWithReplacement(
 			return (clampToRange(s, 0, max) / max) * 100;
 		})
 		.filter((v: number | null) => v !== null) as number[];
-	if (values.length === 0) return null;
+	if (values.length === 0 || values.length < totalExpected) return null;
 	return values.reduce((a: number, b: number) => a + b, 0) / values.length;
 }
 
