@@ -20,7 +20,31 @@
 	const { data, children } = $props();
 
 	const convexClient = useConvexClient();
-	convexClient.setAuth(async () => (data?.token ? (data.token as string) : undefined));
+
+	let initialToken: string | null = data?.token ?? null;
+
+	$effect(() => {
+		convexClient.setAuth(async (args) => {
+			const forceRefreshToken = args?.forceRefreshToken ?? false;
+
+			if (!forceRefreshToken && initialToken) {
+				const token = initialToken;
+				initialToken = null;
+				return token;
+			}
+
+			try {
+				const token = await window.Clerk?.session?.getToken({
+					template: 'convex',
+					skipCache: forceRefreshToken
+				});
+
+				return token ?? undefined;
+			} catch (error) {
+				return undefined;
+			}
+		});
+	});
 
 	onMount(() => {
 		theme.init();
