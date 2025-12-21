@@ -27,9 +27,11 @@
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
 
-	const classes = useQuery(api.class.getUserClasses, {
-		id: (userData?.cohortId as Id<'cohort'>)
-	});
+	const classes = userData?.cohortId
+		? useQuery(api.class.getUserClasses, {
+				id: userData.cohortId as Id<'cohort'>
+			})
+		: { data: undefined, isLoading: false, error: null };
 
 	const client = useConvexClient();
 

@@ -26,9 +26,11 @@ import type { ClassWithSemester } from '../../lib/types';
 	let selectedClass: ClassWithSemester | null = $state(null);
 	let isNavigatingBack = $state(false);
 
-	const classesQuery = useQuery(api.class.getUserClasses, {
-		id: (userData?.cohortId as Id<'cohort'>) || ''
-	});
+	const classesQuery = userData?.cohortId
+		? useQuery(api.class.getUserClasses, {
+				id: userData.cohortId as Id<'cohort'>
+			})
+		: { data: undefined, isLoading: false, error: null };
 
 	const classes = $derived({
 		data: classesQuery.data || [],

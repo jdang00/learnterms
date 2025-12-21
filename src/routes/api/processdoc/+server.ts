@@ -14,7 +14,7 @@ type Chunk = {
 	chunk_type: 'paragraph' | 'slide_group' | 'diagram' | 'table' | 'list';
 };
 
-const MODEL = 'gemini-2.5-flash-lite';
+const MODEL = 'gemini-3-flash-preview';
 const TEMPERATURE = 0.3;
 const MAX_TOKENS_TEXT = 8192;
 const MAX_TOKENS_PDF = 12288;
@@ -51,31 +51,47 @@ function tableGuidelines() {
 }
 
 function pdfPrompt() {
-	return `Role: You are an expert document analysis assistant.
+	return `Role: You are an expert document extraction assistant.
 
-Goal: Analyze this PDF and create meaningful learning chunks.
+Goal: Extract the ACTUAL TEXT from this PDF and create 1 chunk per page (up to 100 chunks for 100 pages).
+
+CRITICAL RULES - NO PARAPHRASING:
+- Extract the EXACT text from the document - do NOT paraphrase, rewrite, or summarize the content
+- Preserve the original wording, terminology, and phrasing from the source material
+- Content field must contain the verbatim text from the page/section
+- Create 1 chunk per page for lecture slides or similar documents
+- For dense academic PDFs, create 1 chunk per substantial section/page
 
 Document Types:
-- Academic PDFs: extract substantial paragraph content, skip standalone titles
-- Lecture slides: group related slides by topic with text and image descriptions
+- Academic PDFs: extract verbatim paragraph content, preserve all technical terms
+- Lecture slides: extract exact text from each slide, include image descriptions only when text is present
+- ${tableGuidelines()}
 
 Instructions:
-1) Create up to 100 substantial chunks
-2) ${tableGuidelines()}
-3) For images/diagrams: add descriptive chunks when confident
-4) Each chunk includes: title, 1-2 sentence summary, full content, 3-5 keywords, and chunk_type`;
+1) Create up to 100 chunks (approximately 1 per page)
+2) Title: Brief identifier for the chunk (e.g., "Page 5: Cell Division")
+3) Summary: 1-2 sentence overview of what the chunk covers
+4) Content: EXACT TEXT extracted from the document - NO paraphrasing or rewriting
+5) Keywords: 3-5 key terms found in the actual text
+6) chunk_type: paragraph, slide_group, diagram, table, or list`;
 }
 
 function textPrompt(material: string) {
-	return `Role: You are an expert document analysis assistant.
+	return `Role: You are an expert document extraction assistant.
 
-Goal: Analyze the provided text and return an array of coherent chunks.
+Goal: Extract and chunk the provided text - NO PARAPHRASING.
+
+CRITICAL RULES - NO PARAPHRASING:
+- Extract the EXACT text from the material - do NOT paraphrase, rewrite, or summarize
+- Preserve original wording, terminology, and phrasing
+- Content field must contain verbatim text from the source
 
 Rules:
 - If the material is ONLY a table (CSV/TSV/Markdown table with header and rows), return ONE CHUNK PER ROW.
   • Each chunk should be chunk_type = 'table' and its content must be a one-row Markdown table using the same columns.
 - Otherwise, follow normal chunking and ${tableGuidelines()}.
 - Produce 5-15 chunks unless the input clearly requires fewer.
+- Each chunk's content must be EXACT text from the material
 
 Return ONLY the JSON array, no extra text.
 
@@ -98,7 +114,10 @@ async function callModel(contents: Array<Record<string, unknown>>, maxTokens: nu
 				temperature: TEMPERATURE,
 				maxOutputTokens: maxTokens,
 				responseMimeType: 'application/json',
-				responseSchema: chunkArraySchema(Type as unknown as GType)
+				responseSchema: chunkArraySchema(Type as unknown as GType),
+				thinkingConfig: {
+					thinkingLevel: 'low' // Minimize latency and cost for extraction task
+				}
 			}
 		});
 

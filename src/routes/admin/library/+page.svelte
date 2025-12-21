@@ -1,5 +1,14 @@
 <script lang="ts">
-	import { ArrowLeft, File, Plus, Pencil, Trash2 } from 'lucide-svelte';
+	import {
+		ArrowLeft,
+		File,
+		Plus,
+		Pencil,
+		Trash2,
+		Search,
+		Clock3,
+		MoreVertical
+	} from 'lucide-svelte';
 	import type { PageData } from './$types';
 	import AddDocumentModal from '../../../lib/admin/AddDocumentModal.svelte';
 	import EditDocumentModal from '../../../lib/admin/EditDocumentModal.svelte';
@@ -71,6 +80,27 @@
 	let currentDocView: string = $state('');
 	let currentDocument: Doc<'contentLib'> | null = $state(null);
 	let docView = $state(false);
+	let searchTerm: string = $state('');
+
+	const filteredDocs = $derived.by<Doc<'contentLib'>[]>(() => {
+		const docs = userContentLib.data ?? [];
+		const search = searchTerm.trim().toLowerCase();
+
+		let next = docs.filter((doc) => {
+			const matchesSearch =
+				!search ||
+				doc.title.toLowerCase().includes(search) ||
+				(doc.description ?? '').toLowerCase().includes(search);
+
+			return matchesSearch;
+		});
+
+		next = [...next].sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+
+		return next;
+	});
+
+	const totalDocs = $derived.by(() => userContentLib.data?.length ?? 0);
 
 	function handledocView(doc_id: string, document: Doc<'contentLib'>) {
 		docView = !docView;
@@ -148,8 +178,8 @@
 	<p class="text-base text-base-content/70">Add, edit, and delete documents</p>
 
 	{#if deleteError}
-		<div class="alert alert-error mt-4">
-			<span>❌ {deleteError}</span>
+		<div class="alert alert-error mt-4 text-sm">
+			<span>{deleteError}</span>
 		</div>
 	{/if}
 
@@ -165,107 +195,156 @@
 			in:fly={{ x: -28, duration: 220, opacity: 0.2 }}
 			out:fly={{ x: 20, duration: 160, opacity: 0 }}
 		>
-			<div class="mt-12 flex flex-row justify-between">
-				<h1 class="font-semibold text-2xl">My Documents</h1>
-				<button class="btn btn-primary" onclick={openAddModal}
-					><Plus size={16} /> Add Document</button
-				>
-			</div>
+			<div class="mt-8 space-y-5">
+				<div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+					<div class="space-y-0.5">
+						<h1 class="font-semibold text-2xl">My Documents</h1>
+						<p class="text-base-content/70 text-sm">
+							{totalDocs} {totalDocs === 1 ? 'item' : 'items'} in your library
+						</p>
+					</div>
+					<div class="flex flex-wrap gap-2">
+						<button class="btn btn-primary btn-sm" onclick={openAddModal}><Plus size={16} /> Add Document</button>
+					</div>
+				</div>
 
-			<div
-				class="overflow-x-auto rounded-box border border-base-300 hover:border-primary/30 transition-colors bg-base-100 mt-8"
-				in:fly={{ y: 8, duration: 220, opacity: 0.2 }}
-			>
-				<table class="table w-full">
-					<!-- head -->
-					<thead>
-						<tr>
-							<th class="w-0 md:w-12">
-								<input type="checkbox" class="checkbox checkbox-primary checkbox-sm" />
-							</th>
-							<th>Title</th>
-							<th>Description</th>
-							<th>Last Updated</th>
-							<th class="w-0 md:w-10">Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#if userContentLib.isLoading}
-							<tr>
-								<td colspan="5" class="text-center">Loading...</td>
-							</tr>
-						{:else if userContentLib.error}
-							<tr>
-								<td colspan="5" class="text-center">Error loading content library</td>
-							</tr>
-						{:else if !userContentLib.data || userContentLib.data.length === 0}
-							<tr>
-								<td colspan="5" class="text-center text-base-content/70"
-									>Create your first document!</td
-								>
-							</tr>
-						{:else}
-							{#each userContentLib.data as doc (doc._id)}
-								<tr>
-									<th>
-										<input type="checkbox" class="checkbox checkbox-primary checkbox-sm" />
-									</th>
-									<td
-										><div class="badge badge-soft">
-											<File size={16} class="text-base-content/40" />
+				<div>
+					<label class="input input-bordered input-sm flex items-center gap-2 max-w-md">
+						<Search size={14} class="text-base-content/60" />
+						<input
+							type="text"
+							class="grow text-sm"
+							placeholder="Search documents..."
+							bind:value={searchTerm}
+						/>
+					</label>
+				</div>
+
+				{#if userContentLib.isLoading}
+					<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+						{#each Array(10) as _}
+							<div class="card aspect-[8.5/11] bg-base-100 border border-base-300 rounded-lg">
+								<div class="card-body p-4 space-y-3">
+									<div class="skeleton h-4 w-3/4"></div>
+									<div class="skeleton h-3 w-full"></div>
+									<div class="skeleton h-3 w-4/5"></div>
+									<div class="mt-auto">
+										<div class="skeleton h-3 w-1/2"></div>
+									</div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{:else if userContentLib.error}
+					<div class="alert alert-error">
+						<span>Unable to load your library right now.</span>
+					</div>
+				{:else if !userContentLib.data || userContentLib.data.length === 0}
+					<div class="rounded-lg border-2 border-dashed border-base-300 bg-base-100 p-12 text-center space-y-4">
+						<div class="flex items-center justify-center">
+							<div class="p-3 rounded-full bg-primary/10">
+								<File size={24} class="text-primary" />
+							</div>
+						</div>
+						<div class="space-y-1">
+							<p class="text-lg font-semibold">No documents yet</p>
+							<p class="text-sm text-base-content/70 max-w-md mx-auto">
+								Start building your library by uploading your first document
+							</p>
+						</div>
+						<button class="btn btn-primary btn-sm" onclick={openAddModal}><Plus size={16} /> Add your first document</button>
+					</div>
+				{:else if filteredDocs.length === 0}
+					<div class="rounded-lg border border-base-300 bg-base-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+						<div>
+							<p class="font-semibold">No matching documents</p>
+							<p class="text-sm text-base-content/70">Try adjusting your search terms</p>
+						</div>
+						<button class="btn btn-ghost btn-sm" type="button" onclick={() => {
+							searchTerm = '';
+						}}>Clear search</button>
+					</div>
+				{:else}
+					<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+						{#each filteredDocs as doc (doc._id)}
+							<div
+								class="group card relative aspect-[8.5/11] bg-linear-to-br from-primary/5 via-base-100 to-secondary/5 border border-base-300 shadow-sm hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer rounded-lg overflow-hidden"
+								onclick={() => handledocView(doc._id, doc)}
+								onkeydown={(event) => {
+									if (event.key === 'Enter' || event.key === ' ') {
+										event.preventDefault();
+										handledocView(doc._id, doc);
+									}
+								}}
+								tabindex="0"
+								role="button"
+							>
+								<div class="absolute inset-0 pointer-events-none rounded-lg border border-white/10"></div>
+								<div class="card-body p-4 space-y-3">
+									<div class="flex items-start justify-between gap-2">
+										<div class="flex-1 min-w-0 space-y-1.5">
+											<div class="flex items-center gap-1.5 text-base-content">
+												<File size={14} class="shrink-0" />
+												<span class="text-base font-semibold leading-tight truncate">{doc.title}</span>
+											</div>
+											<p class="text-xs text-base-content/70 line-clamp-2">
+												{doc.description ? doc.description : 'No description'}
+											</p>
+										</div>
+										<div class="dropdown dropdown-end shrink-0">
 											<button
-												class="link hover:link-primary truncate"
-												onclick={() => handledocView(doc._id, doc)}
+												class="btn btn-ghost btn-circle btn-xs opacity-60 group-hover:opacity-100 transition-opacity"
+												aria-haspopup="menu"
+												aria-label="Open menu"
+												onclick={(event) => event.stopPropagation()}
 											>
-												{doc.title}</button
-												>
-											</div></td
-										>
-									<td class="text-base-content/70"
-										>{doc.description ? doc.description : 'No description'}</td
-									>
-									<td>{doc.updatedAt ? new Date(doc.updatedAt).toLocaleString() : 'Never'}</td>
-									<td>
-										<div class="dropdown dropdown-end">
-									<button class="btn btn-ghost btn-circle btn-sm interactive" tabindex="0" aria-haspopup="menu" aria-label="Open menu">⋮</button>
-											<ul
-										tabindex="0"
-										role="menu"
-												class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow-xl border border-base-300"
-											>
+												<MoreVertical size={14} />
+											</button>
+											<ul role="menu" class="dropdown-content menu bg-base-100 rounded-box w-40 p-1.5 shadow-lg border border-base-300 z-10">
 												<li>
 													<button
-														data-edit-btn
-														class="btn btn-sm btn-ghost w-full justify-start font-medium"
+														class="btn btn-xs btn-ghost w-full justify-start"
 														type="button"
-														aria-label="Edit document"
-														onclick={() => editDocument(doc)}
+														onclick={(event) => {
+															event.stopPropagation();
+															editDocument(doc);
+														}}
 													>
-														<Pencil size={16} />
-														<span>Edit</span>
+														<Pencil size={14} />
+														Edit
 													</button>
 												</li>
 												<li>
 													<button
-														data-delete-btn
-														class="btn btn-sm btn-ghost text-error w-full justify-start font-medium"
+														class="btn btn-xs btn-ghost text-error w-full justify-start"
 														type="button"
-														aria-label="Delete document"
-														onclick={() => openDeleteModal(doc)}
+														onclick={(event) => {
+															event.stopPropagation();
+															openDeleteModal(doc);
+														}}
 														disabled={isDeleting}
 													>
-														<Trash2 size={16} />
-														<span>Delete</span>
+														<Trash2 size={14} />
+														Delete
 													</button>
 												</li>
 											</ul>
-										</div></td
-									>
-								</tr>
-							{/each}
-						{/if}
-					</tbody>
-				</table>
+										</div>
+									</div>
+
+									<div class="mt-auto pt-2 border-t border-base-300/50">
+										<div class="flex items-center gap-1.5 text-xs text-base-content/60">
+											<Clock3 size={12} />
+											<span class="truncate">{doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : 'No date'}</span>
+										</div>
+									</div>
+
+									<div class="text-[10px] uppercase tracking-wider text-base-content/50 font-medium">Click to open</div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		</div>
 

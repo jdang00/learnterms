@@ -18,9 +18,11 @@
 	let submitError: string = $state('');
 
 	// Get current classes to calculate next order number
-	const classes = useQuery(api.class.getUserClasses, {
-		id: userData?.cohortId as Id<'cohort'>
-	});
+	const classes = userData?.cohortId
+		? useQuery(api.class.getUserClasses, {
+				id: userData.cohortId as Id<'cohort'>
+			})
+		: { data: undefined, isLoading: false, error: null };
 
 	$effect(() => {
 		if (semesters.data) {

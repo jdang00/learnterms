@@ -22,25 +22,62 @@
 	const convexClient = useConvexClient();
 
 	let initialToken: string | null = data?.token ?? null;
+	let isClerkReady = $state(false);
+
+	// Wait for Clerk to be fully loaded
+	onMount(() => {
+		const checkClerkReady = () => {
+			if (window.Clerk?.loaded && window.Clerk?.session) {
+				isClerkReady = true;
+				return true;
+			}
+			return false;
+		};
+
+		if (checkClerkReady()) return;
+
+		// Poll for Clerk to be ready (max 5 seconds)
+		const interval = setInterval(() => {
+			if (checkClerkReady()) {
+				clearInterval(interval);
+			}
+		}, 100);
+
+		// Cleanup after 5 seconds
+		setTimeout(() => clearInterval(interval), 5000);
+	});
 
 	$effect(() => {
 		convexClient.setAuth(async (args) => {
 			const forceRefreshToken = args?.forceRefreshToken ?? false;
 
+			// Use initial SSR token on first call
 			if (!forceRefreshToken && initialToken) {
 				const token = initialToken;
 				initialToken = null;
 				return token;
 			}
 
+			// For refresh, ensure Clerk is ready
+			if (!window.Clerk?.session) {
+				console.error('[Convex Auth] Clerk session not available for token refresh');
+				// Fall back to SSR token if still available
+				return initialToken ?? undefined;
+			}
+
 			try {
-				const token = await window.Clerk?.session?.getToken({
+				const token = await window.Clerk.session.getToken({
 					template: 'convex',
 					skipCache: forceRefreshToken
 				});
 
+				if (!token) {
+					console.error('[Convex Auth] Clerk returned null token');
+				}
+
 				return token ?? undefined;
 			} catch (error) {
+				console.error('[Convex Auth] Error fetching token from Clerk:', error);
 				return undefined;
 			}
 		});

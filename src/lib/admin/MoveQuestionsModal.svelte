@@ -30,9 +30,13 @@
   });
 
   // Get only the user's classes based on their cohort
-  const classes = useQuery(api.class.getUserClasses, () => ({
-    id: (userDataQuery.data?.cohortId as Id<'cohort'>) || ''
-  }));
+  const classes = useQuery(
+    api.class.getUserClasses,
+    () =>
+      userDataQuery.data?.cohortId
+        ? { id: userDataQuery.data.cohortId as Id<'cohort'> }
+        : 'skip'
+  );
 
   let selectedClassId: Id<'class'> | null = $state(null);
   let selectedModuleId: Id<'module'> | null = $state(null);
