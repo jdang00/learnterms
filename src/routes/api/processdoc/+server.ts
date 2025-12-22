@@ -14,8 +14,8 @@ type Chunk = {
 	chunk_type: 'paragraph' | 'slide_group' | 'diagram' | 'table' | 'list';
 };
 
-const MODEL = 'gemini-3-flash-preview';
-const TEMPERATURE = 0.3;
+const MODEL = 'gemini-2.0-flash';
+const TEMPERATURE = 1.0;
 const MAX_TOKENS_TEXT = 8192;
 const MAX_TOKENS_PDF = 12288;
 
@@ -114,10 +114,7 @@ async function callModel(contents: Array<Record<string, unknown>>, maxTokens: nu
 				temperature: TEMPERATURE,
 				maxOutputTokens: maxTokens,
 				responseMimeType: 'application/json',
-				responseSchema: chunkArraySchema(Type as unknown as GType),
-				thinkingConfig: {
-					thinkingLevel: 'low' // Minimize latency and cost for extraction task
-				}
+				responseSchema: chunkArraySchema(Type as unknown as GType)
 			}
 		});
 

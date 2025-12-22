@@ -21,48 +21,41 @@
 
 	const convexClient = useConvexClient();
 
+	// Keep both a mutable token for first use and a backup for fallback
 	let initialToken: string | null = data?.token ?? null;
-	let isClerkReady = $state(false);
+	const ssrTokenBackup: string | null = data?.token ?? null;
 
-	// Wait for Clerk to be fully loaded
-	onMount(() => {
-		const checkClerkReady = () => {
-			if (window.Clerk?.loaded && window.Clerk?.session) {
-				isClerkReady = true;
-				return true;
-			}
-			return false;
-		};
+	// Helper to wait for Clerk session with timeout
+	async function waitForClerkSession(timeoutMs: number = 5000): Promise<boolean> {
+		if (window.Clerk?.session) return true;
 
-		if (checkClerkReady()) return;
-
-		// Poll for Clerk to be ready (max 5 seconds)
-		const interval = setInterval(() => {
-			if (checkClerkReady()) {
-				clearInterval(interval);
-			}
-		}, 100);
-
-		// Cleanup after 5 seconds
-		setTimeout(() => clearInterval(interval), 5000);
-	});
+		const startTime = Date.now();
+		while (Date.now() - startTime < timeoutMs) {
+			await new Promise(resolve => setTimeout(resolve, 100));
+			if (window.Clerk?.session) return true;
+		}
+		return false;
+	}
 
 	$effect(() => {
 		convexClient.setAuth(async (args) => {
 			const forceRefreshToken = args?.forceRefreshToken ?? false;
 
-			// Use initial SSR token on first call
+			// Use initial SSR token on first call (non-forced)
 			if (!forceRefreshToken && initialToken) {
 				const token = initialToken;
 				initialToken = null;
 				return token;
 			}
 
-			// For refresh, ensure Clerk is ready
-			if (!window.Clerk?.session) {
-				console.error('[Convex Auth] Clerk session not available for token refresh');
-				// Fall back to SSR token if still available
-				return initialToken ?? undefined;
+			// Wait for Clerk to be ready (with timeout)
+			const clerkReady = await waitForClerkSession(3000);
+
+			if (!clerkReady || !window.Clerk?.session) {
+				console.warn('[Convex Auth] Clerk session not available, using SSR token fallback');
+				// Use the backup SSR token if Clerk isn't ready
+				// This keeps the session alive while Clerk initializes
+				return ssrTokenBackup ?? undefined;
 			}
 
 			try {
@@ -72,13 +65,14 @@
 				});
 
 				if (!token) {
-					console.error('[Convex Auth] Clerk returned null token');
+					console.warn('[Convex Auth] Clerk returned null token, user may be signed out');
 				}
 
 				return token ?? undefined;
 			} catch (error) {
 				console.error('[Convex Auth] Error fetching token from Clerk:', error);
-				return undefined;
+				// On error, try the backup token as last resort
+				return ssrTokenBackup ?? undefined;
 			}
 		});
 	});
