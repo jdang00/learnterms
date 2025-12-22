@@ -822,58 +822,12 @@ ${material}`;
 						propertyOrdering: ['stem', 'options', 'correctAnswerIndexes', 'explanation']
 					}
 				}
+				// Using default HIGH thinking level for better question quality
 			}
 		});
 
-		// Handle different response formats from Google AI SDK
-		let responseText: string;
-
-		if (result && typeof result === 'object') {
-			// Try different response structures
-			if ('text' in result && typeof result.text === 'string') {
-				responseText = result.text;
-			} else if ('response' in result && result.response && typeof result.response === 'object') {
-				const response = result.response as Record<string, unknown>;
-
-				if (
-					response.candidates &&
-					Array.isArray(response.candidates) &&
-					response.candidates[0] &&
-					typeof response.candidates[0] === 'object'
-				) {
-					const candidate = response.candidates[0] as Record<string, unknown>;
-					if (candidate.content && typeof candidate.content === 'object') {
-						const content = candidate.content as Record<string, unknown>;
-						if (
-							content.parts &&
-							Array.isArray(content.parts) &&
-							content.parts[0] &&
-							typeof content.parts[0] === 'object'
-						) {
-							const part = content.parts[0] as Record<string, unknown>;
-							if (part.text && typeof part.text === 'string') {
-								responseText = part.text;
-							} else {
-								throw new Error('AI response missing text content in parts');
-							}
-						} else {
-							throw new Error('AI response missing parts in candidates content');
-						}
-					} else {
-						throw new Error('AI response missing content in candidates');
-					}
-				} else if ('text' in response && typeof response.text === 'string') {
-					responseText = response.text;
-				} else {
-					throw new Error('AI response missing expected text content in response structure');
-				}
-			} else {
-				throw new Error('AI response missing expected text content - unknown structure');
-			}
-		} else {
-			throw new Error('AI response is not a valid object');
-		}
-
+		// Extract response text from SDK (modern SDK provides simple .text accessor)
+		const responseText = result.text;
 		if (!responseText || typeof responseText !== 'string' || responseText.trim().length === 0) {
 			throw new Error('AI response text is empty or invalid');
 		}

@@ -27,9 +27,11 @@
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
 
-	const classes = useQuery(api.class.getUserClasses, {
-		id: (userData?.cohortId as Id<'cohort'>)
-	});
+	const classes = userData?.cohortId
+		? useQuery(api.class.getUserClasses, {
+				id: userData.cohortId as Id<'cohort'>
+			})
+		: { data: undefined, isLoading: false, error: null };
 
 	const client = useConvexClient();
 
@@ -230,11 +232,10 @@
 				</div>
 			</a>
 
-			<div
-				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4 opacity-60 cursor-not-allowed pointer-events-none select-none"
-				aria-label="Class Progress (coming soon)"
-				aria-disabled="true"
-				title="Coming soon"
+			<a
+				href="/admin/progress"
+				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
+				aria-label="Open Class Progress"
 			>
 				<div class="rounded-md bg-primary-content border border-base-300 p-2">
 					<ChartColumnIncreasing size={20} class="text-primary" aria-hidden="true" />
@@ -247,7 +248,7 @@
 						Track performance and monitor mastery over time
 					</p>
 				</div>
-			</div>
+			</a>
 		</div>
 
 		<div class="flex flex-row justify-between items-start mt-12">

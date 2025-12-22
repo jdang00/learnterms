@@ -17,9 +17,23 @@
 
 	let isProcessing = $state(false);
 	let processingError = $state('');
+	let processingStatus = $state('');
+	let chunksReceived = $state(0);
+	let totalChunks = $state(0);
+
+	// Store chunks locally as they stream in for immediate display
+	let streamedChunks = $state<Array<{
+		title: string;
+		summary: string;
+		content: string;
+		keywords: string[];
+		chunk_type: string;
+		_id: string;
+	}>>([]);
 
 	let loadingSkeletons = $state(0);
 	let loadingInterval: ReturnType<typeof setInterval> | null = null;
+	let currentEventSource: EventSource | null = null;
 
 	let isEditModalOpen: boolean = $state(false);
 	let editingChunk: Doc<'chunkContent'> | null = $state(null);
@@ -109,37 +123,62 @@
 		}
 	}
 
-	const uploader = createUploader('pdfUploader', {
-		onClientUploadComplete: async (res) => {
-			try {
-				isProcessing = true;
-				processingError = '';
-				loadingSkeletons = 0;
-				loadingInterval = setInterval(() => {
-					if (loadingSkeletons < 8) loadingSkeletons++;
-				}, 800);
+	async function processDocumentWithStreaming(pdfUrl: string) {
+		return new Promise<void>((resolve, reject) => {
+			isProcessing = true;
+			processingError = '';
+			processingStatus = 'Connecting...';
+			chunksReceived = 0;
+			totalChunks = 0;
+			loadingSkeletons = 0;
+			streamedChunks = []; // Clear any previous streamed chunks
 
-				const uploaded = Array.isArray(res) ? res[0] : null;
-				const pdfUrl = uploaded?.ufsUrl || uploaded?.url;
-				const fileKey = (uploaded as any)?.key || (uploaded as any)?.fileKey;
-				if (!pdfUrl) {
-					throw new Error('Upload complete but missing file URL');
-				}
+			// Close any existing EventSource
+			if (currentEventSource) {
+				currentEventSource.close();
+			}
 
-				const response = await fetch('/api/processdoc', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ pdfUrl, fileKey })
-				});
-				if (!response.ok) {
-					const errorData = await response.json();
-					throw new Error(errorData.error || 'Failed to process PDF');
-				}
-				const result = await response.json();
-				if (result.success && Array.isArray(result.chunks)) {
-					let inserted = 0;
-					for (const chunk of result.chunks) {
-						await client.mutation(api.chunkContent.insertChunkContent, {
+			// Create streaming connection
+			const url = `/api/processdoc-stream?pdfUrl=${encodeURIComponent(pdfUrl)}`;
+			const eventSource = new EventSource(url);
+			currentEventSource = eventSource;
+
+			// Start skeleton animation
+			loadingInterval = setInterval(() => {
+				if (loadingSkeletons < 12) loadingSkeletons++;
+			}, 600);
+
+			eventSource.addEventListener('message', async (e) => {
+				try {
+					const event = JSON.parse(e.data);
+
+					if (event.type === 'status') {
+						processingStatus = event.message;
+					} else if (event.type === 'progress') {
+						processingStatus = event.message || 'Generating chunks...';
+					} else if (event.type === 'chunk') {
+						const chunk = event.data;
+
+						// Add to local state IMMEDIATELY for real-time display
+						const tempId = `temp-${Date.now()}-${event.index}`;
+						streamedChunks = [...streamedChunks, {
+							title: chunk.title,
+							summary: chunk.summary,
+							content: chunk.content,
+							keywords: chunk.keywords,
+							chunk_type: chunk.chunk_type,
+							_id: tempId
+						}];
+
+						chunksReceived = event.index + 1;
+						totalChunks = event.total;
+						processingStatus = `Processing chunk ${chunksReceived} of ${totalChunks}`;
+
+						// Update skeleton count to match progress
+						loadingSkeletons = Math.min(12, Math.floor((chunksReceived / totalChunks) * 12));
+
+						// Insert chunk into database (non-blocking for UI)
+						client.mutation(api.chunkContent.insertChunkContent, {
 							title: chunk.title,
 							summary: chunk.summary,
 							content: chunk.content,
@@ -148,22 +187,72 @@
 							documentId: currentDocView as Id<'contentLib'>,
 							metadata: {},
 							updatedAt: Date.now()
+						}).catch((err) => {
+							console.error('Failed to insert chunk:', err);
 						});
-						inserted++;
+					} else if (event.type === 'complete') {
+						processingStatus = event.message;
+						eventSource.close();
+						currentEventSource = null;
+
+						// Small delay to show completion message, then clear streamed chunks
+						// The database subscription will take over
+						setTimeout(() => {
+							isProcessing = false;
+							loadingSkeletons = 0;
+							streamedChunks = []; // Clear - database subscription will show actual chunks
+							if (loadingInterval !== null) {
+								clearInterval(loadingInterval);
+								loadingInterval = null;
+							}
+							resolve();
+						}, 1000);
+					} else if (event.type === 'error') {
+						processingError = event.message;
+						eventSource.close();
+						currentEventSource = null;
+						isProcessing = false;
+						loadingSkeletons = 0;
+						if (loadingInterval !== null) {
+							clearInterval(loadingInterval);
+							loadingInterval = null;
+						}
+						reject(new Error(event.message));
 					}
-					console.log(`Created ${inserted.toString()} chunks from PDF`);
-				} else {
-					throw new Error('Failed to process PDF - no chunks returned');
+				} catch (parseError) {
+					console.error('Error parsing SSE event:', parseError);
 				}
-			} catch (e) {
-				processingError = e instanceof Error ? e.message : 'Upload/processing failed';
-			} finally {
+			});
+
+			eventSource.addEventListener('error', (err) => {
+				console.error('EventSource error:', err);
+				processingError = 'Connection to server lost';
+				eventSource.close();
+				currentEventSource = null;
 				isProcessing = false;
 				loadingSkeletons = 0;
 				if (loadingInterval !== null) {
 					clearInterval(loadingInterval);
 					loadingInterval = null;
 				}
+				reject(new Error('Connection to server lost'));
+			});
+		});
+	}
+
+	const uploader = createUploader('pdfUploader', {
+		onClientUploadComplete: async (res) => {
+			try {
+				const uploaded = Array.isArray(res) ? res[0] : null;
+				const pdfUrl = uploaded?.ufsUrl || uploaded?.url;
+				if (!pdfUrl) {
+					throw new Error('Upload complete but missing file URL');
+				}
+
+				// Use streaming to process the document
+				await processDocumentWithStreaming(pdfUrl);
+			} catch (e) {
+				processingError = e instanceof Error ? e.message : 'Upload/processing failed';
 			}
 		},
 		onUploadError: (error: Error) => {
@@ -171,54 +260,18 @@
 		}
 	});
 
-	// If navigated here with ?processing=1, show the processing skeleton until chunks appear
+	// If navigated here with ?processing=1, process the document with streaming
 	$effect(() => {
 		if (typeof window === 'undefined') return;
 		const params = new URLSearchParams(window.location.search);
 		const shouldShowProcessing = params.get('processing') === '1';
 		const incomingPdfUrl = params.get('pdfUrl');
-		const incomingFileKey = params.get('fileKey');
-		if (shouldShowProcessing && !isProcessing) {
-			isProcessing = true;
-			processingError = '';
-			loadingSkeletons = 0;
-			if (loadingInterval !== null) clearInterval(loadingInterval);
-			loadingInterval = setInterval(() => {
-				if (loadingSkeletons < 8) loadingSkeletons++;
-			}, 800);
 
-			// Kick off processing now that we're on the chunks page
-			if (incomingPdfUrl) {
-				fetch('/api/processdoc', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ pdfUrl: incomingPdfUrl, fileKey: incomingFileKey ?? undefined })
-				})
-					.then(async (r) => {
-						if (!r.ok) {
-							const e = await r.json().catch(() => ({}));
-							throw new Error(e.error || 'Failed to process PDF');
-						}
-						const result = await r.json();
-						if (result.success && Array.isArray(result.chunks)) {
-							for (const chunk of result.chunks) {
-								await client.mutation(api.chunkContent.insertChunkContent, {
-									title: chunk.title,
-									summary: chunk.summary,
-									content: chunk.content,
-									keywords: chunk.keywords,
-									chunk_type: chunk.chunk_type,
-									documentId: currentDocView as Id<'contentLib'>,
-									metadata: {},
-									updatedAt: Date.now()
-								});
-							}
-						}
-					})
-					.catch((e) => {
-						processingError = e instanceof Error ? e.message : 'Processing failed';
-					});
-			}
+		if (shouldShowProcessing && incomingPdfUrl && !isProcessing) {
+			// Kick off streaming processing
+			processDocumentWithStreaming(incomingPdfUrl).catch((e) => {
+				processingError = e instanceof Error ? e.message : 'Processing failed';
+			});
 		}
 	});
 
@@ -242,6 +295,20 @@
 			}
 		}
 	});
+
+	// Cleanup on unmount
+	$effect(() => {
+		return () => {
+			if (currentEventSource) {
+				currentEventSource.close();
+				currentEventSource = null;
+			}
+			if (loadingInterval !== null) {
+				clearInterval(loadingInterval);
+				loadingInterval = null;
+			}
+		};
+	});
 </script>
 
 <div
@@ -253,61 +320,64 @@
 		<h2 class="text-2xl font-semibold">{currentDocument.title}</h2>
 	</div>
 
-	{#if getDocumentChunks.isLoading || isProcessing}
-		<!-- Dynamic Processing Loading -->
-		<div class="mt-6" in:fade={{ duration: 150 }}>
-			{#if isProcessing}
-				<div class="text-center mb-6">
-					<div class="flex items-center justify-center gap-3 mb-2">
-						<span class="loading loading-spinner loading-md text-primary"></span>
-						<h3 class="text-lg font-semibold">Processing PDF Document</h3>
-					</div>
-					<p class="text-sm text-base-content/70">Analyzing content and generating chunks...</p>
+	<!-- Progress Bar (shown when processing) -->
+	{#if isProcessing}
+		<div class="mt-6 mb-4" in:fade={{ duration: 150 }}>
+			<div class="bg-base-200 rounded-lg p-4">
+				<div class="flex items-center justify-center gap-3 mb-3">
+					<span class="loading loading-spinner loading-sm text-primary"></span>
+					<h3 class="font-semibold">Processing PDF Document</h3>
 				</div>
-			{:else}
-				<div class="skeleton h-8 w-48 mb-6"></div>
-			{/if}
+				<p class="text-sm text-center text-base-content/70 mb-3">
+					{processingStatus || 'Analyzing content and generating chunks...'}
+				</p>
 
+				{#if totalChunks > 0}
+					<div class="max-w-md mx-auto">
+						<progress
+							class="progress progress-primary w-full h-2"
+							value={chunksReceived}
+							max={totalChunks}
+						></progress>
+						<div class="flex justify-between items-center mt-2">
+							<p class="text-xs text-base-content/60">
+								{chunksReceived} of {totalChunks} chunks processed
+							</p>
+							<p class="text-xs text-base-content/50">
+								{Math.round((chunksReceived / totalChunks) * 100)}%
+							</p>
+						</div>
+					</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
+	{#if getDocumentChunks.isLoading && !isProcessing}
+		<!-- Initial Loading State -->
+		<div class="mt-6" in:fade={{ duration: 150 }}>
+			<div class="skeleton h-8 w-48 mb-6"></div>
 			<div class="space-y-4">
-				{#each Array(isProcessing ? loadingSkeletons : 3), index (index)}
-					<div
-						class="card bg-base-100 border border-base-300 {isProcessing ? 'animate-pulse' : ''}"
-						style="animation-delay: {index * 200}ms"
-						in:fly={{ y: 8, duration: 180, delay: index * 40, opacity: 0.2 }}
-					>
+				{#each Array(3), index (index)}
+					<div class="card bg-base-100 border border-base-300">
 						<div class="card-body p-6">
 							<div class="flex justify-between items-start">
 								<div class="flex-1 space-y-3">
 									<div class="skeleton h-6 w-3/4"></div>
 									<div class="skeleton h-4 w-full"></div>
 									<div class="skeleton h-4 w-5/6"></div>
-									<div class="flex gap-2 mt-3">
-										<div class="skeleton h-5 w-20"></div>
-										<div class="skeleton h-4 w-32"></div>
-										<div class="skeleton h-4 w-24"></div>
-									</div>
 								</div>
-								<div class="skeleton h-8 w-8"></div>
 							</div>
 						</div>
 					</div>
 				{/each}
-
-				{#if isProcessing && loadingSkeletons < 8}
-					<div class="flex items-center justify-center py-4">
-						<div class="flex items-center gap-2 text-sm text-base-content/60">
-							<span class="loading loading-dots loading-sm"></span>
-							<span>Generating more chunks...</span>
-						</div>
-					</div>
-				{/if}
 			</div>
 		</div>
 	{:else if getDocumentChunks.error}
 		<div class="alert alert-error mt-6">
 			<span>Error loading chunks: {getDocumentChunks.error.message}</span>
 		</div>
-	{:else if getDocumentChunks.data.length === 0}
+	{:else if getDocumentChunks.data && getDocumentChunks.data.length === 0 && !isProcessing}
 		<!-- Empty State with PDF Upload -->
 		<div class="flex flex-col items-center justify-center py-12 mt-6" in:fade={{ duration: 150 }}>
 			<div class="text-center mb-8">
@@ -341,21 +411,73 @@
 				</div>
 			</div>
 		</div>
-	{:else}
-		<!-- Chunks Display -->
+	{/if}
+
+	<!-- Chunks Display (shown when we have chunks from DB or streaming) -->
+	{#if (getDocumentChunks.data && getDocumentChunks.data.length > 0) || streamedChunks.length > 0}
 		<div class="mt-6" in:fade={{ duration: 160 }}>
 			<div class="flex justify-between items-center mb-6">
 				<div>
 					<h3 class="text-xl font-semibold">Content Chunks</h3>
 					<p class="text-sm text-base-content/70">
-						{getDocumentChunks.data.length} chunks extracted
+						{#if isProcessing}
+							{streamedChunks.length} chunk{streamedChunks.length !== 1 ? 's' : ''} received
+							{#if totalChunks > 0}
+								<span class="text-primary">• {totalChunks - streamedChunks.length} remaining</span>
+							{/if}
+						{:else}
+							{getDocumentChunks.data?.length || 0} chunk{(getDocumentChunks.data?.length || 0) !== 1 ? 's' : ''} extracted
+						{/if}
 					</p>
 				</div>
-				<!-- Upload action removed per request -->
 			</div>
 
 			<div class="grid gap-4">
-				{#each getDocumentChunks.data as chunk (chunk._id)}
+				<!-- Show streamed chunks during processing for immediate feedback -->
+				{#if isProcessing && streamedChunks.length > 0}
+					{#each streamedChunks as chunk (chunk._id)}
+						<div
+							class="card bg-base-100 border border-primary/30 shadow-md transition-all duration-200"
+							in:fly={{ y: 20, duration: 250 }}
+						>
+							<div class="card-body p-6">
+								<div class="flex justify-between items-start gap-4">
+									<div class="flex-1 min-w-0">
+										<div class="flex items-center gap-2 mb-2">
+											<h4 class="font-semibold text-lg truncate">{chunk.title}</h4>
+											<div class="badge badge-soft badge-primary badge-sm capitalize">
+												{chunk.chunk_type}
+											</div>
+											<div class="badge badge-success badge-xs animate-pulse">New</div>
+										</div>
+										<p class="text-base-content/80 text-sm mb-3 line-clamp-2">{chunk.summary}</p>
+										<div class="flex flex-wrap gap-1">
+											{#each chunk.keywords.slice(0, 4) as keyword, index (index)}
+												<span class="badge badge-soft badge-secondary badge-xs">{keyword}</span>
+											{/each}
+											{#if chunk.keywords.length > 4}
+												<span class="badge badge-ghost badge-xs">+{chunk.keywords.length - 4}</span>
+											{/if}
+										</div>
+									</div>
+								</div>
+
+								<div class="mt-4">
+									<details class="collapse collapse-arrow bg-base-200">
+										<summary class="collapse-title text-sm font-medium">View full content</summary>
+										<div class="collapse-content">
+											<div class="prose prose-sm max-w-none pt-2">
+												<pre class="whitespace-pre-wrap text-xs leading-relaxed">{chunk.content}</pre>
+											</div>
+										</div>
+									</details>
+								</div>
+							</div>
+						</div>
+					{/each}
+				{:else if getDocumentChunks.data}
+					<!-- Show database chunks when not processing -->
+					{#each getDocumentChunks.data as chunk (chunk._id)}
 					<div
 						class="card bg-base-100 border border-base-300 hover:border-primary/30 hover:shadow-lg transition-all duration-200"
 						in:fly={{ y: 10, duration: 180 }}
@@ -415,6 +537,7 @@
 						</div>
 					</div>
 				{/each}
+				{/if}
 			</div>
 		</div>
 	{/if}
