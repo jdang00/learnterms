@@ -8,6 +8,15 @@ export default defineSchema({
 		clerkUserId: v.string(),
 		cohortId: v.optional(v.id('cohort')),
 		name: v.string(),
+		// Additional Clerk user data for analytics
+		firstName: v.optional(v.string()),
+		lastName: v.optional(v.string()),
+		email: v.optional(v.string()),
+		username: v.optional(v.string()),
+		imageUrl: v.optional(v.string()),
+		lastSignInAt: v.optional(v.number()),
+		createdAt: v.optional(v.number()),
+		lastActiveAt: v.optional(v.number()),
 		metadata: v.object({})
 	})
 		.index('by_clerkUserId', ['clerkUserId'])
