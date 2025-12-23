@@ -27,16 +27,77 @@ export const getUserById = query({
 });
 
 export const addUser = mutation({
-	args: { clerkUserId: v.string(), name: v.string() },
+	args: {
+		clerkUserId: v.string(),
+		name: v.string(),
+		firstName: v.optional(v.string()),
+		lastName: v.optional(v.string()),
+		email: v.optional(v.string()),
+		username: v.optional(v.string()),
+		imageUrl: v.optional(v.string()),
+		lastSignInAt: v.optional(v.number()),
+		createdAt: v.optional(v.number()),
+		lastActiveAt: v.optional(v.number())
+	},
 	handler: async (ctx, args) => {
 		const user = await ctx.db.insert('users', {
 			clerkUserId: args.clerkUserId,
 			metadata: {},
 			name: args.name,
+			firstName: args.firstName,
+			lastName: args.lastName,
+			email: args.email,
+			username: args.username,
+			imageUrl: args.imageUrl,
+			lastSignInAt: args.lastSignInAt,
+			createdAt: args.createdAt,
+			lastActiveAt: args.lastActiveAt,
 			updatedAt: Date.now()
 		});
 
 		return user;
+	}
+});
+
+/**
+ * Mutation to sync user data from Clerk
+ * Can be called on login to keep user data fresh
+ */
+export const syncUserFromClerk = mutation({
+	args: {
+		clerkUserId: v.string(),
+		firstName: v.optional(v.string()),
+		lastName: v.optional(v.string()),
+		email: v.optional(v.string()),
+		username: v.optional(v.string()),
+		imageUrl: v.optional(v.string()),
+		lastSignInAt: v.optional(v.number()),
+		lastActiveAt: v.optional(v.number())
+	},
+	handler: async (ctx, args) => {
+		// Find the user by clerkUserId
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
+			.first();
+
+		if (!user) {
+			return null;
+		}
+
+		// Update the user with latest Clerk data
+		await ctx.db.patch(user._id, {
+			firstName: args.firstName,
+			lastName: args.lastName,
+			email: args.email,
+			username: args.username,
+			imageUrl: args.imageUrl,
+			lastSignInAt: args.lastSignInAt,
+			lastActiveAt: args.lastActiveAt,
+			updatedAt: Date.now()
+		});
+
+		return user._id;
 	}
 });
 

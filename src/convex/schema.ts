@@ -158,5 +158,67 @@ export default defineSchema({
 		documentId: v.id('contentLib'),
 		metadata: v.optional(v.object({})),
 		deletedAt: v.optional(v.number())
-	}).index('by_documentId', ['documentId'])
+	}).index('by_documentId', ['documentId']),
+
+	// Cached progress stats for cohorts - avoids expensive queries
+	cohortProgressCache: defineTable({
+		cohortId: v.id('cohort'),
+		// Aggregate stats
+		totalStudents: v.number(),
+		totalQuestions: v.number(),
+		totalModules: v.number(),
+		averageCompletion: v.number(),
+		// Per-student progress data
+		studentsProgress: v.array(
+			v.object({
+				_id: v.id('users'),
+				name: v.string(),
+				clerkUserId: v.string(),
+				firstName: v.optional(v.string()),
+				lastName: v.optional(v.string()),
+				email: v.optional(v.string()),
+				username: v.optional(v.string()),
+				imageUrl: v.optional(v.string()),
+				lastSignInAt: v.optional(v.number()),
+				createdAt: v.optional(v.number()),
+				progress: v.number(),
+				questionsInteracted: v.number(),
+				questionsMastered: v.number(),
+				totalQuestions: v.number(),
+				lastActivityAt: v.optional(v.number())
+			})
+		),
+		// Module completion stats
+		moduleCompletion: v.optional(
+			v.array(
+				v.object({
+					moduleId: v.id('module'),
+					moduleName: v.string(),
+					className: v.string(),
+					totalQuestions: v.number(),
+					averageCompletion: v.number(), // 0-100
+					studentsCompleted: v.number(), // Count of students at 100%
+					studentsStarted: v.number() // Count of students with >0% progress
+				})
+			)
+		),
+		// Top flagged questions
+		topFlaggedQuestions: v.optional(
+			v.array(
+				v.object({
+					questionId: v.id('question'),
+					stem: v.string(),
+					moduleName: v.string(),
+					className: v.string(),
+					flagCount: v.number(),
+					totalStudents: v.number(),
+					flagPercentage: v.number() // 0-100
+				})
+			)
+		),
+		// Refresh tracking
+		lastRefreshedAt: v.number(),
+		refreshStatus: v.union(v.literal('idle'), v.literal('refreshing'), v.literal('error')),
+		refreshError: v.optional(v.string())
+	}).index('by_cohortId', ['cohortId'])
 });
