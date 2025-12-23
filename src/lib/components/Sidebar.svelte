@@ -33,6 +33,9 @@
 		const computed: QuickAction[] = [];
 		if (admin || contributor) {
 			computed.push({ title: 'Admin Dashboard', icon: '✏️', href: '/admin' });
+			computed.push({ title: 'Content Library', icon: '📚', href: '/admin/library' });
+			computed.push({ title: 'Question Studio', icon: '✨', href: '/admin/question-studio' });
+			computed.push({ title: 'Class Progress', icon: '📊', href: '/admin/progress' });
 		}
 		if (userRole) {
 			computed.push({ title: 'My Dashboard', icon: '🏠', href: '/classes' });

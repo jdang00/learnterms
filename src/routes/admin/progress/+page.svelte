@@ -29,55 +29,6 @@
 			})
 		: { data: undefined, isLoading: false, error: null };
 
-	// Mock data for module progress and flagged questions (to be wired up later)
-	const mockModuleProgress = [
-		{ id: '1', name: 'Introduction to Pharmacology', emoji: '💊', completion: 92, students: 45 },
-		{ id: '2', name: 'Drug Classifications', emoji: '📋', completion: 78, students: 42 },
-		{ id: '3', name: 'Pharmacokinetics', emoji: '🧪', completion: 65, students: 38 },
-		{ id: '4', name: 'Pharmacodynamics', emoji: '⚡', completion: 54, students: 35 },
-		{ id: '5', name: 'Autonomic Nervous System', emoji: '🧠', completion: 41, students: 28 },
-		{ id: '6', name: 'Cardiovascular Drugs', emoji: '❤️', completion: 32, students: 24 },
-		{ id: '7', name: 'Antimicrobials', emoji: '🦠', completion: 18, students: 15 },
-		{ id: '8', name: 'Pain Management', emoji: '💉', completion: 8, students: 8 }
-	];
-
-	const mockFlaggedQuestions = [
-		{
-			id: '1',
-			question: 'Which receptor does epinephrine primarily act on?',
-			module: 'Autonomic Nervous System',
-			flagCount: 12,
-			reason: 'Confusing wording'
-		},
-		{
-			id: '2',
-			question: 'Calculate the half-life given the following parameters...',
-			module: 'Pharmacokinetics',
-			flagCount: 8,
-			reason: 'Incorrect answer'
-		},
-		{
-			id: '3',
-			question: 'What is the mechanism of action of beta-blockers?',
-			module: 'Cardiovascular Drugs',
-			flagCount: 6,
-			reason: 'Multiple correct answers'
-		},
-		{
-			id: '4',
-			question: 'Identify the drug class based on the structure shown.',
-			module: 'Drug Classifications',
-			flagCount: 5,
-			reason: 'Image not loading'
-		},
-		{
-			id: '5',
-			question: 'Which antibiotic is contraindicated in pregnancy?',
-			module: 'Antimicrobials',
-			flagCount: 4,
-			reason: 'Outdated information'
-		}
-	];
 
 	// Search and filter state
 	let searchQuery = $state('');
@@ -85,15 +36,20 @@
 
 	// Filter students based on search
 	const filteredStudents = $derived(
-		studentsWithProgress.data?.filter((student) =>
-			student.name.toLowerCase().includes(searchQuery.toLowerCase())
-		) ?? []
+		studentsWithProgress.data?.filter((student) => {
+			const query = searchQuery.toLowerCase();
+			return (
+				student.name.toLowerCase().includes(query) ||
+				student.email?.toLowerCase().includes(query) ||
+				student.firstName?.toLowerCase().includes(query) ||
+				student.lastName?.toLowerCase().includes(query)
+			);
+		}) ?? []
 	);
 
 	// Format relative time
-	function formatLastActive(timestamp: number | null): string {
+	function formatRelativeTime(timestamp: number | null | undefined): string {
 		if (!timestamp) return 'Never';
-
 		const now = Date.now();
 		const diff = now - timestamp;
 		const minutes = Math.floor(diff / 60000);
@@ -101,22 +57,11 @@
 		const days = Math.floor(diff / 86400000);
 
 		if (minutes < 1) return 'Just now';
-		if (minutes < 60) return `${minutes} min ago`;
-		if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-		if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+		if (minutes < 60) return `${minutes}m ago`;
+		if (hours < 24) return `${hours}h ago`;
+		if (days < 7) return `${days}d ago`;
+		if (days < 30) return `${Math.floor(days / 7)}w ago`;
 		return new Date(timestamp).toLocaleDateString();
-	}
-
-	function getProgressColor(progress: number): string {
-		if (progress >= 80) return 'progress-success';
-		if (progress >= 50) return 'progress-warning';
-		return 'progress-error';
-	}
-
-	function getProgressBadge(progress: number): string {
-		if (progress >= 80) return 'badge-success';
-		if (progress >= 50) return 'badge-warning';
-		return 'badge-error';
 	}
 </script>
 
@@ -153,16 +98,16 @@
 
 	<!-- Stats Overview -->
 	{#if cohortStats.isLoading}
-		<div class="stats stats-vertical sm:stats-horizontal shadow-sm border border-base-300 w-full mb-8 animate-pulse">
+		<div class="stats stats-vertical sm:stats-horizontal shadow-sm border border-base-300 w-full mb-8 animate-pulse rounded-xl">
 			<div class="stat"><div class="stat-value">...</div></div>
 			<div class="stat"><div class="stat-value">...</div></div>
 			<div class="stat"><div class="stat-value">...</div></div>
 			<div class="stat"><div class="stat-value">...</div></div>
 		</div>
 	{:else if cohortStats.error}
-		<div class="alert alert-error mb-8">Failed to load stats: {cohortStats.error.message}</div>
+		<div class="alert alert-error mb-8 rounded-xl">Failed to load stats: {cohortStats.error.message}</div>
 	{:else}
-		<div class="stats stats-vertical sm:stats-horizontal shadow-sm border border-base-300 w-full mb-8">
+		<div class="stats stats-vertical sm:stats-horizontal shadow-sm border border-base-300 w-full mb-8 rounded-xl">
 			<div class="stat">
 				<div class="stat-figure text-primary">
 					<Users size={24} />
@@ -204,90 +149,36 @@
 	<!-- Two Column Layout -->
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 		<!-- Completion by Module -->
-		<div class="card bg-base-100 shadow-sm border border-base-300">
+		<div class="card bg-base-100 shadow-sm border border-base-300 rounded-xl">
 			<div class="card-body">
 				<h2 class="card-title text-lg mb-4">
 					<BookOpen size={20} />
 					Completion by Module
 				</h2>
-				<div class="space-y-4">
-					{#each mockModuleProgress as module (module.id)}
-						<div class="space-y-1">
-							<div class="flex justify-between items-center">
-								<span class="text-sm font-medium flex items-center gap-2">
-									<span>{module.emoji}</span>
-									<span class="truncate max-w-[200px]">{module.name}</span>
-								</span>
-								<span class="text-sm text-base-content/70">
-									{module.completion}%
-								</span>
-							</div>
-							<progress
-								class="progress {getProgressColor(module.completion)} w-full h-2"
-								value={module.completion}
-								max="100"
-							></progress>
-							<div class="text-xs text-base-content/50">
-								{module.students} students engaged
-							</div>
-						</div>
-					{/each}
+				<div class="text-center py-8 text-base-content/60">
+					<BookOpen size={32} class="mx-auto mb-2 opacity-50" />
+					<p>Module progress coming soon</p>
 				</div>
 			</div>
 		</div>
 
 		<!-- Top Flagged Questions -->
-		<div class="card bg-base-100 shadow-sm border border-base-300">
+		<div class="card bg-base-100 shadow-sm border border-base-300 rounded-xl">
 			<div class="card-body">
 				<h2 class="card-title text-lg mb-4">
 					<Flag size={20} class="text-warning" />
 					Top Flagged Questions
 				</h2>
-				{#if mockFlaggedQuestions.length === 0}
-					<div class="text-center py-8 text-base-content/60">
-						<Flag size={32} class="mx-auto mb-2 opacity-50" />
-						<p>No flagged questions</p>
-					</div>
-				{:else}
-					<div class="overflow-x-auto">
-						<table class="table table-sm">
-							<thead>
-								<tr>
-									<th>Question</th>
-									<th>Module</th>
-									<th>Flags</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each mockFlaggedQuestions as question (question.id)}
-									<tr class="hover">
-										<td>
-											<div class="max-w-[200px]">
-												<p class="truncate text-sm">{question.question}</p>
-												<p class="text-xs text-base-content/50">{question.reason}</p>
-											</div>
-										</td>
-										<td>
-											<span class="badge badge-ghost badge-sm">{question.module}</span>
-										</td>
-										<td>
-											<span class="badge badge-warning badge-sm gap-1">
-												<Flag size={10} />
-												{question.flagCount}
-											</span>
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{/if}
+				<div class="text-center py-8 text-base-content/60">
+					<Flag size={32} class="mx-auto mb-2 opacity-50" />
+					<p>Flagged questions coming soon</p>
+				</div>
 			</div>
 		</div>
 	</div>
 
 	<!-- Students in Class -->
-	<div class="card bg-base-100 shadow-sm border border-base-300 mt-8">
+	<div class="card bg-base-100 shadow-sm border border-base-300 mt-8 rounded-xl">
 		<div class="card-body">
 			<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
 				<h2 class="card-title text-lg">
@@ -299,7 +190,7 @@
 				</h2>
 				<input
 					type="text"
-					placeholder="Search students..."
+					placeholder="Search by name or email..."
 					class="input input-bordered input-sm w-full sm:w-64"
 					bind:value={searchQuery}
 				/>
@@ -328,9 +219,9 @@
 						<thead>
 							<tr>
 								<th>Student</th>
-								<th>Progress</th>
-								<th>Questions</th>
-								<th>Last Active</th>
+								<th>Email</th>
+								<th>Last Sign-In</th>
+								<th>Joined</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -338,42 +229,45 @@
 								<tr class="hover">
 									<td>
 										<div class="flex items-center gap-3">
-											<div class="avatar placeholder">
-												<div class="bg-neutral text-neutral-content w-10 rounded-full">
-													<span class="text-sm">
-														{student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-													</span>
+											{#if student.imageUrl}
+												<div class="avatar">
+													<div class="w-12 h-12 rounded-full">
+														<img src={student.imageUrl} alt={student.name} />
+													</div>
 												</div>
-											</div>
+											{:else}
+												<div class="avatar placeholder">
+													<div class="bg-neutral text-neutral-content w-12 rounded-full">
+														<span class="text-sm">
+															{student.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+														</span>
+													</div>
+												</div>
+											{/if}
 											<div>
 												<div class="font-medium">{student.name}</div>
-												<div class="text-xs text-base-content/50">
-													{student.questionsMastered} mastered
-												</div>
+												{#if student.username}
+													<div class="text-sm text-base-content/60">@{student.username}</div>
+												{/if}
 											</div>
 										</div>
 									</td>
 									<td>
-										<div class="flex items-center gap-3">
-											<progress
-												class="progress {getProgressColor(student.progress)} w-20 h-2"
-												value={student.progress}
-												max="100"
-											></progress>
-											<span class="badge {getProgressBadge(student.progress)} badge-sm">
-												{student.progress}%
-											</span>
+										{#if student.email}
+											<span class="text-sm">{student.email}</span>
+										{:else}
+											<span class="text-sm text-base-content/40">—</span>
+										{/if}
+									</td>
+									<td>
+										<div class="text-sm">
+											{formatRelativeTime(student.lastSignInAt)}
 										</div>
 									</td>
 									<td>
-										<span class="text-sm text-base-content/70">
-											{student.questionsInteracted} / {student.totalQuestions}
-										</span>
-									</td>
-									<td>
-										<span class="text-sm text-base-content/70">
-											{formatLastActive(student.lastActivityAt)}
-										</span>
+										<div class="text-sm">
+											{student.createdAt ? new Date(student.createdAt).toLocaleDateString() : '—'}
+										</div>
 									</td>
 								</tr>
 							{/each}

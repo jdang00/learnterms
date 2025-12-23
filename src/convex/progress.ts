@@ -126,6 +126,15 @@ export const getStudentsWithProgress = authQuery({
 					_id: student._id,
 					name: student.name,
 					clerkUserId: student.clerkUserId,
+					// Enhanced user fields from Clerk
+					firstName: student.firstName,
+					lastName: student.lastName,
+					email: student.email,
+					username: student.username,
+					imageUrl: student.imageUrl,
+					lastSignInAt: student.lastSignInAt,
+					createdAt: student.createdAt,
+					// Progress metrics
 					progress: progressPercentage,
 					questionsInteracted: totalInteracted,
 					questionsMastered: totalMastered,
