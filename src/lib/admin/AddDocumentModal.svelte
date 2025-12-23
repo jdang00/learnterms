@@ -126,7 +126,7 @@
 				<div class="ut-flex ut-flex-col ut-items-center ut-justify-center ut-gap-4">
 					<UploadDropzone {uploader} />
 					<p class="text-sm text-base-content/70 mt-2 text-center">
-						Max file size: 20MB. PDFs only.<br />Optimized for up to 100 pages/slides.
+						Max file size: 16MB. PDFs only.<br />Optimized for up to 100 pages/slides.
 					</p>
 				</div>
 				{#if submitError}
