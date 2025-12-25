@@ -72,9 +72,8 @@
 		}
 	}
 
-	// Search and filter state
+	// Search state
 	let searchQuery = $state('');
-	let selectedClass = $state('All Classes');
 
 	// Filter students based on search
 	const filteredStudents = $derived(
