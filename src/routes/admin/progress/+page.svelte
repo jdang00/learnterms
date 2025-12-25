@@ -9,8 +9,7 @@
 		HelpCircle,
 		BookOpen,
 		Flag,
-		TrendingUp,
-		ChevronDown
+		TrendingUp
 	} from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -30,9 +29,8 @@
 		: { data: undefined, isLoading: false, error: null };
 
 
-	// Search and filter state
+	// Search state
 	let searchQuery = $state('');
-	let selectedClass = $state('All Classes');
 
 	// Filter students based on search
 	const filteredStudents = $derived(
@@ -73,26 +71,11 @@
 	</a>
 
 	<div class="mb-8">
-		<div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
-			<div>
-				<h1 class="text-2xl sm:text-3xl font-bold text-base-content">Class Progress</h1>
-				<p class="text-base-content/70">
-					{userData?.schoolName} - {userData?.cohortName}
-				</p>
-			</div>
-
-			<!-- Class Selector (for future) -->
-			<div class="dropdown dropdown-end">
-				<button class="btn btn-outline gap-2">
-					{selectedClass}
-					<ChevronDown size={16} />
-				</button>
-				<ul class="dropdown-content menu bg-base-100 rounded-box z-10 w-52 p-2 shadow-lg border border-base-300">
-					<li><button onclick={() => selectedClass = 'All Classes'}>All Classes</button></li>
-					<li><button onclick={() => selectedClass = 'PHAR 101'}>PHAR 101</button></li>
-					<li><button onclick={() => selectedClass = 'PHAR 201'}>PHAR 201</button></li>
-				</ul>
-			</div>
+		<div>
+			<h1 class="text-3xl font-bold text-base-content">Class Progress</h1>
+			<p class="text-base text-base-content/70">
+				{userData?.schoolName} - {userData?.cohortName}
+			</p>
 		</div>
 	</div>
 

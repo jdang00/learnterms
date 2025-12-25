@@ -174,8 +174,10 @@
 		<a class="btn mb-4 btn-ghost" href="/admin"><ArrowLeft size={16} />Back</a>
 	{/if}
 
-	<h1 class="text-3xl font-bold text-base-content">Content Library</h1>
-	<p class="text-base text-base-content/70">Add, edit, and delete documents</p>
+	<div class="mb-8">
+		<h1 class="text-3xl font-bold text-base-content">Content Library</h1>
+		<p class="text-base text-base-content/70">Add, edit, and delete documents</p>
+	</div>
 
 	{#if deleteError}
 		<div class="alert alert-error mt-4 text-sm">

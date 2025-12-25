@@ -191,7 +191,7 @@
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 			<div>
 				<h1 class="text-3xl sm:text-4xl font-bold text-base-content">Admin Dashboard</h1>
-				<p class="text-base-content/70">{userData?.schoolName} - {userData?.cohortName}</p>
+				<p class="text-base text-base-content/70">{userData?.schoolName} - {userData?.cohortName}</p>
 			</div>
 		</div>
 

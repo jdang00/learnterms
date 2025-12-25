@@ -144,11 +144,14 @@
 
 <div class="min-h-screen p-4 sm:p-6 lg:p-10 max-w-full mx-auto flex flex-col w-full">
 	<a class="btn mb-4 btn-ghost self-start" href="/admin"><ArrowLeft size={16} />Back</a>
-	<h1 class="text-3xl font-bold text-base-content">Question Studio</h1>
-	<p class="text-base text-base-content/70">Create or generate questions with your documents.</p>
+
+	<div class="mb-6">
+		<h1 class="text-3xl font-bold text-base-content">Question Studio</h1>
+		<p class="text-base text-base-content/70">Create or generate questions with your documents.</p>
+	</div>
 
 	<!-- Compact Selection Bar -->
-	<div class="mt-4">
+	<div>
 		<div class="card bg-base-100 border border-base-300 rounded-lg">
 			<div class="p-4">
 				<!-- Mobile: Stack vertically, Desktop: Grid layout -->
