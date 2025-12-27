@@ -2,6 +2,21 @@ import { mutation, action } from './_generated/server';
 import { authCreateMutation } from './authQueries';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
+import type { Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
+
+async function adjustModuleQuestionCount(
+	ctx: MutationCtx,
+	moduleId: Id<'module'>,
+	delta: number
+): Promise<void> {
+	const module = await ctx.db.get(moduleId);
+	if (!module) return;
+	const currentCount = module.questionCount ?? 0;
+	await ctx.db.patch(moduleId, {
+		questionCount: Math.max(0, currentCount + delta)
+	});
+}
 
 function makeOptionId(stem: string, text: string, index: number): string {
 	const input = `${stem}|${text}|${index}`;
@@ -148,6 +163,7 @@ export const insertQuestion = authCreateMutation({
 			correctAnswers: correctAnswerIds,
 			searchText
 		});
+		await adjustModuleQuestionCount(ctx, args.moduleId, 1);
 		return id;
 	}
 });
@@ -164,6 +180,7 @@ export const deleteQuestion = authCreateMutation({
 		}
 
 		await ctx.db.delete(args.questionId);
+		await adjustModuleQuestionCount(ctx, args.moduleId, -1);
 		return { deleted: true };
 	}
 });
@@ -195,6 +212,10 @@ export const bulkDeleteQuestions = authCreateMutation({
 			} catch (error) {
 				errors.push(`Failed to delete question ${questionId}: ${error}`);
 			}
+		}
+
+		if (deletedCount > 0) {
+			await adjustModuleQuestionCount(ctx, args.moduleId, -deletedCount);
 		}
 
 		return {
@@ -335,6 +356,7 @@ export const createQuestion = authCreateMutation({
 			metadata: args.metadata
 		});
 		const id = await ctx.db.insert('question', { ...args, searchText });
+		await adjustModuleQuestionCount(ctx, args.moduleId, 1);
 		return id;
 	}
 });
@@ -414,6 +436,10 @@ export const bulkInsertQuestions = authCreateMutation({
 			});
 
 			insertedIds.push(id);
+		}
+
+		if (insertedIds.length > 0) {
+			await adjustModuleQuestionCount(ctx, moduleId, insertedIds.length);
 		}
 
 		return { insertedIds, insertedCount: insertedIds.length };
@@ -506,6 +532,12 @@ export const moveQuestionsToModule = authCreateMutation({
 			if (item.order !== i) await ctx.db.patch(item._id, { order: i });
 		}
 
+		// Adjust question counts for both modules
+		if (moved > 0) {
+			await adjustModuleQuestionCount(ctx, args.sourceModuleId, -moved);
+			await adjustModuleQuestionCount(ctx, args.targetModuleId, moved);
+		}
+
 		return { moved, errors, success: errors.length === 0 };
 	}
 });
@@ -550,6 +582,7 @@ export const duplicateQuestion = authCreateMutation({
 			})
 		});
 
+		await adjustModuleQuestionCount(ctx, original.moduleId, 1);
 		return id;
 	}
 });
@@ -596,6 +629,10 @@ export const duplicateQuestionMany = authCreateMutation({
 				})
 			});
 			insertedIds.push(id);
+		}
+
+		if (insertedIds.length > 0) {
+			await adjustModuleQuestionCount(ctx, original.moduleId, insertedIds.length);
 		}
 
 		return { insertedIds, insertedCount: insertedIds.length };

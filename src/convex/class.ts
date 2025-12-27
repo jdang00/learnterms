@@ -48,14 +48,11 @@ export const getClassContentCounts = authQuery({
 			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
 			.collect();
 
-		let totalQuestions = 0;
-		for (const module of modules) {
-			const questions = await ctx.db
-				.query('question')
-				.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
-				.collect();
-			totalQuestions += questions.length;
-		}
+		// Use stored questionCount field instead of querying all questions
+		const totalQuestions = modules.reduce(
+			(sum, module) => sum + (module.questionCount ?? 0),
+			0
+		);
 
 		return {
 			moduleCount: modules.length,

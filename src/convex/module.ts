@@ -1,4 +1,5 @@
 import { authQuery, authAdminMutation } from './authQueries';
+import { mutation } from './_generated/server';
 import { v } from 'convex/values';
 
 function containsOnlyEmoji(input: string): boolean {
@@ -20,7 +21,13 @@ export const getClassModules = authQuery({
 			.filter((q) => q.eq(q.field('status'), 'published'))
 			.collect();
 
-		return modules.sort((a, b) => a.order - b.order);
+		// Include questionCount for user-facing display
+		const modulesWithCounts = modules.map((module) => ({
+			...module,
+			questionCount: module.questionCount ?? 0
+		}));
+
+		return modulesWithCounts.sort((a, b) => a.order - b.order);
 	}
 });
 
@@ -47,12 +54,8 @@ export const getModuleById = authQuery({
 export const getModuleQuestionCount = authQuery({
 	args: { moduleId: v.id('module') },
 	handler: async (ctx, args) => {
-		const questions = await ctx.db
-			.query('question')
-			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
-			.collect();
-
-		return questions.length;
+		const module = await ctx.db.get(args.moduleId);
+		return module?.questionCount ?? 0;
 	}
 });
 
@@ -64,19 +67,11 @@ export const getAdminModulesWithQuestionCounts = authQuery({
 			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
 			.collect();
 
-		const modulesWithCounts = await Promise.all(
-			modules.map(async (module) => {
-				const questions = await ctx.db
-					.query('question')
-					.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
-					.collect();
-
-				return {
-					...module,
-					questionCount: questions.length
-				};
-			})
-		);
+		// Use stored questionCount field (falls back to 0 for unbackfilled modules)
+		const modulesWithCounts = modules.map((module) => ({
+			...module,
+			questionCount: module.questionCount ?? 0
+		}));
 
 		return modulesWithCounts.sort((a, b) => a.order - b.order);
 	}
@@ -302,5 +297,32 @@ export const getAllModules = authQuery({
 	handler: async (ctx) => {
 		const modules = await ctx.db.query('module').collect();
 		return modules;
+	}
+});
+
+/**
+ * Backfill questionCount for all modules.
+ * Run via CLI: npx convex run module:backfillQuestionCounts
+ */
+export const backfillQuestionCounts = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const modules = await ctx.db.query('module').collect();
+		let updated = 0;
+
+		for (const module of modules) {
+			const questions = await ctx.db
+				.query('question')
+				.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
+				.collect();
+
+			const count = questions.length;
+			if (module.questionCount !== count) {
+				await ctx.db.patch(module._id, { questionCount: count });
+				updated++;
+			}
+		}
+
+		return { totalModules: modules.length, updated };
 	}
 });

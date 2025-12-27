@@ -64,7 +64,7 @@ export const getStudentsWithProgress = authQuery({
 
 		const classIds = classes.map((c) => c._id);
 
-		// Get total questions across all classes (for percentage calculation)
+		// Get total questions across all classes using stored questionCount
 		let totalQuestionsInCohort = 0;
 		const modulesByClass = new Map<string, string[]>();
 
@@ -77,12 +77,9 @@ export const getStudentsWithProgress = authQuery({
 			const moduleIds = modules.map((m) => m._id);
 			modulesByClass.set(classItem._id, moduleIds);
 
+			// Use stored questionCount instead of fetching all questions
 			for (const module of modules) {
-				const questions = await ctx.db
-					.query('question')
-					.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
-					.collect();
-				totalQuestionsInCohort += questions.length;
+				totalQuestionsInCohort += module.questionCount ?? 0;
 			}
 		}
 
@@ -171,7 +168,7 @@ export const getCohortProgressStats = authQuery({
 			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
 			.collect();
 
-		// Count modules and questions
+		// Count modules and questions using stored questionCount
 		let totalModules = 0;
 		let totalQuestions = 0;
 
@@ -183,12 +180,9 @@ export const getCohortProgressStats = authQuery({
 
 			totalModules += modules.length;
 
+			// Use stored questionCount instead of fetching all questions
 			for (const module of modules) {
-				const questions = await ctx.db
-					.query('question')
-					.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
-					.collect();
-				totalQuestions += questions.length;
+				totalQuestions += module.questionCount ?? 0;
 			}
 		}
 
