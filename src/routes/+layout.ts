@@ -9,7 +9,7 @@ export const trailingSlash = 'never';
 export const load: LayoutLoad = async ({ data }) => {
 	if (browser) {
 		posthog.init('phc_3eXFYO1aHVEWM75fi3wXFE6OiJZiDNvI5pcl67S19fK', {
-			api_host: '/ingest',
+			api_host: 'https://us.i.posthog.com',
 			ui_host: 'https://us.posthog.com',
 			capture_pageview: false,
 			capture_pageleave: true,
