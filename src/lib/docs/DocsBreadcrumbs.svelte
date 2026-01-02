@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { buildBreadcrumbTrail } from './nav';
-	const trail = $derived(buildBreadcrumbTrail($page.url.pathname));
+	const trail = $derived(buildBreadcrumbTrail(page.url.pathname));
 </script>
 
 <div class="breadcrumbs text-sm">

@@ -12,6 +12,10 @@
 		if (!browser) return;
 
 		if (user && !identified) {
+			const distinctId = posthog.get_distinct_id();
+			if (distinctId && distinctId !== user.id) {
+				posthog.alias(user.id, distinctId);
+			}
 			posthog.identify(user.id, {
 				email: user.primaryEmailAddress?.emailAddress,
 				name: user.fullName,

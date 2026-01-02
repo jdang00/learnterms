@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import DocsMenu from '$lib/docs/DocsMenu.svelte';
 	import DocsBreadcrumbs from '$lib/docs/DocsBreadcrumbs.svelte';
 	import { docsNav } from '$lib/docs/nav';
@@ -8,7 +8,7 @@
 
 	const { children }: { children: Snippet } = $props();
 
-	const currentPath = $derived($page.url.pathname.replace(/\/+$/, ''));
+	const currentPath = $derived(page.url.pathname.replace(/\/+$/, ''));
 	const flatItems: DocsNavItem[] = $derived(docsNav.flatMap((s) => s.items));
 	const currentIndex = $derived(flatItems.findIndex((i) => i.path === currentPath));
 	const prevItem: DocsNavItem | null = $derived(
@@ -24,7 +24,7 @@
 			'LearnTerms Docs'
 	);
 	const description = $derived('Guides and documentation for LearnTerms.');
-	const canonical = $derived($page.url.href);
+	const canonical = $derived(page.url.href);
 </script>
 
 <svelte:head>

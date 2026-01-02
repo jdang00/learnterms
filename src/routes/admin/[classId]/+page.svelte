@@ -9,6 +9,7 @@
 	import EditModuleModal from '$lib/admin/EditModuleModal.svelte';
 	import AddModuleModal from '$lib/admin/AddModuleModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
+	import TagManager from '$lib/admin/TagManager.svelte';
 	import { useClerkContext } from 'svelte-clerk';
 
 	let { data }: { data: PageData } = $props();
@@ -84,8 +85,20 @@
 		classToDelete = null;
 	}
 
-	type ModuleItem = Doc<'module'> & { questionCount: number };
+	type ModuleItem = Doc<'module'> & {
+		questionCount: number;
+		tags?: { _id: Id<'tags'>; name: string; color?: string }[];
+	};
 	let moduleList = $state<ModuleItem[]>([]);
+	const reorderEnabled = $derived(admin);
+	const moduleSource = $derived.by(() =>
+		moduleList.length > 0 ? moduleList : modules.data ? [...modules.data] : []
+	);
+	const sortedModules = $derived.by(() => {
+		const list = [...moduleSource];
+		list.sort((a, b) => a.order - b.order);
+		return list;
+	});
 
 	$effect(() => {
 		if (modules.data) {
@@ -94,6 +107,7 @@
 	});
 
 	async function handleDrop(state: DragDropState<ModuleItem>) {
+		if (!reorderEnabled) return;
 		const { draggedItem, sourceContainer, targetContainer } = state;
 		if (!targetContainer || sourceContainer === targetContainer) return;
 
@@ -211,13 +225,13 @@
 				<div>
 					<h1 class="text-xl sm:text-2xl font-bold text-base-content">{classInfo.data.name}</h1>
 					<p class="text-sm sm:text-base text-base-content/70">
-						Manage your learning modules for {classInfo.data.code}. {#if admin}Drag and drop to
-							reorder them.{/if}
+						Manage your learning modules for {classInfo.data.code}. {#if reorderEnabled}Drag and drop
+							to reorder them.{/if}
 					</p>
 				</div>
 			{/if}
 
-			<div class="flex gap-2 self-start sm:self-auto">
+			<div class="flex items-center gap-2 self-start sm:self-auto">
 				{#if admin}
 					<button class="btn btn-primary gap-2" onclick={openAddModuleModal}>
 						<Plus size={16} />
@@ -227,6 +241,12 @@
 			</div>
 		</div>
 	</div>
+
+	{#if admin}
+		<div class="mb-8">
+			<TagManager {classId} />
+		</div>
+	{/if}
 
 	{#if modules.isLoading}
 		<div class="flex items-center justify-center p-8">
@@ -246,15 +266,16 @@
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-			{#each moduleList as moduleItem, index (moduleItem._id)}
+			{#each sortedModules as moduleItem, index (moduleItem._id)}
 				<div
 					use:droppable={{
 						container: index.toString(),
-						callbacks: { onDrop: handleDrop }
+						callbacks: { onDrop: handleDrop },
+						disabled: !reorderEnabled
 					}}
 					class="relative rounded-lg bg-base-100 shadow-sm border border-base-300 p-4
                            transition-all duration-300 hover:shadow-md hover:border-primary/30
-                           svelte-dnd-touch-feedback"
+                           svelte-dnd-touch-feedback overflow-visible"
 					animate:flip={{ duration: 300 }}
 				>
 					<div
@@ -267,9 +288,10 @@
 								'[data-edit-btn]',
 								'.interactive',
 								'a'
-							]
+							],
+							disabled: !reorderEnabled
 						}}
-						class="cursor-move"
+						class={reorderEnabled ? 'cursor-move' : ''}
 					>
 						<div class="flex flex-col h-full">
 							<div class="flex flex-row justify-between mb-4">
@@ -287,6 +309,45 @@
 											{moduleItem.questionCount} question{moduleItem.questionCount === 1 ? '' : 's'}
 										</span>
 									</div>
+									{#if moduleItem.tags && moduleItem.tags.length > 0}
+										<div class="flex flex-wrap items-center gap-2 mt-2">
+											{#each moduleItem.tags.slice(0, 3) as tag (tag._id)}
+												<span class="inline-flex items-center gap-1 rounded-full border border-base-300 px-2 py-0.5 text-xs">
+													<span
+														class="h-2 w-2 rounded-full"
+														style={`background-color: ${tag.color || '#94a3b8'}`}
+													></span>
+													<span class="truncate">{tag.name}</span>
+												</span>
+											{/each}
+											{#if moduleItem.tags.length > 3}
+												<div class="dropdown dropdown-hover z-50">
+													<div
+														tabindex="0"
+														role="button"
+														class="btn btn-ghost btn-xs rounded-full border border-base-300 px-2"
+													>
+														+{moduleItem.tags.length - 3}
+													</div>
+													<div
+														class="dropdown-content z-50 mt-2 left-0 w-44 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg"
+													>
+														<div class="flex flex-col gap-1">
+															{#each moduleItem.tags.slice(3) as tag (tag._id)}
+																<div class="flex items-center gap-2 rounded-md px-2 py-1 text-xs hover:bg-base-200/70">
+																	<span
+																		class="h-2 w-2 rounded-full"
+																		style={`background-color: ${tag.color || '#94a3b8'}`}
+																	></span>
+																	<span class="truncate">{tag.name}</span>
+																</div>
+															{/each}
+														</div>
+													</div>
+												</div>
+											{/if}
+										</div>
+									{/if}
 								</div>
 								<div class="flex items-center gap-2">
 									{#if admin}
@@ -300,7 +361,7 @@
 											<ul
 												tabindex="0"
 												role="menu"
-												class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+												class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm border border-base-300"
 											>
 												<li>
 													<button
@@ -336,7 +397,7 @@
 							</p>
 							<div class="mt-auto flex justify-end">
 								<div class="text-xs text-base-content/60 font-mono badge rounded-full">
-									{index + 1}
+									{moduleItem.order + 1}
 								</div>
 							</div>
 						</div>

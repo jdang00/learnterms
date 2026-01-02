@@ -3,7 +3,7 @@
 
 	import { X, BookOpenText, AlignLeft, Hash, Laugh } from 'lucide-svelte';
 	import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
-	import { useConvexClient } from 'convex-svelte';
+	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
 
@@ -16,6 +16,17 @@
 	let isSubmitting: boolean = $state(false);
 	let validationErrors: Record<string, string> = $state({});
 	let submitError: string = $state('');
+	let selectedTagIds: string[] = $state([]);
+
+	const tags = useQuery(api.tags.getTagsForClass, {
+		classId: classId as Id<'class'>
+	});
+	let moduleTagsQuery = $state<{
+		isLoading: boolean;
+		error: any;
+		data?: { _id: string }[];
+	}>({ isLoading: false, error: null, data: [] });
+	let lastModuleId = $state<string | null>(null);
 
 	$effect(() => {
 		if (editingModule) {
@@ -23,6 +34,26 @@
 			moduleDescription = editingModule.description || '';
 			moduleStatus = editingModule.status;
 			moduleEmoji = (editingModule as any).emoji || '';
+		}
+	});
+	$effect(() => {
+		if (editingModule) {
+			moduleTagsQuery = useQuery(api.tags.getTagsForModule, {
+				moduleId: editingModule._id as Id<'module'>
+			}) as typeof moduleTagsQuery;
+		} else {
+			moduleTagsQuery = { isLoading: false, error: null, data: [] };
+		}
+	});
+	$effect(() => {
+		if (!editingModule) {
+			selectedTagIds = [];
+			lastModuleId = null;
+			return;
+		}
+		if (moduleTagsQuery.data && lastModuleId !== editingModule._id) {
+			selectedTagIds = moduleTagsQuery.data.map((tag) => tag._id);
+			lastModuleId = editingModule._id;
 		}
 	});
 
@@ -85,6 +116,10 @@
 				emoji: sanitizeEmoji(moduleEmoji) || undefined,
 				description: moduleDescription.trim(),
 				status: moduleStatus
+			});
+			await client.mutation(api.tags.setModuleTags, {
+				moduleId: editingModule._id as Id<'module'>,
+				tagIds: selectedTagIds as Id<'tags'>[]
 			});
 
 			validationErrors = {};
@@ -212,6 +247,66 @@
 							<option value="published">Published</option>
 							<option value="archived">Archived</option>
 						</select>
+					</div>
+
+					<label
+						class="label m-0 hidden items-center gap-2 self-start p-0 text-base font-medium text-base-content/80 md:flex"
+						for="module-tags"
+					>
+						<Hash size={18} class="text-primary/80" />
+						<span>Tags</span>
+					</label>
+					<div class="md:contents">
+						<label
+							for="module-tags"
+							class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+						>
+							<Hash size={18} class="text-primary/80" />
+							<span>Tags</span>
+						</label>
+						<div class="form-control w-full" id="module-tags">
+							{#if tags.isLoading || moduleTagsQuery.isLoading}
+								<div class="flex items-center gap-2 text-xs text-base-content/60">
+									<span class="loading loading-spinner loading-xs"></span>
+									<span>Loading tags...</span>
+								</div>
+							{:else if tags.error || moduleTagsQuery.error}
+								<div class="text-xs text-error">Failed to load tags.</div>
+							{:else if !tags.data || tags.data.length === 0}
+								<div class="text-xs text-base-content/60">
+									No tags yet. Add tags from the class page.
+								</div>
+							{:else}
+								<div class="space-y-2">
+									<div class="flex flex-wrap gap-2">
+										{#each tags.data as tag (tag._id)}
+											<label
+												class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-base-200/50 {selectedTagIds.includes(tag._id) ? 'border-primary' : 'border-base-300'}"
+											>
+												<input
+													type="checkbox"
+													class="checkbox checkbox-xs checkbox-primary"
+													value={tag._id}
+													bind:group={selectedTagIds}
+													disabled={selectedTagIds.length >= 10 && !selectedTagIds.includes(tag._id)}
+												/>
+												<span
+													class="h-2 w-2 rounded-full"
+													style={`background-color: ${tag.color || '#94a3b8'}`}
+												></span>
+												<span>{tag.name}</span>
+											</label>
+										{/each}
+									</div>
+									<div class="text-xs text-base-content/60">
+										{selectedTagIds.length} of 10 tags selected
+										{#if selectedTagIds.length >= 10}
+											<span class="text-warning ml-1">(max reached)</span>
+										{/if}
+									</div>
+								</div>
+							{/if}
+						</div>
 					</div>
 
 					<label

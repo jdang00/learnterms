@@ -8,7 +8,7 @@
 	import { setupConvex, useConvexClient } from 'convex-svelte';
 	import { theme, clerkTheme } from '$lib/theme.svelte';
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import posthog from 'posthog-js';
 	import { browser } from '$app/environment';
 
@@ -86,9 +86,9 @@
 
 	// Track page views on route changes
 	$effect(() => {
-		if (browser && $page.url) {
+		if (browser && page.url) {
 			posthog.capture('$pageview', {
-				$current_url: $page.url.href
+				$current_url: page.url.href
 			});
 		}
 	});
@@ -110,14 +110,14 @@
 		fullUrl: string;
 	};
 	let seo: Seo = $derived({
-		title: $page.data?.seo?.title ?? defaultSeo.title,
-		description: $page.data?.seo?.description ?? defaultSeo.description,
-		image: $page.data?.seo?.image ?? defaultSeo.image,
+		title: page.data?.seo?.title ?? defaultSeo.title,
+		description: page.data?.seo?.description ?? defaultSeo.description,
+		image: page.data?.seo?.image ?? defaultSeo.image,
 		fullUrl:
-			($page.url?.origin || 'https://learnterms.com') +
-			($page.url?.pathname || '/') +
-			($page.url?.search || ''),
-		canonical: ($page.url?.origin || 'https://learnterms.com') + ($page.url?.pathname || '/')
+			(page.url?.origin || 'https://learnterms.com') +
+			(page.url?.pathname || '/') +
+			(page.url?.search || ''),
+		canonical: (page.url?.origin || 'https://learnterms.com') + (page.url?.pathname || '/')
 	} as Seo);
 </script>
 
@@ -154,7 +154,7 @@
 			{@render children?.()}
 		</main>
 
-		{#if !($page.url.pathname.startsWith('/classes') && $page.url.pathname.includes('/modules/')) && !$page.url.pathname.startsWith('/tools/grade-calculator')}
+		{#if !(page.url.pathname.startsWith('/classes') && page.url.pathname.includes('/modules/')) && !page.url.pathname.startsWith('/tools/grade-calculator')}
 			<footer class="bg-base-200 text-base-content border-t border-base-300 mt-auto">
 				<div class="mx-auto w-full max-w-6xl px-4 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
 					<div class="col-span-2 sm:col-span-1 pr-8">
