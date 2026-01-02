@@ -21,11 +21,18 @@
 	const tags = useQuery(api.tags.getTagsForClass, {
 		classId: classId as Id<'class'>
 	});
-	let moduleTagsQuery = $state<{
-		isLoading: boolean;
-		error: any;
-		data?: { _id: string }[];
-	}>({ isLoading: false, error: null, data: [] });
+
+	// Query module tags - reactive to editingModule changes
+	// Uses placeholder ID when editingModule is null to avoid errors
+	const _rawModuleTagsQuery = useQuery(api.tags.getTagsForModule, () => ({
+		moduleId: (editingModule?._id ?? '0') as Id<'module'>
+	}));
+
+	// Wrapper that returns fallback shape when editingModule is null
+	const moduleTagsQuery = $derived(
+		editingModule ? _rawModuleTagsQuery : { isLoading: false, error: null, data: [] }
+	);
+
 	let lastModuleId = $state<string | null>(null);
 
 	$effect(() => {
@@ -37,22 +44,13 @@
 		}
 	});
 	$effect(() => {
-		if (editingModule) {
-			moduleTagsQuery = useQuery(api.tags.getTagsForModule, {
-				moduleId: editingModule._id as Id<'module'>
-			}) as typeof moduleTagsQuery;
-		} else {
-			moduleTagsQuery = { isLoading: false, error: null, data: [] };
-		}
-	});
-	$effect(() => {
 		if (!editingModule) {
 			selectedTagIds = [];
 			lastModuleId = null;
 			return;
 		}
 		if (moduleTagsQuery.data && lastModuleId !== editingModule._id) {
-			selectedTagIds = moduleTagsQuery.data.map((tag) => tag._id);
+			selectedTagIds = moduleTagsQuery.data.filter((tag) => tag != null).map((tag) => tag!._id);
 			lastModuleId = editingModule._id;
 		}
 	});
@@ -95,6 +93,13 @@
 	const isFormValid = $derived(
 		moduleTitle.trim() && moduleDescription.trim() && Object.keys(validationErrors).length === 0
 	);
+
+	// Count only live tags (tags that exist in the current tag list and aren't deleted)
+	const liveSelectedTagCount = $derived.by(() => {
+		if (!tags.data) return 0;
+		const liveTagIds = new Set(tags.data.map((tag) => tag._id));
+		return selectedTagIds.filter((id) => liveTagIds.has(id as any)).length;
+	});
 
 	async function handleSubmit() {
 		if (!editingModule) return;
@@ -288,7 +293,7 @@
 													class="checkbox checkbox-xs checkbox-primary"
 													value={tag._id}
 													bind:group={selectedTagIds}
-													disabled={selectedTagIds.length >= 10 && !selectedTagIds.includes(tag._id)}
+													disabled={liveSelectedTagCount >= 10 && !selectedTagIds.includes(tag._id)}
 												/>
 												<span
 													class="h-2 w-2 rounded-full"
@@ -299,9 +304,11 @@
 										{/each}
 									</div>
 									<div class="text-xs text-base-content/60">
-										{selectedTagIds.length} of 10 tags selected
-										{#if selectedTagIds.length >= 10}
-											<span class="text-warning ml-1">(max reached)</span>
+										{liveSelectedTagCount} {liveSelectedTagCount === 1 ? 'tag' : 'tags'} selected
+										{#if liveSelectedTagCount >= 10}
+											<span class="text-warning ml-1">(max 10)</span>
+										{:else}
+											<span class="text-base-content/40">(max 10)</span>
 										{/if}
 									</div>
 								</div>
