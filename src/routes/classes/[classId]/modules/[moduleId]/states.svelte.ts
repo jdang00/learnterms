@@ -31,7 +31,7 @@ export class QuizState {
 	private saveDebounceHandle: number | null = null;
 	private autoNextHandle: number | null = null;
 	private static readonly AUTO_NEXT_DELAY_MS = 1800;
-	optionOrderByQuestionId: Record<string, string[]> = $state({});
+	private optionOrderCache: Map<string, string[]> = new Map();
 	optionsShuffleEnabled: boolean = $state(false);
 	fullscreenEnabled: boolean = $state(false);
 
@@ -484,11 +484,11 @@ export class QuizState {
 		if (!this.optionsShuffleEnabled) {
 			return originalOptions;
 		}
-		let order = this.optionOrderByQuestionId[question._id];
+		let order = this.optionOrderCache.get(question._id);
 		if (!order || order.length === 0) {
 			const ids = originalOptions.map((o: QuestionOption) => o.id);
 			const shuffled = this.generateShuffledIds(ids);
-			this.optionOrderByQuestionId[question._id] = shuffled;
+			this.optionOrderCache.set(question._id, shuffled);
 			order = shuffled;
 		}
 		const idToOption: Record<string, QuestionOption> = {};
@@ -533,15 +533,12 @@ export class QuizState {
 		for (const question of this.questions) {
 			const ids = (question.options || []).map((o: QuestionOption) => o.id);
 			const shuffled = this.generateShuffledIds(ids);
-			this.optionOrderByQuestionId[question._id] = shuffled;
+			this.optionOrderCache.set(question._id, shuffled);
 		}
 	}
 
 	private resetAllOptionOrdersToOriginal() {
-		for (const question of this.questions) {
-			const original = (question.options || []).map((o: QuestionOption) => o.id);
-			this.optionOrderByQuestionId[question._id] = original;
-		}
+		this.optionOrderCache.clear();
 	}
 
 	private generateShuffledIds(ids: string[]): string[] {
