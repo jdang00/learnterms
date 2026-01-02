@@ -4,10 +4,13 @@
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import NavBar from '$lib/components/NavBar.svelte';
+	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
 	import { setupConvex, useConvexClient } from 'convex-svelte';
 	import { theme, clerkTheme } from '$lib/theme.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import posthog from 'posthog-js';
+	import { browser } from '$app/environment';
 
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
 
@@ -80,6 +83,16 @@
 	onMount(() => {
 		theme.init();
 	});
+
+	// Track page views on route changes
+	$effect(() => {
+		if (browser && $page.url) {
+			posthog.capture('$pageview', {
+				$current_url: $page.url.href
+			});
+		}
+	});
+
 	const year = new Date().getFullYear();
 
 	const defaultSeo = {
@@ -133,6 +146,7 @@
 	publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}
 	appearance={{ baseTheme: $clerkTheme }}
 >
+	<PostHogIdentify />
 	<div class="flex min-h-screen flex-col">
 		<NavBar />
 
