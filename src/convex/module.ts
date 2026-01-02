@@ -2,6 +2,8 @@ import { authQuery, authAdminMutation } from './authQueries';
 import { mutation } from './_generated/server';
 import { v } from 'convex/values';
 
+type TagSummary = { _id: string; name: string; color?: string };
+
 function containsOnlyEmoji(input: string): boolean {
 	const allowedJoiners = new Set(['\u200d', '\ufe0f']);
 	for (const ch of Array.from(input)) {
@@ -9,6 +11,46 @@ function containsOnlyEmoji(input: string): boolean {
 		if (!/\p{Extended_Pictographic}/u.test(ch)) return false;
 	}
 	return true;
+}
+
+async function attachTagsForModules(ctx: { db: any }, classId: string, modules: any[]) {
+	if (modules.length === 0) return modules;
+
+	try {
+		const moduleIdSet = new Set(modules.map((module) => module._id));
+		const links = await ctx.db
+			.query('moduleTags')
+			.withIndex('by_classId', (q: any) => q.eq('classId', classId))
+			.collect();
+
+		const filteredLinks = links.filter((link: any) => moduleIdSet.has(link.moduleId));
+		const tagIdSet = new Set(filteredLinks.map((link: any) => link.tagId));
+		const tags = await Promise.all(Array.from(tagIdSet).map((id) => ctx.db.get(id)));
+
+		const tagMap = new Map<string, TagSummary>();
+		for (const tag of tags) {
+			if (tag && !tag.deletedAt && tag.classId === classId) {
+				tagMap.set(tag._id, { _id: tag._id, name: tag.name, color: tag.color });
+			}
+		}
+
+		const tagsByModule = new Map<string, TagSummary[]>();
+		for (const link of filteredLinks) {
+			const tag = tagMap.get(link.tagId);
+			if (!tag) continue;
+			const existing = tagsByModule.get(link.moduleId) || [];
+			existing.push(tag);
+			tagsByModule.set(link.moduleId, existing);
+		}
+
+		return modules.map((module) => {
+			const tags = tagsByModule.get(module._id) || [];
+			tags.sort((a, b) => a.name.localeCompare(b.name));
+			return { ...module, tags };
+		});
+	} catch {
+		return modules.map((module) => ({ ...module, tags: [] }));
+	}
 }
 
 export const getClassModules = authQuery({
@@ -27,7 +69,8 @@ export const getClassModules = authQuery({
 			questionCount: module.questionCount ?? 0
 		}));
 
-		return modulesWithCounts.sort((a, b) => a.order - b.order);
+		const sorted = modulesWithCounts.sort((a, b) => a.order - b.order);
+		return await attachTagsForModules(ctx, args.id, sorted);
 	}
 });
 
@@ -73,7 +116,8 @@ export const getAdminModulesWithQuestionCounts = authQuery({
 			questionCount: module.questionCount ?? 0
 		}));
 
-		return modulesWithCounts.sort((a, b) => a.order - b.order);
+		const sorted = modulesWithCounts.sort((a, b) => a.order - b.order);
+		return await attachTagsForModules(ctx, args.classId, sorted);
 	}
 });
 
@@ -204,6 +248,14 @@ export const deleteModule = authAdminMutation({
 
 		for (const question of questions) {
 			await ctx.db.delete(question._id);
+		}
+
+		const moduleTags = await ctx.db
+			.query('moduleTags')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
+			.collect();
+		for (const link of moduleTags) {
+			await ctx.db.delete(link._id);
 		}
 
 		await ctx.db.delete(args.moduleId);

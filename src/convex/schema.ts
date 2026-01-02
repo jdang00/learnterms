@@ -70,6 +70,28 @@ export default defineSchema({
 		status: v.string(),
 		questionCount: v.optional(v.number())
 	}).index('by_classId', ['classId']),
+	tags: defineTable({
+		name: v.string(),
+		slug: v.string(),
+		color: v.optional(v.string()),
+		classId: v.id('class'),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+		deletedAt: v.optional(v.number())
+	})
+		.index('by_classId', ['classId'])
+		.index('by_classId_slug', ['classId', 'slug']),
+	moduleTags: defineTable({
+		moduleId: v.id('module'),
+		tagId: v.id('tags'),
+		classId: v.id('class'),
+		createdAt: v.number(),
+		deletedAt: v.optional(v.number())
+	})
+		.index('by_moduleId', ['moduleId'])
+		.index('by_tagId', ['tagId'])
+		.index('by_classId', ['classId'])
+		.index('by_moduleId_tagId', ['moduleId', 'tagId']),
 	question: defineTable({
 		metadata: v.object({
 			generation: v.optional(

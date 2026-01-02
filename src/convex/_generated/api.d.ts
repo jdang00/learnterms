@@ -19,6 +19,7 @@ import type * as question from "../question.js";
 import type * as questionMedia from "../questionMedia.js";
 import type * as school from "../school.js";
 import type * as semester from "../semester.js";
+import type * as tags from "../tags.js";
 import type * as userProgress from "../userProgress.js";
 import type * as users from "../users.js";
 
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   questionMedia: typeof questionMedia;
   school: typeof school;
   semester: typeof semester;
+  tags: typeof tags;
   userProgress: typeof userProgress;
   users: typeof users;
 }>;

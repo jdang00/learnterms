@@ -11,7 +11,7 @@
 	import ModuleCard from '../../lib/components/ModuleCard.svelte';
 	import Sidebar from '../../lib/components/Sidebar.svelte';
 	import ClassList from '../../lib/components/ClassList.svelte';
-import type { ClassWithSemester } from '../../lib/types';
+	import type { ClassWithSemester } from '../../lib/types';
 	import { useClerkContext } from 'svelte-clerk/client';
 	const ctx = useClerkContext();
 	const name = $derived(ctx.user?.firstName);
@@ -38,10 +38,17 @@ import type { ClassWithSemester } from '../../lib/types';
 		error: classesQuery.error
 	});
 
-	let modules = $state<{ isLoading: boolean; error: any; data?: Doc<'module'>[] }>({
+	type TagSummary = { _id: Id<'tags'>; name: string; color?: string };
+	type ModuleWithTags = Doc<'module'> & { tags?: TagSummary[] };
+
+	let modules = $state<{ isLoading: boolean; error: any; data?: ModuleWithTags[] }>({
 		isLoading: false,
 		error: null,
 		data: []
+	});
+	const sortedModules = $derived.by(() => {
+		const source = Array.isArray(modules.data) ? modules.data : [];
+		return [...source].sort((a, b) => a.order - b.order);
 	});
 
 // removed unused classProgress subscription
@@ -185,7 +192,7 @@ import type { ClassWithSemester } from '../../lib/types';
 						</div>
 					{:else}
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-							{#each modules.data as module (module._id)}
+							{#each sortedModules as module (module._id)}
 								<ModuleCard {module} classId={selectedClass._id} />
 							{/each}
 						</div>

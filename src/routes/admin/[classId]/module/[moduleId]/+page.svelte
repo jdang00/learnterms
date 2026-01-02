@@ -19,8 +19,8 @@ import DuplicateQuestionModal from '$lib/admin/DuplicateQuestionModal.svelte';
 	let { data }: { data: PageData } = $props();
 	const moduleId = data.moduleId;
 
-	import { page } from '$app/stores';
-	let editParam = $derived($page.url.searchParams.get('edit'));
+	import { page } from '$app/state';
+	let editParam = $derived(page.url.searchParams.get('edit'));
 
 	let search = $state('');
 	let searchInput = $state('');

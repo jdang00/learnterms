@@ -21,6 +21,9 @@
 	const modules = useQuery(api.module.getAdminModule, {
 		id: classId as Id<'class'>
 	});
+	const tags = useQuery(api.tags.getTagsForClass, {
+		classId: classId as Id<'class'>
+	});
 
 	function validateField(field: string, value: string): string {
 		const trimmed = value.trim();
@@ -66,6 +69,7 @@
 	const isFormValid = $derived(
 		moduleTitle.trim() && moduleDescription.trim() && Object.keys(validationErrors).length === 0
 	);
+	let selectedTagIds: string[] = $state([]);
 
 	async function handleSubmit() {
 		validateOnInput('moduleTitle', moduleTitle);
@@ -83,7 +87,7 @@
 				? Math.max(...modules.data.map((m) => m.order)) + 1
 				: 0;
 
-			await client.mutation(api.module.insertModule, {
+			const moduleId = await client.mutation(api.module.insertModule, {
 				title: moduleTitle.trim(),
 				emoji: sanitizeEmoji(moduleEmoji) || undefined,
 				description: moduleDescription.trim(),
@@ -93,12 +97,19 @@
 				metadata: {},
 				updatedAt: Date.now()
 			});
+			if (selectedTagIds.length > 0) {
+				await client.mutation(api.tags.setModuleTags, {
+					moduleId: moduleId as Id<'module'>,
+					tagIds: selectedTagIds as Id<'tags'>[]
+				});
+			}
 
 			// Reset form
 			moduleTitle = '';
 			moduleDescription = '';
 			moduleStatus = 'draft';
 			moduleEmoji = '';
+			selectedTagIds = [];
 			validationErrors = {};
 			submitError = '';
 			closeAddModal();
@@ -274,6 +285,66 @@
 						<option value="published">Published</option>
 						<option value="archived">Archived</option>
 					</select>
+				</div>
+
+				<label
+					class="label m-0 hidden items-center gap-2 self-start p-0 text-base font-medium text-base-content/80 md:flex"
+					for="module-tags"
+				>
+					<Hash size={18} class="text-primary/80" />
+					<span>Tags</span>
+				</label>
+				<div class="md:contents">
+					<label
+						for="module-tags"
+						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+					>
+						<Hash size={18} class="text-primary/80" />
+						<span>Tags</span>
+					</label>
+					<div class="form-control w-full" id="module-tags">
+						{#if tags.isLoading}
+							<div class="flex items-center gap-2 text-xs text-base-content/60">
+								<span class="loading loading-spinner loading-xs"></span>
+								<span>Loading tags...</span>
+							</div>
+						{:else if tags.error}
+							<div class="text-xs text-error">Failed to load tags.</div>
+						{:else if !tags.data || tags.data.length === 0}
+							<div class="text-xs text-base-content/60">
+								No tags yet. Add tags from the class page.
+							</div>
+						{:else}
+							<div class="space-y-2">
+								<div class="flex flex-wrap gap-2">
+								{#each tags.data as tag (tag._id)}
+									<label
+										class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-base-200/50 {selectedTagIds.includes(tag._id) ? 'border-primary' : 'border-base-300'}"
+									>
+										<input
+											type="checkbox"
+											class="checkbox checkbox-xs checkbox-primary"
+											value={tag._id}
+											bind:group={selectedTagIds}
+											disabled={selectedTagIds.length >= 10 && !selectedTagIds.includes(tag._id)}
+										/>
+										<span
+											class="h-2 w-2 rounded-full"
+											style={`background-color: ${tag.color || '#94a3b8'}`}
+										></span>
+										<span>{tag.name}</span>
+									</label>
+								{/each}
+								</div>
+								<div class="text-xs text-base-content/60">
+									{selectedTagIds.length} of 10 tags selected
+									{#if selectedTagIds.length >= 10}
+										<span class="text-warning ml-1">(max reached)</span>
+									{/if}
+								</div>
+							</div>
+						{/if}
+					</div>
 				</div>
 
 				<label
