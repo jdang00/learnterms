@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:resend.com)",
+      "Bash(bun run check:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:docs.convex.dev)",
+      "Bash(npx convex run:*)"
+    ]
+  }
+}

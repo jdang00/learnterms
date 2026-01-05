@@ -8,11 +8,12 @@
 	import QuizListView from '$lib/components/QuizListView.svelte';
 	import ModuleInfo from '$lib/components/ModuleInfo.svelte';
 	import QuizErrorHandler from '$lib/components/QuizErrorHandler.svelte';
-import { onMount, tick } from 'svelte';
- 
+	import { onMount, tick } from 'svelte';
 	import { Maximize, Minimize } from 'lucide-svelte';
 	import { slide, fade, scale } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
+	import posthog from 'posthog-js';
+	import { browser } from '$app/environment';
 
 	let { data }: { data: PageData } = $props();
 
@@ -294,7 +295,30 @@ import { onMount, tick } from 'svelte';
 			case 'Enter':
 				event.preventDefault();
 				if (currentlySelected) {
-					qs.checkAnswer(currentlySelected.correctAnswers, qs.selectedAnswers);
+					const selectedAnswers = [...qs.selectedAnswers];
+					const eliminatedOptions = [...qs.eliminatedAnswers];
+					const correctAnswers = currentlySelected.correctAnswers || [];
+
+					// Compute isCorrect for multiple choice
+					const sortedCorrect = [...correctAnswers].sort();
+					const sortedSelected = [...selectedAnswers].sort();
+					const isCorrect = sortedCorrect.length === sortedSelected.length &&
+						sortedCorrect.every((answer: string, index: number) => answer === sortedSelected[index]);
+
+					qs.checkAnswer(correctAnswers, selectedAnswers);
+
+					// Track the answer submission
+					if (browser) {
+						posthog.capture('question_answered', {
+							questionId: currentlySelected._id,
+							moduleId: currentlySelected.moduleId,
+							classId: data.classId,
+							questionType: currentlySelected.type,
+							selectedOptions: selectedAnswers,
+							eliminatedOptions: eliminatedOptions,
+							isCorrect: isCorrect
+						});
+					}
 				}
 				qs.scheduleSave();
 				break;

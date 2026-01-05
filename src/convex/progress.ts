@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
+import type { Doc, Id } from './_generated/dataModel';
 
 /**
  * Get all students in a cohort with their basic info
@@ -219,5 +220,139 @@ export const getCohortProgressStats = authQuery({
 			totalModules,
 			averageCompletion
 		};
+	}
+});
+
+/**
+ * Get top flagged questions for a cohort, optionally filtered by semester.
+ * Uses denormalized flagCount on questions for efficient querying.
+ *
+ * The query flow:
+ * 1. Get classes in cohort (filtered by semester if provided)
+ * 2. Get modules for those classes
+ * 3. Get questions with flagCount > 0 from those modules
+ * 4. Sort by flagCount descending and return top N
+ */
+export const getTopFlaggedQuestions = authQuery({
+	args: {
+		cohortId: v.id('cohort'),
+		semesterId: v.optional(v.id('semester')),
+		limit: v.optional(v.number())
+	},
+	handler: async (ctx, args) => {
+		const limit = args.limit ?? 10;
+
+		// Get all classes in cohort
+		let classes = await ctx.db
+			.query('class')
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
+			.collect();
+
+		// Filter by semester if provided
+		if (args.semesterId) {
+			classes = classes.filter((c) => c.semesterId === args.semesterId);
+		}
+
+		if (classes.length === 0) {
+			return [];
+		}
+
+		// Build a map of classId -> class for lookup
+		const classMap = new Map<string, Doc<'class'>>();
+		for (const c of classes) {
+			classMap.set(c._id, c);
+		}
+
+		// Get all modules for these classes
+		const modules: Doc<'module'>[] = [];
+		for (const classItem of classes) {
+			const classModules = await ctx.db
+				.query('module')
+				.withIndex('by_classId', (q) => q.eq('classId', classItem._id))
+				.collect();
+			modules.push(...classModules);
+		}
+
+		if (modules.length === 0) {
+			return [];
+		}
+
+		// Build a map of moduleId -> module for lookup
+		const moduleMap = new Map<string, Doc<'module'>>();
+		for (const m of modules) {
+			moduleMap.set(m._id, m);
+		}
+
+		// Collect all questions with flagCount > 0 from these modules
+		type QuestionWithContext = {
+			_id: Id<'question'>;
+			stem: string;
+			type: string;
+			flagCount: number;
+			moduleId: Id<'module'>;
+			moduleTitle: string;
+			classId: Id<'class'>;
+			className: string;
+		};
+
+		const flaggedQuestions: QuestionWithContext[] = [];
+
+		for (const module of modules) {
+			// Query questions for this module, filtering for those with flags
+			const questions = await ctx.db
+				.query('question')
+				.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
+				.filter((q) => q.gt(q.field('flagCount'), 0))
+				.collect();
+
+			const classItem = classMap.get(module.classId);
+
+			for (const question of questions) {
+				flaggedQuestions.push({
+					_id: question._id,
+					stem: question.stem,
+					type: question.type,
+					flagCount: question.flagCount ?? 0,
+					moduleId: module._id,
+					moduleTitle: module.title,
+					classId: module.classId,
+					className: classItem?.name ?? 'Unknown'
+				});
+			}
+		}
+
+		// Sort by flagCount descending and take top N
+		flaggedQuestions.sort((a, b) => b.flagCount - a.flagCount);
+
+		return flaggedQuestions.slice(0, limit);
+	}
+});
+
+/**
+ * Get available semesters for a cohort (for filtering UI)
+ */
+export const getSemestersForCohort = authQuery({
+	args: { cohortId: v.id('cohort') },
+	handler: async (ctx, args) => {
+		// Get all classes in cohort
+		const classes = await ctx.db
+			.query('class')
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
+			.collect();
+
+		// Get unique semester IDs
+		const semesterIds = [...new Set(classes.map((c) => c.semesterId))];
+
+		// Fetch semester details
+		const semesters = await Promise.all(
+			semesterIds.map((id) => ctx.db.get(id))
+		);
+
+		return semesters
+			.filter((s): s is Doc<'semester'> => s !== null)
+			.map((s) => ({
+				_id: s._id,
+				name: s.name
+			}));
 	}
 });

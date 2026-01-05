@@ -177,7 +177,7 @@
 					<AnswerOptions bind:qs {currentlySelected} />
 				{/if}
 
-				<ActionButtons {qs} {currentlySelected} />
+				<ActionButtons {qs} {currentlySelected} classId={data.classId} />
 			</div>
 		</div>
 		{#if qs.fullscreenEnabled}
