@@ -10,7 +10,7 @@
 		BookOpen,
 		Flag,
 		TrendingUp,
-		ChevronDown
+		ExternalLink
 	} from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -29,10 +29,41 @@
 			})
 		: { data: undefined, isLoading: false, error: null };
 
+	// Semester filter state
+	let selectedSemesterId = $state<Id<'semester'> | undefined>(undefined);
+
+	// Get available semesters for the cohort
+	const semesters = userData?.cohortId
+		? useQuery(api.progress.getSemestersForCohort, {
+				cohortId: userData.cohortId as Id<'cohort'>
+			})
+		: { data: undefined, isLoading: false, error: null };
+
+	// Get top flagged questions (filtered by semester if selected)
+	const topFlaggedQuestions = $derived(
+		userData?.cohortId
+			? useQuery(api.progress.getTopFlaggedQuestions, {
+					cohortId: userData.cohortId as Id<'cohort'>,
+					semesterId: selectedSemesterId,
+					limit: 10
+				})
+			: { data: undefined, isLoading: false, error: null }
+	);
 
 	// Search and filter state
 	let searchQuery = $state('');
-	let selectedClass = $state('All Classes');
+
+	// Strip HTML tags from question stem for display
+	function stripHtml(html: string): string {
+		return html.replace(/<[^>]*>/g, '').trim();
+	}
+
+	// Truncate text to a max length
+	function truncate(text: string, maxLength: number = 100): string {
+		const stripped = stripHtml(text);
+		if (stripped.length <= maxLength) return stripped;
+		return stripped.slice(0, maxLength) + '...';
+	}
 
 	// Filter students based on search
 	const filteredStudents = $derived(
@@ -73,26 +104,11 @@
 	</a>
 
 	<div class="mb-8">
-		<div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
-			<div>
-				<h1 class="text-2xl sm:text-3xl font-bold text-base-content">Class Progress</h1>
-				<p class="text-base-content/70">
-					{userData?.schoolName} - {userData?.cohortName}
-				</p>
-			</div>
-
-			<!-- Class Selector (for future) -->
-			<div class="dropdown dropdown-end">
-				<button class="btn btn-outline gap-2">
-					{selectedClass}
-					<ChevronDown size={16} />
-				</button>
-				<ul class="dropdown-content menu bg-base-100 rounded-box z-10 w-52 p-2 shadow-lg border border-base-300">
-					<li><button onclick={() => selectedClass = 'All Classes'}>All Classes</button></li>
-					<li><button onclick={() => selectedClass = 'PHAR 101'}>PHAR 101</button></li>
-					<li><button onclick={() => selectedClass = 'PHAR 201'}>PHAR 201</button></li>
-				</ul>
-			</div>
+		<div>
+			<h1 class="text-2xl sm:text-3xl font-bold text-base-content">Class Progress</h1>
+			<p class="text-base-content/70">
+				{userData?.schoolName} - {userData?.cohortName}
+			</p>
 		</div>
 	</div>
 
@@ -165,14 +181,67 @@
 		<!-- Top Flagged Questions -->
 		<div class="card bg-base-100 shadow-sm border border-base-300 rounded-xl">
 			<div class="card-body">
-				<h2 class="card-title text-lg mb-4">
-					<Flag size={20} class="text-warning" />
-					Top Flagged Questions
-				</h2>
-				<div class="text-center py-8 text-base-content/60">
-					<Flag size={32} class="mx-auto mb-2 opacity-50" />
-					<p>Flagged questions coming soon</p>
+				<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
+					<h2 class="card-title text-lg">
+						<Flag size={20} class="text-warning" />
+						Top Flagged Questions
+					</h2>
+					<!-- Semester Filter -->
+					{#if semesters.data && semesters.data.length > 1}
+						<select
+							class="select select-bordered select-sm w-full sm:w-auto"
+							bind:value={selectedSemesterId}
+						>
+							<option value={undefined}>All Semesters</option>
+							{#each semesters.data as semester}
+								<option value={semester._id}>{semester.name}</option>
+							{/each}
+						</select>
+					{/if}
 				</div>
+
+				{#if topFlaggedQuestions.isLoading}
+					<div class="flex items-center justify-center py-8">
+						<span class="loading loading-spinner loading-md"></span>
+					</div>
+				{:else if topFlaggedQuestions.error}
+					<div class="alert alert-error text-sm">
+						Failed to load flagged questions
+					</div>
+				{:else if !topFlaggedQuestions.data || topFlaggedQuestions.data.length === 0}
+					<div class="text-center py-8 text-base-content/60">
+						<Flag size={32} class="mx-auto mb-2 opacity-50" />
+						<p>No flagged questions yet</p>
+						<p class="text-sm mt-1">Questions flagged by students will appear here</p>
+					</div>
+				{:else}
+					<div class="space-y-3 max-h-96 overflow-y-auto">
+						{#each topFlaggedQuestions.data as question, index}
+							<div class="flex items-start gap-3 p-3 rounded-lg bg-base-200/50 hover:bg-base-200 transition-colors">
+								<div class="flex-shrink-0 w-8 h-8 rounded-full bg-warning/20 text-warning flex items-center justify-center font-semibold text-sm">
+									{question.flagCount}
+								</div>
+								<div class="flex-1 min-w-0">
+									<p class="text-sm font-medium line-clamp-2" title={stripHtml(question.stem)}>
+										{truncate(question.stem, 120)}
+									</p>
+									<div class="flex items-center gap-2 mt-1 text-xs text-base-content/60">
+										<span class="badge badge-ghost badge-xs">{question.className}</span>
+										<span>·</span>
+										<span>{question.moduleTitle}</span>
+									</div>
+								</div>
+								<a
+									href={`/classes/${question.classId}/modules/${question.moduleId}`}
+									class="btn btn-ghost btn-xs btn-circle flex-shrink-0"
+									title="View question"
+								>
+									<ExternalLink size={14} />
+								</a>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		</div>
 	</div>

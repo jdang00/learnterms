@@ -13,6 +13,7 @@ import type * as chunkContent from "../chunkContent.js";
 import type * as class_ from "../class.js";
 import type * as cohort from "../cohort.js";
 import type * as contentLib from "../contentLib.js";
+import type * as migrations from "../migrations.js";
 import type * as module from "../module.js";
 import type * as progress from "../progress.js";
 import type * as question from "../question.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   class: typeof class_;
   cohort: typeof cohort;
   contentLib: typeof contentLib;
+  migrations: typeof migrations;
   module: typeof module;
   progress: typeof progress;
   question: typeof question;

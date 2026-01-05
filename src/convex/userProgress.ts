@@ -167,17 +167,45 @@ export const saveUserProgress = mutation({
 			.unique();
 
 		if (existingRecord) {
+			const oldFlagged = existingRecord.isFlagged;
+			const newFlagged = args.isFlagged ?? existingRecord.isFlagged;
+
+			// Update flagCount on question if flag status changed
+			if (oldFlagged !== newFlagged) {
+				const question = await ctx.db.get(args.questionId);
+				if (question) {
+					const currentFlagCount = question.flagCount ?? 0;
+					const delta = newFlagged ? 1 : -1;
+					await ctx.db.patch(args.questionId, {
+						flagCount: Math.max(0, currentFlagCount + delta)
+					});
+				}
+			}
+
 			// Update existing record
 			return await ctx.db.patch(existingRecord._id, {
 				selectedOptions: args.selectedOptions ?? existingRecord.selectedOptions,
 				eliminatedOptions: args.eliminatedOptions ?? existingRecord.eliminatedOptions,
-				isFlagged: args.isFlagged ?? existingRecord.isFlagged,
+				isFlagged: newFlagged,
 				isMastered: args.isMastered ?? existingRecord.isMastered,
 				attempts: args.attempts ?? existingRecord.attempts,
 				lastAttemptAt: Date.now(),
 				updatedAt: Date.now()
 			});
 		} else {
+			const newFlagged = args.isFlagged ?? false;
+
+			// If creating with flag set, increment flagCount
+			if (newFlagged) {
+				const question = await ctx.db.get(args.questionId);
+				if (question) {
+					const currentFlagCount = question.flagCount ?? 0;
+					await ctx.db.patch(args.questionId, {
+						flagCount: currentFlagCount + 1
+					});
+				}
+			}
+
 			// Create new record
 			return await ctx.db.insert('userProgress', {
 				userId: args.userId,
@@ -185,7 +213,7 @@ export const saveUserProgress = mutation({
 				questionId: args.questionId,
 				selectedOptions: args.selectedOptions ?? [],
 				eliminatedOptions: args.eliminatedOptions ?? [],
-				isFlagged: args.isFlagged ?? false,
+				isFlagged: newFlagged,
 				isMastered: args.isMastered ?? false,
 				attempts: args.attempts ?? 0,
 				lastAttemptAt: Date.now(),
@@ -211,6 +239,17 @@ export const deleteUserProgress = mutation({
 			.unique();
 
 		if (existingRecord) {
+			// If the record was flagged, decrement the question's flagCount
+			if (existingRecord.isFlagged) {
+				const question = await ctx.db.get(args.questionId);
+				if (question) {
+					const currentFlagCount = question.flagCount ?? 0;
+					await ctx.db.patch(args.questionId, {
+						flagCount: Math.max(0, currentFlagCount - 1)
+					});
+				}
+			}
+
 			await ctx.db.delete(existingRecord._id);
 			return true;
 		}
@@ -235,6 +274,14 @@ export const clearUserProgressForModule = mutation({
 		for (const record of progressRecords) {
 			const question = await ctx.db.get(record.questionId);
 			if (question && question.moduleId === args.moduleId) {
+				// If the record was flagged, decrement the question's flagCount
+				if (record.isFlagged) {
+					const currentFlagCount = question.flagCount ?? 0;
+					await ctx.db.patch(question._id, {
+						flagCount: Math.max(0, currentFlagCount - 1)
+					});
+				}
+
 				await ctx.db.delete(record._id);
 				deletedCount++;
 			}

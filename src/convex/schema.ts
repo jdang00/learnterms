@@ -113,10 +113,12 @@ export default defineSchema({
 		explanation: v.optional(v.string()),
 		aiGenerated: v.boolean(),
 		status: v.string(),
-		searchText: v.optional(v.string())
+		searchText: v.optional(v.string()),
+		flagCount: v.optional(v.number())
 	})
 		.index('by_moduleId', ['moduleId'])
 		.index('by_moduleId_order', ['moduleId', 'order'])
+		.index('by_moduleId_flagCount', ['moduleId', 'flagCount'])
 		.searchIndex('by_moduleId_searchText', {
 			searchField: 'searchText',
 			filterFields: ['moduleId']

@@ -1,8 +1,12 @@
 <script lang="ts">
-	let { qs = $bindable(), currentlySelected } = $props();
+	import type { Id } from '../../convex/_generated/dataModel';
 	import { Flag, Shuffle, ArrowRight, ArrowLeft } from 'lucide-svelte';
 	import { Confetti } from 'svelte-confetti';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
+	import posthog from 'posthog-js';
+	import { browser } from '$app/environment';
+
+	let { qs = $bindable(), currentlySelected, classId }: { qs: any; currentlySelected: any; classId: Id<'class'> } = $props();
 	let showConfetti = $state(false);
 
 	$effect(() => {
@@ -17,16 +21,59 @@
 
 	function handleCheck() {
 		if (currentlySelected) {
+			const selectedAnswers = [...qs.selectedAnswers];
+			const eliminatedOptions = [...qs.eliminatedAnswers];
+			const correctAnswers = currentlySelected.correctAnswers || [];
+			let isCorrect = false;
+
 			if (currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK) {
-				const text = qs.selectedAnswers && qs.selectedAnswers[0] ? qs.selectedAnswers[0] : '';
+				const text = selectedAnswers[0] || '';
 				qs.checkFillInTheBlank(text, currentlySelected);
+				// For FITB, checkResult is set async via setTimeout, so defer tracking
+				if (browser) {
+					setTimeout(() => {
+						posthog.capture('question_answered', {
+							questionId: currentlySelected._id,
+							moduleId: currentlySelected.moduleId,
+							classId: classId,
+							questionType: currentlySelected.type,
+							selectedOptions: selectedAnswers,
+							eliminatedOptions: eliminatedOptions,
+							isCorrect: qs.checkResult === 'Correct!'
+						});
+					}, 1);
+				}
 			} else if (currentlySelected.type === QUESTION_TYPES.MATCHING) {
 				qs.checkMatching(currentlySelected);
+				// For matching, compare arrays
+				isCorrect = correctAnswers.length === selectedAnswers.length &&
+					correctAnswers.every((answer: string) => selectedAnswers.includes(answer));
+				trackQuestionAnswered(selectedAnswers, eliminatedOptions, isCorrect);
 			} else {
-				qs.checkAnswer(currentlySelected.correctAnswers, qs.selectedAnswers);
+				// Multiple choice - compare sorted arrays
+				const sortedCorrect = [...correctAnswers].sort();
+				const sortedSelected = [...selectedAnswers].sort();
+				isCorrect = sortedCorrect.length === sortedSelected.length &&
+					sortedCorrect.every((answer: string, index: number) => answer === sortedSelected[index]);
+				qs.checkAnswer(correctAnswers, selectedAnswers);
+				trackQuestionAnswered(selectedAnswers, eliminatedOptions, isCorrect);
 			}
 		}
 		qs.scheduleSave?.();
+	}
+
+	function trackQuestionAnswered(selectedAnswers: string[], eliminatedOptions: string[], isCorrect: boolean) {
+		if (browser && currentlySelected) {
+			posthog.capture('question_answered', {
+				questionId: currentlySelected._id,
+				moduleId: currentlySelected.moduleId,
+				classId: classId,
+				questionType: currentlySelected.type,
+				selectedOptions: selectedAnswers,
+				eliminatedOptions: eliminatedOptions,
+				isCorrect: isCorrect
+			});
+		}
 	}
 
 	async function handleClear() {

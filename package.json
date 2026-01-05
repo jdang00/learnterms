@@ -71,6 +71,7 @@
 		"marked": "^16.4.2",
 		"openai": "^5.23.2",
 		"posthog-js": "^1.313.0",
+		"resend": "^6.6.0",
 		"showdown": "^2.1.0",
 		"svelte-clerk": "^0.17.10",
 		"svelte-confetti": "^2.3.2",
