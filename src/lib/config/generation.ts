@@ -10,9 +10,9 @@ type ProductModel = {
 };
 
 export const productModels: Record<ProductModelId, ProductModel> = {
-	'swift-general': { label: 'swift-general', model: 'gemini-3-pro-preview', focus: 'general' },
-	'swift-optometry': { label: 'swift-optometry', model: 'gemini-3-pro-preview', focus: 'optometry' },
-	'swift-pharmacy': { label: 'swift-pharmacy', model: 'gemini-3-pro-preview', focus: 'pharmacy' }
+	'swift-general': { label: 'swift-general', model: 'gemini-3-flash-preview', focus: 'general' },
+	'swift-optometry': { label: 'swift-optometry', model: 'gemini-3-flash-preview', focus: 'optometry' },
+	'swift-pharmacy': { label: 'swift-pharmacy', model: 'gemini-3-flash-preview', focus: 'pharmacy' }
 };
 
 export const defaultProductModelId: ProductModelId = 'swift-general';

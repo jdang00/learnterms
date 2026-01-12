@@ -6,7 +6,11 @@
       "Bash(bun run check:*)",
       "Bash(grep:*)",
       "WebFetch(domain:docs.convex.dev)",
-      "Bash(npx convex run:*)"
+      "Bash(npx convex run:*)",
+      "Bash(cat:*)",
+      "Bash(xargs:*)",
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(bunx convex dev:*)"
     ]
   }
 }

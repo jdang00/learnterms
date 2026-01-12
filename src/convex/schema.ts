@@ -183,5 +183,28 @@ export default defineSchema({
 		documentId: v.id('contentLib'),
 		metadata: v.optional(v.object({})),
 		deletedAt: v.optional(v.number())
-	}).index('by_documentId', ['documentId'])
+	}).index('by_documentId', ['documentId']),
+	pdfProcessingJobs: defineTable({
+		documentId: v.id('contentLib'),
+		pdfUrl: v.string(),
+		fileKey: v.optional(v.string()),
+		status: v.union(
+			v.literal('pending'),
+			v.literal('processing'),
+			v.literal('completed'),
+			v.literal('failed')
+		),
+		progress: v.optional(v.object({
+			chunksProcessed: v.number(),
+			totalChunks: v.optional(v.number()),
+			currentStep: v.string()
+		})),
+		error: v.optional(v.string()),
+		retryCount: v.number(),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+		completedAt: v.optional(v.number())
+	})
+		.index('by_documentId', ['documentId'])
+		.index('by_status', ['status'])
 });

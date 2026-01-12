@@ -15,6 +15,8 @@ import type * as cohort from "../cohort.js";
 import type * as contentLib from "../contentLib.js";
 import type * as migrations from "../migrations.js";
 import type * as module from "../module.js";
+import type * as pdfJobs from "../pdfJobs.js";
+import type * as pdfJobsAction from "../pdfJobsAction.js";
 import type * as progress from "../progress.js";
 import type * as question from "../question.js";
 import type * as questionMedia from "../questionMedia.js";
@@ -38,6 +40,8 @@ declare const fullApi: ApiFromModules<{
   contentLib: typeof contentLib;
   migrations: typeof migrations;
   module: typeof module;
+  pdfJobs: typeof pdfJobs;
+  pdfJobsAction: typeof pdfJobsAction;
   progress: typeof progress;
   question: typeof question;
   questionMedia: typeof questionMedia;

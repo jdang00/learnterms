@@ -9,7 +9,7 @@ type Chunk = {
 	chunk_type: 'paragraph' | 'slide_group' | 'diagram' | 'table' | 'list';
 };
 
-const MODEL = 'gemini-2.0-flash';
+const MODEL = 'gemini-3-flash-preview';
 const TEMPERATURE = 1.0;
 const MAX_TOKENS_PDF = 12288;
 
