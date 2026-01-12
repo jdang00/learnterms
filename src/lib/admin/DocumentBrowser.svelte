@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { FileText, ArrowLeft } from 'lucide-svelte';
+	import { FileText, ArrowLeft, Search } from 'lucide-svelte';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
@@ -16,12 +16,7 @@
 
 	let selectedDocId: Id<'contentLib'> | null = $state(null);
 	let selectedDocument: Doc<'contentLib'> | null = $state(null);
-
-	let refreshKey = $state(0); // Force re-render key
-
-	function refreshDocuments() {
-		refreshKey++;
-	}
+	let searchQuery = $state('');
 
 	function selectDoc(doc: Doc<'contentLib'>) {
 		selectedDocId = doc._id as Id<'contentLib'>;
@@ -36,74 +31,84 @@
 	$effect(() => {
 		if (selectedDocId && docs.data) {
 			const match = docs.data.find((d) => d._id === selectedDocId);
-			if (match) {
-				selectedDocument = match as Doc<'contentLib'>;
-			}
+			if (match) selectedDocument = match as Doc<'contentLib'>;
 		}
 	});
+
+	const filteredDocs = $derived(
+		!docs.data || !searchQuery.trim()
+			? docs.data
+			: docs.data.filter((d) =>
+					d.title.toLowerCase().includes(searchQuery.toLowerCase())
+				)
+	);
 </script>
 
-{#key refreshKey}
-	<div class="h-full grid grid-rows-[auto_1fr]">
-		<div class="p-6 border-b border-base-300">
-			{#if selectedDocument}
-				<div class="flex items-center gap-3">
-					<button
-						class="btn btn-ghost btn-sm"
-						onclick={backToDocuments}
-						aria-label="Back to documents"
-					>
-						<ArrowLeft size={16} /> Back
-					</button>
-					<div class="flex-1 min-w-0">
-						<h2 class="text-lg font-semibold">Document Chunks</h2>
-						<p class="text-sm text-base-content/70 break-words">Showing chunks for: {selectedDocument.title}</p>
-					</div>
-				</div>
-			{:else}
-				<div>
-					<h2 class="text-lg font-semibold">Documents</h2>
-					<p class="text-sm text-base-content/70">Select a document to view its chunks</p>
-				</div>
-			{/if}
-		</div>
+<div class="h-full flex flex-col">
+	<div class="p-4 border-b border-base-300 flex-shrink-0">
+		{#if selectedDocument}
+			<div class="flex items-center gap-2">
+				<button class="btn btn-ghost btn-xs gap-1" onclick={backToDocuments}>
+					<ArrowLeft size={14} />
+					Back
+				</button>
+				<div class="h-4 w-px bg-base-300"></div>
+				<span class="text-sm font-medium truncate">{selectedDocument.title}</span>
+			</div>
+		{:else}
+			<div class="flex items-center justify-between gap-2 mb-3">
+				<h2 class="text-sm font-semibold">Content Library</h2>
+				<span class="text-xs text-base-content/50">{docs.data?.length || 0} docs</span>
+			</div>
+			<div class="relative">
+				<Search size={14} class="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
+				<input
+					type="text"
+					placeholder="Search documents..."
+					class="input input-sm input-bordered w-full pl-9"
+					bind:value={searchQuery}
+				/>
+			</div>
+		{/if}
+	</div>
 
-		<div class="min-h-0 h-full overflow-y-auto overflow-x-hidden p-6">
+	<div class="flex-1 overflow-y-auto p-3">
 		{#if !selectedDocument}
 			{#if docs.isLoading}
 				<div class="space-y-2">
-					{#each Array(6) as _}
-						<div class="skeleton h-10 w-full"></div>
+					{#each Array(5) as _}
+						<div class="skeleton h-14 w-full rounded-lg"></div>
 					{/each}
 				</div>
 			{:else if docs.error}
-				<div class="alert alert-error">
-					<span>Error loading documents</span>
-					<div class="mt-3">
-						<button class="btn btn-sm btn-outline" onclick={refreshDocuments}>
-							Try Again
-						</button>
-					</div>
+				<div class="text-center py-8">
+					<p class="text-sm text-error">Failed to load documents</p>
 				</div>
-			{:else if !docs.data || docs.data!.length === 0}
-				<div class="p-2 text-base-content/70">No documents yet</div>
+			{:else if !filteredDocs || filteredDocs.length === 0}
+				<div class="text-center py-8">
+					<FileText size={32} class="mx-auto text-base-content/20 mb-2" />
+					<p class="text-sm text-base-content/50">
+						{searchQuery ? 'No matching documents' : 'No documents yet'}
+					</p>
+				</div>
 			{:else}
-				<div class="space-y-2">
-					{#each (docs.data as Doc<'contentLib'>[] || []) as doc (doc._id)}
+				<div class="space-y-1">
+					{#each filteredDocs as doc (doc._id)}
 						<button
-							class="w-full text-left p-3 rounded-lg border border-base-300 bg-base-100 hover:bg-base-200 hover:border-base-400 transition-all duration-200 group"
+							class="w-full text-left p-3 rounded-lg hover:bg-base-200 transition-colors group"
 							onclick={() => selectDoc(doc as Doc<'contentLib'>)}
-							aria-label={`Open ${doc.title}`}
 						>
-							<div class="flex items-start gap-3">
-								<FileText size={18} class="text-primary mt-0.5 flex-shrink-0" />
+							<div class="flex items-center gap-3">
+								<div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+									<FileText size={16} class="text-primary" />
+								</div>
 								<div class="flex-1 min-w-0">
-									<div class="font-medium text-base-content group-hover:text-primary transition-colors">
+									<div class="text-sm font-medium truncate group-hover:text-primary transition-colors">
 										{doc.title}
 									</div>
-									<div class="text-xs text-base-content/60 mt-1">
-										Click to view chunks and select content
-									</div>
+									{#if doc.description}
+										<div class="text-xs text-base-content/50 truncate">{doc.description}</div>
+									{/if}
 								</div>
 							</div>
 						</button>
@@ -111,16 +116,7 @@
 				</div>
 			{/if}
 		{:else if selectedDocId}
-			<div class="mb-3">
-				<h3 class="text-base font-semibold mb-1">Document</h3>
-				<p class="text-sm text-base-content/70 break-words font-medium">{selectedDocument.title}</p>
-			</div>
-			{#key selectedDocId}
-				<div class="h-[80vh] sm:h-[85vh] lg:h-[90vh] 2xl:h-[95vh] overflow-y-auto overflow-x-hidden pr-1">
-					<ChunkList documentId={selectedDocId as Id<'contentLib'>} bind:selectedText />
-				</div>
-			{/key}
+			<ChunkList documentId={selectedDocId} bind:selectedText />
 		{/if}
-		</div>
 	</div>
-{/key}
+</div>

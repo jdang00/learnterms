@@ -14,7 +14,7 @@ type Chunk = {
 	chunk_type: 'paragraph' | 'slide_group' | 'diagram' | 'table' | 'list';
 };
 
-const MODEL = 'gemini-2.0-flash';
+const MODEL = 'gemini-3-flash-preview';
 const TEMPERATURE = 1.0;
 const MAX_TOKENS_TEXT = 8192;
 const MAX_TOKENS_PDF = 12288;
@@ -42,58 +42,54 @@ function chunkArraySchema(Type: GType) {
 	} as unknown;
 }
 
-function tableGuidelines() {
-	return `For tables or table-like content:
-- Use GitHub-flavored Markdown tables with a concise header row
-- Split long tables across multiple chunks by rows (target 5–15 rows per chunk) while keeping the same columns
-- Optionally group rows by a logical theme and create one chunk per group
-- Prefer chunk_type = 'table' and include only that subset of rows in each chunk's content`;
-}
-
 function pdfPrompt() {
-	return `Role: You are an expert document extraction assistant.
+	return `You are extracting educational content from a PDF into logical, study-friendly chunks.
 
-Goal: Extract the ACTUAL TEXT from this PDF and create 1 chunk per page (up to 100 chunks for 100 pages).
+CHUNKING STRATEGY - Adapt to the document type:
+- Lecture slides: Group 1-3 related slides per chunk (don't split a concept across chunks)
+- Dense text/paragraphs: One chunk per major section or topic (aim for 200-800 words per chunk)
+- Mixed pages: Split by logical topic boundaries, not page breaks
+- Tables: Keep tables intact; split only if exceeds 15 rows
+- Lists/bullet points: Group related items together
 
-CRITICAL RULES - NO PARAPHRASING:
-- Extract the EXACT text from the document - do NOT paraphrase, rewrite, or summarize the content
-- Preserve the original wording, terminology, and phrasing from the source material
-- Content field must contain the verbatim text from the page/section
-- Create 1 chunk per page for lecture slides or similar documents
-- For dense academic PDFs, create 1 chunk per substantial section/page
+OUTPUT: JSON array of chunks, ordered as they appear in the document.
 
-Document Types:
-- Academic PDFs: extract verbatim paragraph content, preserve all technical terms
-- Lecture slides: extract exact text from each slide, include image descriptions only when text is present
-- ${tableGuidelines()}
+FOR EACH CHUNK:
+- title: Descriptive title capturing the main topic (e.g., "Mitosis Phases Overview")
+- summary: 1-2 sentences explaining what this chunk teaches
+- content: VERBATIM text extraction - preserve exact wording, formatting, and terminology
+- keywords: 3-5 searchable terms from the content
+- chunk_type: "paragraph" | "slide_group" | "table" | "list" | "diagram"
 
-Instructions:
-1) Create up to 100 chunks (approximately 1 per page)
-2) Title: Brief identifier for the chunk (e.g., "Page 5: Cell Division")
-3) Summary: 1-2 sentence overview of what the chunk covers
-4) Content: EXACT TEXT extracted from the document - NO paraphrasing or rewriting
-5) Keywords: 3-5 key terms found in the actual text
-6) chunk_type: paragraph, slide_group, diagram, table, or list`;
+CRITICAL RULES:
+- NEVER paraphrase or rewrite - extract text exactly as written
+- Preserve technical terms, formulas, and specialized vocabulary
+- Keep related concepts together (don't orphan a definition from its explanation)
+- Skip pages/sections with less than 10 characters of meaningful text
+- For tables: use Markdown format with | separators
+- Include diagram/figure captions when present
+
+The goal is creating chunks that make sense as standalone study units while preserving the source material exactly.`;
 }
 
 function textPrompt(material: string) {
-	return `Role: You are an expert document extraction assistant.
+	return `You are extracting educational content into logical, study-friendly chunks.
 
-Goal: Extract and chunk the provided text - NO PARAPHRASING.
+CHUNKING STRATEGY:
+- Tables (CSV/TSV/Markdown): One chunk per row, chunk_type = 'table', use Markdown format
+- Dense text: One chunk per major section/topic (200-800 words target)
+- Lists: Group related items together
 
-CRITICAL RULES - NO PARAPHRASING:
-- Extract the EXACT text from the material - do NOT paraphrase, rewrite, or summarize
-- Preserve original wording, terminology, and phrasing
-- Content field must contain verbatim text from the source
+FOR EACH CHUNK:
+- title: Descriptive title for the topic
+- summary: 1-2 sentences explaining the content
+- content: VERBATIM text - preserve exact wording and terminology
+- keywords: 3-5 searchable terms
+- chunk_type: "paragraph" | "table" | "list"
 
-Rules:
-- If the material is ONLY a table (CSV/TSV/Markdown table with header and rows), return ONE CHUNK PER ROW.
-  • Each chunk should be chunk_type = 'table' and its content must be a one-row Markdown table using the same columns.
-- Otherwise, follow normal chunking and ${tableGuidelines()}.
-- Produce 5-15 chunks unless the input clearly requires fewer.
-- Each chunk's content must be EXACT text from the material
+CRITICAL: Never paraphrase. Extract text exactly as written.
 
-Return ONLY the JSON array, no extra text.
+Produce 5-15 chunks unless the input requires fewer.
 
 Material:
 ${material}`;

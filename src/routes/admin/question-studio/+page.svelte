@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { ArrowLeft, CalendarDays, ChevronDown } from 'lucide-svelte';
+	import { ArrowLeft, ChevronDown, BookOpen, Layers, FolderOpen } from 'lucide-svelte';
 	import QuestionsGeneration from '$lib/admin/QuestionGeneration.svelte';
 	import DocumentBrowser from '$lib/admin/DocumentBrowser.svelte';
 	import type { PageData } from './$types';
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api';
 	import { useQuery, useConvexClient } from 'convex-svelte';
-	import { Check } from 'lucide-svelte';
 	import type { ClassWithSemester } from '$lib/types';
 	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
 	import { useClerkContext } from 'svelte-clerk';
@@ -27,7 +26,6 @@
 		data: []
 	});
 
-	// Clerk + Convex user
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
 	let convexUser = $state<{ isLoading: boolean; error: any; data?: Doc<'users'> | null }>({
@@ -44,7 +42,6 @@
 		}
 	});
 
-	// Semester selection
 	const semesters = useQuery(api.semester.getAllSemesters, {});
 	let currentSemester = $state('');
 
@@ -79,14 +76,6 @@
 		}
 	}
 
-	function removeGenerated(index: number) {
-		generatedQuestions = generatedQuestions.filter((_, i) => i !== index);
-	}
-
-	function optionLetter(i: number) {
-		return String.fromCharCode('A'.charCodeAt(0) + i);
-	}
-
 	let classes = $state<{ isLoading: boolean; error: any; data?: Doc<'class'>[] }>({
 		isLoading: false,
 		error: null,
@@ -96,9 +85,7 @@
 	$effect(() => {
 		const cohortId = convexUser.data?.cohortId as Id<'cohort'> | undefined;
 		if (cohortId) {
-			const q = useQuery(api.class.getUserClasses, {
-				id: cohortId
-			});
+			const q = useQuery(api.class.getUserClasses, { id: cohortId });
 			classes = q;
 		} else {
 			classes = { isLoading: false, error: null, data: [] };
@@ -114,7 +101,6 @@
 		}
 	});
 
-	// Semester initialization and persistence
 	$effect(() => {
 		if (semesters.data && !currentSemester) {
 			currentSemester = pickDefaultSemesterName(semesters.data);
@@ -125,7 +111,6 @@
 		if (currentSemester) setLastSemesterName(currentSemester);
 	});
 
-	// Clear class and module selection when semester changes
 	$effect(() => {
 		if (currentSemester !== (selectedClass as ClassWithSemester)?.semester?.name) {
 			selectedClass = null;
@@ -134,214 +119,173 @@
 		}
 	});
 
-	// Filter classes by selected semester
 	const filteredClasses = $derived(
 		!classes.data || !currentSemester
 			? classes.data
 			: classes.data.filter((c) => (c as ClassWithSemester).semester?.name === currentSemester)
 	);
+
+	const isReady = $derived(selectedClass && selectedModuleId);
 </script>
 
-<div class="min-h-screen p-4 sm:p-6 lg:p-10 max-w-full mx-auto flex flex-col w-full">
-	<a class="btn mb-4 btn-ghost self-start" href="/admin"><ArrowLeft size={16} />Back</a>
+<div class="min-h-screen bg-base-200/30">
+	<div class="max-w-[1800px] mx-auto p-4 sm:p-6">
+		<div class="flex items-center gap-4 mb-6">
+			<a class="btn btn-ghost btn-sm gap-2" href="/admin">
+				<ArrowLeft size={16} />
+				<span class="hidden sm:inline">Back</span>
+			</a>
+			<div class="h-6 w-px bg-base-300"></div>
+			<div>
+				<h1 class="text-xl font-semibold">Question Studio</h1>
+				<p class="text-xs text-base-content/60 hidden sm:block">Generate questions from your content</p>
+			</div>
+		</div>
 
-	<div class="mb-6">
-		<h1 class="text-3xl font-bold text-base-content">Question Studio</h1>
-		<p class="text-base text-base-content/70">Create or generate questions with your documents.</p>
-	</div>
+		<div class="flex flex-wrap items-center gap-2 mb-6 p-3 bg-base-100 rounded-lg border border-base-300">
+			<div class="dropdown">
+				<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-2">
+					<FolderOpen size={14} class="text-base-content/60" />
+					<span class="text-sm">{currentSemester || 'Semester'}</span>
+					<ChevronDown size={12} />
+				</div>
+				{#if semesters.data}
+					<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-56 p-1 shadow-lg border border-base-300">
+						{#each semesters.data as semester (semester._id)}
+							<li>
+								<button
+									class="text-sm"
+									class:active={currentSemester === semester.name}
+									onclick={() => {
+										currentSemester = semester.name;
+										selectedClass = null;
+										selectedModuleId = null;
+										selectedModuleTitle = '';
+									}}
+								>
+									{semester.name}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
 
-	<!-- Compact Selection Bar -->
-	<div>
-		<div class="card bg-base-100 border border-base-300 rounded-lg">
-			<div class="p-4">
-				<!-- Mobile: Stack vertically, Desktop: Grid layout -->
-				<div class="flex flex-col gap-4 lg:grid lg:grid-cols-4 lg:gap-4">
-					<!-- Semester Selection -->
-					<div class="form-control">
-						<div class="label">
-							<span class="label-text font-medium text-sm">Semester</span>
+			<span class="text-base-content/30">/</span>
+
+			<div class="dropdown">
+				<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-2" class:btn-disabled={!currentSemester}>
+					<BookOpen size={14} class="text-base-content/60" />
+					<span class="text-sm">{selectedClass?.name || 'Class'}</span>
+					<ChevronDown size={12} />
+				</div>
+				{#if filteredClasses && filteredClasses.length > 0}
+					<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-64 p-1 shadow-lg border border-base-300">
+						{#each filteredClasses as c (c._id)}
+							<li>
+								<button
+									class="text-sm"
+									class:active={selectedClass?._id === c._id}
+									onclick={() => {
+										selectedClass = c as ClassWithSemester;
+										selectedModuleId = null;
+										selectedModuleTitle = '';
+									}}
+								>
+									<span class="truncate">{c.name}</span>
+									{#if c.code}
+										<span class="badge badge-ghost badge-xs">{c.code}</span>
+									{/if}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
+
+			<span class="text-base-content/30">/</span>
+
+			<div class="dropdown">
+				<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-2" class:btn-disabled={!selectedClass}>
+					<Layers size={14} class="text-base-content/60" />
+					<span class="text-sm">{selectedModuleTitle || 'Module'}</span>
+					<ChevronDown size={12} />
+				</div>
+				{#if modules.data && modules.data.length > 0}
+					<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-64 p-1 shadow-lg border border-base-300 max-h-64 overflow-auto">
+						{#each modules.data as m (m._id)}
+							<li>
+								<button
+									class="text-sm"
+									class:active={selectedModuleId === m._id}
+									onclick={() => {
+										selectedModuleId = m._id;
+										selectedModuleTitle = m.title;
+									}}
+								>
+									<span class="truncate">{m.title}</span>
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
+
+			<div class="flex-1"></div>
+
+			{#if isReady}
+				<div class="badge badge-success badge-sm gap-1">
+					<span class="w-1.5 h-1.5 rounded-full bg-success-content"></span>
+					Ready
+				</div>
+			{:else}
+				<div class="badge badge-ghost badge-sm">Select destination</div>
+			{/if}
+		</div>
+
+		<div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
+			<div class="xl:col-span-4 2xl:col-span-3">
+				<div class="bg-base-100 rounded-lg border border-base-300 h-[calc(100vh-220px)] overflow-hidden">
+					{#if convexUser.isLoading}
+						<div class="p-4 space-y-2">
+							{#each Array(5) as _}
+								<div class="skeleton h-12 w-full"></div>
+							{/each}
 						</div>
-						{#if semesters.data}
-							<div class="flex items-center gap-2">
-								<div class="dropdown flex-1">
-									<div tabindex="0" role="button" class="btn btn-outline btn-sm flex-1 justify-between">
-										<div class="flex items-center gap-2">
-											<CalendarDays size={14} />
-											<span class="text-sm truncate">{currentSemester || 'Select semester'}</span>
-										</div>
-										<ChevronDown size={12} />
-									</div>
-									<ul tabindex="0" class="dropdown-content menu menu-lg bg-base-100 rounded-box z-1 w-80 p-2 shadow-sm">
-										{#each semesters.data as semester (semester._id)}
-											<li>
-												<button
-													onclick={() => {
-														currentSemester = semester.name;
-														selectedClass = null;
-														selectedModuleId = null;
-														selectedModuleTitle = '';
-													}}
-													class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150 text-sm w-full text-left"
-												>
-													<CalendarDays size={14} />
-													<span>{semester.name}</span>
-												</button>
-											</li>
-										{/each}
-									</ul>
-								</div>
-							</div>
-						{:else}
-							<div class="text-xs text-base-content/60">Loading...</div>
-						{/if}
-					</div>
-
-					<!-- Class Selection -->
-					<div class="form-control">
-						<div class="label"><span class="label-text text-sm">Class</span></div>
-						{#if classes.isLoading || !currentSemester}
-							<div class="text-xs text-base-content/60">Loading...</div>
-						{:else}
-							<div class="flex items-center gap-2">
-								<div class="dropdown flex-1">
-									<div tabindex="0" role="button" class="btn btn-outline btn-sm flex-1 justify-between">
-										<span class="text-sm truncate">
-											{selectedClass ? `${selectedClass.name}${selectedClass.code ? ` (${selectedClass.code})` : ''}` : 'Select a class'}
-										</span>
-										<ChevronDown size={12} />
-									</div>
-									<ul tabindex="-1" class="dropdown-content menu menu-lg bg-base-100 rounded-box z-1 w-80 p-2 shadow-sm">
-										{#each filteredClasses || [] as c (c._id)}
-											<li>
-												<button
-													onclick={() => {
-														selectedClass = c as ClassWithSemester;
-														selectedModuleId = null;
-														selectedModuleTitle = '';
-													}}
-													class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150 text-sm w-full text-left"
-												>
-													<span>{c.name}{c.code ? ` (${c.code})` : ''}</span>
-												</button>
-											</li>
-										{/each}
-									</ul>
-								</div>
-							</div>
-						{/if}
-					</div>
-
-					<!-- Module Selection -->
-					<div class="form-control">
-						<div class="label"><span class="label-text text-sm">Module</span></div>
-						{#if !selectedClass}
-							<div class="text-xs text-base-content/60">Select a class first</div>
-						{:else if modules.isLoading}
-							<div class="text-xs text-base-content/60">Loading modules...</div>
-						{:else if modules.error}
-							<div class="text-xs text-error">Error loading modules</div>
-						{:else if modules.data && modules.data.length > 0}
-							<div class="flex items-center gap-2">
-								<div class="dropdown flex-1">
-									<div tabindex="0" role="button" class="btn btn-outline btn-sm flex-1 justify-between">
-										<span class="text-sm truncate">
-											{selectedModuleId ? selectedModuleTitle : 'Select a module'}
-										</span>
-										<ChevronDown size={12} />
-									</div>
-									<ul tabindex="-1" class="dropdown-content menu menu-lg bg-base-100 rounded-box z-1 w-80 p-2 shadow-sm">
-										{#each modules.data as m (m._id)}
-											<li>
-												<button
-													onclick={() => {
-														selectedModuleId = m._id;
-														selectedModuleTitle = m.title;
-													}}
-													class="flex items-center gap-2 hover:bg-base-200 transition-colors duration-150 text-sm w-full text-left"
-												>
-													<span>{m.title}</span>
-												</button>
-											</li>
-										{/each}
-									</ul>
-								</div>
-							</div>
-						{:else}
-							<div class="text-xs text-base-content/60">No modules</div>
-						{/if}
-					</div>
-
-					<!-- Destination Summary -->
-					<div class="form-control">
-						<div class="label"><span class="label-text text-sm">Destination</span></div>
-						<div class="text-xs text-base-content/70 bg-base-200 rounded px-3 py-2 min-h-8 truncate">
-							{selectedClass ? selectedClass.name : '—'} • {selectedModuleTitle || '—'}
+					{:else if convexUser.error}
+						<div class="p-4">
+							<div class="alert alert-error alert-sm">Error loading user</div>
 						</div>
-					</div>
+					{:else if convexUser.data && !convexUser.data.cohortId}
+						<div class="p-4">
+							<div class="alert alert-warning alert-sm">No cohort assigned</div>
+						</div>
+					{:else if convexUser.data}
+						<DocumentBrowser
+							cohortId={convexUser.data.cohortId as Id<'cohort'>}
+							bind:selectedText
+						/>
+					{/if}
+				</div>
+			</div>
+
+			<div class="xl:col-span-8 2xl:col-span-9">
+				<div class="bg-base-100 rounded-lg border border-base-300 h-[calc(100vh-220px)] overflow-hidden">
+					<QuestionsGeneration
+						material={selectedText}
+						{wordCount}
+						{charCount}
+						canGenerate={Boolean(selectedClass && selectedModuleId)}
+						destinationSummary={selectedClass && selectedModuleId
+							? `${selectedClass.name} → ${selectedModuleTitle}`
+							: ''}
+						onAddSelected={async ({ questions }: { questions: GeneratedQuestionInput[] }) => {
+							generatedQuestions = questions;
+							await saveGenerated();
+						}}
+					/>
 				</div>
 			</div>
 		</div>
 	</div>
-
-	<div class="grid grid-cols-1 2xl:grid-cols-6 gap-6 lg:gap-10 mt-6 flex-1">
-		<!-- Document Browser - More spacious column -->
-		<div class="2xl:col-span-2">
-			<div class="card bg-base-100 border border-base-300 rounded-xl min-h-96">
-				{#if convexUser.isLoading}
-					<div class="p-6 space-y-2">
-						<div class="text-sm text-base-content/70 mb-4">Loading user data...</div>
-						{#each Array(6) as _}
-							<div class="skeleton h-10 w-full"></div>
-						{/each}
-					</div>
-				{:else if convexUser.error}
-					<div class="p-6">
-						<div class="alert alert-error">
-							<span>Error loading user data: {convexUser.error.toString()}</span>
-						</div>
-					</div>
-				{:else if convexUser.data && !convexUser.data.cohortId}
-					<div class="p-6">
-						<div class="alert alert-warning">
-							<span>No cohort assigned. Please contact an administrator to assign you to a cohort.</span>
-						</div>
-					</div>
-				{:else if !convexUser.isLoading && !convexUser.error && !convexUser.data}
-					<div class="p-6">
-						<div class="alert alert-error">
-							<span>Account not found in database. Please contact an administrator to complete your account setup.</span>
-							<div class="mt-2 text-xs opacity-70">
-								User ID: {clerkUser?.id}
-							</div>
-						</div>
-					</div>
-				{:else}
-					<DocumentBrowser
-						cohortId={convexUser.data!.cohortId as Id<'cohort'>}
-						bind:selectedText
-					/>
-				{/if}
-			</div>
-		</div>
-
-		<!-- Question Generation - Very spacious column -->
-		<div class="2xl:col-span-4">
-			<div class="card bg-base-100 border border-base-300 rounded-xl min-h-96">
-				<QuestionsGeneration
-					material={selectedText}
-					{wordCount}
-					{charCount}
-					canGenerate={Boolean(selectedClass && selectedModuleId)}
-					destinationSummary={selectedClass && selectedModuleId
-						? `${selectedClass.name} • ${selectedModuleTitle}`
-						: ''}
-					onAddSelected={async ({ questions }: { questions: GeneratedQuestionInput[] }) => {
-						generatedQuestions = questions;
-						await saveGenerated();
-					}}
-				/>
-			</div>
-		</div>
-	</div>
-
 </div>

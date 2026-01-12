@@ -17,9 +17,13 @@ export const backfillFlagCounts = mutation({
 		const batchSize = args.batchSize ?? 100;
 
 		// Get all questions, paginated
-		let questionsQuery = ctx.db.query('question');
-
-		const questions = await questionsQuery.take(batchSize);
+		const {
+			page: questions,
+			isDone,
+			continueCursor
+		} = await ctx.db
+			.query('question')
+			.paginate({ cursor: args.cursor ?? null, numItems: batchSize });
 
 		if (questions.length === 0) {
 			return { done: true, processed: 0, message: 'No more questions to process' };
@@ -48,7 +52,8 @@ export const backfillFlagCounts = mutation({
 		}
 
 		return {
-			done: questions.length < batchSize,
+			done: isDone,
+			cursor: continueCursor,
 			processed,
 			updated,
 			message: `Processed ${processed} questions, updated ${updated} flagCounts`
