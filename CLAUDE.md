@@ -21,9 +21,29 @@ bunx <command>        # Execute packages (replaces npx)
 Always use `bunx` instead of `npx` for Convex commands:
 
 ```bash
+# Development
 bunx convex dev                    # Start Convex dev server
+
+# Running functions
 bunx convex run <function>         # Run a Convex function
-bunx convex run migrations:backfillAllFlagCounts  # Example migration
+bunx convex run <function> --prod  # Run against production
+
+# Passing arguments (JSON format)
+bunx convex run migrations:updateQuestionAuthorForClass '{"classId": "jn725vf213tkzqcd1y5685wd757z55df", "firstName": "Brayden", "lastName": "Dyer"}'
+
+# Useful flags
+#   --prod    Target production deployment
+#   --watch   Live updates for query results
+#   --push    Deploy code before running
+```
+
+### Migrations
+Run migrations from `src/convex/migrations.ts`:
+
+```bash
+bunx convex run migrations:backfillAllFlagCounts
+bunx convex run migrations:resetFlagCounts
+bunx convex run migrations:backfillFlagCounts '{"batchSize": 50}'
 ```
 
 ## Tech Stack

@@ -10,7 +10,10 @@
       "Bash(cat:*)",
       "Bash(xargs:*)",
       "WebFetch(domain:ai.google.dev)",
-      "Bash(bunx convex dev:*)"
+      "Bash(bunx convex dev:*)",
+      "Bash(ls:*)",
+      "Bash(bunx convex run:*)",
+      "Bash(bunx convex deploy:*)"
     ]
   }
 }

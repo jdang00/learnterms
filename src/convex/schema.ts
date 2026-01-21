@@ -17,7 +17,17 @@ export default defineSchema({
 		lastSignInAt: v.optional(v.number()),
 		createdAt: v.optional(v.number()),
 		lastActiveAt: v.optional(v.number()),
-		metadata: v.object({})
+		metadata: v.object({}),
+		// Denormalized progress stats for fast dashboard queries
+		progressStats: v.optional(
+			v.object({
+				questionsInteracted: v.number(),
+				questionsMastered: v.number(),
+				totalQuestions: v.number(),
+				lastActivityAt: v.optional(v.number()),
+				updatedAt: v.number()
+			})
+		)
 	})
 		.index('by_clerkUserId', ['clerkUserId'])
 		.index('by_cohortId', ['cohortId']),
@@ -38,7 +48,17 @@ export default defineSchema({
 		startYear: v.string(),
 		endYear: v.string(),
 		classCode: v.optional(v.string()),
-		pic_url: v.optional(v.string())
+		pic_url: v.optional(v.string()),
+		// Denormalized stats for fast dashboard queries
+		stats: v.optional(
+			v.object({
+				totalStudents: v.number(),
+				totalQuestions: v.number(),
+				totalModules: v.number(),
+				averageCompletion: v.number(),
+				updatedAt: v.number()
+			})
+		)
 	}),
 	semester: defineTable({
 		name: v.string(),
