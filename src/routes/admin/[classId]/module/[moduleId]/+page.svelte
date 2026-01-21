@@ -5,13 +5,14 @@
 	import type { Id, Doc } from '../../../../../convex/_generated/dataModel';
 	import { api } from '../../../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-import { Pencil, Trash2, Plus, ArrowLeft, Copy } from 'lucide-svelte';
+import { Pencil, Trash2, Plus, ArrowLeft, Copy, X, GripVertical } from 'lucide-svelte';
 	import { ArrowRightLeft } from 'lucide-svelte';
 import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
 import DuplicateQuestionModal from '$lib/admin/DuplicateQuestionModal.svelte';
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import MoveQuestionsModal from '$lib/admin/MoveQuestionsModal.svelte';
+	import QuestionEditorInline from '$lib/admin/QuestionEditorInline.svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 	import { goto } from '$app/navigation';
 	import { useClerkContext } from 'svelte-clerk';
@@ -68,16 +69,53 @@ const moduleInfo = useQuery(api.module.getModuleById, { id: moduleId as Id<'modu
 let isDuplicateModalOpen = $state(false);
 let duplicateTarget = $state<QuestionItem | null>(null);
 let recentlyAddedIds = $state<Set<string>>(new Set());
+let selectedQuestionId = $state<string | null>(null);
+	let reorderMode = $state(false);
+	let editorMode: 'view' | 'add' | 'edit' = $state('view');
+	let editingQuestionForInline = $state<QuestionItem | null>(null);
+	let hasUnsavedChanges = $state(false);
+	let pendingQuestionId = $state<string | null>(null);
+	let showUnsavedChangesModal = $state(false);
 
 	type QuestionItem = Doc<'question'>;
 
+	const selectedQuestion = $derived.by(() => {
+		if (!selectedQuestionId) return null;
+		if (questionList.length > 0) {
+			return questionList.find((q) => q._id === selectedQuestionId) ?? null;
+		}
+		if (questions.data && questions.data.length > 0) {
+			return questions.data.find((q) => q._id === selectedQuestionId) ?? null;
+		}
+		return null;
+	});
+
+	const selectedQuestionIndex = $derived.by(() => {
+		if (!selectedQuestionId) return -1;
+		return questionList.findIndex((q) => q._id === selectedQuestionId);
+	});
+
 	function editQuestion(questionItem: QuestionItem) {
-		editingQuestion = questionItem;
-		isEditQuestionModalOpen = true;
+		const isDesktopOrTablet = window.innerWidth >= 768; // md breakpoint
+		if (isDesktopOrTablet) {
+			// Check for unsaved changes before switching to edit a different question
+			if ((editorMode === 'edit' || editorMode === 'add') && hasUnsavedChanges && 
+				editingQuestionForInline?._id !== questionItem._id) {
+				pendingQuestionId = `edit:${questionItem._id}`;
+				showUnsavedChangesModal = true;
+				return;
+			}
+			editingQuestionForInline = questionItem;
+			editorMode = 'edit';
+			selectedQuestionId = questionItem._id;
+			hasUnsavedChanges = false;
+		} else {
+			editingQuestion = questionItem;
+			isEditQuestionModalOpen = true;
+		}
 	}
 
 	async function closeEditQuestionModal() {
-		// Clear ?edit first to avoid auto-open race from the $effect
 		try {
 			const url = new URL(window.location.href);
 			if (url.searchParams.has('edit')) {
@@ -88,14 +126,31 @@ let recentlyAddedIds = $state<Set<string>>(new Set());
 		} catch {}
 		isEditQuestionModalOpen = false;
 		editingQuestion = null;
+		editorMode = 'view';
+		editingQuestionForInline = null;
 	}
 
 	function openAddQuestionModal() {
-		isAddQuestionModalOpen = true;
+		const isDesktopOrTablet = window.innerWidth >= 768; // md breakpoint
+		if (isDesktopOrTablet) {
+			// Check for unsaved changes before switching to add mode
+			if ((editorMode === 'edit' || editorMode === 'add') && hasUnsavedChanges) {
+				pendingQuestionId = 'add';
+				showUnsavedChangesModal = true;
+				return;
+			}
+			editorMode = 'add';
+			selectedQuestionId = null;
+			editingQuestionForInline = null;
+			hasUnsavedChanges = false;
+		} else {
+			isAddQuestionModalOpen = true;
+		}
 	}
 
 	function closeAddQuestionModal() {
 		isAddQuestionModalOpen = false;
+		editorMode = 'view';
 	}
 
 	function handleQuestionDelete(id: string) {
@@ -203,13 +258,87 @@ let recentlyAddedIds = $state<Set<string>>(new Set());
 		}
 	}
 
+	function handleInlineEditorSave() {
+		hasUnsavedChanges = false;
+		editorMode = 'view';
+		editingQuestionForInline = null;
+		closeEditQuestionModal();
+	}
+
+	function handleInlineEditorCancel() {
+		hasUnsavedChanges = false;
+		editorMode = 'view';
+		editingQuestionForInline = null;
+		closeEditQuestionModal();
+	}
+
+	function handleQuestionSelect(questionId: string) {
+		// If already viewing this question and not in edit/add mode, do nothing
+		if (editorMode === 'view' && selectedQuestionId === questionId) {
+			return;
+		}
+
+		// If in edit or add mode with unsaved changes, prompt user
+		if ((editorMode === 'edit' || editorMode === 'add') && hasUnsavedChanges) {
+			pendingQuestionId = questionId;
+			showUnsavedChangesModal = true;
+			return;
+		}
+
+		// Otherwise, switch to view mode and select the question
+		editorMode = 'view';
+		editingQuestionForInline = null;
+		selectedQuestionId = questionId;
+		hasUnsavedChanges = false;
+	}
+
+	function confirmDiscardChanges() {
+		hasUnsavedChanges = false;
+		showUnsavedChangesModal = false;
+		
+		if (pendingQuestionId === 'add') {
+			editorMode = 'add';
+			selectedQuestionId = null;
+			editingQuestionForInline = null;
+		} else if (pendingQuestionId?.startsWith('edit:')) {
+			const questionId = pendingQuestionId.replace('edit:', '');
+			const questionItem = questionList.find((q) => q._id === questionId);
+			if (questionItem) {
+				editingQuestionForInline = questionItem;
+				editorMode = 'edit';
+				selectedQuestionId = questionId;
+			}
+		} else if (pendingQuestionId) {
+			editorMode = 'view';
+			editingQuestionForInline = null;
+			selectedQuestionId = pendingQuestionId;
+		}
+		
+		pendingQuestionId = null;
+	}
+
+	function cancelDiscardChanges() {
+		showUnsavedChangesModal = false;
+		pendingQuestionId = null;
+	}
+
+	function handleEditorChange() {
+		hasUnsavedChanges = true;
+	}
+
 	$effect(() => {
-		// Auto-open edit modal if ?edit=<questionId> is present
-		if (!isEditQuestionModalOpen && questions.data && editParam) {
+		if (!isEditQuestionModalOpen && editorMode === 'view' && questions.data && editParam) {
 			const found = questions.data.find((q) => q._id === editParam);
 			if (found) {
-				editingQuestion = found as QuestionItem;
-				isEditQuestionModalOpen = true;
+				const isDesktopOrTablet = typeof window !== 'undefined' && window.innerWidth >= 768;
+				if (isDesktopOrTablet) {
+					editingQuestionForInline = found as QuestionItem;
+					editorMode = 'edit';
+					selectedQuestionId = found._id;
+				} else {
+					editingQuestion = found as QuestionItem;
+					isEditQuestionModalOpen = true;
+				}
 			}
 		}
 		if (questions.data) {
@@ -280,59 +409,42 @@ async function confirmDuplicateModal(count: number) {
 }
 </script>
 
-<div class="min-h-screen p-8 max-w-7xl mx-auto">
-	<a class="btn mb-4 btn-ghost" href={`/admin/${moduleInfo.data?.classId || ''}`}>
-		<ArrowLeft size={16} />Back
-	</a>
-
-	<div class="mb-8 flex flex-col gap-2">
-		<div class="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start">
+<div class="min-h-screen bg-base-200/30">
+	<div class="max-w-[1800px] mx-auto p-4 sm:p-6">
+		<div class="flex items-center gap-4 mb-4">
+			<a class="btn btn-ghost btn-sm gap-2" href={`/admin/${moduleInfo.data?.classId || ''}`}>
+				<ArrowLeft size={16} />
+				<span class="hidden sm:inline">Back</span>
+			</a>
+			<div class="h-6 w-px bg-base-300"></div>
 			{#if moduleInfo.isLoading}
-				<div class="flex items-center justify-center p-8">
-					<div class="text-base-content/70">Loading module...</div>
-				</div>
+				<div class="skeleton h-6 w-48"></div>
 			{:else if moduleInfo.error != null}
-				<div class="flex items-center justify-center p-8">
-					<div class="text-error">Failed to load: {moduleInfo.error.toString()}</div>
-				</div>
+				<div class="text-error text-sm">Failed to load module</div>
 			{:else if moduleInfo.data == null}
-				<div class="flex items-center justify-center p-8">
-					<div class="text-center">
-						<div class="text-4xl mb-4">📚</div>
-						<h3 class="text-lg font-semibold mb-2 text-base-content">
-							Module information not found.
-						</h3>
+				<div class="text-base-content/70 text-sm">Module not found</div>
+			{:else}
+				<div class="flex items-center gap-2">
+					<span class="text-xl">{moduleInfo.data?.emoji || '📘'}</span>
+					<div>
+						<h1 class="text-lg font-semibold leading-tight">{moduleInfo.data.title}</h1>
+						<p class="text-xs text-base-content/60 hidden sm:block">
+							{questionList.length} question{questionList.length !== 1 ? 's' : ''}{#if admin} · Drag to reorder{/if}
+						</p>
 					</div>
 				</div>
-			{:else}
-				<div>
-					<h1
-						class="text-xl sm:text-2xl font-bold text-base-content flex items-center gap-2 sm:gap-3"
-					>
-						<span class="text-2xl sm:text-3xl">{moduleInfo.data?.emoji || '📘'}</span>
-						<span>{moduleInfo.data.title}</span>
-					</h1>
-					<p class="text-sm sm:text-base text-base-content/70">
-						Manage questions for {moduleInfo.data.title}. {#if admin}Drag and drop to reorder them.{/if}
-					</p>
-				</div>
 			{/if}
-
-			{#if canEdit}
-				<button class="btn btn-primary gap-2" onclick={openAddQuestionModal}>
+			<div class="flex-1"></div>
+			{#if canEdit && editorMode !== 'add'}
+				<button class="btn btn-primary btn-sm gap-2" onclick={openAddQuestionModal}>
 					<Plus size={16} />
-					<span class="hidden sm:inline">Add New Question</span>
-					<span class="sm:hidden">Add Question</span>
+					<span class="hidden sm:inline">Add Question</span>
 				</button>
 			{/if}
 		</div>
-	</div>
 
-	<!-- Question Management Controls - Always visible -->
-	<div class="mb-6 p-4 bg-base-200/30 border border-base-300 rounded-lg">
-		<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-			<!-- Search on the left -->
-			<label class="input input-bordered flex items-center gap-2 w-full lg:w-80">
+		<div class="flex flex-wrap items-center gap-2 mb-4 p-3 bg-base-100 rounded-lg border border-base-300">
+			<label class="input input-sm input-bordered flex items-center gap-2 w-full sm:w-64">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 16 16"
@@ -347,7 +459,7 @@ async function confirmDuplicateModal(count: number) {
 				<input
 					type="text"
 					class="grow"
-					placeholder="Search questions..."
+					placeholder="Search..."
 					value={searchInput}
 					oninput={(e) => {
 						searchInput = (e.target as HTMLInputElement).value;
@@ -364,342 +476,545 @@ async function confirmDuplicateModal(count: number) {
 								clearTimeout(searchTimeout);
 								searchTimeout = null;
 							}
-						}}>Clear</button
+						}}>×</button
 					>
 				{/if}
 			</label>
 
-			<!-- Controls on the right -->
-			<div class="flex flex-wrap items-center gap-2 lg:justify-end">
-				<button class="btn btn-outline gap-2" onclick={() => (showTruncated = !showTruncated)}>
-					<span class="hidden sm:inline">{showTruncated ? 'Hide' : 'Show'} Options</span>
-					<span class="sm:hidden">{showTruncated ? 'Hide' : 'Show'}</span>
-				</button>
-
-				<div class="join">
-					<button
-						class={`btn btn-ghost join-item ${sortMode === 'order' ? 'btn-active' : ''}`}
-						onclick={() => (sortMode = sortMode === 'order' ? 'created_desc' : 'order')}
-					>
-						{sortMode === 'order' ? 'Normal order' : 'Last created'}
-					</button>
+			<div class="dropdown">
+				<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-1">
+					{sortMode === 'order' ? 'Order' : 'Recent'}
+					<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
 				</div>
+				<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-40 p-1 shadow-lg border border-base-300">
+					<li><button class="text-sm" class:active={sortMode === 'order'} onclick={() => (sortMode = 'order')}>By Order</button></li>
+					<li><button class="text-sm" class:active={sortMode === 'created_desc'} onclick={() => (sortMode = 'created_desc')}>Recent First</button></li>
+				</ul>
+			</div>
 
-				{#if canEdit && selectedQuestions.size > 0}
-					<button class="btn btn-secondary gap-2" onclick={openMoveModalForSelected}>
-						<ArrowRightLeft size={16} />
-						<span class="hidden sm:inline">{selectedQuestions.size}</span>
-						<span class="sm:hidden">Move ({selectedQuestions.size})</span>
-					</button>
-					<button class="btn btn-error gap-2" onclick={openBulkDeleteModal}>
-						<Trash2 size={16} />
-						<span class="hidden sm:inline">{selectedQuestions.size}</span>
-						<span class="sm:hidden">Delete ({selectedQuestions.size})</span>
-					</button>
-					<button class="btn btn-ghost" onclick={deselectAllQuestions}>Deselect All</button>
-				{:else if canEdit && questions.data && questions.data.length > 0}
-					<button class="btn btn-ghost" onclick={selectAllQuestions}>Select All</button>
+			{#if admin}
+				<!-- Reorder button only on desktop and tablet (md and above) -->
+				<button
+					class="btn btn-sm gap-1 {reorderMode ? 'btn-primary' : 'btn-ghost'} hidden md:flex"
+					onclick={() => (reorderMode = !reorderMode)}
+				>
+					<GripVertical size={14} />
+					<span class="hidden sm:inline">{reorderMode ? 'Done' : 'Reorder'}</span>
+				</button>
+			{/if}
+
+			<div class="flex-1"></div>
+
+			{#if canEdit && selectedQuestions.size > 0}
+				<div class="badge badge-neutral badge-sm">{selectedQuestions.size} selected</div>
+				<button class="btn btn-sm btn-ghost gap-1" onclick={openMoveModalForSelected}>
+					<ArrowRightLeft size={14} />
+					<span class="hidden sm:inline">Move</span>
+				</button>
+				<button class="btn btn-sm btn-ghost text-error gap-1" onclick={openBulkDeleteModal}>
+					<Trash2 size={14} />
+					<span class="hidden sm:inline">Delete</span>
+				</button>
+				<button class="btn btn-sm btn-ghost" onclick={deselectAllQuestions}>Clear</button>
+			{:else if canEdit && questions.data && questions.data.length > 0}
+				<button class="btn btn-sm btn-ghost" onclick={selectAllQuestions}>Select All</button>
+			{/if}
+		</div>
+
+		<!-- Tablet View: Horizontal Scrolling Numbers (md to lg) - Hidden in reorder mode -->
+		{#if !reorderMode}
+		<div class="hidden md:block xl:hidden mb-4">
+			<div class="flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-3 relative items-center border border-base-300 px-4 py-3 rounded-3xl bg-base-100">
+				{#if questions.isLoading}
+					<div class="flex gap-3">
+						{#each Array(10), index (index)}
+							<div class="skeleton h-10 w-10 rounded-full flex-shrink-0"></div>
+						{/each}
+					</div>
+				{:else if questions.data && questions.data.length > 0}
+					{#each questionList as questionItem, index (questionItem._id)}
+						<div class="indicator flex-shrink-0">
+							{#if editorMode === 'edit' && editingQuestionForInline?._id === questionItem._id}
+								<span class="indicator-item indicator-start badge badge-warning badge-xs"></span>
+							{/if}
+							{#if recentlyAddedIds.has(questionItem._id)}
+								<span class="indicator-item indicator-end badge badge-success badge-xs"></span>
+							{/if}
+							<button
+								class="btn btn-circle btn-sm btn-soft {selectedQuestionId === questionItem._id ? 'btn-primary' : 'btn-outline'}"
+								onclick={() => handleQuestionSelect(questionItem._id)}
+								title={questionItem.stem?.replace(/<[^>]*>/g, '').substring(0, 50)}
+							>
+								{index + 1}
+							</button>
+						</div>
+					{/each}
+				{:else}
+					<div class="text-sm text-base-content/60 py-2">No questions yet</div>
 				{/if}
 			</div>
 		</div>
-	</div>
+		{/if}
 
-	{#if questions.isLoading}
-		<div class="space-y-4">
-			{#each Array(5), index (index)}
-				<div class="rounded-xl bg-base-100 shadow-sm border border-base-300 p-4">
-					<div class="flex flex-col gap-4">
-						<div class="flex items-start justify-between gap-3">
-							<div class="flex items-start gap-3">
-								<div class="flex items-center gap-2">
-									<div class="skeleton h-5 w-5 rounded"></div>
-									<div class="skeleton h-6 w-8 rounded-full"></div>
-								</div>
-								<div class="flex flex-col gap-2">
-									<div class="skeleton h-6 w-3/4"></div>
-									<div class="flex gap-2">
-										<div class="skeleton h-5 w-16"></div>
-										<div class="skeleton h-5 w-20"></div>
-										<div class="skeleton h-5 w-14"></div>
+		<!-- Mobile Question List (below md) -->
+		<div class="md:hidden mb-4">
+			<div class="bg-base-100 rounded-lg border border-base-300 overflow-hidden">
+				{#if questions.isLoading}
+					<div class="divide-y divide-base-200">
+						{#each Array(5), index (index)}
+							<div class="px-3 py-2.5">
+								<div class="flex items-start gap-2">
+									<div class="skeleton h-4 w-4 rounded mt-0.5"></div>
+									<div class="flex-1">
+										<div class="flex items-center gap-2 mb-1">
+											<div class="skeleton h-3 w-6 rounded"></div>
+											<div class="skeleton h-3 w-12 rounded"></div>
+										</div>
+										<div class="skeleton h-3 w-full rounded mb-1"></div>
+										<div class="skeleton h-3 w-2/3 rounded"></div>
 									</div>
 								</div>
 							</div>
-							<div class="skeleton h-8 w-8 rounded-full"></div>
-						</div>
-
-						<div class="flex flex-col gap-3 sm:flex-row">
-							<div class="rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1">
-								<div class="skeleton h-4 w-16 mb-2"></div>
-								<div class="space-y-2">
-									<div class="skeleton h-8 w-full"></div>
-									<div class="skeleton h-8 w-5/6"></div>
-									<div class="skeleton h-8 w-4/6"></div>
-									<div class="skeleton h-8 w-3/6"></div>
-								</div>
-							</div>
-
-							<div class="rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1">
-								<div class="skeleton h-4 w-24 mb-2"></div>
-								<div class="space-y-2">
-									<div class="skeleton h-4 w-full"></div>
-									<div class="skeleton h-4 w-5/6"></div>
-									<div class="skeleton h-4 w-4/6"></div>
-								</div>
-							</div>
+						{/each}
+					</div>
+				{:else if questions.error != null}
+					<div class="flex items-center justify-center p-6">
+						<div class="text-error text-xs">Failed to load: {questions.error.toString()}</div>
+					</div>
+				{:else if !questions.data || questions.data.length === 0}
+					<div class="flex items-center justify-center p-8">
+						<div class="text-center">
+							<div class="text-3xl mb-2">📚</div>
+							<h3 class="text-sm font-semibold mb-1">
+								{search ? 'No matches' : 'No questions'}
+							</h3>
+							<p class="text-xs text-base-content/60">
+								{search ? 'Try different search terms' : 'Add your first question'}
+							</p>
 						</div>
 					</div>
-				</div>
-			{/each}
-		</div>
-	{:else if questions.error != null}
-		<div class="flex items-center justify-center p-8">
-			<div class="text-error">Failed to load: {questions.error.toString()}</div>
-		</div>
-	{:else if !questions.data || questions.data.length === 0}
-		<div class="flex items-center justify-center p-8">
-			<div class="text-center">
-				<div class="text-4xl mb-4">📚</div>
-				<h3 class="text-lg font-semibold mb-2 text-base-content">
-					{search ? 'No questions match your search' : 'No questions found'}
-				</h3>
-				<p class="text-base-content/70">
-					{search
-						? 'Try adjusting your search terms or clear the search to see all questions.'
-						: 'No questions available for the selected module.'}
-				</p>
-				{#if search}
-					<button
-						class="btn btn-primary mt-4"
-						onclick={() => {
-							searchInput = '';
-							search = '';
-							if (searchTimeout) {
-								clearTimeout(searchTimeout);
-								searchTimeout = null;
-							}
-						}}
-					>
-						Clear Search
-					</button>
+				{:else}
+					<div class="divide-y divide-base-200 max-h-[calc(100vh-280px)] overflow-y-auto">
+						{#each questionList as questionItem, index (questionItem._id)}
+							<div
+								role="button"
+								tabindex="0"
+								class="px-3 py-2.5 transition-all hover:bg-base-200/50 cursor-pointer active:bg-base-200
+									{selectedQuestionId === questionItem._id ? 'bg-primary/5 border-l-3 border-primary' : 'border-l-3 border-transparent'}"
+								onclick={() => handleQuestionSelect(questionItem._id)}
+								onkeydown={(e) => e.key === 'Enter' && handleQuestionSelect(questionItem._id)}
+							>
+								<div class="flex items-start gap-2">
+									<input
+										type="checkbox"
+										class="checkbox checkbox-xs checkbox-primary mt-0.5 flex-shrink-0"
+										aria-label="Select question"
+										checked={selectedQuestions.has(questionItem._id)}
+										onclick={(e) => {
+											e.stopPropagation();
+											toggleQuestionSelection(questionItem._id);
+										}}
+									/>
+									<div class="flex-1 min-w-0">
+										<div class="flex items-center gap-1.5 mb-1">
+											<span class="text-xs font-medium text-base-content/50">#{index + 1}</span>
+											<span class="text-[9px] px-1 py-0.5 rounded bg-base-200 text-base-content/60 uppercase font-medium">{convertToDisplayFormat(questionItem.type)}</span>
+											<span class="w-1.5 h-1.5 rounded-full flex-shrink-0
+												{questionItem.status === 'published' ? 'bg-success' : questionItem.status === 'draft' ? 'bg-warning' : 'bg-base-300'}"
+												title={questionItem.status}></span>
+										</div>
+										<p class="text-xs text-base-content leading-snug line-clamp-2 tiptap-content-inline">{@html questionItem.stem}</p>
+									</div>
+								</div>
+							</div>
+						{/each}
+					</div>
 				{/if}
 			</div>
 		</div>
-	{:else}
-		<div class="space-y-4">
-			{#each questionList as questionItem, index (questionItem._id)}
-				<div
-					use:droppable={{
-						container: index.toString(),
-						callbacks: { onDrop: handleQuestionDrop }
-					}}
-					class={`relative rounded-xl bg-base-100 shadow-sm border p-4
-              transition-shadow duration-300 hover:shadow-md hover:border-primary/30
-              svelte-dnd-touch-feedback ${recentlyAddedIds.has(questionItem._id) ? 'border-success/70 ring-2 ring-success/30' : 'border-base-300'}`}
-					animate:flip={{ duration: 300 }}
-				>
-					<div
-						use:draggable={{
-							container: index.toString(),
-							dragData: questionItem,
-							interactive: [
-								'[data-delete-btn]',
-								'[data-move-btn]',
-								'[data-view-btn]',
-								'[data-edit-btn]',
-							'[data-duplicate-btn]',
-								'.interactive',
-								'input[type="checkbox"]',
-								'label'
-							]
-						}}
-						class="cursor-move"
-					>
-						<div class="flex flex-col gap-4">
-							<div class="flex items-start justify-between gap-3">
-								<div class="flex items-start gap-3">
-									<div class="flex items-center gap-2">
-										<label class="label cursor-pointer p-0">
+
+		<div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
+			<!-- Desktop Sidebar (xl and above) -->
+			<div class="xl:col-span-5 2xl:col-span-4 hidden xl:block">
+				<div class="bg-base-100 rounded-lg border border-base-300 h-[calc(100vh-180px)] overflow-hidden flex flex-col">
+					<div class="flex-1 overflow-y-auto">
+						{#if questions.isLoading}
+							<div class="divide-y divide-base-200">
+								{#each Array(8), index (index)}
+									<div class="px-4 py-3">
+										<div class="flex items-start gap-3">
+											<div class="skeleton h-5 w-5 rounded mt-0.5"></div>
+											<div class="flex-1">
+												<div class="flex items-center gap-2 mb-2">
+													<div class="skeleton h-3 w-6 rounded"></div>
+													<div class="skeleton h-4 w-12 rounded"></div>
+													<div class="skeleton h-2 w-2 rounded-full"></div>
+												</div>
+												<div class="skeleton h-4 w-full rounded mb-1"></div>
+												<div class="skeleton h-4 w-3/4 rounded"></div>
+											</div>
+										</div>
+									</div>
+								{/each}
+							</div>
+						{:else if questions.error != null}
+							<div class="flex items-center justify-center p-8">
+								<div class="text-error text-sm">Failed to load: {questions.error.toString()}</div>
+							</div>
+						{:else if !questions.data || questions.data.length === 0}
+							<div class="flex items-center justify-center p-8 h-full">
+								<div class="text-center">
+									<div class="text-3xl mb-3">📚</div>
+									<h3 class="text-sm font-semibold mb-1 text-base-content">
+										{search ? 'No matches' : 'No questions'}
+									</h3>
+									<p class="text-xs text-base-content/60">
+										{search ? 'Try different search terms' : 'Add your first question'}
+									</p>
+									{#if search}
+										<button
+											class="btn btn-sm btn-ghost mt-3"
+											onclick={() => {
+												searchInput = '';
+												search = '';
+												if (searchTimeout) {
+													clearTimeout(searchTimeout);
+													searchTimeout = null;
+												}
+											}}
+										>
+											Clear Search
+										</button>
+									{/if}
+								</div>
+							</div>
+						{:else if reorderMode}
+							<div class="divide-y divide-base-200">
+								{#each questionList as questionItem, index (questionItem._id)}
+									<div
+										use:droppable={{
+											container: index.toString(),
+											callbacks: { onDrop: handleQuestionDrop }
+										}}
+										use:draggable={{
+											container: index.toString(),
+											dragData: questionItem
+										}}
+										class="px-4 py-3 transition-all hover:bg-base-200/50 cursor-grab active:cursor-grabbing
+											{recentlyAddedIds.has(questionItem._id) ? 'bg-success/5' : ''}"
+										animate:flip={{ duration: 300 }}
+									>
+										<div class="flex items-center gap-3">
+											<GripVertical size={16} class="text-base-content/30 flex-shrink-0" />
+											<span class="text-xs font-medium text-base-content/50 w-6">#{index + 1}</span>
+											<p class="flex-1 text-sm text-base-content truncate tiptap-content-inline">{@html questionItem.stem}</p>
+										</div>
+									</div>
+								{/each}
+							</div>
+						{:else}
+							<div class="divide-y divide-base-200">
+								{#each questionList as questionItem, index (questionItem._id)}
+									<div
+										role="button"
+										tabindex="0"
+										class="px-4 py-3 transition-all hover:bg-base-200/50 cursor-pointer
+											{selectedQuestionId === questionItem._id ? 'bg-primary/5 border-l-3 border-primary' : 'border-l-3 border-transparent'}
+											{recentlyAddedIds.has(questionItem._id) ? 'bg-success/5' : ''}"
+										onclick={() => handleQuestionSelect(questionItem._id)}
+										onkeydown={(e) => e.key === 'Enter' && handleQuestionSelect(questionItem._id)}
+									>
+										<div class="flex items-start gap-3">
 											<input
 												type="checkbox"
-												class="checkbox checkbox-primary"
+												class="checkbox checkbox-sm checkbox-primary mt-0.5 flex-shrink-0"
 												aria-label="Select question"
 												checked={selectedQuestions.has(questionItem._id)}
-												onclick={() => toggleQuestionSelection(questionItem._id)}
+												onclick={(e) => {
+													e.stopPropagation();
+													toggleQuestionSelection(questionItem._id);
+												}}
 											/>
-										</label>
-										<div
-											class="text-xs text-base-content/60 font-mono badge rounded-full"
-											title="Position"
-										>
-											{index + 1}
+											<div class="flex-1 min-w-0">
+												<div class="flex items-center gap-2 mb-1">
+													<span class="text-xs font-medium text-base-content/50">#{index + 1}</span>
+													<span class="text-[10px] px-1.5 py-0.5 rounded bg-base-200 text-base-content/60 uppercase font-medium">{convertToDisplayFormat(questionItem.type)}</span>
+													<span class="w-2 h-2 rounded-full flex-shrink-0
+														{questionItem.status === 'published' ? 'bg-success' : questionItem.status === 'draft' ? 'bg-warning' : 'bg-base-300'}"
+														title={questionItem.status}></span>
+												</div>
+												<p class="text-sm text-base-content leading-snug line-clamp-2 tiptap-content-inline">{@html questionItem.stem}</p>
+											</div>
 										</div>
 									</div>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				</div>
+			</div>
 
-									<div class="flex flex-col">
-										<h3
-											class="card-title text-base-content text-left mb-3 tiptap-content"
-											title={questionItem.stem}
+			<!-- Main Content Panel (md and above) -->
+			<div class="xl:col-span-7 2xl:col-span-8 hidden md:block">
+				<div class="bg-base-100 rounded-lg border border-base-300 h-[calc(100vh-180px)] overflow-hidden">
+					{#if reorderMode}
+						<!-- Reorder mode view for tablet (md-lg) -->
+						<div class="h-full flex flex-col overflow-hidden">
+							<div class="p-4 border-b border-base-300">
+								<h3 class="text-lg font-semibold">Reorder Questions</h3>
+								<p class="text-sm text-base-content/60 mt-1">Drag questions to reorder them</p>
+							</div>
+							<div class="flex-1 overflow-y-auto">
+								<div class="divide-y divide-base-200">
+									{#each questionList as questionItem, index (questionItem._id)}
+										<div
+											use:droppable={{
+												container: index.toString(),
+												callbacks: { onDrop: handleQuestionDrop }
+											}}
+											use:draggable={{
+												container: index.toString(),
+												dragData: questionItem
+											}}
+											class="px-4 py-3 transition-all hover:bg-base-200/50 cursor-grab active:cursor-grabbing
+												{recentlyAddedIds.has(questionItem._id) ? 'bg-success/5' : ''}"
+											animate:flip={{ duration: 300 }}
 										>
-											{@html questionItem.stem}
-										</h3>
-
-										<div class="mt-1 flex flex-wrap items-center gap-2">
-											{#if questionItem.aiGenerated}
-												<div class="badge badge-soft badge-info" title="AI Generated">
-													🤖 AI Generated
-												</div>
-											{:else}
-												<div class="badge badge-soft badge-success" title="User Created">
-													✍️ User Created
-												</div>
-											{/if}
-
-											{#if questionItem.type}
-												<div
-													class="badge badge-ghost"
-													title={`Type: ${convertToDisplayFormat(questionItem.type)}`}
-												>
-													{convertToDisplayFormat(questionItem.type)}
-												</div>
-											{/if}
-											{#if questionItem.status}
-												<div
-													class="badge badge-soft
-                             {questionItem.status === 'draft'
-														? 'badge-warning'
-														: questionItem.status === 'published'
-															? 'badge-success'
-															: 'badge-neutral'}"
-													title={`Status: ${questionItem.status}`}
-												>
-													{questionItem.status}
-												</div>
-											{/if}
+											<div class="flex items-center gap-3">
+												<GripVertical size={16} class="text-base-content/30 flex-shrink-0" />
+												<span class="text-xs font-medium text-base-content/50 w-6">#{index + 1}</span>
+												<p class="flex-1 text-sm text-base-content truncate tiptap-content-inline">{@html questionItem.stem}</p>
+											</div>
 										</div>
+									{/each}
+								</div>
+							</div>
+						</div>
+					{:else if editorMode === 'add'}
+						<QuestionEditorInline
+							{moduleId}
+							mode="add"
+							onSave={handleInlineEditorSave}
+							onCancel={handleInlineEditorCancel}
+							onChange={handleEditorChange}
+						/>
+					{:else if editorMode === 'edit' && editingQuestionForInline}
+						{#key editingQuestionForInline._id}
+							<QuestionEditorInline
+								{moduleId}
+								editingQuestion={editingQuestionForInline}
+								mode="edit"
+								onSave={handleInlineEditorSave}
+								onCancel={handleInlineEditorCancel}
+								onChange={handleEditorChange}
+							/>
+						{/key}
+					{:else if selectedQuestion}
+						<div class="h-full flex flex-col">
+							<div class="flex items-center justify-between p-4 border-b border-base-300">
+								<div class="flex items-center gap-3">
+									{#if selectedQuestionIndex >= 0}
+										<span class="text-sm font-medium">Question #{selectedQuestionIndex + 1}</span>
+									{:else}
+										<span class="text-sm font-medium">Question #—</span>
+									{/if}
+									<div class="flex items-center gap-1">
+										{#if selectedQuestion.aiGenerated}
+											<span class="badge badge-xs badge-info">AI</span>
+										{:else}
+											<span class="badge badge-xs badge-success">User</span>
+										{/if}
+										<span class="badge badge-xs badge-ghost">{convertToDisplayFormat(selectedQuestion.type)}</span>
+										<span class="badge badge-xs {selectedQuestion.status === 'published' ? 'badge-success' : selectedQuestion.status === 'draft' ? 'badge-warning' : 'badge-neutral'}">{selectedQuestion.status}</span>
 									</div>
 								</div>
-
 								{#if canEdit}
-									<div class="dropdown dropdown-end">
-										<button
-											class="btn btn-ghost btn-circle m-1 interactive"
-											tabindex="0"
-											aria-haspopup="menu"
-											aria-label="Open menu">⋮</button
-										>
-										<ul
-											tabindex="0"
-											role="menu"
-											class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
-										>
-                                    
-											<li>
-												<button
-													data-move-btn
-													class="btn btn-sm btn-ghost w-full justify-start"
-													type="button"
-													aria-label="Move question"
-													onclick={() => openMoveModalForOne(questionItem._id)}
-												>
-													<ArrowRightLeft size={16} />
-													<span>Move</span>
-												</button>
-											</li>
-											<li>
-												<button
-													data-edit-btn
-													class="btn btn-sm btn-ghost w-full justify-start"
-													type="button"
-													aria-label="Edit question"
-													onclick={() => editQuestion(questionItem)}
-												>
-													<Pencil size={16} />
-													<span>Edit</span>
-												</button>
-											</li>
-									<li>
-										<button
-											data-duplicate-btn
-											class="btn btn-sm btn-ghost w-full justify-start"
-											type="button"
-											aria-label="Duplicate question"
-											onclick={() => openDuplicateModalForOne(questionItem._id)}
-										>
-											<Copy size={16} />
-											<span>Duplicate</span>
+									<div class="flex items-center gap-1">
+										<button class="btn btn-sm btn-ghost gap-1" onclick={() => editQuestion(selectedQuestion)}>
+											<Pencil size={14} />
+											Edit
 										</button>
-									</li>
-											<li>
-												<button
-													data-delete-btn
-													class="btn btn-sm btn-ghost text-error w-full justify-start"
-													type="button"
-													aria-label="Delete question"
-													onclick={() => handleQuestionDelete(questionItem._id)}
-												>
-													<Trash2 size={16} />
-													<span>Delete</span>
-												</button>
-											</li>
-										</ul>
+										<button class="btn btn-sm btn-ghost gap-1" onclick={() => openMoveModalForOne(selectedQuestion._id)}>
+											<ArrowRightLeft size={14} />
+											Move
+										</button>
+										<button class="btn btn-sm btn-ghost gap-1" onclick={() => openDuplicateModalForOne(selectedQuestion._id)}>
+											<Copy size={14} />
+											Duplicate
+										</button>
+										<button class="btn btn-sm btn-ghost text-error gap-1" onclick={() => handleQuestionDelete(selectedQuestion._id)}>
+											<Trash2 size={14} />
+										</button>
 									</div>
 								{/if}
 							</div>
-                    
-							{#if showTruncated}
-								<div class="flex flex-col gap-3 sm:flex-row">
-									<!-- Options -->
-									{#if questionItem.options?.length}
-										<div class="rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1">
-											<div
-												class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2"
-											>
-												Options
-											</div>
 
-											<ul class="bg-transparent p-0 gap-1">
-												{#each questionItem.options as option (option.id)}
-													<li class="rounded-lg">
-														<div
-															class="flex items-center justify-between rounded-lg px-2 py-1.5
-                             hover:bg-base-200"
-														>
-															<span
-																class="text-sm {questionItem.correctAnswers.includes(option.id)
-																	? 'text-base-content/80'
-																	: 'text-base-content/50'} tiptap-content">{@html option.text}</span
-															>
-														</div>
-													</li>
-												{/each}
-											</ul>
-										</div>
-									{/if}
-
-									<!-- Explanation -->
-									{#if questionItem.explanation}
-										<div
-											class="text-base-content/80 rounded-lg border border-base-300 bg-base-200/40 p-3 flex-1"
-										>
-											<div
-												class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2"
-											>
-												EXPLANATION
-											</div>
-											<div class="m-0 tiptap-content">{@html questionItem.explanation}</div>
-										</div>
-									{/if}
+							<div class="flex-1 overflow-y-auto p-6">
+								<div class="mb-8">
+									<div class="text-lg font-medium text-base-content leading-relaxed tiptap-content">{@html selectedQuestion.stem}</div>
 								</div>
-							{/if}
+
+								{#if selectedQuestion.options?.length}
+									<div class="mb-6">
+										<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-3">Options</div>
+										<div class="space-y-3">
+											{#each selectedQuestion.options as option, optIndex (option.id)}
+												<label class="label cursor-pointer rounded-full flex items-center border-2 transition-colors p-2.5 {selectedQuestion.correctAnswers.includes(option.id) ? 'border-success bg-success/5' : 'border-base-300 bg-base-200'}">
+													<input
+														type="checkbox"
+														class="checkbox checkbox-primary checkbox-xs ms-3"
+														checked={selectedQuestion.correctAnswers.includes(option.id)}
+														disabled
+													/>
+													<span class="flex-grow text-wrap break-words ml-3 my-2 text-sm">
+														<span class="font-semibold mr-2 select-none">{String.fromCharCode(65 + optIndex)}.</span>
+														<span class="tiptap-content">{@html option.text}</span>
+													</span>
+													{#if selectedQuestion.correctAnswers.includes(option.id)}
+														<span class="text-success text-xs font-medium mr-3 flex-shrink-0">✓ Correct</span>
+													{/if}
+												</label>
+											{/each}
+										</div>
+									</div>
+								{/if}
+
+								{#if selectedQuestion.explanation}
+									<div class="mb-6">
+										<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-3">Explanation</div>
+										<div class="p-4 rounded-lg border border-base-300 bg-base-200/30">
+											<div class="text-sm text-base-content/80 tiptap-content">{@html selectedQuestion.explanation}</div>
+										</div>
+									</div>
+								{/if}
+
+								{#if selectedQuestion.createdBy}
+									<div class="mt-8 pt-4 border-t border-base-200">
+										<div class="flex items-center gap-1.5 text-xs text-base-content/40">
+											<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+											</svg>
+											<span>Created by {selectedQuestion.createdBy.firstName} {selectedQuestion.createdBy.lastName}</span>
+										</div>
+									</div>
+								{/if}
+							</div>
 						</div>
-					</div>
+					{:else if selectedQuestions.size > 0}
+						<div class="h-full flex flex-col items-center justify-center p-8 text-center">
+							<div class="text-4xl mb-4">📋</div>
+							<h3 class="text-lg font-semibold mb-2">{selectedQuestions.size} questions selected</h3>
+							<p class="text-sm text-base-content/60 mb-4">Use the toolbar to move or delete selected questions</p>
+							<div class="flex gap-2">
+								<button class="btn btn-sm btn-ghost gap-1" onclick={openMoveModalForSelected}>
+									<ArrowRightLeft size={14} />
+									Move All
+								</button>
+								<button class="btn btn-sm btn-error gap-1" onclick={openBulkDeleteModal}>
+									<Trash2 size={14} />
+									Delete All
+								</button>
+							</div>
+						</div>
+					{:else}
+						<div class="h-full flex flex-col items-center justify-center p-8 text-center">
+							<div class="text-4xl mb-4">👈</div>
+							<h3 class="text-lg font-semibold mb-2">Select a question</h3>
+							<p class="text-sm text-base-content/60">Click on a question from the list to view its details</p>
+						</div>
+					{/if}
 				</div>
-			{/each}
+			</div>
 		</div>
-	{/if}
+	</div>
 </div>
 
-<!-- Question Modals -->
+{#if selectedQuestion}
+	<!-- Mobile Modal (below md) -->
+	<div class="modal md:hidden" class:modal-open={selectedQuestionId !== null}>
+		<div class="modal-box max-w-2xl max-h-[90vh] p-0">
+			<div class="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-base-300 bg-base-100">
+				<div class="flex items-center gap-2">
+					<span class="text-sm font-medium">Question #{questionList.findIndex(q => q._id === selectedQuestionId) + 1}</span>
+					<div class="flex items-center gap-1">
+						{#if selectedQuestion.aiGenerated}
+							<span class="badge badge-xs badge-info">AI</span>
+						{:else}
+							<span class="badge badge-xs badge-success">User</span>
+						{/if}
+						<span class="badge badge-xs badge-ghost">{convertToDisplayFormat(selectedQuestion.type)}</span>
+						<span class="badge badge-xs {selectedQuestion.status === 'published' ? 'badge-success' : selectedQuestion.status === 'draft' ? 'badge-warning' : 'badge-neutral'}">{selectedQuestion.status}</span>
+					</div>
+				</div>
+				<button class="btn btn-sm btn-ghost btn-circle" onclick={() => (selectedQuestionId = null)}>
+					<X size={18} />
+				</button>
+			</div>
+
+			<div class="p-4 overflow-y-auto">
+				<div class="mb-6">
+					<div class="text-base font-medium text-base-content leading-relaxed tiptap-content">{@html selectedQuestion.stem}</div>
+				</div>
+
+				{#if selectedQuestion.options?.length}
+					<div class="mb-4">
+						<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2">Options</div>
+						<div class="space-y-2">
+							{#each selectedQuestion.options as option, optIndex (option.id)}
+								<label class="label cursor-pointer rounded-full flex items-center border transition-colors p-2 {selectedQuestion.correctAnswers.includes(option.id) ? 'border-success bg-success/5' : 'border-base-300 bg-base-200'}">
+									<input
+										type="checkbox"
+										class="checkbox checkbox-primary checkbox-xs ms-2"
+										checked={selectedQuestion.correctAnswers.includes(option.id)}
+										disabled
+									/>
+									<span class="flex-grow text-wrap break-words ml-2 my-2 text-xs">
+										<span class="font-semibold mr-2 select-none">{String.fromCharCode(65 + optIndex)}.</span>
+										<span class="tiptap-content">{@html option.text}</span>
+									</span>
+									{#if selectedQuestion.correctAnswers.includes(option.id)}
+										<span class="text-success text-xs font-medium mr-2 flex-shrink-0">✓</span>
+									{/if}
+								</label>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
+				{#if selectedQuestion.explanation}
+					<div class="mb-4">
+						<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2">Explanation</div>
+						<div class="p-3 rounded-lg border border-base-300 bg-base-200/30">
+							<div class="text-sm text-base-content/80 tiptap-content">{@html selectedQuestion.explanation}</div>
+						</div>
+					</div>
+				{/if}
+			</div>
+
+			{#if canEdit}
+				<div class="sticky bottom-0 flex items-center justify-end gap-2 p-3 border-t border-base-300 bg-base-100">
+					<button class="btn btn-sm btn-ghost gap-1" onclick={() => editQuestion(selectedQuestion)}>
+						<Pencil size={14} />
+						Edit
+					</button>
+					<button class="btn btn-sm btn-ghost gap-1" onclick={() => openMoveModalForOne(selectedQuestion._id)}>
+						<ArrowRightLeft size={14} />
+						Move
+					</button>
+					<button class="btn btn-sm btn-ghost gap-1" onclick={() => openDuplicateModalForOne(selectedQuestion._id)}>
+						<Copy size={14} />
+						Duplicate
+					</button>
+					<button class="btn btn-sm btn-error gap-1" onclick={() => handleQuestionDelete(selectedQuestion._id)}>
+						<Trash2 size={14} />
+					</button>
+				</div>
+			{/if}
+		</div>
+		<div class="modal-backdrop bg-black/50" onclick={() => (selectedQuestionId = null)}></div>
+	</div>
+{/if}
+
 <AddQuestionModal
 	isAddModalOpen={isAddQuestionModalOpen}
 	closeAddModal={closeAddQuestionModal}
@@ -742,3 +1057,36 @@ async function confirmDuplicateModal(count: number) {
 	onConfirm={confirmDuplicateModal}
 	itemName={duplicateTarget?.stem}
 />
+
+<dialog class="modal" class:modal-open={showUnsavedChangesModal}>
+	<div class="modal-box">
+		<h3 class="font-bold text-lg mb-4">Unsaved Changes</h3>
+		<p class="py-4">You have unsaved changes. Do you want to discard them and continue?</p>
+		<div class="modal-action">
+			<button class="btn btn-ghost" onclick={cancelDiscardChanges}>Cancel</button>
+			<button class="btn btn-error" onclick={confirmDiscardChanges}>Discard Changes</button>
+		</div>
+	</div>
+	<div class="modal-backdrop bg-black/50" onclick={cancelDiscardChanges}></div>
+</dialog>
+
+<style>
+	:global(.tiptap-content-inline) {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+	:global(.tiptap-content-inline p) {
+		margin: 0;
+	}
+	:global(.tiptap-content-inline p:not(:first-child)) {
+		display: none;
+	}
+	:global(.line-clamp-2) {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+</style>

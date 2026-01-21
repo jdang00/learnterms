@@ -120,7 +120,13 @@ export const insertQuestion = authCreateMutation({
 				})
 			)
 		}),
-		updatedAt: v.number()
+		updatedAt: v.number(),
+		createdBy: v.optional(
+			v.object({
+				firstName: v.string(),
+				lastName: v.string()
+			})
+		)
 	},
     handler: async (ctx, args) => {
 		const optionsWithIds = args.options.map((option, index) => ({
@@ -338,6 +344,13 @@ export const createQuestion = authCreateMutation({
 		updatedAt: v.number()
 	},
     handler: async (ctx, args) => {
+		const identity = await ctx.auth.getUserIdentity();
+		const createdBy = identity?.givenName && identity?.familyName
+			? {
+					firstName: identity.givenName,
+					lastName: identity.familyName
+				}
+			: undefined;
         const isMatching = convertQuestionType(args.type) === 'matching';
         if (isMatching) {
             const hasPairs = (args.correctAnswers || []).every((s) => String(s).includes('::'));
@@ -355,7 +368,11 @@ export const createQuestion = authCreateMutation({
 			correctAnswers: args.correctAnswers,
 			metadata: args.metadata
 		});
-		const id = await ctx.db.insert('question', { ...args, searchText });
+		const id = await ctx.db.insert('question', {
+			...args,
+			searchText,
+			...(createdBy && { createdBy })
+		});
 		await adjustModuleQuestionCount(ctx, args.moduleId, 1);
 		return id;
 	}

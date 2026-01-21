@@ -22,16 +22,21 @@
 		classId: classId as Id<'class'>
 	});
 
-	// Query module tags - reactive to editingModule changes
-	// Uses placeholder ID when editingModule is null to avoid errors
-	const _rawModuleTagsQuery = useQuery(api.tags.getTagsForModule, () => ({
-		moduleId: (editingModule?._id ?? '0') as Id<'module'>
-	}));
+	let moduleTagsQuery = $state<{ isLoading: boolean; error: any; data?: any[] }>({
+		isLoading: false,
+		error: null,
+		data: []
+	});
 
-	// Wrapper that returns fallback shape when editingModule is null
-	const moduleTagsQuery = $derived(
-		editingModule ? _rawModuleTagsQuery : { isLoading: false, error: null, data: [] }
-	);
+	$effect(() => {
+		if (editingModule?._id) {
+			moduleTagsQuery = useQuery(api.tags.getTagsForModule, {
+				moduleId: editingModule._id as Id<'module'>
+			});
+		} else {
+			moduleTagsQuery = { isLoading: false, error: null, data: [] };
+		}
+	});
 
 	let lastModuleId = $state<string | null>(null);
 
