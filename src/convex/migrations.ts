@@ -531,3 +531,205 @@ export const backfillUserProgressStats = mutation({
 		};
 	}
 });
+
+/**
+ * Get all cohorts and their progress stats backfill status.
+ * Run via CLI: bunx convex run migrations:getAllCohortsStatus --prod
+ *
+ * Returns information about each cohort and whether it has stats backfilled.
+ */
+export const getAllCohortsStatus = query({
+	args: {},
+	handler: async (ctx) => {
+		const cohorts = await ctx.db.query('cohort').collect();
+		const schools = await ctx.db.query('school').collect();
+		const schoolMap = new Map(schools.map((s) => [s._id, s.name]));
+
+		const cohortStatus = await Promise.all(
+			cohorts.map(async (cohort) => {
+				// Count students
+				const students = await ctx.db
+					.query('users')
+					.withIndex('by_cohortId', (q) => q.eq('cohortId', cohort._id))
+					.filter((q) => q.eq(q.field('deletedAt'), undefined))
+					.collect();
+
+				// Count students with progressStats
+				const studentsWithStats = students.filter((u) => u.progressStats !== undefined);
+
+				// Count classes
+				const classes = await ctx.db
+					.query('class')
+					.withIndex('by_cohortId', (q) => q.eq('cohortId', cohort._id))
+					.collect();
+
+				return {
+					cohortId: cohort._id,
+					cohortName: cohort.name,
+					schoolName: schoolMap.get(cohort.schoolId) ?? 'Unknown',
+					hasCohortStats: !!cohort.stats,
+					totalStudents: students.length,
+					studentsWithProgressStats: studentsWithStats.length,
+					totalClasses: classes.length,
+					needsBackfill:
+						!cohort.stats || studentsWithStats.length < students.length
+				};
+			})
+		);
+
+		return {
+			total: cohorts.length,
+			cohorts: cohortStatus.sort((a, b) => a.cohortName.localeCompare(b.cohortName))
+		};
+	}
+});
+
+/**
+ * Backfill progress stats for ALL cohorts (orchestrator).
+ * Run via CLI: bunx convex run migrations:backfillAllCohortsStats --prod
+ *
+ * This will backfill cohort-level stats for all cohorts.
+ * Note: User-level stats must be backfilled separately using backfillUserProgressStatsForAllCohorts
+ * because it requires pagination.
+ */
+export const backfillAllCohortsStats = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const cohorts = await ctx.db.query('cohort').collect();
+
+		const results = [];
+
+		for (const cohort of cohorts) {
+			// Get all students in cohort
+			const students = await ctx.db
+				.query('users')
+				.withIndex('by_cohortId', (q) => q.eq('cohortId', cohort._id))
+				.filter((q) => q.eq(q.field('deletedAt'), undefined))
+				.collect();
+
+			const totalStudents = students.length;
+
+			// Get all classes in cohort
+			const classes = await ctx.db
+				.query('class')
+				.withIndex('by_cohortId', (q) => q.eq('cohortId', cohort._id))
+				.collect();
+
+			// Count modules and questions
+			let totalModules = 0;
+			let totalQuestions = 0;
+
+			for (const classItem of classes) {
+				const modules = await ctx.db
+					.query('module')
+					.withIndex('by_classId', (q) => q.eq('classId', classItem._id))
+					.collect();
+
+				totalModules += modules.length;
+
+				for (const module of modules) {
+					totalQuestions += module.questionCount ?? 0;
+				}
+			}
+
+			// Calculate average completion
+			let totalProgressSum = 0;
+
+			if (totalQuestions > 0 && totalStudents > 0) {
+				for (const student of students) {
+					if (student.progressStats) {
+						const pct =
+							student.progressStats.totalQuestions > 0
+								? (student.progressStats.questionsInteracted /
+										student.progressStats.totalQuestions) *
+									100
+								: 0;
+						totalProgressSum += pct;
+					} else {
+						// Fallback: compute from userProgress (expensive)
+						let studentInteracted = 0;
+						for (const classItem of classes) {
+							const progressRecords = await ctx.db
+								.query('userProgress')
+								.withIndex('by_user_class', (q) =>
+									q.eq('userId', student._id).eq('classId', classItem._id)
+								)
+								.collect();
+
+							studentInteracted += progressRecords.filter(
+								(r) => r.selectedOptions.length > 0 || r.eliminatedOptions.length > 0
+							).length;
+						}
+						totalProgressSum += totalQuestions > 0 ? (studentInteracted / totalQuestions) * 100 : 0;
+					}
+				}
+			}
+
+			const averageCompletion =
+				totalStudents > 0 ? Math.round(totalProgressSum / totalStudents) : 0;
+
+			// Update cohort with stats
+			await ctx.db.patch(cohort._id, {
+				stats: {
+					totalStudents,
+					totalQuestions,
+					totalModules,
+					averageCompletion,
+					updatedAt: Date.now()
+				}
+			});
+
+			results.push({
+				cohortId: cohort._id,
+				cohortName: cohort.name,
+				stats: {
+					totalStudents,
+					totalQuestions,
+					totalModules,
+					averageCompletion
+				}
+			});
+		}
+
+		return {
+			totalCohorts: cohorts.length,
+			results,
+			message: `Backfilled cohort stats for ${cohorts.length} cohorts`
+		};
+	}
+});
+
+/**
+ * Get the next cohort that needs user progress stats backfilled.
+ * Run via CLI: bunx convex run migrations:getNextCohortForUserBackfill --prod
+ */
+export const getNextCohortForUserBackfill = query({
+	args: {},
+	handler: async (ctx) => {
+		const cohorts = await ctx.db.query('cohort').collect();
+
+		for (const cohort of cohorts) {
+			const students = await ctx.db
+				.query('users')
+				.withIndex('by_cohortId', (q) => q.eq('cohortId', cohort._id))
+				.filter((q) => q.eq(q.field('deletedAt'), undefined))
+				.collect();
+
+			const studentsWithoutStats = students.filter((u) => !u.progressStats);
+
+			if (studentsWithoutStats.length > 0) {
+				return {
+					cohortId: cohort._id,
+					cohortName: cohort.name,
+					totalStudents: students.length,
+					studentsNeedingBackfill: studentsWithoutStats.length
+				};
+			}
+		}
+
+		return {
+			message: 'All cohorts have user progress stats backfilled!',
+			done: true
+		};
+	}
+});
