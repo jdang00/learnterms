@@ -90,6 +90,11 @@ let selectedQuestionId = $state<string | null>(null);
 		return null;
 	});
 
+	const selectedQuestionIndex = $derived.by(() => {
+		if (!selectedQuestionId) return -1;
+		return questionList.findIndex((q) => q._id === selectedQuestionId);
+	});
+
 	function editQuestion(questionItem: QuestionItem) {
 		const isDesktopOrTablet = window.innerWidth >= 768; // md breakpoint
 		if (isDesktopOrTablet) {
@@ -808,7 +813,11 @@ async function confirmDuplicateModal(count: number) {
 						<div class="h-full flex flex-col">
 							<div class="flex items-center justify-between p-4 border-b border-base-300">
 								<div class="flex items-center gap-3">
-									<span class="text-sm font-medium">Question #{questionList.findIndex(q => q._id === selectedQuestionId) + 1}</span>
+									{#if selectedQuestionIndex >= 0}
+										<span class="text-sm font-medium">Question #{selectedQuestionIndex + 1}</span>
+									{:else}
+										<span class="text-sm font-medium">Question #—</span>
+									{/if}
 									<div class="flex items-center gap-1">
 										{#if selectedQuestion.aiGenerated}
 											<span class="badge badge-xs badge-info">AI</span>

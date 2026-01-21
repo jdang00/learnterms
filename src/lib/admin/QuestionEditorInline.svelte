@@ -243,18 +243,132 @@
 		onChange();
 	}
 
-	const questions = useQuery(api.question.getQuestionsByModule, {
-		id: moduleId as Id<'module'>
+	// Fill in the Blank editor state
+	type FitbMode = 'exact' | 'exact_cs' | 'contains' | 'regex';
+	type FitbAnswerRow = {
+		value: string;
+		mode: FitbMode;
+		flags: { ignorePunct: boolean; normalizeWs: boolean };
+	};
+
+	const FITB_MODE_LABELS: Record<FitbMode, string> = {
+		exact: 'Exact (case-insensitive)',
+		exact_cs: 'Exact (case-sensitive)',
+		contains: 'Contains',
+		regex: 'Regex'
+	};
+
+	let fitbAnswers: FitbAnswerRow[] = $state([
+		{ value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }
+	]);
+
+	// Initialize FITB and Matching from editingQuestion
+	$effect(() => {
+		if (editingQuestion && editingQuestion.type && editingQuestion.options) {
+			if (editingQuestion.type === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+				const decoded = editingQuestion.options.map((opt) => {
+					const [before, flagsPart] = (opt.text || '').split(' | flags=');
+					const [modeMaybe, ...rest] = before.split(':');
+					const mode = ['exact', 'exact_cs', 'contains', 'regex'].includes(modeMaybe)
+						? (modeMaybe as FitbMode)
+						: 'exact';
+					const value = rest.join(':');
+					const flags = {
+						ignorePunct: !!flagsPart?.includes('ignore_punct'),
+						normalizeWs: !!flagsPart?.includes('normalize_ws')
+					};
+					return { value, mode, flags } as FitbAnswerRow;
+				});
+				if (decoded.length > 0) {
+					fitbAnswers = decoded;
+				}
+			} else if (editingQuestion.type === QUESTION_TYPES.MATCHING) {
+				const opts = editingQuestion.options;
+				const prompts = opts
+					.filter((o) => o.text && o.text.startsWith('prompt:'))
+					.map((o) => o.text.slice('prompt:'.length));
+				const answers = opts
+					.filter((o) => o.text && o.text.startsWith('answer:'))
+					.map((o) => o.text.slice('answer:'.length));
+				if (prompts.length > 0) matchingPrompts = prompts;
+				if (answers.length > 0) matchingAnswers = answers;
+			}
+		}
 	});
 
+	function addFitbRow() {
+		fitbAnswers = [
+			...fitbAnswers,
+			{ value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }
+		];
+		onChange();
+	}
+
+	function removeFitbRow(index: number) {
+		if (fitbAnswers.length <= 1) return;
+		fitbAnswers = fitbAnswers.filter((_, i) => i !== index);
+		onChange();
+	}
+
+	function updateFitbMode(index: number, mode: FitbMode) {
+		fitbAnswers = fitbAnswers.map((row, i) => (i === index ? { ...row, mode } : row));
+		onChange();
+	}
+
+	function toggleFitbFlag(index: number, flag: 'ignorePunct' | 'normalizeWs') {
+		fitbAnswers = fitbAnswers.map((row, i) =>
+			i === index ? { ...row, flags: { ...row.flags, [flag]: !row.flags[flag] } } : row
+		);
+		onChange();
+	}
+
+	function encodeFitbAnswer(row: FitbAnswerRow): string {
+		const base = `${row.mode}:${row.value}`;
+		const enabledFlags: string[] = [];
+		if (row.flags.ignorePunct) enabledFlags.push('ignore_punct');
+		if (row.flags.normalizeWs) enabledFlags.push('normalize_ws');
+		return enabledFlags.length ? `${base} | flags=${enabledFlags.join(',')}` : base;
+	}
+
+	// Matching editor state
+	let matchingPrompts: string[] = $state(['', '']);
+	let matchingAnswers: string[] = $state(['', '']);
+
+	function addMatchingPrompt() {
+		matchingPrompts = [...matchingPrompts, ''];
+		onChange();
+	}
+
+	function removeMatchingPrompt(index: number) {
+		if (matchingPrompts.length <= 1) return;
+		matchingPrompts = matchingPrompts.filter((_, i) => i !== index);
+		onChange();
+	}
+
+	function addMatchingAnswer() {
+		matchingAnswers = [...matchingAnswers, ''];
+		onChange();
+	}
+
+	function removeMatchingAnswer(index: number) {
+		if (matchingAnswers.length <= 1) return;
+		matchingAnswers = matchingAnswers.filter((_, i) => i !== index);
+		onChange();
+	}
+
+	const questions = useQuery(
+		api.question.getQuestionsByModule,
+		moduleId ? { id: moduleId as Id<'module'> } : 'skip'
+	);
+
 	function addOption() {
-		if (questionType === QUESTION_TYPES.TRUE_FALSE || questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) return;
+		if (questionType === QUESTION_TYPES.TRUE_FALSE || questionType === QUESTION_TYPES.FILL_IN_THE_BLANK || questionType === QUESTION_TYPES.MATCHING) return;
 		options = [...options, { text: '' }];
 		onChange();
 	}
 
 	function removeOption(index: number) {
-		if (questionType === QUESTION_TYPES.TRUE_FALSE) return;
+		if (questionType === QUESTION_TYPES.TRUE_FALSE || questionType === QUESTION_TYPES.FILL_IN_THE_BLANK || questionType === QUESTION_TYPES.MATCHING) return;
 		if (options.length <= 2) return;
 		options = options.filter((_, i) => i !== index);
 		correctAnswers = correctAnswers
@@ -268,6 +382,7 @@
 
 	function toggleCorrectAnswer(index: number) {
 		const indexStr = index.toString();
+		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK || questionType === QUESTION_TYPES.MATCHING) return;
 		if (questionType === QUESTION_TYPES.TRUE_FALSE) {
 			correctAnswers = correctAnswers.includes(indexStr) ? [] : [indexStr];
 		} else if (correctAnswers.includes(indexStr)) {
@@ -282,8 +397,18 @@
 		if (questionType === QUESTION_TYPES.TRUE_FALSE) {
 			options = [{ text: 'True' }, { text: 'False' }];
 			correctAnswers = [];
+		} else if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+			options = [{ text: '' }];
+			fitbAnswers = [
+				{ value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }
+			];
+			correctAnswers = [];
 		} else if (questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
 			options = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
+			correctAnswers = [];
+		} else if (questionType === QUESTION_TYPES.MATCHING) {
+			matchingPrompts = ['', ''];
+			matchingAnswers = ['', ''];
 			correctAnswers = [];
 		}
 	}
@@ -291,9 +416,52 @@
 	async function handleSubmit() {
 		if (!questionStem || !moduleId) return;
 
+		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+			const sanitized = fitbAnswers.filter((r) => r.value.trim());
+			if (sanitized.length < 1) return;
+			const encoded = sanitized.map((row) => ({ text: encodeFitbAnswer(row) }));
+			options = encoded;
+			correctAnswers = encoded.map((_, i) => i.toString());
+		}
+
+		if (questionType === QUESTION_TYPES.MATCHING) {
+			const rawPrompts = matchingPrompts.map((t) => t.trim()).filter((t) => t.length > 0);
+			const rawAnswers = matchingAnswers.map((t) => t.trim()).filter((t) => t.length > 0);
+			if (rawPrompts.length === 0 || rawAnswers.length === 0) return;
+
+			function makeOptionId(stem: string, text: string, index: number): string {
+				const input = `${stem}|${text}|${index}`;
+				let hash = 0;
+				for (let i = 0; i < input.length; i++) {
+					const char = input.charCodeAt(i);
+					hash = (hash << 5) - hash + char;
+					hash = hash & hash;
+				}
+				return Math.abs(hash).toString(36).padStart(8, '0').slice(0, 8);
+			}
+
+			const promptOptions = rawPrompts.map((text, i) => ({
+				id: makeOptionId(questionStem, text, i),
+				text: `prompt:${text}`
+			}));
+			const answerOptions = rawAnswers.map((text, i) => ({
+				id: makeOptionId(questionStem, text, i + rawPrompts.length),
+				text: `answer:${text}`
+			}));
+			const mappings: string[] = [];
+			const n = Math.min(rawPrompts.length, rawAnswers.length);
+			for (let i = 0; i < n; i++) {
+				mappings.push(`${promptOptions[i].id}::${answerOptions[i].id}`);
+			}
+			options = [...promptOptions, ...answerOptions];
+			correctAnswers = mappings;
+		}
+
 		const filledOptions = options.filter((opt) => opt.text.trim());
 		if (questionType === QUESTION_TYPES.TRUE_FALSE && correctAnswers.length !== 1) return;
 		if (questionType === QUESTION_TYPES.MULTIPLE_CHOICE && filledOptions.length < 2) return;
+		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK && filledOptions.length < 1) return;
+		if (questionType === QUESTION_TYPES.MATCHING && correctAnswers.length < 1) return;
 
 		isSubmitting = true;
 
@@ -302,15 +470,6 @@
 
 			// Strip out 'id' field from options - only send 'text'
 			const cleanOptions = filledOptions.map((opt) => ({ text: opt.text }));
-
-			// Get createdBy from Clerk user
-			const createdBy =
-				clerkUser?.firstName && clerkUser?.lastName
-					? {
-							firstName: clerkUser.firstName,
-							lastName: clerkUser.lastName
-						}
-					: undefined;
 
 			if (mode === 'edit' && editingQuestion) {
 				await client.mutation(api.question.updateQuestion, {
@@ -321,14 +480,21 @@
 					options: cleanOptions,
 					correctAnswers,
 					explanation: questionExplanation || '',
-					status: questionStatus.toLowerCase(),
-					createdBy
+					status: questionStatus.toLowerCase()
 				});
 				questionId = editingQuestion._id as Id<'question'>;
 			} else {
 				const nextOrder = questions.data?.length
 					? Math.max(...questions.data.map((q) => q.order || 0)) + 1
 					: 0;
+
+				const createdBy =
+					clerkUser?.firstName && clerkUser?.lastName
+						? {
+								firstName: clerkUser.firstName,
+								lastName: clerkUser.lastName
+							}
+						: undefined;
 
 				questionId = await client.mutation(api.question.insertQuestion, {
 					moduleId: moduleId as Id<'module'>,
@@ -403,20 +569,22 @@
 				Question
 			</label>
 			<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
-				<div class="bg-base-200 border-b border-base-300 p-2 flex gap-1 flex-wrap">
-					{#each menuItems as item (item.name)}
-						<button
-							type="button"
-							class="btn btn-ghost btn-xs gap-1 {item.active() ? 'btn-active' : ''}"
-							onclick={item.command}
-							title={item.name}
-						>
-							<item.icon size={14} />
-						</button>
-					{/each}
-				</div>
-				<EditorContent editor={$editor} class="min-h-12" />
+			<div class="bg-base-200 border-b border-base-300 p-2 flex gap-1 flex-wrap">
+				{#each menuItems as item (item.name)}
+					<button
+						type="button"
+						class="btn btn-ghost btn-xs gap-1 {item.active() ? 'btn-active' : ''}"
+						onclick={item.command}
+						title={item.name}
+					>
+						<item.icon size={14} />
+					</button>
+				{/each}
 			</div>
+			{#if editor}
+				<EditorContent editor={$editor} class="min-h-12" />
+			{/if}
+		</div>
 		</div>
 
 		<div class="flex flex-col gap-2">
@@ -472,13 +640,130 @@
 			</div>
 		</div>
 
-		{#if questionType === QUESTION_TYPES.MULTIPLE_CHOICE || questionType === QUESTION_TYPES.TRUE_FALSE}
-			<div class="card bg-base-200/50 border border-base-300">
-				<div class="card-body p-4">
-					<h6 class="font-semibold mb-3 flex items-center gap-2 text-sm">
-						<ListChecks size={16} class="text-primary/80" />
-						Options & Answers
-					</h6>
+		<div class="card bg-base-200/50 border border-base-300">
+			<div class="card-body p-4">
+				<h6 class="font-semibold mb-3 flex items-center gap-2 text-sm">
+					<ListChecks size={16} class="text-primary/80" />
+					Options & Answers
+				</h6>
+
+				{#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
+					<div class="space-y-4">
+						{#each fitbAnswers as row, index (index)}
+							<div class="p-3 rounded-lg border border-base-300 bg-base-100">
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+									<input
+										type="text"
+										class="input input-bordered w-full"
+										placeholder="Answer text"
+										bind:value={row.value}
+										oninput={onChange}
+									/>
+									<select
+										class="select select-bordered w-full"
+										value={row.mode}
+										onchange={(e) => updateFitbMode(index, e.currentTarget.value as FitbMode)}
+									>
+										{#each Object.entries(FITB_MODE_LABELS) as [mode, label]}
+											<option value={mode}>{label}</option>
+										{/each}
+									</select>
+								</div>
+								<div class="flex items-center gap-4 mt-3">
+									<label class="label cursor-pointer gap-2">
+										<input
+											type="checkbox"
+											class="checkbox checkbox-sm"
+											checked={row.flags.ignorePunct}
+											onchange={() => toggleFitbFlag(index, 'ignorePunct')}
+										/>
+										<span class="label-text text-sm">Ignore punctuation</span>
+									</label>
+									<label class="label cursor-pointer gap-2">
+										<input
+											type="checkbox"
+											class="checkbox checkbox-sm"
+											checked={row.flags.normalizeWs}
+											onchange={() => toggleFitbFlag(index, 'normalizeWs')}
+										/>
+										<span class="label-text text-sm">Normalize whitespace</span>
+									</label>
+									{#if fitbAnswers.length > 1}
+										<button
+											type="button"
+											class="btn btn-ghost btn-xs text-error ml-auto"
+											onclick={() => removeFitbRow(index)}
+										>
+											<X size={14} />
+										</button>
+									{/if}
+								</div>
+							</div>
+						{/each}
+						<button type="button" class="btn btn-sm btn-outline" onclick={addFitbRow}>
+							Add Alternative Answer
+						</button>
+					</div>
+				{:else if questionType === QUESTION_TYPES.MATCHING}
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div>
+							<h6 class="text-sm font-semibold mb-2">Prompts</h6>
+							<div class="space-y-3">
+								{#each matchingPrompts as p, i (i)}
+									<div class="flex items-center gap-2">
+										<input
+											type="text"
+											class="input input-bordered flex-1"
+											placeholder="Prompt {i + 1}"
+											bind:value={matchingPrompts[i]}
+											oninput={onChange}
+										/>
+										{#if matchingPrompts.length > 1}
+											<button
+												type="button"
+												class="btn btn-ghost btn-sm btn-circle"
+												onclick={() => removeMatchingPrompt(i)}
+											>
+												<X size={16} />
+											</button>
+										{/if}
+									</div>
+								{/each}
+								<button type="button" class="btn btn-sm btn-outline" onclick={addMatchingPrompt}>
+									Add Prompt
+								</button>
+							</div>
+						</div>
+						<div>
+							<h6 class="text-sm font-semibold mb-2">Answers</h6>
+							<div class="space-y-3">
+								{#each matchingAnswers as a, i (i)}
+									<div class="flex items-center gap-2">
+										<input
+											type="text"
+											class="input input-bordered flex-1"
+											placeholder="Answer {i + 1}"
+											bind:value={matchingAnswers[i]}
+											oninput={onChange}
+										/>
+										{#if matchingAnswers.length > 1}
+											<button
+												type="button"
+												class="btn btn-ghost btn-sm btn-circle"
+												onclick={() => removeMatchingAnswer(i)}
+											>
+												<X size={16} />
+											</button>
+										{/if}
+									</div>
+								{/each}
+								<button type="button" class="btn btn-sm btn-outline" onclick={addMatchingAnswer}>
+									Add Answer
+								</button>
+							</div>
+						</div>
+					</div>
+				{:else if questionType === QUESTION_TYPES.MULTIPLE_CHOICE || questionType === QUESTION_TYPES.TRUE_FALSE}
 					<div class="space-y-3">
 						{#each options as option, index (index)}
 							<div class="flex items-center gap-3">
@@ -507,9 +792,9 @@
 							<button type="button" class="btn btn-sm btn-outline" onclick={addOption}>Add Option</button>
 						{/if}
 					</div>
-				</div>
+				{/if}
 			</div>
-		{/if}
+		</div>
 
 		<div class="card bg-base-200/50 border border-base-300">
 			<div class="card-body p-4">
@@ -518,20 +803,22 @@
 					Explanation
 				</h6>
 				<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
-					<div class="bg-base-200 border-b border-base-300 p-2 flex gap-1">
-						{#each expMenuItems as item (item.name)}
-							<button
-								type="button"
-								class="btn btn-ghost btn-xs gap-1 {item.active() ? 'btn-active' : ''}"
-								onclick={item.command}
-								title={item.name}
-							>
-								<item.icon size={12} />
-							</button>
-						{/each}
-					</div>
-					<EditorContent editor={$explanationEditor} class="min-h-16" />
+				<div class="bg-base-200 border-b border-base-300 p-2 flex gap-1">
+					{#each expMenuItems as item (item.name)}
+						<button
+							type="button"
+							class="btn btn-ghost btn-xs gap-1 {item.active() ? 'btn-active' : ''}"
+							onclick={item.command}
+							title={item.name}
+						>
+							<item.icon size={12} />
+						</button>
+					{/each}
 				</div>
+				{#if explanationEditor}
+					<EditorContent editor={$explanationEditor} class="min-h-16" />
+				{/if}
+			</div>
 			</div>
 		</div>
 

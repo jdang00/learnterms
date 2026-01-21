@@ -241,13 +241,7 @@ export const updateQuestion = authCreateMutation({
 		options: v.array(v.object({ text: v.string() })),
 		correctAnswers: v.array(v.string()),
 		explanation: v.string(),
-		status: v.string(),
-		createdBy: v.optional(
-			v.object({
-				firstName: v.string(),
-				lastName: v.string()
-			})
-		)
+		status: v.string()
 	},
     handler: async (ctx, args) => {
 		const questionToUpdate = await ctx.db.get(args.questionId);
@@ -320,8 +314,7 @@ export const updateQuestion = authCreateMutation({
 			explanation: args.explanation,
 			status: args.status.toLowerCase(),
 			updatedAt: Date.now(),
-			searchText,
-			...(args.createdBy && { createdBy: args.createdBy })
+			searchText
 		});
 
 		return { updated: true };
@@ -348,15 +341,16 @@ export const createQuestion = authCreateMutation({
 				})
 			)
 		}),
-		updatedAt: v.number(),
-		createdBy: v.optional(
-			v.object({
-				firstName: v.string(),
-				lastName: v.string()
-			})
-		)
+		updatedAt: v.number()
 	},
     handler: async (ctx, args) => {
+		const identity = await ctx.auth.getUserIdentity();
+		const createdBy = identity?.givenName && identity?.familyName
+			? {
+					firstName: identity.givenName,
+					lastName: identity.familyName
+				}
+			: undefined;
         const isMatching = convertQuestionType(args.type) === 'matching';
         if (isMatching) {
             const hasPairs = (args.correctAnswers || []).every((s) => String(s).includes('::'));
@@ -374,7 +368,11 @@ export const createQuestion = authCreateMutation({
 			correctAnswers: args.correctAnswers,
 			metadata: args.metadata
 		});
-		const id = await ctx.db.insert('question', { ...args, searchText });
+		const id = await ctx.db.insert('question', {
+			...args,
+			searchText,
+			...(createdBy && { createdBy })
+		});
 		await adjustModuleQuestionCount(ctx, args.moduleId, 1);
 		return id;
 	}

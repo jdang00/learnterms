@@ -672,31 +672,21 @@
 				? Math.max(...questions.data.map((q) => q.order || 0)) + 1
 				: 0;
 
-			isSubmitting = true;
-			try {
-				// Get createdBy from Clerk user
-				const createdBy =
-					clerkUser?.firstName && clerkUser?.lastName
-						? {
-								firstName: clerkUser.firstName,
-								lastName: clerkUser.lastName
-							}
-						: undefined;
-
-				const questionId = await client.mutation(api.question.createQuestion, {
-					moduleId: moduleId as Id<'module'>,
-					type: QUESTION_TYPES.MATCHING,
-					stem: questionStem,
-					options: [...promptOptions, ...answerOptions],
-					correctAnswers: mappings,
-					explanation: questionExplanation || '',
-					aiGenerated: false,
-					status: questionStatus.toLowerCase(),
-					order: nextOrder,
-					metadata: {},
-					updatedAt: Date.now(),
-					createdBy
-				});
+		isSubmitting = true;
+		try {
+			const questionId = await client.mutation(api.question.createQuestion, {
+				moduleId: moduleId as Id<'module'>,
+				type: QUESTION_TYPES.MATCHING,
+				stem: questionStem,
+				options: [...promptOptions, ...answerOptions],
+				correctAnswers: mappings,
+				explanation: questionExplanation || '',
+				aiGenerated: false,
+				status: questionStatus.toLowerCase(),
+				order: nextOrder,
+				metadata: {},
+				updatedAt: Date.now()
+			});
 
 				if (questionId && queuedMedia.length > 0) {
 					for (let i = 0; i < queuedMedia.length; i++) {
@@ -765,34 +755,33 @@
 				? Math.max(...questions.data.map((q) => q.order || 0)) + 1
 				: 0;
 
-			const filteredCorrectAnswers = correctAnswers
-				.map((index) => parseInt(index))
-				.filter((index) => index < filledOptions.length)
-				.map((index) => index.toString());
+		const filteredCorrectAnswers = correctAnswers
+			.map((index) => parseInt(index))
+			.filter((index) => index < filledOptions.length)
+			.map((index) => index.toString());
 
-			// Get createdBy from Clerk user
-			const createdBy =
-				clerkUser?.firstName && clerkUser?.lastName
-					? {
-							firstName: clerkUser.firstName,
-							lastName: clerkUser.lastName
-						}
-					: undefined;
+		const createdBy =
+			clerkUser?.firstName && clerkUser?.lastName
+				? {
+						firstName: clerkUser.firstName,
+						lastName: clerkUser.lastName
+					}
+				: undefined;
 
-			const questionId = await client.mutation(api.question.insertQuestion, {
-				moduleId: moduleId as Id<'module'>,
-				type: questionType,
-				stem: questionStem,
-				options: filledOptions,
-				correctAnswers: filteredCorrectAnswers,
-				explanation: questionExplanation || '',
-				aiGenerated: false,
-				status: questionStatus.toLowerCase(),
-				order: nextOrder,
-				metadata: {},
-				updatedAt: Date.now(),
-				createdBy
-			});
+		const questionId = await client.mutation(api.question.insertQuestion, {
+			moduleId: moduleId as Id<'module'>,
+			type: questionType,
+			stem: questionStem,
+			options: filledOptions,
+			correctAnswers: filteredCorrectAnswers,
+			explanation: questionExplanation || '',
+			aiGenerated: false,
+			status: questionStatus.toLowerCase(),
+			order: nextOrder,
+			metadata: {},
+			updatedAt: Date.now(),
+			createdBy
+		});
 
 			if (questionId && queuedMedia.length > 0) {
 				for (let i = 0; i < queuedMedia.length; i++) {
