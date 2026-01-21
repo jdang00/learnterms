@@ -10,11 +10,27 @@
 		BookOpen,
 		Flag,
 		TrendingUp,
-		ExternalLink
+		ExternalLink,
+		ChevronRight
 	} from 'lucide-svelte';
+	import StudentDetailModal from '$lib/admin/StudentDetailModal.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
+
+	// Modal state
+	let isStudentModalOpen = $state(false);
+	let selectedStudent = $state<(typeof filteredStudents)[number] | null>(null);
+
+	function openStudentModal(student: (typeof filteredStudents)[number]) {
+		selectedStudent = student;
+		isStudentModalOpen = true;
+	}
+
+	function closeStudentModal() {
+		isStudentModalOpen = false;
+		selectedStudent = null;
+	}
 
 	// Real queries - students and stats
 	const cohortStats = userData?.cohortId
@@ -288,25 +304,28 @@
 						<thead>
 							<tr>
 								<th>Student</th>
-								<th>Email</th>
 								<th>Last Sign-In</th>
 								<th>Joined</th>
+								<th></th>
 							</tr>
 						</thead>
 						<tbody>
 							{#each filteredStudents as student (student._id)}
-								<tr class="hover">
+								<tr
+									class="hover cursor-pointer"
+									onclick={() => openStudentModal(student)}
+								>
 									<td>
 										<div class="flex items-center gap-3">
 											{#if student.imageUrl}
 												<div class="avatar">
-													<div class="w-12 h-12 rounded-full">
+													<div class="w-10 h-10 rounded-full">
 														<img src={student.imageUrl} alt={student.name} />
 													</div>
 												</div>
 											{:else}
 												<div class="avatar placeholder">
-													<div class="bg-neutral text-neutral-content w-12 rounded-full">
+													<div class="bg-neutral text-neutral-content w-10 rounded-full">
 														<span class="text-sm">
 															{student.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
 														</span>
@@ -315,18 +334,11 @@
 											{/if}
 											<div>
 												<div class="font-medium">{student.name}</div>
-												{#if student.username}
-													<div class="text-sm text-base-content/60">@{student.username}</div>
+												{#if student.email}
+													<div class="text-xs text-base-content/60">{student.email}</div>
 												{/if}
 											</div>
 										</div>
-									</td>
-									<td>
-										{#if student.email}
-											<span class="text-sm">{student.email}</span>
-										{:else}
-											<span class="text-sm text-base-content/40">—</span>
-										{/if}
 									</td>
 									<td>
 										<div class="text-sm">
@@ -338,6 +350,9 @@
 											{student.createdAt ? new Date(student.createdAt).toLocaleDateString() : '—'}
 										</div>
 									</td>
+									<td>
+										<ChevronRight size={16} class="text-base-content/40" />
+									</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -347,3 +362,13 @@
 		</div>
 	</div>
 </div>
+
+<!-- Student Detail Modal -->
+{#if userData?.cohortId}
+	<StudentDetailModal
+		isOpen={isStudentModalOpen}
+		onClose={closeStudentModal}
+		student={selectedStudent}
+		cohortId={userData.cohortId as Id<'cohort'>}
+	/>
+{/if}

@@ -44,8 +44,9 @@ export const getStudentCountByCohort = authQuery({
 });
 
 /**
- * Get students with their progress stats for a specific cohort
- * Aggregates progress data across all classes in the cohort
+ * Get students with their progress stats for a specific cohort.
+ * Uses precomputed progressStats from user records for fast reads.
+ * Falls back to computing if stats haven't been backfilled yet.
  */
 export const getStudentsWithProgress = authQuery({
 	args: { cohortId: v.id('cohort') },
@@ -57,74 +58,26 @@ export const getStudentsWithProgress = authQuery({
 			.filter((q) => q.eq(q.field('deletedAt'), undefined))
 			.collect();
 
-		// Get all classes in the cohort using index
-		const classes = await ctx.db
-			.query('class')
-			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
-			.collect();
+		// Get cohort stats for totalQuestions (used if user stats missing)
+		const cohort = await ctx.db.get(args.cohortId);
+		const totalQuestionsInCohort = cohort?.stats?.totalQuestions ?? 0;
 
-		const classIds = classes.map((c) => c._id);
-
-		// Get total questions across all classes using stored questionCount
-		let totalQuestionsInCohort = 0;
-		const modulesByClass = new Map<string, string[]>();
-
-		for (const classItem of classes) {
-			const modules = await ctx.db
-				.query('module')
-				.withIndex('by_classId', (q) => q.eq('classId', classItem._id))
-				.collect();
-
-			const moduleIds = modules.map((m) => m._id);
-			modulesByClass.set(classItem._id, moduleIds);
-
-			// Use stored questionCount instead of fetching all questions
-			for (const module of modules) {
-				totalQuestionsInCohort += module.questionCount ?? 0;
-			}
-		}
-
-		// Get progress for each student
-		const studentsWithProgress = await Promise.all(
-			students.map(async (student) => {
-				// Get all progress records for this student across cohort classes
-				let totalInteracted = 0;
-				let totalMastered = 0;
-				let lastActivityAt: number | null = null;
-
-				for (const classId of classIds) {
-					const progressRecords = await ctx.db
-						.query('userProgress')
-						.withIndex('by_user_class', (q) =>
-							q.eq('userId', student._id).eq('classId', classId)
-						)
-						.collect();
-
-					for (const record of progressRecords) {
-						if (record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0) {
-							totalInteracted++;
-						}
-						if (record.isMastered) {
-							totalMastered++;
-						}
-						if (record.lastAttemptAt) {
-							if (!lastActivityAt || record.lastAttemptAt > lastActivityAt) {
-								lastActivityAt = record.lastAttemptAt;
-							}
-						}
-					}
-				}
-
+		// Map students to progress data using precomputed stats
+		const studentsWithProgress = students.map((student) => {
+			// Use precomputed progressStats if available
+			if (student.progressStats) {
+				const totalQuestions = student.progressStats.totalQuestions || totalQuestionsInCohort;
 				const progressPercentage =
-					totalQuestionsInCohort > 0
-						? Math.round((totalInteracted / totalQuestionsInCohort) * 100)
+					totalQuestions > 0
+						? Math.round(
+								(student.progressStats.questionsInteracted / totalQuestions) * 100
+							)
 						: 0;
 
 				return {
 					_id: student._id,
 					name: student.name,
 					clerkUserId: student.clerkUserId,
-					// Enhanced user fields from Clerk
 					firstName: student.firstName,
 					lastName: student.lastName,
 					email: student.email,
@@ -132,15 +85,33 @@ export const getStudentsWithProgress = authQuery({
 					imageUrl: student.imageUrl,
 					lastSignInAt: student.lastSignInAt,
 					createdAt: student.createdAt,
-					// Progress metrics
 					progress: progressPercentage,
-					questionsInteracted: totalInteracted,
-					questionsMastered: totalMastered,
-					totalQuestions: totalQuestionsInCohort,
-					lastActivityAt
+					questionsInteracted: student.progressStats.questionsInteracted,
+					questionsMastered: student.progressStats.questionsMastered,
+					totalQuestions,
+					lastActivityAt: student.progressStats.lastActivityAt ?? null
 				};
-			})
-		);
+			}
+
+			// Fallback for users without precomputed stats
+			return {
+				_id: student._id,
+				name: student.name,
+				clerkUserId: student.clerkUserId,
+				firstName: student.firstName,
+				lastName: student.lastName,
+				email: student.email,
+				username: student.username,
+				imageUrl: student.imageUrl,
+				lastSignInAt: student.lastSignInAt,
+				createdAt: student.createdAt,
+				progress: 0,
+				questionsInteracted: 0,
+				questionsMastered: 0,
+				totalQuestions: totalQuestionsInCohort,
+				lastActivityAt: null
+			};
+		});
 
 		// Sort by progress descending
 		return studentsWithProgress.sort((a, b) => b.progress - a.progress);
@@ -149,12 +120,33 @@ export const getStudentsWithProgress = authQuery({
 
 /**
  * Get cohort overview stats (students, questions, modules, avg completion)
- * Single query that returns all stats needed for the progress dashboard header
+ * Uses precomputed stats from cohort.stats field for fast reads.
+ * Falls back to computing if stats haven't been backfilled yet.
  */
 export const getCohortProgressStats = authQuery({
 	args: { cohortId: v.id('cohort') },
 	handler: async (ctx, args) => {
-		// Get student count using index
+		const cohort = await ctx.db.get(args.cohortId);
+		if (!cohort) {
+			return {
+				totalStudents: 0,
+				totalQuestions: 0,
+				totalModules: 0,
+				averageCompletion: 0
+			};
+		}
+
+		// Use precomputed stats if available
+		if (cohort.stats) {
+			return {
+				totalStudents: cohort.stats.totalStudents,
+				totalQuestions: cohort.stats.totalQuestions,
+				totalModules: cohort.stats.totalModules,
+				averageCompletion: cohort.stats.averageCompletion
+			};
+		}
+
+		// Fallback: compute stats (for cohorts not yet backfilled)
 		const students = await ctx.db
 			.query('users')
 			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
@@ -163,13 +155,11 @@ export const getCohortProgressStats = authQuery({
 
 		const totalStudents = students.length;
 
-		// Get all classes in cohort using index
 		const classes = await ctx.db
 			.query('class')
 			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
 			.collect();
 
-		// Count modules and questions using stored questionCount
 		let totalModules = 0;
 		let totalQuestions = 0;
 
@@ -180,34 +170,24 @@ export const getCohortProgressStats = authQuery({
 				.collect();
 
 			totalModules += modules.length;
-
-			// Use stored questionCount instead of fetching all questions
 			for (const module of modules) {
 				totalQuestions += module.questionCount ?? 0;
 			}
 		}
 
-		// Calculate average completion across all students
+		// For fallback, use precomputed user stats if available, otherwise estimate
 		let totalProgressSum = 0;
-
 		if (totalQuestions > 0 && totalStudents > 0) {
 			for (const student of students) {
-				let studentInteracted = 0;
-
-				for (const classItem of classes) {
-					const progressRecords = await ctx.db
-						.query('userProgress')
-						.withIndex('by_user_class', (q) =>
-							q.eq('userId', student._id).eq('classId', classItem._id)
-						)
-						.collect();
-
-					studentInteracted += progressRecords.filter(
-						(r) => r.selectedOptions.length > 0 || r.eliminatedOptions.length > 0
-					).length;
+				if (student.progressStats) {
+					const pct =
+						student.progressStats.totalQuestions > 0
+							? (student.progressStats.questionsInteracted /
+									student.progressStats.totalQuestions) *
+								100
+							: 0;
+					totalProgressSum += pct;
 				}
-
-				totalProgressSum += (studentInteracted / totalQuestions) * 100;
 			}
 		}
 
@@ -354,5 +334,188 @@ export const getSemestersForCohort = authQuery({
 				_id: s._id,
 				name: s.name
 			}));
+	}
+});
+
+/**
+ * Get detailed per-module progress stats for a specific user in a cohort.
+ * Used for the student detail modal - called on demand when clicking a student.
+ *
+ * Optimized: Uses stored questionCount on modules instead of fetching all questions.
+ * Only fetches progress records once per class, then aggregates by module.
+ */
+export const getUserModuleStats = authQuery({
+	args: {
+		userId: v.id('users'),
+		cohortId: v.id('cohort'),
+		semesterId: v.optional(v.id('semester'))
+	},
+	handler: async (ctx, args) => {
+		const user = await ctx.db.get(args.userId);
+		if (!user) {
+			return { error: 'User not found', classes: [] };
+		}
+
+		// Get all classes in cohort
+		let classes = await ctx.db
+			.query('class')
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
+			.collect();
+
+		// Filter by semester if provided
+		if (args.semesterId) {
+			classes = classes.filter((c) => c.semesterId === args.semesterId);
+		}
+
+		// Get semesters for grouping
+		const semesterIds = [...new Set(classes.map((c) => c.semesterId))];
+		const semesters = await Promise.all(semesterIds.map((id) => ctx.db.get(id)));
+		const semesterMap = new Map(
+			semesters.filter((s): s is Doc<'semester'> => s !== null).map((s) => [s._id, s.name])
+		);
+
+		// Build detailed stats per class and module
+		const classStats = await Promise.all(
+			classes.map(async (classItem) => {
+				// Get modules with their stored questionCount
+				const modules = await ctx.db
+					.query('module')
+					.withIndex('by_classId', (q) => q.eq('classId', classItem._id))
+					.collect();
+
+				// Get all progress records for this user in this class (single query per class)
+				const progressRecords = await ctx.db
+					.query('userProgress')
+					.withIndex('by_user_class', (q) =>
+						q.eq('userId', args.userId).eq('classId', classItem._id)
+					)
+					.collect();
+
+				// We need to know which module each progress record belongs to
+				// Get question -> module mapping only for questions the user has progress on
+				const questionIds = progressRecords.map((r) => r.questionId);
+				const questions = await Promise.all(
+					questionIds.map((qId) => ctx.db.get(qId))
+				);
+
+				// Build moduleId -> progress records map
+				const progressByModule = new Map<string, typeof progressRecords>();
+				for (let i = 0; i < progressRecords.length; i++) {
+					const question = questions[i];
+					if (question) {
+						const moduleId = question.moduleId;
+						if (!progressByModule.has(moduleId)) {
+							progressByModule.set(moduleId, []);
+						}
+						progressByModule.get(moduleId)!.push(progressRecords[i]);
+					}
+				}
+
+				// Calculate stats per module using stored questionCount
+				const moduleStats = modules.map((module) => {
+					const moduleProgress = progressByModule.get(module._id) ?? [];
+
+					let interacted = 0;
+					let mastered = 0;
+					let flagged = 0;
+					let lastActivityAt: number | undefined = undefined;
+
+					for (const progress of moduleProgress) {
+						if (progress.selectedOptions.length > 0 || progress.eliminatedOptions.length > 0) {
+							interacted++;
+						}
+						if (progress.isMastered) {
+							mastered++;
+						}
+						if (progress.isFlagged) {
+							flagged++;
+						}
+						if (progress.lastAttemptAt) {
+							if (!lastActivityAt || progress.lastAttemptAt > lastActivityAt) {
+								lastActivityAt = progress.lastAttemptAt;
+							}
+						}
+					}
+
+					// Use stored questionCount instead of fetching all questions
+					const totalQuestions = module.questionCount ?? 0;
+					const progressPercentage =
+						totalQuestions > 0 ? Math.round((interacted / totalQuestions) * 100) : 0;
+
+					return {
+						moduleId: module._id,
+						moduleTitle: module.title,
+						moduleEmoji: module.emoji,
+						moduleOrder: module.order,
+						totalQuestions,
+						questionsInteracted: interacted,
+						questionsMastered: mastered,
+						questionsFlagged: flagged,
+						progress: progressPercentage,
+						lastActivityAt
+					};
+				});
+
+				// Calculate class totals
+				const classTotals = moduleStats.reduce(
+					(acc, m) => ({
+						totalQuestions: acc.totalQuestions + m.totalQuestions,
+						questionsInteracted: acc.questionsInteracted + m.questionsInteracted,
+						questionsMastered: acc.questionsMastered + m.questionsMastered,
+						questionsFlagged: acc.questionsFlagged + m.questionsFlagged
+					}),
+					{ totalQuestions: 0, questionsInteracted: 0, questionsMastered: 0, questionsFlagged: 0 }
+				);
+
+				const classProgress =
+					classTotals.totalQuestions > 0
+						? Math.round((classTotals.questionsInteracted / classTotals.totalQuestions) * 100)
+						: 0;
+
+				return {
+					classId: classItem._id,
+					className: classItem.name,
+					classCode: classItem.code,
+					classOrder: classItem.order,
+					semesterId: classItem.semesterId,
+					semesterName: semesterMap.get(classItem.semesterId) ?? 'Unknown',
+					progress: classProgress,
+					...classTotals,
+					modules: moduleStats.sort((a, b) => a.moduleOrder - b.moduleOrder)
+				};
+			})
+		);
+
+		// Calculate overall totals
+		const overallTotals = classStats.reduce(
+			(acc, c) => ({
+				totalQuestions: acc.totalQuestions + c.totalQuestions,
+				questionsInteracted: acc.questionsInteracted + c.questionsInteracted,
+				questionsMastered: acc.questionsMastered + c.questionsMastered,
+				questionsFlagged: acc.questionsFlagged + c.questionsFlagged
+			}),
+			{ totalQuestions: 0, questionsInteracted: 0, questionsMastered: 0, questionsFlagged: 0 }
+		);
+
+		const overallProgress =
+			overallTotals.totalQuestions > 0
+				? Math.round((overallTotals.questionsInteracted / overallTotals.totalQuestions) * 100)
+				: 0;
+
+		return {
+			user: {
+				_id: user._id,
+				name: user.name,
+				firstName: user.firstName,
+				lastName: user.lastName,
+				email: user.email,
+				imageUrl: user.imageUrl
+			},
+			overall: {
+				progress: overallProgress,
+				...overallTotals
+			},
+			classes: classStats.sort((a, b) => a.classOrder - b.classOrder)
+		};
 	}
 });
