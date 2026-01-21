@@ -35,6 +35,10 @@
 	import type { Readable } from 'svelte/store';
 	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
 	import { getEditorExtensions } from '../config/tiptap';
+	import { useClerkContext } from 'svelte-clerk';
+
+	const clerk = useClerkContext();
+	const clerkUser = $derived(clerk.user);
 
 	let editor = $state() as Readable<Editor>;
 	let explanationEditor = $state() as Readable<Editor>;
@@ -670,6 +674,15 @@
 
 			isSubmitting = true;
 			try {
+				// Get createdBy from Clerk user
+				const createdBy =
+					clerkUser?.firstName && clerkUser?.lastName
+						? {
+								firstName: clerkUser.firstName,
+								lastName: clerkUser.lastName
+							}
+						: undefined;
+
 				const questionId = await client.mutation(api.question.createQuestion, {
 					moduleId: moduleId as Id<'module'>,
 					type: QUESTION_TYPES.MATCHING,
@@ -681,7 +694,8 @@
 					status: questionStatus.toLowerCase(),
 					order: nextOrder,
 					metadata: {},
-					updatedAt: Date.now()
+					updatedAt: Date.now(),
+					createdBy
 				});
 
 				if (questionId && queuedMedia.length > 0) {
@@ -756,6 +770,15 @@
 				.filter((index) => index < filledOptions.length)
 				.map((index) => index.toString());
 
+			// Get createdBy from Clerk user
+			const createdBy =
+				clerkUser?.firstName && clerkUser?.lastName
+					? {
+							firstName: clerkUser.firstName,
+							lastName: clerkUser.lastName
+						}
+					: undefined;
+
 			const questionId = await client.mutation(api.question.insertQuestion, {
 				moduleId: moduleId as Id<'module'>,
 				type: questionType,
@@ -767,7 +790,8 @@
 				status: questionStatus.toLowerCase(),
 				order: nextOrder,
 				metadata: {},
-				updatedAt: Date.now()
+				updatedAt: Date.now(),
+				createdBy
 			});
 
 			if (questionId && queuedMedia.length > 0) {

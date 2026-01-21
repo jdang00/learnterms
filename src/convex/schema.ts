@@ -112,6 +112,12 @@ export default defineSchema({
 		correctAnswers: v.array(v.string()),
 		explanation: v.optional(v.string()),
 		aiGenerated: v.boolean(),
+		createdBy: v.optional(
+			v.object({
+				firstName: v.string(),
+				lastName: v.string()
+			})
+		),
 		status: v.string(),
 		searchText: v.optional(v.string()),
 		flagCount: v.optional(v.number())

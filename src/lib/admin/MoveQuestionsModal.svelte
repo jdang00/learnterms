@@ -35,7 +35,7 @@
     () =>
       userDataQuery.data?.cohortId
         ? { id: userDataQuery.data.cohortId as Id<'cohort'> }
-        : 'skip'
+        : undefined
   );
 
   let selectedClassId: Id<'class'> | null = $state(null);

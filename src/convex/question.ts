@@ -120,7 +120,13 @@ export const insertQuestion = authCreateMutation({
 				})
 			)
 		}),
-		updatedAt: v.number()
+		updatedAt: v.number(),
+		createdBy: v.optional(
+			v.object({
+				firstName: v.string(),
+				lastName: v.string()
+			})
+		)
 	},
     handler: async (ctx, args) => {
 		const optionsWithIds = args.options.map((option, index) => ({
@@ -235,7 +241,13 @@ export const updateQuestion = authCreateMutation({
 		options: v.array(v.object({ text: v.string() })),
 		correctAnswers: v.array(v.string()),
 		explanation: v.string(),
-		status: v.string()
+		status: v.string(),
+		createdBy: v.optional(
+			v.object({
+				firstName: v.string(),
+				lastName: v.string()
+			})
+		)
 	},
     handler: async (ctx, args) => {
 		const questionToUpdate = await ctx.db.get(args.questionId);
@@ -308,7 +320,8 @@ export const updateQuestion = authCreateMutation({
 			explanation: args.explanation,
 			status: args.status.toLowerCase(),
 			updatedAt: Date.now(),
-			searchText
+			searchText,
+			...(args.createdBy && { createdBy: args.createdBy })
 		});
 
 		return { updated: true };
@@ -335,7 +348,13 @@ export const createQuestion = authCreateMutation({
 				})
 			)
 		}),
-		updatedAt: v.number()
+		updatedAt: v.number(),
+		createdBy: v.optional(
+			v.object({
+				firstName: v.string(),
+				lastName: v.string()
+			})
+		)
 	},
     handler: async (ctx, args) => {
         const isMatching = convertQuestionType(args.type) === 'matching';
