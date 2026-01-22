@@ -26,30 +26,23 @@
 	let lastMouseY = $state(0);
 	let showCompactAttachments = $state(false);
 
-	let media: {
-		data: Array<{
+	// useQuery at top level with skip pattern
+	const mediaQuery = useQuery(
+		(api as any).questionMedia.getByQuestionId,
+		() => currentlySelected?._id ? { questionId: currentlySelected._id as Id<'question'> } : 'skip'
+	);
+
+	// Derive media from the query result
+	const media = $derived({
+		data: (mediaQuery.data ?? []) as Array<{
 			_id: string;
 			url: string;
 			altText: string;
 			caption?: string;
 			showOnSolution?: boolean;
-		}>;
-		isLoading: boolean;
-		error: any;
-	} = $state({
-		data: [],
-		isLoading: false,
-		error: null
-	});
-
-	$effect(() => {
-		const qid = currentlySelected?._id as Id<'question'> | undefined;
-		if (qid) {
-			const q = useQuery((api as any).questionMedia.getByQuestionId, { questionId: qid });
-			media = q as unknown as typeof media;
-		} else {
-			media = { data: [], isLoading: false, error: null } as typeof media;
-		}
+		}>,
+		isLoading: mediaQuery.isLoading,
+		error: mediaQuery.error
 	});
 
 	async function handleReset() {

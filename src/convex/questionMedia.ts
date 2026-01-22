@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { authQuery, authCreateMutation } from './authQueries';
+import type { Id } from './_generated/dataModel';
 
 export const getByQuestionId = authQuery({
   args: {
@@ -12,6 +13,30 @@ export const getByQuestionId = authQuery({
       .filter((q) => q.eq(q.field('deletedAt'), undefined))
       .collect();
     return media.sort((a, b) => a.order - b.order);
+  }
+});
+
+export const getByQuestionIds = authQuery({
+  args: {
+    questionIds: v.array(v.id('question'))
+  },
+  handler: async ({ db }, args) => {
+    // Efficient batched query - Convex parallelizes these automatically
+    // Returns only minimal data (questionId + boolean flag)
+    const results = await Promise.all(
+      args.questionIds.map(async (questionId) => {
+        const hasMedia = await db
+          .query('questionMedia')
+          .withIndex('by_questionId', (q) => q.eq('questionId', questionId))
+          .filter((q) => q.eq(q.field('deletedAt'), undefined))
+          .first();
+        
+        return hasMedia ? { questionId, hasMedia: true } : null;
+      })
+    );
+    
+    // Return only questions that have media (filter out nulls)
+    return results.filter((r): r is { questionId: Id<'question'>; hasMedia: true } => r !== null);
   }
 });
 

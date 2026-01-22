@@ -17,12 +17,11 @@
 	let validationErrors: Record<string, string> = $state({});
 	let submitError: string = $state('');
 
-	// Get current classes to calculate next order number
-	const classes = userData?.cohortId
-		? useQuery(api.class.getUserClasses, {
-				id: userData.cohortId as Id<'cohort'>
-			})
-		: { data: undefined, isLoading: false, error: null };
+	// Get current classes to calculate next order number - useQuery with skip pattern
+	const classes = useQuery(
+		api.class.getUserClasses,
+		() => userData?.cohortId ? { id: userData.cohortId as Id<'cohort'> } : 'skip'
+	);
 
 	$effect(() => {
 		if (semesters.data) {

@@ -182,10 +182,85 @@
 		url: string;
 		key?: string;
 		name?: string;
+		caption?: string;
 		sizeBytes?: number;
 		mimeType?: string;
 		showOnSolution?: boolean;
 	}> = $state([]);
+
+	// Existing media from database (for edit mode)
+	let existingMedia: Array<{
+		_id: string;
+		url: string;
+		altText: string;
+		caption?: string;
+		order: number;
+		showOnSolution?: boolean;
+	}> = $state([]);
+
+	// Fetch existing media when in edit mode
+	async function refreshMedia() {
+		if (!editingQuestion) return;
+		try {
+			const r = await client.query((api as any).questionMedia.getByQuestionId, {
+				questionId: editingQuestion._id as Id<'question'>
+			});
+			existingMedia = (r || []).sort((a: any, b: any) => a.order - b.order);
+		} catch (e) {
+			console.error('Failed to fetch media:', e);
+		}
+	}
+
+	// Load existing media when editing
+	$effect(() => {
+		if (mode === 'edit' && editingQuestion) {
+			void refreshMedia();
+		} else {
+			existingMedia = [];
+		}
+	});
+
+	// Remove existing media from database
+	async function removeExistingMedia(id: string) {
+		try {
+			const res = await client.mutation((api as any).questionMedia.softDelete, { mediaId: id });
+			// Try to delete from uploadthing
+			try {
+				const key = (res as any)?.fileKey;
+				if (typeof key === 'string' && key.length > 0) {
+					await fetch('/api/processdoc', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ pdfUrl: undefined, fileKey: key })
+					});
+				}
+			} catch {}
+			await refreshMedia();
+			onChange();
+		} catch (e) {
+			mediaError = e instanceof Error ? e.message : 'Failed to remove media';
+		}
+	}
+
+	// Update existing media metadata
+	async function updateExistingMediaMeta(id: string, altText: string, caption: string, showOnSolution?: boolean) {
+		try {
+			await client.mutation((api as any).questionMedia.update, {
+				mediaId: id,
+				altText,
+				caption,
+				showOnSolution
+			});
+			await refreshMedia();
+		} catch (e) {
+			console.error('Failed to update media:', e);
+		}
+	}
+
+	function handleExistingMediaChange(id: string, altText: string, caption: string, showOnSolution?: boolean) {
+		updateExistingMediaMeta(id, altText, caption, showOnSolution);
+		onChange();
+	}
 
 	function mediaTypeFromMime(mime: string | undefined): string {
 		const t = mime || '';
@@ -224,6 +299,7 @@
 					url,
 					key,
 					name,
+					caption: '',
 					sizeBytes: size || undefined,
 					mimeType: mime || undefined,
 					showOnSolution: false
@@ -513,6 +589,8 @@
 			}
 
 			if (questionId && queuedMedia.length > 0) {
+				// Calculate starting order based on existing media
+				const startOrder = existingMedia.length;
 				for (let i = 0; i < queuedMedia.length; i++) {
 					const m = queuedMedia[i];
 					await client.mutation((api as any).questionMedia.create, {
@@ -521,8 +599,8 @@
 						mediaType: mediaTypeFromMime(m.mimeType),
 						mimeType: m.mimeType || 'application/octet-stream',
 						altText: m.name || '',
-						caption: '',
-						order: i,
+						caption: m.caption || '',
+						order: startOrder + i,
 						showOnSolution: m.showOnSolution ?? false,
 						metadata: {
 							uploadthingKey: m.key || '',
@@ -562,7 +640,7 @@
 		</div>
 	</div>
 
-	<div class="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+	<div class="flex-1 overflow-y-auto p-4 pb-12 space-y-4 min-h-0">
 		<div class="flex flex-col gap-2">
 			<label class="font-semibold flex items-center gap-2 text-sm">
 				<MessageSquare size={16} class="text-primary/80" />
@@ -843,16 +921,62 @@
 						<span class="text-sm">{mediaError}</span>
 					</div>
 				{/if}
-				{#if queuedMedia.length > 0}
+
+				{#if existingMedia.length > 0 || queuedMedia.length > 0}
 					<div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-						{#each queuedMedia as m, idx (idx)}
+						<!-- Existing media (from database) -->
+						{#each existingMedia as m (m._id)}
 							<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
+								<img src={m.url} alt={m.altText} class="w-full h-24 object-cover" />
+								<div class="p-3 space-y-2">
+									<input
+										class="input input-bordered input-sm w-full"
+										placeholder="Alt text"
+										bind:value={m.altText}
+										oninput={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+									/>
+									<input
+										class="input input-bordered input-sm w-full"
+										placeholder="Caption (optional)"
+										bind:value={m.caption}
+										oninput={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+									/>
+									<label class="label cursor-pointer gap-2 text-sm">
+										<input
+											type="checkbox"
+											class="checkbox checkbox-sm"
+											bind:checked={m.showOnSolution}
+											onchange={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+										/>
+										<span>Show on solution</span>
+									</label>
+									<div class="flex justify-between items-center pt-1">
+										<span class="text-xs opacity-60">Order: {m.order}</span>
+										<button
+											class="btn btn-ghost btn-xs text-error"
+											onclick={() => removeExistingMedia(m._id)}>Remove</button
+										>
+									</div>
+								</div>
+							</div>
+						{/each}
+
+						<!-- Queued media (newly uploaded, not saved yet) -->
+						{#each queuedMedia as m, idx (idx)}
+							<div class="border border-primary/50 rounded-lg overflow-hidden bg-base-100 relative">
+								<div class="absolute top-2 left-2 badge badge-primary badge-sm">New</div>
 								<img src={m.url} alt={m.name} class="w-full h-24 object-cover" />
 								<div class="p-3 space-y-2">
 									<input
 										class="input input-bordered input-sm w-full"
 										placeholder="Alt text"
 										bind:value={m.name}
+										oninput={onChange}
+									/>
+									<input
+										class="input input-bordered input-sm w-full"
+										placeholder="Caption (optional)"
+										bind:value={m.caption}
 										oninput={onChange}
 									/>
 									<label class="label cursor-pointer gap-2 text-sm">

@@ -18,25 +18,16 @@
 	let submitError: string = $state('');
 	let selectedTagIds: string[] = $state([]);
 
-	const tags = useQuery(api.tags.getTagsForClass, {
+	// useQuery at top level with function args
+	const tags = useQuery(api.tags.getTagsForClass, () => ({
 		classId: classId as Id<'class'>
-	});
+	}));
 
-	let moduleTagsQuery = $state<{ isLoading: boolean; error: any; data?: any[] }>({
-		isLoading: false,
-		error: null,
-		data: []
-	});
-
-	$effect(() => {
-		if (editingModule?._id) {
-			moduleTagsQuery = useQuery(api.tags.getTagsForModule, {
-				moduleId: editingModule._id as Id<'module'>
-			});
-		} else {
-			moduleTagsQuery = { isLoading: false, error: null, data: [] };
-		}
-	});
+	// useQuery at top level with skip pattern
+	const moduleTagsQuery = useQuery(
+		api.tags.getTagsForModule,
+		() => editingModule?._id ? { moduleId: editingModule._id as Id<'module'> } : 'skip'
+	);
 
 	let lastModuleId = $state<string | null>(null);
 

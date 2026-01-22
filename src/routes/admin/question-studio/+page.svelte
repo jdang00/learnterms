@@ -20,29 +20,29 @@
 	let selectedClass: ClassWithSemester | null = $state(null);
 	let selectedModuleId: Id<'module'> | null = $state(null);
 	let selectedModuleTitle: string = $state('');
-	let modules = $state<{ isLoading: boolean; error: any; data?: Doc<'module'>[] }>({
-		isLoading: false,
-		error: null,
-		data: []
-	});
 
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
-	let convexUser = $state<{ isLoading: boolean; error: any; data?: Doc<'users'> | null }>({
-		isLoading: true,
-		error: null,
-		data: undefined
-	});
-	$effect(() => {
-		if (clerkUser) {
-			const q = useQuery(api.users.getUserById, { id: clerkUser.id });
-			convexUser = q;
-		} else {
-			convexUser = { isLoading: true, error: null, data: undefined };
-		}
-	});
 
-	const semesters = useQuery(api.semester.getAllSemesters, {});
+	// useQuery at top level with skip pattern
+	const convexUser = useQuery(
+		api.users.getUserById,
+		() => clerkUser ? { id: clerkUser.id } : 'skip'
+	);
+
+	const semesters = useQuery(api.semester.getAllSemesters, () => ({}));
+
+	// useQuery at top level with skip pattern - depends on convexUser
+	const classes = useQuery(
+		api.class.getUserClasses,
+		() => convexUser.data?.cohortId ? { id: convexUser.data.cohortId as Id<'cohort'> } : 'skip'
+	);
+
+	// useQuery at top level with skip pattern - depends on selectedClass
+	const modules = useQuery(
+		api.module.getClassModules,
+		() => selectedClass ? { id: selectedClass._id } : 'skip'
+	);
 	let currentSemester = $state('');
 
 	type GeneratedQuestionInput = {
@@ -75,31 +75,6 @@
 			isSaving = false;
 		}
 	}
-
-	let classes = $state<{ isLoading: boolean; error: any; data?: Doc<'class'>[] }>({
-		isLoading: false,
-		error: null,
-		data: []
-	});
-
-	$effect(() => {
-		const cohortId = convexUser.data?.cohortId as Id<'cohort'> | undefined;
-		if (cohortId) {
-			const q = useQuery(api.class.getUserClasses, { id: cohortId });
-			classes = q;
-		} else {
-			classes = { isLoading: false, error: null, data: [] };
-		}
-	});
-
-	$effect(() => {
-		if (selectedClass) {
-			const q = useQuery(api.module.getClassModules, { id: selectedClass._id });
-			modules = q;
-		} else {
-			modules = { isLoading: false, error: null, data: [] };
-		}
-	});
 
 	$effect(() => {
 		if (semesters.data && !currentSemester) {

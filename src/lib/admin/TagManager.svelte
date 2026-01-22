@@ -7,7 +7,8 @@
 	import { Pencil, Trash2, Plus, X, Check } from 'lucide-svelte';
 
 	const client = useConvexClient();
-	const tagsQuery = useQuery(api.tags.getTagsForClass, { classId: classId as Id<'class'> });
+	// useQuery with function args for reactivity
+	const tagsQuery = useQuery(api.tags.getTagsForClass, () => ({ classId: classId as Id<'class'> }));
 
 	let newTagName = $state('');
 	let newTagColor = $state('#64748b');

@@ -26,32 +26,18 @@
 
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
-	let userDataQuery = $state<{ isLoading: boolean; error: any; data?: Doc<'users'> | null }>({
-		isLoading: true,
-		error: null,
-		data: undefined
-	});
-	$effect(() => {
-		if (clerkUser) {
-			userDataQuery = useQuery(api.users.getUserById, { id: clerkUser.id });
-		} else {
-			userDataQuery = { isLoading: true, error: null, data: undefined };
-		}
-	});
 
-	let userContentLib = $state<{ isLoading: boolean; error: any; data?: Doc<'contentLib'>[] }>({
-		isLoading: true,
-		error: null,
-		data: []
-	});
-	$effect(() => {
-		const cohortId = userDataQuery.data?.cohortId as Id<'cohort'> | undefined;
-		if (cohortId) {
-			userContentLib = useQuery(api.contentLib.getContentLibByCohort, { cohortId });
-		} else {
-			userContentLib = { isLoading: true, error: null, data: [] };
-		}
-	});
+	// useQuery at top level with skip pattern
+	const userDataQuery = useQuery(
+		api.users.getUserById,
+		() => clerkUser ? { id: clerkUser.id } : 'skip'
+	);
+
+	// useQuery at top level with skip pattern - depends on userDataQuery
+	const userContentLib = useQuery(
+		api.contentLib.getContentLibByCohort,
+		() => userDataQuery.data?.cohortId ? { cohortId: userDataQuery.data.cohortId as Id<'cohort'> } : 'skip'
+	);
 
 	$effect(() => {
 		if (typeof window === 'undefined') return;

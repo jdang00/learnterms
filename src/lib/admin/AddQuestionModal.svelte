@@ -499,9 +499,10 @@
 		{ value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }
 	]);
 
-	const questions = useQuery(api.question.getQuestionsByModule, {
+	// useQuery with function args for reactivity
+	const questions = useQuery(api.question.getQuestionsByModule, () => ({
 		id: moduleId as Id<'module'>
-	});
+	}));
 
 	function addOption() {
 		if (

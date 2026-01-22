@@ -133,64 +133,42 @@
 		}
 	}
 
+	// useQuery with function args for reactivity
 	const questions = useQuery(
 		api.question.getQuestionsByModule,
-		{ id: data.moduleId },
+		() => ({ id: data.moduleId }),
 		{ initialData: data.module }
 	);
 
 	const module = useQuery(
 		api.module.getModuleById,
-		{ id: data.moduleId as Id<'module'> },
+		() => ({ id: data.moduleId as Id<'module'> }),
 		{ initialData: data.moduleInfo }
 	);
 
-	let stableQuestionIds: Id<'question'>[] = $state([]);
-	$effect(() => {
-		if (questions.data) {
-			const next = (questions.data as Doc<'question'>[]).map((q) => q._id as Id<'question'>);
-			if (
-				stableQuestionIds.length !== next.length ||
-				stableQuestionIds.some((id, i) => id !== next[i])
-			) {
-				stableQuestionIds = next;
-			}
-		}
+	// Derive stable question IDs from questions data
+	const stableQuestionIds = $derived.by(() => {
+		if (!questions.data) return [] as Id<'question'>[];
+		return (questions.data as Doc<'question'>[]).map((q) => q._id as Id<'question'>);
 	});
 
-	let moduleProgress: {
-		data:
-			| { interactedQuestionIds: Id<'question'>[]; flaggedQuestionIds: Id<'question'>[] }
-			| undefined;
-		isLoading: boolean;
-		error: any;
-	} = $state({
-		data: {
-			interactedQuestionIds: [],
-			flaggedQuestionIds: []
+	// useQuery at top level with skip pattern
+	const moduleProgressQuery = useQuery(
+		api.userProgress.getUserProgressForModule,
+		() => (userId && questions.data && stableQuestionIds.length > 0) ? {
+			userId: userId,
+			classId: data.classId as Id<'class'>,
+			questionIds: stableQuestionIds
+		} : 'skip'
+	);
+
+	const moduleProgress = $derived({
+		data: moduleProgressQuery.data ?? {
+			interactedQuestionIds: [] as Id<'question'>[],
+			flaggedQuestionIds: [] as Id<'question'>[]
 		},
-		isLoading: true,
-		error: null
-	});
-
-	$effect(() => {
-		if (userId && questions.data) {
-			const query = useQuery(api.userProgress.getUserProgressForModule, {
-				userId: userId,
-				classId: data.classId as Id<'class'>,
-				questionIds: stableQuestionIds
-			});
-			moduleProgress = query;
-		} else {
-			moduleProgress = {
-				data: {
-					interactedQuestionIds: [],
-					flaggedQuestionIds: []
-				},
-				isLoading: false,
-				error: null
-			};
-		}
+		isLoading: moduleProgressQuery.isLoading,
+		error: moduleProgressQuery.error
 	});
 
 	$effect(() => {
