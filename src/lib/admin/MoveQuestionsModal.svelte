@@ -14,49 +14,30 @@
   type ClassDoc = Doc<'class'>;
   type ModuleWithCount = Doc<'module'> & { questionCount?: number };
 
-  // Get user data to access cohort ID
-  let userDataQuery = $state<{ isLoading: boolean; error: any; data?: Doc<'users'> | null }>({
-    isLoading: true,
-    error: null,
-    data: undefined
-  });
+  // Get user data to access cohort ID - using skip pattern
+  const userDataQuery = useQuery(
+    api.users.getUserById,
+    () => clerkUser ? { id: clerkUser.id } : 'skip'
+  );
 
-  $effect(() => {
-    if (clerkUser) {
-      userDataQuery = useQuery(api.users.getUserById, { id: clerkUser.id });
-    } else {
-      userDataQuery = { isLoading: true, error: null, data: undefined };
-    }
-  });
-
-  // Get only the user's classes based on their cohort
+  // Get only the user's classes based on their cohort - using skip pattern
   const classes = useQuery(
     api.class.getUserClasses,
     () =>
       userDataQuery.data?.cohortId
         ? { id: userDataQuery.data.cohortId as Id<'cohort'> }
-        : undefined
+        : 'skip'
   );
 
   let selectedClassId: Id<'class'> | null = $state(null);
   let selectedModuleId: Id<'module'> | null = $state(null);
   let isSubmitting = $state(false);
 
-  let modules: {
-    data: ModuleWithCount[];
-    isLoading: boolean;
-    error: any;
-  } = $state({ data: [], isLoading: false, error: null });
-
-  $effect(() => {
-    const cid = selectedClassId as Id<'class'> | null;
-    if (cid) {
-      const r = useQuery(api.module.getAdminModulesWithQuestionCounts, { classId: cid });
-      modules = r as unknown as typeof modules;
-    } else {
-      modules = { data: [], isLoading: false, error: null } as typeof modules;
-    }
-  });
+  // Get modules for selected class - using skip pattern at top level
+  const modules = useQuery(
+    api.module.getAdminModulesWithQuestionCounts,
+    () => selectedClassId ? { classId: selectedClassId as Id<'class'> } : 'skip'
+  );
 
   function resetSelections() {
     selectedClassId = null as unknown as Id<'class'> | null;

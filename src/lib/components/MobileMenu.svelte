@@ -20,7 +20,7 @@
     import { useClerkContext } from 'svelte-clerk/client';
     import { useQuery } from 'convex-svelte';
     import { api } from '../../convex/_generated/api.js';
-    import type { Doc } from '../../convex/_generated/dataModel';
+    import type { Doc, Id } from '../../convex/_generated/dataModel';
 
     const clerk = useClerkContext();
     const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
@@ -30,16 +30,18 @@
     let showAttachments = $state(false);
     let isAttachmentViewerOpen = $state(false);
     let selectedAttachment = $state<Doc<'questionMedia'> | null>(null);
-    let media: { data: Array<Doc<'questionMedia'>>; isLoading: boolean; error: any } = $state({ data: [], isLoading: false, error: null });
 
-    $effect(() => {
-        const qid = currentlySelected?._id;
-        if (qid) {
-            const q = useQuery((api as any).questionMedia.getByQuestionId, { questionId: qid });
-            media = q as unknown as typeof media;
-        } else {
-            media = { data: [], isLoading: false, error: null } as typeof media;
-        }
+    // useQuery at top level with skip pattern
+    const mediaQuery = useQuery(
+        (api as any).questionMedia.getByQuestionId,
+        () => currentlySelected?._id ? { questionId: currentlySelected._id as Id<'question'> } : 'skip'
+    );
+
+    // Derive media from the query result
+    const media = $derived({
+        data: mediaQuery.data ?? [],
+        isLoading: mediaQuery.isLoading,
+        error: mediaQuery.error
     });
 
 	async function handleClear() {

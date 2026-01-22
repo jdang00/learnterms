@@ -17,13 +17,13 @@
 	let validationErrors: Record<string, string> = $state({});
 	let submitError: string = $state('');
 
-	// Get current modules to calculate next order number
-	const modules = useQuery(api.module.getAdminModule, {
+	// Get current modules to calculate next order number - use function args
+	const modules = useQuery(api.module.getAdminModule, () => ({
 		id: classId as Id<'class'>
-	});
-	const tags = useQuery(api.tags.getTagsForClass, {
+	}));
+	const tags = useQuery(api.tags.getTagsForClass, () => ({
 		classId: classId as Id<'class'>
-	});
+	}));
 
 	function validateField(field: string, value: string): string {
 		const trimmed = value.trim();

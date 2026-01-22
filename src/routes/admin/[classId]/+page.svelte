@@ -15,35 +15,24 @@
 	let { data }: { data: PageData } = $props();
 	const classId = data.classId;
 
-	const modules = useQuery(api.module.getAdminModulesWithQuestionCounts, {
+	const modules = useQuery(api.module.getAdminModulesWithQuestionCounts, () => ({
 		classId: classId as Id<'class'>
-	});
+	}));
 
-	const classInfo = useQuery(api.class.getClassById, { id: classId as Id<'class'> });
+	const classInfo = useQuery(api.class.getClassById, () => ({ id: classId as Id<'class'> }));
 
 	const client = useConvexClient();
 
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
 	const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
-	let userDataQuery = $state<{ isLoading: boolean; error: any; data?: Doc<'users'> | null }>({
-		isLoading: true,
-		error: null,
-		data: undefined
-	});
-	let userData: Doc<'users'> | null = $state(null);
-	$effect(() => {
-		if (clerkUser) {
-			userDataQuery = useQuery(api.users.getUserById, { id: clerkUser.id });
-		} else {
-			userDataQuery = { isLoading: true, error: null, data: undefined };
-		}
-	});
-	$effect(() => {
-		if (userDataQuery.data !== undefined) {
-			userData = (userDataQuery.data as Doc<'users'> | null) ?? null;
-		}
-	});
+
+	// Get user data using skip pattern at top level
+	const userDataQuery = useQuery(
+		api.users.getUserById,
+		() => clerkUser ? { id: clerkUser.id } : 'skip'
+	);
+	const userData = $derived(userDataQuery.data ?? null);
 
 	type ClassItem = Doc<'class'>;
 	let classList = $state<ClassItem[]>([]);

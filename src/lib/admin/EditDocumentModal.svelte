@@ -14,24 +14,17 @@
 	let validationErrors: Record<string, string> = $state({});
 	let submitError: string = $state('');
 
-	// Get current documents to check for duplicates (excluding current document)
-	let documents: { isLoading: boolean; error: any; data: Doc<'contentLib'>[] | undefined } = $state({
-		isLoading: true,
-		error: null,
-		data: []
-	});
+	// Get current documents to check for duplicates - useQuery at top level with skip pattern
+	const documentsQuery = useQuery(
+		api.contentLib.getContentLibByCohort,
+		() => userData?.cohortId ? { cohortId: userData.cohortId as Id<'cohort'> } : 'skip'
+	);
 
-	$effect(() => {
-		const cohortId = userData?.cohortId as Id<'cohort'> | undefined;
-		if (cohortId) {
-			documents = useQuery(api.contentLib.getContentLibByCohort, { cohortId }) as unknown as {
-				isLoading: boolean;
-				error: any;
-				data: Doc<'contentLib'>[] | undefined;
-			};
-		} else {
-			documents = { isLoading: true, error: null, data: [] };
-		}
+	// Derive documents from query result
+	const documents = $derived({
+		isLoading: documentsQuery.isLoading,
+		error: documentsQuery.error,
+		data: documentsQuery.data
 	});
 
 	// Reset form when editingDocument changes

@@ -5,7 +5,7 @@
 	import type { Id, Doc } from '../../../../../convex/_generated/dataModel';
 	import { api } from '../../../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-import { Pencil, Trash2, Plus, ArrowLeft, Copy, X, GripVertical } from 'lucide-svelte';
+import { Pencil, Trash2, Plus, ArrowLeft, Copy, X, GripVertical, Paperclip, CheckSquare } from 'lucide-svelte';
 	import { ArrowRightLeft } from 'lucide-svelte';
 import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
 import DuplicateQuestionModal from '$lib/admin/DuplicateQuestionModal.svelte';
@@ -16,6 +16,7 @@ import DuplicateQuestionModal from '$lib/admin/DuplicateQuestionModal.svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 	import { goto } from '$app/navigation';
 	import { useClerkContext } from 'svelte-clerk';
+	import { onMount } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
 	const moduleId = data.moduleId;
@@ -50,7 +51,7 @@ import DuplicateQuestionModal from '$lib/admin/DuplicateQuestionModal.svelte';
 		};
 	});
 
-const moduleInfo = useQuery(api.module.getModuleById, { id: moduleId as Id<'module'> });
+const moduleInfo = useQuery(api.module.getModuleById, () => ({ id: moduleId as Id<'module'> }));
 
 	const client = useConvexClient();
 	const clerk = useClerkContext();
@@ -89,6 +90,103 @@ let selectedQuestionId = $state<string | null>(null);
 		}
 		return null;
 	});
+
+	// Media/Attachments state for viewing
+	let isAttachmentModalOpen = $state(false);
+	let selectedAttachment = $state<{
+		_id: string;
+		url: string;
+		altText: string;
+		caption?: string;
+	} | null>(null);
+	let attachmentZoom = $state(1);
+	let panX = $state(0);
+	let panY = $state(0);
+	let isDragging = $state(false);
+	let lastMouseX = $state(0);
+	let lastMouseY = $state(0);
+
+	// Query for media attachments
+	const mediaQuery = useQuery(
+		(api as any).questionMedia.getByQuestionId,
+		() => selectedQuestionId ? { questionId: selectedQuestionId as Id<'question'> } : 'skip'
+	);
+
+	const media = $derived({
+		data: (mediaQuery.data ?? []) as Array<{
+			_id: string;
+			url: string;
+			altText: string;
+			caption?: string;
+		}>,
+		isLoading: mediaQuery.isLoading,
+		error: mediaQuery.error
+	});
+
+	function handleAttachmentClick(attachment: {
+		_id: string;
+		url: string;
+		altText: string;
+		caption?: string;
+	}) {
+		selectedAttachment = attachment;
+		attachmentZoom = 1;
+		panX = 0;
+		panY = 0;
+		isAttachmentModalOpen = true;
+	}
+
+	function handleZoomIn() {
+		attachmentZoom = Math.min(attachmentZoom + 0.25, 3);
+	}
+
+	function handleZoomOut() {
+		attachmentZoom = Math.max(attachmentZoom - 0.25, 0.25);
+	}
+
+	function handleFitToScreen() {
+		attachmentZoom = 1;
+		panX = 0;
+		panY = 0;
+	}
+
+	function handleZoomToggle() {
+		if (attachmentZoom > 1) {
+			attachmentZoom = 1;
+			panX = 0;
+			panY = 0;
+		} else {
+			attachmentZoom = Math.min(attachmentZoom + 0.5, 3);
+		}
+	}
+
+	function handleMouseDown(event: MouseEvent) {
+		if (attachmentZoom > 1) {
+			isDragging = true;
+			lastMouseX = event.clientX;
+			lastMouseY = event.clientY;
+			event.preventDefault();
+		}
+	}
+
+	function handleMouseMove(event: MouseEvent) {
+		if (isDragging && attachmentZoom > 1) {
+			const deltaX = event.clientX - lastMouseX;
+			const deltaY = event.clientY - lastMouseY;
+
+			const maxPan = (attachmentZoom - 1) * 100;
+			panX = Math.max(-maxPan, Math.min(maxPan, panX + deltaX));
+			panY = Math.max(-maxPan, Math.min(maxPan, panY + deltaY));
+
+			lastMouseX = event.clientX;
+			lastMouseY = event.clientY;
+			event.preventDefault();
+		}
+	}
+
+	function handleMouseUp() {
+		isDragging = false;
+	}
 
 	const selectedQuestionIndex = $derived.by(() => {
 		if (!selectedQuestionId) return -1;
@@ -183,6 +281,24 @@ let selectedQuestionId = $state<string | null>(null);
 	}
 
 	let questionList = $state<QuestionItem[]>([]);
+
+	// Query for all question media to show paperclip indicators
+	const allMediaQuery = useQuery(
+		api.questionMedia.getByQuestionIds,
+		() => questions.data && questions.data.length > 0 ? { questionIds: questions.data.map(q => q._id) as Id<'question'>[] } : 'skip'
+	);
+
+	const questionHasAttachments = $derived.by(() => {
+		const map = new Map<string, boolean>();
+		if (allMediaQuery.data && Array.isArray(allMediaQuery.data)) {
+			for (const item of allMediaQuery.data) {
+				if (item?.questionId && item?.hasMedia) {
+					map.set(item.questionId, true);
+				}
+			}
+		}
+		return map;
+	});
 
 	// Bulk delete functionality
 	let selectedQuestions = $state<Set<string>>(new Set());
@@ -346,6 +462,63 @@ let selectedQuestionId = $state<string | null>(null);
 		}
 	});
 
+	// Keyboard navigation for question list
+	function handleKeyDown(event: KeyboardEvent) {
+		// Don't trigger if user is typing in an input/textarea
+		if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+			return;
+		}
+
+		// Only work in view mode, not when editing or adding
+		if (editorMode !== 'view') {
+			return;
+		}
+
+		// Don't interfere if no questions or no question selected
+		if (questionList.length === 0) {
+			return;
+		}
+
+		if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+			event.preventDefault();
+			
+			const currentIndex = selectedQuestionId 
+				? questionList.findIndex((q) => q._id === selectedQuestionId)
+				: -1;
+
+			let newIndex: number;
+			
+			if (event.key === 'ArrowDown') {
+				// Move to next question
+				if (currentIndex === -1) {
+					newIndex = 0; // Select first if none selected
+				} else {
+					newIndex = Math.min(currentIndex + 1, questionList.length - 1);
+				}
+			} else {
+				// Move to previous question
+				if (currentIndex === -1) {
+					newIndex = 0; // Select first if none selected
+				} else {
+					newIndex = Math.max(currentIndex - 1, 0);
+				}
+			}
+
+			// Update selection
+			if (newIndex !== currentIndex && questionList[newIndex]) {
+				handleQuestionSelect(questionList[newIndex]._id);
+			}
+		}
+	}
+
+	onMount(() => {
+		window.addEventListener('keydown', handleKeyDown);
+		
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown);
+		};
+	});
+
 	async function handleQuestionDrop(state: DragDropState<QuestionItem>) {
 		const { draggedItem, sourceContainer, targetContainer } = state;
 		if (!targetContainer || sourceContainer === targetContainer) return;
@@ -409,8 +582,8 @@ async function confirmDuplicateModal(count: number) {
 }
 </script>
 
-<div class="min-h-screen bg-base-200/30">
-	<div class="max-w-[1800px] mx-auto p-4 sm:p-6">
+<div class="h-screen overflow-hidden bg-base-200/30 flex flex-col">
+	<div class="max-w-[1800px] mx-auto p-4 sm:p-6 flex flex-col flex-1 min-h-0 w-full">
 		<div class="flex items-center gap-4 mb-4">
 			<a class="btn btn-ghost btn-sm gap-2" href={`/admin/${moduleInfo.data?.classId || ''}`}>
 				<ArrowLeft size={16} />
@@ -443,7 +616,8 @@ async function confirmDuplicateModal(count: number) {
 			{/if}
 		</div>
 
-		<div class="flex flex-wrap items-center gap-2 mb-4 p-3 bg-base-100 rounded-lg border border-base-300">
+		<!-- Controls for mobile/tablet (below xl) -->
+		<div class="xl:hidden flex flex-wrap items-center gap-2 mb-4 p-3 bg-base-100 rounded-lg border border-base-300">
 			<label class="input input-sm input-bordered flex items-center gap-2 w-full sm:w-64">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -493,13 +667,12 @@ async function confirmDuplicateModal(count: number) {
 			</div>
 
 			{#if admin}
-				<!-- Reorder button only on desktop and tablet (md and above) -->
 				<button
-					class="btn btn-sm gap-1 {reorderMode ? 'btn-primary' : 'btn-ghost'} hidden md:flex"
+					class="btn btn-sm gap-1 {reorderMode ? 'btn-primary' : 'btn-ghost'}"
 					onclick={() => (reorderMode = !reorderMode)}
 				>
 					<GripVertical size={14} />
-					<span class="hidden sm:inline">{reorderMode ? 'Done' : 'Reorder'}</span>
+					<span>{reorderMode ? 'Done' : 'Reorder'}</span>
 				</button>
 			{/if}
 
@@ -593,14 +766,40 @@ async function confirmDuplicateModal(count: number) {
 							</p>
 						</div>
 					</div>
+				{:else if reorderMode}
+					<div class="p-2 space-y-2 overflow-y-auto">
+						{#each questionList as questionItem, index (questionItem._id)}
+							<div
+								use:droppable={{
+									container: index.toString(),
+									callbacks: { onDrop: handleQuestionDrop }
+								}}
+								use:draggable={{
+									container: index.toString(),
+									dragData: questionItem
+								}}
+								class="px-3 py-2.5 rounded-lg transition-all cursor-grab active:cursor-grabbing hover:bg-base-200/50
+									{recentlyAddedIds.has(questionItem._id) ? 'bg-success/5' : ''} border-2 border-transparent"
+								animate:flip={{ duration: 300 }}
+							>
+								<div class="flex items-center gap-2">
+									<GripVertical size={16} class="text-base-content/30 flex-shrink-0" />
+									<span class="text-xs font-medium text-base-content/50">#{index + 1}</span>
+									<p class="flex-1 text-xs text-base-content line-clamp-2 tiptap-content-inline">{@html questionItem.stem}</p>
+								</div>
+							</div>
+						{/each}
+					</div>
 				{:else}
-					<div class="divide-y divide-base-200 max-h-[calc(100vh-280px)] overflow-y-auto">
+					<div class="p-2 space-y-2 overflow-y-auto">
 						{#each questionList as questionItem, index (questionItem._id)}
 							<div
 								role="button"
 								tabindex="0"
-								class="px-3 py-2.5 transition-all hover:bg-base-200/50 cursor-pointer active:bg-base-200
-									{selectedQuestionId === questionItem._id ? 'bg-primary/5 border-l-3 border-primary' : 'border-l-3 border-transparent'}"
+								class="px-3 py-2.5 rounded-lg transition-all cursor-pointer active:bg-base-200
+									{selectedQuestionId === questionItem._id 
+										? 'bg-primary/10 border-2 border-primary shadow-sm hover:bg-primary/15 hover:shadow-md' 
+										: 'border-2 border-transparent hover:bg-base-200/50'}"
 								onclick={() => handleQuestionSelect(questionItem._id)}
 								onkeydown={(e) => e.key === 'Enter' && handleQuestionSelect(questionItem._id)}
 							>
@@ -622,6 +821,9 @@ async function confirmDuplicateModal(count: number) {
 											<span class="w-1.5 h-1.5 rounded-full flex-shrink-0
 												{questionItem.status === 'published' ? 'bg-success' : questionItem.status === 'draft' ? 'bg-warning' : 'bg-base-300'}"
 												title={questionItem.status}></span>
+											{#if questionHasAttachments.has(questionItem._id)}
+												<Paperclip size={10} class="text-base-content/40" />
+											{/if}
 										</div>
 										<p class="text-xs text-base-content leading-snug line-clamp-2 tiptap-content-inline">{@html questionItem.stem}</p>
 									</div>
@@ -633,11 +835,111 @@ async function confirmDuplicateModal(count: number) {
 			</div>
 		</div>
 
-		<div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
+		<div class="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0">
 			<!-- Desktop Sidebar (xl and above) -->
-			<div class="xl:col-span-5 2xl:col-span-4 hidden xl:block">
-				<div class="bg-base-100 rounded-lg border border-base-300 h-[calc(100vh-180px)] overflow-hidden flex flex-col">
-					<div class="flex-1 overflow-y-auto">
+			<div class="xl:col-span-5 2xl:col-span-4 hidden xl:block min-h-0">
+				<div class="bg-base-100 rounded-lg border border-base-300 h-full overflow-hidden flex flex-col">
+					<!-- Controls in sidebar header -->
+					<div class="p-4 border-b border-base-300 space-y-3 flex-shrink-0">
+						<label class="input input-sm input-bordered flex items-center gap-2 w-full">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 16 16"
+								fill="currentColor"
+								class="w-4 h-4 opacity-70"
+								><path
+									fill-rule="evenodd"
+									d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+									clip-rule="evenodd"
+								/></svg
+							>
+							<input
+								type="text"
+								class="grow text-sm"
+								placeholder="Search..."
+								value={searchInput}
+								oninput={(e) => {
+									searchInput = (e.target as HTMLInputElement).value;
+									updateSearch();
+								}}
+							/>
+							{#if searchInput}
+								<button
+									class="btn btn-ghost btn-xs"
+									onclick={() => {
+										searchInput = '';
+										search = '';
+										if (searchTimeout) {
+											clearTimeout(searchTimeout);
+											searchTimeout = null;
+										}
+									}}>×</button
+								>
+							{/if}
+						</label>
+
+						<div class="flex items-center gap-2">
+							<div class="dropdown">
+								<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-1">
+									{sortMode === 'order' ? 'Order' : 'Recent'}
+									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+								</div>
+								<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-40 p-1 shadow-lg border border-base-300">
+									<li><button class="text-sm" class:active={sortMode === 'order'} onclick={() => (sortMode = 'order')}>By Order</button></li>
+									<li><button class="text-sm" class:active={sortMode === 'created_desc'} onclick={() => (sortMode = 'created_desc')}>Recent First</button></li>
+								</ul>
+							</div>
+
+							{#if admin}
+								<button
+									class="btn btn-sm gap-1 {reorderMode ? 'btn-primary' : 'btn-ghost'}"
+									onclick={() => (reorderMode = !reorderMode)}
+								>
+									<GripVertical size={14} />
+									{reorderMode ? 'Done' : 'Reorder'}
+								</button>
+							{/if}
+
+							<div class="flex-1"></div>
+
+							{#if canEdit && selectedQuestions.size > 0}
+								<div class="badge badge-neutral badge-sm">{selectedQuestions.size}</div>
+								<button 
+									class="btn btn-sm btn-ghost btn-square" 
+									onclick={openMoveModalForSelected}
+									title="Move selected"
+								>
+									<ArrowRightLeft size={16} />
+								</button>
+								<button 
+									class="btn btn-sm btn-ghost gap-1" 
+									onclick={deselectAllQuestions}
+									title="Clear selection"
+								>
+									<X size={16} />
+									<span class="text-xs">Clear</span>
+								</button>
+								<button 
+									class="btn btn-sm btn-ghost btn-square text-error" 
+									onclick={openBulkDeleteModal}
+									title="Delete selected"
+								>
+									<Trash2 size={16} />
+								</button>
+							{:else if canEdit && questions.data && questions.data.length > 0}
+								<button 
+									class="btn btn-sm btn-ghost gap-1" 
+									onclick={selectAllQuestions}
+									title="Select all questions"
+								>
+									<CheckSquare size={16} />
+									<span class="text-xs">Select All</span>
+								</button>
+							{/if}
+						</div>
+					</div>
+
+					<div class="flex-1 overflow-y-auto pb-8 min-h-0">
 						{#if questions.isLoading}
 							<div class="divide-y divide-base-200">
 								{#each Array(8), index (index)}
@@ -713,13 +1015,15 @@ async function confirmDuplicateModal(count: number) {
 								{/each}
 							</div>
 						{:else}
-							<div class="divide-y divide-base-200">
+							<div class="p-2 space-y-2">
 								{#each questionList as questionItem, index (questionItem._id)}
 									<div
 										role="button"
 										tabindex="0"
-										class="px-4 py-3 transition-all hover:bg-base-200/50 cursor-pointer
-											{selectedQuestionId === questionItem._id ? 'bg-primary/5 border-l-3 border-primary' : 'border-l-3 border-transparent'}
+										class="px-3 py-2.5 rounded-lg transition-all cursor-pointer
+											{selectedQuestionId === questionItem._id 
+												? 'bg-primary/10 border-2 border-primary shadow-sm hover:bg-primary/15 hover:shadow-md' 
+												: 'border-2 border-transparent hover:bg-base-200/50'}
 											{recentlyAddedIds.has(questionItem._id) ? 'bg-success/5' : ''}"
 										onclick={() => handleQuestionSelect(questionItem._id)}
 										onkeydown={(e) => e.key === 'Enter' && handleQuestionSelect(questionItem._id)}
@@ -742,6 +1046,9 @@ async function confirmDuplicateModal(count: number) {
 													<span class="w-2 h-2 rounded-full flex-shrink-0
 														{questionItem.status === 'published' ? 'bg-success' : questionItem.status === 'draft' ? 'bg-warning' : 'bg-base-300'}"
 														title={questionItem.status}></span>
+													{#if questionHasAttachments.has(questionItem._id)}
+														<Paperclip size={12} class="text-base-content/40" />
+													{/if}
 												</div>
 												<p class="text-sm text-base-content leading-snug line-clamp-2 tiptap-content-inline">{@html questionItem.stem}</p>
 											</div>
@@ -755,42 +1062,44 @@ async function confirmDuplicateModal(count: number) {
 			</div>
 
 			<!-- Main Content Panel (md and above) -->
-			<div class="xl:col-span-7 2xl:col-span-8 hidden md:block">
-				<div class="bg-base-100 rounded-lg border border-base-300 h-[calc(100vh-180px)] overflow-hidden">
-					{#if reorderMode}
-						<!-- Reorder mode view for tablet (md-lg) -->
-						<div class="h-full flex flex-col overflow-hidden">
-							<div class="p-4 border-b border-base-300">
-								<h3 class="text-lg font-semibold">Reorder Questions</h3>
-								<p class="text-sm text-base-content/60 mt-1">Drag questions to reorder them</p>
-							</div>
-							<div class="flex-1 overflow-y-auto">
-								<div class="divide-y divide-base-200">
-									{#each questionList as questionItem, index (questionItem._id)}
-										<div
-											use:droppable={{
-												container: index.toString(),
-												callbacks: { onDrop: handleQuestionDrop }
-											}}
-											use:draggable={{
-												container: index.toString(),
-												dragData: questionItem
-											}}
-											class="px-4 py-3 transition-all hover:bg-base-200/50 cursor-grab active:cursor-grabbing
-												{recentlyAddedIds.has(questionItem._id) ? 'bg-success/5' : ''}"
-											animate:flip={{ duration: 300 }}
-										>
-											<div class="flex items-center gap-3">
-												<GripVertical size={16} class="text-base-content/30 flex-shrink-0" />
-												<span class="text-xs font-medium text-base-content/50 w-6">#{index + 1}</span>
-												<p class="flex-1 text-sm text-base-content truncate tiptap-content-inline">{@html questionItem.stem}</p>
-											</div>
+			<div class="xl:col-span-7 2xl:col-span-8 hidden md:block min-h-0">
+				<div class="bg-base-100 rounded-lg border border-base-300 h-full overflow-hidden flex flex-col">
+					<!-- Reorder mode only visible on tablet (md-xl), not desktop (xl+) -->
+					<div class="h-full flex-col overflow-hidden {reorderMode ? 'flex xl:hidden' : 'hidden'}">
+						<div class="p-4 border-b border-base-300">
+							<h3 class="text-lg font-semibold">Reorder Questions</h3>
+							<p class="text-sm text-base-content/60 mt-1">Drag questions to reorder them</p>
+						</div>
+						<div class="flex-1 overflow-y-auto pb-8 min-h-0">
+							<div class="divide-y divide-base-200">
+								{#each questionList as questionItem, index (questionItem._id)}
+									<div
+										use:droppable={{
+											container: index.toString(),
+											callbacks: { onDrop: handleQuestionDrop }
+										}}
+										use:draggable={{
+											container: index.toString(),
+											dragData: questionItem
+										}}
+										class="px-4 py-3 transition-all hover:bg-base-200/50 cursor-grab active:cursor-grabbing
+											{recentlyAddedIds.has(questionItem._id) ? 'bg-success/5' : ''}"
+										animate:flip={{ duration: 300 }}
+									>
+										<div class="flex items-center gap-3">
+											<GripVertical size={16} class="text-base-content/30 flex-shrink-0" />
+											<span class="text-xs font-medium text-base-content/50 w-6">#{index + 1}</span>
+											<p class="flex-1 text-sm text-base-content truncate tiptap-content-inline">{@html questionItem.stem}</p>
 										</div>
-									{/each}
-								</div>
+									</div>
+								{/each}
 							</div>
 						</div>
-					{:else if editorMode === 'add'}
+					</div>
+					
+					<!-- Normal views - hidden on tablet when reordering, always visible on desktop -->
+					<div class="{reorderMode ? 'hidden xl:flex' : 'flex'} flex-col h-full overflow-hidden">
+					{#if editorMode === 'add'}
 						<QuestionEditorInline
 							{moduleId}
 							mode="add"
@@ -810,7 +1119,7 @@ async function confirmDuplicateModal(count: number) {
 							/>
 						{/key}
 					{:else if selectedQuestion}
-						<div class="h-full flex flex-col">
+						<div class="h-full flex flex-col overflow-hidden">
 							<div class="flex items-center justify-between p-4 border-b border-base-300">
 								<div class="flex items-center gap-3">
 									{#if selectedQuestionIndex >= 0}
@@ -849,7 +1158,7 @@ async function confirmDuplicateModal(count: number) {
 								{/if}
 							</div>
 
-							<div class="flex-1 overflow-y-auto p-6">
+							<div class="flex-1 overflow-y-auto p-6 pb-12 min-h-0">
 								<div class="mb-8">
 									<div class="text-lg font-medium text-base-content leading-relaxed tiptap-content">{@html selectedQuestion.stem}</div>
 								</div>
@@ -888,6 +1197,38 @@ async function confirmDuplicateModal(count: number) {
 									</div>
 								{/if}
 
+								{#if media && media.data && media.data.length > 0}
+									<div class="mb-6">
+										<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-3 flex items-center gap-2">
+											<Paperclip size={14} />
+											Attachments ({media.data.length})
+										</div>
+										<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+											{#each media.data as attachment (attachment._id)}
+												<button
+													class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+													onclick={() => handleAttachmentClick(attachment)}
+													aria-label={`View attachment: ${attachment.altText}`}
+												>
+													<div class="relative overflow-hidden">
+														<img
+															src={attachment.url}
+															alt={attachment.altText}
+															class="w-full h-28 object-cover group-hover:brightness-110 group-hover:scale-105 transition-all duration-200"
+														/>
+														<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-200"></div>
+														{#if attachment.caption}
+															<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+																<p class="text-white text-xs truncate">{attachment.caption}</p>
+															</div>
+														{/if}
+													</div>
+												</button>
+											{/each}
+										</div>
+									</div>
+								{/if}
+
 								{#if selectedQuestion.createdBy}
 									<div class="mt-8 pt-4 border-t border-base-200">
 										<div class="flex items-center gap-1.5 text-xs text-base-content/40">
@@ -918,11 +1259,15 @@ async function confirmDuplicateModal(count: number) {
 						</div>
 					{:else}
 						<div class="h-full flex flex-col items-center justify-center p-8 text-center">
-							<div class="text-4xl mb-4">👈</div>
+							<div class="text-4xl mb-4">
+								<span class="xl:hidden">☝️</span>
+								<span class="hidden xl:inline">👈</span>
+							</div>
 							<h3 class="text-lg font-semibold mb-2">Select a question</h3>
 							<p class="text-sm text-base-content/60">Click on a question from the list to view its details</p>
 						</div>
 					{/if}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -1068,6 +1413,127 @@ async function confirmDuplicateModal(count: number) {
 		</div>
 	</div>
 	<div class="modal-backdrop bg-black/50" onclick={cancelDiscardChanges}></div>
+</dialog>
+
+<dialog class="modal max-w-full p-4" class:modal-open={isAttachmentModalOpen}>
+	<div class="modal-box max-w-4xl w-full h-[90vh]">
+		<form method="dialog">
+			<button
+				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-10"
+				onclick={() => {
+					isAttachmentModalOpen = false;
+					selectedAttachment = null;
+				}}>✕</button
+			>
+		</form>
+
+		{#if selectedAttachment}
+			<div class="flex flex-col h-full">
+				<h3 class="font-bold text-lg mb-4">{selectedAttachment.altText}</h3>
+
+				<div
+					class="flex-1 relative overflow-hidden bg-base-200 rounded-lg"
+					onmousedown={handleMouseDown}
+					onmousemove={handleMouseMove}
+					onmouseup={handleMouseUp}
+					onmouseleave={handleMouseUp}
+					role="button"
+					tabindex="0"
+					aria-label="Image viewer - click to zoom, drag to pan when zoomed"
+				>
+					<div
+						class="w-full h-full focus:outline-none focus:ring-2 focus:ring-primary {attachmentZoom >
+						1
+							? isDragging
+								? 'cursor-grabbing'
+								: 'cursor-grab'
+							: 'cursor-zoom-in'}"
+						onclick={attachmentZoom <= 1 ? handleZoomToggle : undefined}
+						onkeydown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault();
+								if (attachmentZoom <= 1) {
+									handleZoomToggle();
+								}
+							}
+						}}
+						aria-label={attachmentZoom > 1 ? 'Pan image' : 'Zoom in'}
+						tabindex="0"
+						role="button"
+					>
+						<img
+							src={selectedAttachment.url}
+							alt={selectedAttachment.altText}
+							class="max-w-full max-h-full object-contain absolute inset-0 m-auto select-none"
+							style="transform: scale({attachmentZoom ||
+								1}) translate({panX}px, {panY}px); transform-origin: center; transition: transform 0.1s ease-out;"
+							draggable="false"
+						/>
+					</div>
+				</div>
+
+				{#if selectedAttachment.caption}
+					<div class="mt-4 p-3 bg-base-200 rounded-lg">
+						<p class="text-sm text-base-content/70">{selectedAttachment.caption}</p>
+					</div>
+				{/if}
+
+				<div class="flex justify-center gap-2 mt-4">
+					<button class="btn btn-sm btn-outline" onclick={handleZoomOut} aria-label="Zoom out">
+						<svg
+							class="w-4 h-4"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
+							/>
+						</svg>
+					</button>
+					<button class="btn btn-sm btn-outline" onclick={handleFitToScreen} aria-label="Fit to screen">
+						<svg
+							class="w-4 h-4"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+							/>
+						</svg>
+					</button>
+					<button class="btn btn-sm btn-outline" onclick={handleZoomIn} aria-label="Zoom in">
+						<svg
+							class="w-4 h-4"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+							/>
+						</svg>
+					</button>
+				</div>
+			</div>
+		{/if}
+	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button onclick={() => {
+			isAttachmentModalOpen = false;
+			selectedAttachment = null;
+		}}>close</button>
+	</form>
 </dialog>
 
 <style>

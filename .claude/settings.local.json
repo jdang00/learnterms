@@ -13,7 +13,8 @@
       "Bash(bunx convex dev:*)",
       "Bash(ls:*)",
       "Bash(bunx convex run:*)",
-      "Bash(bunx convex deploy:*)"
+      "Bash(bunx convex deploy:*)",
+      "Bash(bunx npm view:*)"
     ]
   }
 }

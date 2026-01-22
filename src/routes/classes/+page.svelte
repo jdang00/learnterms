@@ -26,11 +26,11 @@
 	let selectedClass: ClassWithSemester | null = $state(null);
 	let isNavigatingBack = $state(false);
 
-	const classesQuery = userData?.cohortId
-		? useQuery(api.class.getUserClasses, {
-				id: userData.cohortId as Id<'cohort'>
-			})
-		: { data: undefined, isLoading: false, error: null };
+	// useQuery at top level with skip pattern
+	const classesQuery = useQuery(
+		api.class.getUserClasses,
+		() => userData?.cohortId ? { id: userData.cohortId as Id<'cohort'> } : 'skip'
+	);
 
 	const classes = $derived({
 		data: classesQuery.data || [],
@@ -41,11 +41,18 @@
 	type TagSummary = { _id: Id<'tags'>; name: string; color?: string };
 	type ModuleWithTags = Doc<'module'> & { tags?: TagSummary[] };
 
-	let modules = $state<{ isLoading: boolean; error: any; data?: ModuleWithTags[] }>({
-		isLoading: false,
-		error: null,
-		data: []
+	// useQuery at top level with skip pattern
+	const modulesQuery = useQuery(
+		api.module.getClassModules,
+		() => (selectedClass && currentView === 'modules') ? { id: selectedClass._id } : 'skip'
+	);
+
+	const modules = $derived({
+		isLoading: modulesQuery.isLoading,
+		error: modulesQuery.error,
+		data: modulesQuery.data as ModuleWithTags[] | undefined
 	});
+
 	const sortedModules = $derived.by(() => {
 		const source = Array.isArray(modules.data) ? modules.data : [];
 		return [...source].sort((a, b) => a.order - b.order);
@@ -53,20 +60,11 @@
 
 // removed unused classProgress subscription
 
-	const userDataQuery = userData?.clerkUserId
-		? useQuery(api.users.getUserById, {
-				id: userData.clerkUserId
-			})
-		: { data: undefined, isLoading: false, error: null };
-
-	$effect(() => {
-		if (selectedClass && currentView === 'modules') {
-			const query = useQuery(api.module.getClassModules, { id: selectedClass._id });
-			modules = query;
-		} else {
-			modules = { isLoading: false, error: null, data: [] };
-		}
-	});
+	// useQuery at top level with skip pattern
+	const userDataQuery = useQuery(
+		api.users.getUserById,
+		() => userData?.clerkUserId ? { id: userData.clerkUserId } : 'skip'
+	);
 
 // removed live getProgressForClass subscription to avoid unnecessary refresh bandwidth
 

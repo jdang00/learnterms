@@ -13,28 +13,23 @@
 
 	const client = useConvexClient();
 
-	let userDataQuery: any = $state(undefined);
-	let cohortsList: any = $state(undefined);
+	// useQuery at top level with skip pattern
+	const userDataQuery = useQuery(
+		api.users.getUserById,
+		() => user ? { id: user.id } : 'skip'
+	);
+
+	const cohortsList = useQuery(
+		api.cohort.listCohortsWithSchools,
+		() => dev ? {} : 'skip'
+	);
+
 	let selectedCohortId = $state('');
-
-	$effect(() => {
-		if (user) {
-			userDataQuery = useQuery(api.users.getUserById, { id: user.id });
-		} else {
-			userDataQuery = undefined;
-		}
-
-		if (dev) {
-			cohortsList = useQuery(api.cohort.listCohortsWithSchools, {});
-		} else {
-			cohortsList = undefined;
-		}
-	});
 
 	// Reflect database cohort to selection
 	$effect(() => {
-		if (userDataQuery && !userDataQuery.isLoading) {
-			const dbCohortId = userDataQuery?.data?.cohortId as string | undefined;
+		if (userDataQuery && !userDataQuery.isLoading && userDataQuery.data) {
+			const dbCohortId = userDataQuery.data.cohortId as string | undefined;
 			selectedCohortId = dbCohortId || '';
 		}
 	});
