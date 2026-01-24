@@ -40,3 +40,5 @@ export const DISPLAY_QUESTION_TYPES = {
 } as const;
 
 export type QuestionType = (typeof QUESTION_TYPES)[keyof typeof QUESTION_TYPES];
+
+export type StatusFilter = 'all' | 'published' | 'draft' | 'archived';

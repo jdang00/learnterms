@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { GripVertical, Trash2, ArrowRightLeft, X, CheckSquare, FileText, CheckCircle } from 'lucide-svelte';
+	import { GripVertical, Trash2, ArrowRightLeft, X, CheckSquare, FileText, CheckCircle, Filter } from 'lucide-svelte';
+	import type { StatusFilter } from '$lib/types';
 
 	type SortMode = 'order' | 'created_desc';
 
 	interface Props {
 		searchInput: string;
 		sortMode: SortMode;
+		statusFilter: StatusFilter;
 		defaultStatus: 'published' | 'draft';
 		reorderMode: boolean;
 		selectedCount: number;
@@ -16,6 +18,7 @@
 		onSearchChange: (value: string) => void;
 		onSearchClear: () => void;
 		onSortChange: (mode: SortMode) => void;
+		onStatusFilterChange: (filter: StatusFilter) => void;
 		onDefaultStatusChange: (status: 'published' | 'draft') => void;
 		onReorderToggle: () => void;
 		onSelectAll: () => void;
@@ -27,6 +30,7 @@
 	let {
 		searchInput,
 		sortMode,
+		statusFilter,
 		defaultStatus,
 		reorderMode,
 		selectedCount,
@@ -37,6 +41,7 @@
 		onSearchChange,
 		onSearchClear,
 		onSortChange,
+		onStatusFilterChange,
 		onDefaultStatusChange,
 		onReorderToggle,
 		onSelectAll,
@@ -44,6 +49,12 @@
 		onMoveSelected,
 		onDeleteSelected
 	}: Props = $props();
+
+	const statusFilterLabel = $derived(
+		statusFilter === 'all' ? 'All' :
+		statusFilter === 'published' ? 'Published' :
+		statusFilter === 'draft' ? 'Drafts' : 'Archived'
+	);
 
 	const isMobile = $derived(variant === 'mobile');
 </script>
@@ -89,6 +100,22 @@
 			</ul>
 		</div>
 
+		<div class="dropdown">
+			<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-1 {statusFilter !== 'all' ? 'text-primary' : ''}">
+				<Filter size={14} />
+				<span class="text-xs">{statusFilterLabel}</span>
+				<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+				</svg>
+			</div>
+			<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-40 p-1 shadow-lg border border-base-300">
+				<li><button class="text-sm" class:active={statusFilter === 'all'} onclick={() => onStatusFilterChange('all')}>All</button></li>
+				<li><button class="text-sm" class:active={statusFilter === 'published'} onclick={() => onStatusFilterChange('published')}>Published</button></li>
+				<li><button class="text-sm" class:active={statusFilter === 'draft'} onclick={() => onStatusFilterChange('draft')}>Drafts</button></li>
+				<li><button class="text-sm" class:active={statusFilter === 'archived'} onclick={() => onStatusFilterChange('archived')}>Archived</button></li>
+			</ul>
+		</div>
+
 		{#if canEdit}
 			<div class="dropdown">
 				<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-1" title="New Question Status">
@@ -97,13 +124,13 @@
 					{:else}
 						<FileText size={14} class="text-info" />
 					{/if}
-					<span class="hidden sm:inline text-xs">New: {defaultStatus}</span>
+					<span class="hidden sm:inline text-xs">{defaultStatus === 'published' ? 'Auto-publish' : 'Save as draft'}</span>
 					<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
 					</svg>
 				</div>
 				<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-48 p-1 shadow-lg border border-base-300">
-					<li class="menu-title text-xs px-2 pt-1 pb-1">New questions default to:</li>
+					<li class="menu-title text-xs px-2 pt-1 pb-1">New questions are saved as:</li>
 					<li>
 						<button class="text-sm" class:active={defaultStatus === 'published'} onclick={() => onDefaultStatusChange('published')}>
 							<CheckCircle size={14} class="text-success" /> Published
@@ -174,30 +201,56 @@
 		</label>
 
 		<div class="flex items-center gap-2">
-			<div class="dropdown">
-				<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-1">
-					{sortMode === 'order' ? 'Order' : 'Recent'}
-					<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-					</svg>
+			<!-- View Controls -->
+			<div class="join shadow-sm">
+				<div class="dropdown join-item">
+					<div tabindex="0" role="button" class="btn btn-sm btn-ghost join-item gap-1 px-2 border border-base-300">
+						{sortMode === 'order' ? 'Order' : 'Recent'}
+						<svg class="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+						</svg>
+					</div>
+					<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-40 p-1 shadow-lg border border-base-300">
+						<li><button class="text-sm" class:active={sortMode === 'order'} onclick={() => onSortChange('order')}>By Order</button></li>
+						<li><button class="text-sm" class:active={sortMode === 'created_desc'} onclick={() => onSortChange('created_desc')}>Recent First</button></li>
+					</ul>
 				</div>
-				<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-40 p-1 shadow-lg border border-base-300">
-					<li><button class="text-sm" class:active={sortMode === 'order'} onclick={() => onSortChange('order')}>By Order</button></li>
-					<li><button class="text-sm" class:active={sortMode === 'created_desc'} onclick={() => onSortChange('created_desc')}>Recent First</button></li>
-				</ul>
+
+				<div class="dropdown join-item">
+					<div tabindex="0" role="button" class="btn btn-sm btn-ghost join-item gap-1 px-2 border border-base-300 border-l-0 {statusFilter !== 'all' ? 'text-primary' : ''}" title="Filter by status">
+						<Filter size={14} />
+						<span class="text-xs">{statusFilterLabel}</span>
+					</div>
+					<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-40 p-1 shadow-lg border border-base-300">
+						<li><button class="text-sm" class:active={statusFilter === 'all'} onclick={() => onStatusFilterChange('all')}>All</button></li>
+						<li><button class="text-sm" class:active={statusFilter === 'published'} onclick={() => onStatusFilterChange('published')}>Published</button></li>
+						<li><button class="text-sm" class:active={statusFilter === 'draft'} onclick={() => onStatusFilterChange('draft')}>Drafts</button></li>
+						<li><button class="text-sm" class:active={statusFilter === 'archived'} onclick={() => onStatusFilterChange('archived')}>Archived</button></li>
+					</ul>
+				</div>
 			</div>
 
+			<!-- Divider -->
+			<div class="h-6 w-px bg-base-300 mx-1"></div>
+
+			<!-- Editor Actions -->
 			{#if canEdit}
 				<div class="dropdown">
-					<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-1 btn-square" title="New Question Status: {defaultStatus}">
+					<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-2 border border-base-300" title="New Question Status: {defaultStatus}">
+						<span class="text-xs font-medium opacity-60">Save as:</span>
 						{#if defaultStatus === 'published'}
-							<CheckCircle size={16} class="text-success" />
+							<CheckCircle size={14} class="text-success" />
+							<span class="text-xs hidden lg:inline">Published</span>
 						{:else}
-							<FileText size={16} class="text-info" />
+							<FileText size={14} class="text-info" />
+							<span class="text-xs hidden lg:inline">Draft</span>
 						{/if}
+						<svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+						</svg>
 					</div>
 					<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-48 p-1 shadow-lg border border-base-300">
-						<li class="menu-title text-xs px-2 pt-1 pb-1">New questions default to:</li>
+						<li class="menu-title text-xs px-2 pt-1 pb-1">New questions are saved as:</li>
 						<li>
 							<button class="text-sm" class:active={defaultStatus === 'published'} onclick={() => onDefaultStatusChange('published')}>
 								<CheckCircle size={14} class="text-success" /> Published
@@ -226,28 +279,29 @@
 
 			{#if canEdit && selectedCount > 0}
 				<div class="badge badge-neutral badge-sm">{selectedCount}</div>
-				<button
-					class="btn btn-sm btn-ghost btn-square"
-					onclick={onMoveSelected}
-					title="Move selected"
-				>
-					<ArrowRightLeft size={16} />
-				</button>
-				<button
-					class="btn btn-sm btn-ghost gap-1"
-					onclick={onDeselectAll}
-					title="Clear selection"
-				>
-					<X size={16} />
-					<span class="text-xs">Clear</span>
-				</button>
-				<button
-					class="btn btn-sm btn-ghost btn-square text-error"
-					onclick={onDeleteSelected}
-					title="Delete selected"
-				>
-					<Trash2 size={16} />
-				</button>
+				<div class="join shadow-sm">
+					<button
+						class="btn btn-sm btn-ghost join-item btn-square border border-base-300"
+						onclick={onMoveSelected}
+						title="Move selected"
+					>
+						<ArrowRightLeft size={16} />
+					</button>
+					<button
+						class="btn btn-sm btn-ghost join-item btn-square text-error border border-base-300 border-l-0"
+						onclick={onDeleteSelected}
+						title="Delete selected"
+					>
+						<Trash2 size={16} />
+					</button>
+					<button
+						class="btn btn-sm btn-ghost join-item border border-base-300 border-l-0 px-2"
+						onclick={onDeselectAll}
+						title="Clear selection"
+					>
+						<X size={16} />
+					</button>
+				</div>
 			{:else if canEdit && totalCount > 0}
 				<button
 					class="btn btn-sm btn-ghost gap-1"

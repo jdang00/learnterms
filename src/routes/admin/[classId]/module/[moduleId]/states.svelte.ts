@@ -2,6 +2,8 @@ import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
 import type { ConvexClient } from 'convex/browser';
 import { goto } from '$app/navigation';
+import { toastStore } from '$lib/stores/toast.svelte';
+import type { StatusFilter } from '$lib/types';
 
 export type QuestionItem = Doc<'question'>;
 export type MediaItem = { _id: string; url: string; altText: string; caption?: string };
@@ -18,7 +20,11 @@ export class QuestionCurationState {
 	search: string = $state('');
 	searchInput: string = $state('');
 	sortMode: SortMode = $state('order');
+	statusFilter: StatusFilter = $state('all');
 	private searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Auto-select after create
+	pendingSelectId: string | null = $state(null);
 
 	// Preferences
 	defaultQuestionStatus: DefaultQuestionStatus = $state('published');
@@ -124,10 +130,27 @@ export class QuestionCurationState {
 		if (this.searchTimeout) clearTimeout(this.searchTimeout);
 	}
 
+	// Status filter
+	setStatusFilter(filter: StatusFilter) {
+		this.statusFilter = filter;
+	}
+
 	// Question list sync
 	syncQuestionList(questionsData: QuestionItem[] | null | undefined) {
 		if (questionsData) {
-			this.questionList = [...questionsData];
+			if (this.statusFilter === 'all') {
+				this.questionList = [...questionsData];
+			} else {
+				this.questionList = questionsData.filter((q) => q.status === this.statusFilter);
+			}
+
+			if (this.pendingSelectId) {
+				const found = this.questionList.find((q) => q._id === this.pendingSelectId);
+				if (found) {
+					this.selectedQuestionId = this.pendingSelectId;
+					this.pendingSelectId = null;
+				}
+			}
 		}
 	}
 
@@ -235,8 +258,13 @@ export class QuestionCurationState {
 				questionId: this.questionToDelete._id as Id<'question'>,
 				moduleId: this.moduleId as Id<'module'>
 			});
+			if (this.selectedQuestionId === this.questionToDelete._id) {
+				this.selectedQuestionId = null;
+			}
+			toastStore.success('Question deleted');
 		} catch (error) {
 			console.error('Failed to delete question', error);
+			toastStore.error('Failed to delete question');
 		} finally {
 			this.isDeleteQuestionModalOpen = false;
 			this.questionToDelete = null;
@@ -265,11 +293,15 @@ export class QuestionCurationState {
 				moduleId: this.moduleId as Id<'module'>
 			});
 			if (result.success) {
-				console.log(`Successfully deleted ${result.deletedCount} questions`);
+				toastStore.success(`Deleted ${result.deletedCount} question${result.deletedCount !== 1 ? 's' : ''}`);
+			}
+			if (this.selectedQuestionId && this.selectedQuestions.has(this.selectedQuestionId)) {
+				this.selectedQuestionId = null;
 			}
 			this.selectedQuestions = new Set();
 		} catch (error) {
 			console.error('Failed to bulk delete questions', error);
+			toastStore.error('Failed to delete questions');
 		} finally {
 			this.isBulkDeleteModalOpen = false;
 		}
@@ -287,11 +319,16 @@ export class QuestionCurationState {
 		this.isMoveModalOpen = true;
 	}
 
-	handleCloseMoveModal(success?: boolean) {
+	handleCloseMoveModal(success?: boolean, movedCount?: number) {
 		this.isMoveModalOpen = false;
+		const count = movedCount ?? this.moveQuestionIds.length;
 		this.moveQuestionIds = [];
 		if (success) {
+			if (this.selectedQuestionId && this.selectedQuestions.has(this.selectedQuestionId)) {
+				this.selectedQuestionId = null;
+			}
 			this.selectedQuestions = new Set();
+			toastStore.success(`Moved ${count} question${count !== 1 ? 's' : ''}`);
 		}
 	}
 
@@ -321,12 +358,15 @@ export class QuestionCurationState {
 				this.recentlyAddedIds = next;
 				setTimeout(() => {
 					this.recentlyAddedIds = new Set();
-				}, 2000);
+				}, 4000);
 			}
+			toastStore.success(`Duplicated ${count} cop${count !== 1 ? 'ies' : 'y'}`);
 		} catch (error: any) {
 			console.error('Failed to duplicate questions');
 			if (error.message?.includes('Module limit reached') || error.toString().includes('Module limit reached')) {
 				this.isLimitModalOpen = true;
+			} else {
+				toastStore.error('Failed to duplicate');
 			}
 		} finally {
 			this.isDuplicateModalOpen = false;
@@ -334,11 +374,38 @@ export class QuestionCurationState {
 		}
 	}
 
+	async quickDuplicate(questionId: string) {
+		if (!this.client) return;
+		try {
+			const result = await this.client.mutation(api.question.duplicateQuestion, {
+				questionId: questionId as Id<'question'>
+			});
+			if (result) {
+				const next = new Set(this.recentlyAddedIds);
+				next.add(result);
+				this.recentlyAddedIds = next;
+				setTimeout(() => {
+					this.recentlyAddedIds = new Set();
+				}, 4000);
+			}
+			toastStore.success('Question duplicated');
+		} catch (error: any) {
+			if (error.message?.includes('Module limit reached') || error.toString().includes('Module limit reached')) {
+				this.isLimitModalOpen = true;
+			} else {
+				toastStore.error('Failed to duplicate');
+			}
+		}
+	}
+
 	// Inline editor handlers
-	handleInlineEditorSave() {
+	handleInlineEditorSave(newQuestionId?: string) {
 		this.hasUnsavedChanges = false;
 		this.editorMode = 'view';
 		this.editingQuestionForInline = null;
+		if (newQuestionId) {
+			this.pendingSelectId = newQuestionId;
+		}
 		this.closeEditQuestionModal();
 	}
 

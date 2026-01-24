@@ -5,7 +5,7 @@
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-	import { Pencil, Trash2, Plus, ArrowLeft } from 'lucide-svelte';
+	import { Pencil, Trash2, Plus, ArrowLeft, GripVertical } from 'lucide-svelte';
 	import EditModuleModal from '$lib/admin/EditModuleModal.svelte';
 	import AddModuleModal from '$lib/admin/AddModuleModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
@@ -47,6 +47,9 @@
 	let isDeleteModuleModalOpen = $state(false);
 	let moduleToDelete = $state<ModuleItem | null>(null);
 	let moduleQuestionCount = $state<number>(0);
+	
+	// UI State
+	let reorderMode = $state(false);
 
 	async function confirmDelete() {
 		if (!classToDelete) return;
@@ -79,7 +82,7 @@
 		tags?: { _id: Id<'tags'>; name: string; color?: string }[];
 	};
 	let moduleList = $state<ModuleItem[]>([]);
-	const reorderEnabled = $derived(admin);
+	const reorderEnabled = $derived(admin && reorderMode);
 	const moduleSource = $derived.by(() =>
 		moduleList.length > 0 ? moduleList : modules.data ? [...modules.data] : []
 	);
@@ -214,17 +217,24 @@
 				<div>
 					<h1 class="text-xl sm:text-2xl font-bold text-base-content">{classInfo.data.name}</h1>
 					<p class="text-sm sm:text-base text-base-content/70">
-						Manage your learning modules for {classInfo.data.code}. {#if reorderEnabled}Drag and drop
-							to reorder them.{/if}
+						Manage your learning modules for {classInfo.data.code}. {#if reorderMode}Drag to reorder.{/if}
 					</p>
 				</div>
 			{/if}
 
 			<div class="flex items-center gap-2 self-start sm:self-auto">
 				{#if admin}
+					<button 
+						class="btn gap-2 {reorderMode ? 'btn-primary' : 'btn-ghost'}" 
+						onclick={() => reorderMode = !reorderMode}
+					>
+						<GripVertical size={16} />
+						<span class="hidden sm:inline">{reorderMode ? 'Done' : 'Reorder'}</span>
+					</button>
 					<button class="btn btn-primary gap-2" onclick={openAddModuleModal}>
 						<Plus size={16} />
-						<span>Add New Module</span>
+						<span class="hidden sm:inline">Add New Module</span>
+						<span class="sm:hidden">Add</span>
 					</button>
 				{/if}
 			</div>
@@ -284,16 +294,25 @@
 					>
 						<div class="flex flex-col h-full">
 							<div class="flex flex-row justify-between mb-4">
-								<div class="flex flex-col gap-1">
-									<a
-										href={`/admin/${classId}/module/${moduleItem._id}`}
-										class="font-semibold text-base-content text-left hover:text-primary transition-colors cursor-pointer"
-										title={`Go to questions for ${moduleItem.title}`}
-									>
-										<span class="mr-2 text-xl">{moduleItem.emoji || '📘'}</span>
-										<div class="hyphens-auto">{moduleItem.title}</div>
-									</a>
-									<div class="text-xs text-base-content/60 flex items-center gap-1">
+								<div class="flex flex-col gap-1 flex-1 min-w-0">
+									<div class="flex items-start gap-2">
+										{#if reorderMode}
+											<div class="mt-1 cursor-grab active:cursor-grabbing text-base-content/40">
+												<GripVertical size={20} />
+											</div>
+										{/if}
+										<div class="flex-1 min-w-0">
+											<a
+												href={`/admin/${classId}/module/${moduleItem._id}`}
+												class="font-semibold text-base-content text-left hover:text-primary transition-colors cursor-pointer block"
+												title={`Go to questions for ${moduleItem.title}`}
+											>
+												<span class="mr-2 text-xl inline-block align-middle">{moduleItem.emoji || '📘'}</span>
+												<span class="align-middle break-words">{moduleItem.title}</span>
+											</a>
+										</div>
+									</div>
+									<div class="text-xs text-base-content/60 flex items-center gap-1 {reorderMode ? 'pl-7' : ''}">
 										<span>
 											{moduleItem.questionCount} question{moduleItem.questionCount === 1 ? '' : 's'}
 										</span>

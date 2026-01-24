@@ -7,8 +7,9 @@
 	import { flip } from 'svelte/animate';
 	import { Plus, ArrowLeft, GripVertical, Trash2, ArrowRightLeft, X } from 'lucide-svelte';
 	import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
-	import DuplicateQuestionModal from '$lib/admin/DuplicateQuestionModal.svelte';
+
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
+	import DuplicateQuestionModal from '$lib/admin/DuplicateQuestionModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import MoveQuestionsModal from '$lib/admin/MoveQuestionsModal.svelte';
 	import QuestionEditorInline from '$lib/admin/QuestionEditorInline.svelte';
@@ -87,6 +88,8 @@
 	// Sync data from queries to state
 	$effect(() => {
 		curationState.handleEditParam(editParam, questions.data);
+		// Track statusFilter to re-filter when it changes
+		const _filter = curationState.statusFilter;
 		curationState.syncQuestionList(questions.data);
 	});
 
@@ -169,6 +172,7 @@
 			<QuestionListControls
 				searchInput={curationState.searchInput}
 				sortMode={curationState.sortMode}
+				statusFilter={curationState.statusFilter}
 				defaultStatus={curationState.defaultQuestionStatus}
 				reorderMode={curationState.reorderMode}
 				selectedCount={curationState.selectedQuestions.size}
@@ -179,6 +183,7 @@
 				onSearchChange={(v) => { curationState.searchInput = v; curationState.updateSearch(); }}
 				onSearchClear={() => curationState.clearSearch()}
 				onSortChange={(m) => curationState.setSortMode(m)}
+				onStatusFilterChange={(f) => curationState.setStatusFilter(f)}
 				onDefaultStatusChange={(s) => curationState.setDefaultQuestionStatus(s)}
 				onReorderToggle={() => curationState.toggleReorderMode()}
 				onSelectAll={() => curationState.selectAllQuestions()}
@@ -307,6 +312,7 @@
 						<QuestionListControls
 							searchInput={curationState.searchInput}
 							sortMode={curationState.sortMode}
+							statusFilter={curationState.statusFilter}
 							defaultStatus={curationState.defaultQuestionStatus}
 							reorderMode={curationState.reorderMode}
 							selectedCount={curationState.selectedQuestions.size}
@@ -317,6 +323,7 @@
 							onSearchChange={(v) => { curationState.searchInput = v; curationState.updateSearch(); }}
 							onSearchClear={() => curationState.clearSearch()}
 							onSortChange={(m) => curationState.setSortMode(m)}
+							onStatusFilterChange={(f) => curationState.setStatusFilter(f)}
 							onDefaultStatusChange={(s) => curationState.setDefaultQuestionStatus(s)}
 							onReorderToggle={() => curationState.toggleReorderMode()}
 							onSelectAll={() => curationState.selectAllQuestions()}
@@ -435,7 +442,7 @@
 							{moduleId}
 							mode="add"
 							defaultStatus={curationState.defaultQuestionStatus}
-							onSave={() => curationState.handleInlineEditorSave()}
+							onSave={(id) => curationState.handleInlineEditorSave(id)}
 							onCancel={() => curationState.handleInlineEditorCancel()}
 							onChange={() => curationState.handleEditorChange()}
 						/>
@@ -446,7 +453,7 @@
 								editingQuestion={curationState.editingQuestionForInline}
 								mode="edit"
 								defaultStatus={curationState.defaultQuestionStatus}
-								onSave={() => curationState.handleInlineEditorSave()}
+								onSave={(id) => curationState.handleInlineEditorSave(id)}
 								onCancel={() => curationState.handleInlineEditorCancel()}
 								onChange={() => curationState.handleEditorChange()}
 							/>
@@ -461,7 +468,9 @@
 							{isModuleFull}
 							onEdit={() => curationState.editQuestion(selectedQuestion)}
 							onMove={() => curationState.openMoveModalForOne(selectedQuestion._id)}
-							onDuplicate={() => isModuleFull ? curationState.isLimitModalOpen = true : curationState.openDuplicateModal(questions.data, selectedQuestion._id)}
+							onDuplicate={() => isModuleFull ? curationState.isLimitModalOpen = true : curationState.quickDuplicate(selectedQuestion._id)}
+							onDuplicateMany={() => curationState.openDuplicateModal(questions.data, selectedQuestion._id)}
+
 							onDelete={() => curationState.openDeleteModal(questions.data, selectedQuestion._id)}
 							onAttachmentClick={(a) => curationState.openAttachmentViewer(a)}
 						/>
@@ -518,7 +527,8 @@
 				{isModuleFull}
 				onEdit={() => curationState.editQuestion(selectedQuestion)}
 				onMove={() => curationState.openMoveModalForOne(selectedQuestion._id)}
-				onDuplicate={() => isModuleFull ? curationState.isLimitModalOpen = true : curationState.openDuplicateModal(questions.data, selectedQuestion._id)}
+				onDuplicate={() => isModuleFull ? curationState.isLimitModalOpen = true : curationState.quickDuplicate(selectedQuestion._id)}
+				onDuplicateMany={() => curationState.openDuplicateModal(questions.data, selectedQuestion._id)}
 				onDelete={() => curationState.openDeleteModal(questions.data, selectedQuestion._id)}
 			/>
 		</div>
@@ -528,10 +538,15 @@
 
 <AddQuestionModal isAddModalOpen={curationState.isAddQuestionModalOpen} closeAddModal={() => curationState.closeAddQuestionModal()} {moduleId} defaultStatus={curationState.defaultQuestionStatus} />
 <EditQuestionModal isEditModalOpen={curationState.isEditQuestionModalOpen} closeEditModal={() => curationState.closeEditQuestionModal()} editingQuestion={curationState.editingQuestion} {moduleId} />
+<DuplicateQuestionModal 
+    isOpen={curationState.isDuplicateModalOpen} 
+    onCancel={() => curationState.cancelDuplicateModal()} 
+    onConfirm={(count) => curationState.confirmDuplicateModal(count)} 
+    itemName={curationState.duplicateTarget?.stem?.replace(/<[^>]*>/g, '').substring(0, 30)} 
+/>
 <DeleteConfirmationModal isDeleteModalOpen={curationState.isDeleteQuestionModalOpen} onCancel={() => curationState.cancelQuestionDelete()} onConfirm={() => curationState.confirmQuestionDelete()} itemName={curationState.questionToDelete?.stem} itemType="question" />
 <DeleteConfirmationModal isDeleteModalOpen={curationState.isBulkDeleteModalOpen} onCancel={() => curationState.closeBulkDeleteModal()} onConfirm={() => curationState.confirmBulkDelete()} itemName={`${curationState.selectedQuestions.size} selected questions`} itemType="question" />
 <MoveQuestionsModal isOpen={curationState.isMoveModalOpen} onClose={(s?: boolean) => curationState.handleCloseMoveModal(s)} sourceModuleId={moduleId} selectedQuestionIds={curationState.moveQuestionIds} />
-<DuplicateQuestionModal isOpen={curationState.isDuplicateModalOpen} onCancel={() => curationState.cancelDuplicateModal()} onConfirm={(c) => curationState.confirmDuplicateModal(c)} itemName={curationState.duplicateTarget?.stem} />
 
 <dialog class="modal" class:modal-open={curationState.showUnsavedChangesModal}>
 	<div class="modal-box">
