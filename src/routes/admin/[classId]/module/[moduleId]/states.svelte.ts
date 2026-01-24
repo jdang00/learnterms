@@ -3,13 +3,13 @@ import { api } from '../../../../../convex/_generated/api';
 import type { ConvexClient } from 'convex/browser';
 import { goto } from '$app/navigation';
 import { toastStore } from '$lib/stores/toast.svelte';
+import type { StatusFilter } from '$lib/types';
 
 export type QuestionItem = Doc<'question'>;
 export type MediaItem = { _id: string; url: string; altText: string; caption?: string };
 export type SortMode = 'order' | 'created_desc';
 export type EditorMode = 'view' | 'add' | 'edit';
 export type DefaultQuestionStatus = 'published' | 'draft';
-export type StatusFilter = 'all' | 'published' | 'draft' | 'archived';
 
 export class QuestionCurationState {
 	// Dependencies

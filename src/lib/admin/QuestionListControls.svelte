@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { GripVertical, Trash2, ArrowRightLeft, X, CheckSquare, FileText, CheckCircle, Filter } from 'lucide-svelte';
+	import type { StatusFilter } from '$lib/types';
 
 	type SortMode = 'order' | 'created_desc';
-	type StatusFilter = 'all' | 'published' | 'draft' | 'archived';
 
 	interface Props {
 		searchInput: string;
