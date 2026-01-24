@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { isAddModalOpen, closeAddModal, moduleId } = $props();
+	let { isAddModalOpen, closeAddModal, moduleId, defaultStatus = 'draft' }: { isAddModalOpen: boolean; closeAddModal: () => void; moduleId: string; defaultStatus?: 'published' | 'draft' } = $props();
 
 	import {
 		X,
@@ -36,6 +36,7 @@
 	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
 	import { getEditorExtensions } from '../config/tiptap';
 	import { useClerkContext } from 'svelte-clerk';
+	import ModuleLimitModal from './ModuleLimitModal.svelte';
 
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
@@ -386,8 +387,9 @@
 	let questionStemText: string = $state('');
 	let questionExplanation: string = $state('');
 	let questionExplanationText: string = $state('');
-	let questionStatus: string = $state('draft');
+	let questionStatus: string = $state(defaultStatus);
 	let questionType: string = $state('multiple_choice');
+	let isLimitModalOpen = $state(false);
 	let options: Array<{ text: string }> = $state([
 		{ text: '' },
 		{ text: '' },
@@ -714,7 +716,7 @@
 				questionStemText = '';
 				questionExplanation = '';
 				questionExplanationText = '';
-				questionStatus = 'draft';
+				questionStatus = defaultStatus;
 				questionType = 'multiple_choice';
 				options = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
 				correctAnswers = [];
@@ -729,8 +731,11 @@
 				}
 				closeAddModal();
 				return;
-			} catch (error) {
+			} catch (error: any) {
 				console.error('Failed to create matching question', error);
+				if (error.message?.includes('Module limit reached') || error.toString().includes('Module limit reached')) {
+					isLimitModalOpen = true;
+				}
 			} finally {
 				isSubmitting = false;
 			}
@@ -809,7 +814,7 @@
 			questionStemText = '';
 			questionExplanation = '';
 			questionExplanationText = '';
-			questionStatus = 'draft';
+			questionStatus = defaultStatus;
 			questionType = 'multiple_choice';
 			options = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
 			correctAnswers = [];
@@ -822,8 +827,11 @@
 				$explanationEditor.commands.setContent('');
 			}
 			closeAddModal();
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Failed to create question', error);
+			if (error.message?.includes('Module limit reached') || error.toString().includes('Module limit reached')) {
+				isLimitModalOpen = true;
+			}
 		} finally {
 			isSubmitting = false;
 		}
@@ -1200,4 +1208,6 @@
 			</form>
 		</div>
 	</div>
+
+	<ModuleLimitModal isOpen={isLimitModalOpen} onClose={() => isLimitModalOpen = false} />
 </dialog>

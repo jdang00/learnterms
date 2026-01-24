@@ -16,11 +16,12 @@
 	const ctx = useClerkContext();
 	const name = $derived(ctx.user?.firstName);
 	const user = $derived(ctx.user);
-	const admin = $derived(ctx.user?.publicMetadata.role === 'admin');
-	const contributor = $derived(ctx.user?.publicMetadata.create === 'contributor');
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
+	const dev = $derived(userData?.role === 'dev');
+	const admin = $derived(userData?.role === 'admin');
+	const curator = $derived(userData?.role === 'curator');
 
 	let currentView: 'classes' | 'modules' = $state('classes');
 	let selectedClass: ClassWithSemester | null = $state(null);
@@ -127,14 +128,19 @@
 							<div class="badge badge-primary rounded-full badge-soft mt-2">
 								{userData.cohortName}
 							</div>
+							{#if dev}
+								<div class="badge badge-error rounded-full badge-soft mt-2">
+									<ShieldCheckIcon size={16} /> Dev
+								</div>
+							{/if}
 							{#if admin}
 								<div class="badge badge-secondary rounded-full badge-soft mt-2">
 									<ShieldCheckIcon size={16} /> Admin
 								</div>
 							{/if}
-							{#if contributor}
+							{#if curator}
 								<div class="badge badge-accent rounded-full badge-soft mt-2">
-									<UserRoundPenIcon size={16} /> Contributor
+									<UserRoundPenIcon size={16} /> Curator
 								</div>
 							{/if}
 						{/if}

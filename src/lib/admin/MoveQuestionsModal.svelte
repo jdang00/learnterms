@@ -6,6 +6,7 @@
   import { api } from '../../convex/_generated/api.js';
   import type { Id, Doc } from '../../convex/_generated/dataModel';
   import { useClerkContext } from 'svelte-clerk/client';
+  import ModuleLimitModal from './ModuleLimitModal.svelte';
 
   const client = useConvexClient();
   const clerk = useClerkContext();
@@ -32,6 +33,7 @@
   let selectedClassId: Id<'class'> | null = $state(null);
   let selectedModuleId: Id<'module'> | null = $state(null);
   let isSubmitting = $state(false);
+  let isLimitModalOpen = $state(false);
 
   // Get modules for selected class - using skip pattern at top level
   const modules = useQuery(
@@ -56,8 +58,12 @@
       });
       resetSelections();
       onClose(true);
-    } catch (e) {
-      onClose(false);
+    } catch (e: any) {
+      if (e.message?.includes('Module limit reached') || e.toString().includes('Module limit reached')) {
+        isLimitModalOpen = true;
+      } else {
+        onClose(false);
+      }
     } finally {
       isSubmitting = false;
     }
@@ -141,6 +147,8 @@
       </form>
     </div>
   </div>
+
+  <ModuleLimitModal isOpen={isLimitModalOpen} onClose={() => isLimitModalOpen = false} />
 </dialog>
 
 

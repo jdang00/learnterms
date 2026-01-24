@@ -14,7 +14,9 @@
       "Bash(ls:*)",
       "Bash(bunx convex run:*)",
       "Bash(bunx convex deploy:*)",
-      "Bash(bunx npm view:*)"
+      "Bash(bunx npm view:*)",
+      "Bash(wc:*)",
+      "WebFetch(domain:daisyui.com)"
     ]
   }
 }

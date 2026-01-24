@@ -21,7 +21,6 @@
 	import EditClassModal from '$lib/admin/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
-	import { useClerkContext } from 'svelte-clerk/client';
 	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
 
 	let { data }: { data: PageData } = $props();
@@ -35,8 +34,8 @@
 
 	const client = useConvexClient();
 
-	const clerk = useClerkContext();
-	const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
+	const dev = $derived(userData?.role === 'dev');
+	const admin = $derived(userData?.role === 'admin');
 
 	type ClassItem = Doc<'class'> & {
 		semester?: {

@@ -733,3 +733,37 @@ export const getNextCohortForUserBackfill = query({
 		};
 	}
 });
+
+export const bootstrapAdmin = mutation({
+	args: {
+		clerkUserId: v.string()
+	},
+	handler: async (ctx, args) => {
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
+			.first();
+
+		if (!user) throw new Error('User not found');
+
+		await ctx.db.patch(user._id, { role: 'admin', updatedAt: Date.now() });
+		return { success: true, userId: user._id };
+	}
+});
+
+export const bootstrapDev = mutation({
+	args: {
+		clerkUserId: v.string()
+	},
+	handler: async (ctx, args) => {
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
+			.first();
+
+		if (!user) throw new Error('User not found');
+
+		await ctx.db.patch(user._id, { role: 'dev', updatedAt: Date.now() });
+		return { success: true, userId: user._id };
+	}
+});

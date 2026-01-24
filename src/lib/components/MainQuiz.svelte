@@ -7,6 +7,8 @@
 	import ActionButtons from '$lib/components/ActionButtons.svelte';
 	import MobileMenu from '$lib/components/MobileMenu.svelte';
 	import MobileInfo from '$lib/components/MobileInfo.svelte';
+	import { useQuery } from 'convex-svelte';
+	import { api } from '../../convex/_generated/api';
 	import ResultBanner from '$lib/components/ResultBanner.svelte';
 	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
 	import {
@@ -36,9 +38,11 @@
 	} = $props();
 
 	const clerk = useClerkContext();
-	const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
-	const contributor = $derived(clerk.user?.publicMetadata.create === 'contributor');
-	const canEdit = $derived(admin || contributor);
+	const userDataQuery = useQuery(
+		api.users.getUserById,
+		() => clerk.user ? { id: clerk.user.id } : 'skip'
+	);
+	const canEdit = $derived(userDataQuery.data?.role === 'dev' || userDataQuery.data?.role === 'admin' || userDataQuery.data?.role === 'curator');
 
 	function isAuthError(error: any): boolean {
 		if (!error) return false;

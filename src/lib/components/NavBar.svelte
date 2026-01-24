@@ -7,8 +7,6 @@
 	import type { Id } from '../../convex/_generated/dataModel';
 
 	const ctx = useClerkContext();
-	const plan = $derived(ctx.user?.publicMetadata.plan === 'pro');
-	const dev = $derived(ctx.user?.publicMetadata.view === 'developer');
 	const user = $derived(ctx.user);
 
 	const client = useConvexClient();
@@ -18,6 +16,9 @@
 		api.users.getUserById,
 		() => user ? { id: user.id } : 'skip'
 	);
+
+	const dev = $derived(userDataQuery.data?.role === 'dev');
+	const plan = $derived(userDataQuery.data?.plan === 'pro');
 
 	const cohortsList = useQuery(
 		api.cohort.listCohortsWithSchools,

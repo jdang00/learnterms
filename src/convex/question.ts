@@ -1,9 +1,70 @@
-import { mutation, action } from './_generated/server';
-import { authCreateMutation } from './authQueries';
+import { mutation, action, internalMutation } from './_generated/server';
+import { authCuratorMutation } from './authQueries';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
+import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
+
+const MAX_QUESTIONS_PER_MODULE = 150;
+const LIMIT_FREE = 15;
+const LIMIT_PRO = 300;
+
+export const checkAndIncrementUsage = internalMutation({
+	args: { count: v.number(), clerkUserId: v.string() },
+	handler: async (ctx, { count, clerkUserId }) => {
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkUserId))
+			.first();
+
+		if (!user) throw new Error('User not found');
+
+		const now = Date.now();
+		const oneDayMs = 24 * 60 * 60 * 1000;
+		let usage = user.generationUsage;
+
+		// Initialize or reset if older than 24h
+		if (!usage || now - usage.lastResetAt > oneDayMs) {
+			usage = { count: 0, lastResetAt: now };
+		}
+
+		const limit = user.plan === 'pro' ? LIMIT_PRO : LIMIT_FREE;
+
+		if (usage.count + count > limit) {
+			if (user.plan === 'pro') {
+				throw new Error(
+					`Daily generation limit reached. You have used ${usage.count}/${limit} generations today. That's a lot of studying! Please check back tomorrow.`
+				);
+			}
+			throw new Error(
+				`Daily generation limit reached. You have used ${usage.count}/${limit} generations today. Upgrade to Pro for more.`
+			);
+		}
+
+		await ctx.db.patch(user._id, {
+			generationUsage: {
+				count: usage.count + count,
+				lastResetAt: usage.lastResetAt
+			}
+		});
+	}
+});
+
+async function checkModuleCapacity(
+	ctx: MutationCtx,
+	moduleId: Id<'module'>,
+	countToAdd: number
+): Promise<void> {
+	const module = await ctx.db.get(moduleId);
+	if (!module) throw new Error('Module not found');
+	
+	const currentCount = module.questionCount ?? 0;
+	
+	if (currentCount + countToAdd > MAX_QUESTIONS_PER_MODULE) {
+		throw new Error(`Module limit reached (${MAX_QUESTIONS_PER_MODULE} questions). Please split this module for better learning retention.`);
+	}
+}
 
 async function adjustModuleQuestionCount(
 	ctx: MutationCtx,
@@ -100,7 +161,7 @@ export const getFirstQuestionInModule = authQuery({
 	}
 });
 
-export const insertQuestion = authCreateMutation({
+export const insertQuestion = authCuratorMutation({
 	args: {
 		moduleId: v.id('module'),
 		type: v.string(),
@@ -129,6 +190,8 @@ export const insertQuestion = authCreateMutation({
 		)
 	},
     handler: async (ctx, args) => {
+		await checkModuleCapacity(ctx, args.moduleId, 1);
+
 		const optionsWithIds = args.options.map((option, index) => ({
 			id: makeOptionId(args.stem, option.text, index),
 			text: option.text
@@ -174,7 +237,7 @@ export const insertQuestion = authCreateMutation({
 	}
 });
 
-export const deleteQuestion = authCreateMutation({
+export const deleteQuestion = authCuratorMutation({
 	args: {
 		questionId: v.id('question'),
 		moduleId: v.id('module')
@@ -191,7 +254,7 @@ export const deleteQuestion = authCreateMutation({
 	}
 });
 
-export const bulkDeleteQuestions = authCreateMutation({
+export const bulkDeleteQuestions = authCuratorMutation({
 	args: {
 		questionIds: v.array(v.id('question')),
 		moduleId: v.id('module')
@@ -232,7 +295,7 @@ export const bulkDeleteQuestions = authCreateMutation({
 	}
 });
 
-export const updateQuestion = authCreateMutation({
+export const updateQuestion = authCuratorMutation({
 	args: {
 		questionId: v.id('question'),
 		moduleId: v.id('module'),
@@ -263,26 +326,14 @@ export const updateQuestion = authCreateMutation({
         }
         let correctAnswerIds: string[];
         if (isMatching) {
-            const oldIdToText: Record<string, string> = {};
-            for (const opt of questionToUpdate.options || []) {
-                oldIdToText[opt.id] = opt.text;
-            }
-            const textToNewId: Record<string, string> = {};
-            for (const opt of optionsWithIds) {
-                textToNewId[opt.text] = opt.id;
-            }
-            correctAnswerIds = (args.correctAnswers || [])
-                .map((pair) => {
-                    const [oldPromptId, oldAnswerId] = String(pair).split('::');
-                    const promptText = oldIdToText[oldPromptId];
-                    const answerText = oldIdToText[oldAnswerId];
-                    if (!promptText || !answerText) return '';
-                    const newPromptId = textToNewId[promptText];
-                    const newAnswerId = textToNewId[answerText];
-                    if (!newPromptId || !newAnswerId) return '';
-                    return `${newPromptId}::${newAnswerId}`;
-                })
-                .filter((s) => s !== '');
+            // For matching questions, the frontend sends IDs generated from the new text.
+            // Since makeOptionId is deterministic, these IDs match the ones we generated in optionsWithIds.
+            // We just need to filter out any that might be invalid (though they shouldn't be).
+            const availableIds = new Set(optionsWithIds.map((o) => o.id));
+            correctAnswerIds = (args.correctAnswers || []).filter((pair) => {
+                const [promptId, answerId] = String(pair).split('::');
+                return availableIds.has(promptId) && availableIds.has(answerId);
+            });
         } else {
             correctAnswerIds = args.correctAnswers
                 .map((correctAnswer) => {
@@ -321,7 +372,7 @@ export const updateQuestion = authCreateMutation({
 	}
 });
 
-export const createQuestion = authCreateMutation({
+export const createQuestion = authCuratorMutation({
 	args: {
 		moduleId: v.id('module'),
 		type: v.string(),
@@ -344,6 +395,8 @@ export const createQuestion = authCreateMutation({
 		updatedAt: v.number()
 	},
     handler: async (ctx, args) => {
+		await checkModuleCapacity(ctx, args.moduleId, 1);
+
 		const identity = await ctx.auth.getUserIdentity();
 		const createdBy = identity?.givenName && identity?.familyName
 			? {
@@ -378,7 +431,7 @@ export const createQuestion = authCreateMutation({
 	}
 });
 
-export const bulkInsertQuestions = authCreateMutation({
+export const bulkInsertQuestions = authCuratorMutation({
 	args: {
 		moduleId: v.id('module'),
 		questions: v.array(
@@ -405,6 +458,8 @@ export const bulkInsertQuestions = authCreateMutation({
 		)
 	},
     handler: async (ctx, { moduleId, questions }) => {
+		await checkModuleCapacity(ctx, moduleId, questions.length);
+
 		const insertedIds: string[] = [];
 
         for (const q of questions) {
@@ -463,7 +518,7 @@ export const bulkInsertQuestions = authCreateMutation({
 	}
 });
 
-export const updateQuestionOrder = authCreateMutation({
+export const updateQuestionOrder = authCuratorMutation({
 	args: {
 		questionId: v.id('question'),
 		newOrder: v.number(),
@@ -497,7 +552,7 @@ export const updateQuestionOrder = authCreateMutation({
 	}
 });
 
-export const moveQuestionsToModule = authCreateMutation({
+export const moveQuestionsToModule = authCuratorMutation({
 	args: {
 		sourceModuleId: v.id('module'),
 		targetModuleId: v.id('module'),
@@ -507,6 +562,8 @@ export const moveQuestionsToModule = authCreateMutation({
 		if (args.sourceModuleId === args.targetModuleId) {
 			return { moved: 0, errors: [], success: true };
 		}
+
+		await checkModuleCapacity(ctx, args.targetModuleId, args.questionIds.length);
 
 		const targetQuestions = await ctx.db
 			.query('question')
@@ -559,13 +616,15 @@ export const moveQuestionsToModule = authCreateMutation({
 	}
 });
 
-export const duplicateQuestion = authCreateMutation({
+export const duplicateQuestion = authCuratorMutation({
 	args: { questionId: v.id('question') },
 	handler: async (ctx, { questionId }) => {
 		const original = await ctx.db.get(questionId);
 		if (!original) {
 			throw new Error('Question not found');
 		}
+
+		await checkModuleCapacity(ctx, original.moduleId, 1);
 
 		const lastInModule = await ctx.db
 			.query('question')
@@ -604,7 +663,7 @@ export const duplicateQuestion = authCreateMutation({
 	}
 });
 
-export const duplicateQuestionMany = authCreateMutation({
+export const duplicateQuestionMany = authCuratorMutation({
 	args: { questionId: v.id('question'), count: v.number() },
 	handler: async (ctx, { questionId, count }) => {
 		const original = await ctx.db.get(questionId);
@@ -612,6 +671,8 @@ export const duplicateQuestionMany = authCreateMutation({
 			throw new Error('Question not found');
 		}
 		const n = Math.max(1, Math.min(10, count));
+
+		await checkModuleCapacity(ctx, original.moduleId, n);
 
 		const lastInModule = await ctx.db
 			.query('question')
@@ -762,7 +823,7 @@ export const backfillSearchTextForAllModules = mutation({
 	}
 });
 
-export const repairMatchingPairsForModule = authCreateMutation({
+export const repairMatchingPairsForModule = authCuratorMutation({
     args: { moduleId: v.id('module') },
     handler: async (ctx, { moduleId }) => {
         const items = await ctx.db
@@ -814,6 +875,14 @@ export const generateQuestions = action({
 		customPrompt: v.optional(v.string())
 	},
 	handler: async (ctx, { material, model, numQuestions, focus, customPrompt }) => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) throw new Error('Unauthenticated');
+
+		await ctx.runMutation(internal.question.checkAndIncrementUsage, {
+			count: numQuestions,
+			clerkUserId: identity.subject
+		});
+
 		if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.trim().length === 0) {
 			throw new Error('GEMINI_API_KEY is not configured');
 		}

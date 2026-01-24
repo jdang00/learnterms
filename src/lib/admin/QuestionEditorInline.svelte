@@ -40,6 +40,7 @@
 		moduleId,
 		editingQuestion = null,
 		mode = 'add',
+		defaultStatus = 'draft',
 		onSave,
 		onCancel,
 		onChange = () => {}
@@ -47,6 +48,7 @@
 		moduleId: string;
 		editingQuestion?: QuestionItem | null;
 		mode?: 'add' | 'edit';
+		defaultStatus?: 'published' | 'draft';
 		onSave: () => void;
 		onCancel: () => void;
 		onChange?: () => void;
@@ -158,7 +160,7 @@
 
 	let questionStem: string = $state(editingQuestion?.stem || '');
 	let questionExplanation: string = $state(editingQuestion?.explanation || '');
-	let questionStatus: string = $state(editingQuestion?.status || 'draft');
+	let questionStatus: string = $state(editingQuestion?.status || defaultStatus);
 	let questionType: string = $state(editingQuestion?.type || 'multiple_choice');
 	let options: Array<{ id?: string; text: string }> = $state(
 		editingQuestion?.options?.length ? [...editingQuestion.options] : [{ text: '' }, { text: '' }, { text: '' }, { text: '' }]
@@ -516,14 +518,21 @@
 				return Math.abs(hash).toString(36).padStart(8, '0').slice(0, 8);
 			}
 
-			const promptOptions = rawPrompts.map((text, i) => ({
-				id: makeOptionId(questionStem, text, i),
-				text: `prompt:${text}`
-			}));
-			const answerOptions = rawAnswers.map((text, i) => ({
-				id: makeOptionId(questionStem, text, i + rawPrompts.length),
-				text: `answer:${text}`
-			}));
+			const promptOptions = rawPrompts.map((text, i) => {
+				const full = `prompt:${text}`;
+				return {
+					id: makeOptionId(questionStem, full, i),
+					text: full
+				};
+			});
+			const answersOffset = promptOptions.length;
+			const answerOptions = rawAnswers.map((text, i) => {
+				const full = `answer:${text}`;
+				return {
+					id: makeOptionId(questionStem, full, answersOffset + i),
+					text: full
+				};
+			});
 			const mappings: string[] = [];
 			const n = Math.min(rawPrompts.length, rawAnswers.length);
 			for (let i = 0; i < n; i++) {

@@ -27,7 +27,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		)?.emailAddress;
 
 		if (userData === null && user.fullName) {
-			// Create new user with full Clerk data
 			await client.mutation(api.users.addUser, {
 				clerkUserId: user.id,
 				name: user.fullName,
@@ -44,7 +43,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		} else if (userData?.cohortId === undefined) {
 			return redirect(307, '/join-class');
 		} else {
-			// Sync existing user's Clerk data on login
 			await client.mutation(api.users.syncUserFromClerk, {
 				clerkUserId: user.id,
 				firstName: user.firstName || undefined,

@@ -17,6 +17,8 @@ export default defineSchema({
 		lastSignInAt: v.optional(v.number()),
 		createdAt: v.optional(v.number()),
 		lastActiveAt: v.optional(v.number()),
+		role: v.optional(v.union(v.literal('dev'), v.literal('admin'), v.literal('curator'))),
+		plan: v.optional(v.union(v.literal('pro'), v.literal('free'))),
 		metadata: v.object({}),
 		// Denormalized progress stats for fast dashboard queries
 		progressStats: v.optional(
@@ -26,6 +28,13 @@ export default defineSchema({
 				totalQuestions: v.number(),
 				lastActivityAt: v.optional(v.number()),
 				updatedAt: v.number()
+			})
+		),
+		// Track AI generation usage for rate limiting
+		generationUsage: v.optional(
+			v.object({
+				count: v.number(),
+				lastResetAt: v.number()
 			})
 		)
 	})

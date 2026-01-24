@@ -27,8 +27,5 @@ tmp
 
 # Testing
 /src/routes/seed
-/src/lib/utils/seed.ts
-/src/lib/utils/seed-example.ts
-/src/routes/error-demo
 
 .cursor

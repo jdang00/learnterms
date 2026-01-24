@@ -85,13 +85,13 @@ export const deleteCohort = mutation({
 export const listCohortsWithSchools = authQuery({
 	args: {},
 	handler: async (ctx) => {
-		const meta = ctx.identity?.public_metadata;
-		const viewVal =
-			meta && typeof meta === 'object' && !Array.isArray(meta)
-				? (meta as Record<string, unknown>).view
-				: undefined;
-		const view = typeof viewVal === 'string' ? viewVal : undefined;
-		if (view !== 'developer') throw new Error('Unauthorized');
+		// Get user's role from Convex database
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
+			.first();
+
+		if (!user || user.role !== 'dev') throw new Error('Unauthorized');
 
 		const cohorts = await ctx.db.query('cohort').collect();
 		const result = await Promise.all(
