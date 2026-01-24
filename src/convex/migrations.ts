@@ -1,6 +1,7 @@
 import { internalMutation, mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import type { Id } from './_generated/dataModel';
+import { authAdminMutation } from './authQueries';
 
 /**
  * Get stats about questions and userProgress for migration planning (paginated).
@@ -734,7 +735,7 @@ export const getNextCohortForUserBackfill = query({
 	}
 });
 
-export const bootstrapAdmin = mutation({
+export const bootstrapAdmin = authAdminMutation({
 	args: {
 		clerkUserId: v.string()
 	},
@@ -751,7 +752,7 @@ export const bootstrapAdmin = mutation({
 	}
 });
 
-export const bootstrapDev = mutation({
+export const bootstrapDev = authAdminMutation({
 	args: {
 		clerkUserId: v.string()
 	},

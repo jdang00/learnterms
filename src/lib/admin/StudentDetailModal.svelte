@@ -24,16 +24,16 @@
 			lastName?: string;
 			email?: string;
 			imageUrl?: string;
-			role?: string;
+			role?: 'dev' | 'admin' | 'curator' | null;
 			plan?: string;
 			clerkUserId?: string;
 		} | null;
 		cohortId: Id<'cohort'>;
-		currentUserRole?: string;
+		currentUserRole?: 'dev' | 'admin' | 'curator' | null;
 		currentUserClerkId?: string;
 		isDev?: boolean;
 		isAdmin?: boolean;
-		updateRole?: (userId: Id<'users'>, role: string) => Promise<void>;
+		updateRole?: (userId: Id<'users'>, role: 'dev' | 'admin' | 'curator' | null) => Promise<void>;
 		updatePlan?: (userId: Id<'users'>, plan: string) => Promise<void>;
 	} = $props();
 
@@ -42,8 +42,8 @@
 
 	// Get available role options based on current user's role
 	const availableRoles = $derived.by(() => {
-		const roles: Array<{ value: string; label: string; icon: any; color: string }> = [
-			{ value: '', label: 'Student', icon: User, color: 'ghost' }
+		const roles: Array<{ value: 'dev' | 'admin' | 'curator' | null; label: string; icon: any; color: string }> = [
+			{ value: null, label: 'Student', icon: User, color: 'ghost' }
 		];
 
 		if (currentUserRole === 'dev') {
@@ -56,16 +56,16 @@
 		return roles;
 	});
 
-	// Can edit role if: admin+, not own profile, and not trying to edit admin/dev
+	// Can edit role if: admin or dev, not own profile, and not trying to edit admin/dev
 	const canEditRole = $derived.by(() => {
-		if (!isAdmin || isOwnProfile || !student) return false;
+		if (!(isAdmin || isDev) || isOwnProfile || !student) return false;
 		
-		const targetRole = student.role || 'student';
+		const targetRole = student.role ?? null;
 
 		if (currentUserRole === 'dev') {
 			return targetRole !== 'dev';
 		} else if (currentUserRole === 'admin') {
-			return targetRole === 'student' || targetRole === 'curator';
+			return targetRole === null || targetRole === 'curator';
 		}
 		
 		return false;
@@ -141,7 +141,7 @@
 		</div>
 
 		<!-- Role and Plan Management (Only if editable and not own profile) -->
-		{#if (canEditRole || canEditPlan) && student && updateRole && updatePlan && !isOwnProfile}
+		{#if (canEditRole || canEditPlan) && student && !isOwnProfile}
 			<div class="bg-base-200/50 rounded-2xl p-6 mb-6">
 				<div class="flex items-center gap-2 mb-4">
 					<Shield size={18} class="text-primary" />
@@ -150,7 +150,7 @@
 				
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 					<!-- Role Selection -->
-					{#if canEditRole}
+					{#if canEditRole && updateRole}
 						<div class="space-y-3">
 							<div class="flex items-center justify-between">
 								<span class="text-sm font-medium text-base-content/70">Access Level</span>
@@ -166,10 +166,10 @@
 									{#each availableRoles as roleOption}
 										<button 
 											class="join-item btn btn-sm flex-1 gap-2"
-											class:btn-active={(student.role ?? '') === roleOption.value}
-											class:btn-primary={(student.role ?? '') === roleOption.value && roleOption.value === 'admin'}
-											class:btn-info={(student.role ?? '') === roleOption.value && roleOption.value === 'curator'}
-											class:btn-neutral={(student.role ?? '') === roleOption.value && roleOption.value === ''}
+											class:btn-active={(student.role ?? null) === roleOption.value}
+											class:btn-primary={(student.role ?? null) === roleOption.value && roleOption.value === 'admin'}
+											class:btn-info={(student.role ?? null) === roleOption.value && roleOption.value === 'curator'}
+											class:btn-neutral={(student.role ?? null) === roleOption.value && roleOption.value === null}
 											onclick={() => updateRole(student._id, roleOption.value)}
 										>
 											<roleOption.icon size={16} />
@@ -182,7 +182,7 @@
 					{/if}
 
 					<!-- Plan Selection -->
-					{#if canEditPlan}
+					{#if canEditPlan && updatePlan}
 						<div class="space-y-3">
 							<div class="flex items-center justify-between">
 								<span class="text-sm font-medium text-base-content/70">Subscription Plan</span>
