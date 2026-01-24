@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import type { Id } from '../../../convex/_generated/dataModel';
-	import { useQuery } from 'convex-svelte';
+	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import {
 		ArrowLeft,
@@ -11,25 +11,51 @@
 		Flag,
 		TrendingUp,
 		ExternalLink,
-		ChevronRight
+		ChevronRight,
+		Shield,
+		PenTool,
+		Zap
 	} from 'lucide-svelte';
 	import StudentDetailModal from '$lib/admin/StudentDetailModal.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
+	const client = useConvexClient();
+	const isDev = $derived(userData?.role === 'dev');
+	const isAdmin = $derived(userData?.role === 'dev' || userData?.role === 'admin');
+
+	async function updateRole(userId: Id<'users'>, role: string) {
+		await client.mutation(api.users.updateUserRoleAndPlan, {
+			userId,
+			role: role === '' ? null : role as 'admin' | 'curator'
+		});
+	}
+
+	async function updatePlan(userId: Id<'users'>, plan: string) {
+		await client.mutation(api.users.updateUserRoleAndPlan, {
+			userId,
+			plan: plan === '' ? null : plan as 'pro' | 'free'
+		});
+	}
 
 	// Modal state
 	let isStudentModalOpen = $state(false);
-	let selectedStudent = $state<(typeof filteredStudents)[number] | null>(null);
+	let selectedStudentId = $state<Id<'users'> | null>(null);
+
+	const selectedStudent = $derived(
+		selectedStudentId && studentsWithProgress.data
+			? studentsWithProgress.data.find((s) => s._id === selectedStudentId) ?? null
+			: null
+	);
 
 	function openStudentModal(student: (typeof filteredStudents)[number]) {
-		selectedStudent = student;
+		selectedStudentId = student._id;
 		isStudentModalOpen = true;
 	}
 
 	function closeStudentModal() {
 		isStudentModalOpen = false;
-		selectedStudent = null;
+		selectedStudentId = null;
 	}
 
 	// Real queries - students and stats
@@ -304,6 +330,7 @@
 						<thead>
 							<tr>
 								<th>Student</th>
+								<th>Access</th>
 								<th>Last Sign-In</th>
 								<th>Joined</th>
 								<th></th>
@@ -333,11 +360,46 @@
 												</div>
 											{/if}
 											<div>
-												<div class="font-medium">{student.name}</div>
+												<div class="font-medium">
+													{student.name}
+												</div>
 												{#if student.email}
 													<div class="text-xs text-base-content/60">{student.email}</div>
 												{/if}
 											</div>
+										</div>
+									</td>
+									<td>
+										<div class="flex items-center gap-2">
+											{#if student.role === 'dev'}
+												<div class="tooltip" data-tip="Developer">
+													<span class="badge badge-warning badge-sm px-2 gap-1 cursor-help">
+														<Shield size={12} /> dev
+													</span>
+												</div>
+											{:else if student.role === 'admin'}
+												<div class="tooltip" data-tip="Admin">
+													<span class="badge badge-primary badge-sm px-2 gap-1 cursor-help">
+														<Shield size={12} /> admin
+													</span>
+												</div>
+											{:else if student.role === 'curator'}
+												<div class="tooltip" data-tip="Curator">
+													<span class="badge badge-info badge-sm px-2 gap-1 cursor-help">
+														<PenTool size={12} /> curator
+													</span>
+												</div>
+											{:else}
+												<span class="text-xs text-base-content/40 italic">Student</span>
+											{/if}
+
+											{#if student.plan === 'pro'}
+												<div class="tooltip" data-tip="Pro Plan">
+													<span class="badge badge-secondary badge-sm px-2 gap-1 cursor-help">
+														<Zap size={12} fill="currentColor" /> pro
+													</span>
+												</div>
+											{/if}
 										</div>
 									</td>
 									<td>
@@ -370,5 +432,11 @@
 		onClose={closeStudentModal}
 		student={selectedStudent}
 		cohortId={userData.cohortId as Id<'cohort'>}
+		currentUserRole={userData.role}
+		currentUserClerkId={userData.clerkUserId}
+		{isDev}
+		{isAdmin}
+		{updateRole}
+		{updatePlan}
 	/>
 {/if}

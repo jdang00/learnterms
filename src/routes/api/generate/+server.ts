@@ -13,7 +13,7 @@ interface RequestBody {
 }
 
 // --- SvelteKit Endpoint ---
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
 		const body = (await request.json()) as RequestBody;
 		const material = body?.material;
@@ -43,7 +43,11 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Convex URL not configured' }, { status: 500 });
 		}
 
+		const token = await locals.auth().getToken({ template: 'convex' });
 		const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
+		if (token) {
+			client.setAuth(token);
+		}
 		const payload = { material, model, numQuestions: nInt, focus, customPrompt };
 		const { questions, count } = await client.action(api.question.generateQuestions, payload as never);
 

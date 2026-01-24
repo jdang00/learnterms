@@ -24,7 +24,6 @@
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
 
-	// useQuery at top level with skip pattern
 	const convexUser = useQuery(
 		api.users.getUserById,
 		() => clerkUser ? { id: clerkUser.id } : 'skip'
@@ -32,18 +31,20 @@
 
 	const semesters = useQuery(api.semester.getAllSemesters, () => ({}));
 
-	// useQuery at top level with skip pattern - depends on convexUser
 	const classes = useQuery(
 		api.class.getUserClasses,
 		() => convexUser.data?.cohortId ? { id: convexUser.data.cohortId as Id<'cohort'> } : 'skip'
 	);
 
-	// useQuery at top level with skip pattern - depends on selectedClass
 	const modules = useQuery(
 		api.module.getClassModules,
 		() => selectedClass ? { id: selectedClass._id } : 'skip'
 	);
 	let currentSemester = $state('');
+	let classSearch = $state('');
+	let moduleSearch = $state('');
+	let classOpen = $state(false);
+	let moduleOpen = $state(false);
 
 	type GeneratedQuestionInput = {
 		type: string;
@@ -100,6 +101,23 @@
 			: classes.data.filter((c) => (c as ClassWithSemester).semester?.name === currentSemester)
 	);
 
+	const searchedClasses = $derived(
+		!filteredClasses
+			? []
+			: filteredClasses.filter((c) =>
+				c.name.toLowerCase().includes(classSearch.toLowerCase()) ||
+				(c.code?.toLowerCase().includes(classSearch.toLowerCase()) ?? false)
+			)
+	);
+
+	const searchedModules = $derived(
+		!modules.data
+			? []
+			: modules.data.filter((m) =>
+				m.title.toLowerCase().includes(moduleSearch.toLowerCase())
+			)
+	);
+
 	const isReady = $derived(selectedClass && selectedModuleId);
 </script>
 
@@ -148,61 +166,101 @@
 
 			<span class="text-base-content/30">/</span>
 
-			<div class="dropdown">
-				<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-2" class:btn-disabled={!currentSemester}>
+			<div class="relative">
+				<button
+					type="button"
+					class="btn btn-sm btn-ghost gap-2"
+					class:btn-disabled={!currentSemester}
+					onclick={() => { classOpen = !classOpen; classSearch = ''; }}
+				>
 					<BookOpen size={14} class="text-base-content/60" />
-					<span class="text-sm">{selectedClass?.name || 'Class'}</span>
+					<span class="text-sm truncate max-w-[140px]">{selectedClass?.name || 'Class'}</span>
 					<ChevronDown size={12} />
-				</div>
-				{#if filteredClasses && filteredClasses.length > 0}
-					<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-64 p-1 shadow-lg border border-base-300">
-						{#each filteredClasses as c (c._id)}
-							<li>
-								<button
-									class="text-sm"
-									class:active={selectedClass?._id === c._id}
-									onclick={() => {
-										selectedClass = c as ClassWithSemester;
-										selectedModuleId = null;
-										selectedModuleTitle = '';
-									}}
-								>
-									<span class="truncate">{c.name}</span>
-									{#if c.code}
-										<span class="badge badge-ghost badge-xs">{c.code}</span>
-									{/if}
-								</button>
-							</li>
-						{/each}
-					</ul>
+				</button>
+				{#if classOpen && filteredClasses && filteredClasses.length > 0}
+					<div class="fixed inset-0 z-10" onclick={() => { classOpen = false; }} role="none"></div>
+					<div class="absolute top-full left-0 mt-1 z-20 w-64 bg-base-100 rounded-lg shadow-lg border border-base-300 p-2">
+						<input
+							type="text"
+							placeholder="Search classes..."
+							class="input input-sm input-bordered w-full mb-1"
+							bind:value={classSearch}
+						/>
+						<ul class="max-h-52 overflow-y-auto">
+							{#each searchedClasses as c (c._id)}
+								<li>
+									<button
+										type="button"
+										class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200 flex items-center gap-2"
+										class:bg-primary={selectedClass?._id === c._id}
+										class:text-primary-content={selectedClass?._id === c._id}
+										onclick={() => {
+											selectedClass = c as ClassWithSemester;
+											selectedModuleId = null;
+											selectedModuleTitle = '';
+											classOpen = false;
+										}}
+									>
+										<span class="truncate">{c.name}</span>
+										{#if c.code}
+											<span class="badge badge-ghost badge-xs">{c.code}</span>
+										{/if}
+									</button>
+								</li>
+							{/each}
+							{#if searchedClasses.length === 0}
+								<li class="text-xs text-base-content/50 px-3 py-2">No matches</li>
+							{/if}
+						</ul>
+					</div>
 				{/if}
 			</div>
 
 			<span class="text-base-content/30">/</span>
 
-			<div class="dropdown">
-				<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-2" class:btn-disabled={!selectedClass}>
+			<div class="relative">
+				<button
+					type="button"
+					class="btn btn-sm btn-ghost gap-2"
+					class:btn-disabled={!selectedClass}
+					onclick={() => { moduleOpen = !moduleOpen; moduleSearch = ''; }}
+				>
 					<Layers size={14} class="text-base-content/60" />
-					<span class="text-sm">{selectedModuleTitle || 'Module'}</span>
+					<span class="text-sm truncate max-w-[140px]">{selectedModuleTitle || 'Module'}</span>
 					<ChevronDown size={12} />
-				</div>
-				{#if modules.data && modules.data.length > 0}
-					<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-64 p-1 shadow-lg border border-base-300 max-h-64 overflow-auto">
-						{#each modules.data as m (m._id)}
-							<li>
-								<button
-									class="text-sm"
-									class:active={selectedModuleId === m._id}
-									onclick={() => {
-										selectedModuleId = m._id;
-										selectedModuleTitle = m.title;
-									}}
-								>
-									<span class="truncate">{m.title}</span>
-								</button>
-							</li>
-						{/each}
-					</ul>
+				</button>
+				{#if moduleOpen && modules.data && modules.data.length > 0}
+					<div class="fixed inset-0 z-10" onclick={() => { moduleOpen = false; }} role="none"></div>
+					<div class="absolute top-full left-0 mt-1 z-20 w-64 bg-base-100 rounded-lg shadow-lg border border-base-300 p-2">
+						<input
+							type="text"
+							placeholder="Search modules..."
+							class="input input-sm input-bordered w-full mb-1"
+							bind:value={moduleSearch}
+						/>
+						<ul class="max-h-52 overflow-y-auto">
+							{#each searchedModules as m (m._id)}
+								<li>
+									<button
+										type="button"
+										class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200 truncate"
+										class:bg-primary={selectedModuleId === m._id}
+										class:text-primary-content={selectedModuleId === m._id}
+										onclick={() => {
+											selectedModuleId = m._id;
+											selectedModuleTitle = m.title;
+											moduleOpen = false;
+										}}
+									>
+										{m.title}
+									</button>
+								</li>
+							{/each}
+							{#if searchedModules.length === 0}
+								<li class="text-xs text-base-content/50 px-3 py-2">No matches</li>
+							{/if}
+						</ul>
+					</div>
 				{/if}
 			</div>
 

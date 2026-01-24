@@ -25,13 +25,13 @@
 
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
-	const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
 
-	// Get user data using skip pattern at top level
 	const userDataQuery = useQuery(
 		api.users.getUserById,
 		() => clerkUser ? { id: clerkUser.id } : 'skip'
 	);
+	const dev = $derived(userDataQuery.data?.role === 'dev');
+	const admin = $derived(userDataQuery.data?.role === 'admin' || userDataQuery.data?.role === 'dev');
 	const userData = $derived(userDataQuery.data ?? null);
 
 	type ClassItem = Doc<'class'>;

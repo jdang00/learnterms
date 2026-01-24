@@ -1,13 +1,19 @@
 <script lang="ts">
 	import { useClerkContext } from 'svelte-clerk/client';
+	import { useQuery } from 'convex-svelte';
+	import { api } from '../../convex/_generated/api';
 
 	const ctx = useClerkContext();
-
-	const admin = $derived(ctx.user?.publicMetadata.role === 'admin');
-	const contributor = $derived(ctx.user?.publicMetadata.create === 'contributor');
-	const userRole = $derived(
-		ctx.user?.publicMetadata.role === 'student' || ctx.user?.publicMetadata.role === 'user'
+	const clerkUser = $derived(ctx.user);
+	const userDataQuery = useQuery(
+		api.users.getUserById,
+		() => clerkUser ? { id: clerkUser.id } : 'skip'
 	);
+
+	const dev = $derived(userDataQuery.data?.role === 'dev');
+	const admin = $derived(userDataQuery.data?.role === 'admin');
+	const curator = $derived(userDataQuery.data?.role === 'curator');
+	const userRole = $derived(!userDataQuery.data?.role);
 
 	interface QuickAction {
 		title: string;
@@ -31,7 +37,7 @@
 			return;
 		}
 		const computed: QuickAction[] = [];
-		if (admin || contributor) {
+		if (dev || admin || curator) {
 			computed.push({ title: 'Admin Dashboard', icon: '✏️', href: '/admin' });
 			computed.push({ title: 'Content Library', icon: '📚', href: '/admin/library' });
 			computed.push({ title: 'Question Studio', icon: '✨', href: '/admin/question-studio' });

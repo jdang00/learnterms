@@ -1,6 +1,7 @@
 import { internalMutation, mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import type { Id } from './_generated/dataModel';
+import { authAdminMutation } from './authQueries';
 
 /**
  * Get stats about questions and userProgress for migration planning (paginated).
@@ -731,5 +732,39 @@ export const getNextCohortForUserBackfill = query({
 			message: 'All cohorts have user progress stats backfilled!',
 			done: true
 		};
+	}
+});
+
+export const bootstrapAdmin = authAdminMutation({
+	args: {
+		clerkUserId: v.string()
+	},
+	handler: async (ctx, args) => {
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
+			.first();
+
+		if (!user) throw new Error('User not found');
+
+		await ctx.db.patch(user._id, { role: 'admin', updatedAt: Date.now() });
+		return { success: true, userId: user._id };
+	}
+});
+
+export const bootstrapDev = authAdminMutation({
+	args: {
+		clerkUserId: v.string()
+	},
+	handler: async (ctx, args) => {
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
+			.first();
+
+		if (!user) throw new Error('User not found');
+
+		await ctx.db.patch(user._id, { role: 'dev', updatedAt: Date.now() });
+		return { success: true, userId: user._id };
 	}
 });

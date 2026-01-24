@@ -1,7 +1,7 @@
-import { query, action } from './_generated/server';
+import { query } from './_generated/server';
 import { v } from 'convex/values';
-import { mutation, internalMutation } from './_generated/server';
-import { internal } from './_generated/api';
+import { mutation } from './_generated/server';
+import { authAdminMutation } from './authQueries';
 
 export const getUserById = query({
 	args: { id: v.string() },
@@ -59,10 +59,6 @@ export const addUser = mutation({
 	}
 });
 
-/**
- * Mutation to sync user data from Clerk
- * Can be called on login to keep user data fresh
- */
 export const syncUserFromClerk = mutation({
 	args: {
 		clerkUserId: v.string(),
@@ -75,7 +71,6 @@ export const syncUserFromClerk = mutation({
 		lastActiveAt: v.optional(v.number())
 	},
 	handler: async (ctx, args) => {
-		// Find the user by clerkUserId
 		const user = await ctx.db
 			.query('users')
 			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
@@ -85,7 +80,6 @@ export const syncUserFromClerk = mutation({
 			return null;
 		}
 
-		// Update the user with latest Clerk data
 		await ctx.db.patch(user._id, {
 			firstName: args.firstName,
 			lastName: args.lastName,
@@ -101,140 +95,76 @@ export const syncUserFromClerk = mutation({
 	}
 });
 
-/**
- * Internal mutation to update a user with Clerk data
- * This is called by the backfill action
- */
-export const updateUserFromClerk = internalMutation({
+export const updateUserRoleAndPlan = authAdminMutation({
 	args: {
-		clerkUserId: v.string(),
-		firstName: v.optional(v.string()),
-		lastName: v.optional(v.string()),
-		email: v.optional(v.string()),
-		username: v.optional(v.string()),
-		imageUrl: v.optional(v.string()),
-		lastSignInAt: v.optional(v.number()),
-		createdAt: v.optional(v.number()),
-		lastActiveAt: v.optional(v.number())
+		userId: v.id('users'),
+		role: v.optional(v.union(v.literal('dev'), v.literal('admin'), v.literal('curator'), v.null())),
+		plan: v.optional(v.union(v.literal('pro'), v.literal('free'), v.null()))
 	},
 	handler: async (ctx, args) => {
-		// Find the user by clerkUserId
-		const user = await ctx.db
+		// Get the caller's user record to check their role
+		const caller = await ctx.db
 			.query('users')
-			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
 			.first();
 
-		if (!user) {
-			console.log(`User not found for clerkUserId: ${args.clerkUserId}`);
-			return null;
+		const targetUser = await ctx.db.get(args.userId);
+		if (!targetUser) {
+			throw new Error('Target user not found');
 		}
 
-		// Update the user with Clerk data
-		await ctx.db.patch(user._id, {
-			firstName: args.firstName,
-			lastName: args.lastName,
-			email: args.email,
-			username: args.username,
-			imageUrl: args.imageUrl,
-			lastSignInAt: args.lastSignInAt,
-			createdAt: args.createdAt,
-			lastActiveAt: args.lastActiveAt,
-			updatedAt: Date.now()
-		});
+		const callerRole = caller?.role || 'student';
+		const targetCurrentRole = targetUser.role || 'student';
+		const targetNewRole = args.role === null ? 'student' : (args.role || targetCurrentRole);
 
-		return user._id;
-	}
-});
-
-/**
- * Action to backfill user data from Clerk
- * This fetches all users from Clerk and updates the Convex database
- *
- * Usage: bun convex run backfillUsersFromClerk
- */
-export const backfillUsersFromClerk = action({
-	args: {},
-	handler: async (ctx) => {
-		// Check for Clerk secret key
-		if (!process.env.CLERK_SECRET_KEY) {
-			throw new Error('CLERK_SECRET_KEY environment variable is not set');
+		// Rule 1: Users cannot change their own role
+		if (caller?._id === args.userId && args.role !== undefined) {
+			throw new Error('You cannot change your own role');
 		}
 
-		// Import Clerk SDK
-		const { createClerkClient } = await import('@clerk/backend');
-		const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+		// Rule 2: Dev can do ANYTHING (skip all other checks)
+		if (callerRole === 'dev') {
+			const updates: Record<string, any> = { updatedAt: Date.now() };
+			if (args.role !== undefined) {
+				updates.role = args.role === null ? undefined : args.role;
+			}
+			if (args.plan !== undefined) {
+				updates.plan = args.plan === null ? undefined : args.plan;
+			}
+			await ctx.db.patch(args.userId, updates);
+			return { success: true };
+		}
 
-		console.log('Fetching users from Clerk...');
-
-		// Get all users from Clerk (paginate if needed)
-		let allUsers: any[] = [];
-		let offset = 0;
-		const limit = 100; // Max limit per request
-
-		// Fetch all users with pagination
-		while (true) {
-			const response = await clerkClient.users.getUserList({
-				limit,
-				offset,
-				orderBy: '-created_at'
-			});
-
-			allUsers = allUsers.concat(response.data);
-
-			console.log(`Fetched ${allUsers.length} users so far...`);
-
-			// Check if we've fetched all users
-			if (response.data.length < limit) {
-				break;
+		// Rule 3: Admin restrictions
+		if (callerRole === 'admin') {
+			// Admins can ONLY toggle between student and curator
+			const allowedRoles = ['student', 'curator'];
+			
+			// Check if trying to modify a user with admin/dev role
+			if (targetCurrentRole === 'admin' || targetCurrentRole === 'dev') {
+				throw new Error('Admins cannot manage other admins or devs');
 			}
 
-			offset += limit;
-		}
-
-		console.log(`Total users from Clerk: ${allUsers.length}`);
-
-		// Update each user in Convex
-		let successCount = 0;
-		let errorCount = 0;
-
-		for (const clerkUser of allUsers) {
-			try {
-				// Extract primary email
-				const primaryEmail = clerkUser.emailAddresses?.find(
-					(e: any) => e.id === clerkUser.primaryEmailAddressId
-				)?.emailAddress;
-
-				// Call the internal mutation to update the user
-				await ctx.runMutation(internal.users.updateUserFromClerk, {
-					clerkUserId: clerkUser.id,
-					firstName: clerkUser.firstName || undefined,
-					lastName: clerkUser.lastName || undefined,
-					email: primaryEmail || undefined,
-					username: clerkUser.username || undefined,
-					imageUrl: clerkUser.imageUrl || undefined,
-					lastSignInAt: clerkUser.lastSignInAt || undefined,
-					createdAt: clerkUser.createdAt || undefined,
-					lastActiveAt: clerkUser.lastActiveAt || undefined
-				});
-
-				successCount++;
-			} catch (error) {
-				console.error(
-					`Error updating user ${clerkUser.id}:`,
-					error instanceof Error ? error.message : error
-				);
-				errorCount++;
+			// Check if trying to assign admin/dev role
+			if (targetNewRole === 'admin' || targetNewRole === 'dev') {
+				throw new Error('Admins can only assign student or curator roles');
 			}
+
+			// Admins cannot change plans (dev only)
+			if (args.plan !== undefined) {
+				throw new Error('Only devs can change user plans');
+			}
+
+			// If we got here, admin is changing student ↔ curator which is allowed
+			const updates: Record<string, any> = { updatedAt: Date.now() };
+			if (args.role !== undefined) {
+				updates.role = args.role === null ? undefined : args.role;
+			}
+			await ctx.db.patch(args.userId, updates);
+			return { success: true };
 		}
 
-		const summary = {
-			totalClerkUsers: allUsers.length,
-			successCount,
-			errorCount,
-			timestamp: Date.now()
-		};
-
-		console.log('Backfill complete:', summary);
-		return summary;
+		// Rule 4: Curators and students cannot manage roles
+		throw new Error('You do not have permission to manage roles');
 	}
 });

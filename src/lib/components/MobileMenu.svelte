@@ -23,9 +23,12 @@
     import type { Doc, Id } from '../../convex/_generated/dataModel';
 
     const clerk = useClerkContext();
-    const admin = $derived(clerk.user?.publicMetadata.role === 'admin');
-    const contributor = $derived(clerk.user?.publicMetadata.create === 'contributor');
-    const canEdit = $derived(admin || contributor);
+    const clerkUser = $derived(clerk.user);
+    const userDataQuery = useQuery(
+        api.users.getUserById,
+        () => clerkUser ? { id: clerkUser.id } : 'skip'
+    );
+    const canEdit = $derived(userDataQuery.data?.role === 'dev' || userDataQuery.data?.role === 'admin' || userDataQuery.data?.role === 'curator');
 
     let showAttachments = $state(false);
     let isAttachmentViewerOpen = $state(false);

@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { authQuery, authCreateMutation } from './authQueries';
+import { authQuery, authCuratorMutation } from './authQueries';
 import type { Id } from './_generated/dataModel';
 
 export const getByQuestionId = authQuery({
@@ -40,7 +40,7 @@ export const getByQuestionIds = authQuery({
   }
 });
 
-export const create = authCreateMutation({
+export const create = authCuratorMutation({
   args: {
     questionId: v.id('question'),
     url: v.string(),
@@ -101,7 +101,7 @@ export const create = authCreateMutation({
   }
 });
 
-export const softDelete = authCreateMutation({
+export const softDelete = authCuratorMutation({
   args: {
     mediaId: v.id('questionMedia')
   },
@@ -116,7 +116,7 @@ export const softDelete = authCreateMutation({
   }
 });
 
-export const update = authCreateMutation({
+export const update = authCuratorMutation({
   args: {
     mediaId: v.id('questionMedia'),
     altText: v.optional(v.string()),

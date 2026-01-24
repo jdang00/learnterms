@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { Check, Trash2, Zap, ChevronDown, Settings, FileText } from 'lucide-svelte';
+	import { Check, Trash2, Zap, ChevronDown, Settings, FileText, Sparkles, CheckCircle } from 'lucide-svelte';
 	import { resolveProduct, defaultProductModelId, productModelOptions } from '$lib/config/generation';
+	import ModuleLimitModal from './ModuleLimitModal.svelte';
 
 	export interface Props {
 		material?: string;
@@ -22,6 +23,10 @@
 
 	let isGenerating = $state(false);
 	let isAdding = $state(false);
+	let isLimitModalOpen = $state(false);
+	let usageError = $state('');
+	let limitReached = $state(false);
+	let limitType = $state<'free' | 'pro'>('free');
 	let productModelId = $state(defaultProductModelId);
 	let numQuestions = $state('10');
 	let customPrompt = $state('');
@@ -67,6 +72,8 @@
 	async function generate() {
 		if (!canGenerate || !material.trim()) return;
 		isGenerating = true;
+		usageError = '';
+		limitReached = false;
 		try {
 			const res = await fetch('/api/generate', {
 				method: 'POST',
@@ -80,7 +87,14 @@
 			});
 			const data = await res.json();
 			if (!res.ok) {
-				console.error(`Generate error: ${data?.error || 'unknown'}`);
+				const errMsg = data?.error || 'unknown error';
+				console.error(`Generate error: ${errMsg}`);
+				if (errMsg.includes('Daily generation limit')) {
+					limitReached = true;
+					limitType = errMsg.includes('Upgrade to Pro') ? 'free' : 'pro';
+				} else {
+					usageError = errMsg;
+				}
 				return;
 			}
 			generated = (data.questions as GeneratedQuestionInput[]).map((q, i) => ({ ...q, order: i }));
@@ -98,6 +112,11 @@
 			await onAddSelected({ questions: picked });
 			generated = [];
 			selected = new Set();
+		} catch (error: any) {
+			console.error('Failed to add questions:', error);
+			if (error.message?.includes('Module limit reached') || error.toString().includes('Module limit reached')) {
+				isLimitModalOpen = true;
+			}
 		} finally {
 			isAdding = false;
 		}
@@ -199,6 +218,60 @@
 	</div>
 
 	<div class="flex-1 overflow-y-auto p-4">
+		{#if limitReached}
+			<div class="card bg-base-100 border border-base-200 shadow-sm mb-4">
+				<div class="card-body p-6 text-center items-center">
+					<div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+						{#if limitType === 'pro'}
+							<CheckCircle size={32} class="text-primary" />
+						{:else}
+							<Sparkles size={32} class="text-primary" />
+						{/if}
+					</div>
+					
+					{#if limitType === 'pro'}
+						<h3 class="card-title text-xl font-bold mb-2">Wow, that's a lot of questions!</h3>
+						<p class="text-sm text-base-content/70 mb-6">
+							You've hit the daily Pro limit. That is some serious dedication to studying! To keep things running smoothly for everyone, we'll reset your limit tomorrow.
+						</p>
+						<div class="flex flex-col gap-3 w-full">
+							<button class="btn btn-primary btn-block" onclick={() => limitReached = false}>Take a break</button>
+						</div>
+					{:else}
+						<h3 class="card-title text-xl font-bold mb-2">Daily Limit Reached</h3>
+						<p class="text-sm text-base-content/70 mb-6">
+							You've hit the limit for today, but don't stop learning! Upgrading to Pro unlocks the full power of LearnTerms AI.
+						</p>
+						<div class="text-left w-full space-y-3 mb-6 bg-base-200/50 p-4 rounded-lg">
+							<div class="flex items-start gap-3">
+								<CheckCircle class="text-success mt-0.5 shrink-0" size={16} />
+								<span class="text-xs"><strong>Unlimited Generation:</strong> Create as many practice questions as you need.</span>
+							</div>
+							<div class="flex items-start gap-3">
+								<CheckCircle class="text-success mt-0.5 shrink-0" size={16} />
+								<span class="text-xs"><strong>Deeper Understanding:</strong> Get detailed explanations for every answer.</span>
+							</div>
+							<div class="flex items-start gap-3">
+								<CheckCircle class="text-success mt-0.5 shrink-0" size={16} />
+								<span class="text-xs"><strong>Custom Tailored:</strong> Questions specific to your exact curriculum.</span>
+							</div>
+						</div>
+						<div class="flex flex-col gap-3 w-full">
+							<a href="/sign-up" target="_blank" class="btn btn-primary btn-block">Upgrade to Pro</a>
+							<button class="btn btn-ghost btn-xs" onclick={() => limitReached = false}>Maybe later</button>
+						</div>
+					{/if}
+				</div>
+			</div>
+		{/if}
+
+		{#if usageError}
+			<div class="alert alert-error mb-4 text-sm shadow-lg">
+				<Settings size={16} />
+				<span>{usageError}</span>
+			</div>
+		{/if}
+
 		{#if generated.length === 0}
 			<div class="mb-4">
 				<details class="group">
@@ -334,4 +407,6 @@
 			</div>
 		{/if}
 	</div>
+
+	<ModuleLimitModal isOpen={isLimitModalOpen} onClose={() => isLimitModalOpen = false} />
 </div>

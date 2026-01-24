@@ -2,8 +2,16 @@ import { query, mutation } from './_generated/server';
 import { customQuery, customMutation } from 'convex-helpers/server/customFunctions';
 import { v } from 'convex/values';
 
+async function getUserRole(ctx: { db: any; auth: any }) {
+	const identity = await ctx.auth.getUserIdentity();
+	if (!identity) return { identity: null, role: undefined };
+	const user = await ctx.db
+		.query('users')
+		.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', identity.subject))
+		.first();
+	return { identity, role: user?.role as string | undefined };
+}
 
-// Logged-in only query builder
 export const authQuery = customQuery(query, {
 	args: {},
 	input: async (ctx) => {
@@ -13,65 +21,50 @@ export const authQuery = customQuery(query, {
 	}
 });
 
-
-
-// Generic admin-only query builder
 export const authAdminQuery = customQuery(query, {
 	args: {},
 	input: async (ctx) => {
-		const identity = await ctx.auth.getUserIdentity();
-		const meta = identity?.public_metadata;
-		const roleVal =
-			meta && typeof meta === 'object' && !Array.isArray(meta)
-				? (meta as Record<string, unknown>).role
-				: undefined;
-		const role = typeof roleVal === 'string' ? roleVal : undefined;
-		if (role !== 'admin') throw new Error('Unauthorized');
-
+		const { identity, role } = await getUserRole(ctx);
+		if (!identity || !(role === 'dev' || role === 'admin')) throw new Error('Unauthorized');
 		return { ctx: { db: ctx.db, identity }, args: {} };
 	}
 });
 
-
-// Generic admin-only mutation builder
 export const authAdminMutation = customMutation(mutation, {
 	args: {},
 	input: async (ctx) => {
-		const identity = await ctx.auth.getUserIdentity();
-		const meta = identity?.public_metadata;
-		const roleVal =
-			meta && typeof meta === 'object' && !Array.isArray(meta)
-				? (meta as Record<string, unknown>).role
-				: undefined;
-		const role = typeof roleVal === 'string' ? roleVal : undefined;
-		if (role !== 'admin') throw new Error('Unauthorized');
-
+		const { identity, role } = await getUserRole(ctx);
+		if (!identity || !(role === 'dev' || role === 'admin')) throw new Error('Unauthorized');
 		return { ctx: { db: ctx.db, identity }, args: {} };
 	}
 });
 
-// Admin or contributor (create) mutation builder
-export const authCreateMutation = customMutation(mutation, {
+export const authDevQuery = customQuery(query, {
 	args: {},
 	input: async (ctx) => {
-		const identity = await ctx.auth.getUserIdentity();
-		const meta = identity?.public_metadata;
-		const roleVal =
-			meta && typeof meta === 'object' && !Array.isArray(meta)
-				? (meta as Record<string, unknown>).role
-				: undefined;
-		const createVal =
-			meta && typeof meta === 'object' && !Array.isArray(meta)
-				? (meta as Record<string, unknown>).create
-				: undefined;
-		const role = typeof roleVal === 'string' ? roleVal : undefined;
-		const create = typeof createVal === 'string' ? createVal : undefined;
-		if (!(role === 'admin' || create === 'contributor')) throw new Error('Unauthorized');
-
+		const { identity, role } = await getUserRole(ctx);
+		if (!identity || role !== 'dev') throw new Error('Unauthorized');
 		return { ctx: { db: ctx.db, identity }, args: {} };
 	}
 });
 
+export const authDevMutation = customMutation(mutation, {
+	args: {},
+	input: async (ctx) => {
+		const { identity, role } = await getUserRole(ctx);
+		if (!identity || role !== 'dev') throw new Error('Unauthorized');
+		return { ctx: { db: ctx.db, identity }, args: {} };
+	}
+});
+
+export const authCuratorMutation = customMutation(mutation, {
+	args: {},
+	input: async (ctx) => {
+		const { identity, role } = await getUserRole(ctx);
+		if (!identity || !(role === 'dev' || role === 'admin' || role === 'curator')) throw new Error('Unauthorized');
+		return { ctx: { db: ctx.db, identity }, args: {} };
+	}
+});
 
 export const joinCohort = mutation({
 	args: {
@@ -79,19 +72,12 @@ export const joinCohort = mutation({
 		cohortId: v.id('cohort')
 	},
 	handler: async (ctx, args) => {
-
-		const identity = await ctx.auth.getUserIdentity();
-		const meta = identity?.public_metadata;
-		const viewVal =
-			meta && typeof meta === 'object' && !Array.isArray(meta)
-				? (meta as Record<string, unknown>).view
-				: undefined;
-		const view = typeof viewVal === 'string' ? viewVal : undefined;
-		if (view !== 'developer') throw new Error('Unauthorized');
+		const { role } = await getUserRole(ctx);
+		if (!(role === 'dev' || role === 'admin')) throw new Error('Unauthorized');
 
 		const user = await ctx.db
 			.query('users')
-			.filter((q) => q.eq(q.field('clerkUserId'), args.clerkUserId))
+			.filter((q: any) => q.eq(q.field('clerkUserId'), args.clerkUserId))
 			.first();
 
 		if (!user) {
@@ -108,34 +94,27 @@ export const joinCohort = mutation({
 });
 
 export const switchCohort = mutation({
-    args: {
-        cohortId: v.id('cohort')
-    },
-    handler: async (ctx, args) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) throw new Error('Unauthorized');
+	args: {
+		cohortId: v.id('cohort')
+	},
+	handler: async (ctx, args) => {
+		const { identity, role } = await getUserRole(ctx);
+		if (!identity || !(role === 'dev' || role === 'admin')) throw new Error('Unauthorized');
 
-        const meta = identity.public_metadata as Record<string, unknown> | undefined;
-        const viewVal = meta ? (meta as Record<string, unknown>).view : undefined;
-        const view = typeof viewVal === 'string' ? viewVal : undefined;
-        if (view !== 'developer') throw new Error('Unauthorized');
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', identity.subject))
+			.first();
 
-        const clerkUserId = identity.subject;
+		if (!user) {
+			throw new Error('User not found');
+		}
 
-        const user = await ctx.db
-            .query('users')
-            .filter((q) => q.eq(q.field('clerkUserId'), clerkUserId))
-            .first();
+		await ctx.db.patch(user._id, {
+			cohortId: args.cohortId,
+			updatedAt: Date.now()
+		});
 
-        if (!user) {
-            throw new Error('User not found');
-        }
-
-        await ctx.db.patch(user._id, {
-            cohortId: args.cohortId,
-            updatedAt: Date.now()
-        });
-
-        return { success: true };
-    }
+		return { success: true };
+	}
 });
