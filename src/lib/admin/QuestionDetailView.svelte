@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Pencil, Trash2, Copy, ArrowRightLeft, Paperclip, Check } from 'lucide-svelte';
+	import { Pencil, Trash2, Copy, CopyPlus, ArrowRightLeft, Paperclip, Check, MoreVertical } from 'lucide-svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 	import type { Doc } from '../../convex/_generated/dataModel';
 
@@ -21,6 +21,7 @@
 		onEdit: () => void;
 		onMove: () => void;
 		onDuplicate: () => void;
+		onDuplicateMany?: () => void;
 		onDelete: () => void;
 		onAttachmentClick?: (attachment: MediaItem) => void;
 		isModuleFull?: boolean;
@@ -35,6 +36,7 @@
 		onEdit,
 		onMove,
 		onDuplicate,
+		onDuplicateMany,
 		onDelete,
 		onAttachmentClick,
 		isModuleFull = false
@@ -101,19 +103,19 @@
 <div class="h-full flex flex-col overflow-hidden">
 	<!-- Header -->
 	<div class="flex items-center justify-between p-4 border-b border-base-300 {isMobile ? 'sticky top-0 z-10 bg-base-100' : ''}">
-		<div class="flex items-center gap-{isMobile ? '2' : '3'}">
+		<div class="flex items-center {isMobile ? 'gap-2' : 'gap-3'}">
 			{#if questionIndex >= 0}
-				<span class="text-sm font-medium">Question #{questionIndex + 1}</span>
+				<span class="text-sm font-medium whitespace-nowrap">Question #{questionIndex + 1}</span>
 			{:else}
-				<span class="text-sm font-medium">Question #—</span>
+				<span class="text-sm font-medium whitespace-nowrap">Question #—</span>
 			{/if}
-			<div class="flex items-center gap-1">
+			<div class="flex flex-wrap items-center gap-1">
 				{#if question.aiGenerated}
 					<span class="badge badge-xs badge-info">AI</span>
 				{:else}
 					<span class="badge badge-xs badge-success">User</span>
 				{/if}
-				<span class="badge badge-xs badge-ghost">{convertToDisplayFormat(question.type)}</span>
+				<span class="badge badge-xs badge-ghost text-xs">{convertToDisplayFormat(question.type)}</span>
 				<span class="badge badge-xs {question.status === 'published' ? 'badge-success' : question.status === 'draft' ? 'badge-warning' : 'badge-neutral'}">{question.status}</span>
 			</div>
 		</div>
@@ -127,39 +129,63 @@
 					<ArrowRightLeft size={14} />
 					{#if !isMobile}Move{/if}
 				</button>
-				<div class="tooltip tooltip-bottom" data-tip={isModuleFull ? 'Module limit reached' : 'Duplicate question'}>
-					<button class="btn btn-sm btn-ghost gap-1" onclick={onDuplicate}>
+				
+				<div class="join">
+					<button 
+						class="btn btn-sm btn-ghost join-item gap-1" 
+						onclick={onDuplicate} 
+						title={isModuleFull ? 'Module limit reached' : 'Duplicate question'}
+					>
 						<Copy size={14} />
 						{#if !isMobile}Duplicate{/if}
 					</button>
+					{#if onDuplicateMany}
+						<div class="dropdown dropdown-end join-item">
+							<button tabindex="0" class="btn btn-sm btn-ghost px-1 border-l border-base-300">
+								<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+								</svg>
+							</button>
+							<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-20 w-44 p-1 shadow-lg border border-base-300">
+								<li>
+									<button class="text-sm gap-2" onclick={onDuplicateMany}>
+										<CopyPlus size={14} />
+										Duplicate many...
+									</button>
+								</li>
+							</ul>
+						</div>
+					{/if}
 				</div>
-				<button class="btn btn-sm btn-ghost {isMobile ? 'btn-error' : 'text-error'} gap-1" onclick={onDelete}>
+
+				<button class="btn btn-sm btn-ghost text-error gap-1" onclick={onDelete}>
 					<Trash2 size={14} />
+					{#if !isMobile}Delete{/if}
 				</button>
 			</div>
 		{/if}
 	</div>
 
 	<!-- Content -->
-	<div class="flex-1 overflow-y-auto p-{isMobile ? '4' : '6'} {isMobile ? '' : 'pb-12'} min-h-0">
+	<div class="flex-1 overflow-y-auto {isMobile ? 'p-4' : 'p-6 pb-12'} min-h-0">
 		<!-- Question Stem -->
-		<div class="mb-{isMobile ? '6' : '8'}">
-			<div class="text-{isMobile ? 'base' : 'lg'} font-medium text-base-content leading-relaxed tiptap-content">{@html question.stem}</div>
+		<div class={isMobile ? 'mb-6' : 'mb-8'}>
+			<div class="{isMobile ? 'text-base' : 'text-lg'} font-medium text-base-content leading-relaxed tiptap-content">{@html question.stem}</div>
 		</div>
 
 		<!-- Fill in the Blank -->
 		{#if isFillInTheBlank}
-			<div class="mb-{isMobile ? '4' : '6'}">
-				<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-{isMobile ? '2' : '3'}">Accepted Answers</div>
-				<div class="card bg-base-100 border border-base-300 shadow-sm">
-					<div class="card-body p-{isMobile ? '3' : '4'}">
+			<div class={isMobile ? 'mb-4' : 'mb-6'}>
+				<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile ? 'mb-2' : 'mb-3'}">Accepted Answers</div>
+				<div class="card bg-base-100 border border-base-300 shadow-sm rounded-3xl">
+					<div class="card-body {isMobile ? 'p-3' : 'p-4'}">
 						{#if fitbAnswers.length > 0}
 							<div class="flex items-center gap-2 mb-2">
 								<div class="badge badge-success gap-1">
 									<Check size={12} />
 									Primary
 								</div>
-								<span class="text-{isMobile ? 'base' : 'lg'} font-semibold">{fitbAnswers[0]}</span>
+								<span class="{isMobile ? 'text-base' : 'text-lg'} font-semibold">{fitbAnswers[0]}</span>
 							</div>
 							{#if fitbAnswers.length > 1}
 								<div class="mt-3 pt-3 border-t border-base-200">
@@ -183,34 +209,34 @@
 
 		<!-- Matching -->
 		{:else if isMatching}
-			<div class="mb-{isMobile ? '4' : '6'}">
-				<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-{isMobile ? '2' : '3'}">Matching Pairs</div>
-				<div class="space-y-{isMobile ? '2' : '3'}">
+			<div class={isMobile ? 'mb-4' : 'mb-6'}>
+				<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile ? 'mb-2' : 'mb-3'}">Matching Pairs</div>
+				<div class={isMobile ? 'space-y-2' : 'space-y-3'}>
 					{#each matchingPrompts as prompt (prompt.id)}
 						{@const correctAnswer = getCorrectAnswerForPrompt(prompt.id)}
-						<div class="flex items-center gap-{isMobile ? '2' : '3'}">
+						<div class="flex items-center {isMobile ? 'gap-2' : 'gap-3'}">
 							<!-- Prompt -->
 							<div class="flex-1">
-								<div class="rounded-full border-2 border-base-300 bg-base-200 px-{isMobile ? '3' : '4'} py-{isMobile ? '2' : '3'}">
-									<span class="font-semibold text-{isMobile ? 'xs' : 'sm'} tiptap-content">{@html getPromptLabel(prompt.text)}</span>
+								<div class="rounded-3xl border-2 border-base-300 bg-base-200 {isMobile ? 'px-4 py-2' : 'px-5 py-3'}">
+									<span class="font-semibold {isMobile ? 'text-xs' : 'text-sm'} tiptap-content">{@html getPromptLabel(prompt.text)}</span>
 								</div>
 							</div>
 							<!-- Arrow -->
 							<div class="text-base-content/40 flex-shrink-0">
-								<svg class="w-{isMobile ? '4' : '5'} h-{isMobile ? '4' : '5'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class={isMobile ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
 								</svg>
 							</div>
 							<!-- Answer -->
 							<div class="flex-1">
 								{#if correctAnswer}
-									<div class="rounded-full border-2 border-success bg-success/10 px-{isMobile ? '3' : '4'} py-{isMobile ? '2' : '3'} flex items-center gap-2">
+									<div class="rounded-3xl border-2 border-success bg-success/10 {isMobile ? 'px-4 py-2' : 'px-5 py-3'} flex items-center gap-2">
 										<Check size={isMobile ? 14 : 16} class="text-success flex-shrink-0" />
-										<span class="text-{isMobile ? 'xs' : 'sm'} tiptap-content">{@html correctAnswer}</span>
+										<span class="{isMobile ? 'text-xs' : 'text-sm'} tiptap-content">{@html correctAnswer}</span>
 									</div>
 								{:else}
-									<div class="rounded-full border-2 border-dashed border-base-300 bg-base-100 px-{isMobile ? '3' : '4'} py-{isMobile ? '2' : '3'}">
-										<span class="text-{isMobile ? 'xs' : 'sm'} text-base-content/40 italic">No match defined</span>
+									<div class="rounded-3xl border-2 border-dashed border-base-300 bg-base-100 {isMobile ? 'px-4 py-2' : 'px-5 py-3'}">
+										<span class="{isMobile ? 'text-xs' : 'text-sm'} text-base-content/40 italic">No match defined</span>
 									</div>
 								{/if}
 							</div>
@@ -232,23 +258,23 @@
 
 		<!-- Multiple Choice / Multiple Select -->
 		{:else if isMultipleChoice && question.options?.length}
-			<div class="mb-{isMobile ? '4' : '6'}">
-				<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-{isMobile ? '2' : '3'}">Options</div>
-				<div class="space-y-{isMobile ? '2' : '3'}">
+			<div class={isMobile ? 'mb-4' : 'mb-6'}>
+				<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile ? 'mb-2' : 'mb-3'}">Options</div>
+				<div class={isMobile ? 'space-y-2' : 'space-y-3'}>
 					{#each question.options as option, optIndex (option.id)}
-						<label class="label cursor-pointer rounded-full flex items-center border{isMobile ? '' : '-2'} transition-colors p-{isMobile ? '2' : '2.5'} {question.correctAnswers.includes(option.id) ? 'border-success bg-success/5' : 'border-base-300 bg-base-200'}">
+						<label class="label cursor-pointer rounded-full flex items-center {isMobile ? 'border p-1.5' : 'border-2 p-2'} transition-colors {question.correctAnswers.includes(option.id) ? 'border-success bg-success/5' : 'border-base-300 bg-base-200'}">
 							<input
 								type="checkbox"
-								class="checkbox checkbox-primary checkbox-xs ms-{isMobile ? '2' : '3'}"
+								class="checkbox checkbox-primary {isMobile ? 'checkbox-xs ms-2' : 'checkbox-sm ms-3'}"
 								checked={question.correctAnswers.includes(option.id)}
 								disabled
 							/>
-							<span class="flex-grow text-wrap break-words ml-{isMobile ? '2' : '3'} my-2 text-{isMobile ? 'xs' : 'sm'}">
+							<span class="flex-grow text-wrap break-words {isMobile ? 'ml-2 text-xs' : 'ml-4 text-sm'} my-2">
 								<span class="font-semibold mr-2 select-none">{String.fromCharCode(65 + optIndex)}.</span>
 								<span class="tiptap-content">{@html option.text}</span>
 							</span>
 							{#if question.correctAnswers.includes(option.id)}
-								<span class="text-success text-xs font-medium mr-{isMobile ? '2' : '3'} flex-shrink-0">{isMobile ? '✓' : '✓ Correct'}</span>
+								<span class="text-success text-xs font-medium {isMobile ? 'mr-3' : 'mr-4'} flex-shrink-0">{isMobile ? '✓' : '✓ Correct'}</span>
 							{/if}
 						</label>
 					{/each}

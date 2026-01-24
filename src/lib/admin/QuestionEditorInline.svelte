@@ -29,6 +29,7 @@
 	import { createUploader } from '$lib/utils/uploadthing';
 	import { UploadDropzone } from '@uploadthing/svelte';
 	import { onMount } from 'svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
 	import type { Readable } from 'svelte/store';
 	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
 	import { getEditorExtensions } from '../config/tiptap';
@@ -49,13 +50,20 @@
 		editingQuestion?: QuestionItem | null;
 		mode?: 'add' | 'edit';
 		defaultStatus?: 'published' | 'draft';
-		onSave: () => void;
+		onSave: (newQuestionId?: string) => void;
 		onCancel: () => void;
 		onChange?: () => void;
 	} = $props();
 
 	let editor = $state() as Readable<Editor>;
 	let explanationEditor = $state() as Readable<Editor>;
+
+	function handleKeyboardSave(e: KeyboardEvent) {
+		if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+			e.preventDefault();
+			if (!isSubmitting && questionStem) handleSubmit();
+		}
+	}
 
 	onMount(() => {
 		editor = createEditor({
@@ -77,6 +85,9 @@
 				}
 			}
 		});
+
+		window.addEventListener('keydown', handleKeyboardSave);
+		return () => window.removeEventListener('keydown', handleKeyboardSave);
 	});
 
 	const toggleBold = () => $editor.chain().focus().toggleBold().run();
@@ -492,11 +503,17 @@
 	}
 
 	async function handleSubmit() {
-		if (!questionStem || !moduleId) return;
+		if (!questionStem || !moduleId) {
+			toastStore.error('Question stem is required');
+			return;
+		}
 
 		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
 			const sanitized = fitbAnswers.filter((r) => r.value.trim());
-			if (sanitized.length < 1) return;
+			if (sanitized.length < 1) {
+				toastStore.error('At least one answer is required');
+				return;
+			}
 			const encoded = sanitized.map((row) => ({ text: encodeFitbAnswer(row) }));
 			options = encoded;
 			correctAnswers = encoded.map((_, i) => i.toString());
@@ -505,7 +522,10 @@
 		if (questionType === QUESTION_TYPES.MATCHING) {
 			const rawPrompts = matchingPrompts.map((t) => t.trim()).filter((t) => t.length > 0);
 			const rawAnswers = matchingAnswers.map((t) => t.trim()).filter((t) => t.length > 0);
-			if (rawPrompts.length === 0 || rawAnswers.length === 0) return;
+			if (rawPrompts.length === 0 || rawAnswers.length === 0) {
+				toastStore.error('At least one prompt and one answer are required');
+				return;
+			}
 
 			function makeOptionId(stem: string, text: string, index: number): string {
 				const input = `${stem}|${text}|${index}`;
@@ -543,10 +563,22 @@
 		}
 
 		const filledOptions = options.filter((opt) => opt.text.trim());
-		if (questionType === QUESTION_TYPES.TRUE_FALSE && correctAnswers.length !== 1) return;
-		if (questionType === QUESTION_TYPES.MULTIPLE_CHOICE && filledOptions.length < 2) return;
-		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK && filledOptions.length < 1) return;
-		if (questionType === QUESTION_TYPES.MATCHING && correctAnswers.length < 1) return;
+		if (questionType === QUESTION_TYPES.TRUE_FALSE && correctAnswers.length !== 1) {
+			toastStore.error('Select True or False as the correct answer');
+			return;
+		}
+		if (questionType === QUESTION_TYPES.MULTIPLE_CHOICE && filledOptions.length < 2) {
+			toastStore.error('At least 2 options are required');
+			return;
+		}
+		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK && filledOptions.length < 1) {
+			toastStore.error('At least one answer is required');
+			return;
+		}
+		if (questionType === QUESTION_TYPES.MATCHING && correctAnswers.length < 1) {
+			toastStore.error('At least one matching pair is required');
+			return;
+		}
 
 		isSubmitting = true;
 
@@ -598,7 +630,6 @@
 			}
 
 			if (questionId && queuedMedia.length > 0) {
-				// Calculate starting order based on existing media
 				const startOrder = existingMedia.length;
 				for (let i = 0; i < queuedMedia.length; i++) {
 					const m = queuedMedia[i];
@@ -620,9 +651,11 @@
 				}
 			}
 
-			onSave();
+			toastStore.success(mode === 'edit' ? 'Question saved' : 'Question created');
+			onSave(mode === 'add' ? questionId : undefined);
 		} catch (error) {
 			console.error('Failed to save question', error);
+			toastStore.error('Failed to save question');
 		} finally {
 			isSubmitting = false;
 		}

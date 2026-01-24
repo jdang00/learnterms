@@ -4,6 +4,7 @@
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import NavBar from '$lib/components/NavBar.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
 	import { setupConvex, useConvexClient } from 'convex-svelte';
 	import { theme, clerkTheme } from '$lib/theme.svelte';
@@ -198,4 +199,5 @@
 			</footer>
 		{/if}
 	</div>
+	<Toast />
 </ClerkProvider>
