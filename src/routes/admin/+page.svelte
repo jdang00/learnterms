@@ -266,7 +266,7 @@
 					{/if}
 				</p>
 			</div>
-			{#if admin}
+			{#if admin || dev}
 				<button class="btn btn-primary gap-2" onclick={openAddModal}>
 					<Plus size={16} />
 					<span>Add New Class</span>
@@ -385,7 +385,7 @@
 										</a>
 									</div>
 
-									{#if admin}
+									{#if admin || dev}
 									<div class="flex items-center gap-2 sm:shrink-0">
 								<div class="dropdown dropdown-end">
 									<button class="btn btn-ghost btn-circle btn-sm interactive" tabindex="0" aria-haspopup="menu" aria-label="Open menu">⋮</button>
