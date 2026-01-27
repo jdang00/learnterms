@@ -246,10 +246,10 @@
 			try {
 				const key = (res as any)?.fileKey;
 				if (typeof key === 'string' && key.length > 0) {
-					await fetch('/api/processdoc', {
+					await fetch('/api/uploads/delete', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ pdfUrl: undefined, fileKey: key })
+						body: JSON.stringify({ fileKey: key })
 					});
 				}
 			} catch {}
@@ -402,7 +402,7 @@
 		// Delete from UploadThing if we have a key
 		if (media?.key) {
 			try {
-				await fetch('/api/processdoc', {
+				await fetch('/api/uploads/delete', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ fileKey: media.key })

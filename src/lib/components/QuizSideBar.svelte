@@ -168,7 +168,7 @@
 					class="btn btn-ghost font-bold"
 					href={`/classes?classId=${classId}`}
 					onclick={(e) => {
-						if (onExit) {
+						if (typeof onExit === 'function') {
 							e.preventDefault();
 							onExit();
 						}
