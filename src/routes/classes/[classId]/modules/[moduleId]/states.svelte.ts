@@ -14,6 +14,7 @@ export class QuizState {
 	shuffledQuestionIds: string[] = $state([]);
 	isShuffled: boolean = $state(false);
 	showSolution = $state(false);
+	solutionAutoRevealed = $state(false);
 	autoNextEnabled: boolean = $state(true);
 	saveProgressFunction: (() => Promise<void>) | null = $state(null);
 	loadProgressFunction: ((questionId: Id<'question'>) => Promise<void>) | null = $state(null);
@@ -66,6 +67,8 @@ export class QuizState {
 		setTimeout(() => {
 			this.checkResult = message;
 			if (isCorrect) {
+				this.showSolution = true;
+				this.solutionAutoRevealed = true;
 				const shouldAutoNext = options?.autoNextOnCorrect ?? true;
 				if (shouldAutoNext) {
 					this.scheduleAutoNextIfEnabled();
@@ -205,6 +208,7 @@ export class QuizState {
 			this.currentQuestionIndex++;
 			this.checkResult = '';
 			this.showSolution = false;
+			this.solutionAutoRevealed = false;
 
 			this.selectedAnswers = [];
 			this.eliminatedAnswers = [];
@@ -228,6 +232,7 @@ export class QuizState {
 			this.currentQuestionIndex--;
 			this.checkResult = '';
 			this.showSolution = false;
+			this.solutionAutoRevealed = false;
 
 			this.selectedAnswers = [];
 			this.eliminatedAnswers = [];
@@ -265,6 +270,7 @@ export class QuizState {
 			this.currentQuestionIndex = index;
 			this.checkResult = '';
 			this.showSolution = false;
+			this.solutionAutoRevealed = false;
 
 			this.selectedAnswers = [];
 			this.eliminatedAnswers = [];
@@ -333,6 +339,7 @@ export class QuizState {
 		this.currentQuestionIndex = 0;
 		this.checkResult = '';
 		this.showSolution = false;
+		this.solutionAutoRevealed = false;
 		this.selectedAnswers = [];
 		this.eliminatedAnswers = [];
 		this.scheduleSave();
@@ -352,6 +359,7 @@ export class QuizState {
 
 	handleSolution() {
 		this.showSolution = !this.showSolution;
+		this.solutionAutoRevealed = false;
 	}
 
 	toggleElimination(optionId: string) {
@@ -397,6 +405,7 @@ export class QuizState {
 		this.showFlagged = !this.showFlagged;
 		this.checkResult = '';
 		this.showSolution = false;
+		this.solutionAutoRevealed = false;
 		this.selectedAnswers = [];
 		this.eliminatedAnswers = [];
 
@@ -421,6 +430,7 @@ export class QuizState {
 		this.currentQuestionIndex = 0;
 		this.checkResult = '';
 		this.showSolution = false;
+		this.solutionAutoRevealed = false;
 		this.selectedAnswers = [];
 		this.eliminatedAnswers = [];
 	}
@@ -462,6 +472,7 @@ export class QuizState {
 		this.currentQuestionFlagged = false;
 		this.checkResult = '';
 		this.showSolution = false;
+		this.solutionAutoRevealed = false;
 		this.currentQuestionIndex = 0;
 		this.isShuffled = false;
 		this.shuffledQuestionIds = [];

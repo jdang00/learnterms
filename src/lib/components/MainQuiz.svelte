@@ -17,7 +17,8 @@
 		ArrowDownNarrowWide,
 		Maximize,
 		Minimize,
-		Pencil
+		Pencil,
+		ChevronLeft
 	} from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { slide, fade, scale } from 'svelte/transition';
@@ -34,7 +35,8 @@
 		handleFilterToggle,
 		client,
 		module,
-		suppressAuthErrors = false
+		suppressAuthErrors = false,
+		onExit
 	} = $props();
 
 	const clerk = useClerkContext();
@@ -72,9 +74,7 @@
 	<ErrorDisplay error={questions.error} showReload={true} class="mb-4" />
 {:else if currentlySelected}
 	<div
-		class="flex flex-col md:flex-col lg:flex-row bg-base-100 {qs.fullscreenEnabled
-			? ' min-h-[calc(100vh-3rem)] sm:min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)]'
-			: 'h-[24rem] sm:h-[28rem] overflow-hidden'} pt-2 md:pt-3 lg:p-4 gap-3 sm:gap-4 lg:gap-8 rounded-t-xl transition-all duration-500 ease-in-out"
+		class="flex flex-col md:flex-col lg:flex-row bg-base-100 h-full overflow-hidden p-2 md:p-3 lg:p-4 {qs.fullscreenEnabled ? '' : 'rounded-t-xl'} gap-3 sm:gap-4 lg:gap-8 transition-all duration-500 ease-in-out"
 		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 	>
 		<span id="quiz-top" aria-hidden="true"></span>
@@ -87,14 +87,13 @@
 				moduleId={data.moduleId}
 				{client}
 				classId={data.classId}
+				{onExit}
 			/>
 			<MobileInfo {module} classId={data.classId} />
 		{/if}
 
 		<div
-			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full {qs.fullscreenEnabled
-				? 'pb-24 sm:pb-36 lg:pb-48'
-				: 'pb-4'} relative"
+			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
 		>
 			<ResultBanner bind:qs />
 			{#if qs.noFlags}

@@ -17,7 +17,8 @@
       "Bash(bunx npm view:*)",
       "Bash(wc:*)",
       "WebFetch(domain:daisyui.com)",
-      "Bash(xxd:*)"
+      "Bash(xxd:*)",
+      "WebFetch(domain:docs.uploadthing.com)"
     ]
   }
 }

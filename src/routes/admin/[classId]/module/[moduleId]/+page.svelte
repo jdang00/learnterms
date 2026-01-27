@@ -124,6 +124,7 @@
 		window.addEventListener('keydown', handleKeyDown);
 		return () => window.removeEventListener('keydown', handleKeyDown);
 	});
+
 </script>
 
 <div class="h-screen overflow-hidden bg-base-200/30 flex flex-col">
@@ -155,8 +156,8 @@
 			<div class="flex-1"></div>
 			{#if canEdit && curationState.editorMode !== 'add'}
 				<div class="flex items-center gap-1 sm:gap-2">
-					<button 
-						class="btn btn-primary btn-xs sm:btn-sm gap-1 sm:gap-2" 
+					<button
+						class="btn btn-primary btn-xs sm:btn-sm gap-1 sm:gap-2"
 						onclick={() => isModuleFull ? curationState.isLimitModalOpen = true : curationState.openAddQuestionModal()}
 					>
 						<Plus size={14} class="sm:w-4 sm:h-4" />

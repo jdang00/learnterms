@@ -442,8 +442,8 @@
 
 		<!-- Reorder View -->
 		{#if viewMode === 'reorder'}
-			<div class="bg-base-200 rounded-xl p-6 border border-base-300">
-				<div class="space-y-4">
+			<div class="bg-base-200 rounded-xl p-3 sm:p-6 border border-base-300">
+				<div class="space-y-3 sm:space-y-4">
 					{#each filteredClassList as classItem, index (classItem._id)}
 						<div
 							use:droppable={{
@@ -459,34 +459,36 @@
 									'.interactive'
 								]
 							}}
-							class="flex items-center gap-4 p-4 bg-base-100 rounded-lg border border-base-300 shadow-sm hover:shadow-md transition-all duration-200 svelte-dnd-touch-feedback"
+							class="flex items-center gap-3 p-3 sm:gap-4 sm:p-4 bg-base-100 rounded-lg border border-base-300 shadow-sm hover:shadow-md transition-all duration-200 svelte-dnd-touch-feedback touch-manipulation"
 							animate:flip={{ duration: 300 }}
 						>
 							<!-- Drag Handle -->
-							<div class="flex items-center justify-center w-10 h-10 rounded-md bg-base-200 hover:bg-base-300 transition-colors cursor-move">
-								<GripVertical size={18} class="text-base-content/70" />
+							<div class="flex-none flex items-center justify-center w-10 h-10 rounded-md bg-base-200 hover:bg-base-300 transition-colors cursor-move active:cursor-grabbing">
+								<GripVertical size={20} class="text-base-content/70" />
 							</div>
 
 							<!-- Class Info -->
 							<div class="flex-1 min-w-0">
-								<div class="flex items-center gap-3">
-									<h3 class="font-semibold text-lg text-base-content truncate">
+								<div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+									<h3 class="font-semibold text-base sm:text-lg text-base-content truncate">
 										{classItem.name}
 									</h3>
-									<span class="badge badge-secondary badge-sm font-mono">
-										{classItem.code}
-									</span>
-									<span class="badge badge-soft badge-sm font-mono">
-										{classItem.semester?.name || 'No semester'}
-									</span>
+									<div class="flex items-center gap-2">
+										<span class="badge badge-secondary badge-xs sm:badge-sm font-mono">
+											{classItem.code}
+										</span>
+										<span class="badge badge-soft badge-xs sm:badge-sm font-mono truncate max-w-[100px] sm:max-w-none">
+											{classItem.semester?.name || 'No semester'}
+										</span>
+									</div>
 								</div>
-								<p class="text-sm text-base-content/70 mt-1 line-clamp-2">
+								<p class="text-xs sm:text-sm text-base-content/70 mt-1 line-clamp-1 sm:line-clamp-2">
 									{classItem.description || 'No description available'}
 								</p>
 							</div>
 
 							<!-- Order Indicator -->
-							<div class="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+							<div class="flex-none flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary font-bold text-xs sm:text-sm">
 								{index + 1}
 							</div>
 						</div>

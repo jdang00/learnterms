@@ -3,7 +3,6 @@
 		X,
 		Bold,
 		Italic,
-		FileText,
 		CheckCircle,
 		Archive,
 		CheckSquare,
@@ -19,14 +18,20 @@
 		Link as LinkIcon,
 		Highlighter as HighlighterIcon,
 		MessageSquare,
-		Hash,
-		Lightbulb
+		Plus,
+		Shuffle,
+		Clipboard,
+		Trash2,
+		Save,
+		Image as ImageIcon,
+		Check,
+		FileText
 	} from 'lucide-svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
-	import { QUESTION_TYPES } from '../types';
-	import { createUploader } from '$lib/utils/uploadthing';
+	import { QUESTION_TYPES } from '$lib/types';
+	import { createUploader, createUploadThing } from '$lib/utils/uploadthing';
 	import { UploadDropzone } from '@uploadthing/svelte';
 	import { onMount } from 'svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
@@ -71,7 +76,7 @@
 			content: editingQuestion?.stem || '',
 			editorProps: {
 				attributes: {
-					class: 'prose prose-sm max-w-none focus:outline-none min-h-12 p-3'
+					class: 'prose prose-sm max-w-none focus:outline-none min-h-[3rem] p-3 tiptap-content'
 				}
 			}
 		});
@@ -81,7 +86,7 @@
 			content: editingQuestion?.explanation || '',
 			editorProps: {
 				attributes: {
-					class: 'prose prose-sm max-w-none focus:outline-none min-h-16 p-3'
+					class: 'prose prose-sm max-w-none focus:outline-none min-h-[3rem] p-3 tiptap-content text-sm'
 				}
 			}
 		});
@@ -327,7 +332,85 @@
 		}
 	});
 
-	function removeQueuedMedia(index: number) {
+	// Paste upload support
+	const { startUpload, isUploading } = createUploadThing('questionMediaUploader', {
+		onClientUploadComplete: (res) => {
+			try {
+				const f = Array.isArray(res) ? res[0] : null;
+				if (!f) return;
+				const url = (f as any)?.ufsUrl ?? (f as any)?.url;
+				const key = (f as any)?.key ?? (f as any)?.fileKey;
+				const name = (f as any)?.name ?? '';
+				const size = Number((f as any)?.size ?? 0);
+				const mime = (f as any)?.type ?? '';
+
+				if (!url) {
+					setMediaError('Missing file URL');
+					return;
+				}
+
+				addMediaItem({
+					url,
+					key,
+					name,
+					caption: '',
+					sizeBytes: size || undefined,
+					mimeType: mime || undefined,
+					showOnSolution: false
+				});
+				setMediaError('');
+			} catch (e) {
+				setMediaError(e instanceof Error ? e.message : 'Upload failed');
+			}
+		},
+		onUploadError: (error: Error) => {
+			setMediaError(error.message);
+		}
+	});
+
+	let isPasteUploading = $state(false);
+
+	async function handlePaste(e: ClipboardEvent) {
+		const items = e.clipboardData?.items;
+		if (!items) return;
+
+		const files: File[] = [];
+		for (const item of items) {
+			if (item.kind === 'file') {
+				const file = item.getAsFile();
+				if (file) files.push(file);
+			}
+		}
+
+		if (files.length === 0) return;
+
+		e.preventDefault();
+		isPasteUploading = true;
+		setMediaError('');
+
+		try {
+			await startUpload(files);
+		} catch (err) {
+			setMediaError(err instanceof Error ? err.message : 'Paste upload failed');
+		} finally {
+			isPasteUploading = false;
+		}
+	}
+
+	async function removeQueuedMedia(index: number) {
+		const media = queuedMedia[index];
+		// Delete from UploadThing if we have a key
+		if (media?.key) {
+			try {
+				await fetch('/api/processdoc', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ fileKey: media.key })
+				});
+			} catch (e) {
+				console.error('Failed to delete from UploadThing:', e);
+			}
+		}
 		queuedMedia = queuedMedia.filter((_, i) => i !== index);
 		onChange();
 	}
@@ -341,8 +424,8 @@
 	};
 
 	const FITB_MODE_LABELS: Record<FitbMode, string> = {
-		exact: 'Exact (case-insensitive)',
-		exact_cs: 'Exact (case-sensitive)',
+		exact: 'Exact',
+		exact_cs: 'Case-sensitive',
 		contains: 'Contains',
 		regex: 'Regex'
 	};
@@ -453,6 +536,27 @@
 	function addOption() {
 		if (questionType === QUESTION_TYPES.TRUE_FALSE || questionType === QUESTION_TYPES.FILL_IN_THE_BLANK || questionType === QUESTION_TYPES.MATCHING) return;
 		options = [...options, { text: '' }];
+		onChange();
+	}
+
+	function shuffleOptions() {
+		if (
+			questionType === QUESTION_TYPES.TRUE_FALSE ||
+			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+			questionType === QUESTION_TYPES.MATCHING
+		)
+			return;
+		const pairs = options.map((opt, idx) => ({ opt, idx }));
+		for (let i = pairs.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+		}
+		const newCorrect = correctAnswers.map((oldIdx) => {
+			const newIdx = pairs.findIndex((p) => p.idx === parseInt(oldIdx));
+			return newIdx.toString();
+		});
+		options = pairs.map((p) => p.opt);
+		correctAnswers = newCorrect;
 		onChange();
 	}
 
@@ -662,388 +766,495 @@
 	}
 </script>
 
-<div class="h-full flex flex-col overflow-hidden">
-	<div class="flex items-center justify-between p-4 border-b border-base-300 bg-base-100 flex-shrink-0">
-		<h3 class="text-lg font-semibold">{mode === 'edit' ? 'Edit Question' : 'New Question'}</h3>
+<div class="h-full flex flex-col overflow-hidden bg-base-100">
+	<!-- Top Bar: Title & Actions -->
+	<div class="flex items-center justify-between px-4 py-3 border-b border-base-300 bg-base-100 flex-shrink-0">
+		<h3 class="text-base font-semibold">{mode === 'edit' ? 'Edit Question' : 'New Question'}</h3>
 		<div class="flex items-center gap-2">
-			<button class="btn btn-ghost" onclick={onCancel} disabled={isSubmitting}>Cancel</button>
+			<button class="btn btn-sm btn-ghost" onclick={onCancel} disabled={isSubmitting}>Cancel</button>
 			<button
-				class="btn btn-primary gap-2"
+				class="btn btn-sm btn-primary gap-2"
 				onclick={handleSubmit}
 				disabled={isSubmitting || !questionStem}
 			>
 				{#if isSubmitting}
-					<span class="loading loading-spinner loading-sm"></span>
-					<span>{mode === 'edit' ? 'Saving...' : 'Creating...'}</span>
+					<span class="loading loading-spinner loading-xs"></span>
 				{:else}
-					<span>{mode === 'edit' ? 'Save Changes' : 'Create Question'}</span>
+					<Save size={14} />
 				{/if}
+				{mode === 'edit' ? 'Save' : 'Create'}
 			</button>
 		</div>
 	</div>
 
-	<div class="flex-1 overflow-y-auto p-4 pb-12 space-y-4 min-h-0">
+	<!-- Toolbar: Type & Status -->
+	<div class="flex flex-wrap items-center gap-8 px-6 py-4 border-b border-base-300 bg-base-200/30 flex-shrink-0">
+		<!-- Type Selector -->
 		<div class="flex flex-col gap-2">
-			<label class="font-semibold flex items-center gap-2 text-sm">
-				<MessageSquare size={16} class="text-primary/80" />
-				Question
-			</label>
-			<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
-			<div class="bg-base-200 border-b border-base-300 p-2 flex gap-1 flex-wrap">
-				{#each menuItems as item (item.name)}
+			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1">Type</span>
+			<div class="join shadow-sm bg-base-100 rounded-lg border border-base-300 p-1">
+				{#each questionTypeOptions as option (option.value)}
 					<button
-						type="button"
-						class="btn btn-ghost btn-xs gap-1 {item.active() ? 'btn-active' : ''}"
-						onclick={item.command}
-						title={item.name}
+						class="join-item btn btn-xs sm:btn-sm border-0 {questionType === option.value ? 'btn-active font-medium' : 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
+						onclick={() => {
+							questionType = option.value;
+							handleTypeChange();
+							onChange();
+						}}
+						title={option.label}
 					>
-						<item.icon size={14} />
+						<option.icon size={16} />
+						<span class="hidden md:inline">{option.label}</span>
 					</button>
 				{/each}
 			</div>
-			{#if editor}
-				<EditorContent editor={$editor} class="min-h-12" />
-			{/if}
-		</div>
 		</div>
 
-		<div class="flex flex-col gap-2">
-			<label class="font-semibold flex items-center gap-2 text-sm">
-				<Hash size={16} class="text-primary/80" />
-				Type
-			</label>
-			<div class="join join-horizontal w-full">
-				{#each questionTypeOptions as option (option.value)}
-					<label
-						class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {questionType === option.value ? 'btn-active' : ''}"
-					>
-						<input
-							type="radio"
-							name="question-type-inline"
-							class="hidden"
-							value={option.value}
-							bind:group={questionType}
-							onchange={() => {
-								handleTypeChange();
-								onChange();
-							}}
-						/>
-						<option.icon size={14} />
-						<span class="hidden xl:inline">{option.label}</span>
-					</label>
-				{/each}
-			</div>
-		</div>
+		<div class="w-px h-10 bg-base-300 hidden sm:block"></div>
 
+		<!-- Status Selector -->
 		<div class="flex flex-col gap-2">
-			<label class="font-semibold flex items-center gap-2 text-sm">
-				<Hash size={16} class="text-primary/80" />
-				Status
-			</label>
-			<div class="join join-horizontal w-full">
+			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1">Status</span>
+			<div class="join shadow-sm bg-base-100 rounded-lg border border-base-300 p-1">
 				{#each statusOptions as option (option.value)}
-					<label
-						class="join-item btn flex-1 gap-2 px-3 py-2 text-sm {option.colorClass} {questionStatus === option.value ? 'btn-active' : ''}"
+					<button
+						class="join-item btn btn-xs sm:btn-sm border-0 {questionStatus === option.value ? option.colorClass + ' btn-active font-medium' : 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
+						onclick={() => {
+							questionStatus = option.value;
+							onChange();
+						}}
+						title={option.label}
 					>
-						<input
-							type="radio"
-							name="question-status-inline"
-							class="hidden"
-							value={option.value}
-							bind:group={questionStatus}
-							onchange={onChange}
-						/>
-						<option.icon size={14} />
-						<span class="hidden xl:inline">{option.label}</span>
-					</label>
+						<option.icon size={16} />
+						<span class="hidden md:inline">{option.label}</span>
+					</button>
 				{/each}
 			</div>
 		</div>
+	</div>
 
-		<div class="card bg-base-200/50 border border-base-300">
-			<div class="card-body p-4">
-				<h6 class="font-semibold mb-3 flex items-center gap-2 text-sm">
-					<ListChecks size={16} class="text-primary/80" />
-					Options & Answers
-				</h6>
+	<!-- Main Scrollable Content -->
+	<div class="flex-1 overflow-y-auto min-h-0 p-4 pb-40 sm:p-6" onpaste={handlePaste}>
+		<div class="w-full max-w-none space-y-8">
+			
+			<!-- Question Stem -->
+			<div class="space-y-2">
+				<div class="flex items-center justify-between">
+					<label class="text-xs font-semibold uppercase tracking-wide text-base-content/60 flex items-center gap-2">
+						<MessageSquare size={14} /> Question
+					</label>
+					<span class="text-[10px] text-base-content/40 font-medium hidden sm:inline">Ctrl + S to save</span>
+				</div>
+				<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100 shadow-sm group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+					{#if editor}
+						<div class="bg-base-200/50 border-b border-base-300 p-1 flex gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+							{#each menuItems as item (item.name)}
+								<button
+									type="button"
+									class="btn btn-ghost btn-xs btn-square {item.active() ? 'btn-active text-primary' : ''}"
+									onclick={item.command}
+									title={item.name}
+								>
+									<item.icon size={12} />
+								</button>
+							{/each}
+						</div>
+						<EditorContent editor={$editor} />
+					{/if}
+				</div>
+			</div>
 
+			<div class="divider my-2 opacity-50"></div>
+
+			<!-- Options Section -->
+			<div>
 				{#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
 					<div class="space-y-4">
-						{#each fitbAnswers as row, index (index)}
-							<div class="p-3 rounded-lg border border-base-300 bg-base-100">
-								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<input
-										type="text"
-										class="input input-bordered w-full"
-										placeholder="Answer text"
-										bind:value={row.value}
-										oninput={onChange}
-									/>
-									<select
-										class="select select-bordered w-full"
-										value={row.mode}
-										onchange={(e) => updateFitbMode(index, e.currentTarget.value as FitbMode)}
-									>
-										{#each Object.entries(FITB_MODE_LABELS) as [mode, label]}
-											<option value={mode}>{label}</option>
-										{/each}
-									</select>
-								</div>
-								<div class="flex items-center gap-4 mt-3">
-									<label class="label cursor-pointer gap-2">
-										<input
-											type="checkbox"
-											class="checkbox checkbox-sm"
-											checked={row.flags.ignorePunct}
-											onchange={() => toggleFitbFlag(index, 'ignorePunct')}
-										/>
-										<span class="label-text text-sm">Ignore punctuation</span>
-									</label>
-									<label class="label cursor-pointer gap-2">
-										<input
-											type="checkbox"
-											class="checkbox checkbox-sm"
-											checked={row.flags.normalizeWs}
-											onchange={() => toggleFitbFlag(index, 'normalizeWs')}
-										/>
-										<span class="label-text text-sm">Normalize whitespace</span>
-									</label>
-									{#if fitbAnswers.length > 1}
-										<button
-											type="button"
-											class="btn btn-ghost btn-xs text-error ml-auto"
-											onclick={() => removeFitbRow(index)}
-										>
-											<X size={14} />
-										</button>
+						<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2">Accepted Answers</div>
+						<div class="card bg-base-100 border border-base-300 shadow-sm rounded-3xl overflow-hidden">
+							<div class="card-body p-4 gap-4">
+								{#each fitbAnswers as row, index (index)}
+									<div class="flex flex-col sm:flex-row gap-3 items-start">
+										<div class="flex-1 w-full">
+											<div class="flex items-center gap-2 mb-1">
+												<span class="badge badge-sm {index === 0 ? 'badge-success' : 'badge-ghost'}">
+													{index === 0 ? 'Primary' : 'Alt'}
+												</span>
+												{#if fitbAnswers.length > 1}
+													<button class="btn btn-ghost btn-xs text-error ml-auto sm:hidden" onclick={() => removeFitbRow(index)}>
+														<X size={14} />
+													</button>
+												{/if}
+											</div>
+											<input
+												type="text"
+												class="input input-bordered input-sm w-full font-medium"
+												placeholder="Answer text"
+												bind:value={row.value}
+												oninput={onChange}
+											/>
+										</div>
+										<div class="flex flex-wrap items-center gap-2 w-full sm:w-auto pt-6">
+											<select
+												class="select select-bordered select-sm"
+												value={row.mode}
+												onchange={(e) => updateFitbMode(index, e.currentTarget.value as FitbMode)}
+											>
+												{#each Object.entries(FITB_MODE_LABELS) as [mode, label]}
+													<option value={mode}>{label}</option>
+												{/each}
+											</select>
+											<div class="join">
+												<button 
+													class="btn btn-sm join-item {row.flags.ignorePunct ? 'btn-active' : 'btn-ghost border-base-300'}"
+													onclick={() => toggleFitbFlag(index, 'ignorePunct')}
+													title="Ignore Punctuation"
+												>
+													Punct
+												</button>
+												<button 
+													class="btn btn-sm join-item {row.flags.normalizeWs ? 'btn-active' : 'btn-ghost border-base-300'}"
+													onclick={() => toggleFitbFlag(index, 'normalizeWs')}
+													title="Normalize Whitespace"
+												>
+													Space
+												</button>
+											</div>
+											{#if fitbAnswers.length > 1}
+												<button class="btn btn-ghost btn-sm btn-square text-error hidden sm:flex" onclick={() => removeFitbRow(index)}>
+													<X size={16} />
+												</button>
+											{/if}
+										</div>
+									</div>
+									{#if index < fitbAnswers.length - 1}
+										<div class="divider my-0"></div>
 									{/if}
-								</div>
+								{/each}
 							</div>
-						{/each}
-						<button type="button" class="btn btn-sm btn-outline" onclick={addFitbRow}>
-							Add Alternative Answer
-						</button>
+							<div class="bg-base-200/50 p-2 border-t border-base-300 flex justify-center">
+								<button class="btn btn-xs btn-ghost gap-1" onclick={addFitbRow}>
+									<Plus size={14} /> Add Alternative
+								</button>
+							</div>
+						</div>
 					</div>
+
 				{:else if questionType === QUESTION_TYPES.MATCHING}
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div>
-							<h6 class="text-sm font-semibold mb-2">Prompts</h6>
-							<div class="space-y-3">
-								{#each matchingPrompts as p, i (i)}
-									<div class="flex items-center gap-2">
-										<input
-											type="text"
-											class="input input-bordered flex-1"
-											placeholder="Prompt {i + 1}"
-											bind:value={matchingPrompts[i]}
-											oninput={onChange}
-										/>
-										{#if matchingPrompts.length > 1}
-											<button
-												type="button"
-												class="btn btn-ghost btn-sm btn-circle"
-												onclick={() => removeMatchingPrompt(i)}
-											>
-												<X size={16} />
-											</button>
+					<div class="space-y-4">
+						<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2">Matching Pairs</div>
+						<div class="space-y-3">
+							{#each Array(Math.max(matchingPrompts.length, matchingAnswers.length)) as _, i (i)}
+								<div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+									<!-- Left Column: Prompt -->
+									<div class="flex-1 w-full relative">
+										{#if i < matchingPrompts.length}
+											<input
+												type="text"
+												class="input input-bordered w-full rounded-3xl pr-10"
+												placeholder="Prompt {i + 1}"
+												bind:value={matchingPrompts[i]}
+												oninput={onChange}
+											/>
+											{#if matchingPrompts.length > 1}
+												<button
+													type="button"
+													class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-error"
+													onclick={() => removeMatchingPrompt(i)}
+												>
+													<X size={14} />
+												</button>
+											{/if}
+										{:else}
+											<div class="h-12 w-full rounded-3xl border border-dashed border-base-300 bg-base-100/50 flex items-center justify-center text-xs text-base-content/30 italic">
+												Distractor (No Prompt)
+											</div>
 										{/if}
 									</div>
-								{/each}
-								<button type="button" class="btn btn-sm btn-outline" onclick={addMatchingPrompt}>
-									Add Prompt
+									
+									<!-- Center: Arrow -->
+									<div class="text-base-content/30 rotate-90 sm:rotate-0 w-5 flex justify-center">
+										{#if i < matchingPrompts.length && i < matchingAnswers.length}
+											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+											</svg>
+										{/if}
+									</div>
+
+									<!-- Right Column: Answer -->
+									<div class="flex-1 w-full relative">
+										{#if i < matchingAnswers.length}
+											<input
+												type="text"
+												class="input input-bordered w-full rounded-3xl pr-10 border-success/30 focus:border-success focus:ring-success/20"
+												placeholder="Answer {i + 1}"
+												bind:value={matchingAnswers[i]}
+												oninput={onChange}
+											/>
+											{#if matchingAnswers.length > 1}
+												<button
+													type="button"
+													class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-error"
+													onclick={() => removeMatchingAnswer(i)}
+												>
+													<X size={14} />
+												</button>
+											{/if}
+										{:else}
+											<div class="h-12 w-full rounded-3xl border border-dashed border-base-300 bg-base-100/50 flex items-center justify-center text-xs text-base-content/30 italic">
+												No Answer
+											</div>
+										{/if}
+									</div>
+								</div>
+							{/each}
+						</div>
+						
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+							<div class="flex justify-center sm:justify-start">
+								<button class="btn btn-sm btn-outline gap-2 w-full sm:w-auto" onclick={addMatchingPrompt}>
+									<Plus size={14} /> Add Prompt
 								</button>
 							</div>
-						</div>
-						<div>
-							<h6 class="text-sm font-semibold mb-2">Answers</h6>
-							<div class="space-y-3">
-								{#each matchingAnswers as a, i (i)}
-									<div class="flex items-center gap-2">
-										<input
-											type="text"
-											class="input input-bordered flex-1"
-											placeholder="Answer {i + 1}"
-											bind:value={matchingAnswers[i]}
-											oninput={onChange}
-										/>
-										{#if matchingAnswers.length > 1}
-											<button
-												type="button"
-												class="btn btn-ghost btn-sm btn-circle"
-												onclick={() => removeMatchingAnswer(i)}
-											>
-												<X size={16} />
-											</button>
-										{/if}
-									</div>
-								{/each}
-								<button type="button" class="btn btn-sm btn-outline" onclick={addMatchingAnswer}>
-									Add Answer
+							<div class="flex justify-center sm:justify-end">
+								<button class="btn btn-sm btn-outline gap-2 w-full sm:w-auto" onclick={addMatchingAnswer}>
+									<Plus size={14} /> Add Answer
 								</button>
 							</div>
 						</div>
 					</div>
-				{:else if questionType === QUESTION_TYPES.MULTIPLE_CHOICE || questionType === QUESTION_TYPES.TRUE_FALSE}
-					<div class="space-y-3">
-						{#each options as option, index (index)}
+
+				{:else}
+					<!-- Multiple Choice / True False -->
+					<div class="space-y-4">
+						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-3">
-								<input
-									type="checkbox"
-									class="checkbox checkbox-primary"
-									checked={correctAnswers.includes(index.toString())}
-									onchange={() => toggleCorrectAnswer(index)}
-								/>
-								<input
-									type="text"
-									class="input input-bordered flex-1 rounded-lg"
-									bind:value={option.text}
-									disabled={questionType === QUESTION_TYPES.TRUE_FALSE}
-									placeholder="Option {index + 1}"
-									oninput={onChange}
-								/>
-								{#if options.length > 2 && questionType !== QUESTION_TYPES.TRUE_FALSE}
-									<button type="button" class="btn btn-ghost btn-sm btn-circle" onclick={() => removeOption(index)}>
-										<X size={16} />
-									</button>
-								{/if}
+								<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60">Options</div>
+								<span class="text-[10px] text-base-content/40 font-medium hidden sm:inline">Ctrl + Enter to toggle correct</span>
 							</div>
-						{/each}
+							{#if questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
+								<button class="btn btn-xs btn-ghost gap-1" onclick={shuffleOptions}>
+									<Shuffle size={12} /> Shuffle
+								</button>
+							{/if}
+						</div>
+
+						<div class="space-y-3">
+							{#each options as option, index (index)}
+								<div class="relative group">
+									<div class="flex items-center rounded-full border-2 transition-colors bg-base-100 pl-3 pr-2 py-1 {correctAnswers.includes(index.toString()) ? 'border-success bg-success/5' : 'border-base-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20'}">
+										<input
+											type="checkbox"
+											class="checkbox checkbox-sm {correctAnswers.includes(index.toString()) ? 'checkbox-success' : 'checkbox-primary'}"
+											checked={correctAnswers.includes(index.toString())}
+											onclick={() => toggleCorrectAnswer(index)}
+											tabindex={-1}
+										/>
+										<span class="font-semibold text-sm ml-3 text-base-content/50 select-none w-6">{String.fromCharCode(65 + index)}.</span>
+										<input
+											type="text"
+											class="flex-1 bg-transparent border-none focus:ring-0 text-sm px-2 h-9"
+											bind:value={option.text}
+											disabled={questionType === QUESTION_TYPES.TRUE_FALSE}
+											placeholder="Option text..."
+											onblur={onChange}
+											onkeydown={(e) => {
+												if (e.ctrlKey && e.key === 'Enter') {
+													e.preventDefault();
+													toggleCorrectAnswer(index);
+												}
+											}}
+										/>
+										{#if options.length > 2 && questionType !== QUESTION_TYPES.TRUE_FALSE}
+											<button 
+												type="button" 
+												class="btn btn-ghost btn-xs btn-circle text-base-content/30 hover:text-error ml-1" 
+												tabindex={-1} 
+												onclick={() => removeOption(index)}
+											>
+												<X size={14} />
+											</button>
+										{:else if questionType === QUESTION_TYPES.TRUE_FALSE}
+											<div class="w-8"></div>
+										{/if}
+									</div>
+								</div>
+							{/each}
+						</div>
+
 						{#if questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
-							<button type="button" class="btn btn-sm btn-outline" onclick={addOption}>Add Option</button>
+							<button class="btn btn-sm btn-ghost gap-2 w-full border-2 border-dashed border-base-300 hover:border-primary hover:text-primary mt-2" onclick={addOption}>
+								<Plus size={14} /> Add Option
+							</button>
 						{/if}
 					</div>
 				{/if}
 			</div>
-		</div>
 
-		<div class="card bg-base-200/50 border border-base-300">
-			<div class="card-body p-4">
-				<h6 class="font-semibold mb-3 flex items-center gap-2 text-sm">
-					<Lightbulb size={16} class="text-primary/80" />
-					Explanation
-				</h6>
-				<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
-				<div class="bg-base-200 border-b border-base-300 p-2 flex gap-1">
-					{#each expMenuItems as item (item.name)}
-						<button
-							type="button"
-							class="btn btn-ghost btn-xs gap-1 {item.active() ? 'btn-active' : ''}"
-							onclick={item.command}
-							title={item.name}
-						>
-							<item.icon size={12} />
-						</button>
-					{/each}
-				</div>
-				{#if explanationEditor}
-					<EditorContent editor={$explanationEditor} class="min-h-16" />
-				{/if}
-			</div>
-			</div>
-		</div>
-
-		<div class="card bg-base-200/50 border border-base-300">
-			<div class="card-body p-4">
-				<h6 class="font-semibold mb-3 text-sm">Attachments</h6>
-				<div class="flex justify-center">
-					<div class="w-full max-w-xs">
-						<UploadDropzone
-							uploader={mediaUploader}
-							aria-label="Upload image attachment"
-							appearance={{
-								container: 'rounded-lg',
-								label: 'text-sm',
-								allowedContent: 'text-[11px] opacity-70'
-							}}
-						/>
+			<!-- Explanation & Attachments -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-base-200">
+				<div>
+					<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2 flex items-center gap-2">
+						<MessageSquare size={14} /> Explanation
+					</div>
+					<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100 group">
+						{#if explanationEditor}
+							<EditorContent editor={$explanationEditor} />
+							<div class="bg-base-200/50 border-t border-base-300 p-1 flex gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
+								{#each expMenuItems as item (item.name)}
+									<button
+										type="button"
+										class="btn btn-ghost btn-xs btn-square {item.active() ? 'btn-active' : ''}"
+										onclick={item.command}
+										title={item.name}
+									>
+										<item.icon size={12} />
+									</button>
+								{/each}
+							</div>
+						{/if}
 					</div>
 				</div>
-				{#if mediaError}
-					<div class="alert alert-error alert-sm mt-3">
-						<span class="text-sm">{mediaError}</span>
-					</div>
-				{/if}
 
-				{#if existingMedia.length > 0 || queuedMedia.length > 0}
-					<div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-						<!-- Existing media (from database) -->
-						{#each existingMedia as m (m._id)}
-							<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
-								<img src={m.url} alt={m.altText} class="w-full h-24 object-cover" />
-								<div class="p-3 space-y-2">
-									<input
-										class="input input-bordered input-sm w-full"
-										placeholder="Alt text"
-										bind:value={m.altText}
-										oninput={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
-									/>
-									<input
-										class="input input-bordered input-sm w-full"
-										placeholder="Caption (optional)"
-										bind:value={m.caption}
-										oninput={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
-									/>
-									<label class="label cursor-pointer gap-2 text-sm">
-										<input
-											type="checkbox"
-											class="checkbox checkbox-sm"
-											bind:checked={m.showOnSolution}
-											onchange={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+				<div>
+					<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2 flex items-center gap-2">
+						<ImageIcon size={14} /> Attachments
+					</div>
+					
+					<div class="space-y-3">
+						{#if existingMedia.length > 0 || queuedMedia.length > 0}
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+								<!-- Existing Media -->
+								{#each existingMedia as m (m._id)}
+									<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
+										<div class="relative group">
+											<img src={m.url} alt={m.altText} class="w-full h-32 object-cover" />
+											<button 
+												class="absolute top-1 right-1 btn btn-circle btn-xs btn-error opacity-0 group-hover:opacity-100 transition-opacity"
+												onclick={() => removeExistingMedia(m._id)}
+											>
+												<Trash2 size={12} />
+											</button>
+										</div>
+										<div class="p-3 space-y-2">
+											<input
+												class="input input-bordered input-sm w-full"
+												placeholder="Alt text"
+												bind:value={m.altText}
+												oninput={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+											/>
+											<input
+												class="input input-bordered input-sm w-full"
+												placeholder="Caption (optional)"
+												bind:value={m.caption}
+												oninput={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+											/>
+											<label class="label cursor-pointer gap-2 text-xs p-0 justify-start">
+												<input
+													type="checkbox"
+													class="checkbox checkbox-xs"
+													bind:checked={m.showOnSolution}
+													onchange={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+												/>
+												<span>Show on solution</span>
+											</label>
+										</div>
+									</div>
+								{/each}
+								
+								<!-- Queued Media -->
+								{#each queuedMedia as m, idx (idx)}
+									<div class="border border-primary/50 rounded-lg overflow-hidden bg-base-100 relative">
+										<div class="absolute top-2 left-2 badge badge-primary badge-xs z-10">New</div>
+										<div class="relative">
+											<img src={m.url} alt={m.name} class="w-full h-32 object-cover" />
+											<button 
+												class="absolute top-1 right-1 btn btn-circle btn-xs btn-error z-10"
+												onclick={() => removeQueuedMedia(idx)}
+											>
+												<Trash2 size={12} />
+											</button>
+										</div>
+										<div class="p-3 space-y-2">
+											<input
+												class="input input-bordered input-sm w-full"
+												placeholder="Alt text"
+												bind:value={m.name}
+												oninput={onChange}
+											/>
+											<input
+												class="input input-bordered input-sm w-full"
+												placeholder="Caption (optional)"
+												bind:value={m.caption}
+												oninput={onChange}
+											/>
+											<label class="label cursor-pointer gap-2 text-xs p-0 justify-start">
+												<input
+													type="checkbox"
+													class="checkbox checkbox-xs"
+													bind:checked={m.showOnSolution}
+													onchange={onChange}
+												/>
+												<span>Show on solution</span>
+											</label>
+										</div>
+									</div>
+								{/each}
+							</div>
+						{/if}
+
+						<div class="relative">
+							{#if isPasteUploading}
+								<div class="border-2 border-dashed border-primary rounded-lg p-6 flex flex-col items-center justify-center h-32 bg-base-100/50">
+									<span class="loading loading-spinner text-primary mb-2"></span>
+									<span class="text-xs text-primary font-medium">Processing pasted image...</span>
+								</div>
+							{:else}
+								<div class="group relative h-36 w-full border-2 border-dashed border-base-300 rounded-xl hover:border-primary transition-colors bg-base-100/50 flex flex-col items-center justify-center text-center overflow-hidden">
+									<!-- The Dropzone covers everything but is invisible -->
+									<div class="absolute inset-0 z-10 opacity-0 cursor-pointer">
+										<UploadDropzone
+											uploader={mediaUploader}
+											aria-label="Upload image"
+											appearance={{
+												container: 'h-full w-full',
+												label: 'hidden',
+												allowedContent: 'hidden',
+												button: 'hidden'
+											}}
 										/>
-										<span>Show on solution</span>
-									</label>
-									<div class="flex justify-between items-center pt-1">
-										<span class="text-xs opacity-60">Order: {m.order}</span>
-										<button
-											class="btn btn-ghost btn-xs text-error"
-											onclick={() => removeExistingMedia(m._id)}>Remove</button
-										>
+									</div>
+									
+									<!-- Visible Content -->
+									<div class="flex flex-col items-center gap-2 p-4 text-base-content/60 group-hover:text-primary transition-colors">
+										<div class="p-3 bg-base-200 rounded-full group-hover:bg-primary/10 transition-colors">
+											<ImageIcon size={24} />
+										</div>
+										<div class="flex flex-col gap-0.5">
+											<span class="text-sm font-semibold">Upload Image</span>
+											<span class="text-xs opacity-70">Drag & drop or paste (Ctrl+V)</span>
+										</div>
 									</div>
 								</div>
-							</div>
-						{/each}
-
-						<!-- Queued media (newly uploaded, not saved yet) -->
-						{#each queuedMedia as m, idx (idx)}
-							<div class="border border-primary/50 rounded-lg overflow-hidden bg-base-100 relative">
-								<div class="absolute top-2 left-2 badge badge-primary badge-sm">New</div>
-								<img src={m.url} alt={m.name} class="w-full h-24 object-cover" />
-								<div class="p-3 space-y-2">
-									<input
-										class="input input-bordered input-sm w-full"
-										placeholder="Alt text"
-										bind:value={m.name}
-										oninput={onChange}
-									/>
-									<input
-										class="input input-bordered input-sm w-full"
-										placeholder="Caption (optional)"
-										bind:value={m.caption}
-										oninput={onChange}
-									/>
-									<label class="label cursor-pointer gap-2 text-sm">
-										<input
-											type="checkbox"
-											class="checkbox checkbox-sm"
-											bind:checked={m.showOnSolution}
-											onchange={onChange}
-										/>
-										<span>Show on solution</span>
-									</label>
-									<div class="flex justify-end">
-										<button
-											class="btn btn-ghost btn-xs text-error"
-											onclick={() => removeQueuedMedia(idx)}>Remove</button
-										>
-									</div>
-								</div>
-							</div>
-						{/each}
+							{/if}
+						</div>
 					</div>
-				{:else}
-					<div class="text-center text-base-content/60 p-8">No attachments yet.</div>
-				{/if}
+				</div>
 			</div>
 		</div>
 	</div>
 </div>
+
+<style>
+	:global(.tiptap-content) {
+		outline: none;
+	}
+	:global(.tiptap-content p.is-editor-empty:first-child::before) {
+		color: #adb5bd;
+		content: attr(data-placeholder);
+		float: left;
+		height: 0;
+		pointer-events: none;
+	}
+</style>
+
