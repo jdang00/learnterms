@@ -6,10 +6,9 @@
 	import { QuizState } from './states.svelte';
 	import MainQuiz from '$lib/components/MainQuiz.svelte';
 	import QuizListView from '$lib/components/QuizListView.svelte';
-	import ModuleInfo from '$lib/components/ModuleInfo.svelte';
 	import QuizErrorHandler from '$lib/components/QuizErrorHandler.svelte';
 	import { onMount, tick } from 'svelte';
-	import { Maximize, Minimize } from 'lucide-svelte';
+	import { Maximize, Minimize, Play, ChevronLeft, RotateCcw, Settings } from 'lucide-svelte';
 	import { slide, fade, scale } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import posthog from 'posthog-js';
@@ -386,123 +385,149 @@
 			return () => clearTimeout(timer);
 		}
 	});
-
-	let showFullscreenHint = $state(false);
-	$effect(() => {
-		if (!qs.fullscreenEnabled) {
-			showFullscreenHint = true;
-			const t = setTimeout(() => (showFullscreenHint = false), 2500);
-			return () => clearTimeout(t);
-		} else {
-			showFullscreenHint = false;
-		}
-	});
 </script>
 
-<div
-	class="bg-base-300 {qs.fullscreenEnabled
-		? ''
-		: 'pt-3 sm:pt-4'} transition-all duration-500 ease-in-out"
-	transition:fade={{ duration: 300, easing: cubicInOut }}
->
+{#if qs.fullscreenEnabled}
+	<!-- Focus Mode / Quiz View -->
 	<div
-		class="{qs.fullscreenEnabled
-			? 'w-full'
-			: 'max-w-7xl mx-auto relative px-2 sm:px-4'} transition-all duration-500 ease-in-out"
+		class="flex flex-col h-[calc(100vh-4rem)]"
+		transition:fade={{ duration: 200 }}
 	>
-
-
-		<MainQuiz
-			{qs}
-			{questions}
-			{currentlySelected}
-			{userId}
-			{data}
-			{handleSelect}
-			{handleFilterToggle}
-			{client}
-			{module}
-			suppressAuthErrors={true}
-		/>
-
-		{#if !qs.fullscreenEnabled}
-			<div class="mt-4">
-				<QuizErrorHandler {questions} {module} {moduleProgress} className="max-w-2xl mx-auto" />
-			</div>
-		{/if}
-
-		{#if !qs.fullscreenEnabled}
-			<div
-				transition:scale={{ duration: 300, easing: cubicInOut, start: 0.8 }}
-				class="transition-all duration-300 ease-in-out"
-			>
-				<div
-					class="tooltip tooltip-left absolute bottom-3 right-3 sm:bottom-4 sm:right-4"
-					data-tip="Enter focus mode"
+		<div class="flex-1 min-h-0 relative">
+			<MainQuiz
+				{qs}
+				{questions}
+				{currentlySelected}
+				{userId}
+				{data}
+				{handleSelect}
+				{handleFilterToggle}
+				{client}
+				{module}
+				suppressAuthErrors={true}
+				onExit={() => (qs.fullscreenEnabled = false)}
+			/>
+		</div>
+	</div>
+{:else}
+	<!-- Preview / Landing View -->
+	<div
+		class="min-h-[calc(100vh-4rem)] bg-base-200/30 p-4 pb-20 sm:p-8"
+		transition:fade={{ duration: 300 }}
+	>
+		<div class="max-w-4xl mx-auto space-y-8">
+			<!-- Back Button -->
+			<div class="flex items-center">
+				<a
+					class="btn btn-ghost btn-sm -ml-2 gap-2 text-base-content/70 hover:text-base-content"
+					href={`/classes?classId=${data.classId}`}
 				>
-					<div class="relative">
-						<button
-							class="btn btn-circle btn-sm sm:btn-md btn-ghost z-40 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 border border-primary"
-							onclick={() => (qs.fullscreenEnabled = !qs.fullscreenEnabled)}
-							aria-label="Enter fullscreen"
-						>
-							<Maximize size="18" class="sm:w-5 sm:h-5 transition-transform duration-200" />
-						</button>
-						{#if showFullscreenHint}
-							<span
-								class="pointer-events-none absolute inset-0 -m-1 rounded-full animate-ping bg-primary/30"
-							></span>
-						{/if}
+					<ChevronLeft size={16} />
+					Back to Module {(module.data?.order ?? 0) + 1}
+				</a>
+			</div>
+
+			<!-- Hero Card -->
+			<div class="card bg-base-100 shadow-sm border border-base-300 overflow-hidden">
+				<div class="card-body p-6 sm:p-8 space-y-6">
+					<!-- Title & Desc -->
+					<div>
+						<div class="flex items-start gap-4">
+							<span class="text-4xl sm:text-5xl">{module.data?.emoji || '📘'}</span>
+							<div class="flex-1">
+								<h1 class="text-2xl sm:text-3xl font-bold leading-tight text-base-content">
+									{module.data?.title || 'Loading...'}
+								</h1>
+								{#if module.data?.description}
+									<p class="text-base text-base-content/70 mt-2 leading-relaxed">
+										{module.data.description}
+									</p>
+								{/if}
+							</div>
+						</div>
+					</div>
+
+					<div class="divider my-0"></div>
+
+					<!-- Progress & Actions -->
+					<div class="flex flex-col gap-6">
+						<div class="space-y-2">
+							<div class="flex justify-between items-end">
+								<span class="text-sm font-semibold text-base-content/70">Your Progress</span>
+								<span class="text-sm font-mono font-medium">{qs.getProgressPercentage()}%</span>
+							</div>
+							<progress 
+								class="progress progress-success w-full h-3" 
+								value={qs.getProgressPercentage()} 
+								max="100"
+							></progress>
+						</div>
+
+						<div class="flex flex-col sm:flex-row gap-4 sm:items-center">
+							<button 
+								class="btn btn-primary btn-xl gap-3 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex-1 sm:flex-none"
+								onclick={() => qs.fullscreenEnabled = true}
+							>
+								<Play size={20} fill="currentColor" />
+								Start Quiz
+							</button>
+
+							<div class="hidden sm:block w-px h-10 bg-base-300 mx-2"></div>
+
+							<div class="flex flex-wrap items-center gap-4 flex-1">
+								<label class="label cursor-pointer gap-2 p-0 hover:opacity-80 transition-opacity">
+									<input
+										type="checkbox"
+										class="toggle toggle-primary toggle-sm"
+										checked={qs.autoNextEnabled}
+										onchange={(e) => qs.setAutoNextEnabled((e.currentTarget as HTMLInputElement).checked)}
+									/>
+									<span class="label-text font-medium">Auto-next</span>
+								</label>
+								<label class="label cursor-pointer gap-2 p-0 hover:opacity-80 transition-opacity">
+									<input
+										type="checkbox"
+										class="toggle toggle-primary toggle-sm"
+										checked={qs.optionsShuffleEnabled}
+										onchange={(e) => qs.setOptionsShuffleEnabled((e.currentTarget as HTMLInputElement).checked)}
+									/>
+									<span class="label-text font-medium">Shuffle</span>
+								</label>
+							</div>
+
+							<button 
+								class="btn btn-ghost btn-sm text-error/80 hover:text-error hover:bg-error/10 gap-2 self-start sm:self-center"
+								onclick={() => (qs.isResetModalOpen = true)}
+							>
+								<RotateCcw size={14} />
+								Reset
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
-		{/if}
-	</div>
 
-	{#if qs.fullscreenEnabled}
-		<div
-			class="tooltip tooltip-left fixed bottom-3 right-3 sm:bottom-4 sm:right-4"
-			data-tip="Exit focus mode"
-		>
-			<button
-				class="btn btn-circle btn-sm sm:btn-md btn-ghost z-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 border border-primary"
-				onclick={() => (qs.fullscreenEnabled = !qs.fullscreenEnabled)}
-				aria-label="Exit fullscreen"
-			>
-				<Minimize size="18" class="sm:w-5 sm:h-5 transition-transform duration-200" />
-			</button>
+			<!-- Question List -->
+			<div class="space-y-4">
+				<div class="flex items-center justify-between px-1">
+					<h3 class="text-lg font-bold flex items-center gap-2">
+						Questions in this module
+						<span class="badge badge-neutral badge-sm">{questions.data?.length || 0}</span>
+					</h3>
+				</div>
+				
+				<div class="bg-base-100 rounded-xl border border-base-300 shadow-sm overflow-hidden">
+					{#if questions.isLoading}
+						<div class="p-8 text-center text-base-content/50">Loading questions...</div>
+					{:else}
+						<div class="p-4">
+							<QuizListView questions={questions.data} />
+						</div>
+					{/if}
+				</div>
+			</div>
 		</div>
-	{/if}
-</div>
-
-{#if !qs.fullscreenEnabled}
-	<div
-		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
-		class="transition-all duration-400 ease-in-out"
-	>
-		<ModuleInfo
-			{module}
-			classId={data.classId as Id<'class'>}
-			progressPercentage={qs.getProgressPercentage()}
-			suppressAuthErrors={true}
-			qs={qs}
-		/>
 	</div>
-{/if}
-
-{#if !qs.fullscreenEnabled}
-	{#if questions.isLoading}
-		<p transition:fade={{ duration: 200 }} class="transition-all duration-200 ease-in-out">
-			Loading...
-		</p>
-	{:else}
-		<div
-			transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y', delay: 100 }}
-			class="mx-auto max-w-5xl mt-8 sm:mt-12 px-2 sm:px-0 transition-all duration-400 ease-in-out"
-		>
-			<QuizListView questions={questions.data} />
-		</div>
-	{/if}
 {/if}
 
 <!-- Global Reset Modal at page root to ensure highest stacking context -->
@@ -527,4 +552,5 @@
 			<button class="btn btn-error" onclick={() => handleResetModalConfirm()}>Reset</button>
 		</div>
 	</div>
+	<div class="modal-backdrop bg-black/50" onclick={() => (qs.isResetModalOpen = false)}></div>
 </dialog>

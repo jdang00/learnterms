@@ -5,10 +5,12 @@
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-	import { Pencil, Trash2, Plus, ArrowLeft, GripVertical } from 'lucide-svelte';
+	import { Pencil, Trash2, Plus, ArrowLeft, GripVertical, Download, FileText, FileJson, FileSpreadsheet } from 'lucide-svelte';
+	import { exportModuleQuestions, type ExportableQuestion } from '$lib/utils/questionExport';
 	import EditModuleModal from '$lib/admin/EditModuleModal.svelte';
 	import AddModuleModal from '$lib/admin/AddModuleModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
+	import ExportModuleModal from '$lib/admin/ExportModuleModal.svelte';
 	import TagManager from '$lib/admin/TagManager.svelte';
 	import { useClerkContext } from 'svelte-clerk';
 
@@ -47,6 +49,10 @@
 	let isDeleteModuleModalOpen = $state(false);
 	let moduleToDelete = $state<ModuleItem | null>(null);
 	let moduleQuestionCount = $state<number>(0);
+	
+	// Export state
+	let isExportModalOpen = $state(false);
+	let exportModuleItem = $state<ModuleItem | null>(null);
 	
 	// UI State
 	let reorderMode = $state(false);
@@ -189,6 +195,47 @@
 
 	function closeAddModuleModal() {
 		isAddModuleModalOpen = false;
+	}
+
+	function openExportModal(moduleItem: ModuleItem) {
+		exportModuleItem = moduleItem;
+		isExportModalOpen = true;
+	}
+
+	function closeExportModal() {
+		isExportModalOpen = false;
+		exportModuleItem = null;
+	}
+
+	// Export functions
+	let isExporting = $state(false);
+
+	async function handleExport(format: 'txt' | 'json' | 'csv') {
+		if (isExporting || !exportModuleItem) return;
+		isExporting = true;
+
+		try {
+			// Fetch questions for this module
+			const questions = await client.query(api.question.getQuestionsByModuleAdmin, {
+				id: exportModuleItem._id as Id<'module'>
+			});
+
+			if (!questions || questions.length === 0) {
+				alert('No questions to export in this module.');
+				return;
+			}
+
+			exportModuleQuestions(questions as ExportableQuestion[], exportModuleItem.title, format, {
+				includeExplanations: true,
+				includeMetadata: format === 'json'
+			});
+			closeExportModal();
+		} catch (error) {
+			console.error('Export failed:', error);
+			alert('Failed to export questions. Please try again.');
+		} finally {
+			isExporting = false;
+		}
 	}
 </script>
 
@@ -383,7 +430,19 @@
 														<span>Edit</span>
 													</button>
 												</li>
-												<li>
+												{#if moduleItem.questionCount > 0}
+													<li>
+														<button
+															class="btn btn-sm btn-ghost w-full justify-start interactive"
+															type="button"
+															onclick={() => openExportModal(moduleItem)}
+														>
+															<Download size={16} />
+															<span>Export Questions</span>
+														</button>
+													</li>
+												{/if}
+												<li class="pt-2">
 													<button
 														data-delete-btn
 														class="btn btn-sm btn-ghost text-error w-full justify-start"
@@ -443,4 +502,12 @@
 	itemName={moduleToDelete?.title}
 	itemType="module"
 	questionCount={moduleQuestionCount}
+/>
+
+<ExportModuleModal 
+	isOpen={isExportModalOpen}
+	onClose={closeExportModal}
+	onExport={handleExport}
+	moduleItem={exportModuleItem}
+	{isExporting}
 />
