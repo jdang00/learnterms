@@ -5,7 +5,7 @@
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id } from '../../convex/_generated/dataModel';
 
-	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId, onExit } = $props();
+	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
 	let hideSidebar = $state(false);
 	let isInfoModalOpen = $state(false);
 	let isSolutionModalOpen = $state(false);
@@ -167,12 +167,6 @@
 				<a
 					class="btn btn-ghost font-bold"
 					href={`/classes?classId=${classId}`}
-					onclick={(e) => {
-						if (typeof onExit === 'function') {
-							e.preventDefault();
-							onExit();
-						}
-					}}
 				>
 					<ChevronLeft size={16} /> MODULE {module.data.order + 1}
 				</a>

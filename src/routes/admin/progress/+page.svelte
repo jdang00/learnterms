@@ -31,13 +31,6 @@
 		});
 	}
 
-	async function updatePlan(userId: Id<'users'>, plan: string) {
-		await client.mutation(api.users.updateUserRoleAndPlan, {
-			userId,
-			plan: plan === '' ? null : plan as 'pro' | 'free'
-		});
-	}
-
 	// Modal state
 	let isStudentModalOpen = $state(false);
 	let selectedStudentId = $state<Id<'users'> | null>(null);
@@ -437,6 +430,5 @@
 		{isDev}
 		{isAdmin}
 		{updateRole}
-		{updatePlan}
 	/>
 {/if}

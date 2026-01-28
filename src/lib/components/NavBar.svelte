@@ -14,11 +14,21 @@
 	// useQuery at top level with skip pattern
 	const userDataQuery = useQuery(
 		api.users.getUserById,
-		() => user ? { id: user.id } : 'skip'
+		() => (user ? { id: user.id } : 'skip')
+	);
+
+	// Check subscription status for pro badge
+	const subscriptionQuery = useQuery(api.polar.getCurrentUserWithSubscription, () =>
+		user ? {} : 'skip'
 	);
 
 	const dev = $derived(userDataQuery.data?.role === 'dev');
-	const plan = $derived(userDataQuery.data?.plan === 'pro');
+	// Check subscription status instead of plan field
+	const isPro = $derived(
+		subscriptionQuery.data?.isPro ||
+			subscriptionQuery.data?.subscription?.status === 'active' ||
+			subscriptionQuery.data?.subscription?.status === 'trialing'
+	);
 
 	const cohortsList = useQuery(
 		api.cohort.listCohortsWithSchools,
@@ -137,7 +147,7 @@
 		<div class="flex flex-row gap-4">
 			<ThemeToggle variant="ghost" size="md" class="btn-circle m-1" />
 
-			{#if plan}
+			{#if isPro}
 				<div class="self-center">
 					<div class="badge badge-primary badge-outline rounded-full hidden sm:block">PRO</div>
 				</div>

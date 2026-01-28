@@ -18,6 +18,7 @@ export default defineSchema({
 		createdAt: v.optional(v.number()),
 		lastActiveAt: v.optional(v.number()),
 		role: v.optional(v.union(v.literal('dev'), v.literal('admin'), v.literal('curator'))),
+		// DEPRECATED: plan is now derived from Polar subscription source of truth
 		plan: v.optional(v.union(v.literal('pro'), v.literal('free'))),
 		metadata: v.object({}),
 		// Denormalized progress stats for fast dashboard queries

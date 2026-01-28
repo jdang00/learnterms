@@ -15,10 +15,7 @@
 		Flag,
 		BookmarkCheck,
 		ArrowDownNarrowWide,
-		Maximize,
-		Minimize,
-		Pencil,
-		ChevronLeft
+		Pencil
 	} from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { slide, fade, scale } from 'svelte/transition';
@@ -35,8 +32,7 @@
 		handleFilterToggle,
 		client,
 		module,
-		suppressAuthErrors = false,
-		onExit
+		suppressAuthErrors = false
 	} = $props();
 
 	const clerk = useClerkContext();
@@ -74,23 +70,20 @@
 	<ErrorDisplay error={questions.error} showReload={true} class="mb-4" />
 {:else if currentlySelected}
 	<div
-		class="flex flex-col md:flex-col lg:flex-row bg-base-100 h-full overflow-hidden p-2 md:p-3 lg:p-4 {qs.fullscreenEnabled ? '' : 'rounded-t-xl'} gap-3 sm:gap-4 lg:gap-8 transition-all duration-500 ease-in-out"
+		class="flex flex-col md:flex-col lg:flex-row bg-base-100 h-full overflow-hidden p-2 md:p-3 lg:p-4 gap-3 sm:gap-4 lg:gap-8 transition-all duration-500 ease-in-out"
 		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 	>
 		<span id="quiz-top" aria-hidden="true"></span>
-		{#if qs.fullscreenEnabled}
-			<QuizSideBar
-				{qs}
-				{module}
-				{currentlySelected}
-				{userId}
-				moduleId={data.moduleId}
-				{client}
-				classId={data.classId}
-				{onExit}
-			/>
-			<MobileInfo {module} classId={data.classId} />
-		{/if}
+		<QuizSideBar
+			{qs}
+			{module}
+			{currentlySelected}
+			{userId}
+			moduleId={data.moduleId}
+			{client}
+			classId={data.classId}
+		/>
+		<MobileInfo {module} classId={data.classId} />
 
 		<div
 			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
@@ -183,14 +176,12 @@
 				<ActionButtons {qs} {currentlySelected} classId={data.classId} />
 			</div>
 		</div>
-		{#if qs.fullscreenEnabled}
-			<div
-				transition:slide={{ duration: 300, easing: cubicInOut, axis: 'y' }}
-				class="transition-all duration-300 ease-in-out"
-			>
-				<MobileMenu bind:qs {currentlySelected} classId={data.classId} moduleId={data.moduleId} />
-			</div>
-		{/if}
+		<div
+			transition:slide={{ duration: 300, easing: cubicInOut, axis: 'y' }}
+			class="transition-all duration-300 ease-in-out"
+		>
+			<MobileMenu bind:qs {currentlySelected} classId={data.classId} moduleId={data.moduleId} />
+		</div>
 	</div>
 {:else}
 	<p>No questions available.</p>
