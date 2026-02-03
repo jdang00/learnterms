@@ -9,7 +9,7 @@
         "@clerk/themes": "^2.4.48",
         "@convex-dev/polar": "^0.7.3",
         "@google/genai": "^1.38.0",
-        "@polar-sh/sveltekit": "^0.7.3",
+        "@polar-sh/sdk": "^0.42.4",
         "@tailwindcss/postcss": "^4.1.18",
         "@thisux/sveltednd": "^0.0.20",
         "@tiptap/extension-blockquote": "^3.16.0",
@@ -33,7 +33,6 @@
         "dompurify": "^3.3.1",
         "lucide-svelte": "^0.525.0",
         "marked": "^16.4.2",
-        "openai": "^5.23.2",
         "posthog-js": "^1.332.0",
         "resend": "^6.8.0",
         "showdown": "^2.1.0",
@@ -231,13 +230,9 @@
 
     "@pkgjs/parseargs": ["@pkgjs/parseargs@0.11.0", "", {}, "sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg=="],
 
-    "@polar-sh/adapter-utils": ["@polar-sh/adapter-utils@0.4.3", "", { "dependencies": { "@polar-sh/sdk": "^0.42.1" } }, "sha512-9xjOyaAVWRFaFZKkSdZr8J6i5LToUoFKeoczXCEu6+uxAhKmkjA3Qlc8otI4be1DSouWgrYB/VUGHOW7dIgCuQ=="],
-
     "@polar-sh/checkout": ["@polar-sh/checkout@0.2.0", "", { "dependencies": { "@polar-sh/sdk": "^0.42.1", "@polar-sh/ui": "^0.1.2", "event-source-plus": "^0.1.15", "eventemitter3": "^5.0.1", "markdown-to-jsx": "^8.0.0", "react-hook-form": "~7.70.0" }, "peerDependencies": { "@stripe/react-stripe-js": "^3.6.0 || ^4.0.2", "@stripe/stripe-js": "^7.1.0", "react": "^18 || ^19" } }, "sha512-lkHa7JJtQpbHblsfpEX91bJRV6s7gyBIlehVCy2KRL89vP4t6t2vYKNwIxIHI+EG7RxXKu/4fCMchQYrVSMYuQ=="],
 
     "@polar-sh/sdk": ["@polar-sh/sdk@0.42.4", "", { "dependencies": { "standardwebhooks": "^1.0.0", "zod": "^3.25.65 || ^4.0.0" } }, "sha512-wZueAFJ7C+Q5ZDBnkE5lNcqr4DFGazfQWoUmVnZDRUgnq5g3kXUspPQYUS86y9XlL4szXXdT/LUcMwIZq4mgWw=="],
-
-    "@polar-sh/sveltekit": ["@polar-sh/sveltekit@0.7.3", "", { "dependencies": { "@polar-sh/adapter-utils": "0.4.3", "@polar-sh/sdk": "^0.42.1" }, "peerDependencies": { "@sveltejs/kit": "^2.0.0" } }, "sha512-alEp6HacMcNK/t9eNSCImhjUyFrYOl6ogQthHDkKEdqQgYS/wYzw7yvJYli+XIJUgTvCdnO2NLNONjxiHxNo6A=="],
 
     "@polar-sh/ui": ["@polar-sh/ui@0.1.2", "", { "dependencies": { "@radix-ui/react-accordion": "^1.2.12", "@radix-ui/react-alert-dialog": "^1.1.15", "@radix-ui/react-checkbox": "^1.3.3", "@radix-ui/react-dialog": "^1.1.15", "@radix-ui/react-dropdown-menu": "^2.1.16", "@radix-ui/react-label": "^2.1.7", "@radix-ui/react-popover": "^1.1.15", "@radix-ui/react-radio-group": "^1.3.8", "@radix-ui/react-select": "^2.2.6", "@radix-ui/react-separator": "^1.1.7", "@radix-ui/react-slot": "^1.2.3", "@radix-ui/react-switch": "^1.2.6", "@radix-ui/react-tabs": "^1.1.13", "@radix-ui/react-toast": "^1.2.15", "@radix-ui/react-toggle": "^1.1.10", "@radix-ui/react-toggle-group": "^1.1.11", "@radix-ui/react-tooltip": "^1.2.8", "@tanstack/react-table": "^8.21.3", "class-variance-authority": "^0.7.1", "clsx": "^2.1.1", "cmdk": "^1.1.1", "countries-list": "^3.2.0", "date-fns": "^4.1.0", "input-otp": "^1.4.2", "lucide-react": "^0.547.0", "react-day-picker": "^9.11.1", "react-hook-form": "^7.65.0", "react-timeago": "^8.3.0", "recharts": "^3.3.0", "tailwind-merge": "^3.3.1" }, "peerDependencies": { "react": "^18 || ^19", "react-dom": "^18 || ^19" } }, "sha512-YTmMB2lr+PplMTDZnTs0Crgu0KNBKyQcSX4N0FYXSlo1Q6e9IKs4hwzEcqNUv3eHS4BxGO1SvxxNjuSK+il49Q=="],
 
@@ -986,8 +981,6 @@
     "obug": ["obug@2.1.1", "", {}, "sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ=="],
 
     "ofetch": ["ofetch@1.5.1", "", { "dependencies": { "destr": "^2.0.5", "node-fetch-native": "^1.6.7", "ufo": "^1.6.1" } }, "sha512-2W4oUZlVaqAPAil6FUg/difl6YhqhUR7x2eZY4bQCko22UXg3hptq9KLQdqFClV+Wu85UX7hNtdGTngi/1BxcA=="],
-
-    "openai": ["openai@5.23.2", "", { "peerDependencies": { "ws": "^8.18.0", "zod": "^3.23.8" }, "optionalPeers": ["ws", "zod"], "bin": { "openai": "bin/cli" } }, "sha512-MQBzmTulj+MM5O8SKEk/gL8a7s5mktS9zUtAkU257WjvobGc9nKcBuVwjyEEcb9SI8a8Y2G/mzn3vm9n1Jlleg=="],
 
     "optionator": ["optionator@0.9.4", "", { "dependencies": { "deep-is": "^0.1.3", "fast-levenshtein": "^2.0.6", "levn": "^0.4.1", "prelude-ls": "^1.2.1", "type-check": "^0.4.0", "word-wrap": "^1.2.5" } }, "sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g=="],
 
