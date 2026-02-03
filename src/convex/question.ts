@@ -2,7 +2,7 @@ import { mutation, action, internalMutation } from './_generated/server';
 import { authCuratorMutation } from './authQueries';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
-import { internal } from './_generated/api';
+import { internal, components } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 
@@ -29,10 +29,24 @@ export const checkAndIncrementUsage = internalMutation({
 			usage = { count: 0, lastResetAt: now };
 		}
 
-		const limit = user.plan === 'pro' ? LIMIT_PRO : LIMIT_FREE;
+		// Check Polar subscription status to determine pro
+		let isPro = false;
+		try {
+			const subscription = await ctx.runQuery(components.polar.lib.getCurrentSubscription, {
+				userId: user._id
+			});
+			isPro =
+				subscription?.status === 'active' ||
+				subscription?.status === 'trialing';
+		} catch {
+			// If subscription check fails, user is not pro
+			isPro = false;
+		}
+
+		const limit = isPro ? LIMIT_PRO : LIMIT_FREE;
 
 		if (usage.count + count > limit) {
-			if (user.plan === 'pro') {
+			if (isPro) {
 				throw new Error(
 					`Daily generation limit reached. You have used ${usage.count}/${limit} generations today. That's a lot of studying! Please check back tomorrow.`
 				);

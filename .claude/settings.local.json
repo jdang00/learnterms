@@ -18,7 +18,16 @@
       "Bash(wc:*)",
       "WebFetch(domain:daisyui.com)",
       "Bash(xxd:*)",
-      "WebFetch(domain:docs.uploadthing.com)"
+      "WebFetch(domain:docs.uploadthing.com)",
+      "WebFetch(domain:polar.sh)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:www.convex.dev)",
+      "Bash(bunx convex env set:*)",
+      "Bash(bunx convex env list:*)",
+      "Bash(bunx convex logs:*)",
+      "Bash(bunx convex function-spec:*)",
+      "Bash(bunx convex data:*)"
     ]
   }
 }

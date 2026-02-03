@@ -105,7 +105,7 @@
 </script>
 
 <div
-	class="items-center gap-2 px-3 sm:px-4 md:px-5 lg:px-6 py-3 sm:py-4 md:py-5 rounded-full backdrop-blur-md border border-base-300 shadow-xl w-auto {qs.fullscreenEnabled ? 'fixed left-1/2 -translate-x-1/2 bottom-4 z-40 hidden md:inline-flex' : 'hidden'}"
+	class="items-center gap-2 px-3 sm:px-4 md:px-5 lg:px-6 py-3 sm:py-4 md:py-5 rounded-full backdrop-blur-md border border-base-300 shadow-xl w-auto fixed left-1/2 -translate-x-1/2 bottom-4 z-40 hidden md:inline-flex"
 >
 	<button class="btn btn-sm btn-outline" onclick={handleClear}>Clear</button>
 	<div class="relative inline-block">

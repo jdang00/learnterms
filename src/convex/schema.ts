@@ -18,6 +18,7 @@ export default defineSchema({
 		createdAt: v.optional(v.number()),
 		lastActiveAt: v.optional(v.number()),
 		role: v.optional(v.union(v.literal('dev'), v.literal('admin'), v.literal('curator'))),
+		// DEPRECATED: plan is now derived from Polar subscription source of truth
 		plan: v.optional(v.union(v.literal('pro'), v.literal('free'))),
 		metadata: v.object({}),
 		// Denormalized progress stats for fast dashboard queries
@@ -32,6 +33,13 @@ export default defineSchema({
 		),
 		// Track AI generation usage for rate limiting
 		generationUsage: v.optional(
+			v.object({
+				count: v.number(),
+				lastResetAt: v.number()
+			})
+		),
+		// Track PDF upload usage for rate limiting
+		pdfUploadUsage: v.optional(
 			v.object({
 				count: v.number(),
 				lastResetAt: v.number()

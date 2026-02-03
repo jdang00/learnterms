@@ -1,7 +1,8 @@
-import { query } from './_generated/server';
+import { query, internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 import { mutation } from './_generated/server';
 import { authAdminMutation } from './authQueries';
+import type { Id } from './_generated/dataModel';
 
 export const getUserById = query({
 	args: { id: v.string() },
@@ -98,8 +99,7 @@ export const syncUserFromClerk = mutation({
 export const updateUserRoleAndPlan = authAdminMutation({
 	args: {
 		userId: v.id('users'),
-		role: v.optional(v.union(v.literal('dev'), v.literal('admin'), v.literal('curator'), v.null())),
-		plan: v.optional(v.union(v.literal('pro'), v.literal('free'), v.null()))
+		role: v.optional(v.union(v.literal('dev'), v.literal('admin'), v.literal('curator'), v.null()))
 	},
 	handler: async (ctx, args) => {
 		// Get the caller's user record to check their role
@@ -128,9 +128,6 @@ export const updateUserRoleAndPlan = authAdminMutation({
 			if (args.role !== undefined) {
 				updates.role = args.role === null ? undefined : args.role;
 			}
-			if (args.plan !== undefined) {
-				updates.plan = args.plan === null ? undefined : args.plan;
-			}
 			await ctx.db.patch(args.userId, updates);
 			return { success: true };
 		}
@@ -150,11 +147,6 @@ export const updateUserRoleAndPlan = authAdminMutation({
 				throw new Error('Admins can only assign student or curator roles');
 			}
 
-			// Admins cannot change plans (dev only)
-			if (args.plan !== undefined) {
-				throw new Error('Only devs can change user plans');
-			}
-
 			// If we got here, admin is changing student ↔ curator which is allowed
 			const updates: Record<string, any> = { updatedAt: Date.now() };
 			if (args.role !== undefined) {
@@ -166,5 +158,44 @@ export const updateUserRoleAndPlan = authAdminMutation({
 
 		// Rule 4: Curators and students cannot manage roles
 		throw new Error('You do not have permission to manage roles');
+	}
+});
+
+// Get current authenticated user
+export const getCurrentUser = query({
+	args: {},
+	handler: async (ctx) => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) {
+			return null;
+		}
+
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
+			.first();
+
+		if (!user) {
+			return null;
+		}
+
+		// Get cohort and school info if available
+		let cohortName = null;
+		let schoolName = null;
+
+		if (user.cohortId) {
+			const cohort = await ctx.db.get(user.cohortId);
+			cohortName = cohort?.name || null;
+			if (cohort?.schoolId) {
+				const school = await ctx.db.get(cohort.schoolId);
+				schoolName = school?.name || null;
+			}
+		}
+
+		return {
+			...user,
+			cohortName,
+			schoolName
+		};
 	}
 });

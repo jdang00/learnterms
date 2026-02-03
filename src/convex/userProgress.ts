@@ -263,26 +263,33 @@ export const clearUserProgressForModule = mutation({
 		moduleId: v.id('module')
 	},
 	handler: async (ctx, args) => {
-		// Get all user progress records for the user
-		const progressRecords = await ctx.db
-			.query('userProgress')
-			.withIndex('by_user_question', (q) => q.eq('userId', args.userId))
+		// Get all questions for this module (efficient, bounded by module size)
+		const questions = await ctx.db
+			.query('question')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
 			.collect();
 
-		// Filter and delete records where the question belongs to the module
+		// For each question, find and delete the user's progress record
 		let deletedCount = 0;
-		for (const record of progressRecords) {
-			const question = await ctx.db.get(record.questionId);
-			if (question && question.moduleId === args.moduleId) {
+		for (const question of questions) {
+			// Use by_question_user index to efficiently find the specific progress record
+			const progressRecord = await ctx.db
+				.query('userProgress')
+				.withIndex('by_question_user', (q) =>
+					q.eq('questionId', question._id).eq('userId', args.userId)
+				)
+				.unique();
+
+			if (progressRecord) {
 				// If the record was flagged, decrement the question's flagCount
-				if (record.isFlagged) {
+				if (progressRecord.isFlagged) {
 					const currentFlagCount = question.flagCount ?? 0;
 					await ctx.db.patch(question._id, {
 						flagCount: Math.max(0, currentFlagCount - 1)
 					});
 				}
 
-				await ctx.db.delete(record._id);
+				await ctx.db.delete(progressRecord._id);
 				deletedCount++;
 			}
 		}

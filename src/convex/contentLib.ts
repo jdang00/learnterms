@@ -1,6 +1,10 @@
-import {  mutation } from './_generated/server';
+import { mutation } from './_generated/server';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
+import { components } from './_generated/api';
+
+const PDF_LIMIT_FREE = 1;
+const PDF_LIMIT_PRO = 999; // Effectively unlimited
 
 export const getContentLibByCohort = authQuery({
 	args: {
@@ -31,6 +35,66 @@ export const insertDocument = mutation({
 		)
 	},
 	handler: async (ctx, args) => {
+		// Check authentication
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) {
+			throw new Error('Not authenticated');
+		}
+
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
+			.first();
+
+		if (!user) {
+			throw new Error('User not found');
+		}
+
+		// Check and increment PDF upload usage
+		const now = Date.now();
+		const oneDayMs = 24 * 60 * 60 * 1000;
+		let usage = user.pdfUploadUsage;
+
+		// Initialize or reset if older than 24h
+		if (!usage || now - usage.lastResetAt > oneDayMs) {
+			usage = { count: 0, lastResetAt: now };
+		}
+
+		// Check Polar subscription status to determine pro
+		let isPro = false;
+		try {
+			const subscription = await ctx.runQuery(components.polar.lib.getCurrentSubscription, {
+				userId: user._id
+			});
+			isPro =
+				subscription?.status === 'active' ||
+				subscription?.status === 'trialing';
+		} catch {
+			// If subscription check fails, user is not pro
+			isPro = false;
+		}
+
+		const limit = isPro ? PDF_LIMIT_PRO : PDF_LIMIT_FREE;
+
+		if (usage.count + 1 > limit) {
+			if (isPro) {
+				throw new Error(
+					`Daily PDF upload limit reached. You have uploaded ${usage.count}/${limit} documents today. Please check back tomorrow.`
+				);
+			}
+			throw new Error(
+				`Daily PDF upload limit reached (${usage.count}/${limit}). Upgrade to Pro for unlimited uploads.`
+			);
+		}
+
+		// Increment usage
+		await ctx.db.patch(user._id, {
+			pdfUploadUsage: {
+				count: usage.count + 1,
+				lastResetAt: usage.lastResetAt
+			}
+		});
+
 		const id = await ctx.db.insert('contentLib', { ...args, updatedAt: Date.now() });
 		return id;
 	}
