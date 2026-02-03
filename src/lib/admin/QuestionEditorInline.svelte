@@ -25,7 +25,8 @@
 		Save,
 		Image as ImageIcon,
 		Check,
-		FileText
+		FileText,
+		Sparkles
 	} from 'lucide-svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
@@ -39,6 +40,8 @@
 	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
 	import { getEditorExtensions } from '../config/tiptap';
 	import { useClerkContext } from 'svelte-clerk';
+	import type { Focus } from '$lib/config/generation';
+	import { Loader2 } from 'lucide-svelte';
 
 	type QuestionItem = Doc<'question'>;
 
@@ -194,6 +197,10 @@
 			: []
 	);
 	let isSubmitting: boolean = $state(false);
+	let isGeneratingAI: boolean = $state(false);
+
+	// Get user's domain focus from metadata or default to 'general'
+	let userFocus: Focus = $state('general'); // TODO: fetch from user settings/metadata when available
 
 	let mediaError: string = $state('');
 	let queuedMedia: Array<{
@@ -558,6 +565,63 @@
 		options = pairs.map((p) => p.opt);
 		correctAnswers = newCorrect;
 		onChange();
+	}
+
+	// AI Assistant - inline generation
+	function canGenerateAI(): boolean {
+		return (
+			questionType === QUESTION_TYPES.MULTIPLE_CHOICE &&
+			questionStem.trim().length > 0 &&
+			correctAnswers.length > 0 &&
+			!isGeneratingAI
+		);
+	}
+
+	async function generateAIOptions() {
+		if (!canGenerateAI()) return;
+
+		isGeneratingAI = true;
+		try {
+			const correctTexts = correctAnswers
+				.map((idx) => options[parseInt(idx)]?.text || '')
+				.filter((t) => t.trim().length > 0);
+			const existingTexts = options.map((o) => o.text).filter((t) => t.trim().length > 0);
+
+			const result = await client.action(api.question.generateDistractorsAndExplanation, {
+				stem: questionStem,
+				correctAnswers: correctTexts,
+				existingOptions: existingTexts,
+				focus: userFocus,
+				numDistractors: 3
+			});
+
+			// Insert distractors into empty option slots or append
+			const filledOptions = options.filter((o) => o.text.trim().length > 0);
+			result.distractors.forEach((d) => {
+				filledOptions.push({ text: d });
+			});
+			options = filledOptions;
+
+			// Set explanation if empty
+			if (!questionExplanation.trim() && result.explanation) {
+				questionExplanation = result.explanation;
+				if ($explanationEditor) {
+					$explanationEditor.commands.setContent(result.explanation);
+				}
+			}
+
+			onChange();
+			toastStore.success('Options generated');
+		} catch (err: any) {
+			console.error('AI generation error:', err);
+			if (err.message?.includes('Daily generation limit')) {
+				toastStore.error(err.message);
+			} else {
+				toastStore.error('Failed to generate. Try again.');
+			}
+		} finally {
+			isGeneratingAI = false;
+		}
 	}
 
 	function removeOption(index: number) {
@@ -1032,11 +1096,26 @@
 								<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60">Options</div>
 								<span class="text-[10px] text-base-content/40 font-medium hidden sm:inline">Ctrl + Enter to toggle correct</span>
 							</div>
-							{#if questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
-								<button class="btn btn-xs btn-ghost gap-1" onclick={shuffleOptions}>
-									<Shuffle size={12} /> Shuffle
-								</button>
-							{/if}
+							<div class="flex items-center gap-1">
+								{#if questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
+									<button
+										class="btn btn-xs btn-ghost gap-1"
+										onclick={generateAIOptions}
+										disabled={!canGenerateAI()}
+										title={canGenerateAI() ? 'Generate distractor options with AI' : 'Add stem and correct answer first'}
+									>
+										{#if isGeneratingAI}
+											<Loader2 size={12} class="animate-spin" />
+										{:else}
+											<Sparkles size={12} />
+										{/if}
+										<span class="hidden sm:inline">AI</span>
+									</button>
+									<button class="btn btn-xs btn-ghost gap-1" onclick={shuffleOptions}>
+										<Shuffle size={12} /> <span class="hidden sm:inline">Shuffle</span>
+									</button>
+								{/if}
+							</div>
 						</div>
 
 						<div class="space-y-3">

@@ -768,3 +768,48 @@ export const bootstrapDev = authAdminMutation({
 		return { success: true, userId: user._id };
 	}
 });
+
+/**
+ * Clear the deprecated `plan` field from all users.
+ * Pro status is now determined by Polar subscription status.
+ *
+ * Run via CLI: bunx convex run migrations:clearPlanField
+ * After running, you can remove the `plan` field from schema.ts
+ */
+export const clearPlanField = mutation({
+	args: {
+		batchSize: v.optional(v.number()),
+		cursor: v.optional(v.string())
+	},
+	handler: async (ctx, args) => {
+		const batchSize = args.batchSize ?? 100;
+
+		const {
+			page: users,
+			isDone,
+			continueCursor
+		} = await ctx.db
+			.query('users')
+			.paginate({ cursor: args.cursor ?? null, numItems: batchSize });
+
+		let processed = 0;
+		let cleared = 0;
+
+		for (const user of users) {
+			processed++;
+			// Check if user has a plan field set
+			if ((user as any).plan !== undefined) {
+				await ctx.db.patch(user._id, { plan: undefined } as any);
+				cleared++;
+			}
+		}
+
+		return {
+			done: isDone,
+			cursor: continueCursor,
+			processed,
+			cleared,
+			message: `Processed ${processed} users, cleared plan from ${cleared}`
+		};
+	}
+});

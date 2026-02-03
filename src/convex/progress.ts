@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
 import type { Doc, Id } from './_generated/dataModel';
+import { polar } from './polar';
 
 /**
  * Get all students in a cohort with their basic info
@@ -63,17 +64,54 @@ export const getStudentsWithProgress = authQuery({
 		const totalQuestionsInCohort = cohort?.stats?.totalQuestions ?? 0;
 
 		// Map students to progress data using precomputed stats
-		const studentsWithProgress = students.map((student) => {
-			// Use precomputed progressStats if available
-			if (student.progressStats) {
-				const totalQuestions = student.progressStats.totalQuestions || totalQuestionsInCohort;
-				const progressPercentage =
-					totalQuestions > 0
-						? Math.round(
-								(student.progressStats.questionsInteracted / totalQuestions) * 100
-							)
-						: 0;
+		// Also fetch subscription status for each student
+		const studentsWithProgress = await Promise.all(
+			students.map(async (student) => {
+				// Get subscription status from Polar
+				let isPro = false;
+				try {
+					const subscription = await polar.getCurrentSubscription(ctx, {
+						userId: student._id
+					});
+					isPro =
+						subscription?.status === 'active' ||
+						subscription?.status === 'trialing';
+				} catch {
+					isPro = false;
+				}
 
+				// Use precomputed progressStats if available
+				if (student.progressStats) {
+					const totalQuestions = student.progressStats.totalQuestions || totalQuestionsInCohort;
+					const progressPercentage =
+						totalQuestions > 0
+							? Math.round(
+									(student.progressStats.questionsInteracted / totalQuestions) * 100
+								)
+							: 0;
+
+					return {
+						_id: student._id,
+						name: student.name,
+						clerkUserId: student.clerkUserId,
+						firstName: student.firstName,
+						lastName: student.lastName,
+						email: student.email,
+						username: student.username,
+						imageUrl: student.imageUrl,
+						lastSignInAt: student.lastSignInAt,
+						createdAt: student.createdAt,
+						role: student.role,
+						isPro,
+						progress: progressPercentage,
+						questionsInteracted: student.progressStats.questionsInteracted,
+						questionsMastered: student.progressStats.questionsMastered,
+						totalQuestions,
+						lastActivityAt: student.progressStats.lastActivityAt ?? null
+					};
+				}
+
+				// Fallback for users without precomputed stats
 				return {
 					_id: student._id,
 					name: student.name,
@@ -86,36 +124,15 @@ export const getStudentsWithProgress = authQuery({
 					lastSignInAt: student.lastSignInAt,
 					createdAt: student.createdAt,
 					role: student.role,
-					plan: student.plan,
-					progress: progressPercentage,
-					questionsInteracted: student.progressStats.questionsInteracted,
-					questionsMastered: student.progressStats.questionsMastered,
-					totalQuestions,
-					lastActivityAt: student.progressStats.lastActivityAt ?? null
+					isPro,
+					progress: 0,
+					questionsInteracted: 0,
+					questionsMastered: 0,
+					totalQuestions: totalQuestionsInCohort,
+					lastActivityAt: null
 				};
-			}
-
-			// Fallback for users without precomputed stats
-			return {
-				_id: student._id,
-				name: student.name,
-				clerkUserId: student.clerkUserId,
-				firstName: student.firstName,
-				lastName: student.lastName,
-				email: student.email,
-				username: student.username,
-				imageUrl: student.imageUrl,
-				lastSignInAt: student.lastSignInAt,
-				createdAt: student.createdAt,
-				role: student.role,
-				plan: student.plan,
-				progress: 0,
-				questionsInteracted: 0,
-				questionsMastered: 0,
-				totalQuestions: totalQuestionsInCohort,
-				lastActivityAt: null
-			};
-		});
+			})
+		);
 
 		// Sort by progress descending
 		return studentsWithProgress.sort((a, b) => b.progress - a.progress);

@@ -25,7 +25,7 @@
 	const isAdmin = $derived(userData?.role === 'dev' || userData?.role === 'admin');
 
 	async function updateRole(userId: Id<'users'>, role: string) {
-		await client.mutation(api.users.updateUserRoleAndPlan, {
+		await client.mutation(api.users.updateUserRole, {
 			userId,
 			role: role === '' ? null : role as 'admin' | 'curator'
 		});
@@ -386,7 +386,7 @@
 												<span class="text-xs text-base-content/40 italic">Student</span>
 											{/if}
 
-											{#if student.plan === 'pro'}
+											{#if student.isPro}
 												<div class="tooltip" data-tip="Pro Plan">
 													<span class="badge badge-secondary badge-sm px-2 gap-1 cursor-help">
 														<Zap size={12} fill="currentColor" /> pro

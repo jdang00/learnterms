@@ -1,4 +1,4 @@
-export type ModelId = 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
+export type ModelId = 'gemini-3-pro-preview' | 'gemini-3-flash-preview' | 'gemini-2.0-flash';
 export type Focus = 'optometry' | 'pharmacy' | 'general';
 
 export type ProductModelId = 'swift-general' | 'swift-optometry' | 'swift-pharmacy';
