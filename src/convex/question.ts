@@ -1031,3 +1031,116 @@ ${material}`;
 		return { questions: normalized, count: normalized.length };
 	}
 });
+
+/**
+ * Generate plausible distractor options and explanation from a stem and correct answer(s).
+ * This helps educators who write their own questions but need assistance with distractors.
+ */
+export const generateDistractorsAndExplanation = action({
+	args: {
+		stem: v.string(),
+		correctAnswers: v.array(v.string()),
+		existingOptions: v.optional(v.array(v.string())),
+		focus: v.string(),
+		numDistractors: v.optional(v.number())
+	},
+	handler: async (ctx, { stem, correctAnswers, existingOptions = [], focus, numDistractors = 3 }) => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) throw new Error('Unauthenticated');
+
+		// Check usage limits (count as 1 question generation)
+		await ctx.runMutation(internal.question.checkAndIncrementUsage, {
+			count: 1,
+			clerkUserId: identity.subject
+		});
+
+		if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.trim().length === 0) {
+			throw new Error('GEMINI_API_KEY is not configured');
+		}
+
+		const { GoogleGenAI, Type } = await import('@google/genai');
+		const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+		const focusLabel = (focus || 'general').toLowerCase();
+		const domainHint =
+			focusLabel === 'optometry'
+				? ' If medical, focus on optometry context.'
+				: focusLabel === 'pharmacy'
+					? ' If medical, focus on pharmacy/pharmacology context.'
+					: '';
+
+		// Build existing options context if any (compact)
+		const avoidList = existingOptions.length > 0
+			? ` Avoid: ${existingOptions.join('; ')}.`
+			: '';
+
+		// Compact prompt optimized for tokens
+		const prompt = `Generate ${numDistractors} wrong but plausible distractors and a brief explanation for this MCQ.${domainHint}
+
+Q: ${stem}
+Correct: ${correctAnswers.join('; ')}${avoidList}
+
+Distractors: plausible misconceptions, no prefixes, match answer length.
+Explanation: 2-3 sentences, why correct is right, why distractors are wrong.`;
+
+		const result = await ai.models.generateContent({
+			model: 'gemini-3-flash-preview',
+			contents: [{ role: 'user', parts: [{ text: prompt }] }],
+			config: {
+				temperature: 0.7,
+				maxOutputTokens: 1024,
+				thinkingConfig: {
+					thinkingLevel: 'minimal'
+				},
+				responseMimeType: 'application/json',
+				responseSchema: {
+					type: Type.OBJECT,
+					properties: {
+						distractors: {
+							type: Type.ARRAY,
+							items: { type: Type.STRING },
+							minItems: numDistractors,
+							maxItems: numDistractors
+						},
+						explanation: { type: Type.STRING }
+					},
+					required: ['distractors', 'explanation']
+				}
+			}
+		});
+
+		const responseText = result.text;
+		if (!responseText || typeof responseText !== 'string' || responseText.trim().length === 0) {
+			throw new Error('AI response text is empty or invalid');
+		}
+
+		let parsed: {
+			distractors: string[];
+			explanation: string;
+		};
+		try {
+			parsed = JSON.parse(responseText.trim());
+			if (!Array.isArray(parsed.distractors) || typeof parsed.explanation !== 'string') {
+				throw new Error('Invalid response structure');
+			}
+		} catch (err) {
+			console.error('Failed to parse AI response:', err);
+			throw new Error('Failed to parse AI-generated distractors and explanation');
+		}
+
+		// Validate and clean up distractors
+		const cleanedDistractors = parsed.distractors
+			.filter((d) => d && d.trim().length > 0)
+			.map((d) => d.trim())
+			.slice(0, numDistractors);
+
+		if (cleanedDistractors.length < numDistractors) {
+			throw new Error(`Only generated ${cleanedDistractors.length} valid distractors, expected ${numDistractors}`);
+		}
+
+		return {
+			distractors: cleanedDistractors,
+			explanation: parsed.explanation.trim()
+		};
+	}
+});

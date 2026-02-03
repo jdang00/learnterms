@@ -96,7 +96,7 @@ export const syncUserFromClerk = mutation({
 	}
 });
 
-export const updateUserRoleAndPlan = authAdminMutation({
+export const updateUserRole = authAdminMutation({
 	args: {
 		userId: v.id('users'),
 		role: v.optional(v.union(v.literal('dev'), v.literal('admin'), v.literal('curator'), v.null()))
