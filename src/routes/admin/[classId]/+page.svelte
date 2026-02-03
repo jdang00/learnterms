@@ -36,6 +36,14 @@
 	const admin = $derived(userDataQuery.data?.role === 'admin' || userDataQuery.data?.role === 'dev');
 	const userData = $derived(userDataQuery.data ?? null);
 
+	// Check Pro status for export gating
+	const subscriptionQuery = useQuery(api.polar.getCurrentUserWithSubscription, {});
+	const isPro = $derived(
+		subscriptionQuery.data?.isPro ||
+		subscriptionQuery.data?.subscription?.status === 'active' ||
+		subscriptionQuery.data?.subscription?.status === 'trialing'
+	);
+
 	type ClassItem = Doc<'class'>;
 	let classList = $state<ClassItem[]>([]);
 
@@ -212,6 +220,14 @@
 
 	async function handleExport(format: 'txt' | 'json' | 'csv') {
 		if (isExporting || !exportModuleItem) return;
+
+		// Check Pro status before allowing export
+		if (!isPro) {
+			alert('Question export is a Pro feature. Upgrade to Pro to export questions.');
+			closeExportModal();
+			return;
+		}
+
 		isExporting = true;
 
 		try {
@@ -439,6 +455,9 @@
 														>
 															<Download size={16} />
 															<span>Export Questions</span>
+															{#if !isPro}
+																<span class="badge badge-xs badge-primary ml-auto">Pro</span>
+															{/if}
 														</button>
 													</li>
 												{/if}

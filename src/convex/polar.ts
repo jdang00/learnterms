@@ -80,12 +80,10 @@ const getCurrentUserInternal = async (ctx: QueryCtx) => {
 		userId: user._id
 	});
 
-	// Only check subscription status - deprecating plan field
+	// Only check subscription status - plan field is deprecated
 	const isPro =
 		subscription?.status === 'active' ||
-		subscription?.status === 'trialing' ||
-		subscription?.productKey === 'proSemester' ||
-		subscription?.productKey === 'proAnnual';
+		subscription?.status === 'trialing';
 
 	return {
 		...user,
@@ -116,9 +114,7 @@ export const getUserWithSubscriptionById = query({
 
 		const isPro =
 			subscription?.status === 'active' ||
-			subscription?.status === 'trialing' ||
-			subscription?.productKey === 'proSemester' ||
-			subscription?.productKey === 'proAnnual';
+			subscription?.status === 'trialing';
 
 		return {
 			...user,
@@ -145,9 +141,7 @@ export const getUserWithSubscriptionByClerkId = query({
 
 		const isPro =
 			subscription?.status === 'active' ||
-			subscription?.status === 'trialing' ||
-			subscription?.productKey === 'proSemester' ||
-			subscription?.productKey === 'proAnnual';
+			subscription?.status === 'trialing';
 
 		return {
 			...user,

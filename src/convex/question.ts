@@ -37,9 +37,7 @@ export const checkAndIncrementUsage = internalMutation({
 			});
 			isPro =
 				subscription?.status === 'active' ||
-				subscription?.status === 'trialing' ||
-				subscription?.productKey === 'proSemester' ||
-				subscription?.productKey === 'proAnnual';
+				subscription?.status === 'trialing';
 		} catch {
 			// If subscription check fails, user is not pro
 			isPro = false;

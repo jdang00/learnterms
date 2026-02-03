@@ -37,6 +37,13 @@ export default defineSchema({
 				count: v.number(),
 				lastResetAt: v.number()
 			})
+		),
+		// Track PDF upload usage for rate limiting
+		pdfUploadUsage: v.optional(
+			v.object({
+				count: v.number(),
+				lastResetAt: v.number()
+			})
 		)
 	})
 		.index('by_clerkUserId', ['clerkUserId'])
