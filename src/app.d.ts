@@ -15,6 +15,7 @@ declare global {
 					lastName?: string;
 				};
 			};
+			isCrawler?: boolean;
 		}
 		// Optional: Define PageData for Clerk-related data
 		interface PageData {

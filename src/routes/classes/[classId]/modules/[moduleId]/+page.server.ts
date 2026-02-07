@@ -6,7 +6,7 @@ import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import type { Id } from '../../../../../convex/_generated/dataModel';
 import { rateLimit } from '$lib/server/rateLimit';
 
-export const load: PageServerLoad = async ({ params, locals, url, getClientAddress }) => {
+export const load: PageServerLoad = async ({ params, locals, url, getClientAddress, setHeaders }) => {
 	if (!PUBLIC_CONVEX_URL) {
 		throw new Error('PUBLIC_CONVEX_URL is not configured');
 	}
@@ -15,14 +15,36 @@ export const load: PageServerLoad = async ({ params, locals, url, getClientAddre
 	const userId = auth.userId;
 	const moduleId = params.moduleId as Id<'module'>;
 	const origin = url.origin;
+	const crawlerRequest = locals.isCrawler === true;
 
 	// Unauthenticated path: serve SEO metadata for crawlers
 	if (!userId) {
+		// Non-crawler unauthenticated users get redirected
+		if (!crawlerRequest) {
+			return redirect(307, '/sign-in');
+		}
+
 		const ip = getClientAddress();
 		const { ok } = rateLimit(ip, { maxRequests: 60, windowMs: 60_000 });
 		if (!ok) {
 			return redirect(307, '/sign-in');
 		}
+
+		setHeaders({ 'Cache-Control': 'public, max-age=300' });
+
+		const fallbackSeo = {
+			isPublicView: true as const,
+			moduleInfo: undefined,
+			module: undefined,
+			moduleId,
+			convexID: undefined,
+			classId: params.classId,
+			seo: {
+				title: 'LearnTerms Module',
+				description: 'Sign in to view this module on LearnTerms',
+				image: `${origin}/og/module/${moduleId}`
+			}
+		};
 
 		const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
 		try {
@@ -31,7 +53,7 @@ export const load: PageServerLoad = async ({ params, locals, url, getClientAddre
 			});
 
 			if (!metadata) {
-				return redirect(307, '/sign-in');
+				return fallbackSeo;
 			}
 
 			return {
@@ -49,7 +71,7 @@ export const load: PageServerLoad = async ({ params, locals, url, getClientAddre
 			};
 		} catch (err) {
 			console.error('Convex query failed', err);
-			return redirect(307, '/sign-in');
+			return fallbackSeo;
 		}
 	}
 
