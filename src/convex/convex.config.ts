@@ -1,6 +1,6 @@
 import { defineApp } from 'convex/server';
 import polar from '@convex-dev/polar/convex.config.js';
-import rateLimiter from '@convex-dev/rate-limiter/convex.config.js';
+import rateLimiter from '@convex-dev/rate-limiter/convex.config';
 
 const app = defineApp();
 app.use(polar);
