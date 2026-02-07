@@ -16,6 +16,7 @@ import type * as contentLib from "../contentLib.js";
 import type * as http from "../http.js";
 import type * as migrations from "../migrations.js";
 import type * as module from "../module.js";
+import type * as ogRateLimit from "../ogRateLimit.js";
 import type * as pdfJobs from "../pdfJobs.js";
 import type * as pdfJobsAction from "../pdfJobsAction.js";
 import type * as polar from "../polar.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   migrations: typeof migrations;
   module: typeof module;
+  ogRateLimit: typeof ogRateLimit;
   pdfJobs: typeof pdfJobs;
   pdfJobsAction: typeof pdfJobsAction;
   polar: typeof polar;

@@ -12,5 +12,9 @@ export default defineConfig({
 	build: {
 		target: 'esnext'
 	},
-	server: {}
+	server: {},
+	esbuild: {
+		jsx: 'automatic',
+		jsxImportSource: 'react'
+	}
 });
