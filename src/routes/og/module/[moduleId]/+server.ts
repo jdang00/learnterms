@@ -6,7 +6,7 @@ import { api } from '../../../../convex/_generated/api';
 import type { Id } from '../../../../convex/_generated/dataModel';
 import { createElement as h } from 'react';
 
-export const GET: RequestHandler = async ({ params, getClientAddress, url }) => {
+export const GET: RequestHandler = async ({ params, getClientAddress, fetch }) => {
 	const ip = getClientAddress();
 	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
 
@@ -20,11 +20,10 @@ export const GET: RequestHandler = async ({ params, getClientAddress, url }) => 
 	}
 	const moduleId = params.moduleId as Id<'module'>;
 
-	// Fetch fonts from static directory
-	const baseUrl = `${url.protocol}//${url.host}`;
+	// Use SvelteKit's internal fetch for static files (avoids self-referencing HTTP on Vercel)
 	const [fontBoldResponse, fontRegularResponse] = await Promise.all([
-		fetch(`${baseUrl}/fonts/Inter-Bold.ttf`),
-		fetch(`${baseUrl}/fonts/Inter-Regular.ttf`)
+		fetch('/fonts/Inter-Bold.ttf'),
+		fetch('/fonts/Inter-Regular.ttf')
 	]);
 
 	if (!fontBoldResponse.ok || !fontRegularResponse.ok) {
@@ -194,7 +193,7 @@ export const GET: RequestHandler = async ({ params, getClientAddress, url }) => 
 		)
 	);
 
-	return new ImageResponse(element, {
+	const response = new ImageResponse(element, {
 		width: 1200,
 		height: 630,
 		fonts: [
@@ -212,4 +211,9 @@ export const GET: RequestHandler = async ({ params, getClientAddress, url }) => 
 			}
 		]
 	});
+
+	// Cache at CDN for 7 days, browser for 1 day
+	response.headers.set('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+
+	return response;
 };
