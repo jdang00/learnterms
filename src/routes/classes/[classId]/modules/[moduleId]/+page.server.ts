@@ -47,7 +47,8 @@ export const load: PageServerLoad = async ({ params, locals, url, getClientAddre
 					image: `${origin}/og/module/${moduleId}`
 				}
 			};
-		} catch {
+		} catch (err) {
+			console.error('Convex query failed', err);
 			return redirect(307, '/sign-in');
 		}
 	}

@@ -11,6 +11,7 @@
 	import { fade } from 'svelte/transition';
 	import posthog from 'posthog-js';
 	import { browser } from '$app/environment';
+	import { resolve } from '$app/navigation';
 	import { BookOpen } from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -393,7 +394,7 @@
 			<BookOpen class="mx-auto mb-4 text-primary" size={48} />
 			<h1 class="text-2xl font-bold mb-2">{data.seo?.title?.replace(' — LearnTerms', '') ?? 'Study Module'}</h1>
 			<p class="text-base-content/70 mb-6">Sign in to start studying this module on LearnTerms.</p>
-			<a href="/sign-in" class="btn btn-primary">Sign in to study</a>
+			<a href={resolve('/sign-in')} class="btn btn-primary">Sign in to study</a>
 		</div>
 	</div>
 {:else}

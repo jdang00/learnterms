@@ -3,23 +3,23 @@
  * Uses a sliding window approach per IP address.
  */
 
-const requests = new Map<string, number[]>();
+const requests = new Map<string, { timestamps: number[]; windowMs: number }>();
 
 const CLEANUP_INTERVAL = 60_000; // 1 minute
 let lastCleanup = Date.now();
 
-function cleanup(windowMs: number) {
+function cleanup() {
 	const now = Date.now();
 	if (now - lastCleanup < CLEANUP_INTERVAL) return;
 	lastCleanup = now;
 
-	const cutoff = now - windowMs;
-	for (const [key, timestamps] of requests) {
-		const valid = timestamps.filter((t) => t > cutoff);
+	for (const [key, entry] of requests) {
+		const cutoff = now - entry.windowMs;
+		const valid = entry.timestamps.filter((t) => t > cutoff);
 		if (valid.length === 0) {
 			requests.delete(key);
 		} else {
-			requests.set(key, valid);
+			entry.timestamps = valid;
 		}
 	}
 }
@@ -28,11 +28,12 @@ export function rateLimit(
 	ip: string,
 	{ maxRequests = 30, windowMs = 60_000 }: { maxRequests?: number; windowMs?: number } = {}
 ): { ok: boolean; retryAfterMs: number } {
-	cleanup(windowMs);
+	cleanup();
 
 	const now = Date.now();
 	const cutoff = now - windowMs;
-	const timestamps = (requests.get(ip) ?? []).filter((t) => t > cutoff);
+	const entry = requests.get(ip);
+	const timestamps = (entry?.timestamps ?? []).filter((t) => t > cutoff);
 
 	if (timestamps.length >= maxRequests) {
 		const oldestInWindow = timestamps[0];
@@ -40,6 +41,6 @@ export function rateLimit(
 	}
 
 	timestamps.push(now);
-	requests.set(ip, timestamps);
+	requests.set(ip, { timestamps, windowMs });
 	return { ok: true, retryAfterMs: 0 };
 }

@@ -7,7 +7,6 @@ import { ConvexHttpClient } from 'convex/browser';
 import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import { api } from '../../../../convex/_generated/api';
 import type { Id } from '../../../../convex/_generated/dataModel';
-import { rateLimit } from '$lib/server/rateLimit';
 
 const fontBold = readFileSync(resolve('static/fonts/Inter-Bold.ttf'));
 const fontRegular = readFileSync(resolve('static/fonts/Inter-Regular.ttf'));
@@ -23,15 +22,16 @@ function emojiToTwemojiUrl(emoji: string): string {
 
 export const GET: RequestHandler = async ({ params, getClientAddress }) => {
 	const ip = getClientAddress();
-	const { ok, retryAfterMs } = rateLimit(ip, { maxRequests: 30, windowMs: 60_000 });
-	if (!ok) {
+	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
+
+	const rateLimitResult = await client.mutation(api.ogRateLimit.checkOgRateLimit, { key: ip });
+	if (!rateLimitResult.ok) {
+		const retryAfterMs = rateLimitResult.retryAfter ?? 60_000;
 		return new Response('Too Many Requests', {
 			status: 429,
 			headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) }
 		});
 	}
-
-	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
 	const moduleId = params.moduleId as Id<'module'>;
 
 	let moduleData;
