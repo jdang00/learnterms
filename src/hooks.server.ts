@@ -29,7 +29,19 @@ const protectClasses: Handle = async ({ event, resolve }) => {
 	const url = new URL(event.request.url);
 	if (url.pathname === '/classes' || url.pathname.startsWith('/classes/')) {
 		const { userId } = event.locals.auth();
-		if (!userId) throw redirect(307, '/');
+		if (!userId) {
+			// Allow crawlers/bots to access for OG tags
+			const userAgent = event.request.headers.get('user-agent') || '';
+			const isCrawler = /bot|crawler|spider|crawling|facebookexternalhit|twitterbot|discordbot|slackbot|whatsapp|telegrambot|linkedinbot|pinterest|tumblr/i.test(userAgent);
+			
+			// If it's a crawler accessing a module page, allow it through
+			// The +page.server.ts will handle serving SEO metadata
+			if (isCrawler && url.pathname.includes('/modules/')) {
+				return resolve(event);
+			}
+			
+			throw redirect(307, '/');
+		}
 	}
 	return resolve(event);
 };
