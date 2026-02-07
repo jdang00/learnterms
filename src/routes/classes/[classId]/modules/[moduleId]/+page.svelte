@@ -11,6 +11,8 @@
 	import { fade } from 'svelte/transition';
 	import posthog from 'posthog-js';
 	import { browser } from '$app/environment';
+	import { base } from '$app/paths';
+	import { BookOpen } from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -385,48 +387,60 @@
 	});
 </script>
 
-<!-- Quiz View -->
-<div
-	class="flex flex-col h-[calc(100vh-4rem)]"
-	transition:fade={{ duration: 200 }}
->
-	<div class="flex-1 min-h-0 relative">
-		<MainQuiz
-			{qs}
-			{questions}
-			{currentlySelected}
-			{userId}
-			{data}
-			{handleSelect}
-			{handleFilterToggle}
-			{client}
-			{module}
-			suppressAuthErrors={true}
-		/>
-	</div>
-</div>
-
-<!-- Global Reset Modal at page root to ensure highest stacking context -->
-<dialog class="modal max-w-full p-4 z-[1000]" class:modal-open={qs.isResetModalOpen}>
-	<div class="modal-box">
-		<form method="dialog">
-			<button
-				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-				onclick={() => (qs.isResetModalOpen = false)}
-			>
-				✕
-			</button>
-		</form>
-		<h3 class="text-lg font-bold">Reset Progress</h3>
-		<p class="py-4">
-			Do you want to start over? All current progress for this module will be lost.
-		</p>
-		<div class="flex justify-end space-x-2">
-			<button class="btn btn-outline" onclick={() => (qs.isResetModalOpen = false)}>
-				Cancel
-			</button>
-			<button class="btn btn-error" onclick={() => handleResetModalConfirm()}>Reset</button>
+{#if data.isPublicView}
+	<!-- Public view for crawlers and unauthenticated users -->
+	<div class="flex items-center justify-center min-h-[60vh]">
+		<div class="text-center max-w-md mx-auto p-8">
+			<BookOpen class="mx-auto mb-4 text-primary" size={48} />
+			<h1 class="text-2xl font-bold mb-2">{data.seo?.title?.replace(' — LearnTerms', '') ?? 'Study Module'}</h1>
+			<p class="text-base-content/70 mb-6">Sign in to start studying this module on LearnTerms.</p>
+			<a href="{base}/sign-in" class="btn btn-primary">Sign in to study</a>
 		</div>
 	</div>
-	<div class="modal-backdrop bg-black/50" onclick={() => (qs.isResetModalOpen = false)}></div>
-</dialog>
+{:else}
+	<!-- Quiz View -->
+	<div
+		class="flex flex-col h-[calc(100vh-4rem)]"
+		transition:fade={{ duration: 200 }}
+	>
+		<div class="flex-1 min-h-0 relative">
+			<MainQuiz
+				{qs}
+				{questions}
+				{currentlySelected}
+				{userId}
+				{data}
+				{handleSelect}
+				{handleFilterToggle}
+				{client}
+				{module}
+				suppressAuthErrors={true}
+			/>
+		</div>
+	</div>
+
+	<!-- Global Reset Modal at page root to ensure highest stacking context -->
+	<dialog class="modal max-w-full p-4 z-[1000]" class:modal-open={qs.isResetModalOpen}>
+		<div class="modal-box">
+			<form method="dialog">
+				<button
+					class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+					onclick={() => (qs.isResetModalOpen = false)}
+				>
+					✕
+				</button>
+			</form>
+			<h3 class="text-lg font-bold">Reset Progress</h3>
+			<p class="py-4">
+				Do you want to start over? All current progress for this module will be lost.
+			</p>
+			<div class="flex justify-end space-x-2">
+				<button class="btn btn-outline" onclick={() => (qs.isResetModalOpen = false)}>
+					Cancel
+				</button>
+				<button class="btn btn-error" onclick={() => handleResetModalConfirm()}>Reset</button>
+			</div>
+		</div>
+		<div class="modal-backdrop bg-black/50" onclick={() => (qs.isResetModalOpen = false)}></div>
+	</dialog>
+{/if}
