@@ -55,7 +55,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 			});
 		}
 
-		return { userData };
+		return {
+			userData,
+			seo: {
+				title: 'My Classes — LearnTerms',
+				description: 'View and manage your classes on LearnTerms.'
+			}
+		};
 	} catch (error) {
 		console.error('Failed to load classes page data:', error);
 		throw error;
