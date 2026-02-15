@@ -15,15 +15,9 @@ export const load: PageServerLoad = async ({ params, locals, url, getClientAddre
 	const userId = auth.userId;
 	const moduleId = params.moduleId as Id<'module'>;
 	const origin = url.origin;
-	const crawlerRequest = locals.isCrawler === true;
-
-	// Unauthenticated path: serve SEO metadata for crawlers
+	// Unauthenticated path: serve minimal SEO metadata for all unauthenticated requests
+	// (enables OG previews on any platform, not just known crawlers)
 	if (!userId) {
-		// Non-crawler unauthenticated users get redirected
-		if (!crawlerRequest) {
-			return redirect(307, '/sign-in');
-		}
-
 		const ip = getClientAddress();
 		const { ok } = rateLimit(ip, { maxRequests: 60, windowMs: 60_000 });
 		if (!ok) {

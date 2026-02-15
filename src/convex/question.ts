@@ -1042,9 +1042,10 @@ export const generateDistractorsAndExplanation = action({
 		correctAnswers: v.array(v.string()),
 		existingOptions: v.optional(v.array(v.string())),
 		focus: v.string(),
-		numDistractors: v.optional(v.number())
+		numDistractors: v.optional(v.number()),
+		existingExplanation: v.optional(v.string())
 	},
-	handler: async (ctx, { stem, correctAnswers, existingOptions = [], focus, numDistractors = 3 }) => {
+	handler: async (ctx, { stem, correctAnswers, existingOptions = [], focus, numDistractors = 3, existingExplanation = '' }) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) throw new Error('Unauthenticated');
 
@@ -1069,29 +1070,30 @@ export const generateDistractorsAndExplanation = action({
 					? ' If medical, focus on pharmacy/pharmacology context.'
 					: '';
 
-		// Build existing options context if any (compact)
-		const avoidList = existingOptions.length > 0
-			? ` Avoid: ${existingOptions.join('; ')}.`
+		// Build existing options list so AI knows what NOT to duplicate
+		const avoidSection = existingOptions.length > 0
+			? `\nAlready used (DO NOT repeat any of these): ${existingOptions.join('; ')}`
+			: '';
+
+		const contextHint = existingExplanation.trim()
+			? `\nNotes: ${existingExplanation.trim()}`
 			: '';
 
 		// Compact prompt optimized for tokens
-		const prompt = `Generate ${numDistractors} wrong but plausible distractors and a brief explanation for this MCQ.${domainHint}
+		const prompt = `MCQ. Generate exactly ${numDistractors} NEW wrong options + explanation.${domainHint}
 
 Q: ${stem}
-Correct: ${correctAnswers.join('; ')}${avoidList}
+A: ${correctAnswers.join('; ')}${avoidSection}${contextHint}
 
-Distractors: plausible misconceptions, no prefixes, match answer length.
-Explanation: 2-3 sentences, why correct is right, why distractors are wrong.`;
+Wrong options: plausible, no prefixes, match answer length. Each must be unique and different from every existing option listed above.
+Explanation: 2-3 sentences why the answer is correct. Incorporate the notes if provided, rewriting into a clear paragraph. Do not reference wrong options.`;
 
 		const result = await ai.models.generateContent({
-			model: 'gemini-3-flash-preview',
+			model: 'gemini-2.5-flash-lite',
 			contents: [{ role: 'user', parts: [{ text: prompt }] }],
 			config: {
 				temperature: 0.7,
-				maxOutputTokens: 1024,
-				thinkingConfig: {
-					thinkingLevel: 'minimal'
-				},
+				maxOutputTokens: 512,
 				responseMimeType: 'application/json',
 				responseSchema: {
 					type: Type.OBJECT,
@@ -1128,18 +1130,101 @@ Explanation: 2-3 sentences, why correct is right, why distractors are wrong.`;
 			throw new Error('Failed to parse AI-generated distractors and explanation');
 		}
 
-		// Validate and clean up distractors
+		// Validate, clean up, and deduplicate against existing options
+		const existingLower = new Set([
+			...existingOptions.map((o) => o.trim().toLowerCase()),
+			...correctAnswers.map((a) => a.trim().toLowerCase())
+		]);
 		const cleanedDistractors = parsed.distractors
 			.filter((d) => d && d.trim().length > 0)
 			.map((d) => d.trim())
+			.filter((d) => !existingLower.has(d.toLowerCase()))
 			.slice(0, numDistractors);
-
-		if (cleanedDistractors.length < numDistractors) {
-			throw new Error(`Only generated ${cleanedDistractors.length} valid distractors, expected ${numDistractors}`);
-		}
 
 		return {
 			distractors: cleanedDistractors,
+			explanation: parsed.explanation.trim()
+		};
+	}
+});
+
+/**
+ * Generate an explanation only (for FITB questions).
+ */
+export const generateExplanation = action({
+	args: {
+		stem: v.string(),
+		answer: v.string(),
+		focus: v.string(),
+		existingExplanation: v.optional(v.string())
+	},
+	handler: async (ctx, { stem, answer, focus, existingExplanation = '' }) => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) throw new Error('Unauthenticated');
+
+		await ctx.runMutation(internal.question.checkAndIncrementUsage, {
+			count: 1,
+			clerkUserId: identity.subject
+		});
+
+		if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.trim().length === 0) {
+			throw new Error('GEMINI_API_KEY is not configured');
+		}
+
+		const { GoogleGenAI, Type } = await import('@google/genai');
+		const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+		const focusLabel = (focus || 'general').toLowerCase();
+		const domainHint =
+			focusLabel === 'optometry'
+				? ' If medical, focus on optometry context.'
+				: focusLabel === 'pharmacy'
+					? ' If medical, focus on pharmacy/pharmacology context.'
+					: '';
+
+		const contextHint = existingExplanation.trim()
+			? `\nNotes: ${existingExplanation.trim()}`
+			: '';
+
+		const prompt = `Explain why this is correct in 2-3 sentences. Incorporate the notes if provided, rewriting into a clear paragraph.${domainHint}
+
+Q: ${stem}
+A: ${answer}${contextHint}`;
+
+		const result = await ai.models.generateContent({
+			model: 'gemini-2.5-flash-lite',
+			contents: [{ role: 'user', parts: [{ text: prompt }] }],
+			config: {
+				temperature: 0.7,
+				maxOutputTokens: 256,
+				responseMimeType: 'application/json',
+				responseSchema: {
+					type: Type.OBJECT,
+					properties: {
+						explanation: { type: Type.STRING }
+					},
+					required: ['explanation']
+				}
+			}
+		});
+
+		const responseText = result.text;
+		if (!responseText || typeof responseText !== 'string' || responseText.trim().length === 0) {
+			throw new Error('AI response text is empty or invalid');
+		}
+
+		let parsed: { explanation: string };
+		try {
+			parsed = JSON.parse(responseText.trim());
+			if (typeof parsed.explanation !== 'string') {
+				throw new Error('Invalid response structure');
+			}
+		} catch (err) {
+			console.error('Failed to parse AI response:', err);
+			throw new Error('Failed to parse AI-generated explanation');
+		}
+
+		return {
 			explanation: parsed.explanation.trim()
 		};
 	}

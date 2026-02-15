@@ -569,12 +569,14 @@
 
 	// AI Assistant - inline generation
 	function canGenerateAI(): boolean {
-		return (
-			questionType === QUESTION_TYPES.MULTIPLE_CHOICE &&
-			questionStem.trim().length > 0 &&
-			correctAnswers.length > 0 &&
-			!isGeneratingAI
-		);
+		if (isGeneratingAI || questionStem.trim().length === 0) return false;
+		if (questionType === QUESTION_TYPES.MULTIPLE_CHOICE) {
+			return correctAnswers.length > 0;
+		}
+		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+			return fitbAnswers.some((row) => row.value.trim().length > 0);
+		}
+		return false;
 	}
 
 	async function generateAIOptions() {
@@ -582,36 +584,66 @@
 
 		isGeneratingAI = true;
 		try {
-			const correctTexts = correctAnswers
-				.map((idx) => options[parseInt(idx)]?.text || '')
-				.filter((t) => t.trim().length > 0);
-			const existingTexts = options.map((o) => o.text).filter((t) => t.trim().length > 0);
+			if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+				const answer = fitbAnswers
+					.map((row) => row.value.trim())
+					.filter((t) => t.length > 0)
+					.join('; ');
 
-			const result = await client.action(api.question.generateDistractorsAndExplanation, {
-				stem: questionStem,
-				correctAnswers: correctTexts,
-				existingOptions: existingTexts,
-				focus: userFocus,
-				numDistractors: 3
-			});
+				const result = await client.action(api.question.generateExplanation, {
+					stem: questionStem,
+					answer,
+					focus: userFocus,
+					existingExplanation: questionExplanation.trim() || undefined
+				});
 
-			// Insert distractors into empty option slots or append
-			const filledOptions = options.filter((o) => o.text.trim().length > 0);
-			result.distractors.forEach((d) => {
-				filledOptions.push({ text: d });
-			});
-			options = filledOptions;
-
-			// Set explanation if empty
-			if (!questionExplanation.trim() && result.explanation) {
-				questionExplanation = result.explanation;
-				if ($explanationEditor) {
-					$explanationEditor.commands.setContent(result.explanation);
+				if (result.explanation) {
+					questionExplanation = result.explanation;
+					if ($explanationEditor) {
+						$explanationEditor.commands.setContent(result.explanation);
+					}
 				}
-			}
 
-			onChange();
-			toastStore.success('Options generated');
+				onChange();
+				toastStore.success('Explanation generated');
+			} else {
+				const correctTexts = correctAnswers
+					.map((idx) => options[parseInt(idx)]?.text || '')
+					.filter((t) => t.trim().length > 0);
+				const existingTexts = options.map((o) => o.text).filter((t) => t.trim().length > 0);
+
+				// Count empty option slots — that's how many distractors the user wants
+				const emptyCount = options.filter((o) => o.text.trim().length === 0).length;
+				const numDistractors = Math.max(1, emptyCount);
+
+				const result = await client.action(api.question.generateDistractorsAndExplanation, {
+					stem: questionStem,
+					correctAnswers: correctTexts,
+					existingOptions: existingTexts,
+					focus: userFocus,
+					numDistractors,
+					existingExplanation: questionExplanation.trim() || undefined
+				});
+
+				// Fill empty slots with generated distractors
+				let distractorIdx = 0;
+				options = options.map((o) => {
+					if (o.text.trim().length === 0 && distractorIdx < result.distractors.length) {
+						return { text: result.distractors[distractorIdx++] };
+					}
+					return o;
+				});
+
+				if (result.explanation) {
+					questionExplanation = result.explanation;
+					if ($explanationEditor) {
+						$explanationEditor.commands.setContent(result.explanation);
+					}
+				}
+
+				onChange();
+				toastStore.success('Options generated');
+			}
 		} catch (err: any) {
 			console.error('AI generation error:', err);
 			if (err.message?.includes('Daily generation limit')) {
@@ -934,7 +966,22 @@
 			<div>
 				{#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
 					<div class="space-y-4">
-						<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2">Accepted Answers</div>
+						<div class="flex items-center justify-between mb-2">
+							<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60">Accepted Answers</div>
+							<button
+								class="btn btn-xs btn-ghost gap-1"
+								onclick={generateAIOptions}
+								disabled={!canGenerateAI()}
+								title={canGenerateAI() ? 'Generate explanation with AI' : 'Add stem and answer first'}
+							>
+								{#if isGeneratingAI}
+									<Loader2 size={12} class="animate-spin" />
+								{:else}
+									<Sparkles size={12} />
+								{/if}
+								<span class="hidden sm:inline">AI</span>
+							</button>
+						</div>
 						<div class="card bg-base-100 border border-base-300 shadow-sm rounded-3xl overflow-hidden">
 							<div class="card-body p-4 gap-4">
 								{#each fitbAnswers as row, index (index)}
@@ -1173,9 +1220,10 @@
 			<!-- Explanation & Attachments -->
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-base-200">
 				<div>
-					<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2 flex items-center gap-2">
+					<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-1 flex items-center gap-2">
 						<MessageSquare size={14} /> Explanation
 					</div>
+					<p class="text-[10px] text-base-content/40 mb-2">Add notes or context here to guide AI-generated explanations</p>
 					<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100 group">
 						{#if explanationEditor}
 							<EditorContent editor={$explanationEditor} />

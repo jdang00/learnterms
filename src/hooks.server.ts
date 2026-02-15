@@ -5,8 +5,6 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { ConvexHttpClient } from 'convex/browser';
 import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import { api } from './convex/_generated/api';
-import { isCrawler } from '$lib/server/crawler';
-
 const protectAdmin: Handle = async ({ event, resolve }) => {
 	const url = new URL(event.request.url);
 	if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) {
@@ -31,12 +29,7 @@ const protectClasses: Handle = async ({ event, resolve }) => {
 	if (url.pathname === '/classes' || url.pathname.startsWith('/classes/')) {
 		const { userId } = event.locals.auth();
 		if (!userId) {
-			if (isCrawler(event.request)) {
-				event.locals.isCrawler = true;
-				return resolve(event);
-			}
-
-			throw redirect(307, '/');
+			return resolve(event);
 		}
 	}
 	return resolve(event);
