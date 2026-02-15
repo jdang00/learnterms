@@ -92,7 +92,7 @@
 			{#if qs.noFlags}
 				<div
 					role="alert"
-					class="alert alert-warning fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-11/12 sm:w-max max-w-xs sm:max-w-sm md:max-w-md p-4 text-center"
+					class="alert alert-warning fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-11/12 sm:w-max max-w-xs sm:max-w-sm md:max-w-md p-4 text-center rounded-full"
 				>
 					<Flag size="16" />
 					<span class="align-middle">No Questions Flagged.</span>
@@ -140,7 +140,7 @@
 							</div>
 							<ul
 								tabindex="-1"
-								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow-sm"
+								class="dropdown-content menu bg-base-100 rounded-2xl z-[1] w-52 p-2 shadow-sm"
 							>
 								<li>
 									<button onclick={() => handleFilterToggle('flagged')}>

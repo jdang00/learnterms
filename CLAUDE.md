@@ -11,6 +11,10 @@ bun run <script>      # Run package.json scripts
 bunx <command>        # Execute packages (replaces npx)
 ```
 
+## Coding Preferences
+- Keep code comments minimal. Add comments only when the logic is non-obvious.
+- Use **bun** for all package management, script execution, and CLI workflows.
+
 ## Key Commands
 - `bun run dev` - Start SvelteKit dev server
 - `bun run dev:convex` - Start Convex dev server

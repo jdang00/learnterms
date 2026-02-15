@@ -133,7 +133,7 @@
                                 Select a choice
                             {/if}
                         </label>
-                        <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-full z-[1]">
+                        <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-2xl w-full z-[1]">
                             {#each (qs.showSolution ? shuffledAnswers : availableAnswersForPrompt(p.id)) as a (a.id)}
                                 <li>
                                     <button
@@ -164,11 +164,11 @@
     </div>
 
     <div class="mt-2 flex gap-2">
-        <button class="btn" onclick={handleToggleSolution} aria-label="toggle solution">
+        <button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle solution">
             <Eye />
         </button>
         {#if !qs.showSolution && qs.selectedAnswers && qs.selectedAnswers.length > 0}
-            <button class="btn" onclick={clearAllSelections} aria-label="clear all selections">
+            <button class="btn rounded-full" onclick={clearAllSelections} aria-label="clear all selections">
                 <X /> Clear all
             </button>
         {/if}

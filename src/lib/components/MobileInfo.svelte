@@ -7,10 +7,10 @@
 	class="lg:hidden flex flex-row mt-2 items-center w-full justify-between sticky top-0 bg-base-100 z-40 py-2 px-2"
 >
 	<a
-		class="btn btn-ghost btn-sm flex-shrink-0 flex items-center"
+		class="btn btn-ghost btn-sm btn-circle flex-shrink-0 flex items-center"
 		href={`/classes?classId=${classId}`}
 	>
-		<ArrowLeft />
+		<ArrowLeft size={20} />
 	</a>
 	<div
 		class="flex flex-row gap-1 sm:gap-2 justify-center text-center max-w-xs mx-auto absolute left-0 right-0"

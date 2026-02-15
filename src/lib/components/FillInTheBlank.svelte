@@ -72,7 +72,7 @@
 		<input
 			type="text"
 			placeholder="Type here"
-			class="input input-bordered w-64 sm:w-72"
+			class="input input-bordered w-64 sm:w-72 rounded-full"
 			value={inputText}
 			oninput={(e) => {
 				inputText = (e.target as HTMLInputElement).value;
@@ -93,13 +93,13 @@
 			bind:this={inputEl}
 		/>
 		<button
-			class="btn btn-primary ms-2"
+			class="btn btn-primary ms-2 rounded-full"
 			onclick={handleEnter}
 			disabled={qs.showSolution || !inputText.trim()}>Enter</button
 		>
 	</div>
 
-	<div class="card bg-base-100 w-72 sm:w-80 shadow-md mt-6 border border-base-content/10">
+	<div class="card bg-base-100 w-72 sm:w-80 shadow-md mt-6 border border-base-content/10 rounded-2xl">
 		<div class="card-body">
 			<h3 class="text-lg font-semibold mb-2 {qs.showSolution ? '' : 'blur'}">{displayAnswer()}</h3>
 			{#if qs.showSolution && alternateAnswers().length > 0}
@@ -112,7 +112,7 @@
 					</ul>
 				</div>
 			{/if}
-			<button class="btn" onclick={handleToggleSolution} aria-label="toggle solution">
+			<button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle solution">
 				<Eye />
 			</button>
 		</div>

@@ -4,7 +4,7 @@
 </script>
 
 <dialog class="modal max-w-full p-4" class:modal-open={isOpen}>
-	<div class="modal-box">
+	<div class="modal-box rounded-2xl">
 		<form method="dialog">
 			<button
 				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
@@ -46,7 +46,7 @@
 			<div class="flex justify-between items-center">
 				<span>Reset progress</span>
 				<button
-					class="btn btn-error btn-soft btn-sm"
+					class="btn btn-error btn-soft btn-sm rounded-full"
 					onclick={() => {
 						isOpen = false;
 						qs.isResetModalOpen = true;

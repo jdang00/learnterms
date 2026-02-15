@@ -200,7 +200,8 @@ export default defineSchema({
 	})
 		.index('by_user_question', ['userId', 'questionId'])
 		.index('by_question_user', ['questionId', 'userId'])
-		.index('by_user_class', ['userId', 'classId']),
+		.index('by_user_class', ['userId', 'classId'])
+		.index('by_classId', ['classId']),
 	contentLib: defineTable({
 		title: v.string(),
 		description: v.optional(v.string()),
@@ -237,11 +238,13 @@ export default defineSchema({
 			v.literal('completed'),
 			v.literal('failed')
 		),
-		progress: v.optional(v.object({
-			chunksProcessed: v.number(),
-			totalChunks: v.optional(v.number()),
-			currentStep: v.string()
-		})),
+		progress: v.optional(
+			v.object({
+				chunksProcessed: v.number(),
+				totalChunks: v.optional(v.number()),
+				currentStep: v.string()
+			})
+		),
 		error: v.optional(v.string()),
 		retryCount: v.number(),
 		createdAt: v.number(),

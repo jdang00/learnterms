@@ -9,10 +9,10 @@
 	import { onMount, tick } from 'svelte';
 	import { RotateCcw } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
-	import posthog from 'posthog-js';
-	import { browser } from '$app/environment';
 	import { base } from '$app/paths';
 	import { BookOpen } from 'lucide-svelte';
+	import { QUESTION_TYPES } from '$lib/utils/questionType';
+	import { captureQuestionAnswered } from '$lib/analytics/questionAnswered';
 
 	let { data }: { data: PageData } = $props();
 
@@ -133,17 +133,13 @@
 	}
 
 	// useQuery with function args for reactivity
-	const questions = useQuery(
-		api.question.getQuestionsByModule,
-		() => ({ id: data.moduleId }),
-		{ initialData: data.module }
-	);
+	const questions = useQuery(api.question.getQuestionsByModule, () => ({ id: data.moduleId }), {
+		initialData: data.module
+	});
 
-	const module = useQuery(
-		api.module.getModuleById,
-		() => ({ id: data.moduleId as Id<'module'> }),
-		{ initialData: data.moduleInfo }
-	);
+	const module = useQuery(api.module.getModuleById, () => ({ id: data.moduleId as Id<'module'> }), {
+		initialData: data.moduleInfo
+	});
 
 	// Derive stable question IDs from questions data
 	const stableQuestionIds = $derived.by(() => {
@@ -152,13 +148,14 @@
 	});
 
 	// useQuery at top level with skip pattern
-	const moduleProgressQuery = useQuery(
-		api.userProgress.getUserProgressForModule,
-		() => (userId && questions.data && stableQuestionIds.length > 0) ? {
-			userId: userId,
-			classId: data.classId as Id<'class'>,
-			questionIds: stableQuestionIds
-		} : 'skip'
+	const moduleProgressQuery = useQuery(api.userProgress.getUserProgressForModule, () =>
+		userId && questions.data && stableQuestionIds.length > 0
+			? {
+					userId: userId,
+					classId: data.classId as Id<'class'>,
+					questionIds: stableQuestionIds
+				}
+			: 'skip'
 	);
 
 	const moduleProgress = $derived({
@@ -192,8 +189,6 @@
 			}
 		}
 	});
-
- 
 
 	let currentlySelected = $derived(
 		qs.getCurrentFilteredQuestion() ||
@@ -275,25 +270,56 @@
 					const selectedAnswers = [...qs.selectedAnswers];
 					const eliminatedOptions = [...qs.eliminatedAnswers];
 					const correctAnswers = currentlySelected.correctAnswers || [];
+					let isCorrect = false;
 
-					// Compute isCorrect for multiple choice
-					const sortedCorrect = [...correctAnswers].sort();
-					const sortedSelected = [...selectedAnswers].sort();
-					const isCorrect = sortedCorrect.length === sortedSelected.length &&
-						sortedCorrect.every((answer: string, index: number) => answer === sortedSelected[index]);
-
-					qs.checkAnswer(correctAnswers, selectedAnswers);
-
-					// Track the answer submission
-					if (browser) {
-						posthog.capture('question_answered', {
+					if (currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+						const text = selectedAnswers[0] || '';
+						qs.checkFillInTheBlank(text, currentlySelected);
+						setTimeout(() => {
+							captureQuestionAnswered({
+								questionId: currentlySelected._id,
+								moduleId: currentlySelected.moduleId,
+								classId: data.classId,
+								questionType: currentlySelected.type,
+								selectedOptions: selectedAnswers,
+								eliminatedOptions: eliminatedOptions,
+								isCorrect: qs.checkResult === 'Correct!',
+								submissionSource: 'keyboard'
+							});
+						}, 1);
+					} else if (currentlySelected.type === QUESTION_TYPES.MATCHING) {
+						qs.checkMatching(currentlySelected);
+						isCorrect =
+							correctAnswers.length === selectedAnswers.length &&
+							correctAnswers.every((answer: string) => selectedAnswers.includes(answer));
+						captureQuestionAnswered({
 							questionId: currentlySelected._id,
 							moduleId: currentlySelected.moduleId,
 							classId: data.classId,
 							questionType: currentlySelected.type,
 							selectedOptions: selectedAnswers,
 							eliminatedOptions: eliminatedOptions,
-							isCorrect: isCorrect
+							isCorrect,
+							submissionSource: 'keyboard'
+						});
+					} else {
+						const sortedCorrect = [...correctAnswers].sort();
+						const sortedSelected = [...selectedAnswers].sort();
+						isCorrect =
+							sortedCorrect.length === sortedSelected.length &&
+							sortedCorrect.every(
+								(answer: string, index: number) => answer === sortedSelected[index]
+							);
+						qs.checkAnswer(correctAnswers, selectedAnswers);
+						captureQuestionAnswered({
+							questionId: currentlySelected._id,
+							moduleId: currentlySelected.moduleId,
+							classId: data.classId,
+							questionType: currentlySelected.type,
+							selectedOptions: selectedAnswers,
+							eliminatedOptions: eliminatedOptions,
+							isCorrect,
+							submissionSource: 'keyboard'
 						});
 					}
 				}
@@ -392,17 +418,16 @@
 	<div class="flex items-center justify-center min-h-[60vh]">
 		<div class="text-center max-w-md mx-auto p-8">
 			<BookOpen class="mx-auto mb-4 text-primary" size={48} />
-			<h1 class="text-2xl font-bold mb-2">{data.seo?.title?.replace(' — LearnTerms', '') ?? 'Study Module'}</h1>
+			<h1 class="text-2xl font-bold mb-2">
+				{data.seo?.title?.replace(' — LearnTerms', '') ?? 'Study Module'}
+			</h1>
 			<p class="text-base-content/70 mb-6">Sign in to start studying this module on LearnTerms.</p>
 			<a href="{base}/sign-in" class="btn btn-primary">Sign in to study</a>
 		</div>
 	</div>
 {:else}
 	<!-- Quiz View -->
-	<div
-		class="flex flex-col h-[calc(100vh-4rem)]"
-		transition:fade={{ duration: 200 }}
-	>
+	<div class="flex flex-col h-[calc(100vh-4rem)]" transition:fade={{ duration: 200 }}>
 		<div class="flex-1 min-h-0 relative">
 			<MainQuiz
 				{qs}
@@ -421,7 +446,7 @@
 
 	<!-- Global Reset Modal at page root to ensure highest stacking context -->
 	<dialog class="modal max-w-full p-4 z-[1000]" class:modal-open={qs.isResetModalOpen}>
-		<div class="modal-box">
+		<div class="modal-box rounded-2xl">
 			<form method="dialog">
 				<button
 					class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
@@ -435,10 +460,10 @@
 				Do you want to start over? All current progress for this module will be lost.
 			</p>
 			<div class="flex justify-end space-x-2">
-				<button class="btn btn-outline" onclick={() => (qs.isResetModalOpen = false)}>
+				<button class="btn btn-outline rounded-full" onclick={() => (qs.isResetModalOpen = false)}>
 					Cancel
 				</button>
-				<button class="btn btn-error" onclick={() => handleResetModalConfirm()}>Reset</button>
+				<button class="btn btn-error rounded-full" onclick={() => handleResetModalConfirm()}>Reset</button>
 			</div>
 		</div>
 		<div class="modal-backdrop bg-black/50" onclick={() => (qs.isResetModalOpen = false)}></div>
