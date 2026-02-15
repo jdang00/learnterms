@@ -27,7 +27,11 @@
       "Bash(bunx convex env list:*)",
       "Bash(bunx convex logs:*)",
       "Bash(bunx convex function-spec:*)",
-      "Bash(bunx convex data:*)"
+      "Bash(bunx convex data:*)",
+      "Bash(git -C /Users/justindang/learnterms log --oneline -5)",
+      "Bash(git -C /Users/justindang/learnterms diff --stat)",
+      "Bash(git -C /Users/justindang/learnterms add src/convex/_generated/api.d.ts src/convex/question.ts src/convex/schema.ts src/convex/userProgress.ts src/lib/components/Sidebar.svelte src/routes/+layout.svelte src/routes/admin/progress/+page.svelte vite.config.ts dev/ACHIEVEMENT_SYSTEM_PROPOSAL.md src/convex/badgeEngine.ts src/convex/badges.ts src/lib/components/BadgeAwardModal.svelte src/lib/components/badges/ src/routes/admin/badges/ src/routes/badges/ src/routes/cohort/)",
+      "Bash(git -C:*)"
     ]
   }
 }

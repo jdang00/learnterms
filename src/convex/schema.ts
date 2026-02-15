@@ -184,6 +184,112 @@ export default defineSchema({
 			originalFileName: v.optional(v.string())
 		})
 	}).index('by_questionId', ['questionId']),
+	badgeDefinitions: defineTable({
+		key: v.string(),
+		name: v.string(),
+		description: v.string(),
+		iconKey: v.string(),
+		iconColor: v.string(),
+		gradient: v.object({
+			from: v.string(),
+			mid: v.string(),
+			to: v.string()
+		}),
+		ownedPct: v.number(),
+		scopeType: v.union(v.literal('global'), v.literal('cohort'), v.literal('class')),
+		cohortId: v.optional(v.id('cohort')),
+		classId: v.optional(v.id('class')),
+		issuerType: v.union(
+			v.literal('platform'),
+			v.literal('cohort'),
+			v.literal('class'),
+			v.literal('event'),
+			v.literal('partner')
+		),
+		issuerName: v.string(),
+		issuerUrl: v.optional(v.string()),
+		scopeLabel: v.string(),
+		eligibility: v.string(),
+		seasonLabel: v.optional(v.string()),
+		isActive: v.boolean(),
+		awardedCount: v.optional(v.number()),
+		createdByUserId: v.optional(v.id('users')),
+		updatedAt: v.number()
+	})
+		.index('by_key', ['key'])
+		.index('by_isActive', ['isActive'])
+		.index('by_scopeType', ['scopeType'])
+		.index('by_cohortId', ['cohortId'])
+		.index('by_classId', ['classId']),
+	badgeRules: defineTable({
+		badgeDefinitionId: v.id('badgeDefinitions'),
+		name: v.optional(v.string()),
+		allOf: v.array(
+			v.object({
+				metric: v.union(
+					v.literal('questions_interacted'),
+					v.literal('questions_mastered'),
+					v.literal('questions_flagged'),
+					v.literal('early_interactions'),
+					v.literal('late_interactions'),
+					v.literal('questions_created'),
+					v.literal('streak_current_days'),
+					v.literal('streak_best_days')
+				),
+				op: v.union(
+					v.literal('gte'),
+					v.literal('gt'),
+					v.literal('eq'),
+					v.literal('lte'),
+					v.literal('lt')
+				),
+				value: v.number()
+			})
+		),
+		isActive: v.boolean(),
+		createdByUserId: v.optional(v.id('users')),
+		updatedAt: v.number()
+	})
+		.index('by_badgeDefinitionId', ['badgeDefinitionId'])
+		.index('by_isActive', ['isActive'])
+		.index('by_badgeDefinitionId_isActive', ['badgeDefinitionId', 'isActive']),
+	userBadgeAwards: defineTable({
+		userId: v.id('users'),
+		badgeDefinitionId: v.id('badgeDefinitions'),
+		awardedByRuleId: v.optional(v.id('badgeRules')),
+		source: v.union(v.literal('earned'), v.literal('manual')),
+		cohortId: v.optional(v.id('cohort')),
+		classId: v.optional(v.id('class')),
+		seenAt: v.optional(v.number()),
+		awardedAt: v.number(),
+		updatedAt: v.number()
+	})
+		.index('by_userId', ['userId'])
+		.index('by_userId_seenAt', ['userId', 'seenAt'])
+		.index('by_badgeDefinitionId', ['badgeDefinitionId'])
+		.index('by_user_badge', ['userId', 'badgeDefinitionId'])
+		.index('by_cohortId', ['cohortId'])
+		.index('by_cohortId_userId', ['cohortId', 'userId'])
+		.index('by_classId', ['classId']),
+	userBadgeMetrics: defineTable({
+		userId: v.id('users'),
+		scopeType: v.union(v.literal('global'), v.literal('cohort'), v.literal('class')),
+		cohortId: v.optional(v.id('cohort')),
+		classId: v.optional(v.id('class')),
+		questionsInteracted: v.number(),
+		questionsMastered: v.number(),
+		questionsFlagged: v.number(),
+		earlyInteractions: v.number(),
+		lateInteractions: v.number(),
+		questionsCreated: v.optional(v.number()),
+		streakCurrentDays: v.number(),
+		streakBestDays: v.number(),
+		lastActivityDayKey: v.optional(v.number()),
+		updatedAt: v.number()
+	})
+		.index('by_user_scopeType', ['userId', 'scopeType'])
+		.index('by_user_scope_cohort', ['userId', 'scopeType', 'cohortId'])
+		.index('by_user_scope_class', ['userId', 'scopeType', 'classId']),
 	userProgress: defineTable({
 		userId: v.id('users'),
 		classId: v.id('class'),
@@ -194,7 +300,10 @@ export default defineSchema({
 		isMastered: v.boolean(),
 		attempts: v.number(),
 		lastAttemptAt: v.optional(v.number()),
-		metadata: v.object({}),
+		metadata: v.object({
+			firstInteractedAt: v.optional(v.number()),
+			firstInteractedHourUtc: v.optional(v.number())
+		}),
 		deletedAt: v.optional(v.number()),
 		updatedAt: v.number()
 	})

@@ -5,6 +5,7 @@ import { authQuery } from './authQueries';
 import { internal, components } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
+import { applyQuestionCreationDeltaAndEvaluateBadges } from './badgeEngine';
 
 const MAX_QUESTIONS_PER_MODULE = 150;
 const LIMIT_FREE = 15;
@@ -35,9 +36,7 @@ export const checkAndIncrementUsage = internalMutation({
 			const subscription = await ctx.runQuery(components.polar.lib.getCurrentSubscription, {
 				userId: user._id
 			});
-			isPro =
-				subscription?.status === 'active' ||
-				subscription?.status === 'trialing';
+			isPro = subscription?.status === 'active' || subscription?.status === 'trialing';
 		} catch {
 			// If subscription check fails, user is not pro
 			isPro = false;
@@ -72,11 +71,13 @@ async function checkModuleCapacity(
 ): Promise<void> {
 	const module = await ctx.db.get(moduleId);
 	if (!module) throw new Error('Module not found');
-	
+
 	const currentCount = module.questionCount ?? 0;
-	
+
 	if (currentCount + countToAdd > MAX_QUESTIONS_PER_MODULE) {
-		throw new Error(`Module limit reached (${MAX_QUESTIONS_PER_MODULE} questions). Please split this module for better learning retention.`);
+		throw new Error(
+			`Module limit reached (${MAX_QUESTIONS_PER_MODULE} questions). Please split this module for better learning retention.`
+		);
 	}
 }
 
@@ -90,6 +91,33 @@ async function adjustModuleQuestionCount(
 	const currentCount = module.questionCount ?? 0;
 	await ctx.db.patch(moduleId, {
 		questionCount: Math.max(0, currentCount + delta)
+	});
+}
+
+async function applyQuestionCreationBadgesForActor(
+	ctx: MutationCtx,
+	moduleId: Id<'module'>,
+	questionsCreatedDelta: number
+): Promise<void> {
+	if (questionsCreatedDelta <= 0) return;
+
+	const identity = await ctx.auth.getUserIdentity();
+	if (!identity) return;
+
+	const actor = await ctx.db
+		.query('users')
+		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
+		.first();
+	if (!actor) return;
+
+	const module = await ctx.db.get(moduleId);
+	if (!module) return;
+
+	await applyQuestionCreationDeltaAndEvaluateBadges(ctx, {
+		userId: actor._id,
+		classId: module.classId,
+		questionsCreatedDelta,
+		occurredAt: Date.now()
 	});
 }
 
@@ -203,7 +231,7 @@ export const insertQuestion = authCuratorMutation({
 			})
 		)
 	},
-    handler: async (ctx, args) => {
+	handler: async (ctx, args) => {
 		await checkModuleCapacity(ctx, args.moduleId, 1);
 
 		const optionsWithIds = args.options.map((option, index) => ({
@@ -211,21 +239,23 @@ export const insertQuestion = authCuratorMutation({
 			text: option.text
 		}));
 
-        const isMatching = convertQuestionType(args.type) === 'matching';
-        if (isMatching) {
-            const hasPairs = (args.correctAnswers || []).every((s) => String(s).includes('::'));
-            if (!hasPairs) {
-                throw new Error('Matching questions must use pair-formatted correctAnswers (promptId::answerId)');
-            }
-        }
-        const correctAnswerIds = isMatching
-            ? args.correctAnswers
-            : args.correctAnswers
-                  .map((index) => {
-                      const numIndex = parseInt(index);
-                      return optionsWithIds[numIndex]?.id || '';
-                  })
-                  .filter((id) => id !== '');
+		const isMatching = convertQuestionType(args.type) === 'matching';
+		if (isMatching) {
+			const hasPairs = (args.correctAnswers || []).every((s) => String(s).includes('::'));
+			if (!hasPairs) {
+				throw new Error(
+					'Matching questions must use pair-formatted correctAnswers (promptId::answerId)'
+				);
+			}
+		}
+		const correctAnswerIds = isMatching
+			? args.correctAnswers
+			: args.correctAnswers
+					.map((index) => {
+						const numIndex = parseInt(index);
+						return optionsWithIds[numIndex]?.id || '';
+					})
+					.filter((id) => id !== '');
 
 		const searchText = computeSearchText({
 			stem: args.stem,
@@ -247,6 +277,7 @@ export const insertQuestion = authCuratorMutation({
 			searchText
 		});
 		await adjustModuleQuestionCount(ctx, args.moduleId, 1);
+		await applyQuestionCreationBadgesForActor(ctx, args.moduleId, 1);
 		return id;
 	}
 });
@@ -320,7 +351,7 @@ export const updateQuestion = authCuratorMutation({
 		explanation: v.string(),
 		status: v.string()
 	},
-    handler: async (ctx, args) => {
+	handler: async (ctx, args) => {
 		const questionToUpdate = await ctx.db.get(args.questionId);
 		if (!questionToUpdate || questionToUpdate.moduleId !== args.moduleId) {
 			throw new Error('Question not found or access denied');
@@ -331,34 +362,36 @@ export const updateQuestion = authCuratorMutation({
 			text: option.text
 		}));
 
-        const isMatching = convertQuestionType(args.type) === 'matching';
-        if (isMatching) {
-            const hasPairs = (args.correctAnswers || []).every((s) => String(s).includes('::'));
-            if (!hasPairs) {
-                throw new Error('Matching questions must use pair-formatted correctAnswers (promptId::answerId)');
-            }
-        }
-        let correctAnswerIds: string[];
-        if (isMatching) {
-            // For matching questions, the frontend sends IDs generated from the new text.
-            // Since makeOptionId is deterministic, these IDs match the ones we generated in optionsWithIds.
-            // We just need to filter out any that might be invalid (though they shouldn't be).
-            const availableIds = new Set(optionsWithIds.map((o) => o.id));
-            correctAnswerIds = (args.correctAnswers || []).filter((pair) => {
-                const [promptId, answerId] = String(pair).split('::');
-                return availableIds.has(promptId) && availableIds.has(answerId);
-            });
-        } else {
-            correctAnswerIds = args.correctAnswers
-                .map((correctAnswer) => {
-                    const numIndex = parseInt(correctAnswer);
-                    if (!isNaN(numIndex) && numIndex >= 0 && numIndex < optionsWithIds.length) {
-                        return optionsWithIds[numIndex].id;
-                    }
-                    return correctAnswer;
-                })
-                .filter((id) => id !== '');
-        }
+		const isMatching = convertQuestionType(args.type) === 'matching';
+		if (isMatching) {
+			const hasPairs = (args.correctAnswers || []).every((s) => String(s).includes('::'));
+			if (!hasPairs) {
+				throw new Error(
+					'Matching questions must use pair-formatted correctAnswers (promptId::answerId)'
+				);
+			}
+		}
+		let correctAnswerIds: string[];
+		if (isMatching) {
+			// For matching questions, the frontend sends IDs generated from the new text.
+			// Since makeOptionId is deterministic, these IDs match the ones we generated in optionsWithIds.
+			// We just need to filter out any that might be invalid (though they shouldn't be).
+			const availableIds = new Set(optionsWithIds.map((o) => o.id));
+			correctAnswerIds = (args.correctAnswers || []).filter((pair) => {
+				const [promptId, answerId] = String(pair).split('::');
+				return availableIds.has(promptId) && availableIds.has(answerId);
+			});
+		} else {
+			correctAnswerIds = args.correctAnswers
+				.map((correctAnswer) => {
+					const numIndex = parseInt(correctAnswer);
+					if (!isNaN(numIndex) && numIndex >= 0 && numIndex < optionsWithIds.length) {
+						return optionsWithIds[numIndex].id;
+					}
+					return correctAnswer;
+				})
+				.filter((id) => id !== '');
+		}
 
 		const searchText = computeSearchText({
 			stem: args.stem,
@@ -408,23 +441,26 @@ export const createQuestion = authCuratorMutation({
 		}),
 		updatedAt: v.number()
 	},
-    handler: async (ctx, args) => {
+	handler: async (ctx, args) => {
 		await checkModuleCapacity(ctx, args.moduleId, 1);
 
 		const identity = await ctx.auth.getUserIdentity();
-		const createdBy = identity?.givenName && identity?.familyName
-			? {
-					firstName: identity.givenName,
-					lastName: identity.familyName
-				}
-			: undefined;
-        const isMatching = convertQuestionType(args.type) === 'matching';
-        if (isMatching) {
-            const hasPairs = (args.correctAnswers || []).every((s) => String(s).includes('::'));
-            if (!hasPairs) {
-                throw new Error('Matching questions must use pair-formatted correctAnswers (promptId::answerId)');
-            }
-        }
+		const createdBy =
+			identity?.givenName && identity?.familyName
+				? {
+						firstName: identity.givenName,
+						lastName: identity.familyName
+					}
+				: undefined;
+		const isMatching = convertQuestionType(args.type) === 'matching';
+		if (isMatching) {
+			const hasPairs = (args.correctAnswers || []).every((s) => String(s).includes('::'));
+			if (!hasPairs) {
+				throw new Error(
+					'Matching questions must use pair-formatted correctAnswers (promptId::answerId)'
+				);
+			}
+		}
 		const searchText = computeSearchText({
 			stem: args.stem,
 			explanation: args.explanation,
@@ -441,6 +477,7 @@ export const createQuestion = authCuratorMutation({
 			...(createdBy && { createdBy })
 		});
 		await adjustModuleQuestionCount(ctx, args.moduleId, 1);
+		await applyQuestionCreationBadgesForActor(ctx, args.moduleId, 1);
 		return id;
 	}
 });
@@ -471,35 +508,37 @@ export const bulkInsertQuestions = authCuratorMutation({
 			})
 		)
 	},
-    handler: async (ctx, { moduleId, questions }) => {
+	handler: async (ctx, { moduleId, questions }) => {
 		await checkModuleCapacity(ctx, moduleId, questions.length);
 
 		const insertedIds: string[] = [];
 
-        for (const q of questions) {
-            const isMatching = convertQuestionType(q.type) === 'matching';
-            if (isMatching) {
-                const hasPairs = (q.correctAnswers || []).every((s) => String(s).includes('::'));
-                if (!hasPairs) {
-                    throw new Error('Matching questions must use pair-formatted correctAnswers (promptId::answerId)');
-                }
-            }
+		for (const q of questions) {
+			const isMatching = convertQuestionType(q.type) === 'matching';
+			if (isMatching) {
+				const hasPairs = (q.correctAnswers || []).every((s) => String(s).includes('::'));
+				if (!hasPairs) {
+					throw new Error(
+						'Matching questions must use pair-formatted correctAnswers (promptId::answerId)'
+					);
+				}
+			}
 			const optionsWithIds = q.options.map((option, index) => ({
 				id: makeOptionId(q.stem, option.text, index),
 				text: option.text
 			}));
-            const correctAnswerIds = isMatching
-                ? q.correctAnswers
-                : q.correctAnswers
-                      .map((index) => {
-                          const numIndex = parseInt(index);
-                          return optionsWithIds[numIndex]?.id || '';
-                      })
-                      .filter((id) => id !== '');
+			const correctAnswerIds = isMatching
+				? q.correctAnswers
+				: q.correctAnswers
+						.map((index) => {
+							const numIndex = parseInt(index);
+							return optionsWithIds[numIndex]?.id || '';
+						})
+						.filter((id) => id !== '');
 
 			const id = await ctx.db.insert('question', {
 				moduleId,
-                type: convertQuestionType(q.type),
+				type: convertQuestionType(q.type),
 				stem: q.stem,
 				options: optionsWithIds,
 				correctAnswers: correctAnswerIds,
@@ -526,6 +565,7 @@ export const bulkInsertQuestions = authCuratorMutation({
 
 		if (insertedIds.length > 0) {
 			await adjustModuleQuestionCount(ctx, moduleId, insertedIds.length);
+			await applyQuestionCreationBadgesForActor(ctx, moduleId, insertedIds.length);
 		}
 
 		return { insertedIds, insertedCount: insertedIds.length };
@@ -673,6 +713,7 @@ export const duplicateQuestion = authCuratorMutation({
 		});
 
 		await adjustModuleQuestionCount(ctx, original.moduleId, 1);
+		await applyQuestionCreationBadgesForActor(ctx, original.moduleId, 1);
 		return id;
 	}
 });
@@ -725,6 +766,7 @@ export const duplicateQuestionMany = authCuratorMutation({
 
 		if (insertedIds.length > 0) {
 			await adjustModuleQuestionCount(ctx, original.moduleId, insertedIds.length);
+			await applyQuestionCreationBadgesForActor(ctx, original.moduleId, insertedIds.length);
 		}
 
 		return { insertedIds, insertedCount: insertedIds.length };
@@ -838,46 +880,46 @@ export const backfillSearchTextForAllModules = mutation({
 });
 
 export const repairMatchingPairsForModule = authCuratorMutation({
-    args: { moduleId: v.id('module') },
-    handler: async (ctx, { moduleId }) => {
-        const items = await ctx.db
-            .query('question')
-            .withIndex('by_moduleId', (q) => q.eq('moduleId', moduleId))
-            .collect();
+	args: { moduleId: v.id('module') },
+	handler: async (ctx, { moduleId }) => {
+		const items = await ctx.db
+			.query('question')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', moduleId))
+			.collect();
 
-        let updated = 0;
-        for (const q of items) {
-            if (q.type !== 'matching') continue;
-            const hasPairs = (q.correctAnswers || []).some((s: string) => String(s).includes('::'));
-            if (hasPairs) continue;
+		let updated = 0;
+		for (const q of items) {
+			if (q.type !== 'matching') continue;
+			const hasPairs = (q.correctAnswers || []).some((s: string) => String(s).includes('::'));
+			if (hasPairs) continue;
 
-            const prompts = (q.options || []).filter((o) => o.text.startsWith('prompt:'));
-            const answers = (q.options || []).filter((o) => o.text.startsWith('answer:'));
-            const n = Math.min(prompts.length, answers.length);
-            if (n === 0) continue;
+			const prompts = (q.options || []).filter((o) => o.text.startsWith('prompt:'));
+			const answers = (q.options || []).filter((o) => o.text.startsWith('answer:'));
+			const n = Math.min(prompts.length, answers.length);
+			if (n === 0) continue;
 
-            const pairs: string[] = [];
-            for (let i = 0; i < n; i++) {
-                pairs.push(`${prompts[i].id}::${answers[i].id}`);
-            }
+			const pairs: string[] = [];
+			for (let i = 0; i < n; i++) {
+				pairs.push(`${prompts[i].id}::${answers[i].id}`);
+			}
 
-            const searchText = computeSearchText({
-                stem: q.stem,
-                explanation: q.explanation ?? '',
-                type: q.type,
-                status: q.status,
-                aiGenerated: q.aiGenerated,
-                options: q.options,
-                correctAnswers: pairs,
-                metadata: q.metadata
-            });
+			const searchText = computeSearchText({
+				stem: q.stem,
+				explanation: q.explanation ?? '',
+				type: q.type,
+				status: q.status,
+				aiGenerated: q.aiGenerated,
+				options: q.options,
+				correctAnswers: pairs,
+				metadata: q.metadata
+			});
 
-            await ctx.db.patch(q._id, { correctAnswers: pairs, searchText, updatedAt: Date.now() });
-            updated += 1;
-        }
+			await ctx.db.patch(q._id, { correctAnswers: pairs, searchText, updatedAt: Date.now() });
+			updated += 1;
+		}
 
-        return { updated };
-    }
+		return { updated };
+	}
 });
 
 export const generateQuestions = action({
@@ -1045,7 +1087,17 @@ export const generateDistractorsAndExplanation = action({
 		numDistractors: v.optional(v.number()),
 		existingExplanation: v.optional(v.string())
 	},
-	handler: async (ctx, { stem, correctAnswers, existingOptions = [], focus, numDistractors = 3, existingExplanation = '' }) => {
+	handler: async (
+		ctx,
+		{
+			stem,
+			correctAnswers,
+			existingOptions = [],
+			focus,
+			numDistractors = 3,
+			existingExplanation = ''
+		}
+	) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) throw new Error('Unauthenticated');
 
@@ -1071,13 +1123,12 @@ export const generateDistractorsAndExplanation = action({
 					: '';
 
 		// Build existing options list so AI knows what NOT to duplicate
-		const avoidSection = existingOptions.length > 0
-			? `\nAlready used (DO NOT repeat any of these): ${existingOptions.join('; ')}`
-			: '';
+		const avoidSection =
+			existingOptions.length > 0
+				? `\nAlready used (DO NOT repeat any of these): ${existingOptions.join('; ')}`
+				: '';
 
-		const contextHint = existingExplanation.trim()
-			? `\nNotes: ${existingExplanation.trim()}`
-			: '';
+		const contextHint = existingExplanation.trim() ? `\nNotes: ${existingExplanation.trim()}` : '';
 
 		// Compact prompt optimized for tokens
 		const prompt = `MCQ. Generate exactly ${numDistractors} NEW wrong options + explanation.${domainHint}
@@ -1182,9 +1233,7 @@ export const generateExplanation = action({
 					? ' If medical, focus on pharmacy/pharmacology context.'
 					: '';
 
-		const contextHint = existingExplanation.trim()
-			? `\nNotes: ${existingExplanation.trim()}`
-			: '';
+		const contextHint = existingExplanation.trim() ? `\nNotes: ${existingExplanation.trim()}` : '';
 
 		const prompt = `Explain why this is correct in 2-3 sentences. Incorporate the notes if provided, rewriting into a clear paragraph.${domainHint}
 

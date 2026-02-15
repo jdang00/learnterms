@@ -4,6 +4,7 @@
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import NavBar from '$lib/components/NavBar.svelte';
+	import BadgeAwardModal from '$lib/components/BadgeAwardModal.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
 	import { setupConvex, useConvexClient } from 'convex-svelte';
@@ -35,7 +36,7 @@
 
 		const startTime = Date.now();
 		while (Date.now() - startTime < timeoutMs) {
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise((resolve) => setTimeout(resolve, 100));
 			if (window.Clerk?.session) return true;
 		}
 		return false;
@@ -200,4 +201,5 @@
 		{/if}
 	</div>
 	<Toast />
+	<BadgeAwardModal />
 </ClerkProvider>
