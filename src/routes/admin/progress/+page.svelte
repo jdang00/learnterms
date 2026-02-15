@@ -8,15 +8,16 @@
 		Users,
 		HelpCircle,
 		BookOpen,
-		Flag,
 		TrendingUp,
-		ExternalLink,
 		ChevronRight,
 		Shield,
 		PenTool,
-		Zap
+		Zap,
+		BarChart3,
+		LayoutDashboard
 	} from 'lucide-svelte';
 	import StudentDetailModal from '$lib/admin/StudentDetailModal.svelte';
+	import CuratorModuleAnalytics from '$lib/admin/CuratorModuleAnalytics.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
@@ -24,22 +25,16 @@
 	const isDev = $derived(userData?.role === 'dev');
 	const isAdmin = $derived(userData?.role === 'dev' || userData?.role === 'admin');
 
-	async function updateRole(userId: Id<'users'>, role: string) {
+	async function updateRole(userId: Id<'users'>, role: 'dev' | 'admin' | 'curator' | null) {
 		await client.mutation(api.users.updateUserRole, {
 			userId,
-			role: role === '' ? null : role as 'admin' | 'curator'
+			role
 		});
 	}
 
-	// Modal state
 	let isStudentModalOpen = $state(false);
 	let selectedStudentId = $state<Id<'users'> | null>(null);
-
-	const selectedStudent = $derived(
-		selectedStudentId && studentsWithProgress.data
-			? studentsWithProgress.data.find((s) => s._id === selectedStudentId) ?? null
-			: null
-	);
+	let activeTab = $state<'overview' | 'analytics' | 'students'>('overview');
 
 	function openStudentModal(student: (typeof filteredStudents)[number]) {
 		selectedStudentId = student._id;
@@ -51,7 +46,6 @@
 		selectedStudentId = null;
 	}
 
-	// Real queries - students and stats
 	const cohortStats = userData?.cohortId
 		? useQuery(api.progress.getCohortProgressStats, {
 				cohortId: userData.cohortId as Id<'cohort'>
@@ -60,47 +54,13 @@
 
 	const studentsWithProgress = userData?.cohortId
 		? useQuery(api.progress.getStudentsWithProgress, {
-				cohortId: userData.cohortId as Id<'cohort'>
+				cohortId: userData.cohortId as Id<'cohort'>,
+				includeSubscription: false
 			})
 		: { data: undefined, isLoading: false, error: null };
 
-	// Semester filter state
-	let selectedSemesterId = $state<Id<'semester'> | undefined>(undefined);
-
-	// Get available semesters for the cohort
-	const semesters = userData?.cohortId
-		? useQuery(api.progress.getSemestersForCohort, {
-				cohortId: userData.cohortId as Id<'cohort'>
-			})
-		: { data: undefined, isLoading: false, error: null };
-
-	// Get top flagged questions (filtered by semester if selected)
-	const topFlaggedQuestions = $derived(
-		userData?.cohortId
-			? useQuery(api.progress.getTopFlaggedQuestions, {
-					cohortId: userData.cohortId as Id<'cohort'>,
-					semesterId: selectedSemesterId,
-					limit: 10
-				})
-			: { data: undefined, isLoading: false, error: null }
-	);
-
-	// Search and filter state
 	let searchQuery = $state('');
 
-	// Strip HTML tags from question stem for display
-	function stripHtml(html: string): string {
-		return html.replace(/<[^>]*>/g, '').trim();
-	}
-
-	// Truncate text to a max length
-	function truncate(text: string, maxLength: number = 100): string {
-		const stripped = stripHtml(text);
-		if (stripped.length <= maxLength) return stripped;
-		return stripped.slice(0, maxLength) + '...';
-	}
-
-	// Filter students based on search
 	const filteredStudents = $derived(
 		studentsWithProgress.data?.filter((student) => {
 			const query = searchQuery.toLowerCase();
@@ -113,7 +73,22 @@
 		}) ?? []
 	);
 
-	// Format relative time
+	const activeLearners = $derived(
+		studentsWithProgress.data?.filter((student) => student.questionsInteracted > 0).length ?? 0
+	);
+
+	const activeLearnerRate = $derived(
+		cohortStats.data?.totalStudents
+			? Math.round((activeLearners / cohortStats.data.totalStudents) * 100)
+			: 0
+	);
+
+	const selectedStudent = $derived(
+		selectedStudentId && studentsWithProgress.data
+			? (studentsWithProgress.data.find((student) => student._id === selectedStudentId) ?? null)
+			: null
+	);
+
 	function formatRelativeTime(timestamp: number | null | undefined): string {
 		if (!timestamp) return 'Never';
 		const now = Date.now();
@@ -131,166 +106,154 @@
 	}
 </script>
 
-<div class="min-h-screen p-8 max-w-7xl mx-auto">
+<div class="min-h-screen p-4 sm:p-8 max-w-7xl mx-auto">
 	<!-- Header -->
-	<a class="btn mb-4 btn-ghost" href="/admin">
+	<a class="btn btn-ghost btn-sm mb-3" href="/admin">
 		<ArrowLeft size={16} />
 		Back
 	</a>
 
-	<div class="mb-8">
-		<div>
-			<h1 class="text-2xl sm:text-3xl font-bold text-base-content">Class Progress</h1>
-			<p class="text-base-content/70">
-				{userData?.schoolName} - {userData?.cohortName}
-			</p>
-		</div>
+	<div class="mb-6">
+		<h1 class="text-2xl font-bold text-base-content">Class Progress</h1>
+		<p class="text-sm text-base-content/60">
+			{userData?.schoolName} &middot; {userData?.cohortName}
+		</p>
 	</div>
 
-	<!-- Stats Overview -->
-	{#if cohortStats.isLoading}
-		<div class="stats stats-vertical sm:stats-horizontal shadow-sm border border-base-300 w-full mb-8 animate-pulse rounded-xl">
-			<div class="stat"><div class="stat-value">...</div></div>
-			<div class="stat"><div class="stat-value">...</div></div>
-			<div class="stat"><div class="stat-value">...</div></div>
-			<div class="stat"><div class="stat-value">...</div></div>
-		</div>
-	{:else if cohortStats.error}
-		<div class="alert alert-error mb-8 rounded-xl">Failed to load stats: {cohortStats.error.message}</div>
+	<!-- Tabs -->
+	<div role="tablist" class="tabs tabs-boxed bg-base-200 mb-6 w-fit">
+		<button
+			role="tab"
+			class="tab gap-2 transition-all"
+			class:tab-active={activeTab === 'overview'}
+			onclick={() => (activeTab = 'overview')}
+		>
+			<LayoutDashboard size={14} />
+			Overview
+		</button>
+		<button
+			role="tab"
+			class="tab gap-2 transition-all"
+			class:tab-active={activeTab === 'analytics'}
+			onclick={() => (activeTab = 'analytics')}
+		>
+			<BarChart3 size={14} />
+			Module Analytics
+		</button>
+		<button
+			role="tab"
+			class="tab gap-2 transition-all"
+			class:tab-active={activeTab === 'students'}
+			onclick={() => (activeTab = 'students')}
+		>
+			<Users size={14} />
+			Students
+			{#if cohortStats.data}
+				<span class="badge badge-ghost badge-xs">{cohortStats.data.totalStudents}</span>
+			{/if}
+		</button>
+	</div>
+
+	<!-- Tab Content -->
+	{#if activeTab === 'overview'}
+		<!-- Overview Tab -->
+		{#if cohortStats.isLoading}
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+				{#each Array(4) as _}
+					<div class="bg-base-100 rounded-xl border border-base-300 p-5 animate-pulse">
+						<div class="skeleton h-4 w-20 mb-2"></div>
+						<div class="skeleton h-8 w-16"></div>
+					</div>
+				{/each}
+			</div>
+		{:else if cohortStats.error}
+			<div class="alert alert-error rounded-xl">
+				Failed to load stats: {cohortStats.error.message}
+			</div>
+		{:else}
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
+					<div class="flex items-center justify-between mb-1">
+						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide">Students</span>
+						<Users size={16} class="text-primary" />
+					</div>
+					<div class="text-3xl font-bold text-primary">{cohortStats.data?.totalStudents ?? 0}</div>
+					<p class="text-xs text-base-content/50 mt-1">Enrolled in cohort</p>
+				</div>
+
+				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
+					<div class="flex items-center justify-between mb-1">
+						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide">Questions</span>
+						<HelpCircle size={16} class="text-secondary" />
+					</div>
+					<div class="text-3xl font-bold text-secondary">{cohortStats.data?.totalQuestions ?? 0}</div>
+					<p class="text-xs text-base-content/50 mt-1">Across all modules</p>
+				</div>
+
+				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
+					<div class="flex items-center justify-between mb-1">
+						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide">Modules</span>
+						<BookOpen size={16} class="text-accent" />
+					</div>
+					<div class="text-3xl font-bold text-accent">{cohortStats.data?.totalModules ?? 0}</div>
+					<p class="text-xs text-base-content/50 mt-1">Active learning modules</p>
+				</div>
+
+				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
+					<div class="flex items-center justify-between mb-1">
+						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide">Active Learners</span>
+						<TrendingUp size={16} class="text-success" />
+					</div>
+					<div class="text-3xl font-bold text-success">{activeLearners}</div>
+					<p class="text-xs text-base-content/50 mt-1">{activeLearnerRate}% engagement rate</p>
+				</div>
+			</div>
+
+			<!-- Quick Actions -->
+			<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+				<button
+					class="bg-base-100 rounded-xl border border-base-300 p-4 text-left hover:border-primary/40 hover:shadow-md transition-all group cursor-pointer"
+					onclick={() => (activeTab = 'analytics')}
+				>
+					<div class="flex items-center gap-3">
+						<div class="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+							<BarChart3 size={20} />
+						</div>
+						<div>
+							<p class="font-medium text-sm">Module Analytics</p>
+							<p class="text-xs text-base-content/50">Drill into question-level data per module</p>
+						</div>
+						<ChevronRight size={16} class="ml-auto text-base-content/30 group-hover:text-primary transition-colors" />
+					</div>
+				</button>
+				<button
+					class="bg-base-100 rounded-xl border border-base-300 p-4 text-left hover:border-primary/40 hover:shadow-md transition-all group cursor-pointer"
+					onclick={() => (activeTab = 'students')}
+				>
+					<div class="flex items-center gap-3">
+						<div class="p-2 rounded-lg bg-secondary/10 text-secondary group-hover:bg-secondary/20 transition-colors">
+							<Users size={20} />
+						</div>
+						<div>
+							<p class="font-medium text-sm">Student Roster</p>
+							<p class="text-xs text-base-content/50">View individual student progress and roles</p>
+						</div>
+						<ChevronRight size={16} class="ml-auto text-base-content/30 group-hover:text-primary transition-colors" />
+					</div>
+				</button>
+			</div>
+		{/if}
+	{:else if activeTab === 'analytics'}
+		{#if userData?.cohortId}
+			<CuratorModuleAnalytics cohortId={userData.cohortId as Id<'cohort'>} />
+		{/if}
 	{:else}
-		<div class="stats stats-vertical sm:stats-horizontal shadow-sm border border-base-300 w-full mb-8 rounded-xl">
-			<div class="stat">
-				<div class="stat-figure text-primary">
-					<Users size={24} />
-				</div>
-				<div class="stat-title">Total Students</div>
-				<div class="stat-value text-primary">{cohortStats.data?.totalStudents ?? 0}</div>
-				<div class="stat-desc">Enrolled in cohort</div>
-			</div>
-
-			<div class="stat">
-				<div class="stat-figure text-secondary">
-					<HelpCircle size={24} />
-				</div>
-				<div class="stat-title">Total Questions</div>
-				<div class="stat-value text-secondary">{cohortStats.data?.totalQuestions ?? 0}</div>
-				<div class="stat-desc">Across all modules</div>
-			</div>
-
-			<div class="stat">
-				<div class="stat-figure text-accent">
-					<BookOpen size={24} />
-				</div>
-				<div class="stat-title">Modules</div>
-				<div class="stat-value text-accent">{cohortStats.data?.totalModules ?? 0}</div>
-				<div class="stat-desc">Active learning modules</div>
-			</div>
-
-			<div class="stat">
-				<div class="stat-figure text-success">
-					<TrendingUp size={24} />
-				</div>
-				<div class="stat-title">Avg. Completion</div>
-				<div class="stat-value text-success">{cohortStats.data?.averageCompletion ?? 0}%</div>
-				<div class="stat-desc">Class average</div>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Two Column Layout -->
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-		<!-- Completion by Module -->
-		<div class="card bg-base-100 shadow-sm border border-base-300 rounded-xl">
-			<div class="card-body">
-				<h2 class="card-title text-lg mb-4">
-					<BookOpen size={20} />
-					Completion by Module
-				</h2>
-				<div class="text-center py-8 text-base-content/60">
-					<BookOpen size={32} class="mx-auto mb-2 opacity-50" />
-					<p>Module progress coming soon</p>
-				</div>
-			</div>
-		</div>
-
-		<!-- Top Flagged Questions -->
-		<div class="card bg-base-100 shadow-sm border border-base-300 rounded-xl">
-			<div class="card-body">
-				<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
-					<h2 class="card-title text-lg">
-						<Flag size={20} class="text-warning" />
-						Top Flagged Questions
-					</h2>
-					<!-- Semester Filter -->
-					{#if semesters.data && semesters.data.length > 1}
-						<select
-							class="select select-bordered select-sm w-full sm:w-auto"
-							bind:value={selectedSemesterId}
-						>
-							<option value={undefined}>All Semesters</option>
-							{#each semesters.data as semester}
-								<option value={semester._id}>{semester.name}</option>
-							{/each}
-						</select>
-					{/if}
-				</div>
-
-				{#if topFlaggedQuestions.isLoading}
-					<div class="flex items-center justify-center py-8">
-						<span class="loading loading-spinner loading-md"></span>
-					</div>
-				{:else if topFlaggedQuestions.error}
-					<div class="alert alert-error text-sm">
-						Failed to load flagged questions
-					</div>
-				{:else if !topFlaggedQuestions.data || topFlaggedQuestions.data.length === 0}
-					<div class="text-center py-8 text-base-content/60">
-						<Flag size={32} class="mx-auto mb-2 opacity-50" />
-						<p>No flagged questions yet</p>
-						<p class="text-sm mt-1">Questions flagged by students will appear here</p>
-					</div>
-				{:else}
-					<div class="space-y-3 max-h-96 overflow-y-auto">
-						{#each topFlaggedQuestions.data as question, index}
-							<div class="flex items-start gap-3 p-3 rounded-lg bg-base-200/50 hover:bg-base-200 transition-colors">
-								<div class="flex-shrink-0 w-8 h-8 rounded-full bg-warning/20 text-warning flex items-center justify-center font-semibold text-sm">
-									{question.flagCount}
-								</div>
-								<div class="flex-1 min-w-0">
-									<p class="text-sm font-medium line-clamp-2" title={stripHtml(question.stem)}>
-										{truncate(question.stem, 120)}
-									</p>
-									<div class="flex items-center gap-2 mt-1 text-xs text-base-content/60">
-										<span class="badge badge-ghost badge-xs">{question.className}</span>
-										<span>·</span>
-										<span>{question.moduleTitle}</span>
-									</div>
-								</div>
-								<a
-									href={`/classes/${question.classId}/modules/${question.moduleId}`}
-									class="btn btn-ghost btn-xs btn-circle flex-shrink-0"
-									title="View question"
-								>
-									<ExternalLink size={14} />
-								</a>
-							</div>
-						{/each}
-					</div>
-				{/if}
-			</div>
-		</div>
-	</div>
-
-	<!-- Students in Class -->
-	<div class="card bg-base-100 shadow-sm border border-base-300 mt-8 rounded-xl">
-		<div class="card-body">
-			<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-				<h2 class="card-title text-lg">
-					<Users size={20} />
+		<!-- Students Tab -->
+		<div class="bg-base-100 rounded-xl border border-base-300 shadow-sm">
+			<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-4 border-b border-base-300">
+				<h2 class="font-semibold flex items-center gap-2">
+					<Users size={18} />
 					Students in Cohort
-					{#if cohortStats.data}
-						<span class="badge badge-ghost">{cohortStats.data.totalStudents}</span>
-					{/if}
 				</h2>
 				<input
 					type="text"
@@ -305,16 +268,16 @@
 					<span class="loading loading-spinner loading-lg"></span>
 				</div>
 			{:else if studentsWithProgress.error}
-				<div class="alert alert-error">
+				<div class="alert alert-error m-4">
 					Failed to load students: {studentsWithProgress.error.message}
 				</div>
 			{:else if filteredStudents.length === 0}
 				<div class="text-center py-12 text-base-content/60">
-					<Users size={48} class="mx-auto mb-4 opacity-50" />
+					<Users size={40} class="mx-auto mb-3 opacity-40" />
 					{#if searchQuery}
-						<p>No students match "{searchQuery}"</p>
+						<p class="text-sm">No students match "{searchQuery}"</p>
 					{:else}
-						<p>No students in this cohort yet</p>
+						<p class="text-sm">No students in this cohort yet</p>
 					{/if}
 				</div>
 			{:else}
@@ -331,82 +294,69 @@
 						</thead>
 						<tbody>
 							{#each filteredStudents as student (student._id)}
-								<tr
-									class="hover cursor-pointer"
-									onclick={() => openStudentModal(student)}
-								>
+								<tr class="hover cursor-pointer" onclick={() => openStudentModal(student)}>
 									<td>
 										<div class="flex items-center gap-3">
 											{#if student.imageUrl}
 												<div class="avatar">
-													<div class="w-10 h-10 rounded-full">
+													<div class="w-9 h-9 rounded-full">
 														<img src={student.imageUrl} alt={student.name} />
 													</div>
 												</div>
 											{:else}
 												<div class="avatar placeholder">
-													<div class="bg-neutral text-neutral-content w-10 rounded-full">
-														<span class="text-sm">
-															{student.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+													<div class="bg-neutral text-neutral-content w-9 h-9 rounded-full">
+														<span class="text-xs">
+															{student.name
+																.split(' ')
+																.map((n) => n[0])
+																.join('')
+																.slice(0, 2)
+																.toUpperCase()}
 														</span>
 													</div>
 												</div>
 											{/if}
 											<div>
-												<div class="font-medium">
-													{student.name}
-												</div>
+												<div class="font-medium text-sm">{student.name}</div>
 												{#if student.email}
-													<div class="text-xs text-base-content/60">{student.email}</div>
+													<div class="text-xs text-base-content/50">{student.email}</div>
 												{/if}
 											</div>
 										</div>
 									</td>
 									<td>
-										<div class="flex items-center gap-2">
+										<div class="flex items-center gap-1.5">
 											{#if student.role === 'dev'}
-												<div class="tooltip" data-tip="Developer">
-													<span class="badge badge-warning badge-sm px-2 gap-1 cursor-help">
-														<Shield size={12} /> dev
-													</span>
-												</div>
+												<span class="badge badge-warning badge-xs gap-1">
+													<Shield size={10} /> dev
+												</span>
 											{:else if student.role === 'admin'}
-												<div class="tooltip" data-tip="Admin">
-													<span class="badge badge-primary badge-sm px-2 gap-1 cursor-help">
-														<Shield size={12} /> admin
-													</span>
-												</div>
+												<span class="badge badge-primary badge-xs gap-1">
+													<Shield size={10} /> admin
+												</span>
 											{:else if student.role === 'curator'}
-												<div class="tooltip" data-tip="Curator">
-													<span class="badge badge-info badge-sm px-2 gap-1 cursor-help">
-														<PenTool size={12} /> curator
-													</span>
-												</div>
+												<span class="badge badge-info badge-xs gap-1">
+													<PenTool size={10} /> curator
+												</span>
 											{:else}
-												<span class="text-xs text-base-content/40 italic">Student</span>
+												<span class="text-xs text-base-content/40">Student</span>
 											{/if}
-
 											{#if student.isPro}
-												<div class="tooltip" data-tip="Pro Plan">
-													<span class="badge badge-secondary badge-sm px-2 gap-1 cursor-help">
-														<Zap size={12} fill="currentColor" /> pro
-													</span>
-												</div>
+												<span class="badge badge-secondary badge-xs gap-1">
+													<Zap size={10} fill="currentColor" /> pro
+												</span>
 											{/if}
 										</div>
 									</td>
-									<td>
-										<div class="text-sm">
-											{formatRelativeTime(student.lastSignInAt)}
-										</div>
+									<td class="text-sm text-base-content/70">
+										{formatRelativeTime(student.lastSignInAt)}
+									</td>
+									<td class="text-sm text-base-content/70">
+										{student.createdAt ? new Date(student.createdAt).toLocaleDateString() : '—'}
 									</td>
 									<td>
-										<div class="text-sm">
-											{student.createdAt ? new Date(student.createdAt).toLocaleDateString() : '—'}
-										</div>
-									</td>
-									<td>
-										<ChevronRight size={16} class="text-base-content/40" />
+										<ChevronRight size={14} class="text-base-content/30" />
 									</td>
 								</tr>
 							{/each}
@@ -415,10 +365,9 @@
 				</div>
 			{/if}
 		</div>
-	</div>
+	{/if}
 </div>
 
-<!-- Student Detail Modal -->
 {#if userData?.cohortId}
 	<StudentDetailModal
 		isOpen={isStudentModalOpen}

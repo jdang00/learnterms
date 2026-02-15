@@ -50,8 +50,12 @@ export const getStudentCountByCohort = authQuery({
  * Falls back to computing if stats haven't been backfilled yet.
  */
 export const getStudentsWithProgress = authQuery({
-	args: { cohortId: v.id('cohort') },
+	args: {
+		cohortId: v.id('cohort'),
+		includeSubscription: v.optional(v.boolean())
+	},
 	handler: async (ctx, args) => {
+		const includeSubscription = args.includeSubscription ?? false;
 		// Get all students in the cohort using index
 		const students = await ctx.db
 			.query('users')
@@ -64,20 +68,18 @@ export const getStudentsWithProgress = authQuery({
 		const totalQuestionsInCohort = cohort?.stats?.totalQuestions ?? 0;
 
 		// Map students to progress data using precomputed stats
-		// Also fetch subscription status for each student
 		const studentsWithProgress = await Promise.all(
 			students.map(async (student) => {
-				// Get subscription status from Polar
 				let isPro = false;
-				try {
-					const subscription = await polar.getCurrentSubscription(ctx, {
-						userId: student._id
-					});
-					isPro =
-						subscription?.status === 'active' ||
-						subscription?.status === 'trialing';
-				} catch {
-					isPro = false;
+				if (includeSubscription) {
+					try {
+						const subscription = await polar.getCurrentSubscription(ctx, {
+							userId: student._id
+						});
+						isPro = subscription?.status === 'active' || subscription?.status === 'trialing';
+					} catch {
+						isPro = false;
+					}
 				}
 
 				// Use precomputed progressStats if available
@@ -85,9 +87,7 @@ export const getStudentsWithProgress = authQuery({
 					const totalQuestions = student.progressStats.totalQuestions || totalQuestionsInCohort;
 					const progressPercentage =
 						totalQuestions > 0
-							? Math.round(
-									(student.progressStats.questionsInteracted / totalQuestions) * 100
-								)
+							? Math.round((student.progressStats.questionsInteracted / totalQuestions) * 100)
 							: 0;
 
 					return {
@@ -203,8 +203,7 @@ export const getCohortProgressStats = authQuery({
 				if (student.progressStats) {
 					const pct =
 						student.progressStats.totalQuestions > 0
-							? (student.progressStats.questionsInteracted /
-									student.progressStats.totalQuestions) *
+							? (student.progressStats.questionsInteracted / student.progressStats.totalQuestions) *
 								100
 							: 0;
 					totalProgressSum += pct;
@@ -212,14 +211,247 @@ export const getCohortProgressStats = authQuery({
 			}
 		}
 
-		const averageCompletion =
-			totalStudents > 0 ? Math.round(totalProgressSum / totalStudents) : 0;
+		const averageCompletion = totalStudents > 0 ? Math.round(totalProgressSum / totalStudents) : 0;
 
 		return {
 			totalStudents,
 			totalQuestions,
 			totalModules,
 			averageCompletion
+		};
+	}
+});
+
+export const getModuleCompletionStats = authQuery({
+	args: {
+		cohortId: v.id('cohort'),
+		semesterId: v.optional(v.id('semester')),
+		limit: v.optional(v.number()),
+		offset: v.optional(v.number())
+	},
+	handler: async (ctx, args) => {
+		const limit = Math.max(1, Math.min(args.limit ?? 8, 50));
+		const offset = Math.max(0, args.offset ?? 0);
+
+		const students = await ctx.db
+			.query('users')
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
+			.filter((q) => q.eq(q.field('deletedAt'), undefined))
+			.collect();
+		const totalStudents = students.length;
+		const studentIds = new Set(students.map((student) => student._id));
+
+		let classes = await ctx.db
+			.query('class')
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
+			.collect();
+
+		if (args.semesterId) {
+			classes = classes.filter((classItem) => classItem.semesterId === args.semesterId);
+		}
+
+		if (classes.length === 0) {
+			return {
+				totalStudents,
+				totalModules: 0,
+				averageCompletion: 0,
+				modules: [],
+				page: { offset, limit, hasMore: false, nextOffset: null }
+			};
+		}
+
+		const classMap = new Map(classes.map((classItem) => [classItem._id, classItem]));
+
+		const modules: Doc<'module'>[] = [];
+		for (const classItem of classes) {
+			const classModules = await ctx.db
+				.query('module')
+				.withIndex('by_classId', (q) => q.eq('classId', classItem._id))
+				.filter((q) => q.eq(q.field('deletedAt'), undefined))
+				.collect();
+			modules.push(...classModules);
+		}
+
+		if (modules.length === 0) {
+			return {
+				totalStudents,
+				totalModules: 0,
+				averageCompletion: 0,
+				modules: [],
+				page: { offset, limit, hasMore: false, nextOffset: null }
+			};
+		}
+
+		if (totalStudents === 0) {
+			const rankedModules = modules
+				.map((module) => {
+					const classItem = classMap.get(module.classId);
+					return {
+						moduleId: module._id,
+						moduleTitle: module.title,
+						moduleEmoji: module.emoji,
+						moduleOrder: module.order,
+						classId: module.classId,
+						className: classItem?.name ?? 'Unknown',
+						totalQuestions: module.questionCount ?? 0,
+						totalStudents: 0,
+						possibleInteractions: 0,
+						questionsInteracted: 0,
+						questionsMastered: 0,
+						questionsFlagged: 0,
+						activeStudents: 0,
+						completion: 0,
+						mastery: 0
+					};
+				})
+				.sort((a, b) => {
+					if (a.className !== b.className) return a.className.localeCompare(b.className);
+					return a.moduleOrder - b.moduleOrder;
+				});
+
+			const pageModules = rankedModules.slice(offset, offset + limit);
+			const hasMore = offset + limit < rankedModules.length;
+			const nextOffset = hasMore ? offset + limit : null;
+
+			return {
+				totalStudents: 0,
+				totalModules: rankedModules.length,
+				averageCompletion: 0,
+				modules: pageModules,
+				page: {
+					offset,
+					limit,
+					hasMore,
+					nextOffset
+				}
+			};
+		}
+
+		type ModuleAccumulator = {
+			questionsInteracted: number;
+			questionsMastered: number;
+			questionsFlagged: number;
+			activeStudentIds: Set<Id<'users'>>;
+		};
+
+		const moduleStatsMap = new Map<Id<'module'>, ModuleAccumulator>();
+		for (const module of modules) {
+			moduleStatsMap.set(module._id, {
+				questionsInteracted: 0,
+				questionsMastered: 0,
+				questionsFlagged: 0,
+				activeStudentIds: new Set<Id<'users'>>()
+			});
+		}
+
+		const questionToModuleId = new Map<Id<'question'>, Id<'module'>>();
+		for (const module of modules) {
+			if ((module.questionCount ?? 0) === 0) continue;
+
+			const questions = await ctx.db
+				.query('question')
+				.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
+				.collect();
+
+			for (const question of questions) {
+				if (!question.deletedAt) {
+					questionToModuleId.set(question._id, module._id);
+				}
+			}
+		}
+
+		for (const classItem of classes) {
+			const progressRecords = await ctx.db
+				.query('userProgress')
+				.withIndex('by_classId', (q) => q.eq('classId', classItem._id))
+				.filter((q) => q.eq(q.field('deletedAt'), undefined))
+				.collect();
+
+			for (const progress of progressRecords) {
+				if (!studentIds.has(progress.userId)) continue;
+
+				const moduleId = questionToModuleId.get(progress.questionId);
+				if (!moduleId) continue;
+
+				const moduleStats = moduleStatsMap.get(moduleId);
+				if (!moduleStats) continue;
+
+				const interacted =
+					progress.selectedOptions.length > 0 || progress.eliminatedOptions.length > 0;
+				if (interacted) {
+					moduleStats.questionsInteracted++;
+					moduleStats.activeStudentIds.add(progress.userId);
+				}
+				if (progress.isMastered) moduleStats.questionsMastered++;
+				if (progress.isFlagged) moduleStats.questionsFlagged++;
+			}
+		}
+
+		const rankedModules = modules
+			.map((module) => {
+				const classItem = classMap.get(module.classId);
+				const moduleStats = moduleStatsMap.get(module._id);
+				const totalQuestions = module.questionCount ?? 0;
+				const possibleInteractions = totalQuestions * totalStudents;
+				const questionsInteracted = moduleStats?.questionsInteracted ?? 0;
+				const questionsMastered = moduleStats?.questionsMastered ?? 0;
+				const questionsFlagged = moduleStats?.questionsFlagged ?? 0;
+				const activeStudents = moduleStats?.activeStudentIds.size ?? 0;
+				const completion =
+					possibleInteractions > 0
+						? Math.round((questionsInteracted / possibleInteractions) * 100)
+						: 0;
+				const mastery =
+					possibleInteractions > 0
+						? Math.round((questionsMastered / possibleInteractions) * 100)
+						: 0;
+
+				return {
+					moduleId: module._id,
+					moduleTitle: module.title,
+					moduleEmoji: module.emoji,
+					moduleOrder: module.order,
+					classId: module.classId,
+					className: classItem?.name ?? 'Unknown',
+					totalQuestions,
+					totalStudents,
+					possibleInteractions,
+					questionsInteracted,
+					questionsMastered,
+					questionsFlagged,
+					activeStudents,
+					completion,
+					mastery
+				};
+			})
+			.sort((a, b) => {
+				if (a.completion !== b.completion) return a.completion - b.completion;
+				if (a.className !== b.className) return a.className.localeCompare(b.className);
+				return a.moduleOrder - b.moduleOrder;
+			});
+
+		const averageCompletion =
+			rankedModules.length > 0
+				? Math.round(
+						rankedModules.reduce((sum, module) => sum + module.completion, 0) / rankedModules.length
+					)
+				: 0;
+
+		const pageModules = rankedModules.slice(offset, offset + limit);
+		const hasMore = offset + limit < rankedModules.length;
+		const nextOffset = hasMore ? offset + limit : null;
+
+		return {
+			totalStudents,
+			totalModules: rankedModules.length,
+			averageCompletion,
+			modules: pageModules,
+			page: {
+				offset,
+				limit,
+				hasMore,
+				nextOffset
+			}
 		};
 	}
 });
@@ -241,30 +473,24 @@ export const getTopFlaggedQuestions = authQuery({
 		limit: v.optional(v.number())
 	},
 	handler: async (ctx, args) => {
-		const limit = args.limit ?? 10;
+		const limit = Math.max(1, Math.min(args.limit ?? 10, 50));
 
-		// Get all classes in cohort
 		let classes = await ctx.db
 			.query('class')
 			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
 			.collect();
 
-		// Filter by semester if provided
 		if (args.semesterId) {
 			classes = classes.filter((c) => c.semesterId === args.semesterId);
 		}
 
-		if (classes.length === 0) {
-			return [];
-		}
+		if (classes.length === 0) return [];
 
-		// Build a map of classId -> class for lookup
 		const classMap = new Map<string, Doc<'class'>>();
-		for (const c of classes) {
-			classMap.set(c._id, c);
+		for (const classItem of classes) {
+			classMap.set(classItem._id, classItem);
 		}
 
-		// Get all modules for these classes
 		const modules: Doc<'module'>[] = [];
 		for (const classItem of classes) {
 			const classModules = await ctx.db
@@ -274,17 +500,8 @@ export const getTopFlaggedQuestions = authQuery({
 			modules.push(...classModules);
 		}
 
-		if (modules.length === 0) {
-			return [];
-		}
+		if (modules.length === 0) return [];
 
-		// Build a map of moduleId -> module for lookup
-		const moduleMap = new Map<string, Doc<'module'>>();
-		for (const m of modules) {
-			moduleMap.set(m._id, m);
-		}
-
-		// Collect all questions with flagCount > 0 from these modules
 		type QuestionWithContext = {
 			_id: Id<'question'>;
 			stem: string;
@@ -296,24 +513,25 @@ export const getTopFlaggedQuestions = authQuery({
 			className: string;
 		};
 
-		const flaggedQuestions: QuestionWithContext[] = [];
+		const candidates: QuestionWithContext[] = [];
+		const perModuleFetch = Math.min(limit, 20);
 
 		for (const module of modules) {
-			// Query questions for this module, filtering for those with flags
-			const questions = await ctx.db
+			const topByFlags = await ctx.db
 				.query('question')
-				.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
-				.filter((q) => q.gt(q.field('flagCount'), 0))
-				.collect();
+				.withIndex('by_moduleId_flagCount', (q) => q.eq('moduleId', module._id))
+				.order('desc')
+				.take(perModuleFetch);
 
 			const classItem = classMap.get(module.classId);
-
-			for (const question of questions) {
-				flaggedQuestions.push({
+			for (const question of topByFlags) {
+				const flagCount = question.flagCount ?? 0;
+				if (flagCount <= 0) continue;
+				candidates.push({
 					_id: question._id,
 					stem: question.stem,
 					type: question.type,
-					flagCount: question.flagCount ?? 0,
+					flagCount,
 					moduleId: module._id,
 					moduleTitle: module.title,
 					classId: module.classId,
@@ -322,10 +540,8 @@ export const getTopFlaggedQuestions = authQuery({
 			}
 		}
 
-		// Sort by flagCount descending and take top N
-		flaggedQuestions.sort((a, b) => b.flagCount - a.flagCount);
-
-		return flaggedQuestions.slice(0, limit);
+		candidates.sort((a, b) => b.flagCount - a.flagCount);
+		return candidates.slice(0, limit);
 	}
 });
 
@@ -345,9 +561,7 @@ export const getSemestersForCohort = authQuery({
 		const semesterIds = [...new Set(classes.map((c) => c.semesterId))];
 
 		// Fetch semester details
-		const semesters = await Promise.all(
-			semesterIds.map((id) => ctx.db.get(id))
-		);
+		const semesters = await Promise.all(semesterIds.map((id) => ctx.db.get(id)));
 
 		return semesters
 			.filter((s): s is Doc<'semester'> => s !== null)
@@ -415,9 +629,7 @@ export const getUserModuleStats = authQuery({
 				// We need to know which module each progress record belongs to
 				// Get question -> module mapping only for questions the user has progress on
 				const questionIds = progressRecords.map((r) => r.questionId);
-				const questions = await Promise.all(
-					questionIds.map((qId) => ctx.db.get(qId))
-				);
+				const questions = await Promise.all(questionIds.map((qId) => ctx.db.get(qId)));
 
 				// Build moduleId -> progress records map
 				const progressByModule = new Map<string, typeof progressRecords>();

@@ -165,15 +165,15 @@
 		<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
 				<a
-					class="btn btn-ghost font-bold"
+					class="btn btn-ghost font-bold rounded-full"
 					href={`/classes?classId=${classId}`}
 				>
 					<ChevronLeft size={16} /> MODULE {module.data.order + 1}
 				</a>
 			</h4>
-			<h2 class="font-semibold text-3xl mt-2 flex items-center gap-3 min-w-0">
-				<span class="text-3xl">{module.data?.emoji || '📘'}</span>
-				<span class="whitespace-pre-line">{module.data.title}</span>
+			<h2 class="font-semibold text-2xl mt-2 flex items-start gap-3 min-w-0">
+				<span class="text-2xl shrink-0">{module.data?.emoji || '📘'}</span>
+				<span class="break-words hyphens-auto overflow-hidden">{module.data.title}</span>
 			</h2>
 			<p class="text-base-content/70 mt-2 break-words hyphens-auto">{module.data.description}</p>
 
@@ -189,7 +189,7 @@
 
 		<div class="flex flex-col justify-center m-4">
 			{#if media && media.data && media.data.length > 0}
-				<div class="card bg-base-100 shadow-xl mt-8 lg:mt-12">
+				<div class="card bg-base-100 shadow-xl mt-8 lg:mt-12 rounded-2xl">
 					<div class="card-body">
 						<h3 class="card-title">Attachments</h3>
 						<div class="grid grid-cols-2 gap-3 mt-2">
@@ -235,7 +235,7 @@
 					const t = currentlySelected.explanation.trim().toLowerCase();
 					return t.length > 0 && t !== 'undefined' && t !== 'null';
 				})()}
-				<div class="card bg-base-100 shadow-xl mt-6">
+				<div class="card bg-base-100 shadow-xl mt-6 rounded-2xl">
 					<div class="card-body">
 						<div class="flex flex-row flex-wrap justify-between border-b pb-2">
 							<h2 class="card-title">Solution</h2>
@@ -256,7 +256,7 @@
 			{/if}
 
 			<div class="flex flex-row mt-6 justify-center">
-				<button class="btn btn-soft btn-sm" onclick={() => (isSettingsModalOpen = true)}>
+				<button class="btn btn-soft btn-sm rounded-full" onclick={() => (isSettingsModalOpen = true)}>
 					<Settings size={16} />
 					<span class="ml-1 hidden sm:inline">Settings</span>
 				</button>
@@ -427,7 +427,7 @@
  
 
 <dialog class="modal max-w-full p-4" class:modal-open={isInfoModalOpen}>
-	<div class="modal-box">
+	<div class="modal-box rounded-2xl">
 		<form method="dialog">
 			<button
 				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
@@ -439,13 +439,13 @@
 		<p class="font-2xl font-semibold">Module {module.data.order + 1}: {module.data.title}</p>
 		<p class="text-base-content/70">{module.data.description}</p>
 		<div class="modal-action">
-			<button class="btn" onclick={() => (isInfoModalOpen = false)}>Close</button>
+			<button class="btn rounded-full" onclick={() => (isInfoModalOpen = false)}>Close</button>
 		</div>
 	</div>
 </dialog>
 
 <dialog class="modal max-w-full p-4" class:modal-open={isSolutionModalOpen}>
-	<div class="modal-box">
+	<div class="modal-box rounded-2xl">
 		<form method="dialog">
 			<button
 				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
@@ -462,7 +462,7 @@
 <SettingsModal bind:qs bind:isOpen={isSettingsModalOpen} />
 
 <dialog class="modal max-w-full p-4 z-[1000]" class:modal-open={qs.isResetModalOpen}>
-	<div class="modal-box">
+	<div class="modal-box rounded-2xl">
 		<form method="dialog">
 			<button
 				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
@@ -476,16 +476,16 @@
 			Do you want to start over? All current progress for this module will be lost.
 		</p>
 		<div class="flex justify-end space-x-2">
-			<button class="btn btn-outline" onclick={() => (qs.isResetModalOpen = false)}>
+			<button class="btn btn-outline rounded-full" onclick={() => (qs.isResetModalOpen = false)}>
 				Cancel
 			</button>
-			<button class="btn btn-error" onclick={() => handleReset()}>Reset</button>
+			<button class="btn btn-error rounded-full" onclick={() => handleReset()}>Reset</button>
 		</div>
 	</div>
 </dialog>
 
 <dialog class="modal max-w-full p-4" class:modal-open={isAttachmentModalOpen}>
-	<div class="modal-box max-w-4xl w-full h-[90vh]">
+	<div class="modal-box max-w-4xl w-full h-[90vh] rounded-2xl">
 		<form method="dialog">
 			<button
 				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-10"
@@ -549,7 +549,7 @@
 				{/if}
 
 				<div class="flex justify-center gap-2 mt-4">
-					<button class="btn btn-sm btn-outline" onclick={handleZoomOut} aria-label="Zoom out">
+					<button class="btn btn-sm btn-outline btn-circle" onclick={handleZoomOut} aria-label="Zoom out">
 						<svg
 							class="w-4 h-4"
 							fill="none"
@@ -563,13 +563,13 @@
 						<span class="sr-only">Zoom out</span>
 					</button>
 					<button
-						class="btn btn-sm btn-outline"
+						class="btn btn-sm btn-outline rounded-full"
 						onclick={handleFitToScreen}
 						aria-label="Fit to screen"
 					>
 						<span class="text-xs">Fit</span>
 					</button>
-					<button class="btn btn-sm btn-outline" onclick={handleZoomIn} aria-label="Zoom in">
+					<button class="btn btn-sm btn-outline btn-circle" onclick={handleZoomIn} aria-label="Zoom in">
 						<svg
 							class="w-4 h-4"
 							fill="none"
