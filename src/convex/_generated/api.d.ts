@@ -9,6 +9,8 @@
  */
 
 import type * as authQueries from "../authQueries.js";
+import type * as badgeEngine from "../badgeEngine.js";
+import type * as badges from "../badges.js";
 import type * as chunkContent from "../chunkContent.js";
 import type * as class_ from "../class.js";
 import type * as cohort from "../cohort.js";
@@ -39,6 +41,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   authQueries: typeof authQueries;
+  badgeEngine: typeof badgeEngine;
+  badges: typeof badges;
   chunkContent: typeof chunkContent;
   class: typeof class_;
   cohort: typeof cohort;

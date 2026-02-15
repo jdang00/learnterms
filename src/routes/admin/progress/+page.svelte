@@ -14,7 +14,8 @@
 		PenTool,
 		Zap,
 		BarChart3,
-		LayoutDashboard
+		LayoutDashboard,
+		Award
 	} from 'lucide-svelte';
 	import StudentDetailModal from '$lib/admin/StudentDetailModal.svelte';
 	import CuratorModuleAnalytics from '$lib/admin/CuratorModuleAnalytics.svelte';
@@ -174,7 +175,9 @@
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
 					<div class="flex items-center justify-between mb-1">
-						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide">Students</span>
+						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide"
+							>Students</span
+						>
 						<Users size={16} class="text-primary" />
 					</div>
 					<div class="text-3xl font-bold text-primary">{cohortStats.data?.totalStudents ?? 0}</div>
@@ -183,16 +186,22 @@
 
 				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
 					<div class="flex items-center justify-between mb-1">
-						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide">Questions</span>
+						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide"
+							>Questions</span
+						>
 						<HelpCircle size={16} class="text-secondary" />
 					</div>
-					<div class="text-3xl font-bold text-secondary">{cohortStats.data?.totalQuestions ?? 0}</div>
+					<div class="text-3xl font-bold text-secondary">
+						{cohortStats.data?.totalQuestions ?? 0}
+					</div>
 					<p class="text-xs text-base-content/50 mt-1">Across all modules</p>
 				</div>
 
 				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
 					<div class="flex items-center justify-between mb-1">
-						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide">Modules</span>
+						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide"
+							>Modules</span
+						>
 						<BookOpen size={16} class="text-accent" />
 					</div>
 					<div class="text-3xl font-bold text-accent">{cohortStats.data?.totalModules ?? 0}</div>
@@ -201,7 +210,9 @@
 
 				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
 					<div class="flex items-center justify-between mb-1">
-						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide">Active Learners</span>
+						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide"
+							>Active Learners</span
+						>
 						<TrendingUp size={16} class="text-success" />
 					</div>
 					<div class="text-3xl font-bold text-success">{activeLearners}</div>
@@ -210,20 +221,25 @@
 			</div>
 
 			<!-- Quick Actions -->
-			<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+			<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 				<button
 					class="bg-base-100 rounded-xl border border-base-300 p-4 text-left hover:border-primary/40 hover:shadow-md transition-all group cursor-pointer"
 					onclick={() => (activeTab = 'analytics')}
 				>
 					<div class="flex items-center gap-3">
-						<div class="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+						<div
+							class="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors"
+						>
 							<BarChart3 size={20} />
 						</div>
 						<div>
 							<p class="font-medium text-sm">Module Analytics</p>
 							<p class="text-xs text-base-content/50">Drill into question-level data per module</p>
 						</div>
-						<ChevronRight size={16} class="ml-auto text-base-content/30 group-hover:text-primary transition-colors" />
+						<ChevronRight
+							size={16}
+							class="ml-auto text-base-content/30 group-hover:text-primary transition-colors"
+						/>
 					</div>
 				</button>
 				<button
@@ -231,16 +247,41 @@
 					onclick={() => (activeTab = 'students')}
 				>
 					<div class="flex items-center gap-3">
-						<div class="p-2 rounded-lg bg-secondary/10 text-secondary group-hover:bg-secondary/20 transition-colors">
+						<div
+							class="p-2 rounded-lg bg-secondary/10 text-secondary group-hover:bg-secondary/20 transition-colors"
+						>
 							<Users size={20} />
 						</div>
 						<div>
 							<p class="font-medium text-sm">Student Roster</p>
 							<p class="text-xs text-base-content/50">View individual student progress and roles</p>
 						</div>
-						<ChevronRight size={16} class="ml-auto text-base-content/30 group-hover:text-primary transition-colors" />
+						<ChevronRight
+							size={16}
+							class="ml-auto text-base-content/30 group-hover:text-primary transition-colors"
+						/>
 					</div>
 				</button>
+				<a
+					href="/admin/badges"
+					class="bg-base-100 rounded-xl border border-base-300 p-4 text-left hover:border-primary/40 hover:shadow-md transition-all group cursor-pointer"
+				>
+					<div class="flex items-center gap-3">
+						<div
+							class="p-2 rounded-lg bg-accent/10 text-accent group-hover:bg-accent/20 transition-colors"
+						>
+							<Award size={20} />
+						</div>
+						<div>
+							<p class="font-medium text-sm">Badge Catalog</p>
+							<p class="text-xs text-base-content/50">Manage and review badge definitions</p>
+						</div>
+						<ChevronRight
+							size={16}
+							class="ml-auto text-base-content/30 group-hover:text-primary transition-colors"
+						/>
+					</div>
+				</a>
 			</div>
 		{/if}
 	{:else if activeTab === 'analytics'}
@@ -250,7 +291,9 @@
 	{:else}
 		<!-- Students Tab -->
 		<div class="bg-base-100 rounded-xl border border-base-300 shadow-sm">
-			<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-4 border-b border-base-300">
+			<div
+				class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-4 border-b border-base-300"
+			>
 				<h2 class="font-semibold flex items-center gap-2">
 					<Users size={18} />
 					Students in Cohort
