@@ -198,8 +198,8 @@
 					LearnTerms is Smarter Studying, Simplified.
 				</h1>
 				<p class="mt-5 max-w-3xl text-lg text-base-content/80 sm:text-xl">
-					LearnTerms gives you a live quiz workspace for optics, anterior blepharitis, astigmatism,
-					and ocular disease where answers, flags, and progress sync instantly.
+					LearnTerms gives you a live quiz workspace where answers, flags, and progress sync
+					instantly, so every study session stays focused and uninterrupted.
 				</p>
 				<div class="mt-8 flex">
 					<a href="/sign-in" class="btn btn-primary rounded-full px-6">
