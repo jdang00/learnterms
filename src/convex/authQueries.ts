@@ -61,7 +61,8 @@ export const authCuratorMutation = customMutation(mutation, {
 	args: {},
 	input: async (ctx) => {
 		const { identity, role } = await getUserRole(ctx);
-		if (!identity || !(role === 'dev' || role === 'admin' || role === 'curator')) throw new Error('Unauthorized');
+		if (!identity || !(role === 'dev' || role === 'admin' || role === 'curator'))
+			throw new Error('Unauthorized');
 		return { ctx: { db: ctx.db, identity }, args: {} };
 	}
 });
@@ -99,7 +100,7 @@ export const switchCohort = mutation({
 	},
 	handler: async (ctx, args) => {
 		const { identity, role } = await getUserRole(ctx);
-		if (!identity || !(role === 'dev' || role === 'admin')) throw new Error('Unauthorized');
+		if (!identity || role !== 'dev') throw new Error('Unauthorized');
 
 		const user = await ctx.db
 			.query('users')

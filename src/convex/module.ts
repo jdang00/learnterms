@@ -1,6 +1,7 @@
 import { authQuery, authAdminMutation } from './authQueries';
 import { mutation } from './_generated/server';
 import { v } from 'convex/values';
+import type { Id } from './_generated/dataModel';
 
 type TagSummary = { _id: string; name: string; color?: string };
 
@@ -207,6 +208,11 @@ export const insertModule = authAdminMutation({
 			throw new Error('Module status must be draft, published, or archived');
 		}
 
+		const classDoc = await ctx.db.get(args.classId);
+		if (!classDoc) {
+			throw new Error('Class not found');
+		}
+
 		const existingModules = await ctx.db
 			.query('module')
 			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
@@ -224,7 +230,8 @@ export const insertModule = authAdminMutation({
 			title: trimmedTitle,
 			emoji: trimmedEmoji,
 			description: trimmedDescription,
-			status: trimmedStatus
+			status: trimmedStatus,
+			cohortId: classDoc.cohortId
 		});
 		return id;
 	}
@@ -349,6 +356,205 @@ export const getAllModules = authQuery({
 	handler: async (ctx) => {
 		const modules = await ctx.db.query('module').collect();
 		return modules;
+	}
+});
+
+function computeModuleSearchScore(
+	query: string,
+	moduleItem: { title: string; description: string; status: string }
+) {
+	const title = moduleItem.title.toLowerCase();
+	const description = moduleItem.description.toLowerCase();
+	let score = 0;
+
+	if (title === query) score += 280;
+	else if (title.startsWith(query)) score += 210;
+	else if (title.includes(query)) score += 145;
+
+	if (description.startsWith(query)) score += 80;
+	else if (description.includes(query)) score += 45;
+
+	if (moduleItem.status === 'published') score += 4;
+	return score;
+}
+
+async function assertCohortSearchAccess(
+	ctx: { db: any; identity: { subject: string } },
+	cohortId: Id<'cohort'>
+) {
+	const viewer = await ctx.db
+		.query('users')
+		.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', ctx.identity.subject))
+		.first();
+	if (!viewer) throw new Error('Unauthorized');
+	if (viewer.role !== 'dev' && viewer.cohortId !== cohortId) {
+		throw new Error('Unauthorized');
+	}
+}
+
+export const searchModulesByCohort = authQuery({
+	args: {
+		cohortId: v.id('cohort'),
+		query: v.string(),
+		limit: v.optional(v.number())
+	},
+	handler: async (ctx, { cohortId, query, limit }) => {
+		const trimmed = query.trim().toLowerCase();
+		if (trimmed.length < 3) return [];
+		await assertCohortSearchAccess(ctx, cohortId);
+
+		const max = Math.min(Math.max(limit ?? 16, 1), 50);
+		const searchWindow = Math.min(max * 4, 120);
+		const cohortClasses = await ctx.db
+			.query('class')
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', cohortId))
+			.collect();
+
+		if (cohortClasses.length === 0) return [];
+
+		const sortedClasses = cohortClasses
+			.filter((classItem) => !classItem.deletedAt)
+			.sort((a, b) => a.order - b.order);
+		if (sortedClasses.length === 0) return [];
+
+		const classMap = new Map(
+			sortedClasses.map((classItem) => [
+				classItem._id,
+				{ name: classItem.name, code: classItem.code, order: classItem.order }
+			])
+		);
+
+		const merged = new Map<
+			string,
+			{
+				_id: string;
+				title: string;
+				description: string;
+				classId: Id<'class'>;
+				className: string;
+				classCode: string;
+				emoji?: string;
+				status: string;
+				questionCount: number;
+				order: number;
+				classOrder: number;
+				score: number;
+			}
+		>();
+
+		const addMatches = (moduleItems: Array<any>, boost: number) => {
+			for (const moduleItem of moduleItems) {
+				if (moduleItem.deletedAt) continue;
+				const classItem = classMap.get(moduleItem.classId);
+				if (!classItem) continue;
+
+				const className = classItem.name.toLowerCase();
+				const classCode = classItem.code.toLowerCase();
+				const classBoost =
+					(className.includes(trimmed) ? 20 : 0) + (classCode.includes(trimmed) ? 32 : 0);
+				const score = computeModuleSearchScore(trimmed, moduleItem) + classBoost + boost;
+				const key = moduleItem._id;
+				const existing = merged.get(key);
+				if (existing) {
+					existing.score = Math.max(existing.score, score);
+					continue;
+				}
+
+				merged.set(key, {
+					_id: moduleItem._id,
+					title: moduleItem.title,
+					description: moduleItem.description,
+					classId: moduleItem.classId,
+					className: classItem.name,
+					classCode: classItem.code,
+					emoji: moduleItem.emoji,
+					status: moduleItem.status,
+					questionCount: moduleItem.questionCount ?? 0,
+					order: moduleItem.order,
+					classOrder: classItem.order,
+					score
+				});
+			}
+		};
+
+		// Primary path: cohort-level search indexes (efficient at scale).
+		try {
+			const [titleMatches, descriptionMatches] = await Promise.all([
+				ctx.db
+					.query('module')
+					.withSearchIndex('by_classId_cohortId_title', (q) =>
+						q.search('title', trimmed).eq('cohortId', cohortId)
+					)
+					.take(searchWindow),
+				ctx.db
+					.query('module')
+					.withSearchIndex('by_classId_cohortId_description', (q) =>
+						q.search('description', trimmed).eq('cohortId', cohortId)
+					)
+					.take(searchWindow)
+			]);
+			addMatches(titleMatches, 12);
+			addMatches(descriptionMatches, 0);
+		} catch {
+			// Ignore and allow fallback scan below.
+		}
+
+		// Fallback while legacy modules may still be missing cohortId.
+		if (merged.size === 0) {
+			const scannedModulesByClass = await Promise.all(
+				sortedClasses.map((classItem) =>
+					ctx.db
+						.query('module')
+						.withIndex('by_classId', (q) => q.eq('classId', classItem._id))
+						.collect()
+				)
+			);
+			for (const modules of scannedModulesByClass) {
+				addMatches(
+					modules.filter((moduleItem) =>
+						`${moduleItem.title} ${moduleItem.description}`.toLowerCase().includes(trimmed)
+					),
+					0
+				);
+			}
+		}
+
+		return Array.from(merged.values())
+			.filter((item) => item.score > 0)
+			.sort((a, b) => b.score - a.score || a.classOrder - b.classOrder || a.order - b.order)
+			.slice(0, max)
+			.map(({ classOrder: _classOrder, order: _order, score: _score, ...item }) => item);
+	}
+});
+
+/**
+ * Backfill module.cohortId from each module's class.cohortId.
+ * Run via CLI: bunx convex run module:backfillModuleCohortIds
+ */
+export const backfillModuleCohortIds = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const modules = await ctx.db.query('module').collect();
+		let updated = 0;
+		let skipped = 0;
+
+		for (const moduleItem of modules) {
+			const classItem = await ctx.db.get(moduleItem.classId);
+			if (!classItem) {
+				skipped += 1;
+				continue;
+			}
+			if (moduleItem.cohortId !== classItem.cohortId) {
+				await ctx.db.patch(moduleItem._id, { cohortId: classItem.cohortId });
+				updated += 1;
+			}
+		}
+
+		return {
+			totalModules: modules.length,
+			updated,
+			skippedMissingClass: skipped
+		};
 	}
 });
 
