@@ -97,7 +97,15 @@ export const listCohortsWithSchools = authQuery({
 		const result = await Promise.all(
 			cohorts.map(async (cohort) => {
 				const school = await ctx.db.get(cohort.schoolId);
-				return { _id: cohort._id, name: cohort.name, schoolName: school?.name ?? '' };
+				return {
+					_id: cohort._id,
+					name: cohort.name,
+					schoolName: school?.name ?? '',
+					startYear: cohort.startYear,
+					endYear: cohort.endYear,
+					classCode: cohort.classCode,
+					stats: cohort.stats,
+				};
 			})
 		);
 		return result;

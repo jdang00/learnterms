@@ -112,7 +112,7 @@
 					</ul>
 				</div>
 			{/if}
-			<button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle solution">
+			<button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle rationale">
 				<Eye />
 			</button>
 		</div>

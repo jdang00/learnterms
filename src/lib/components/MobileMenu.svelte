@@ -6,7 +6,6 @@
 		ArrowLeft,
 		ArrowRight,
 		ListRestart,
-		ChevronUp,
 		Flag,
 		BookmarkCheck,
 		Shuffle,
@@ -14,7 +13,8 @@
 		Check,
 		ArrowUpWideNarrow,
 		Pencil,
-		Paperclip
+		Paperclip,
+		CircleHelp
 	} from 'lucide-svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import { useClerkContext } from 'svelte-clerk/client';
@@ -49,6 +49,19 @@
 		data: mediaQuery.data ?? [],
 		isLoading: mediaQuery.isLoading,
 		error: mediaQuery.error
+	});
+
+	const hasRationale = $derived.by(() => {
+		const explanation = currentlySelected?.explanation;
+		if (typeof explanation !== 'string') return false;
+		const normalized = explanation.trim().toLowerCase();
+		return normalized.length > 0 && normalized !== 'undefined' && normalized !== 'null';
+	});
+
+	$effect(() => {
+		if (!qs.showSolution || !hasRationale) {
+			qs.isModalOpen = false;
+		}
 	});
 
 	async function handleClear() {
@@ -226,9 +239,13 @@
 		<Flag size={18} />
 	</button>
 
-	<button class="btn modal-button lg:hidden btn-sm btn-circle" onclick={() => (qs.isModalOpen = true)}
-		><Eye size={18} /></button
+	<button
+		class="btn btn-outline btn-sm btn-circle {qs.showSolution ? 'btn-success' : ''}"
+		onclick={() => qs.handleSolution()}
+		aria-label={qs.showSolution ? 'Hide answer highlights' : 'Reveal answer highlights'}
 	>
+		<Eye size={18} />
+	</button>
 
 	{#if media && media.data && media.data.length > 0}
 		<button
@@ -257,16 +274,16 @@
 		<ArrowRight size={20} />
 	</button>
 
-	<dialog class="modal max-w-full p-4" class:modal-open={qs.isModalOpen}>
-		<div class="modal-box rounded-2xl">
+	<dialog class="modal modal-bottom sm:modal-middle max-w-full p-0 sm:p-4" class:modal-open={qs.isModalOpen}>
+		<div class="modal-box rounded-t-3xl sm:rounded-2xl max-h-[65vh]">
 			<form method="dialog">
 				<button
 					class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
 					onclick={() => (qs.isModalOpen = false)}>✕</button
 				>
 			</form>
-			<h3 class="text-lg font-bold">Solution</h3>
-			{#if typeof currentlySelected.explanation === 'string' && currentlySelected.explanation.trim().length > 0}
+			<h3 class="text-lg font-bold">Rationale</h3>
+			{#if hasRationale}
 				<div class="py-4 tiptap-content">{@html currentlySelected.explanation}</div>
 			{/if}
 		</div>
@@ -342,3 +359,15 @@
 
 	<SettingsModal bind:qs bind:isOpen={isSettingsModalOpen} />
 </div>
+
+{#if qs.showSolution && hasRationale && !qs.isModalOpen}
+	<button
+		class="fixed right-4 z-[60] md:hidden btn btn-sm btn-soft rounded-full border border-base-300/70 bg-base-100/85 backdrop-blur-sm normal-case shadow-sm"
+		style="bottom: calc(env(safe-area-inset-bottom, 0px) + 6.25rem);"
+		onclick={() => (qs.isModalOpen = true)}
+		aria-label="Show rationale"
+	>
+		<CircleHelp size={14} />
+		<span class="ml-1">Rationale</span>
+	</button>
+{/if}

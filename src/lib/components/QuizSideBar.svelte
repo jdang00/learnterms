@@ -238,7 +238,7 @@
 				<div class="card bg-base-100 shadow-xl mt-6 rounded-2xl">
 					<div class="card-body">
 						<div class="flex flex-row flex-wrap justify-between border-b pb-2">
-							<h2 class="card-title">Solution</h2>
+							<h2 class="card-title">Rationale</h2>
 							<div class="flex flex-row">
 								<kbd class="kbd kbd-sm hidden xl:block self-center me-1">tab</kbd>
 								<button class="btn btn-ghost btn-circle" onclick={() => qs.handleSolution()}>
@@ -452,7 +452,7 @@
 				onclick={() => (isSolutionModalOpen = false)}>✕</button
 			>
 		</form>
-		<h3 class="text-lg font-bold">Solution</h3>
+		<h3 class="text-lg font-bold">Rationale</h3>
 		{#if typeof currentlySelected.explanation === 'string' && currentlySelected.explanation.trim().length > 0}
 			<div class="py-4 tiptap-content">{@html currentlySelected.explanation}</div>
 		{/if}

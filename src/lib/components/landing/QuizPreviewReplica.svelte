@@ -271,7 +271,7 @@
 					<div class="card mt-2 rounded-2xl bg-base-100 shadow-xl">
 						<div class="card-body">
 							<div class="flex flex-row justify-between border-b pb-2">
-								<h2 class="card-title">Solution</h2>
+								<h2 class="card-title">Rationale</h2>
 								<button
 									class="btn btn-ghost btn-circle"
 									onclick={() => (showSolution = !showSolution)}

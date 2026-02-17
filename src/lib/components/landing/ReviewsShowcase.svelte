@@ -14,7 +14,7 @@
 
 <div>
 	<div class="mb-8 max-w-3xl">
-		<h2 class="text-3xl font-bold sm:text-4xl">Students are using it daily</h2>
+		<h2 class="text-3xl font-bold sm:text-4xl">Used daily by healthcare students</h2>
 		<p class="mt-2 text-base-content/75">
 			Real feedback from healthcare learners running LearnTerms as part of their study routine.
 		</p>

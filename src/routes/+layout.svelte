@@ -98,8 +98,9 @@
 	const year = new Date().getFullYear();
 
 	const defaultSeo = {
-		title: 'LearnTerms',
-		description: 'Smarter Studying, Simplified. Adaptive learning powered by AI.',
+		title: 'LearnTerms is Smarter Studying, Simplified.',
+		description:
+			'LearnTerms gives you a live quiz workspace where answers, flags, and progress sync instantly, so every study session stays focused and uninterrupted.',
 		image: 'https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w',
 		siteName: 'LearnTerms'
 	};

@@ -94,7 +94,7 @@
 </div>
 
 <h2>Sidebar</h2>
-<p>Your sidebar keeps you oriented with module info, progress, solution reveal, and settings.</p>
+<p>Your sidebar keeps you oriented with module info, progress, rationale reveal, and settings.</p>
 
 <div class="card bg-base-100 border border-base-300 shadow-sm">
 	<div class="card-body">
@@ -109,7 +109,7 @@
 			<progress class="progress progress-success w-full" value="13" max="100"></progress>
 		</div>
 		<div class="mt-4 flex gap-2">
-			<button class="btn btn-ghost btn-sm"><Eye size={16} class="mr-1" /> Solution</button>
+			<button class="btn btn-ghost btn-sm"><Eye size={16} class="mr-1" /> Rationale</button>
 			<button class="btn btn-soft btn-sm"><Settings size={16} class="mr-1" /> Settings</button>
 		</div>
 	</div>
@@ -135,6 +135,6 @@
 <h2>FAQ</h2>
 <ul>
 	<li><strong>Will I lose answers when navigating?</strong> No—your selections are saved as you go.</li>
-	<li><strong>Where’s the solution?</strong> Use the Solution control in the sidebar; it reveals the explanation when available.</li>
+	<li><strong>Where’s the rationale?</strong> Use the Rationale control in the sidebar; it reveals the explanation when available.</li>
 	<li><strong>Mobile view?</strong> The layout adapts; controls stay accessible and unobtrusive.</li>
 </ul>
