@@ -1283,7 +1283,7 @@
 													bind:checked={m.showOnSolution}
 													onchange={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
 												/>
-												<span>Show on solution</span>
+												<span>Show on rationale</span>
 											</label>
 										</div>
 									</div>
@@ -1322,7 +1322,7 @@
 													bind:checked={m.showOnSolution}
 													onchange={onChange}
 												/>
-												<span>Show on solution</span>
+												<span>Show on rationale</span>
 											</label>
 										</div>
 									</div>
@@ -1384,4 +1384,3 @@
 		pointer-events: none;
 	}
 </style>
-

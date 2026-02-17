@@ -90,7 +90,7 @@
 		{ key: '⏎', label: 'Check', action: 'checking' },
 		{ key: '→', label: 'Next', action: 'next' },
 		{ key: 'F', label: 'Flag', action: 'flagging' },
-		{ key: 'Tab', label: 'Solution', action: 'solution' }
+		{ key: 'Tab', label: 'Rationale', action: 'solution' }
 	];
 	let activeKeyIndex = $state(0);
 
@@ -118,7 +118,7 @@
 		return () => clearTimeout(timeout);
 	});
 
-	// Solution reveal demo
+	// Rationale reveal demo
 	let solutionRevealed = $state(false);
 
 	// Analytics demo — cohort student roster
@@ -692,7 +692,7 @@
 					Ready to study smarter?
 				</h2>
 				<p class="mx-auto mt-4 max-w-lg text-base-content/70">
-					Join your class or start your own. Setup takes under five minutes.
+					Join your class or start your own. Reach out to get your cohort started today.
 				</p>
 				<div class="mt-8 flex flex-wrap items-center justify-center gap-3">
 					<a href="/sign-in" class="btn btn-primary btn-lg rounded-full px-8">
@@ -1043,7 +1043,7 @@
 	}
 
 
-	/* Solution blur transition */
+	/* Rationale blur transition */
 	.solution-box {
 		transition: border-color 0.3s ease;
 	}

@@ -92,11 +92,11 @@
 		<div class="card bg-base-100 shadow-xl mt-12">
 			<div class="card-body">
 				<div class="flex flex-row justify-between border-b pb-2">
-					<h2 class="card-title">Solution</h2>
+					<h2 class="card-title">Rationale</h2>
 					<button
 						class="btn btn-ghost"
 						onclick={() => (qs.showSolution = !qs.showSolution)}
-						aria-label="toggle solution"
+						aria-label="toggle rationale"
 					>
 						<Eye />
 					</button>

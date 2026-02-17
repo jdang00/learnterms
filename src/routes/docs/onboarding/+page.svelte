@@ -64,12 +64,10 @@
 <ul>
 	<li>See your progress at the top (e.g., “13% done”)</li>
 	<li>Work through multiple-choice questions one at a time</li>
-	<li>Reveal solutions when you’re ready</li>
+	<li>Reveal rationales when you’re ready</li>
 	<li>Navigate between questions using the top bar</li>
 </ul>
 
 <p>This flow keeps your focus on one question at a time while showing your overall progress.</p>
 
 <p>✅ <strong>Tip:</strong> The dashboard is designed to keep everything organized by semester → class → module → questions. If you ever get lost, just return to the dashboard to reset.</p>
-
-

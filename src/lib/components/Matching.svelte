@@ -164,7 +164,7 @@
     </div>
 
     <div class="mt-2 flex gap-2">
-        <button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle solution">
+        <button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle rationale">
             <Eye />
         </button>
         {#if !qs.showSolution && qs.selectedAnswers && qs.selectedAnswers.length > 0}
@@ -174,5 +174,4 @@
         {/if}
     </div>
 </div>
-
 

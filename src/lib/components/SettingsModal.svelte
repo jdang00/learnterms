@@ -65,7 +65,7 @@
 				<div class="font-mono flex flex-col gap-2">
 					<div class="flex items-center gap-4 justify-between">
 						<kbd class="kbd kbd-sm">tab</kbd>
-						<span>Solution</span>
+						<span>Rationale</span>
 					</div>
 					<div class="flex items-center gap-4 justify-between">
 						<kbd class="kbd kbd-sm">shift + s</kbd>

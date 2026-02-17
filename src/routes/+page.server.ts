@@ -9,9 +9,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 	return {
 		seo: {
-			title: 'LearnTerms — Smarter Studying, Simplified',
+			title: 'LearnTerms is Smarter Studying, Simplified.',
 			description:
-				'Adaptive learning for optometry. Study astigmatism, anterior blepharitis, retina, and ocular disease while building board prep as you learn.',
+				'LearnTerms gives you a live quiz workspace where answers, flags, and progress sync instantly, so every study session stays focused and uninterrupted.',
 			image: 'https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w'
 		}
 	};
