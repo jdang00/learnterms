@@ -31,4 +31,5 @@ tmp
 .cursor
 
 # Claude Code skills
+.claude/
 .claude/skills/
