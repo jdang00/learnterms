@@ -4,13 +4,11 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
-	ssr: {
-		noExternal: ['lucide-svelte', '@lucide/svelte']
-	},
 	optimizeDeps: {
+		include: ['lucide-svelte', 'convex-svelte', 'svelte-confetti', 'posthog-js'],
 		esbuildOptions: {
 			target: 'esnext'
-		}
+		},
 	},
 	build: {
 		target: 'esnext'

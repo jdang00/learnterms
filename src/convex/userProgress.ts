@@ -5,6 +5,11 @@ import type { Doc, Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
 import { applyProgressDeltaAndEvaluateBadges } from './badgeEngine';
 
+const EARLY_HOUR_CUTOFF = 8;
+const LATE_HOUR_CUTOFF = 22;
+const MIN_UTC_OFFSET_MINUTES = -14 * 60;
+const MAX_UTC_OFFSET_MINUTES = 14 * 60;
+
 const getUserProgressRecords = async (
 	ctx: QueryCtx,
 	userId: Id<'users'>,
@@ -21,6 +26,38 @@ const getUserProgressRecords = async (
 	const idSet = new Set(questionIds);
 	return recordsForUserAndClass.filter((r) => idSet.has(r.questionId));
 };
+
+function normalizeUtcOffsetMinutes(offset: number | undefined) {
+	if (offset === undefined || !Number.isFinite(offset)) return undefined;
+	const rounded = Math.trunc(offset);
+	if (rounded < MIN_UTC_OFFSET_MINUTES || rounded > MAX_UTC_OFFSET_MINUTES) return undefined;
+	return rounded;
+}
+
+function getHourForOffset(ts: number, utcOffsetMinutes: number | undefined) {
+	if (utcOffsetMinutes === undefined) return new Date(ts).getUTCHours();
+	return new Date(ts - utcOffsetMinutes * 60_000).getUTCHours();
+}
+
+function getRecordedInteractionHour(record: Doc<'userProgress'>) {
+	const metadata = record.metadata;
+	if (!metadata) return undefined;
+	if (metadata.firstInteractedHourLocal !== undefined) return metadata.firstInteractedHourLocal;
+	if (
+		metadata.firstInteractedAt !== undefined &&
+		metadata.firstInteractedUtcOffsetMinutes !== undefined
+	) {
+		return getHourForOffset(metadata.firstInteractedAt, metadata.firstInteractedUtcOffsetMinutes);
+	}
+	return metadata.firstInteractedHourUtc;
+}
+
+function earlyLateDeltaFromHour(hour: number | undefined, direction: 1 | -1) {
+	return {
+		early: hour !== undefined && hour < EARLY_HOUR_CUTOFF ? direction : 0,
+		late: hour !== undefined && hour >= LATE_HOUR_CUTOFF ? direction : 0
+	};
+}
 
 export const checkExistingRecord = authQuery({
 	args: { userId: v.id('users'), questionId: v.id('question') },
@@ -156,11 +193,14 @@ export const saveUserProgress = mutation({
 		eliminatedOptions: v.optional(v.array(v.string())),
 		isFlagged: v.optional(v.boolean()),
 		isMastered: v.optional(v.boolean()),
-		attempts: v.optional(v.number())
+		attempts: v.optional(v.number()),
+		clientUtcOffsetMinutes: v.optional(v.number())
 	},
 	handler: async (ctx, args) => {
 		const now = Date.now();
 		const currentHourUtc = new Date(now).getUTCHours();
+		const utcOffsetMinutes = normalizeUtcOffsetMinutes(args.clientUtcOffsetMinutes);
+		const currentHourLocal = getHourForOffset(now, utcOffsetMinutes);
 
 		// Check if record exists
 		const existingRecord = await ctx.db
@@ -191,22 +231,26 @@ export const saveUserProgress = mutation({
 
 			let earlyInteractionsDelta = 0;
 			let lateInteractionsDelta = 0;
-			const previousHour = existingRecord.metadata?.firstInteractedHourUtc;
+			const previousHour = getRecordedInteractionHour(existingRecord);
 
 			if (!wasInteracted && isInteracted) {
 				nextMetadata.firstInteractedAt = now;
 				nextMetadata.firstInteractedHourUtc = currentHourUtc;
-				if (currentHourUtc < 8) earlyInteractionsDelta += 1;
-				if (currentHourUtc >= 22) lateInteractionsDelta += 1;
+				nextMetadata.firstInteractedHourLocal = currentHourLocal;
+				nextMetadata.firstInteractedUtcOffsetMinutes = utcOffsetMinutes;
+				const delta = earlyLateDeltaFromHour(currentHourLocal, 1);
+				earlyInteractionsDelta += delta.early;
+				lateInteractionsDelta += delta.late;
 			}
 
 			if (wasInteracted && !isInteracted) {
-				if (previousHour !== undefined) {
-					if (previousHour < 8) earlyInteractionsDelta -= 1;
-					if (previousHour >= 22) lateInteractionsDelta -= 1;
-				}
+				const delta = earlyLateDeltaFromHour(previousHour, -1);
+				earlyInteractionsDelta += delta.early;
+				lateInteractionsDelta += delta.late;
 				nextMetadata.firstInteractedAt = undefined;
 				nextMetadata.firstInteractedHourUtc = undefined;
+				nextMetadata.firstInteractedHourLocal = undefined;
+				nextMetadata.firstInteractedUtcOffsetMinutes = undefined;
 			}
 
 			// Update flagCount on question if flag status changed
@@ -242,6 +286,7 @@ export const saveUserProgress = mutation({
 				flaggedDelta,
 				earlyInteractionsDelta,
 				lateInteractionsDelta,
+				utcOffsetMinutes,
 				touchStreak: true
 			});
 
@@ -252,12 +297,14 @@ export const saveUserProgress = mutation({
 			const eliminatedOptions = args.eliminatedOptions ?? [];
 			const isInteracted = selectedOptions.length > 0 || eliminatedOptions.length > 0;
 			const isMastered = args.isMastered ?? false;
-			const earlyInteractionsDelta = isInteracted && currentHourUtc < 8 ? 1 : 0;
-			const lateInteractionsDelta = isInteracted && currentHourUtc >= 22 ? 1 : 0;
+			const earlyInteractionsDelta = isInteracted && currentHourLocal < EARLY_HOUR_CUTOFF ? 1 : 0;
+			const lateInteractionsDelta = isInteracted && currentHourLocal >= LATE_HOUR_CUTOFF ? 1 : 0;
 			const metadata = isInteracted
 				? {
 						firstInteractedAt: now,
-						firstInteractedHourUtc: currentHourUtc
+						firstInteractedHourUtc: currentHourUtc,
+						firstInteractedHourLocal: currentHourLocal,
+						firstInteractedUtcOffsetMinutes: utcOffsetMinutes
 					}
 				: {};
 
@@ -296,6 +343,7 @@ export const saveUserProgress = mutation({
 				flaggedDelta: Number(newFlagged),
 				earlyInteractionsDelta,
 				lateInteractionsDelta,
+				utcOffsetMinutes,
 				touchStreak: true
 			});
 
@@ -323,18 +371,13 @@ export const deleteUserProgress = mutation({
 		if (existingRecord) {
 			const wasInteracted =
 				existingRecord.selectedOptions.length > 0 || existingRecord.eliminatedOptions.length > 0;
-			const earlyInteractionsDelta =
-				wasInteracted && existingRecord.metadata?.firstInteractedHourUtc !== undefined
-					? existingRecord.metadata.firstInteractedHourUtc < 8
-						? -1
-						: 0
-					: 0;
-			const lateInteractionsDelta =
-				wasInteracted && existingRecord.metadata?.firstInteractedHourUtc !== undefined
-					? existingRecord.metadata.firstInteractedHourUtc >= 22
-						? -1
-						: 0
-					: 0;
+			const interactionHour = getRecordedInteractionHour(existingRecord);
+			const earlyInteractionsDelta = wasInteracted
+				? earlyLateDeltaFromHour(interactionHour, -1).early
+				: 0;
+			const lateInteractionsDelta = wasInteracted
+				? earlyLateDeltaFromHour(interactionHour, -1).late
+				: 0;
 
 			// If the record was flagged, decrement the question's flagCount
 			if (existingRecord.isFlagged) {
@@ -403,11 +446,10 @@ export const clearUserProgressForModule = mutation({
 					progressRecord.selectedOptions.length > 0 || progressRecord.eliminatedOptions.length > 0;
 				if (wasInteracted) {
 					interactedDelta -= 1;
-					const hour = progressRecord.metadata?.firstInteractedHourUtc;
-					if (hour !== undefined) {
-						if (hour < 8) earlyInteractionsDelta -= 1;
-						if (hour >= 22) lateInteractionsDelta -= 1;
-					}
+					const hour = getRecordedInteractionHour(progressRecord);
+					const delta = earlyLateDeltaFromHour(hour, -1);
+					earlyInteractionsDelta += delta.early;
+					lateInteractionsDelta += delta.late;
 				}
 				if (progressRecord.isMastered) masteredDelta -= 1;
 				if (progressRecord.isFlagged) flaggedDelta -= 1;

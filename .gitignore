@@ -29,3 +29,6 @@ tmp
 /src/routes/seed
 
 .cursor
+
+# Claude Code skills
+.claude/skills/

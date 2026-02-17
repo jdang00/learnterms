@@ -354,7 +354,7 @@ export const getAllModules = authQuery({
 
 /**
  * Backfill questionCount for all modules.
- * Run via CLI: npx convex run module:backfillQuestionCounts
+ * Run via CLI: bunx convex run module:backfillQuestionCounts
  */
 export const backfillQuestionCounts = mutation({
 	args: {},
