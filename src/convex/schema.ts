@@ -94,7 +94,20 @@ export default defineSchema({
 		code: v.string(),
 		description: v.string(),
 		order: v.number()
-	}).index('by_cohortId', ['cohortId']),
+	})
+		.index('by_cohortId', ['cohortId'])
+		.searchIndex('by_cohortId_name', {
+			searchField: 'name',
+			filterFields: ['cohortId']
+		})
+		.searchIndex('by_cohortId_code', {
+			searchField: 'code',
+			filterFields: ['cohortId']
+		})
+		.searchIndex('by_cohortId_description', {
+			searchField: 'description',
+			filterFields: ['cohortId']
+		}),
 	module: defineTable({
 		title: v.string(),
 		emoji: v.optional(v.string()),
@@ -102,11 +115,22 @@ export default defineSchema({
 		updatedAt: v.number(),
 		deletedAt: v.optional(v.number()),
 		classId: v.id('class'),
+		cohortId: v.optional(v.id('cohort')),
 		order: v.number(),
 		description: v.string(),
 		status: v.string(),
 		questionCount: v.optional(v.number())
-	}).index('by_classId', ['classId']),
+	})
+		.index('by_classId', ['classId'])
+		.index('by_cohortId', ['cohortId'])
+		.searchIndex('by_classId_cohortId_title', {
+			searchField: 'title',
+			filterFields: ['classId', 'cohortId']
+		})
+		.searchIndex('by_classId_cohortId_description', {
+			searchField: 'description',
+			filterFields: ['classId', 'cohortId']
+		}),
 	tags: defineTable({
 		name: v.string(),
 		slug: v.string(),

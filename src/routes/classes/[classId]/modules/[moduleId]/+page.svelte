@@ -13,6 +13,11 @@
 	import { BookOpen } from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { captureQuestionAnswered } from '$lib/analytics/questionAnswered';
+	import {
+		QUIZ_PREFERENCE_CHANGED_EVENT,
+		QUIZ_PREFERENCE_KEYS,
+		type QuizPreferenceChangedDetail
+	} from '$lib/components/power-bar/preferences';
 
 	let { data }: { data: PageData } = $props();
 
@@ -375,7 +380,23 @@
 
 	onMount(() => {
 		document.addEventListener('keydown', handleKeydown);
-		return () => document.removeEventListener('keydown', handleKeydown);
+
+		const handlePreferenceUpdate = (event: Event) => {
+			const custom = event as CustomEvent<QuizPreferenceChangedDetail>;
+			if (custom.detail.key === QUIZ_PREFERENCE_KEYS.autoNextEnabled) {
+				qs.setAutoNextEnabled(custom.detail.value);
+			}
+			if (custom.detail.key === QUIZ_PREFERENCE_KEYS.optionsShuffleEnabled) {
+				qs.setOptionsShuffleEnabled(custom.detail.value);
+			}
+		};
+
+		window.addEventListener(QUIZ_PREFERENCE_CHANGED_EVENT, handlePreferenceUpdate);
+
+		return () => {
+			document.removeEventListener('keydown', handleKeydown);
+			window.removeEventListener(QUIZ_PREFERENCE_CHANGED_EVENT, handlePreferenceUpdate);
+		};
 	});
 
 	$effect(() => {

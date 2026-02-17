@@ -1,5 +1,6 @@
 import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
+import type { Doc, Id } from './_generated/dataModel';
 
 // Get user classes by their UserId and looking up their school and cohort
 export const getUserClasses = authQuery({
@@ -49,10 +50,7 @@ export const getClassContentCounts = authQuery({
 			.collect();
 
 		// Use stored questionCount field instead of querying all questions
-		const totalQuestions = modules.reduce(
-			(sum, module) => sum + (module.questionCount ?? 0),
-			0
-		);
+		const totalQuestions = modules.reduce((sum, module) => sum + (module.questionCount ?? 0), 0);
 
 		return {
 			moduleCount: modules.length,
@@ -329,5 +327,157 @@ export const updateClass = authAdminMutation({
 		});
 
 		return { updated: true };
+	}
+});
+
+function computeClassSearchScore(
+	query: string,
+	classItem: { name: string; code: string; description: string }
+) {
+	const name = classItem.name.toLowerCase();
+	const code = classItem.code.toLowerCase();
+	const description = classItem.description.toLowerCase();
+	let score = 0;
+
+	if (name === query) score += 300;
+	else if (name.startsWith(query)) score += 220;
+	else if (name.includes(query)) score += 150;
+
+	if (code === query) score += 240;
+	else if (code.startsWith(query)) score += 190;
+	else if (code.includes(query)) score += 130;
+
+	if (description.startsWith(query)) score += 80;
+	else if (description.includes(query)) score += 40;
+
+	return score;
+}
+
+async function assertCohortSearchAccess(
+	ctx: { db: any; identity: { subject: string } },
+	cohortId: Id<'cohort'>
+) {
+	const viewer = await ctx.db
+		.query('users')
+		.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', ctx.identity.subject))
+		.first();
+	if (!viewer) throw new Error('Unauthorized');
+	if (viewer.role !== 'dev' && viewer.cohortId !== cohortId) {
+		throw new Error('Unauthorized');
+	}
+}
+
+export const searchClassesByCohort = authQuery({
+	args: {
+		cohortId: v.id('cohort'),
+		query: v.string(),
+		limit: v.optional(v.number())
+	},
+	handler: async (ctx, { cohortId, query, limit }) => {
+		const trimmed = query.trim().toLowerCase();
+		if (trimmed.length < 2) return [];
+		await assertCohortSearchAccess(ctx, cohortId);
+		if (!trimmed) return [];
+
+		const max = Math.min(Math.max(limit ?? 12, 1), 40);
+		const searchWindow = Math.min(max * 2, 60);
+		let searchCandidates: Array<{
+			_id: string;
+			name: string;
+			code: string;
+			description: string;
+			order: number;
+			semesterId: Id<'semester'>;
+			deletedAt?: number;
+		}> = [];
+
+		try {
+			const [nameMatches, codeMatches, descriptionMatches] = await Promise.all([
+				ctx.db
+					.query('class')
+					.withSearchIndex('by_cohortId_name', (q) =>
+						q.search('name', trimmed).eq('cohortId', cohortId)
+					)
+					.take(searchWindow),
+				ctx.db
+					.query('class')
+					.withSearchIndex('by_cohortId_code', (q) =>
+						q.search('code', trimmed).eq('cohortId', cohortId)
+					)
+					.take(searchWindow),
+				ctx.db
+					.query('class')
+					.withSearchIndex('by_cohortId_description', (q) =>
+						q.search('description', trimmed).eq('cohortId', cohortId)
+					)
+					.take(searchWindow)
+			]);
+			searchCandidates = [...nameMatches, ...codeMatches, ...descriptionMatches];
+		} catch {
+			const scannedClasses = await ctx.db
+				.query('class')
+				.withIndex('by_cohortId', (q) => q.eq('cohortId', cohortId))
+				.collect();
+			searchCandidates = scannedClasses.filter((classItem) =>
+				`${classItem.name} ${classItem.code} ${classItem.description}`
+					.toLowerCase()
+					.includes(trimmed)
+			);
+		}
+
+		const merged = new Map<
+			string,
+			{
+				_id: string;
+				name: string;
+				code: string;
+				description: string;
+				order: number;
+				semesterId: Id<'semester'>;
+				score: number;
+			}
+		>();
+
+		for (const classItem of searchCandidates) {
+			if (classItem.deletedAt) continue;
+			const key = classItem._id;
+			const score = computeClassSearchScore(trimmed, classItem);
+			const existing = merged.get(key);
+			if (existing) {
+				existing.score = Math.max(existing.score, score);
+				continue;
+			}
+			merged.set(key, {
+				_id: classItem._id,
+				name: classItem.name,
+				code: classItem.code,
+				description: classItem.description,
+				order: classItem.order,
+				semesterId: classItem.semesterId,
+				score
+			});
+		}
+
+		const ranked = Array.from(merged.values())
+			.filter((item) => item.score > 0)
+			.sort((a, b) => b.score - a.score || a.order - b.order)
+			.slice(0, max);
+
+		const semesterIds = Array.from(new Set(ranked.map((item) => item.semesterId)));
+		const semesters = await Promise.all(semesterIds.map((id) => ctx.db.get(id)));
+		const semesterMap = new Map<Id<'semester'>, Doc<'semester'>>();
+		for (const semester of semesters) {
+			if (semester) {
+				semesterMap.set(semester._id, semester);
+			}
+		}
+
+		return ranked.map((item) => ({
+			_id: item._id,
+			name: item.name,
+			code: item.code,
+			description: item.description,
+			semesterName: semesterMap.get(item.semesterId)?.name ?? null
+		}));
 	}
 });
