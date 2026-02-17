@@ -302,7 +302,9 @@ export default defineSchema({
 		lastAttemptAt: v.optional(v.number()),
 		metadata: v.object({
 			firstInteractedAt: v.optional(v.number()),
-			firstInteractedHourUtc: v.optional(v.number())
+			firstInteractedHourUtc: v.optional(v.number()),
+			firstInteractedHourLocal: v.optional(v.number()),
+			firstInteractedUtcOffsetMinutes: v.optional(v.number())
 		}),
 		deletedAt: v.optional(v.number()),
 		updatedAt: v.number()

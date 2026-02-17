@@ -37,6 +37,7 @@ export type ProgressMetricDelta = {
 	earlyInteractionsDelta: number;
 	lateInteractionsDelta: number;
 	questionsCreatedDelta?: number;
+	utcOffsetMinutes?: number;
 	touchStreak: boolean;
 };
 
@@ -44,8 +45,9 @@ function clampNonNegative(value: number) {
 	return Math.max(0, value);
 }
 
-function toDayKey(ts: number) {
-	return Math.floor(ts / DAY_MS);
+function toDayKey(ts: number, utcOffsetMinutes?: number) {
+	if (utcOffsetMinutes === undefined) return Math.floor(ts / DAY_MS);
+	return Math.floor((ts - utcOffsetMinutes * 60_000) / DAY_MS);
 }
 
 function compareMetric(left: number, op: BadgeMetricOp, right: number) {
@@ -95,6 +97,7 @@ async function getMetricDoc(ctx: DbCtx, userId: Id<'users'>, scope: ScopeRef) {
 type StreakUpdate = {
 	touchStreak: boolean;
 	occurredAt: number;
+	utcOffsetMinutes?: number;
 };
 
 async function upsertMetricDoc(
@@ -136,7 +139,7 @@ async function upsertMetricDoc(
 	let lastActivityDayKey = base.lastActivityDayKey;
 
 	if (scope.scopeType === 'global' && streakUpdate.touchStreak) {
-		const dayKey = toDayKey(streakUpdate.occurredAt);
+		const dayKey = toDayKey(streakUpdate.occurredAt, streakUpdate.utcOffsetMinutes);
 		if (lastActivityDayKey === undefined) {
 			streakCurrentDays = 1;
 			streakBestDays = Math.max(streakBestDays, 1);
@@ -351,7 +354,11 @@ export async function applyProgressDeltaAndEvaluateBadges(ctx: DbCtx, args: Prog
 			late: args.lateInteractionsDelta,
 			created: args.questionsCreatedDelta ?? 0
 		},
-		{ touchStreak: args.touchStreak, occurredAt: args.occurredAt }
+		{
+			touchStreak: args.touchStreak,
+			occurredAt: args.occurredAt,
+			utcOffsetMinutes: args.utcOffsetMinutes
+		}
 	);
 
 	const cohortMetricDoc = await upsertMetricDoc(

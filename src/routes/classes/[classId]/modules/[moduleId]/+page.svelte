@@ -97,7 +97,8 @@
 				questionId: currentQuestion._id,
 				selectedOptions: qs.selectedAnswers,
 				eliminatedOptions: qs.eliminatedAnswers,
-				isFlagged: isFlagged
+				isFlagged: isFlagged,
+				clientUtcOffsetMinutes: new Date().getTimezoneOffset()
 			});
 		} catch (error) {
 			return;
@@ -463,7 +464,9 @@
 				<button class="btn btn-outline rounded-full" onclick={() => (qs.isResetModalOpen = false)}>
 					Cancel
 				</button>
-				<button class="btn btn-error rounded-full" onclick={() => handleResetModalConfirm()}>Reset</button>
+				<button class="btn btn-error rounded-full" onclick={() => handleResetModalConfirm()}
+					>Reset</button
+				>
 			</div>
 		</div>
 		<div class="modal-backdrop bg-black/50" onclick={() => (qs.isResetModalOpen = false)}></div>

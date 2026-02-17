@@ -160,7 +160,7 @@
 					</div>
 				</SignedIn>
 				<SignedOut>
-					<div class="btn btn-outline btn-primary self-end">
+					<div class="btn btn-outline btn-primary rounded-full self-end">
 						<SignInButton
 							forceRedirectUrl="/sign-in"
 							fallbackRedirectUrl="/sign-in"
