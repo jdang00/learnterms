@@ -5,7 +5,7 @@
 </script>
 
 <dialog class="modal" class:modal-open={isOpen}>
-	<div class="modal-box">
+	<div class="modal-box rounded-2xl">
 		<h3 class="font-bold text-lg flex items-center gap-2 text-warning">
 			<TriangleAlert />
 			Module Limit Reached
@@ -44,7 +44,7 @@
 		</div>
 
 		<div class="modal-action">
-			<button class="btn" onclick={onClose}>Understood</button>
+			<button class="btn rounded-full" onclick={onClose}>Understood</button>
 		</div>
 	</div>
 	<form method="dialog" class="modal-backdrop">

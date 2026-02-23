@@ -29,7 +29,10 @@
 		() => clerkUser ? { id: clerkUser.id } : 'skip'
 	);
 
-	const semesters = useQuery(api.semester.getAllSemesters, () => ({}));
+	const semesters = useQuery(
+		api.semester.getAllSemesters,
+		() => clerkUser ? {} : 'skip'
+	);
 
 	const classes = useQuery(
 		api.class.getUserClasses,
@@ -124,7 +127,7 @@
 <div class="min-h-screen bg-base-200/30">
 	<div class="max-w-[1800px] mx-auto p-4 sm:p-6">
 		<div class="flex items-center gap-4 mb-6">
-			<a class="btn btn-ghost btn-sm gap-2" href="/admin">
+			<a class="btn btn-ghost btn-sm rounded-full gap-2" href="/admin">
 				<ArrowLeft size={16} />
 				<span class="hidden sm:inline">Back</span>
 			</a>
@@ -135,15 +138,15 @@
 			</div>
 		</div>
 
-		<div class="flex flex-wrap items-center gap-2 mb-6 p-3 bg-base-100 rounded-lg border border-base-300">
+		<div class="flex flex-wrap items-center gap-2 mb-6 p-3 bg-base-100 rounded-2xl border border-base-300">
 			<div class="dropdown">
-				<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-2">
+				<div tabindex="0" role="button" class="btn btn-sm btn-ghost rounded-full gap-2">
 					<FolderOpen size={14} class="text-base-content/60" />
 					<span class="text-sm">{currentSemester || 'Semester'}</span>
 					<ChevronDown size={12} />
 				</div>
 				{#if semesters.data}
-					<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-10 w-56 p-1 shadow-lg border border-base-300">
+					<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-56 p-1 shadow-lg border border-base-300">
 						{#each semesters.data as semester (semester._id)}
 							<li>
 								<button
@@ -169,7 +172,7 @@
 			<div class="relative">
 				<button
 					type="button"
-					class="btn btn-sm btn-ghost gap-2"
+					class="btn btn-sm btn-ghost rounded-full gap-2"
 					class:btn-disabled={!currentSemester}
 					onclick={() => { classOpen = !classOpen; classSearch = ''; }}
 				>
@@ -179,11 +182,11 @@
 				</button>
 				{#if classOpen && filteredClasses && filteredClasses.length > 0}
 					<div class="fixed inset-0 z-10" onclick={() => { classOpen = false; }} role="none"></div>
-					<div class="absolute top-full left-0 mt-1 z-20 w-64 bg-base-100 rounded-lg shadow-lg border border-base-300 p-2">
+					<div class="absolute top-full left-0 mt-1 z-20 w-64 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-2">
 						<input
 							type="text"
 							placeholder="Search classes..."
-							class="input input-sm input-bordered w-full mb-1"
+							class="input input-sm input-bordered rounded-full w-full mb-1"
 							bind:value={classSearch}
 						/>
 						<ul class="max-h-52 overflow-y-auto">
@@ -221,7 +224,7 @@
 			<div class="relative">
 				<button
 					type="button"
-					class="btn btn-sm btn-ghost gap-2"
+					class="btn btn-sm btn-ghost rounded-full gap-2"
 					class:btn-disabled={!selectedClass}
 					onclick={() => { moduleOpen = !moduleOpen; moduleSearch = ''; }}
 				>
@@ -231,11 +234,11 @@
 				</button>
 				{#if moduleOpen && modules.data && modules.data.length > 0}
 					<div class="fixed inset-0 z-10" onclick={() => { moduleOpen = false; }} role="none"></div>
-					<div class="absolute top-full left-0 mt-1 z-20 w-64 bg-base-100 rounded-lg shadow-lg border border-base-300 p-2">
+					<div class="absolute top-full left-0 mt-1 z-20 w-64 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-2">
 						<input
 							type="text"
 							placeholder="Search modules..."
-							class="input input-sm input-bordered w-full mb-1"
+							class="input input-sm input-bordered rounded-full w-full mb-1"
 							bind:value={moduleSearch}
 						/>
 						<ul class="max-h-52 overflow-y-auto">
@@ -278,7 +281,7 @@
 
 		<div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
 			<div class="xl:col-span-4 2xl:col-span-3">
-				<div class="bg-base-100 rounded-lg border border-base-300 h-[calc(100vh-220px)] overflow-hidden">
+				<div class="bg-base-100 rounded-2xl border border-base-300 h-[calc(100vh-220px)] overflow-hidden">
 					{#if convexUser.isLoading}
 						<div class="p-4 space-y-2">
 							{#each Array(5) as _}
@@ -303,7 +306,7 @@
 			</div>
 
 			<div class="xl:col-span-8 2xl:col-span-9">
-				<div class="bg-base-100 rounded-lg border border-base-300 h-[calc(100vh-220px)] overflow-hidden">
+				<div class="bg-base-100 rounded-2xl border border-base-300 h-[calc(100vh-220px)] overflow-hidden">
 					<QuestionsGeneration
 						material={selectedText}
 						{wordCount}

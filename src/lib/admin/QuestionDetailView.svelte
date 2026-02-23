@@ -110,45 +110,40 @@
 				<span class="text-sm font-medium whitespace-nowrap">Question #—</span>
 			{/if}
 			<div class="flex flex-wrap items-center gap-1">
-				{#if question.aiGenerated}
-					<span class="badge badge-xs badge-info">AI</span>
-				{:else}
-					<span class="badge badge-xs badge-success">User</span>
-				{/if}
 				<span class="badge badge-xs badge-ghost text-xs">{convertToDisplayFormat(question.type)}</span>
 				<span class="badge badge-xs {question.status === 'published' ? 'badge-success' : question.status === 'draft' ? 'badge-warning' : 'badge-neutral'}">{question.status}</span>
 			</div>
 		</div>
 		{#if canEdit}
 			<div class="flex items-center gap-1">
-				<button class="btn btn-sm btn-ghost gap-1" onclick={onEdit}>
+				<button class="btn btn-sm btn-ghost rounded-full gap-1" onclick={onEdit}>
 					<Pencil size={14} />
 					{#if !isMobile}Edit{/if}
 				</button>
-				<button class="btn btn-sm btn-ghost gap-1" onclick={onMove}>
+				<button class="btn btn-sm btn-ghost rounded-full gap-1" onclick={onMove}>
 					<ArrowRightLeft size={14} />
 					{#if !isMobile}Move{/if}
 				</button>
-				
-				<div class="join">
-					<button 
-						class="btn btn-sm btn-ghost join-item gap-1" 
-						onclick={onDuplicate} 
+
+				<div class="flex items-center">
+					<button
+						class="btn btn-sm btn-ghost rounded-full gap-1"
+						onclick={onDuplicate}
 						title={isModuleFull ? 'Module limit reached' : 'Duplicate question'}
 					>
 						<Copy size={14} />
 						{#if !isMobile}Duplicate{/if}
 					</button>
 					{#if onDuplicateMany}
-						<div class="dropdown dropdown-end join-item">
-							<button tabindex="0" class="btn btn-sm btn-ghost px-1 border-l border-base-300">
+						<div class="dropdown dropdown-end">
+							<button tabindex="0" class="btn btn-sm btn-ghost btn-circle">
 								<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
 								</svg>
 							</button>
-							<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-lg z-20 w-44 p-1 shadow-lg border border-base-300">
+							<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-2xl z-20 w-44 p-1 shadow-lg border border-base-300">
 								<li>
-									<button class="text-sm gap-2" onclick={onDuplicateMany}>
+									<button class="text-sm gap-2 rounded-xl" onclick={onDuplicateMany}>
 										<CopyPlus size={14} />
 										Duplicate many...
 									</button>
@@ -158,7 +153,7 @@
 					{/if}
 				</div>
 
-				<button class="btn btn-sm btn-ghost text-error gap-1" onclick={onDelete}>
+				<button class="btn btn-sm btn-ghost rounded-full text-error gap-1" onclick={onDelete}>
 					<Trash2 size={14} />
 					{#if !isMobile}Delete{/if}
 				</button>
@@ -283,13 +278,13 @@
 		{/if}
 
 		<!-- Explanation -->
-		{#if question.explanation}
-			<div class="mb-{isMobile ? '4' : '6'}">
-				<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-{isMobile ? '2' : '3'}">Explanation</div>
-				<div class="p-{isMobile ? '3' : '4'} rounded-lg border border-base-300 bg-base-200/30">
-					<div class="text-sm text-base-content/80 tiptap-content">{@html question.explanation}</div>
+			{#if question.explanation}
+				<div class={isMobile ? 'mb-4' : 'mb-6'}>
+					<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60" class:mb-2={isMobile} class:mb-3={!isMobile}>Explanation</div>
+					<div class="rounded-2xl border border-base-300 bg-base-200/30" class:p-3={isMobile} class:p-4={!isMobile}>
+						<div class="text-sm text-base-content/80 tiptap-content">{@html question.explanation}</div>
+					</div>
 				</div>
-			</div>
 		{/if}
 
 		<!-- Attachments (desktop only) -->
@@ -302,7 +297,7 @@
 				<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
 					{#each media as attachment (attachment._id)}
 						<button
-							class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+							class="group border-2 border-base-300 rounded-2xl overflow-hidden cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
 							onclick={() => onAttachmentClick?.(attachment)}
 							aria-label={`View attachment: ${attachment.altText}`}
 						>
@@ -325,16 +320,32 @@
 			</div>
 		{/if}
 
-		<!-- Created by -->
-		{#if question.createdBy}
-			<div class="mt-{isMobile ? '6' : '8'} pt-4 border-t border-base-200">
-				<div class="flex items-center gap-1.5 text-xs text-base-content/40">
-					<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-					</svg>
-					<span>Created by {question.createdBy.firstName} {question.createdBy.lastName}</span>
-				</div>
+		<!-- Attribution & timestamps -->
+		<div class="{isMobile ? 'mt-6' : 'mt-8'} pt-4 border-t border-base-200">
+			<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-base-content/40">
+				{#if question.createdBy}
+					<span class="flex items-center gap-1.5">
+						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+						</svg>
+						{question.createdBy.firstName} {question.createdBy.lastName}
+					</span>
+				{:else if question.aiGenerated}
+					<span>AI generated</span>
+				{/if}
+				{#if question._creationTime}
+					<span class="flex items-center gap-1">
+						{#if question.createdBy || question.aiGenerated}<span class="text-base-content/25">&middot;</span>{/if}
+						Created {new Date(question._creationTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+					</span>
+				{/if}
+				{#if question.updatedAt && question._creationTime && question.updatedAt - question._creationTime > 60_000}
+					<span class="flex items-center gap-1">
+						<span class="text-base-content/25">&middot;</span>
+						Updated {new Date(question.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+					</span>
+				{/if}
 			</div>
-		{/if}
+		</div>
 	</div>
 </div>

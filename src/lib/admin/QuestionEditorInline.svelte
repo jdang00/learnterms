@@ -867,9 +867,9 @@
 	<div class="flex items-center justify-between px-4 py-3 border-b border-base-300 bg-base-100 flex-shrink-0">
 		<h3 class="text-base font-semibold">{mode === 'edit' ? 'Edit Question' : 'New Question'}</h3>
 		<div class="flex items-center gap-2">
-			<button class="btn btn-sm btn-ghost" onclick={onCancel} disabled={isSubmitting}>Cancel</button>
+			<button class="btn btn-sm btn-ghost rounded-full" onclick={onCancel} disabled={isSubmitting}>Cancel</button>
 			<button
-				class="btn btn-sm btn-primary gap-2"
+				class="btn btn-sm btn-primary rounded-full gap-2"
 				onclick={handleSubmit}
 				disabled={isSubmitting || !questionStem}
 			>
@@ -888,10 +888,10 @@
 		<!-- Type Selector -->
 		<div class="flex flex-col gap-2">
 			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1">Type</span>
-			<div class="join shadow-sm bg-base-100 rounded-lg border border-base-300 p-1">
+			<div class="flex shadow-sm bg-base-100 rounded-full border border-base-300 p-1 gap-0.5">
 				{#each questionTypeOptions as option (option.value)}
 					<button
-						class="join-item btn btn-xs sm:btn-sm border-0 {questionType === option.value ? 'btn-active font-medium' : 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
+						class="btn btn-xs sm:btn-sm rounded-full border-0 {questionType === option.value ? 'btn-active font-medium' : 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
 						onclick={() => {
 							questionType = option.value;
 							handleTypeChange();
@@ -911,10 +911,10 @@
 		<!-- Status Selector -->
 		<div class="flex flex-col gap-2">
 			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1">Status</span>
-			<div class="join shadow-sm bg-base-100 rounded-lg border border-base-300 p-1">
+			<div class="flex shadow-sm bg-base-100 rounded-full border border-base-300 p-1 gap-0.5">
 				{#each statusOptions as option (option.value)}
 					<button
-						class="join-item btn btn-xs sm:btn-sm border-0 {questionStatus === option.value ? option.colorClass + ' btn-active font-medium' : 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
+						class="btn btn-xs sm:btn-sm rounded-full border-0 {questionStatus === option.value ? option.colorClass + ' btn-active font-medium' : 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
 						onclick={() => {
 							questionStatus = option.value;
 							onChange();
@@ -930,7 +930,7 @@
 	</div>
 
 	<!-- Main Scrollable Content -->
-	<div class="flex-1 overflow-y-auto min-h-0 p-4 pb-40 sm:p-6" onpaste={handlePaste}>
+	<div class="flex-1 overflow-y-auto min-h-0 p-4 pb-40 sm:p-6 sm:pb-40" onpaste={handlePaste}>
 		<div class="w-full max-w-none space-y-8">
 			
 			<!-- Question Stem -->
@@ -941,7 +941,7 @@
 					</label>
 					<span class="text-[10px] text-base-content/40 font-medium hidden sm:inline">Ctrl + S to save</span>
 				</div>
-				<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100 shadow-sm group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+				<div class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 shadow-sm group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
 					{#if editor}
 						<div class="bg-base-200/50 border-b border-base-300 p-1 flex gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
 							{#each menuItems as item (item.name)}
@@ -1015,16 +1015,16 @@
 													<option value={mode}>{label}</option>
 												{/each}
 											</select>
-											<div class="join">
-												<button 
-													class="btn btn-sm join-item {row.flags.ignorePunct ? 'btn-active' : 'btn-ghost border-base-300'}"
+											<div class="flex items-center rounded-full border border-base-300 p-0.5 gap-0.5">
+												<button
+													class="btn btn-sm rounded-full border-0 {row.flags.ignorePunct ? 'btn-active' : 'btn-ghost'}"
 													onclick={() => toggleFitbFlag(index, 'ignorePunct')}
 													title="Ignore Punctuation"
 												>
 													Punct
 												</button>
 												<button 
-													class="btn btn-sm join-item {row.flags.normalizeWs ? 'btn-active' : 'btn-ghost border-base-300'}"
+													class="btn btn-sm rounded-full border-0 {row.flags.normalizeWs ? 'btn-active' : 'btn-ghost'}"
 													onclick={() => toggleFitbFlag(index, 'normalizeWs')}
 													title="Normalize Whitespace"
 												>
@@ -1224,7 +1224,7 @@
 						<MessageSquare size={14} /> Explanation
 					</div>
 					<p class="text-[10px] text-base-content/40 mb-2">Add notes or context here to guide AI-generated explanations</p>
-					<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100 group">
+					<div class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 group">
 						{#if explanationEditor}
 							<EditorContent editor={$explanationEditor} />
 							<div class="bg-base-200/50 border-t border-base-300 p-1 flex gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
@@ -1253,7 +1253,7 @@
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 								<!-- Existing Media -->
 								{#each existingMedia as m (m._id)}
-									<div class="border border-base-300 rounded-lg overflow-hidden bg-base-100">
+									<div class="border border-base-300 rounded-2xl overflow-hidden bg-base-100">
 										<div class="relative group">
 											<img src={m.url} alt={m.altText} class="w-full h-32 object-cover" />
 											<button 
@@ -1291,7 +1291,7 @@
 								
 								<!-- Queued Media -->
 								{#each queuedMedia as m, idx (idx)}
-									<div class="border border-primary/50 rounded-lg overflow-hidden bg-base-100 relative">
+									<div class="border border-primary/50 rounded-2xl overflow-hidden bg-base-100 relative">
 										<div class="absolute top-2 left-2 badge badge-primary badge-xs z-10">New</div>
 										<div class="relative">
 											<img src={m.url} alt={m.name} class="w-full h-32 object-cover" />
@@ -1332,7 +1332,7 @@
 
 						<div class="relative">
 							{#if isPasteUploading}
-								<div class="border-2 border-dashed border-primary rounded-lg p-6 flex flex-col items-center justify-center h-32 bg-base-100/50">
+								<div class="border-2 border-dashed border-primary rounded-2xl p-6 flex flex-col items-center justify-center h-32 bg-base-100/50">
 									<span class="loading loading-spinner text-primary mb-2"></span>
 									<span class="text-xs text-primary font-medium">Processing pasted image...</span>
 								</div>

@@ -3,6 +3,10 @@ import { authQuery } from './authQueries';
 import type { Doc, Id } from './_generated/dataModel';
 import { polar } from './polar';
 
+function hasInteraction(record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions'>) {
+	return record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0;
+}
+
 /**
  * Get all students in a cohort with their basic info
  * Uses the by_cohortId index for efficient querying
@@ -750,5 +754,204 @@ export const getUserModuleStats = authQuery({
 			},
 			classes: classStats.sort((a, b) => a.classOrder - b.classOrder)
 		};
+	}
+});
+
+/**
+ * Lightweight query to identify which modules the current user touched most recently.
+ * Returns only module IDs and timestamps for minimal payload.
+ */
+export const getRecentModuleActivity = authQuery({
+	args: {
+		limit: v.optional(v.number())
+	},
+	handler: async (ctx, args) => {
+		const limit = Math.max(1, Math.min(args.limit ?? 4, 8));
+		const viewer = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
+			.first();
+		if (!viewer || viewer.deletedAt || !viewer.cohortId) return [];
+
+		const cohortClasses = await ctx.db
+			.query('class')
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', viewer.cohortId!))
+			.collect();
+
+		if (cohortClasses.length === 0) return [];
+
+		const interactedProgress: Doc<'userProgress'>[] = [];
+		for (const classItem of cohortClasses) {
+			const classProgress = await ctx.db
+				.query('userProgress')
+				.withIndex('by_user_class', (q) => q.eq('userId', viewer._id).eq('classId', classItem._id))
+				.filter((q) => q.eq(q.field('deletedAt'), undefined))
+				.collect();
+
+			for (const record of classProgress) {
+				if (hasInteraction(record)) interactedProgress.push(record);
+			}
+		}
+
+		if (interactedProgress.length === 0) return [];
+
+		const sortedProgress = [...interactedProgress].sort(
+			(a, b) => (b.lastAttemptAt ?? b.updatedAt) - (a.lastAttemptAt ?? a.updatedAt)
+		);
+		const cohortClassIdSet = new Set(cohortClasses.map((classItem) => classItem._id));
+		const questionToModuleId = new Map<Id<'question'>, Id<'module'> | null>();
+		const moduleVisibility = new Map<Id<'module'>, boolean>();
+		const seenModuleIds = new Set<Id<'module'>>();
+		const recentModules: Array<{ moduleId: Id<'module'>; lastActivityAt: number }> = [];
+
+		for (const progress of sortedProgress) {
+			if (recentModules.length >= limit) break;
+
+			let moduleId: Id<'module'> | null | undefined = questionToModuleId.get(progress.questionId);
+			if (moduleId === undefined) {
+				const question = await ctx.db.get(progress.questionId);
+				moduleId = question && !question.deletedAt ? question.moduleId : null;
+				questionToModuleId.set(progress.questionId, moduleId);
+			}
+
+			if (!moduleId || seenModuleIds.has(moduleId)) continue;
+
+			let isVisible = moduleVisibility.get(moduleId);
+			if (isVisible === undefined) {
+				const moduleDoc = await ctx.db.get(moduleId);
+				isVisible = Boolean(
+					moduleDoc &&
+					!moduleDoc.deletedAt &&
+					moduleDoc.status === 'published' &&
+					cohortClassIdSet.has(moduleDoc.classId)
+				);
+				moduleVisibility.set(moduleId, isVisible);
+			}
+
+			if (!isVisible) continue;
+
+			seenModuleIds.add(moduleId);
+			recentModules.push({
+				moduleId,
+				lastActivityAt: progress.lastAttemptAt ?? progress.updatedAt
+			});
+		}
+
+		return recentModules;
+	}
+});
+
+/**
+ * Optimized per-module progress query for a small set of modules.
+ * Designed to pair with getRecentModuleActivity on the classes page.
+ */
+export const getRecentModulesProgress = authQuery({
+	args: {
+		moduleIds: v.array(v.id('module'))
+	},
+	handler: async (ctx, args) => {
+		const dedupedModuleIds = Array.from(new Set(args.moduleIds)).slice(0, 8);
+		if (dedupedModuleIds.length === 0) return [];
+
+		const viewer = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
+			.first();
+		if (!viewer || viewer.deletedAt || !viewer.cohortId) return [];
+
+		const moduleDocs = await Promise.all(dedupedModuleIds.map((moduleId) => ctx.db.get(moduleId)));
+		const validModules = moduleDocs.filter(
+			(moduleDoc): moduleDoc is Doc<'module'> =>
+				moduleDoc !== null && !moduleDoc.deletedAt && moduleDoc.status === 'published'
+		);
+		if (validModules.length === 0) return [];
+
+		const classIds = Array.from(new Set(validModules.map((moduleDoc) => moduleDoc.classId)));
+		const classDocs = await Promise.all(classIds.map((classId) => ctx.db.get(classId)));
+		const classMap = new Map<Id<'class'>, Doc<'class'>>();
+		for (const classDoc of classDocs) {
+			if (!classDoc || classDoc.deletedAt) continue;
+			if (classDoc.cohortId !== viewer.cohortId) continue;
+			classMap.set(classDoc._id, classDoc);
+		}
+
+		const cohortModules = validModules.filter((moduleDoc) => classMap.has(moduleDoc.classId));
+		if (cohortModules.length === 0) return [];
+
+		type ModuleAccumulator = {
+			totalQuestions: number;
+			questionsInteracted: number;
+			questionsMastered: number;
+			questionsFlagged: number;
+		};
+
+		const moduleAccumulators = new Map<Id<'module'>, ModuleAccumulator>();
+		const questionToModuleId = new Map<Id<'question'>, Id<'module'>>();
+
+		for (const moduleDoc of cohortModules) {
+			const questions = await ctx.db
+				.query('question')
+				.withIndex('by_moduleId', (q) => q.eq('moduleId', moduleDoc._id))
+				.filter((q) => q.eq(q.field('deletedAt'), undefined))
+				.collect();
+
+			for (const question of questions) {
+				questionToModuleId.set(question._id, moduleDoc._id);
+			}
+
+			moduleAccumulators.set(moduleDoc._id, {
+				totalQuestions: moduleDoc.questionCount ?? questions.length,
+				questionsInteracted: 0,
+				questionsMastered: 0,
+				questionsFlagged: 0
+			});
+		}
+
+		const involvedClassIds = Array.from(new Set(cohortModules.map((moduleDoc) => moduleDoc.classId)));
+		for (const classId of involvedClassIds) {
+			const progressRecords = await ctx.db
+				.query('userProgress')
+				.withIndex('by_user_class', (q) => q.eq('userId', viewer._id).eq('classId', classId))
+				.filter((q) => q.eq(q.field('deletedAt'), undefined))
+				.collect();
+
+			for (const progress of progressRecords) {
+				const moduleId = questionToModuleId.get(progress.questionId);
+				if (!moduleId) continue;
+				const moduleStats = moduleAccumulators.get(moduleId);
+				if (!moduleStats) continue;
+
+				if (hasInteraction(progress)) moduleStats.questionsInteracted++;
+				if (progress.isMastered) moduleStats.questionsMastered++;
+				if (progress.isFlagged) moduleStats.questionsFlagged++;
+			}
+		}
+
+		const orderLookup = new Map(dedupedModuleIds.map((moduleId, index) => [moduleId, index]));
+
+		return [...cohortModules]
+			.sort((a, b) => (orderLookup.get(a._id) ?? 999) - (orderLookup.get(b._id) ?? 999))
+			.map((moduleDoc) => {
+				const classDoc = classMap.get(moduleDoc.classId)!;
+				const stats = moduleAccumulators.get(moduleDoc._id)!;
+				const progress =
+					stats.totalQuestions > 0
+						? Math.round((stats.questionsInteracted / stats.totalQuestions) * 100)
+						: 0;
+
+				return {
+					moduleId: moduleDoc._id,
+					moduleTitle: moduleDoc.title,
+					moduleEmoji: moduleDoc.emoji,
+					classId: classDoc._id,
+					className: classDoc.name,
+					classCode: classDoc.code,
+					totalQuestions: stats.totalQuestions,
+					questionsInteracted: stats.questionsInteracted,
+					questionsMastered: stats.questionsMastered,
+					questionsFlagged: stats.questionsFlagged,
+					progress
+				};
+			});
 	}
 });

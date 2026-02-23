@@ -158,7 +158,7 @@
 				<div class="form-control w-full">
 					<textarea
 						id="module-description"
-						class="textarea textarea-bordered w-full min-h-48"
+						class="textarea textarea-bordered rounded-2xl w-full min-h-48"
 						class:textarea-error={validationErrors.moduleDescription}
 						bind:value={moduleDescription}
 						placeholder="Describe what this module covers..."
@@ -203,7 +203,7 @@
 							id="module-emoji"
 							type="text"
 							placeholder="e.g., 📘"
-							class="input input-bordered w-full max-w-28"
+							class="input input-bordered rounded-full w-full max-w-28"
 							bind:value={moduleEmoji}
 							oninput={() => validateOnInput('moduleEmoji', moduleEmoji)}
 							maxlength="8"
@@ -237,7 +237,7 @@
 							id="module-title"
 							type="text"
 							placeholder="e.g., Introduction to Optics"
-							class="input input-bordered w-full"
+							class="input input-bordered rounded-full w-full"
 							class:input-error={validationErrors.moduleTitle}
 							bind:value={moduleTitle}
 							oninput={() => validateOnInput('moduleTitle', moduleTitle)}
@@ -278,7 +278,7 @@
 					</label>
 					<select
 						id="module-status"
-						class="select select-bordered w-full"
+						class="select select-bordered rounded-full w-full"
 						bind:value={moduleStatus}
 					>
 						<option value="draft">Draft</option>
@@ -357,7 +357,7 @@
 				<div class="form-control hidden w-full md:block">
 					<textarea
 						id="module-description"
-						class="textarea textarea-bordered w-full min-h-48"
+						class="textarea textarea-bordered rounded-2xl w-full min-h-48"
 						class:textarea-error={validationErrors.moduleDescription}
 						bind:value={moduleDescription}
 						placeholder="Describe what this module covers..."
@@ -383,10 +383,10 @@
 
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
-				<button class="btn btn-ghost" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button
+				<button class="btn btn-ghost rounded-full" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button
 				>
 				<button
-					class="btn btn-primary gap-2"
+					class="btn btn-primary gap-2 rounded-full"
 					onclick={handleSubmit}
 					disabled={isSubmitting || !isFormValid}
 					title={!isFormValid ? 'Please fill all fields correctly before creating the module' : ''}

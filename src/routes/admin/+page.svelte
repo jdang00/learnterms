@@ -22,9 +22,12 @@
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
+	import { useClerkContext } from 'svelte-clerk/client';
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
+	const clerk = useClerkContext();
+	const clerkUser = $derived(clerk.user);
 
 	const classes = userData?.cohortId
 		? useQuery(api.class.getUserClasses, {
@@ -140,7 +143,10 @@
 		}
 	}
 
-	const semesters = useQuery(api.semester.getAllSemesters, {});
+	const semesters = useQuery(
+		api.semester.getAllSemesters,
+		() => clerkUser ? {} : 'skip'
+	);
 	let currentSemester = $state('');
 	let viewMode = $state<'normal' | 'reorder'>('normal');
 
@@ -197,10 +203,10 @@
 		<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8" role="list">
 			<a
 				href="/admin/library"
-				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
+				class="group rounded-2xl bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Content Library"
 			>
-				<div class="rounded-md border bg-primary-content border-base-300 p-2">
+				<div class="rounded-xl border bg-primary-content border-base-300 p-2">
 					<NotebookPen size={20} class="text-primary" aria-hidden="true" />
 				</div>
 				<div class="flex-1 min-w-0">
@@ -215,10 +221,10 @@
 
 			<a
 				href="/admin/question-studio"
-				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
+				class="group rounded-2xl bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Question Studio"
 			>
-				<div class="rounded-md bg-primary-content border border-base-300 p-2">
+				<div class="rounded-xl bg-primary-content border border-base-300 p-2">
 					<Sparkles size={20} class="text-primary" aria-hidden="true" />
 				</div>
 				<div class="flex-1 min-w-0">
@@ -233,10 +239,10 @@
 
 			<a
 				href="/admin/progress"
-				class="group rounded-lg bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
+				class="group rounded-2xl bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Class Progress"
 			>
-				<div class="rounded-md bg-primary-content border border-base-300 p-2">
+				<div class="rounded-xl bg-primary-content border border-base-300 p-2">
 					<ChartColumnIncreasing size={20} class="text-primary" aria-hidden="true" />
 				</div>
 				<div class="flex-1 min-w-0">
@@ -267,7 +273,7 @@
 				</p>
 			</div>
 			{#if admin || dev}
-				<button class="btn btn-primary gap-2" onclick={openAddModal}>
+				<button class="btn btn-primary rounded-full gap-2" onclick={openAddModal}>
 					<Plus size={16} />
 					<span>Add New Class</span>
 				</button>
@@ -287,11 +293,11 @@
 			<div class="flex items-center mt-4 mb-4 justify-between">
 				<div>
 					<details class="dropdown">
-						<summary class="btn btn-outline btn-sm">
+						<summary class="btn btn-outline btn-sm rounded-full">
 							{currentSemester}
 							<ChevronDownIcon size={16} />
 						</summary>
-						<ul class="menu dropdown-content w-48 rounded-lg bg-base-100 shadow-sm border border-base-300">
+						<ul class="menu dropdown-content w-48 rounded-2xl bg-base-100 shadow-sm border border-base-300">
 							{#each semesters.data as semester (semester._id)}
 								<li>
 									<button
@@ -312,7 +318,7 @@
 						<span><X size={16} /></span>
 					</button>
 				{:else}
-					<button class="btn btn-outline gap-2 btn-sm" onclick={() => viewMode = 'reorder'}>
+					<button class="btn btn-outline rounded-full gap-2 btn-sm" onclick={() => viewMode = 'reorder'}>
 						<GripVertical size={16} />
 						<span>Reorder</span>
 					</button>
@@ -345,7 +351,7 @@
 					<div class="space-y-3">
 						{#each filteredClassList as classItem (classItem._id)}
 							<div
-								class="rounded-lg bg-base-100 p-4 shadow-sm border border-base-300
+								class="rounded-2xl bg-base-100 p-4 shadow-sm border border-base-300
 								transition-all duration-200 hover:shadow-md hover:border-primary"
 								aria-label={`Class card: ${classItem.name}`}
 							>
@@ -392,7 +398,7 @@
 									<ul
 										tabindex="0"
 										role="menu"
-										class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+										class="dropdown-content menu bg-base-100 rounded-2xl z-1 w-52 p-2 shadow-sm"
 									>
 												<li>
 													<button
@@ -459,11 +465,11 @@
 									'.interactive'
 								]
 							}}
-							class="flex items-center gap-3 p-3 sm:gap-4 sm:p-4 bg-base-100 rounded-lg border border-base-300 shadow-sm hover:shadow-md transition-all duration-200 svelte-dnd-touch-feedback touch-manipulation"
+							class="flex items-center gap-3 p-3 sm:gap-4 sm:p-4 bg-base-100 rounded-2xl border border-base-300 shadow-sm hover:shadow-md transition-all duration-200 svelte-dnd-touch-feedback touch-manipulation"
 							animate:flip={{ duration: 300 }}
 						>
 							<!-- Drag Handle -->
-							<div class="flex-none flex items-center justify-center w-10 h-10 rounded-md bg-base-200 hover:bg-base-300 transition-colors cursor-move active:cursor-grabbing">
+							<div class="flex-none flex items-center justify-center w-10 h-10 rounded-xl bg-base-200 hover:bg-base-300 transition-colors cursor-move active:cursor-grabbing">
 								<GripVertical size={20} class="text-base-content/70" />
 							</div>
 

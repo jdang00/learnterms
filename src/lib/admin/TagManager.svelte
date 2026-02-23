@@ -114,19 +114,19 @@
 				<span class="badge badge-sm">{tagsQuery.data.length}</span>
 			{/if}
 		</div>
-		<button class="btn btn-primary btn-sm gap-2" onclick={() => showAddForm = !showAddForm}>
+		<button class="btn btn-primary btn-sm rounded-full gap-2" onclick={() => showAddForm = !showAddForm}>
 			<Plus size={14} />
 			<span>New Tag</span>
 		</button>
 	</div>
 
 	{#if showAddForm}
-		<div class="mb-4 p-3 rounded-lg bg-base-200/50 border border-base-300">
+		<div class="mb-4 p-3 rounded-2xl bg-base-200/50 border border-base-300">
 			<div class="flex flex-col gap-3">
 				<div class="flex items-center gap-2">
 					<input
 						type="text"
-						class="input input-bordered input-sm flex-1"
+						class="input input-bordered input-sm rounded-full flex-1"
 						placeholder="Tag name (e.g. Midterm, Chapter 1)"
 						maxlength="40"
 						bind:value={newTagName}
@@ -139,7 +139,7 @@
 							bind:value={newTagColor} 
 							title="Choose tag color"
 						/>
-						<button class="btn btn-primary btn-sm gap-1" onclick={handleCreate} disabled={isCreating}>
+						<button class="btn btn-primary btn-sm rounded-full gap-1" onclick={handleCreate} disabled={isCreating}>
 							{#if isCreating}
 								<span class="loading loading-spinner loading-xs"></span>
 							{:else}
@@ -234,7 +234,7 @@
 										<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
 									</button>
 									<ul
-										class="dropdown-content menu bg-base-100 rounded-box z-10 w-32 p-1.5 shadow-lg border border-base-300"
+										class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-32 p-1.5 shadow-lg border border-base-300"
 									>
 										<li>
 											<button

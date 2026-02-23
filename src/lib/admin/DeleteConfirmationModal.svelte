@@ -14,7 +14,7 @@
 </script>
 
 <dialog class="modal max-w-full p-4" class:modal-open={isDeleteModalOpen}>
-	<div class="modal-box">
+	<div class="modal-box rounded-2xl">
 		<form method="dialog">
 			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onclick={onCancel}>
 				<X size={16} />
@@ -49,8 +49,8 @@
 			{/if}
 		</p>
 		<div class="flex justify-end space-x-2">
-			<button class="btn btn-outline" onclick={onCancel}>Cancel</button>
-			<button class="btn btn-error" onclick={onConfirm}>Delete</button>
+			<button class="btn btn-outline rounded-full" onclick={onCancel}>Cancel</button>
+			<button class="btn btn-error rounded-full" onclick={onConfirm}>Delete</button>
 		</div>
 	</div>
 </dialog>

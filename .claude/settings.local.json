@@ -34,7 +34,9 @@
       "Bash(git -C:*)",
       "Bash(kill:*)",
       "Bash(lsof:*)",
-      "Bash(bun ls:*)"
+      "Bash(bun ls:*)",
+      "Bash(bun outdated:*)",
+      "Bash(find:*)"
     ]
   }
 }

@@ -153,11 +153,11 @@
 
 <div class="min-h-screen p-8 max-w-7xl mx-auto">
 	{#if docView}
-		<button class="btn mb-4 btn-ghost" onclick={backToLibrary}
+		<button class="btn mb-4 btn-ghost rounded-full" onclick={backToLibrary}
 			><ArrowLeft size={16} />Back to Library</button
 		>
 	{:else}
-		<a class="btn mb-4 btn-ghost" href="/admin"><ArrowLeft size={16} />Back</a>
+		<a class="btn mb-4 btn-ghost rounded-full" href="/admin"><ArrowLeft size={16} />Back</a>
 	{/if}
 
 	<div class="mb-8">
@@ -192,12 +192,12 @@
 						</p>
 					</div>
 					<div class="flex flex-wrap gap-2">
-						<button class="btn btn-primary btn-sm" onclick={openAddModal}><Plus size={16} /> Add Document</button>
+						<button class="btn btn-primary btn-sm rounded-full" onclick={openAddModal}><Plus size={16} /> Add Document</button>
 					</div>
 				</div>
 
 				<div>
-					<label class="input input-bordered input-sm flex items-center gap-2 max-w-md">
+					<label class="input input-bordered input-sm rounded-full flex items-center gap-2 max-w-md">
 						<Search size={14} class="text-base-content/60" />
 						<input
 							type="text"
@@ -211,7 +211,7 @@
 				{#if userContentLib.isLoading}
 					<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
 						{#each Array(10) as _}
-							<div class="card aspect-[8.5/11] bg-base-100 border border-base-300 rounded-lg">
+							<div class="card aspect-[8.5/11] bg-base-100 border border-base-300 rounded-2xl">
 								<div class="card-body p-4 space-y-3">
 									<div class="skeleton h-4 w-3/4"></div>
 									<div class="skeleton h-3 w-full"></div>
@@ -228,7 +228,7 @@
 						<span>Unable to load your library right now.</span>
 					</div>
 				{:else if !userContentLib.data || userContentLib.data.length === 0}
-					<div class="rounded-lg border-2 border-dashed border-base-300 bg-base-100 p-12 text-center space-y-4">
+					<div class="rounded-2xl border-2 border-dashed border-base-300 bg-base-100 p-12 text-center space-y-4">
 						<div class="flex items-center justify-center">
 							<div class="p-3 rounded-full bg-primary/10">
 								<File size={24} class="text-primary" />
@@ -240,10 +240,10 @@
 								Start building your library by uploading your first document
 							</p>
 						</div>
-						<button class="btn btn-primary btn-sm" onclick={openAddModal}><Plus size={16} /> Add your first document</button>
+						<button class="btn btn-primary btn-sm rounded-full" onclick={openAddModal}><Plus size={16} /> Add your first document</button>
 					</div>
 				{:else if filteredDocs.length === 0}
-					<div class="rounded-lg border border-base-300 bg-base-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+					<div class="rounded-2xl border border-base-300 bg-base-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-3">
 						<div>
 							<p class="font-semibold">No matching documents</p>
 							<p class="text-sm text-base-content/70">Try adjusting your search terms</p>
@@ -256,7 +256,7 @@
 					<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
 						{#each filteredDocs as doc (doc._id)}
 							<div
-								class="group card relative aspect-[8.5/11] bg-linear-to-br from-primary/5 via-base-100 to-secondary/5 border border-base-300 shadow-sm hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer rounded-lg overflow-hidden"
+								class="group card relative aspect-[8.5/11] bg-linear-to-br from-primary/5 via-base-100 to-secondary/5 border border-base-300 shadow-sm hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer rounded-2xl overflow-hidden"
 								onclick={() => handledocView(doc._id, doc)}
 								onkeydown={(event) => {
 									if (event.key === 'Enter' || event.key === ' ') {
@@ -267,7 +267,7 @@
 								tabindex="0"
 								role="button"
 							>
-								<div class="absolute inset-0 pointer-events-none rounded-lg border border-white/10"></div>
+								<div class="absolute inset-0 pointer-events-none rounded-2xl border border-white/10"></div>
 								<div class="card-body p-4 space-y-3">
 									<div class="flex items-start justify-between gap-2">
 										<div class="flex-1 min-w-0 space-y-1.5">
@@ -288,7 +288,7 @@
 											>
 												<MoreVertical size={14} />
 											</button>
-											<ul role="menu" class="dropdown-content menu bg-base-100 rounded-box w-40 p-1.5 shadow-lg border border-base-300 z-10">
+											<ul role="menu" class="dropdown-content menu bg-base-100 rounded-2xl w-40 p-1.5 shadow-lg border border-base-300 z-10">
 												<li>
 													<button
 														class="btn btn-xs btn-ghost w-full justify-start"

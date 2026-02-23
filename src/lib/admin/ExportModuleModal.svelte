@@ -25,7 +25,7 @@
 </script>
 
 <dialog class="modal" class:modal-open={isOpen}>
-	<div class="modal-box">
+	<div class="modal-box rounded-2xl">
 		<form method="dialog">
 			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onclick={onClose}>
 				<X size={18} />
@@ -39,11 +39,11 @@
 
 		<div class="grid grid-cols-1 gap-3">
 			<button 
-				class="btn btn-outline justify-start h-auto py-3 px-4 flex-nowrap group hover:btn-primary hover:text-primary-content transition-all"
+				class="btn btn-outline rounded-2xl justify-start h-auto py-3 px-4 flex-nowrap group hover:btn-primary hover:text-primary-content transition-all"
 				onclick={() => onExport('txt')}
 				disabled={isExporting}
 			>
-				<div class="bg-base-200 p-2 rounded-lg group-hover:bg-primary-content/20 text-base-content group-hover:text-primary-content transition-colors">
+				<div class="bg-base-200 p-2 rounded-xl group-hover:bg-primary-content/20 text-base-content group-hover:text-primary-content transition-colors">
 					<FileText size={24} />
 				</div>
 				<div class="text-left ml-2 flex-1">
@@ -53,11 +53,11 @@
 			</button>
 
 			<button 
-				class="btn btn-outline justify-start h-auto py-3 px-4 flex-nowrap group hover:btn-secondary hover:text-secondary-content transition-all"
+				class="btn btn-outline rounded-2xl justify-start h-auto py-3 px-4 flex-nowrap group hover:btn-secondary hover:text-secondary-content transition-all"
 				onclick={() => onExport('json')}
 				disabled={isExporting}
 			>
-				<div class="bg-base-200 p-2 rounded-lg group-hover:bg-secondary-content/20 text-base-content group-hover:text-secondary-content transition-colors">
+				<div class="bg-base-200 p-2 rounded-xl group-hover:bg-secondary-content/20 text-base-content group-hover:text-secondary-content transition-colors">
 					<FileJson size={24} />
 				</div>
 				<div class="text-left ml-2 flex-1">
@@ -67,11 +67,11 @@
 			</button>
 
 			<button 
-				class="btn btn-outline justify-start h-auto py-3 px-4 flex-nowrap group hover:btn-accent hover:text-accent-content transition-all"
+				class="btn btn-outline rounded-2xl justify-start h-auto py-3 px-4 flex-nowrap group hover:btn-accent hover:text-accent-content transition-all"
 				onclick={() => onExport('csv')}
 				disabled={isExporting}
 			>
-				<div class="bg-base-200 p-2 rounded-lg group-hover:bg-accent-content/20 text-base-content group-hover:text-accent-content transition-colors">
+				<div class="bg-base-200 p-2 rounded-xl group-hover:bg-accent-content/20 text-base-content group-hover:text-accent-content transition-colors">
 					<FileSpreadsheet size={24} />
 				</div>
 				<div class="text-left ml-2 flex-1">
@@ -82,7 +82,7 @@
 		</div>
 
 		<div class="modal-action">
-			<button class="btn btn-ghost" onclick={onClose}>Cancel</button>
+			<button class="btn btn-ghost rounded-full" onclick={onClose}>Cancel</button>
 		</div>
 	</div>
 	<div class="modal-backdrop bg-black/50" onclick={onClose}></div>
