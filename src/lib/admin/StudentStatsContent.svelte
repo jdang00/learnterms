@@ -69,7 +69,7 @@
 	{@const overall = userStats.data.overall}
 	<!-- Overall Stats -->
 	<div
-		class="stats stats-vertical sm:stats-horizontal shadow-sm border border-base-300 mb-4 rounded-lg"
+		class="stats stats-vertical sm:stats-horizontal shadow-sm border border-base-300 mb-4 rounded-2xl"
 	>
 		<div class="stat py-3">
 			<div class="stat-figure text-primary">
@@ -125,7 +125,7 @@
 			<div class="space-y-2">
 				{#each [...classesBySemester().entries()] as [semesterName, classes]}
 					<!-- Semester Header -->
-					<div class="collapse collapse-arrow bg-base-200 rounded-lg">
+					<div class="collapse collapse-arrow bg-base-200 rounded-2xl">
 						<input
 							type="checkbox"
 							checked={expandedSemesters.has(semesterName)}
@@ -142,7 +142,7 @@
 								{#each classes as cls}
 									<!-- Class -->
 									<div
-										class="collapse collapse-arrow bg-base-100 border border-base-300 rounded-lg"
+										class="collapse collapse-arrow bg-base-100 border border-base-300 rounded-2xl"
 									>
 										<input
 											type="checkbox"

@@ -109,7 +109,7 @@
 
 <div class="min-h-screen p-4 sm:p-8 max-w-7xl mx-auto">
 	<!-- Header -->
-	<a class="btn btn-ghost btn-sm mb-3" href="/admin">
+	<a class="btn btn-ghost btn-sm rounded-full mb-3" href="/admin">
 		<ArrowLeft size={16} />
 		Back
 	</a>
@@ -228,7 +228,7 @@
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors"
+							class="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors"
 						>
 							<BarChart3 size={20} />
 						</div>
@@ -248,7 +248,7 @@
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="p-2 rounded-lg bg-secondary/10 text-secondary group-hover:bg-secondary/20 transition-colors"
+							class="p-2 rounded-xl bg-secondary/10 text-secondary group-hover:bg-secondary/20 transition-colors"
 						>
 							<Users size={20} />
 						</div>
@@ -268,7 +268,7 @@
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="p-2 rounded-lg bg-accent/10 text-accent group-hover:bg-accent/20 transition-colors"
+							class="p-2 rounded-xl bg-accent/10 text-accent group-hover:bg-accent/20 transition-colors"
 						>
 							<Award size={20} />
 						</div>
@@ -301,7 +301,7 @@
 				<input
 					type="text"
 					placeholder="Search by name or email..."
-					class="input input-bordered input-sm w-full sm:w-64"
+					class="input input-bordered input-sm rounded-full w-full sm:w-64"
 					bind:value={searchQuery}
 				/>
 			</div>

@@ -193,7 +193,7 @@
 				<div class="relative inline-block">
 					<button
 						id="edit-semester-trigger"
-						class="btn btn-sm ms-4 md:btn-md"
+						class="btn btn-sm ms-4 md:btn-md rounded-full"
 						popovertarget="edit-popover-1"
 						style="anchor-name: --edit-anchor-1"
 						type="button"
@@ -220,7 +220,7 @@
 										semesterEditName = semester.name;
 										document.getElementById('edit-popover-1')?.hidePopover();
 									}}
-									class="flex items-center gap-2 rounded-lg p-2 transition-colors duration-150 hover:bg-base-200"
+									class="flex items-center gap-2 rounded-xl p-2 transition-colors duration-150 hover:bg-base-200"
 								>
 									<CalendarDays size={16} class="text-primary/70" />
 									<span>{semester.name}</span>
@@ -246,7 +246,7 @@
 					</label>
 					<textarea
 						id="class-description"
-						class="textarea textarea-bordered w-full min-h-48"
+						class="textarea textarea-bordered rounded-2xl w-full min-h-48"
 						bind:value={classDescription}
 						placeholder="Enter class description..."
 					></textarea>
@@ -274,7 +274,7 @@
 								id="class-name"
 								type="text"
 								placeholder="e.g., General Pharmacology"
-								class="input input-bordered w-full"
+								class="input input-bordered rounded-full w-full"
 								class:input-error={validationErrors.className}
 								bind:value={className}
 								oninput={() => validateOnInput('className', className)}
@@ -318,7 +318,7 @@
 								id="class-code"
 								type="text"
 								placeholder="e.g., OPT5103"
-								class="input input-bordered w-full"
+								class="input input-bordered rounded-full w-full"
 								class:input-error={validationErrors.classCode}
 								bind:value={classCode}
 								oninput={() => validateOnInput('classCode', classCode)}
@@ -352,7 +352,7 @@
 					<div class="form-control hidden w-full md:block">
 						<textarea
 							id="class-description"
-							class="textarea textarea-bordered w-full min-h-48"
+							class="textarea textarea-bordered rounded-2xl w-full min-h-48"
 							class:textarea-error={validationErrors.classDescription}
 							bind:value={classDescription}
 							placeholder="Describe what this class covers..."
@@ -380,7 +380,7 @@
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
 				<button
-					class="btn btn-ghost"
+					class="btn btn-ghost rounded-full"
 					onclick={() => {
 						resetForm();
 						closeEditModal();
@@ -388,7 +388,7 @@
 					disabled={isSubmitting}>Cancel</button
 				>
 				<button
-					class="btn btn-primary gap-2"
+					class="btn btn-primary gap-2 rounded-full"
 					onclick={handleSubmit}
 					disabled={isSubmitting || !isFormValid}
 					title={!isFormValid ? 'Please fill all fields correctly before saving changes' : ''}

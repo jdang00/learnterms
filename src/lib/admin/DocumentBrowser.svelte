@@ -48,7 +48,7 @@
 	<div class="p-4 border-b border-base-300 flex-shrink-0">
 		{#if selectedDocument}
 			<div class="flex items-center gap-2">
-				<button class="btn btn-ghost btn-xs gap-1" onclick={backToDocuments}>
+				<button class="btn btn-ghost btn-xs rounded-full gap-1" onclick={backToDocuments}>
 					<ArrowLeft size={14} />
 					Back
 				</button>
@@ -65,7 +65,7 @@
 				<input
 					type="text"
 					placeholder="Search documents..."
-					class="input input-sm input-bordered w-full pl-9"
+					class="input input-sm input-bordered rounded-full w-full pl-9"
 					bind:value={searchQuery}
 				/>
 			</div>
@@ -77,7 +77,7 @@
 			{#if docs.isLoading}
 				<div class="space-y-2">
 					{#each Array(5) as _}
-						<div class="skeleton h-14 w-full rounded-lg"></div>
+						<div class="skeleton h-14 w-full rounded-2xl"></div>
 					{/each}
 				</div>
 			{:else if docs.error}
@@ -95,11 +95,11 @@
 				<div class="space-y-1">
 					{#each filteredDocs as doc (doc._id)}
 						<button
-							class="w-full text-left p-3 rounded-lg hover:bg-base-200 transition-colors group"
+							class="w-full text-left p-3 rounded-2xl hover:bg-base-200 transition-colors group"
 							onclick={() => selectDoc(doc as Doc<'contentLib'>)}
 						>
 							<div class="flex items-center gap-3">
-								<div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+								<div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
 									<FileText size={16} class="text-primary" />
 								</div>
 								<div class="flex-1 min-w-0">

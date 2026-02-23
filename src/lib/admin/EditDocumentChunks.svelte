@@ -179,7 +179,7 @@
 </script>
 
 <div
-	class="border border-base-300 mt-12 rounded-lg shadow-sm bg-base-100 p-8"
+	class="border border-base-300 mt-12 rounded-2xl shadow-sm bg-base-100 p-8"
 	in:fade={{ duration: 180 }}
 	out:fade={{ duration: 120 }}
 >
@@ -190,7 +190,7 @@
 	<!-- Progress Bar (shown when processing) -->
 	{#if isProcessing}
 		<div class="mt-6 mb-4" in:fade={{ duration: 150 }}>
-			<div class="bg-base-200 rounded-lg p-4">
+			<div class="bg-base-200 rounded-2xl p-4">
 				<div class="flex items-center justify-center gap-3 mb-3">
 					<span class="loading loading-spinner loading-sm text-primary"></span>
 					<h3 class="font-semibold">Processing PDF Document</h3>
@@ -247,7 +247,7 @@
 			<div class="skeleton h-8 w-48 mb-6"></div>
 			<div class="space-y-4">
 				{#each Array(3), index (index)}
-					<div class="card bg-base-100 border border-base-300">
+					<div class="card bg-base-100 border border-base-300 rounded-2xl">
 						<div class="card-body p-6">
 							<div class="flex justify-between items-start">
 								<div class="flex-1 space-y-3">
@@ -320,7 +320,7 @@
 			<div class="grid gap-4">
 				{#each getDocumentChunks.data as chunk (chunk._id)}
 					<div
-						class="card bg-base-100 border border-base-300 hover:border-primary/30 hover:shadow-lg transition-all duration-200"
+						class="card bg-base-100 border border-base-300 rounded-2xl hover:border-primary/30 hover:shadow-lg transition-all duration-200"
 						in:fly={{ y: 10, duration: 180 }}
 					>
 						<div class="card-body p-6">
@@ -351,7 +351,7 @@
 										</svg>
 									</div>
 									<ul
-										class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-44 z-20 border border-base-300"
+										class="dropdown-content menu p-2 shadow bg-base-100 rounded-2xl w-44 z-20 border border-base-300"
 									>
 										<li>
 											<button class="text-sm" onclick={() => openEdit(chunk)}>Edit chunk</button>
@@ -425,7 +425,7 @@
 						<input
 							id="chunk-title"
 							type="text"
-							class="input input-bordered w-full"
+							class="input input-bordered rounded-full w-full"
 							bind:value={editTitle}
 							maxlength="200"
 						/>
@@ -451,7 +451,7 @@
 						<input
 							id="chunk-type"
 							type="text"
-							class="input input-bordered w-full"
+							class="input input-bordered rounded-full w-full"
 							bind:value={editChunkType}
 						/>
 					</div>
@@ -476,7 +476,7 @@
 						<input
 							id="chunk-keywords"
 							type="text"
-							class="input input-bordered w-full"
+							class="input input-bordered rounded-full w-full"
 							bind:value={editKeywords}
 						/>
 						<div class="label">
@@ -502,7 +502,7 @@
 					</label>
 					<textarea
 						id="chunk-summary"
-						class="textarea textarea-bordered w-full min-h-40"
+						class="textarea textarea-bordered rounded-2xl w-full min-h-40"
 						bind:value={editSummary}
 						maxlength="1000"
 					></textarea>
@@ -525,7 +525,7 @@
 					</label>
 					<textarea
 						id="chunk-content"
-						class="textarea textarea-bordered w-full min-h-72"
+						class="textarea textarea-bordered rounded-2xl w-full min-h-72"
 						bind:value={editContent}
 					></textarea>
 				</div>
@@ -534,8 +534,8 @@
 
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
-				<button class="btn btn-ghost" onclick={closeEdit} disabled={isSubmitting}>Cancel</button>
-				<button class="btn btn-primary gap-2" onclick={saveEdit} disabled={isSubmitting}>
+				<button class="btn btn-ghost rounded-full" onclick={closeEdit} disabled={isSubmitting}>Cancel</button>
+				<button class="btn btn-primary rounded-full gap-2" onclick={saveEdit} disabled={isSubmitting}>
 					{#if isSubmitting}
 						<span class="loading loading-spinner loading-sm"></span>
 						<span>Saving...</span>

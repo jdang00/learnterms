@@ -139,7 +139,7 @@
 
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
-				<button class="btn btn-ghost" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button
+				<button class="btn btn-ghost rounded-full" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button
 				>
 			</form>
 		</div>

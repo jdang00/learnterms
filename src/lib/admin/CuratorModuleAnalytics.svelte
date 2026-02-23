@@ -271,12 +271,12 @@
 
 <div class="space-y-4">
 	<!-- Module Selector -->
-	<div class="p-3 bg-base-100 rounded-lg border border-base-300">
+	<div class="p-3 bg-base-100 rounded-2xl border border-base-300">
 		<div class="flex flex-wrap items-center gap-2">
 			<div class="relative">
 				<button
 					type="button"
-					class="btn btn-sm btn-ghost gap-2"
+					class="btn btn-sm btn-ghost rounded-full gap-2"
 					onclick={() => {
 						semesterOpen = !semesterOpen;
 						classOpen = false;
@@ -290,7 +290,7 @@
 				{#if semesterOpen}
 					<div class="fixed inset-0 z-10" onclick={() => (semesterOpen = false)} role="none"></div>
 					<div
-						class="absolute top-full left-0 mt-1 z-20 w-56 bg-base-100 rounded-lg shadow-lg border border-base-300 p-1"
+						class="absolute top-full left-0 mt-1 z-20 w-56 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-1"
 					>
 						<ul class="max-h-60 overflow-y-auto">
 							<li>
@@ -327,7 +327,7 @@
 			<div class="relative">
 				<button
 					type="button"
-					class="btn btn-sm btn-ghost gap-2"
+					class="btn btn-sm btn-ghost rounded-full gap-2"
 					class:btn-disabled={!selectorOptions.data || selectorOptions.data.classes.length === 0}
 					onclick={() => {
 						if (!selectorOptions.data || selectorOptions.data.classes.length === 0) return;
@@ -344,12 +344,12 @@
 				{#if classOpen}
 					<div class="fixed inset-0 z-10" onclick={() => (classOpen = false)} role="none"></div>
 					<div
-						class="absolute top-full left-0 mt-1 z-20 w-72 bg-base-100 rounded-lg shadow-lg border border-base-300 p-2"
+						class="absolute top-full left-0 mt-1 z-20 w-72 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-2"
 					>
 						<input
 							type="text"
 							placeholder="Search classes..."
-							class="input input-sm input-bordered w-full mb-1"
+							class="input input-sm input-bordered rounded-full w-full mb-1"
 							bind:value={classSearch}
 						/>
 						<ul class="max-h-56 overflow-y-auto">
@@ -380,7 +380,7 @@
 			<div class="relative">
 				<button
 					type="button"
-					class="btn btn-sm btn-ghost gap-2"
+					class="btn btn-sm btn-ghost rounded-full gap-2"
 					class:btn-disabled={!selectedClassId ||
 						!selectorOptions.data ||
 						selectorOptions.data.modules.length === 0}
@@ -405,12 +405,12 @@
 				{#if moduleOpen}
 					<div class="fixed inset-0 z-10" onclick={() => (moduleOpen = false)} role="none"></div>
 					<div
-						class="absolute top-full left-0 mt-1 z-20 w-72 bg-base-100 rounded-lg shadow-lg border border-base-300 p-2"
+						class="absolute top-full left-0 mt-1 z-20 w-72 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-2"
 					>
 						<input
 							type="text"
 							placeholder="Search modules..."
-							class="input input-sm input-bordered w-full mb-1"
+							class="input input-sm input-bordered rounded-full w-full mb-1"
 							bind:value={moduleSearch}
 						/>
 						<ul class="max-h-56 overflow-y-auto">
@@ -461,12 +461,12 @@
 
 	<!-- Content -->
 	{#if !selectedModuleId}
-		<div class="bg-base-100 rounded-lg border border-base-300 p-8 text-center text-base-content/50">
+		<div class="bg-base-100 rounded-2xl border border-base-300 p-8 text-center text-base-content/50">
 			<BookOpen size={28} class="mx-auto mb-2 opacity-40" />
 			<p class="text-sm">Select a class and module to view analytics.</p>
 		</div>
 	{:else if moduleOverview.isLoading && !moduleOverview.data}
-		<div class="bg-base-100 rounded-lg border border-base-300 p-10 flex justify-center">
+		<div class="bg-base-100 rounded-2xl border border-base-300 p-10 flex justify-center">
 			<span class="loading loading-spinner loading-lg"></span>
 		</div>
 	{:else if moduleOverview.error}
@@ -475,7 +475,7 @@
 		</div>
 	{:else if moduleOverview.data}
 		<!-- Module Header + Inline Stats -->
-		<div class="bg-base-100 rounded-lg border border-base-300">
+		<div class="bg-base-100 rounded-2xl border border-base-300">
 			<div class="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-base-300">
 				<div class="min-w-0">
 					<h3 class="font-semibold text-sm">
@@ -566,9 +566,9 @@
 					<span class="text-xs text-base-content/50">
 						Page {currentPage} of {totalPages}
 					</span>
-					<div class="join">
+					<div class="flex items-center gap-1">
 						<button
-							class="join-item btn btn-xs"
+							class="btn btn-xs btn-ghost rounded-full"
 							disabled={currentPage === 1}
 							onclick={() => goToPage(currentPage - 1)}
 						>
@@ -576,10 +576,10 @@
 						</button>
 						{#each pageNumbers as page}
 							{#if page === 'ellipsis'}
-								<button class="join-item btn btn-xs btn-disabled">...</button>
+								<button class="btn btn-xs btn-ghost rounded-full btn-disabled">...</button>
 							{:else}
 								<button
-									class="join-item btn btn-xs"
+									class="btn btn-xs btn-ghost rounded-full"
 									class:btn-active={page === currentPage}
 									onclick={() => goToPage(page)}
 								>
@@ -588,7 +588,7 @@
 							{/if}
 						{/each}
 						<button
-							class="join-item btn btn-xs"
+							class="btn btn-xs btn-ghost rounded-full"
 							disabled={currentPage === totalPages}
 							onclick={() => goToPage(currentPage + 1)}
 						>
@@ -602,7 +602,7 @@
 		<!-- Insights Grid -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 			<!-- Participants -->
-			<div class="bg-base-100 rounded-lg border border-base-300 flex flex-col max-h-[26rem]">
+			<div class="bg-base-100 rounded-2xl border border-base-300 flex flex-col max-h-[26rem]">
 				<div class="px-4 py-3 border-b border-base-300 shrink-0">
 					<div class="flex items-center justify-between">
 						<h4 class="text-sm font-semibold flex items-center gap-2">
@@ -669,7 +669,7 @@
 			</div>
 
 			<!-- Flagged Hotspots -->
-			<div class="bg-base-100 rounded-lg border border-base-300 flex flex-col max-h-[26rem]">
+			<div class="bg-base-100 rounded-2xl border border-base-300 flex flex-col max-h-[26rem]">
 				<div class="px-4 py-3 border-b border-base-300 shrink-0">
 					<div class="flex items-center justify-between">
 						<h4 class="text-sm font-semibold flex items-center gap-2">
@@ -690,7 +690,7 @@
 					{:else}
 						<div class="space-y-3">
 							{#each visibleHotspots as question}
-								<div class="rounded-lg bg-warning/5 border border-warning/15 p-3">
+								<div class="rounded-2xl bg-warning/5 border border-warning/15 p-3">
 									<div class="flex items-start justify-between gap-2">
 										<p class="text-xs font-medium leading-snug line-clamp-2" title={stripHtml(question.stem)}>
 											<span class="text-warning font-semibold">Q{question.order + 1}</span>
@@ -720,7 +720,7 @@
 			</div>
 
 			<!-- Recent Activity -->
-			<div class="bg-base-100 rounded-lg border border-base-300 flex flex-col max-h-[26rem]">
+			<div class="bg-base-100 rounded-2xl border border-base-300 flex flex-col max-h-[26rem]">
 				<div class="px-4 py-3 border-b border-base-300 shrink-0">
 					<h4 class="text-sm font-semibold flex items-center gap-2">
 						<Activity size={14} class="text-info" />

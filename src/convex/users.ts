@@ -44,6 +44,7 @@ export const addUser = mutation({
 		const user = await ctx.db.insert('users', {
 			clerkUserId: args.clerkUserId,
 			metadata: {},
+			seenFeatureAnnouncementIds: [],
 			name: args.name,
 			firstName: args.firstName,
 			lastName: args.lastName,

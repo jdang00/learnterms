@@ -48,7 +48,7 @@
 {#if chunks.isLoading}
 	<div class="space-y-2">
 		{#each Array(4) as _}
-			<div class="skeleton h-16 w-full rounded-lg"></div>
+			<div class="skeleton h-16 w-full rounded-2xl"></div>
 		{/each}
 	</div>
 {:else if chunks.error}
@@ -79,7 +79,7 @@
 		{#each chunks.data as chunk (chunk._id)}
 			{@const isSelected = selectedChunkIds.has(chunk._id)}
 			<div
-				class="rounded-lg border transition-all cursor-pointer {isSelected
+				class="rounded-2xl border transition-all cursor-pointer {isSelected
 					? 'border-primary bg-primary/5'
 					: 'border-base-300 hover:border-base-content/20'}"
 				role="button"
@@ -119,7 +119,7 @@
 							<ChevronDown size={12} />
 							Preview content
 						</summary>
-						<div class="mt-2 p-2 bg-base-200 rounded text-xs max-h-32 overflow-auto">
+						<div class="mt-2 p-2 bg-base-200 rounded-xl text-xs max-h-32 overflow-auto">
 							<pre class="whitespace-pre-wrap break-words">{chunk.content}</pre>
 						</div>
 					</details>

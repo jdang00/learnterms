@@ -205,7 +205,7 @@
 								id="document-title"
 								type="text"
 								placeholder="e.g., Pharmacology Study Guide"
-								class="input input-bordered w-full"
+								class="input input-bordered rounded-full w-full"
 								class:input-error={validationErrors.documentTitle}
 								bind:value={documentTitle}
 								oninput={() => validateOnInput('documentTitle', documentTitle)}
@@ -269,7 +269,7 @@
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
 				<button
-					class="btn btn-ghost"
+					class="btn btn-ghost rounded-full"
 					onclick={() => {
 						resetForm();
 						closeEditModal();
@@ -277,7 +277,7 @@
 					disabled={isSubmitting}>Cancel</button
 				>
 				<button
-					class="btn btn-primary gap-2"
+					class="btn btn-primary gap-2 rounded-full"
 					onclick={handleSubmit}
 					disabled={isSubmitting || !isFormValid}
 					title={!isFormValid ? 'Please fill all fields correctly before saving changes' : ''}

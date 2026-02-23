@@ -242,7 +242,7 @@
 						<p class="text-sm text-base-content/70 mb-6">
 							You've hit the limit for today, but don't stop learning! Upgrading to Pro unlocks the full power of LearnTerms AI.
 						</p>
-						<div class="text-left w-full space-y-3 mb-6 bg-base-200/50 p-4 rounded-lg">
+						<div class="text-left w-full space-y-3 mb-6 bg-base-200/50 p-4 rounded-2xl">
 							<div class="flex items-start gap-3">
 								<CheckCircle class="text-success mt-0.5 shrink-0" size={16} />
 								<span class="text-xs"><strong>Unlimited Generation:</strong> Create as many practice questions as you need.</span>
@@ -280,7 +280,7 @@
 						<span>Advanced options</span>
 						<ChevronDown size={12} class="group-open:rotate-180 transition-transform" />
 					</summary>
-					<div class="mt-3 p-3 bg-base-200/50 rounded-lg space-y-3">
+					<div class="mt-3 p-3 bg-base-200/50 rounded-2xl space-y-3">
 						<div>
 							<label class="text-xs font-medium mb-1 block" for="model-select">AI Model</label>
 							<select id="model-select" class="select select-sm select-bordered w-full" bind:value={productModelId}>
@@ -319,7 +319,7 @@
 						<span class="text-xs text-success">Ready to generate</span>
 					{/if}
 				</div>
-				<div class="bg-base-200/50 rounded-lg p-4 max-h-[50vh] overflow-auto">
+				<div class="bg-base-200/50 rounded-2xl p-4 max-h-[50vh] overflow-auto">
 					{#if material}
 						<pre class="text-sm whitespace-pre-wrap break-words text-base-content/80">{material}</pre>
 					{:else}
@@ -346,7 +346,7 @@
 				{#each generated as q, i (i)}
 					{@const isSelected = selected.has(i)}
 					<div
-						class="rounded-lg border p-4 transition-all {isSelected
+						class="rounded-2xl border p-4 transition-all {isSelected
 							? 'border-primary bg-primary/5'
 							: 'border-base-300'}"
 					>

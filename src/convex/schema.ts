@@ -2,10 +2,10 @@ import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
 export default defineSchema({
-	users: defineTable({
-		updatedAt: v.number(),
-		deletedAt: v.optional(v.number()),
-		clerkUserId: v.string(),
+		users: defineTable({
+			updatedAt: v.number(),
+			deletedAt: v.optional(v.number()),
+			clerkUserId: v.string(),
 		cohortId: v.optional(v.id('cohort')),
 		name: v.string(),
 		// Additional Clerk user data for analytics
@@ -38,14 +38,15 @@ export default defineSchema({
 				lastResetAt: v.number()
 			})
 		),
-		// Track PDF upload usage for rate limiting
-		pdfUploadUsage: v.optional(
-			v.object({
-				count: v.number(),
-				lastResetAt: v.number()
-			})
-		)
-	})
+			// Track PDF upload usage for rate limiting
+			pdfUploadUsage: v.optional(
+				v.object({
+					count: v.number(),
+					lastResetAt: v.number()
+				})
+			),
+			seenFeatureAnnouncementIds: v.optional(v.array(v.string()))
+		})
 		.index('by_clerkUserId', ['clerkUserId'])
 		.index('by_cohortId', ['cohortId']),
 	school: defineTable({
@@ -337,6 +338,123 @@ export default defineSchema({
 		.index('by_question_user', ['questionId', 'userId'])
 		.index('by_user_class', ['userId', 'classId'])
 		.index('by_classId', ['classId']),
+	quizAttempts: defineTable({
+		userId: v.id('users'),
+		classId: v.id('class'),
+		cohortId: v.optional(v.id('cohort')),
+		status: v.union(
+			v.literal('in_progress'),
+			v.literal('submitted'),
+			v.literal('timed_out'),
+			v.literal('abandoned')
+		),
+		mode: v.literal('custom_random_v1'),
+		configSnapshot: v.object({
+			moduleIds: v.array(v.id('module')),
+			questionCountRequested: v.number(),
+			questionCountActual: v.number(),
+			sourceFilter: v.union(
+				v.literal('all'),
+				v.literal('flagged'),
+				v.literal('incomplete')
+			),
+			questionTypes: v.optional(v.array(v.string())),
+			shuffleQuestions: v.boolean(),
+			shuffleOptions: v.boolean(),
+			timeLimitSec: v.optional(v.number()),
+			passThresholdPct: v.number()
+		}),
+		seed: v.string(),
+		startedAt: v.number(),
+		lastActivityAt: v.number(),
+		submittedAt: v.optional(v.number()),
+		timeLimitSec: v.optional(v.number()),
+		elapsedMs: v.number(),
+		timeExpiredAt: v.optional(v.number()),
+		progressCounters: v.object({
+			visitedCount: v.number(),
+			answeredCount: v.number(),
+			flaggedCount: v.number()
+		}),
+		resultSummary: v.optional(
+			v.object({
+				scoreEarned: v.number(),
+				scorePossible: v.number(),
+				scorePct: v.number(),
+				correctCount: v.number(),
+				incorrectCount: v.number(),
+				unansweredCount: v.number(),
+				passThresholdPct: v.number(),
+				passed: v.boolean(),
+				byModule: v.array(
+					v.object({
+						moduleId: v.id('module'),
+						moduleTitle: v.string(),
+						total: v.number(),
+						correct: v.number(),
+						incorrect: v.number(),
+						unanswered: v.number(),
+						accuracyPct: v.number()
+					})
+				),
+				byType: v.array(
+					v.object({
+						questionType: v.string(),
+						total: v.number(),
+						correct: v.number(),
+						incorrect: v.number(),
+						unanswered: v.number(),
+						accuracyPct: v.number()
+					})
+				),
+				reviewReady: v.boolean()
+			})
+		),
+		updatedAt: v.number()
+	})
+		.index('by_user', ['userId'])
+		.index('by_user_class', ['userId', 'classId'])
+		.index('by_user_class_status', ['userId', 'classId', 'status'])
+		.index('by_class', ['classId'])
+		.index('by_status', ['status'])
+		.index('by_user_lastActivityAt', ['userId', 'lastActivityAt']),
+	quizAttemptItems: defineTable({
+		attemptId: v.id('quizAttempts'),
+		userId: v.id('users'),
+		classId: v.id('class'),
+		questionId: v.id('question'),
+		moduleId: v.id('module'),
+		order: v.number(),
+		optionOrder: v.optional(v.array(v.string())),
+		questionSnapshot: v.object({
+			type: v.string(),
+			stem: v.string(),
+			options: v.array(v.object({ id: v.string(), text: v.string() })),
+			correctAnswers: v.array(v.string()),
+			explanation: v.optional(v.string()),
+			questionUpdatedAt: v.number()
+		}),
+		response: v.object({
+			selectedOptions: v.array(v.string()),
+			textResponse: v.optional(v.string()),
+			isFlagged: v.boolean(),
+			visitedAt: v.optional(v.number()),
+			answeredAt: v.optional(v.number()),
+			lastChangedAt: v.optional(v.number()),
+			changeCount: v.number(),
+			timeSpentMs: v.number()
+		}),
+		score: v.object({
+			isCorrect: v.optional(v.boolean()),
+			pointsEarned: v.optional(v.number()),
+			pointsPossible: v.number()
+		}),
+		updatedAt: v.number()
+	})
+		.index('by_attempt_order', ['attemptId', 'order'])
+		.index('by_attempt_question', ['attemptId', 'questionId'])
+		.index('by_attempt_module', ['attemptId', 'moduleId'])
+		.index('by_user_attempt', ['userId', 'attemptId']),
 	contentLib: defineTable({
 		title: v.string(),
 		description: v.optional(v.string()),

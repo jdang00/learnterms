@@ -21,7 +21,7 @@
 </script>
 
 <dialog class="modal max-w-full p-4" class:modal-open={isOpen}>
-	<div class="modal-box">
+	<div class="modal-box rounded-2xl">
 		<form method="dialog">
 			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onclick={onCancel}>
 				<X size={16} />
@@ -31,20 +31,20 @@
 		<p class="py-2 text-base-content/70">
 			How many copies {itemName ? `of "${itemName}"` : ''} would you like to create?
 		</p>
-		<div class="alert alert-warning mb-3">
+		<div class="alert alert-warning rounded-2xl mb-3">
 			<span>Note: media attached to the question is not copied.</span>
 		</div>
 		<div class="form-control">
 			<label class="label" for="duplicate-count">
 				<span class="label-text">Number of copies (1-10)</span>
 			</label>
-			<div class="join w-full">
-				<button type="button" class="btn join-item" onclick={dec}>-</button>
+			<div class="flex w-full gap-2">
+				<button type="button" class="btn rounded-full" onclick={dec}>-</button>
 				<input
 					type="number"
 					min={1}
 					max={10}
-					class="input input-bordered join-item w-24 text-center"
+					class="input input-bordered rounded-full w-24 text-center"
 					id="duplicate-count"
 					value={count}
 					oninput={(e) => {
@@ -52,12 +52,12 @@
 						if (!Number.isNaN(v)) count = Math.max(1, Math.min(10, v));
 					}}
 				/>
-				<button type="button" class="btn join-item" onclick={inc}>+</button>
+				<button type="button" class="btn rounded-full" onclick={inc}>+</button>
 			</div>
 		</div>
 		<div class="flex justify-end space-x-2 mt-4">
-			<button class="btn btn-outline" onclick={onCancel}>Cancel</button>
-			<button class="btn btn-primary" onclick={submit}>Duplicate</button>
+			<button class="btn btn-outline rounded-full" onclick={onCancel}>Cancel</button>
+			<button class="btn btn-primary rounded-full" onclick={submit}>Duplicate</button>
 		</div>
 	</div>
 </dialog>

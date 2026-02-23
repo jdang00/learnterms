@@ -173,7 +173,7 @@
 					</label>
 					<textarea
 						id="module-description"
-						class="textarea textarea-bordered w-full min-h-48"
+						class="textarea textarea-bordered rounded-2xl w-full min-h-48"
 						bind:value={moduleDescription}
 						placeholder="Enter module description..."
 					></textarea>
@@ -200,7 +200,7 @@
 								id="module-title"
 								type="text"
 								placeholder="e.g., Introduction to Optics"
-								class="input input-bordered w-full"
+								class="input input-bordered rounded-full w-full"
 								class:input-error={validationErrors.moduleTitle}
 								bind:value={moduleTitle}
 								oninput={() => validateOnInput('moduleTitle', moduleTitle)}
@@ -241,7 +241,7 @@
 						</label>
 						<select
 							id="module-status"
-							class="select select-bordered w-full"
+							class="select select-bordered rounded-full w-full"
 							bind:value={moduleStatus}
 						>
 							<option value="draft">Draft</option>
@@ -321,7 +321,7 @@
 					</label>
 					<textarea
 						id="module-description"
-						class="textarea textarea-bordered hidden w-full min-h-48 md:block"
+						class="textarea textarea-bordered rounded-2xl hidden w-full min-h-48 md:block"
 						bind:value={moduleDescription}
 						placeholder="Enter module description..."
 					></textarea>
@@ -346,7 +346,7 @@
 								id="module-emoji"
 								type="text"
 								placeholder="e.g., 📘"
-								class="input input-bordered w-28"
+								class="input input-bordered rounded-full w-28"
 								bind:value={moduleEmoji}
 								oninput={() => validateOnInput('moduleEmoji', moduleEmoji)}
 								maxlength="8"
@@ -365,11 +365,11 @@
 
 			<div class="modal-action mt-8">
 				<form method="dialog" class="flex gap-3">
-					<button class="btn btn-ghost" onclick={closeEditModal} disabled={isSubmitting}
+					<button class="btn btn-ghost rounded-full" onclick={closeEditModal} disabled={isSubmitting}
 						>Cancel</button
 					>
 					<button
-						class="btn btn-primary gap-2"
+						class="btn btn-primary gap-2 rounded-full"
 						onclick={handleSubmit}
 						disabled={isSubmitting || !isFormValid}
 						title={!isFormValid ? 'Please fill all fields correctly before saving changes' : ''}

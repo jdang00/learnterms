@@ -5,7 +5,7 @@
 	import type { Id } from '../../../../../convex/_generated/dataModel';
 	import { api } from '../../../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-	import { Plus, ArrowLeft, GripVertical, Trash2, ArrowRightLeft, X } from 'lucide-svelte';
+	import { Plus, ArrowLeft, GripVertical, Trash2, ArrowRightLeft, X, CheckSquare } from 'lucide-svelte';
 	import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
 
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
@@ -131,7 +131,7 @@
 	<div class="max-w-[1800px] mx-auto p-4 sm:p-6 flex flex-col flex-1 min-h-0 w-full">
 		<!-- Header -->
 		<div class="flex items-center gap-4 mb-4">
-			<a class="btn btn-ghost btn-sm gap-2" href={`/admin/${moduleInfo.data?.classId || ''}`}>
+			<a class="btn btn-ghost btn-sm rounded-full gap-2" href={`/admin/${moduleInfo.data?.classId || ''}`}>
 				<ArrowLeft size={16} />
 				<span class="hidden sm:inline">Back</span>
 			</a>
@@ -148,7 +148,7 @@
 					<div>
 						<h1 class="text-lg font-semibold leading-tight">{moduleInfo.data.title}</h1>
 						<p class="text-xs text-base-content/60 hidden sm:block">
-							{curationState.questionList.length} question{curationState.questionList.length !== 1 ? 's' : ''}{#if admin} · Drag to reorder{/if}
+							{curationState.questionList.length} question{curationState.questionList.length !== 1 ? 's' : ''}
 						</p>
 					</div>
 				</div>
@@ -157,10 +157,10 @@
 			{#if canEdit && curationState.editorMode !== 'add'}
 				<div class="flex items-center gap-1 sm:gap-2">
 					<button
-						class="btn btn-primary btn-xs sm:btn-sm gap-1 sm:gap-2"
+						class="btn btn-primary btn-sm rounded-full gap-2"
 						onclick={() => isModuleFull ? curationState.isLimitModalOpen = true : curationState.openAddQuestionModal()}
 					>
-						<Plus size={14} class="sm:w-4 sm:h-4" />
+						<Plus size={16} />
 						<span class="hidden sm:inline">Add Question</span>
 						<span class="sm:hidden">Add</span>
 					</button>
@@ -169,7 +169,7 @@
 		</div>
 
 		<!-- Controls for mobile/tablet (below xl) -->
-		<div class="xl:hidden p-3 bg-base-100 rounded-lg border border-base-300 mb-4">
+		<div class="xl:hidden p-3 bg-base-100 rounded-2xl border border-base-300 mb-4">
 			<QuestionListControls
 				searchInput={curationState.searchInput}
 				sortMode={curationState.sortMode}
@@ -179,7 +179,7 @@
 				selectedCount={curationState.selectedQuestions.size}
 				totalCount={questions.data?.length ?? 0}
 				{canEdit}
-				isAdmin={admin}
+				isAdmin={admin || dev}
 				variant="mobile"
 				onSearchChange={(v) => { curationState.searchInput = v; curationState.updateSearch(); }}
 				onSearchClear={() => curationState.clearSearch()}
@@ -231,7 +231,7 @@
 
 		<!-- Mobile Question List (below md) -->
 		<div class="md:hidden flex-1 min-h-0 flex flex-col">
-			<div class="bg-base-100 rounded-lg border border-base-300 overflow-hidden flex-1 min-h-0 flex flex-col">
+			<div class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden flex-1 min-h-0 flex flex-col">
 				{#if questions.isLoading}
 					<div class="divide-y divide-base-200">
 						{#each Array(5), index (index)}
@@ -308,8 +308,8 @@
 		<div class="hidden md:grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0">
 			<!-- Desktop Sidebar (xl and above) -->
 			<div class="xl:col-span-5 2xl:col-span-4 hidden xl:block min-h-0">
-				<div class="bg-base-100 rounded-lg border border-base-300 h-full overflow-hidden flex flex-col">
-					<div class="p-4 border-b border-base-300 flex-shrink-0">
+				<div class="bg-base-200/30 rounded-2xl border border-base-300 h-full overflow-hidden flex flex-col">
+					<div class="p-4 border-b border-base-300 bg-base-100 flex-shrink-0">
 						<QuestionListControls
 							searchInput={curationState.searchInput}
 							sortMode={curationState.sortMode}
@@ -319,7 +319,7 @@
 							selectedCount={curationState.selectedQuestions.size}
 							totalCount={questions.data?.length ?? 0}
 							{canEdit}
-							isAdmin={admin}
+							isAdmin={admin || dev}
 							variant="desktop"
 							onSearchChange={(v) => { curationState.searchInput = v; curationState.updateSearch(); }}
 							onSearchClear={() => curationState.clearSearch()}
@@ -365,7 +365,7 @@
 									<h3 class="text-sm font-semibold mb-1 text-base-content">{curationState.search ? 'No matches' : 'No questions'}</h3>
 									<p class="text-xs text-base-content/60">{curationState.search ? 'Try different search terms' : 'Add your first question'}</p>
 									{#if curationState.search}
-										<button class="btn btn-sm btn-ghost mt-3" onclick={() => curationState.clearSearch()}>Clear Search</button>
+										<button class="btn btn-sm btn-ghost rounded-full mt-3" onclick={() => curationState.clearSearch()}>Clear Search</button>
 									{/if}
 								</div>
 							</div>
@@ -409,7 +409,7 @@
 
 			<!-- Main Content Panel (md and above) -->
 			<div class="xl:col-span-7 2xl:col-span-8 hidden md:block min-h-0">
-				<div class="bg-base-100 rounded-lg border border-base-300 h-full overflow-hidden flex flex-col">
+				<div class="bg-base-100 rounded-2xl border border-base-300 h-full overflow-hidden flex flex-col">
 					<!-- Reorder mode only visible on tablet (md-xl) -->
 					<div class="h-full flex-col overflow-hidden {curationState.reorderMode ? 'flex xl:hidden' : 'hidden'}">
 						<div class="p-4 border-b border-base-300">
@@ -481,11 +481,11 @@
 							<h3 class="text-lg font-semibold mb-2">{curationState.selectedQuestions.size} questions selected</h3>
 							<p class="text-sm text-base-content/60 mb-4">Use the toolbar to move or delete selected questions</p>
 							<div class="flex gap-2">
-								<button class="btn btn-sm btn-ghost gap-1" onclick={() => curationState.openMoveModalForSelected()}>
+								<button class="btn btn-sm btn-ghost rounded-full gap-1" onclick={() => curationState.openMoveModalForSelected()}>
 									<ArrowRightLeft size={14} />
 									Move All
 								</button>
-								<button class="btn btn-sm btn-error gap-1" onclick={() => curationState.openBulkDeleteModal()}>
+								<button class="btn btn-sm btn-error rounded-full gap-1" onclick={() => curationState.openBulkDeleteModal()}>
 									<Trash2 size={14} />
 									Delete All
 								</button>
@@ -554,8 +554,8 @@
 		<h3 class="font-bold text-lg mb-4">Unsaved Changes</h3>
 		<p class="py-4">You have unsaved changes. Do you want to discard them and continue?</p>
 		<div class="modal-action">
-			<button class="btn btn-ghost" onclick={() => curationState.cancelDiscardChanges()}>Cancel</button>
-			<button class="btn btn-error" onclick={() => curationState.confirmDiscardChanges()}>Discard Changes</button>
+			<button class="btn btn-ghost rounded-full" onclick={() => curationState.cancelDiscardChanges()}>Cancel</button>
+			<button class="btn btn-error rounded-full" onclick={() => curationState.confirmDiscardChanges()}>Discard Changes</button>
 		</div>
 	</div>
 	<div class="modal-backdrop bg-black/50" onclick={() => curationState.cancelDiscardChanges()}></div>

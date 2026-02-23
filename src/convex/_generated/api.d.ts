@@ -16,6 +16,8 @@ import type * as class_ from "../class.js";
 import type * as cohort from "../cohort.js";
 import type * as contentLib from "../contentLib.js";
 import type * as curatorAnalytics from "../curatorAnalytics.js";
+import type * as customQuiz from "../customQuiz.js";
+import type * as featureAnnouncements from "../featureAnnouncements.js";
 import type * as http from "../http.js";
 import type * as migrations from "../migrations.js";
 import type * as module from "../module.js";
@@ -48,6 +50,8 @@ declare const fullApi: ApiFromModules<{
   cohort: typeof cohort;
   contentLib: typeof contentLib;
   curatorAnalytics: typeof curatorAnalytics;
+  customQuiz: typeof customQuiz;
+  featureAnnouncements: typeof featureAnnouncements;
   http: typeof http;
   migrations: typeof migrations;
   module: typeof module;

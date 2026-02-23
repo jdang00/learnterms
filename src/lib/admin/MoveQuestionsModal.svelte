@@ -86,7 +86,7 @@
     <div class="space-y-4">
       <div class="form-control">
         <label class="label" for="class-select"><span class="label-text font-medium">Class</span></label>
-        <select id="class-select" class="select select-bordered w-full" bind:value={selectedClassId}>
+        <select id="class-select" class="select select-bordered rounded-full w-full" bind:value={selectedClassId}>
           <option value={null}>Select class…</option>
           {#if userDataQuery.isLoading || !userDataQuery.data?.cohortId}
             <option disabled>Loading user data…</option>
@@ -106,7 +106,7 @@
 
       <div class="form-control">
         <label class="label" for="module-select"><span class="label-text font-medium">Module</span></label>
-        <select id="module-select" class="select select-bordered w-full" bind:value={selectedModuleId} disabled={!selectedClassId || userDataQuery.isLoading || !userDataQuery.data?.cohortId}>
+        <select id="module-select" class="select select-bordered rounded-full w-full" bind:value={selectedModuleId} disabled={!selectedClassId || userDataQuery.isLoading || !userDataQuery.data?.cohortId}>
           <option value={null} disabled={!selectedClassId || userDataQuery.isLoading || !userDataQuery.data?.cohortId}>
             {#if userDataQuery.isLoading || !userDataQuery.data?.cohortId}
               Loading user data…
@@ -135,8 +135,8 @@
 
     <div class="modal-action mt-6">
       <form method="dialog" class="flex gap-3">
-        <button class="btn btn-ghost" onclick={() => onClose(false)} disabled={isSubmitting}>Cancel</button>
-        <button class="btn btn-primary" onclick={handleConfirm} disabled={isSubmitting || !selectedModuleId || userDataQuery.isLoading || !userDataQuery.data?.cohortId}>
+        <button class="btn btn-ghost rounded-full" onclick={() => onClose(false)} disabled={isSubmitting}>Cancel</button>
+        <button class="btn btn-primary rounded-full" onclick={handleConfirm} disabled={isSubmitting || !selectedModuleId || userDataQuery.isLoading || !userDataQuery.data?.cohortId}>
           {#if isSubmitting}
             <span class="loading loading-spinner loading-sm"></span>
             <span>Moving…</span>

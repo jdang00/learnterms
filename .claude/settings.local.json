@@ -34,7 +34,11 @@
       "Bash(git -C:*)",
       "Bash(kill:*)",
       "Bash(lsof:*)",
-      "Bash(bun ls:*)"
+      "Bash(bun ls:*)",
+      "Bash(bun outdated:*)",
+      "Bash(bun update:*)",
+      "Bash(grep convex:*)",
+      "Bash(find:*)"
     ]
   }
 }

@@ -256,7 +256,7 @@
 </script>
 
 <div class="min-h-screen p-8 max-w-7xl mx-auto">
-	<a class="btn mb-4 btn-ghost" href="/admin"><ArrowLeft size={16} />Back</a>
+	<a class="btn mb-4 btn-ghost rounded-full" href="/admin"><ArrowLeft size={16} />Back</a>
 	<div class="mb-8 flex flex-col gap-2">
 		<div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
 			{#if classInfo.isLoading}
@@ -288,13 +288,13 @@
 			<div class="flex items-center gap-2 self-start sm:self-auto">
 				{#if admin}
 					<button 
-						class="btn gap-2 {reorderMode ? 'btn-primary' : 'btn-ghost'}" 
+						class="btn rounded-full gap-2 {reorderMode ? 'btn-primary' : 'btn-ghost'}" 
 						onclick={() => reorderMode = !reorderMode}
 					>
 						<GripVertical size={16} />
 						<span class="hidden sm:inline">{reorderMode ? 'Done' : 'Reorder'}</span>
 					</button>
-					<button class="btn btn-primary gap-2" onclick={openAddModuleModal}>
+					<button class="btn btn-primary rounded-full gap-2" onclick={openAddModuleModal}>
 						<Plus size={16} />
 						<span class="hidden sm:inline">Add New Module</span>
 						<span class="sm:hidden">Add</span>
@@ -335,7 +335,7 @@
 						callbacks: { onDrop: handleDrop },
 						disabled: !reorderEnabled
 					}}
-					class="relative rounded-lg bg-base-100 shadow-sm border border-base-300 p-4
+					class="relative rounded-2xl bg-base-100 shadow-sm border border-base-300 p-4
                            transition-all duration-300 hover:shadow-md hover:border-primary/30
                            svelte-dnd-touch-feedback overflow-visible"
 					animate:flip={{ duration: 300 }}
@@ -401,7 +401,7 @@
 														+{moduleItem.tags.length - 3}
 													</div>
 													<div
-														class="dropdown-content z-50 mt-2 left-0 w-44 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg"
+														class="dropdown-content z-50 mt-2 left-0 w-44 rounded-2xl border border-base-300 bg-base-100 p-2 shadow-lg"
 													>
 														<div class="flex flex-col gap-1">
 															{#each moduleItem.tags.slice(3) as tag (tag._id)}
@@ -432,7 +432,7 @@
 											<ul
 												tabindex="0"
 												role="menu"
-												class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm border border-base-300"
+												class="dropdown-content menu bg-base-100 rounded-2xl z-1 w-52 p-2 shadow-sm border border-base-300"
 											>
 												<li>
 													<button

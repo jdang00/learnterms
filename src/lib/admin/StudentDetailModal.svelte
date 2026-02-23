@@ -80,7 +80,7 @@
 </script>
 
 <dialog class="modal max-w-full p-4" class:modal-open={isOpen}>
-	<div class="modal-box max-w-4xl max-h-[90vh] flex flex-col">
+	<div class="modal-box max-w-4xl max-h-[90vh] rounded-2xl flex flex-col">
 		<!-- Header -->
 		<div class="flex items-start justify-between mb-4">
 			<div class="flex items-center gap-4">
@@ -163,10 +163,10 @@
 							<span>Dev roles are managed via the CLI for security.</span>
 						</div>
 					{:else}
-						<div class="join w-full">
+						<div class="flex w-full gap-2">
 							{#each availableRoles as roleOption}
-								<button 
-									class="join-item btn btn-sm flex-1 gap-2"
+								<button
+									class="btn btn-sm rounded-full flex-1 gap-2"
 									class:btn-active={(student.role ?? null) === roleOption.value}
 									class:btn-primary={(student.role ?? null) === roleOption.value && roleOption.value === 'admin'}
 									class:btn-info={(student.role ?? null) === roleOption.value && roleOption.value === 'curator'}
@@ -194,7 +194,7 @@
 
 		<!-- Footer -->
 		<div class="modal-action mt-4">
-			<button class="btn" onclick={onClose}>Close</button>
+			<button class="btn rounded-full" onclick={onClose}>Close</button>
 		</div>
 	</div>
 	<form method="dialog" class="modal-backdrop">
