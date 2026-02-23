@@ -5,7 +5,7 @@
 	import type { Id } from '../../../../../convex/_generated/dataModel';
 	import { api } from '../../../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-	import { Plus, ArrowLeft, GripVertical, Trash2, ArrowRightLeft, X, CheckSquare } from 'lucide-svelte';
+	import { Plus, ArrowLeft, GripVertical, Trash2, ArrowRightLeft, X } from 'lucide-svelte';
 	import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
 
 	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';

@@ -4,8 +4,10 @@
 	import { onMount } from 'svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../../../convex/_generated/api';
-	import { fade, slide } from 'svelte/transition';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
+	import { slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
+	import createDOMPurify from 'dompurify';
 	import {
 		PanelRight,
 		ChevronLeft,
@@ -18,7 +20,6 @@
 		Send,
 		ArrowLeft,
 		ArrowRight,
-		Eraser,
 		Info
 	} from 'lucide-svelte';
 
@@ -42,10 +43,10 @@
 	};
 
 	const client = useConvexClient();
-	const classId = $derived(page.params.classId as any);
-	const attemptId = $derived(page.params.attemptId as any);
+	const classId = $derived(page.params.classId as Id<'class'>);
+	const attemptId = $derived(page.params.attemptId as Id<'quizAttempts'>);
 
-	const runnerQuery = useQuery((api as any).customQuiz.getAttemptRunnerBundle, () =>
+	const runnerQuery = useQuery(api.customQuiz.getAttemptRunnerBundle, () =>
 		attemptId ? { attemptId } : 'skip'
 	);
 
@@ -70,9 +71,23 @@
 	let syncInFlight = false;
 	let syncRequestedWhileInFlight = false;
 	let questionButtons = $state<HTMLButtonElement[]>([]);
+	let domPurify: ReturnType<typeof createDOMPurify> | null = null;
 
 	function cacheKey(id: string) {
 		return `lt:testAttempt:${id}`;
+	}
+
+	function sanitizeHtml(value: string | undefined | null) {
+		const raw = String(value ?? '');
+		if (typeof window === 'undefined') {
+			return raw
+				.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+				.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+				.replace(/\son[a-z]+\s*=\s*(["'])[\s\S]*?\1/gi, '')
+				.replace(/\s(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi, ' $1="#"');
+		}
+		domPurify ??= createDOMPurify(window);
+		return domPurify.sanitize(raw);
 	}
 
 	function loadCache(id: string): LocalCache | null {
@@ -284,31 +299,41 @@
 			return;
 		}
 
-		const ids = Array.from(dirtyItemIds);
-		if (ids.length === 0 && !force) return;
+			const ids = Array.from(dirtyItemIds);
 
-		syncStatus = 'syncing';
+			syncStatus = 'syncing';
 		syncError = null;
 		syncInFlight = true;
 
 		try {
 			const changes = ids
-				.map((id) => {
-					const r = responses[id];
-					if (!r) return null;
-					return {
-						itemId: id,
-						selectedOptions: r.selectedOptions,
-						textResponse: r.textResponse ?? '',
-						isFlagged: r.isFlagged,
+					.map((id) => {
+						const r = responses[id];
+						if (!r) return null;
+						return {
+							itemId: id as Id<'quizAttemptItems'>,
+							selectedOptions: r.selectedOptions,
+							textResponse: r.textResponse ?? '',
+							isFlagged: r.isFlagged,
 						markVisited: r.visited,
 						timeSpentDeltaMs: pendingTimeDeltas[id] ?? 0
 					};
-				})
-				.filter(Boolean);
+					})
+					.filter(
+						(
+							change
+						): change is {
+							itemId: Id<'quizAttemptItems'>;
+							selectedOptions: string[];
+							textResponse: string;
+							isFlagged: boolean;
+							markVisited: boolean;
+							timeSpentDeltaMs: number;
+						} => change !== null
+					);
 
 			if (changes.length > 0 || force) {
-				await client.mutation((api as any).customQuiz.patchAttemptResponses, {
+					await client.mutation(api.customQuiz.patchAttemptResponses, {
 					attemptId,
 					elapsedMs: elapsedMsLocal,
 					changes
@@ -360,13 +385,23 @@
 
 			for (const [itemId, localResponse] of Object.entries(cached.responses ?? {})) {
 				if (!serverResponses[itemId]) continue;
-				mergedResponses[itemId] = {
-					...serverResponses[itemId],
-					...localResponse,
-					selectedOptions: [...(localResponse.selectedOptions ?? serverResponses[itemId].selectedOptions ?? [])]
-				};
-				dirtyItemIds.add(itemId);
-			}
+					const server = serverResponses[itemId];
+					const localSelected = localResponse.selectedOptions ?? [];
+					const serverSelected = server.selectedOptions ?? [];
+					const selectedOptions = localSelected.length > 0 ? localSelected : serverSelected;
+					mergedResponses[itemId] = {
+						...server,
+						selectedOptions: [...selectedOptions],
+						textResponse:
+							(localResponse.textResponse ?? '').trim().length > 0
+								? localResponse.textResponse
+								: server.textResponse,
+						isFlagged: localResponse.isFlagged ?? server.isFlagged,
+						visited: localResponse.visited || server.visited,
+						timeSpentMs: Math.max(server.timeSpentMs ?? 0, localResponse.timeSpentMs ?? 0)
+					};
+					dirtyItemIds.add(itemId);
+				}
 		}
 
 		responses = mergedResponses;
@@ -407,7 +442,7 @@
 		isSubmitting = true;
 		try {
 			await flushSync(true);
-			await client.mutation((api as any).customQuiz.submitAttempt, {
+				await client.mutation(api.customQuiz.submitAttempt, {
 				attemptId,
 				elapsedMs: elapsedMsLocal
 			});
@@ -415,11 +450,12 @@
 				window.localStorage.removeItem(cacheKey(String(attemptId)));
 			}
 			await goto(`/classes/${classId}/tests/${attemptId}/results${auto ? '?autoSubmit=1' : ''}`);
-		} catch (error: any) {
-			submitError = error?.message ?? 'Something went wrong while submitting. Please try again.';
-			isSubmitting = false;
+			} catch (error: any) {
+				submitError = error?.message ?? 'Something went wrong while submitting. Please try again.';
+			} finally {
+				isSubmitting = false;
+			}
 		}
-	}
 
 	function promptsForMatching(item: any) {
 		return (item.question.options || []).filter((o: any) => String(o.text).startsWith('prompt:'));
@@ -549,7 +585,7 @@
 			if (dirtyItemIds.size > 0 || Object.keys(pendingTimeDeltas).length > 0) {
 				void flushSync();
 			}
-			void client.mutation((api as any).customQuiz.heartbeatAttempt, {
+				void client.mutation(api.customQuiz.heartbeatAttempt, {
 				attemptId,
 				elapsedMs: elapsedMsLocal
 			}).catch(() => {
@@ -567,7 +603,7 @@
 	});
 </script>
 
-<div class="flex flex-col h-[calc(100vh-4rem)]" transition:fade={{ duration: 200 }}>
+	<div class="flex flex-col h-[calc(100vh-4rem)]">
 	{#if runnerQuery.isLoading}
 		<div class="flex-1 flex items-center justify-center">
 			<div class="text-center">
@@ -765,7 +801,7 @@
 							{@const answered = r ? (isFitb(item.question.type) ? String(r.textResponse ?? r.selectedOptions[0] ?? '').trim().length > 0 : r.selectedOptions.length > 0) : false}
 							<div class="indicator">
 								{#if r?.isFlagged}
-									<span class="indicator-item indicator-start badge badge-warning badge-xs translate-x-[-1/4] translate-y-[-1/4] z-[1]"></span>
+										<span class="indicator-item indicator-start badge badge-warning badge-xs -translate-x-1/4 -translate-y-1/4 z-[1]"></span>
 								{/if}
 								<button
 									bind:this={questionButtons[index]}
@@ -800,13 +836,13 @@
 
 							{#if !isFitb(currentItem.question.type)}
 								<div class="text-base sm:text-xl leading-tight tiptap-content font-medium ms-2 mt-3">
-									{@html currentItem.question.stem}
+										{@html sanitizeHtml(currentItem.question.stem)}
 								</div>
 							{/if}
 
 							{#if isFitb(currentItem.question.type)}
 								<div class="text-base sm:text-xl leading-tight tiptap-content font-medium ms-2 mt-3 mb-5">
-									{@html currentItem.question.stem}
+										{@html sanitizeHtml(currentItem.question.stem)}
 								</div>
 								<div class="ms-2">
 									<input
@@ -825,7 +861,7 @@
 									{#each promptsForMatching(currentItem) as prompt (prompt.id)}
 										<div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] gap-3 items-center">
 											<div class="border-2 border-base-300 rounded-full p-3 px-5 bg-base-200/50 tiptap-content text-sm">
-												{@html promptLabel(prompt.text)}
+													{@html sanitizeHtml(promptLabel(prompt.text))}
 											</div>
 											<select
 												class="select select-bordered rounded-full w-full bg-base-200/50"
@@ -869,7 +905,7 @@
 											/>
 											<span class="flex-grow text-wrap break-words ml-3 md:ml-4 my-3 text-sm md:text-base">
 												<span class="font-semibold mr-2 select-none">{String.fromCharCode(65 + i)}.</span>
-												<span class="tiptap-content">{@html option.text}</span>
+													<span class="tiptap-content">{@html sanitizeHtml(option.text)}</span>
 											</span>
 										</label>
 									{/each}

@@ -1,4 +1,5 @@
 import { mutation, query } from './_generated/server';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import type { Doc } from './_generated/dataModel';
 
@@ -57,17 +58,17 @@ const ANNOUNCEMENTS: Announcement[] = [
 	}
 ];
 
-async function requireCurrentUser(ctx: any): Promise<Doc<'users'>> {
+async function requireCurrentUser(ctx: ConvexCtx): Promise<Doc<'users'>> {
 	const identity = await ctx.auth.getUserIdentity();
 	if (!identity) throw new Error('Unauthorized');
 
 	const user = await ctx.db
 		.query('users')
-		.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', identity.subject))
+		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
 		.first();
 
 	if (!user) throw new Error('User not found');
-	return user as Doc<'users'>;
+	return user;
 }
 
 function getCurrentActiveAnnouncement(): Announcement | null {
@@ -106,4 +107,5 @@ export const markSeen = mutation({
 		return { ok: true };
 	}
 });
+type ConvexCtx = QueryCtx | MutationCtx;
 

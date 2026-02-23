@@ -278,13 +278,13 @@
 		{/if}
 
 		<!-- Explanation -->
-		{#if question.explanation}
-			<div class="mb-{isMobile ? '4' : '6'}">
-				<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-{isMobile ? '2' : '3'}">Explanation</div>
-				<div class="p-{isMobile ? '3' : '4'} rounded-2xl border border-base-300 bg-base-200/30">
-					<div class="text-sm text-base-content/80 tiptap-content">{@html question.explanation}</div>
+			{#if question.explanation}
+				<div class={isMobile ? 'mb-4' : 'mb-6'}>
+					<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60" class:mb-2={isMobile} class:mb-3={!isMobile}>Explanation</div>
+					<div class="rounded-2xl border border-base-300 bg-base-200/30" class:p-3={isMobile} class:p-4={!isMobile}>
+						<div class="text-sm text-base-content/80 tiptap-content">{@html question.explanation}</div>
+					</div>
 				</div>
-			</div>
 		{/if}
 
 		<!-- Attachments (desktop only) -->

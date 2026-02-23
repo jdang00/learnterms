@@ -22,9 +22,12 @@
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
+	import { useClerkContext } from 'svelte-clerk/client';
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
+	const clerk = useClerkContext();
+	const clerkUser = $derived(clerk.user);
 
 	const classes = userData?.cohortId
 		? useQuery(api.class.getUserClasses, {
@@ -140,7 +143,10 @@
 		}
 	}
 
-	const semesters = useQuery(api.semester.getAllSemesters, {});
+	const semesters = useQuery(
+		api.semester.getAllSemesters,
+		() => clerkUser ? {} : 'skip'
+	);
 	let currentSemester = $state('');
 	let viewMode = $state<'normal' | 'reorder'>('normal');
 

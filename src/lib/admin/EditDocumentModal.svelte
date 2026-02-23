@@ -17,7 +17,7 @@
 	// Get current documents to check for duplicates - useQuery at top level with skip pattern
 	const documentsQuery = useQuery(
 		api.contentLib.getContentLibByCohort,
-		() => userData?.cohortId ? { cohortId: userData.cohortId as Id<'cohort'> } : 'skip'
+		() => (isEditModalOpen && userData?.cohortId) ? { cohortId: userData.cohortId as Id<'cohort'> } : 'skip'
 	);
 
 	// Derive documents from query result

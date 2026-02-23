@@ -2,10 +2,10 @@ import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
 export default defineSchema({
-		users: defineTable({
-			updatedAt: v.number(),
-			deletedAt: v.optional(v.number()),
-			clerkUserId: v.string(),
+	users: defineTable({
+		updatedAt: v.number(),
+		deletedAt: v.optional(v.number()),
+		clerkUserId: v.string(),
 		cohortId: v.optional(v.id('cohort')),
 		name: v.string(),
 		// Additional Clerk user data for analytics
@@ -38,15 +38,15 @@ export default defineSchema({
 				lastResetAt: v.number()
 			})
 		),
-			// Track PDF upload usage for rate limiting
-			pdfUploadUsage: v.optional(
-				v.object({
-					count: v.number(),
-					lastResetAt: v.number()
-				})
-			),
-			seenFeatureAnnouncementIds: v.optional(v.array(v.string()))
-		})
+		// Track PDF upload usage for rate limiting
+		pdfUploadUsage: v.optional(
+			v.object({
+				count: v.number(),
+				lastResetAt: v.number()
+			})
+		),
+		seenFeatureAnnouncementIds: v.optional(v.array(v.string()))
+	})
 		.index('by_clerkUserId', ['clerkUserId'])
 		.index('by_cohortId', ['cohortId']),
 	school: defineTable({

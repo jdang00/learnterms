@@ -2,12 +2,13 @@
 	import { page } from '$app/state';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../../../../convex/_generated/api';
+	import type { Id } from '../../../../../../convex/_generated/dataModel';
 	import { fade, slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
+	import createDOMPurify from 'dompurify';
 	import {
 		ChevronLeft,
 		PanelRight,
-		Trophy,
 		Clock,
 		Target,
 		Flag,
@@ -21,12 +22,15 @@
 		Plus
 	} from 'lucide-svelte';
 
-	const classId = $derived(page.params.classId as any);
-	const attemptId = $derived(page.params.attemptId as any);
+	const classId = $derived(page.params.classId as Id<'class'>);
+	const attemptId = $derived(page.params.attemptId as Id<'quizAttempts'>);
 
-	const resultsQuery = useQuery((api as any).customQuiz.getAttemptResults, () =>
+	const resultsQuery = useQuery(api.customQuiz.getAttemptResults, () =>
 		attemptId ? { attemptId } : 'skip'
 	);
+	type ResultsQueryData = NonNullable<typeof resultsQuery.data>;
+	type ReviewItem = ResultsQueryData['reviewItems'][number];
+	let domPurify: ReturnType<typeof createDOMPurify> | null = null;
 
 	let selectedIndex = $state(0);
 	let tab = $state<'summary' | 'review'>('summary');
@@ -51,8 +55,21 @@
 		return String(type || '').toLowerCase() === 'matching';
 	}
 
-	function optionTextById(item: any, id: string) {
-		return item.question.options.find((o: any) => o.id === id)?.text ?? id;
+	function sanitizeHtml(value: string | undefined | null) {
+		const raw = String(value ?? '');
+		if (typeof window === 'undefined') {
+			return raw
+				.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+				.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+				.replace(/\son[a-z]+\s*=\s*(["'])[\s\S]*?\1/gi, '')
+				.replace(/\s(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi, ' $1="#"');
+		}
+		domPurify ??= createDOMPurify(window);
+		return domPurify.sanitize(raw);
+	}
+
+	function optionTextById(item: ReviewItem, id: string) {
+		return item.question.options.find((o) => o.id === id)?.text ?? id;
 	}
 
 	function answerLabel(text: string) {
@@ -97,7 +114,7 @@
 		return as.every((v, i) => v === bs[i]);
 	}
 
-	function multiSelectAnalysis(item: any) {
+	function multiSelectAnalysis(item: ReviewItem) {
 		const selected = (item.response?.selectedOptions ?? []) as string[];
 		const correct = (item.correctAnswerDisplay ?? []) as string[];
 		const selectedSet = new Set(selected);
@@ -491,7 +508,7 @@
 							{@const unanswered = !item.response?.selectedOptions?.length && !String(item.response?.textResponse ?? '').trim()}
 							<div class="indicator">
 								{#if item.response?.isFlagged}
-									<span class="indicator-item indicator-start badge badge-warning badge-xs translate-x-[-1/4] translate-y-[-1/4] z-[1]"></span>
+										<span class="indicator-item indicator-start badge badge-warning badge-xs -translate-x-1/4 -translate-y-1/4 z-[1]"></span>
 								{/if}
 								<button
 									bind:this={questionButtons[idx]}
@@ -533,7 +550,7 @@
 							</div>
 
 							<div class="text-base sm:text-xl leading-tight tiptap-content font-medium ms-2 mt-4">
-								{@html selectedItem.question.stem}
+									{@html sanitizeHtml(selectedItem.question.stem)}
 							</div>
 
 							{#if isFitb(selectedItem.question.type)}
@@ -624,7 +641,7 @@
 											<input type="checkbox" class="checkbox checkbox-sm ms-4 {correct ? 'checkbox-success' : selected ? 'checkbox-error' : ''}" checked={selected} disabled />
 											<span class="flex-grow text-wrap break-words ml-3 md:ml-4 my-3 text-sm md:text-base">
 												<span class="font-semibold mr-2 select-none">{String.fromCharCode(65 + i)}.</span>
-												<span class="tiptap-content">{@html option.text}</span>
+													<span class="tiptap-content">{@html sanitizeHtml(option.text)}</span>
 											</span>
 											{#if correct}
 												<span class="badge badge-success badge-soft badge-sm rounded-full mr-4">Correct</span>
@@ -642,7 +659,7 @@
 									<div class="card-body">
 										<h3 class="card-title text-base">Rationale</h3>
 										<div class="tiptap-content text-sm text-base-content/80">
-											{@html selectedItem.question.explanation}
+												{@html sanitizeHtml(selectedItem.question.explanation)}
 										</div>
 									</div>
 								</div>

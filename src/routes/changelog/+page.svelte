@@ -1,15 +1,28 @@
 <script lang="ts">
 	import {
 		Sparkles,
-		ClipboardCheck,
 		BrainCircuit,
 		BookOpen,
+		ChartColumnIncreasing,
+		CircleGauge,
+		ClipboardCheck,
+		Database,
+		FileCog,
 		Flag,
+		FolderOpen,
+		GalleryVerticalEnd,
+		GitBranch,
 		Keyboard,
 		BarChart3,
 		FileText,
 		Eye,
 		Image,
+		LayoutDashboard,
+		Palette,
+		Search,
+		Shield,
+		SlidersHorizontal,
+		WandSparkles,
 		Users,
 		Zap,
 		ArrowRight
@@ -19,22 +32,39 @@
 		const y = opts?.y ?? 24;
 		const delay = opts?.delay ?? 0;
 		const stagger = opts?.stagger ?? 0;
+		const reduceMotion =
+			typeof window !== 'undefined' &&
+			window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 		const children = stagger ? (Array.from(node.children) as HTMLElement[]) : [];
 		const targets = stagger ? children : [node];
 
 		targets.forEach((el, i) => {
+			if (reduceMotion) {
+				el.style.opacity = '1';
+				el.style.transform = 'translateY(0)';
+				el.style.transition = '';
+				return;
+			}
 			el.style.opacity = '0';
 			el.style.transform = `translateY(${y}px)`;
 			el.style.transition = `opacity 0.6s cubic-bezier(.16,1,.3,1) ${delay + i * stagger}ms, transform 0.6s cubic-bezier(.16,1,.3,1) ${delay + i * stagger}ms`;
 		});
 
 		const observer = new IntersectionObserver(
-			([entry]) => {
-				if (entry.isIntersecting) {
-					targets.forEach((el, i) => {
-						setTimeout(() => {
-							el.style.opacity = '1';
+				([entry]) => {
+					if (entry.isIntersecting) {
+						if (reduceMotion) {
+							targets.forEach((el) => {
+								el.style.opacity = '1';
+								el.style.transform = 'translateY(0)';
+							});
+							observer.disconnect();
+							return;
+						}
+						targets.forEach((el, i) => {
+							setTimeout(() => {
+								el.style.opacity = '1';
 							el.style.transform = 'translateY(0)';
 						}, delay + i * stagger);
 					});
@@ -61,111 +91,249 @@
 		version: string;
 		date: string;
 		title: string;
-		badge: string;
-		badgeClass: string;
-		highlights: { icon: typeof Sparkles; title: string; description: string }[];
+		highlights: {
+			icon: typeof Sparkles;
+			title: string;
+			description: string;
+			href?: string;
+		}[];
 	};
 
 	const changelog: ChangelogEntry[] = [
 		{
-			version: 'v4',
+			version: 'Feb 2026',
 			date: 'February 2026',
-			title: 'Custom Tests & Practice Exams',
-			badge: 'Latest',
-			badgeClass: 'badge-primary',
+			title: 'Enhancing the Learning Experience',
 			highlights: [
 				{
-					icon: ClipboardCheck,
-					title: 'Build your own test',
+					icon: CircleGauge,
+					title: 'Power bar & UI refresh',
 					description:
-						'Pick modules, set a time limit, and take a scored practice exam. Review every answer when you finish.'
+						'Introduced the power bar plus frontend refinements across mobile flow, solution display, and question switching.',
+					href: 'https://github.com/jdang00/learnterms/commits/main/#:~:text=Copy%20full%20SHA%20for%200be2cb9'
 				},
 				{
-					icon: Flag,
-					title: 'Flag-aware test builder',
+					icon: Palette,
+					title: 'Badges & visual redesign',
 					description:
-						'Include only flagged questions from past study sessions so you focus on the material you missed.'
+						'Added badges and a redesigned interface with cohort page updates, more vibrant sidebar elements, and a refreshed aesthetic.',
+					href: 'https://github.com/jdang00/learnterms/commits/main/#:~:text=%2A%20,buttons'
 				},
 				{
 					icon: BarChart3,
-					title: 'Results breakdown',
+					title: 'Analytics + AI helper polish',
 					description:
-						'See your score, time per question, and which topics gave you the most trouble — all in one view.'
-				}
-			]
-		},
-		{
-			version: 'v3',
-			date: 'January 2026',
-			title: 'Content Library & AI Chunking',
-			badge: 'Stable',
-			badgeClass: 'badge-secondary',
-			highlights: [
-				{
-					icon: BrainCircuit,
-					title: 'AI-powered question generation',
-					description:
-						'Upload PDFs, lecture notes, or outlines and generate questions with rationales in a single pass.'
-				},
-				{
-					icon: FileText,
-					title: 'Document chunking',
-					description:
-						'Source material is automatically split into reviewable chunks. Edit, reorder, or regenerate any section.'
+						'Expanded analytics, improved progress displays, and tuned AI helper prompts/behavior for more reliable support.',
+					href: 'https://github.com/jdang00/learnterms/commits/main/#:~:text=%2A%20,buttons'
 				},
 				{
 					icon: Image,
-					title: 'Rich attachments',
+					title: 'Open Graph & share fixes',
 					description:
-						'Questions support images with zoom, captions, and gated reveals behind the rationale.'
+						'Miscellaneous fixes improved Open Graph images and general polish so shared links render more consistently.',
+					href: 'https://github.com/jdang00/learnterms/commits/main/#:~:text=%2A%20,buttons'
 				}
 			]
 		},
 		{
-			version: 'v2',
-			date: 'November 2025',
-			title: 'Classes, Modules & Progress',
-			badge: 'Foundation',
-			badgeClass: 'badge-accent',
+			version: 'Jan 2026',
+			date: 'January 2026',
+			title: 'Curation Tools and Redesign',
 			highlights: [
 				{
-					icon: BookOpen,
-					title: 'Structured curriculum',
+					icon: LayoutDashboard,
+					title: 'Admin + student redesign',
 					description:
-						'Organize content into classes and modules. Students see only what belongs to their cohort.'
-				},
-				{
-					icon: Keyboard,
-					title: 'Keyboard-first quizzing',
-					description:
-						'Number keys select, Enter checks, arrows navigate, Tab reveals rationales. Built for speed.'
-				},
-				{
-					icon: Eye,
-					title: 'Rationale-first questions',
-					description:
-						'Every question ships with an explanation. Students learn the why, not just the answer.'
-				}
-			]
-		},
-		{
-			version: 'v1',
-			date: 'September 2025',
-			title: 'The Beginning',
-			badge: 'Genesis',
-			badgeClass: 'badge-neutral',
-			highlights: [
-				{
-					icon: Zap,
-					title: 'Core study flow',
-					description:
-						'Interactive question practice with real-time progress tracking and theme support.'
+						'A significant interface redesign improved navigation for admins and students with more intuitive layouts and streamlined screens.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=Commits%20on%20Jan%2027%2C%202026'
 				},
 				{
 					icon: Users,
-					title: 'Cohort access',
+					title: 'Developer class management',
 					description:
-						'Students join through their school and cohort. Access is scoped and controlled from day one.'
+						'Internal developer tooling expanded to support class management, student adds/removals, and course-content handling.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=Commits%20on%20Jan%2024%2C%202026'
+				},
+				{
+					icon: FileCog,
+					title: 'Question curation ergonomics',
+					description:
+						'Improved question editing workflows with optimizations, limits, auth fixes, and a new curation/content-management setup.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=%2A%20'
+				},
+				{
+					icon: ChartColumnIncreasing,
+					title: 'Stats, flags, and tagging',
+					description:
+						'Added updated statistics/progress dashboards plus flagged-question tracking and the tagging system groundwork.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=committed'
+				},
+				{
+					icon: WandSparkles,
+					title: 'PostHog reintegration',
+					description:
+						'Reintroduced PostHog analytics and strengthened the tracking infrastructure for better product telemetry.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=committed'
+				}
+			]
+		},
+		{
+			version: 'Dec 2025',
+			date: 'December 2025',
+			title: 'Performance Tweaks',
+			highlights: [
+				{
+					icon: Zap,
+					title: 'Simplified progress cache',
+					description:
+						'Rolled back an expensive progress cache in favor of simpler direct queries, reducing complexity and improving runtime performance.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=%2A%20,to%20fixed%20field'
+				},
+				{
+					icon: ClipboardCheck,
+					title: 'Fixed module question counts',
+					description:
+						'Question counts moved from calculated values to fixed stored fields to support more accurate reporting and summaries.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=%2A%20,to%20fixed%20field'
+				}
+			]
+		},
+		{
+			version: 'Nov 2025',
+			date: 'November 2025',
+			title: 'Minor Fixes and UI Refinements',
+			highlights: [
+				{
+					icon: BookOpen,
+					title: 'About page + grade calculations',
+					description:
+						'Reworked the About section, improved grade calculations, and shipped several bug fixes near the end of the month.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=%2A%20'
+				},
+				{
+					icon: SlidersHorizontal,
+					title: 'General cleanup bump',
+					description:
+						'A larger cleanup pass bundled dependency bumps, visual tweaks, and a set of smaller maintenance updates.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=%2A%20'
+				}
+			]
+		},
+		{
+			version: 'Oct 2025',
+			date: 'October 2025',
+			title: 'Progress Tracking Enhancements',
+			highlights: [
+				{
+					icon: Eye,
+					title: 'Attachment modal hotfix',
+					description:
+						'Fixed unintended blur behavior so users can view attachments clearly without blurring the rest of the page.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=%2A%20,by%20default%20on%20attachment%20modal'
+				},
+				{
+					icon: Keyboard,
+					title: 'FITB and matching updates',
+					description:
+						'Improved reset behavior for fill-in-the-blank and matching questions and began counting them in overall progress tracking.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=Commits%20on%20Oct%202%2C%202025'
+				}
+			]
+		},
+		{
+			version: 'Sep 2025',
+			date: 'September 2025',
+			title: 'Matching and Editor Refinements',
+			highlights: [
+				{
+					icon: ClipboardCheck,
+					title: 'Matching question fixes',
+					description:
+						'Fixed matching behavior and ensured answer-option order shuffles independently from prompt order.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=%2A%20'
+				},
+				{
+					icon: FileText,
+					title: 'TipTap + duplicate warnings',
+					description:
+						'Addressed rich-text editor issues and duplicate content warnings to smooth out authoring workflows.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=%2A%20'
+				},
+				{
+					icon: Sparkles,
+					title: 'Small quality improvements',
+					description:
+						'A cluster of additional commits delivered smaller refinements across user-facing features and internal tooling.'
+				}
+			]
+		},
+		{
+			version: 'Aug 2025',
+			date: 'August 2025',
+			title: 'Content and AI Capabilities Expand',
+			highlights: [
+				{
+					icon: Image,
+					title: 'Images in questions',
+					description:
+						'Enabled attaching images directly to questions to support richer learning and review experiences.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=Copy%20full%20SHA%20for%20862a492'
+				},
+				{
+					icon: Shield,
+					title: 'Security + quality-of-life',
+					description:
+						'Shipped cohort module security improvements, better error handling, improved forms, and class-management UI tweaks.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=Copy%20full%20SHA%20for%20862a492'
+				},
+				{
+					icon: Search,
+					title: 'Search, docs, and UI polish',
+					description:
+						'Expanded search and documentation while aligning the interface more closely with evolving design standards.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=Copy%20full%20SHA%20for%20862a492'
+				},
+				{
+					icon: BrainCircuit,
+					title: 'AI generation + content library',
+					description:
+						'Early AI-generated practice questions landed and the admin content library was introduced for reusable materials.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=%2A%20'
+				},
+				{
+					icon: Database,
+					title: 'Progress tracking efficiency',
+					description:
+						'Improved how user progress is stored and queried to reduce bandwidth usage and make tracking more efficient.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=Copy%20full%20SHA%20for%20862a492'
+				}
+			]
+		},
+		{
+			version: 'Jul 2025',
+			date: 'July 2025',
+			title: 'Foundational Work',
+			highlights: [
+				{
+					icon: GalleryVerticalEnd,
+					title: 'Navigation overhaul',
+					description:
+						'Introduced a new sidebar and improved class UI, making it easier for learners to navigate modules.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=%2A%20'
+				},
+				{
+					icon: GitBranch,
+					title: 'Convex migration + modularization',
+					description:
+						'Started migrating storage to Convex and modularizing frontend components as the architecture took shape.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=Commits%20on%20Jul%2027%2C%202025'
+				},
+				{
+					icon: FolderOpen,
+					title: 'Initial features and fixes',
+					description:
+						'Early commits stabilized question generation and introduced initial cohort pages and class editing screens.',
+					href: 'https://github.com/jdang00/learnterms/commits/main#:~:text=%2A%20'
 				}
 			]
 		}
@@ -228,9 +396,6 @@
 							>
 							<span class="text-xs text-base-content/35">&middot;</span>
 							<span class="text-xs text-base-content/45">{entry.date}</span>
-							<span class="badge {entry.badgeClass} badge-soft badge-xs rounded-full"
-								>{entry.badge}</span
-							>
 						</div>
 
 						<h2 class="text-xl font-bold sm:text-2xl mb-4">{entry.title}</h2>
@@ -251,6 +416,17 @@
 									<p class="mt-1 text-xs text-base-content/55 leading-relaxed">
 										{highlight.description}
 									</p>
+									{#if highlight.href}
+										<a
+											href={highlight.href}
+											target="_blank"
+											rel="noreferrer"
+											class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80"
+										>
+											View source commits
+											<ArrowRight size={12} />
+										</a>
+									{/if}
 								</div>
 							{/each}
 						</div>

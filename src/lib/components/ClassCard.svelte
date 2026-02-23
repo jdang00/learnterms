@@ -1,14 +1,4 @@
-<script lang="ts">
-	import { ArrowRight } from 'lucide-svelte';
-	import { fade } from 'svelte/transition';
-	import type { ClassWithSemester } from '../types';
-	interface Props {
-		classItem: ClassWithSemester;
-		onSelect: (classItem: ClassWithSemester) => void;
-	}
-
-	let { classItem, onSelect }: Props = $props();
-
+<script module lang="ts">
 	const palettes = [
 		{ base: '#7c6fcd', light: '#a89be0', dark: '#5a4ea3' },
 		{ base: '#5b8fd9', light: '#87aee6', dark: '#3d6db5' },
@@ -21,8 +11,20 @@
 		{ base: '#6899d4', light: '#92b5e2', dark: '#4a78b3' },
 		{ base: '#d4886a', light: '#e2a892', dark: '#b3684a' },
 		{ base: '#5aad8e', light: '#82c5ab', dark: '#3e8e70' },
-		{ base: '#cc7191', light: '#db96ae', dark: '#ab5274' },
+		{ base: '#cc7191', light: '#db96ae', dark: '#ab5274' }
 	];
+</script>
+
+<script lang="ts">
+	import { ArrowRight } from 'lucide-svelte';
+	import { fade } from 'svelte/transition';
+	import type { ClassWithSemester } from '../types';
+	interface Props {
+		classItem: ClassWithSemester;
+		onSelect: (classItem: ClassWithSemester) => void;
+	}
+
+	let { classItem, onSelect }: Props = $props();
 
 	function hashStr(s: string): number {
 		let h = 0;
@@ -39,7 +41,7 @@
 </script>
 
 <div in:fade={{ duration: 300 }} class="relative group">
-	<button onclick={() => onSelect(classItem)} class="w-full text-left">
+	<button onclick={() => onSelect(classItem)} class="w-full text-left" aria-label={`Open class ${classItem.name}`}>
 		<div class="card-root relative h-64 rounded-2xl bg-base-100 border-2 border-base-300 transition-all duration-300 hover:border-base-content/20 hover:-translate-y-1" style="isolation: isolate;">
 			<!-- Banner -->
 			<div class="absolute inset-x-0 top-0 h-28 rounded-t-2xl overflow-hidden" style="background: {palette.light};">
@@ -125,10 +127,11 @@
 
 				<!-- Class name -->
 				<div class="absolute inset-x-0 bottom-0 px-5 pb-3 pointer-events-none">
-					<h2
-						class="font-bold text-[1.25rem] leading-snug text-white"
-						style="text-shadow: 0 1px 6px {palette.dark}cc, 0 0 24px {palette.dark}aa;"
-					>
+						<h2
+							class="font-bold text-[1.25rem] leading-snug text-white truncate"
+							title={classItem.name}
+							style="text-shadow: 0 1px 6px {palette.dark}cc, 0 0 24px {palette.dark}aa;"
+						>
 						{classItem.name}
 					</h2>
 				</div>

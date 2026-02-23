@@ -29,7 +29,10 @@
 		() => clerkUser ? { id: clerkUser.id } : 'skip'
 	);
 
-	const semesters = useQuery(api.semester.getAllSemesters, () => ({}));
+	const semesters = useQuery(
+		api.semester.getAllSemesters,
+		() => clerkUser ? {} : 'skip'
+	);
 
 	const classes = useQuery(
 		api.class.getUserClasses,

@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../../../../convex/_generated/api';
+	import type { Id } from '../../../../../convex/_generated/dataModel';
 	import { ChevronLeft, Clock, Target, Shuffle, Hash, Filter, Play, History, Tags } from 'lucide-svelte';
 
 	type SourceFilter = 'all' | 'flagged' | 'incomplete';
@@ -10,11 +11,11 @@
 
 	const client = useConvexClient();
 
-	const classId = $derived(page.params.classId as any);
+	const classId = $derived(page.params.classId as Id<'class'>);
 
 	let sourceFilter = $state<SourceFilter>('all');
 	let questionCount = $state(25);
-	let selectedModuleIds = $state<string[]>([]);
+	let selectedModuleIds = $state<Id<'module'>[]>([]);
 	let selectedQuestionTypes = $state<QuestionTypeKey[]>([
 		'multiple_choice',
 		'fill_in_the_blank',
@@ -25,26 +26,53 @@
 	let timed = $state(true);
 	let timeLimitMinutes = $state(20);
 	let passThresholdPct = $state(70);
-	let selectedTagCollectionIds = $state<string[]>([]);
+	let selectedTagCollectionIds = $state<Id<'tags'>[]>([]);
 	let starting = $state(false);
 	let createError = $state<string | null>(null);
 
-	const builderQuery = useQuery((api as any).customQuiz.getClassQuizBuilderData, () =>
+	const builderQuery = useQuery(api.customQuiz.getClassQuizBuilderData, () =>
 		classId ? { classId } : 'skip'
 	);
 
-	const summaryQuery = useQuery((api as any).customQuiz.getEligibleQuestionPoolSummary, () =>
-		classId && selectedModuleIds.length > 0
+	let summaryDebounceHandle: number | null = null;
+	let debouncedSelectedModuleIds = $state<Id<'module'>[]>([]);
+	const normalizedSelectedModuleIds = $derived.by(() =>
+		Array.from(new Set(selectedModuleIds)).sort()
+	);
+
+	$effect(() => {
+		if (typeof window === 'undefined') {
+			debouncedSelectedModuleIds = normalizedSelectedModuleIds;
+			return;
+		}
+		if (summaryDebounceHandle !== null) {
+			clearTimeout(summaryDebounceHandle);
+		}
+		const next = [...normalizedSelectedModuleIds];
+		summaryDebounceHandle = window.setTimeout(() => {
+			debouncedSelectedModuleIds = next;
+			summaryDebounceHandle = null;
+		}, 250);
+		return () => {
+			if (summaryDebounceHandle !== null) {
+				clearTimeout(summaryDebounceHandle);
+				summaryDebounceHandle = null;
+			}
+		};
+	});
+
+	const summaryQuery = useQuery(api.customQuiz.getEligibleQuestionPoolSummary, () =>
+		classId && debouncedSelectedModuleIds.length > 0
 			? {
 					classId,
-					moduleIds: selectedModuleIds as any,
+					moduleIds: debouncedSelectedModuleIds,
 					sourceFilter,
 					questionTypes: selectedQuestionTypes
 				}
-			: 'skip'
+				: 'skip'
 	);
 
-	const attemptsQuery = useQuery((api as any).customQuiz.getUserAttemptsForClass, () =>
+	const attemptsQuery = useQuery(api.customQuiz.getUserAttemptsForClass, () =>
 		classId ? { classId } : 'skip'
 	);
 
@@ -56,7 +84,7 @@
 	const matchedTagModuleIds = $derived.by(() => {
 		const tags = builderQuery.data?.tagCollections ?? [];
 		const selected = new Set(selectedTagCollectionIds);
-		const moduleIds = new Set<string>();
+		const moduleIds = new Set<Id<'module'>>();
 		for (const tag of tags) {
 			if (!selected.has(tag._id)) continue;
 			for (const moduleId of tag.moduleIds ?? []) moduleIds.add(moduleId);
@@ -64,10 +92,10 @@
 		return Array.from(moduleIds);
 	});
 
-	function moduleIdsForTagCollectionIds(tagIds: string[]): string[] {
+	function moduleIdsForTagCollectionIds(tagIds: Id<'tags'>[]): Id<'module'>[] {
 		const tags = builderQuery.data?.tagCollections ?? [];
 		const selected = new Set(tagIds);
-		const moduleIds = new Set<string>();
+		const moduleIds = new Set<Id<'module'>>();
 		for (const tag of tags) {
 			if (!selected.has(tag._id)) continue;
 			for (const moduleId of tag.moduleIds ?? []) moduleIds.add(moduleId);
@@ -75,7 +103,7 @@
 		return Array.from(moduleIds);
 	}
 
-	function toggleModule(moduleId: string) {
+	function toggleModule(moduleId: Id<'module'>) {
 		createError = null;
 		if (selectedModuleIds.includes(moduleId)) {
 			selectedModuleIds = selectedModuleIds.filter((id) => id !== moduleId);
@@ -93,7 +121,7 @@
 		selectedQuestionTypes = [...selectedQuestionTypes, type];
 	}
 
-	function toggleTagCollection(tagId: string) {
+	function toggleTagCollection(tagId: Id<'tags'>) {
 		createError = null;
 		const nextTagIds = selectedTagCollectionIds.includes(tagId)
 			? selectedTagCollectionIds.filter((id) => id !== tagId)
@@ -113,22 +141,22 @@
 		selectedModuleIds = Array.from(new Set([...selectedModuleIds, ...matched]));
 	}
 
-	function typeLabel(type: QuestionTypeKey): string {
-		switch (type) {
-			case 'multiple_choice': return 'Multiple Choice';
-			case 'fill_in_the_blank': return 'Fill in the Blank';
-			case 'matching': return 'Matching';
+		function typeLabel(type: string): string {
+			switch (type) {
+				case 'multiple_choice': return 'Multiple Choice';
+				case 'fill_in_the_blank': return 'Fill in the Blank';
+				case 'matching': return 'Matching';
+				default: return type;
+			}
 		}
-	}
 
-	function friendlyTypeName(raw: string): string {
-		switch (raw) {
-			case 'multiple_choice': return 'Multiple Choice';
-			case 'fill_in_the_blank': return 'Fill in the Blank';
-			case 'matching': return 'Matching';
-			default: return raw;
+		function safeTagColor(value?: string): string | null {
+			if (!value) return null;
+			const trimmed = value.trim();
+			const isHex = /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(trimmed);
+			const isRgbLike = /^(?:rgb|hsl)a?\([\d\s.,%+-]+\)$/i.test(trimmed);
+			return isHex || isRgbLike ? trimmed : null;
 		}
-	}
 
 	async function startTest() {
 		createError = null;
@@ -147,7 +175,7 @@
 
 		starting = true;
 		try {
-			const result = await client.mutation((api as any).customQuiz.createCustomQuizAttempt, {
+				const result = await client.mutation(api.customQuiz.createCustomQuizAttempt, {
 				classId,
 				moduleIds: selectedModuleIds,
 				questionCount: effectiveQuestionCount,
@@ -297,16 +325,17 @@
 											</div>
 
 											<div class="flex flex-wrap gap-2 mt-3">
-												{#each builderQuery.data.tagCollections as tag (tag._id)}
-													{@const active = selectedTagCollectionIds.includes(tag._id)}
-													<button
+													{#each builderQuery.data.tagCollections as tag (tag._id)}
+														{@const active = selectedTagCollectionIds.includes(tag._id)}
+														{@const tagColor = safeTagColor(tag.color)}
+														<button
 														class="btn btn-sm rounded-full border transition-all duration-200 {active ? 'btn-primary btn-soft border-primary/40' : 'btn-ghost border-base-300'}"
 														onclick={() => toggleTagCollection(tag._id)}
 														title={`Modules: ${tag.moduleCount} · Questions: ${tag.questionCount}`}
 													>
-														{#if tag.color}
-															<span class="inline-block w-2 h-2 rounded-full" style={`background:${tag.color}`}></span>
-														{/if}
+															{#if tagColor}
+																<span class="inline-block w-2 h-2 rounded-full" style={`background:${tagColor}`}></span>
+															{/if}
 														<span>{tag.name}</span>
 														<span class="opacity-60 text-xs">({tag.moduleCount}m · {tag.questionCount}q)</span>
 													</button>
@@ -346,11 +375,12 @@
 														</div>
 														{#if module.tags && module.tags.length > 0}
 															<div class="flex flex-wrap gap-1 mt-2">
-																{#each module.tags as tag (tag._id)}
-																	<span class="badge badge-soft badge-xs rounded-full border border-base-300">
-																		{#if tag.color}
-																			<span class="inline-block w-1.5 h-1.5 rounded-full mr-1" style={`background:${tag.color}`}></span>
-																		{/if}
+																	{#each module.tags as tag (tag._id)}
+																		{@const tagColor = safeTagColor(tag.color)}
+																		<span class="badge badge-soft badge-xs rounded-full border border-base-300">
+																			{#if tagColor}
+																				<span class="inline-block w-1.5 h-1.5 rounded-full mr-1" style={`background:${tagColor}`}></span>
+																			{/if}
 																		{tag.name}
 																	</span>
 																{/each}
@@ -417,7 +447,7 @@
 								<div>
 									<div class="text-sm font-medium mb-2">Question Types</div>
 									<div class="flex flex-wrap gap-2">
-										{#each (['multiple_choice', 'fill_in_the_blank', 'matching'] as QuestionTypeKey[]) as type}
+											{#each (['multiple_choice', 'fill_in_the_blank', 'matching'] as QuestionTypeKey[]) as type (type)}
 											<button
 												class="btn btn-sm rounded-full transition-all duration-200
 												{selectedQuestionTypes.includes(type) ? 'btn-primary btn-soft' : 'btn-ghost border border-base-300'}"
@@ -548,10 +578,10 @@
 
 										{#if summaryQuery.data?.byType?.length > 0}
 										<div class="flex flex-wrap gap-1.5">
-											{#each summaryQuery.data.byType as row}
-												<div class="badge badge-soft badge-sm rounded-full">
-													{friendlyTypeName(row.questionType)}: {row.count}
-												</div>
+												{#each summaryQuery.data.byType as row (row.questionType)}
+													<div class="badge badge-soft badge-sm rounded-full">
+														{typeLabel(row.questionType)}: {row.count}
+													</div>
 											{/each}
 										</div>
 									{/if}

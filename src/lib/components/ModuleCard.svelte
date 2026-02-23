@@ -18,16 +18,9 @@
 		tags?: TagSummary[];
 	}
 
-	interface Progress {
-		completionPercentage: number;
-		interactedQuestions: number;
-		totalQuestions: number;
-	}
-
 	interface Props {
 		module: Module;
 		classId: Id<'class'>;
-		progress?: Progress;
 		onSelect?: (module: Module) => void;
 	}
 
@@ -92,12 +85,11 @@
 				{module.description || 'No description available'}
 			</p>
 
-			<div class="mt-auto flex items-center justify-between">
-				<span></span>
-				<div class="btn btn-sm btn-primary btn-soft rounded-full gap-1 transition-all duration-200 group-hover:gap-2">
-					Start <ArrowRight size={14} class="transition-transform duration-200 group-hover:translate-x-0.5" />
+				<div class="mt-auto flex items-center justify-between">
+					<div class="btn btn-sm btn-primary btn-soft rounded-full gap-1 transition-all duration-200 group-hover:gap-2 ml-auto">
+						Start <ArrowRight size={14} class="transition-transform duration-200 group-hover:translate-x-0.5" />
+					</div>
 				</div>
-			</div>
 		</div>
 	</div>
 {/snippet}

@@ -33,8 +33,17 @@
 
 	let { data }: { data: PageData } = $props();
 	const userData = data.userData;
-	const userSchoolName = $derived.by(() => (userData as any)?.schoolName ?? null);
-	const userCohortName = $derived.by(() => (userData as any)?.cohortName ?? null);
+	function hasUserDisplayNames(
+		value: unknown
+	): value is { schoolName?: string | null; cohortName?: string | null } {
+		return typeof value === 'object' && value !== null;
+	}
+	const userSchoolName = $derived.by(() =>
+		hasUserDisplayNames(userData) ? (userData.schoolName ?? null) : null
+	);
+	const userCohortName = $derived.by(() =>
+		hasUserDisplayNames(userData) ? (userData.cohortName ?? null) : null
+	);
 	const dev = $derived(userData?.role === 'dev');
 	const admin = $derived(userData?.role === 'admin');
 	const curator = $derived(userData?.role === 'curator');
@@ -73,7 +82,7 @@
 	);
 
 	const featureAnnouncementQuery = useQuery(
-		(api as any).featureAnnouncements.getCurrentForViewer,
+		api.featureAnnouncements.getCurrentForViewer,
 		() => userData?.cohortId ? {} : 'skip'
 	);
 
@@ -112,7 +121,7 @@
 
 	const recentModuleActivityQuery = useQuery(
 		api.progress.getRecentModuleActivity,
-		() => userData?.cohortId ? { limit: 4 } : 'skip'
+		() => (currentView === 'classes' && userData?.cohortId) ? { limit: 4 } : 'skip'
 	);
 
 	const recentModuleIds = $derived.by(() => {
@@ -122,7 +131,7 @@
 
 	const recentModuleProgressQuery = useQuery(
 		api.progress.getRecentModulesProgress,
-		() => recentModuleIds.length > 0 ? { moduleIds: recentModuleIds } : 'skip'
+		() => (currentView === 'classes' && recentModuleIds.length > 0) ? { moduleIds: recentModuleIds } : 'skip'
 	);
 
 	const recentModules = $derived.by(() => {
@@ -211,15 +220,17 @@
 	}
 
 	function featureHref(item: { title: string; href?: string }) {
-		if (item.href) return item.href;
+		if (item.href === '/cohort') return resolve('/cohort');
 		if (item.title === 'Build your own test') {
 			const classId = selectedClass?._id ?? firstClassId;
-			return classId ? `/classes/${classId}/tests/new` : '/classes';
+			return classId
+				? resolve('/classes/[classId]/tests/new', { classId })
+				: resolve('/classes');
 		}
 		if (item.title === 'Pick up where you left off') {
-			return '/classes';
+			return resolve('/classes');
 		}
-		return '/classes';
+		return resolve('/classes');
 	}
 
 	async function dismissFeatureSpotlight() {
@@ -231,7 +242,7 @@
 		featureSpotlightAcknowledging = true;
 		featureSpotlightError = null;
 		try {
-			await client.mutation((api as any).featureAnnouncements.markSeen, {
+				await client.mutation(api.featureAnnouncements.markSeen, {
 				announcementId: announcement.id
 			});
 			featureSpotlightSeenLocal = true;
@@ -402,10 +413,10 @@
 						</div>
 					</div>
 
-					<a
-						href={`/classes/${selectedClass._id}/tests/new`}
-						class="group flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 mb-6 transition-all duration-200 hover:border-primary/40 hover:bg-primary/10 hover:shadow-md hover:-translate-y-0.5"
-					>
+						<a
+							href={resolve('/classes/[classId]/tests/new', { classId: selectedClass._id })}
+							class="group flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 mb-6 transition-all duration-200 hover:border-primary/40 hover:bg-primary/10 hover:shadow-md hover:-translate-y-0.5"
+						>
 						<div class="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/15 text-primary shrink-0 transition-transform duration-200 group-hover:scale-110">
 							<ClipboardCheck size={22} />
 						</div>

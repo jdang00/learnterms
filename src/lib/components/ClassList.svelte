@@ -2,8 +2,6 @@
 	import { fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import ClassCard from './ClassCard.svelte';
-	import { useQuery } from 'convex-svelte';
-	import { api } from '../../convex/_generated/api';
 	import type { ClassWithSemester } from '../types';
 	import { pickDefaultSemesterName, setLastSemesterName } from '../utils/semester';
 	import { ChevronDown } from 'lucide-svelte';
@@ -21,13 +19,25 @@
 
 	let { classes, onSelectClass, title = 'My Classes', variant = 'grid' }: Props = $props();
 
-	const semesters = useQuery(api.semester.getAllSemesters, {});
+	type SemesterOption = { _id: string; name: string };
+	const semesters = $derived.by(() => {
+		const source = classes.data ?? [];
+		const seen = new Set<string>();
+		const list: SemesterOption[] = [];
+		for (const classItem of source) {
+			const semester = classItem.semester;
+			if (!semester || seen.has(semester._id)) continue;
+			seen.add(semester._id);
+			list.push({ _id: semester._id, name: semester.name });
+		}
+		return list;
+	});
 
 	let currentSemester = $state('');
 
 	$effect(() => {
-		if (semesters.data && !currentSemester) {
-			currentSemester = pickDefaultSemesterName(semesters.data);
+		if (semesters.length > 0 && !currentSemester) {
+			currentSemester = pickDefaultSemesterName(semesters);
 		}
 	});
 
@@ -46,22 +56,24 @@
 	<div class="mb-6 flex justify-between items-center">
 		<h3 class="text-lg font-semibold text-base-content">{title}</h3>
 
-		{#if semesters.isLoading}
+		{#if classes.isLoading}
 			<div class="skeleton h-9 w-32 rounded-full"></div>
-		{:else if semesters.error != null}
+		{:else if classes.error != null}
 			<div class="text-error text-sm">Failed to load semesters</div>
+		{:else if semesters.length === 0}
+			<div class="text-base-content/60 text-sm">No semesters</div>
 		{:else}
 			<button class="btn btn-sm rounded-full gap-1.5 border-base-300 hover:border-primary/30 transition-colors duration-200" popovertarget="popover-1" style="anchor-name:--anchor-1">
 				{currentSemester}
 				<ChevronDown size={14} class="text-base-content/50" />
 			</button>
-			<ul
-				class="dropdown menu w-52 rounded-xl bg-base-100 shadow-lg border border-base-300"
-				popover
-				id="popover-1"
-				style="position-anchor:--anchor-1"
-			>
-				{#each semesters.data as semester (semester._id)}
+				<ul
+					class="dropdown menu w-52 rounded-xl bg-base-100 shadow-lg border border-base-300"
+					popover
+					id="popover-1"
+					style="position-anchor:--anchor-1; position-area:block-end;"
+				>
+				{#each semesters as semester (semester._id)}
 					<li>
 						<button
 							onclick={() => (currentSemester = semester.name)}
@@ -158,10 +170,10 @@
 </div>
 
 <style>
-	@keyframes cardReveal {
-		from {
-			opacity: 0;
-			transform: translateY(12px);
+		@keyframes -global-cardReveal {
+			from {
+				opacity: 0;
+				transform: translateY(12px);
 		}
 		to {
 			opacity: 1;

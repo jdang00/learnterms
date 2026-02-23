@@ -1,9 +1,11 @@
 import { query, mutation } from './_generated/server';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 
 type SourceFilter = 'all' | 'flagged' | 'incomplete';
 type AttemptStatus = 'in_progress' | 'submitted' | 'timed_out' | 'abandoned';
+type ConvexCtx = QueryCtx | MutationCtx;
 
 const MAX_QUESTIONS_PER_ATTEMPT = 100;
 const MAX_PATCH_CHANGES = 200;
@@ -20,20 +22,20 @@ function nowTs() {
 	return Date.now();
 }
 
-async function requireCurrentUser(ctx: any): Promise<Doc<'users'>> {
+async function requireCurrentUser(ctx: ConvexCtx): Promise<Doc<'users'>> {
 	const identity = await ctx.auth.getUserIdentity();
 	if (!identity) throw new Error('Unauthorized');
 
 	const user = await ctx.db
 		.query('users')
-		.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', identity.subject))
+		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
 		.first();
 
 	if (!user) throw new Error('User not found');
 	return user;
 }
 
-async function requireClassAccess(ctx: any, user: Doc<'users'>, classId: Id<'class'>) {
+async function requireClassAccess(ctx: ConvexCtx, user: Doc<'users'>, classId: Id<'class'>) {
 	const classDoc = await ctx.db.get(classId);
 	if (!classDoc) throw new Error('Class not found');
 	if (!user.cohortId || classDoc.cohortId !== user.cohortId) {
@@ -43,7 +45,7 @@ async function requireClassAccess(ctx: any, user: Doc<'users'>, classId: Id<'cla
 }
 
 async function requireAttemptOwner(
-	ctx: any,
+	ctx: ConvexCtx,
 	user: Doc<'users'>,
 	attemptId: Id<'quizAttempts'>,
 	classId?: Id<'class'>
@@ -125,7 +127,21 @@ function normalizeForFlags(
 	return out.trim();
 }
 
+function looksUnsafeRegexPattern(pattern: string): boolean {
+	if (pattern.length > 200) return true;
+	// Heuristic for catastrophic backtracking patterns like (.+)+ or (a*){2,}
+	if (/\((?:[^()\\]|\\.)*(?:\+|\*|\{\d+(?:,\d*)?\})(?:[^()\\]|\\.)*\)\s*(?:\+|\*|\{\d+(?:,\d*)?\})/.test(pattern)) {
+		return true;
+	}
+	// Heuristic for repeated wildcard groups such as (.*.*)+
+	if (/\((?:[^()\\]|\\.)*(?:\.\*|\.\+)(?:[^()\\]|\\.)*(?:\.\*|\.\+)(?:[^()\\]|\\.)*\)/.test(pattern)) {
+		return true;
+	}
+	return false;
+}
+
 function safeRegex(pattern: string): RegExp | null {
+	if (looksUnsafeRegexPattern(pattern)) return null;
 	try {
 		return new RegExp(pattern);
 	} catch {
@@ -227,17 +243,17 @@ function computeAttemptCounters(items: Doc<'quizAttemptItems'>[]) {
 	return { visitedCount, answeredCount, flaggedCount };
 }
 
-async function getClassPublishedModules(ctx: any, classId: Id<'class'>): Promise<Doc<'module'>[]> {
+async function getClassPublishedModules(ctx: ConvexCtx, classId: Id<'class'>): Promise<Doc<'module'>[]> {
 	const modules = (await ctx.db
 		.query('module')
-		.withIndex('by_classId', (q: any) => q.eq('classId', classId))
-		.filter((q: any) => q.eq(q.field('status'), 'published'))
+		.withIndex('by_classId', (q) => q.eq('classId', classId))
+		.filter((q) => q.eq(q.field('status'), 'published'))
 		.collect()) as Doc<'module'>[];
 	return modules.sort((a: any, b: any) => a.order - b.order);
 }
 
 async function getModuleTagsForClass(
-	ctx: any,
+	ctx: ConvexCtx,
 	classId: Id<'class'>,
 	moduleIds: Id<'module'>[]
 ): Promise<{
@@ -258,11 +274,11 @@ async function getModuleTagsForClass(
 	const [tagDocs, tagLinks] = await Promise.all([
 		ctx.db
 			.query('tags')
-			.withIndex('by_classId', (q: any) => q.eq('classId', classId))
+			.withIndex('by_classId', (q) => q.eq('classId', classId))
 			.collect(),
 		ctx.db
 			.query('moduleTags')
-			.withIndex('by_classId', (q: any) => q.eq('classId', classId))
+			.withIndex('by_classId', (q) => q.eq('classId', classId))
 			.collect()
 	]);
 
@@ -311,7 +327,7 @@ async function getModuleTagsForClass(
 	return { tagsByModuleId, tagCollections };
 }
 
-async function getEligibleQuestionsForAttempt(ctx: any, params: {
+async function getEligibleQuestionsForAttempt(ctx: ConvexCtx, params: {
 	userId: Id<'users'>;
 	classId: Id<'class'>;
 	moduleIds: Id<'module'>[];
@@ -340,11 +356,11 @@ async function getEligibleQuestionsForAttempt(ctx: any, params: {
 
 	const questionLists = await Promise.all(
 		params.moduleIds.map(async (moduleId) => {
-			const q = await ctx.db
-				.query('question')
-				.withIndex('by_moduleId_order', (indexQ: any) => indexQ.eq('moduleId', moduleId))
-				.filter((qb: any) => qb.eq(qb.field('status'), 'published'))
-				.collect();
+				const q = await ctx.db
+					.query('question')
+					.withIndex('by_moduleId_order', (indexQ) => indexQ.eq('moduleId', moduleId))
+					.filter((qb) => qb.eq(qb.field('status'), 'published'))
+					.collect();
 			return q as Doc<'question'>[];
 		})
 	);
@@ -360,7 +376,7 @@ async function getEligibleQuestionsForAttempt(ctx: any, params: {
 
 	const progress = (await ctx.db
 		.query('userProgress')
-		.withIndex('by_user_class', (q: any) =>
+		.withIndex('by_user_class', (q) =>
 			q.eq('userId', params.userId).eq('classId', params.classId)
 		)
 		.collect()) as Doc<'userProgress'>[];
@@ -642,7 +658,7 @@ export const getAttemptRunnerBundle = query({
 
 		const items = (await ctx.db
 			.query('quizAttemptItems')
-			.withIndex('by_attempt_order', (q: any) => q.eq('attemptId', args.attemptId))
+			.withIndex('by_attempt_order', (q) => q.eq('attemptId', args.attemptId))
 			.collect()) as Doc<'quizAttemptItems'>[];
 
 			const classDoc = (await ctx.db.get(attempt.classId)) as Doc<'class'> | null;
@@ -755,7 +771,7 @@ export const patchAttemptResponses = mutation({
 
 		const freshItems = (await ctx.db
 			.query('quizAttemptItems')
-			.withIndex('by_attempt_order', (q: any) => q.eq('attemptId', args.attemptId))
+			.withIndex('by_attempt_order', (q) => q.eq('attemptId', args.attemptId))
 			.collect()) as Doc<'quizAttemptItems'>[];
 		const counters = computeAttemptCounters(freshItems);
 
@@ -821,7 +837,7 @@ export const submitAttempt = mutation({
 
 		const items = (await ctx.db
 			.query('quizAttemptItems')
-			.withIndex('by_attempt_order', (q: any) => q.eq('attemptId', args.attemptId))
+			.withIndex('by_attempt_order', (q) => q.eq('attemptId', args.attemptId))
 			.collect()) as Doc<'quizAttemptItems'>[];
 
 		let scoreEarned = 0;
@@ -954,7 +970,7 @@ export const getAttemptResults = query({
 		const classDoc = (await ctx.db.get(attempt.classId)) as Doc<'class'> | null;
 		const items = (await ctx.db
 			.query('quizAttemptItems')
-			.withIndex('by_attempt_order', (q: any) => q.eq('attemptId', args.attemptId))
+			.withIndex('by_attempt_order', (q) => q.eq('attemptId', args.attemptId))
 			.collect()) as Doc<'quizAttemptItems'>[];
 
 		const moduleIds = Array.from(new Set(items.map((item) => item.moduleId)));
@@ -1015,7 +1031,7 @@ export const getUserAttemptsForClass = query({
 
 		const attempts = (await ctx.db
 			.query('quizAttempts')
-			.withIndex('by_user_class', (q: any) =>
+			.withIndex('by_user_class', (q) =>
 				q.eq('userId', user._id).eq('classId', args.classId)
 			)
 			.collect()) as Doc<'quizAttempts'>[];

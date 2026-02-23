@@ -6,6 +6,7 @@
 	import { api } from '../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
 	import { Pencil, Trash2, Plus, ArrowLeft, GripVertical, Download, FileText, FileJson, FileSpreadsheet } from 'lucide-svelte';
+	import { resolve } from '$app/paths';
 	import { exportModuleQuestions, type ExportableQuestion } from '$lib/utils/questionExport';
 	import EditModuleModal from '$lib/admin/EditModuleModal.svelte';
 	import AddModuleModal from '$lib/admin/AddModuleModal.svelte';
@@ -256,7 +257,7 @@
 </script>
 
 <div class="min-h-screen p-8 max-w-7xl mx-auto">
-	<a class="btn mb-4 btn-ghost rounded-full" href="/admin"><ArrowLeft size={16} />Back</a>
+	<a class="btn mb-4 btn-ghost rounded-full" href={resolve('/admin')}><ArrowLeft size={16} />Back</a>
 	<div class="mb-8 flex flex-col gap-2">
 		<div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
 			{#if classInfo.isLoading}
