@@ -106,6 +106,106 @@ function exactSetMatch(correctAnswers: string[], userAnswers: string[]) {
 	);
 }
 
+function matchingRoleFromOptionText(text: string): 'prompt' | 'answer' | null {
+	const normalized = String(text ?? '').trimStart().toLowerCase();
+	if (normalized.startsWith('prompt:')) return 'prompt';
+	if (normalized.startsWith('answer:')) return 'answer';
+	return null;
+}
+
+function parseMatchingPair(value: string): { promptId: string; answerId: string } | null {
+	const raw = String(value ?? '').trim();
+	const sep = raw.indexOf('::');
+	if (sep <= 0) return null;
+	const promptId = raw.slice(0, sep).trim();
+	const answerId = raw.slice(sep + 2).trim();
+	if (!promptId || !answerId) return null;
+	return { promptId, answerId };
+}
+
+function normalizeMatchingCorrectPairs(
+	questionSnapshot: Doc<'quizAttemptItems'>['questionSnapshot']
+): string[] {
+	const options = questionSnapshot.options || [];
+	const promptOptions = options.filter((o) => matchingRoleFromOptionText(o.text) === 'prompt');
+	const answerOptions = options.filter((o) => matchingRoleFromOptionText(o.text) === 'answer');
+	const answerIdSet = new Set(answerOptions.map((o) => o.id));
+	const promptIdSet = new Set(promptOptions.map((o) => o.id));
+	const raw = (questionSnapshot.correctAnswers || []).map((s) => String(s));
+
+	// Modern format: promptId::answerId
+	const pairValues = raw
+		.map(parseMatchingPair)
+		.filter(
+			(
+				pair
+			): pair is {
+				promptId: string;
+				answerId: string;
+			} => Boolean(pair)
+		)
+		.filter((pair) => promptIdSet.has(pair.promptId) && answerIdSet.has(pair.answerId));
+	if (pairValues.length > 0) {
+		return Array.from(new Set(pairValues.map((pair) => `${pair.promptId}::${pair.answerId}`)));
+	}
+
+	// Legacy format: answer IDs aligned with prompt order
+	const promptCount = promptOptions.length;
+	if (promptCount > 0 && raw.length > 0) {
+		const pairsFromAnswerIds = promptOptions
+			.map((prompt, index) => {
+				const answerId = raw[index];
+				return answerId && answerIdSet.has(answerId) ? `${prompt.id}::${answerId}` : null;
+			})
+			.filter((pair): pair is string => Boolean(pair));
+		if (pairsFromAnswerIds.length > 0) {
+			return Array.from(new Set(pairsFromAnswerIds));
+		}
+	}
+
+	// Last-resort legacy fallback: zip prompt/answer order from the snapshot.
+	const zipped: string[] = [];
+	const n = Math.min(promptOptions.length, answerOptions.length);
+	for (let i = 0; i < n; i++) {
+		zipped.push(`${promptOptions[i].id}::${answerOptions[i].id}`);
+	}
+	return zipped;
+}
+
+function normalizeMatchingUserPairs(
+	questionSnapshot: Doc<'quizAttemptItems'>['questionSnapshot'],
+	selectedOptions: string[]
+): string[] {
+	const options = questionSnapshot.options || [];
+	const promptIdSet = new Set(
+		options
+			.filter((o) => matchingRoleFromOptionText(o.text) === 'prompt')
+			.map((o) => o.id)
+	);
+	const answerIdSet = new Set(
+		options
+			.filter((o) => matchingRoleFromOptionText(o.text) === 'answer')
+			.map((o) => o.id)
+	);
+
+	return Array.from(
+		new Set(
+			(selectedOptions || [])
+				.map(parseMatchingPair)
+				.filter(
+					(
+						pair
+					): pair is {
+						promptId: string;
+						answerId: string;
+					} => Boolean(pair)
+				)
+				.filter((pair) => promptIdSet.has(pair.promptId) && answerIdSet.has(pair.answerId))
+				.map((pair) => `${pair.promptId}::${pair.answerId}`)
+		)
+	);
+}
+
 type FitbMode = 'exact' | 'exact_cs' | 'contains' | 'regex';
 
 function isFitbMode(s: string): s is FitbMode {
@@ -218,7 +318,10 @@ function scoreAttemptItem(item: Doc<'quizAttemptItems'>) {
 		const text = item.response.textResponse ?? item.response.selectedOptions[0] ?? '';
 		isCorrect = evaluateFitb(item.questionSnapshot, String(text));
 	} else if (isMatchingType(item.questionSnapshot.type)) {
-		isCorrect = exactSetMatch(item.questionSnapshot.correctAnswers || [], item.response.selectedOptions || []);
+		isCorrect = exactSetMatch(
+			normalizeMatchingCorrectPairs(item.questionSnapshot),
+			normalizeMatchingUserPairs(item.questionSnapshot, item.response.selectedOptions || [])
+		);
 	} else {
 		isCorrect = exactSetMatch(item.questionSnapshot.correctAnswers || [], item.response.selectedOptions || []);
 	}
@@ -413,6 +516,10 @@ function buildCorrectAnswerDisplay(item: Doc<'quizAttemptItems'>) {
 		return (item.questionSnapshot.correctAnswers || [])
 			.map((id) => optionMap.get(id) ?? id)
 			.map((s) => decodeFitbDisplayText(s));
+	}
+
+	if (isMatchingType(item.questionSnapshot.type)) {
+		return normalizeMatchingCorrectPairs(item.questionSnapshot);
 	}
 
 	return item.questionSnapshot.correctAnswers || [];
