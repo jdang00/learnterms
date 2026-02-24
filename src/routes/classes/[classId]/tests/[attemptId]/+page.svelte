@@ -131,6 +131,13 @@
 		return String(type || '').toLowerCase() === 'matching';
 	}
 
+	function matchingRole(text: string): 'prompt' | 'answer' | null {
+		const normalized = String(text ?? '').trimStart().toLowerCase();
+		if (normalized.startsWith('prompt:')) return 'prompt';
+		if (normalized.startsWith('answer:')) return 'answer';
+		return null;
+	}
+
 	function getDefaultLocalResponse(item: any): LocalResponse {
 		return {
 			selectedOptions: [...(item.response?.selectedOptions || [])],
@@ -458,11 +465,11 @@
 		}
 
 	function promptsForMatching(item: any) {
-		return (item.question.options || []).filter((o: any) => String(o.text).startsWith('prompt:'));
+		return (item.question.options || []).filter((o: any) => matchingRole(String(o.text)) === 'prompt');
 	}
 
 	function answersForMatching(item: any) {
-		return (item.question.options || []).filter((o: any) => String(o.text).startsWith('answer:'));
+		return (item.question.options || []).filter((o: any) => matchingRole(String(o.text)) === 'answer');
 	}
 
 	function selectedAnswerIdForPrompt(itemId: string, promptId: string) {
@@ -512,10 +519,10 @@
 	}
 
 	function answerLabel(text: string) {
-		return String(text).startsWith('answer:') ? String(text).slice('answer:'.length).trim() : text;
+		return String(text).replace(/^\s*answer:\s*/i, '');
 	}
 	function promptLabel(text: string) {
-		return String(text).startsWith('prompt:') ? String(text).slice('prompt:'.length).trim() : text;
+		return String(text).replace(/^\s*prompt:\s*/i, '');
 	}
 
 	function syncStatusIcon(status: string) {

@@ -73,11 +73,11 @@
 	}
 
 	function answerLabel(text: string) {
-		return String(text).startsWith('answer:') ? String(text).slice('answer:'.length).trim() : text;
+		return String(text).replace(/^\s*answer:\s*/i, '');
 	}
 
 	function promptLabel(text: string) {
-		return String(text).startsWith('prompt:') ? String(text).slice('prompt:'.length).trim() : text;
+		return String(text).replace(/^\s*prompt:\s*/i, '');
 	}
 
 	function parseMatchingPairs(values: string[]): Array<{ promptId: string; answerId: string }> {
