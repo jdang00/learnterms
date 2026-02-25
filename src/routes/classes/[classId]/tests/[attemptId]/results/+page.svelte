@@ -3,6 +3,7 @@
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../../convex/_generated/dataModel';
+	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
 	import { fade, slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import createDOMPurify from 'dompurify';
@@ -455,6 +456,13 @@
 								<Plus size={16} />
 								New Test
 							</a>
+
+							<QuestionAttachmentsSidebar
+								questionId={selectedItem?.questionId}
+								showSolution={true}
+								solutionOnlyBehavior="show"
+								showSolutionBadges={true}
+							/>
 						</div>
 					{:else}
 						<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
@@ -481,6 +489,13 @@
 							>
 								<BarChart3 size={20} />
 							</button>
+							<QuestionAttachmentsSidebar
+								questionId={selectedItem?.questionId}
+								showSolution={true}
+								solutionOnlyBehavior="show"
+								showSolutionBadges={true}
+								collapsed={true}
+							/>
 						</div>
 					{/if}
 				</div>
@@ -728,6 +743,7 @@
 					Next <ArrowRight size={16} />
 				</button>
 			</div>
+
 		{/if}
 	{/if}
 </div>

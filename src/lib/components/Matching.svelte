@@ -1,16 +1,28 @@
 <script lang="ts">
     import { Eye, X } from 'lucide-svelte';
     type Option = { id: string; text: string };
-    let { qs = $bindable(), currentlySelected } = $props();
+    let {
+        qs = $bindable(),
+        currentlySelected,
+        allowSolution = true,
+        allowClear = true
+    } = $props();
+
+    function optionRole(text: string): 'prompt' | 'answer' | null {
+        const normalized = String(text ?? '').trimStart().toLowerCase();
+        if (normalized.startsWith('prompt:')) return 'prompt';
+        if (normalized.startsWith('answer:')) return 'answer';
+        return null;
+    }
 
     const prompts = $derived(() => {
         const opts = (currentlySelected?.options || []) as Option[];
-        return opts.filter((o) => o.text.startsWith('prompt:'));
+        return opts.filter((o) => optionRole(o.text) === 'prompt');
     });
 
     const answers = $derived(() => {
         const opts = (currentlySelected?.options || []) as Option[];
-        return opts.filter((o) => o.text.startsWith('answer:'));
+        return opts.filter((o) => optionRole(o.text) === 'answer');
     });
 
     let shuffledAnswers = $state<Option[]>([]);
@@ -49,18 +61,13 @@
         shuffledAnswers = out;
     });
 
-    $effect(() => {
-        console.log(`[Matching] selectedAnswers changed: ${JSON.stringify(qs.selectedAnswers)}`);
-    });
-
     function getPromptLabel(text: string): string {
-        return text.startsWith('prompt:') ? text.slice('prompt:'.length).trim() : text;
+        return String(text).replace(/^\s*prompt:\s*/i, '');
     }
 
     function getUserSelectionForPrompt(promptId: string): string | undefined {
         const prefix = `${promptId}::`;
         const found = (qs.selectedAnswers || []).find((s: string) => s.startsWith(prefix));
-        console.log(`[Matching] getUserSelectionForPrompt: promptId=${promptId}, selectedAnswers=${JSON.stringify(qs.selectedAnswers)}, found=${found}, result=${found ? found.split('::')[1] : 'undefined'}`);
         return found ? found.split('::')[1] : undefined;
     }
 
@@ -68,9 +75,7 @@
         const prefix = `${promptId}::`;
         const others = (qs.selectedAnswers || []).filter((s: string) => !s.startsWith(prefix));
         const newSelection = `${promptId}::${answerId}`;
-        console.log(`[Matching] setUserSelection: promptId=${promptId}, answerId=${answerId}, oldSelectedAnswers=${JSON.stringify(qs.selectedAnswers)}, newSelection=${newSelection}`);
         qs.selectedAnswers = [...others, newSelection];
-        console.log(`[Matching] setUserSelection: updated selectedAnswers=${JSON.stringify(qs.selectedAnswers)}`);
         qs.markCurrentQuestionInteracted?.();
         qs.scheduleSave?.();
     }
@@ -86,11 +91,11 @@
 
     function correctAnswerIdForPrompt(promptId: string): string | undefined {
         const pair = (currentlySelected?.correctAnswers || []).find((cid: string) => String(cid).startsWith(`${promptId}::`));
-        console.log(`[Matching] correctAnswerIdForPrompt: promptId=${promptId}, correctAnswers=${JSON.stringify(currentlySelected?.correctAnswers)}, pair=${pair}, result=${pair ? String(pair).split('::')[1] : 'undefined'}`);
         return pair ? String(pair).split('::')[1] : undefined;
     }
 
     function handleToggleSolution() {
+        if (!allowSolution) return;
         qs.handleSolution();
     }
 
@@ -164,14 +169,15 @@
     </div>
 
     <div class="mt-2 flex gap-2">
-        <button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle rationale">
-            <Eye />
-        </button>
-        {#if !qs.showSolution && qs.selectedAnswers && qs.selectedAnswers.length > 0}
+        {#if allowSolution}
+            <button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle rationale">
+                <Eye />
+            </button>
+        {/if}
+        {#if allowClear && !qs.showSolution && qs.selectedAnswers && qs.selectedAnswers.length > 0}
             <button class="btn rounded-full" onclick={clearAllSelections} aria-label="clear all selections">
                 <X /> Clear all
             </button>
         {/if}
     </div>
 </div>
-
