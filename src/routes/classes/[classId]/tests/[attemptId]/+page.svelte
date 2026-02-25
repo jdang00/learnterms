@@ -5,6 +5,10 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../convex/_generated/dataModel';
+	import Matching from '$lib/components/Matching.svelte';
+	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
+	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
+	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
 	import { slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import createDOMPurify from 'dompurify';
@@ -25,6 +29,7 @@
 
 	type LocalResponse = {
 		selectedOptions: string[];
+		eliminatedOptions: string[];
 		textResponse?: string;
 		isFlagged: boolean;
 		timeSpentMs: number;
@@ -141,6 +146,7 @@
 	function getDefaultLocalResponse(item: any): LocalResponse {
 		return {
 			selectedOptions: [...(item.response?.selectedOptions || [])],
+			eliminatedOptions: [],
 			textResponse: item.response?.textResponse ?? undefined,
 			isFlagged: item.response?.isFlagged ?? false,
 			timeSpentMs: item.response?.timeSpentMs ?? 0,
@@ -200,6 +206,7 @@
 		setResponse(item._id, (prev) => ({
 			...prev,
 			selectedOptions: [],
+			eliminatedOptions: [],
 			textResponse: undefined
 		}));
 	}
@@ -283,6 +290,119 @@
 
 	const currentItem = $derived(getCurrentItem());
 	const currentResponse = $derived(currentItem ? responses[currentItem._id] : null);
+	const currentSharedQuestion = $derived.by(() => {
+		const item = currentItem;
+		if (!item) return null;
+		return {
+			_id: item.questionId,
+			type: item.question.type,
+			stem: sanitizeHtml(item.question.stem),
+			options: (item.question.options || []).map((option: any) => ({
+				...option,
+				text: sanitizeHtml(option.text)
+			})),
+			// Intentionally hidden in test mode to prevent in-session checking/reveal.
+			correctAnswers: [] as string[]
+		};
+	});
+
+	const testQuizUiAdapter = $derived.by(() => {
+		// Touch response state so the adapter prop updates and shared components re-render.
+		const item = currentItem;
+		const response = item ? responses[item._id] : null;
+		void response;
+
+		return {
+			get selectedAnswers() {
+				const current = getCurrentItem();
+				return current ? [...(responses[current._id]?.selectedOptions ?? [])] : [];
+			},
+			set selectedAnswers(next: string[]) {
+				const current = getCurrentItem();
+				if (!current) return;
+				const textValue =
+					isFitb(current.question.type) ? String((next ?? [])[0] ?? '') : undefined;
+				setResponse(current._id, (prev) => ({
+					...prev,
+					selectedOptions: [...(next ?? [])],
+					textResponse: isFitb(current.question.type) ? (textValue || undefined) : prev.textResponse
+				}));
+			},
+			get eliminatedAnswers() {
+				const current = getCurrentItem();
+				return current ? [...(responses[current._id]?.eliminatedOptions ?? [])] : [];
+			},
+			set eliminatedAnswers(next: string[]) {
+				const current = getCurrentItem();
+				if (!current) return;
+				const nextEliminated = [...new Set(next ?? [])];
+				setResponse(current._id, (prev) => ({
+					...prev,
+					eliminatedOptions: nextEliminated,
+					selectedOptions: (prev.selectedOptions ?? []).filter((id) => !nextEliminated.includes(id))
+				}));
+			},
+			get showSolution() {
+				return false;
+			},
+			set showSolution(_value: boolean) {
+				// Results are only available after submit.
+			},
+			get solutionAutoRevealed() {
+				return false;
+			},
+			scheduleSave() {
+				scheduleSync(250);
+			},
+			markCurrentQuestionInteracted() {
+				const current = getCurrentItem();
+				if (current) markVisited(current._id);
+			},
+			handleSolution() {
+				// No in-test answer reveal.
+			},
+			checkFillInTheBlank(_text: string, _question?: any) {
+				// Submit-only mode in tests.
+			},
+			getOrderedOptions(question: any) {
+				return question?.options || [];
+			},
+			toggleOption(optionId: string) {
+				const current = getCurrentItem();
+				if (current && (responses[current._id]?.eliminatedOptions ?? []).includes(optionId)) return;
+				if (current) toggleOption(current, optionId);
+			},
+			toggleElimination(optionId: string) {
+				const current = getCurrentItem();
+				if (!current) return;
+				setResponse(current._id, (prev) => {
+					const eliminated = prev.eliminatedOptions ?? [];
+					const has = eliminated.includes(optionId);
+					const nextEliminated = has
+						? eliminated.filter((id) => id !== optionId)
+						: [...eliminated, optionId];
+					return {
+						...prev,
+						eliminatedOptions: nextEliminated,
+						selectedOptions: has
+							? prev.selectedOptions
+							: (prev.selectedOptions ?? []).filter((id) => id !== optionId)
+					};
+				});
+			},
+			isOptionSelected(optionId: string) {
+				const current = getCurrentItem();
+				return current ? (responses[current._id]?.selectedOptions ?? []).includes(optionId) : false;
+			},
+			isOptionEliminated(_optionId: string) {
+				const current = getCurrentItem();
+				return current ? (responses[current._id]?.eliminatedOptions ?? []).includes(_optionId) : false;
+			},
+			isCorrect(_optionId: string) {
+				return false;
+			}
+		};
+	});
 
 	function scheduleSync(delayMs = 800) {
 		if (typeof window === 'undefined') return;
@@ -396,12 +516,13 @@
 					const localSelected = localResponse.selectedOptions ?? [];
 					const serverSelected = server.selectedOptions ?? [];
 					const selectedOptions = localSelected.length > 0 ? localSelected : serverSelected;
-					mergedResponses[itemId] = {
-						...server,
-						selectedOptions: [...selectedOptions],
-						textResponse:
-							(localResponse.textResponse ?? '').trim().length > 0
-								? localResponse.textResponse
+						mergedResponses[itemId] = {
+							...server,
+							selectedOptions: [...selectedOptions],
+							eliminatedOptions: [...(localResponse.eliminatedOptions ?? [])],
+							textResponse:
+								(localResponse.textResponse ?? '').trim().length > 0
+									? localResponse.textResponse
 								: server.textResponse,
 						isFlagged: localResponse.isFlagged ?? server.isFlagged,
 						visited: localResponse.visited || server.visited,
@@ -556,6 +677,61 @@
 		}
 	});
 
+	function handleRunnerKeydown(event: KeyboardEvent) {
+		if (showSubmitModal) return;
+		if (
+			!['Tab', 'ArrowLeft', 'ArrowRight'].includes(event.key) &&
+			(event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
+		) {
+			return;
+		}
+
+		const item = currentItem;
+		switch (event.key) {
+			case 'ArrowRight':
+				event.preventDefault();
+				nextQuestion();
+				break;
+			case 'ArrowLeft':
+				event.preventDefault();
+				previousQuestion();
+				break;
+			case 'Tab':
+				// Main quiz reveals rationale on Tab; test mode is submit-only.
+				break;
+			case 'Escape':
+				event.preventDefault();
+				if (item) clearAnswer(item);
+				break;
+			case 'f':
+			case 'F':
+				event.preventDefault();
+				if (item) toggleFlag(item);
+				break;
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+			case '0': {
+				if (!item) break;
+				if (isFitb(item.question.type) || isMatching(item.question.type)) break;
+				const options = item.question.options || [];
+				const idx = event.key === '0' ? 9 : parseInt(event.key, 10) - 1;
+				if (idx >= 0 && idx < options.length) {
+					event.preventDefault();
+					const option = options[idx];
+					if (option?.id) toggleOption(item, option.id);
+				}
+				break;
+			}
+		}
+	}
+
 	onMount(() => {
 		const onVisibility = () => {
 			if (document.visibilityState === 'hidden') {
@@ -567,6 +743,7 @@
 		};
 		document.addEventListener('visibilitychange', onVisibility);
 		window.addEventListener('pagehide', onPageHide);
+		document.addEventListener('keydown', handleRunnerKeydown);
 
 		lastTickAt = Date.now();
 		tickerHandle = window.setInterval(() => {
@@ -603,6 +780,7 @@
 		return () => {
 			document.removeEventListener('visibilitychange', onVisibility);
 			window.removeEventListener('pagehide', onPageHide);
+			document.removeEventListener('keydown', handleRunnerKeydown);
 			if (syncTimeout !== null) clearTimeout(syncTimeout);
 			if (tickerHandle !== null) clearInterval(tickerHandle);
 			if (heartbeatHandle !== null) clearInterval(heartbeatHandle);
@@ -739,6 +917,13 @@
 							{#if syncError}
 								<div class="text-error text-xs text-center mt-1">{syncError}</div>
 							{/if}
+
+							<QuestionAttachmentsSidebar
+								questionId={currentItem?.questionId}
+								showSolution={false}
+								solutionOnlyBehavior="hide"
+								showHiddenNote={true}
+							/>
 						</div>
 					{:else}
 						<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
@@ -772,6 +957,13 @@
 							<div class="flex flex-col items-center text-xs text-base-content/50 gap-1">
 								<Wifi size={12} class={syncStatusIcon(syncStatus)} />
 							</div>
+
+							<QuestionAttachmentsSidebar
+								questionId={currentItem?.questionId}
+								showSolution={false}
+								solutionOnlyBehavior="hide"
+								collapsed={true}
+							/>
 						</div>
 					{/if}
 				</div>
@@ -848,45 +1040,29 @@
 							{/if}
 
 							{#if isFitb(currentItem.question.type)}
-								<div class="text-base sm:text-xl leading-tight tiptap-content font-medium ms-2 mt-3 mb-5">
-										{@html sanitizeHtml(currentItem.question.stem)}
-								</div>
-								<div class="ms-2">
-									<input
-										type="text"
-										class="input input-bordered w-full rounded-full bg-base-200 border-2 border-base-300 px-6 py-3 text-base"
-										placeholder="Type your answer..."
-										value={currentResponse.textResponse ?? ''}
-										oninput={(e) => setFitbText(currentItem, (e.target as HTMLInputElement).value)}
+								{#if currentSharedQuestion}
+									<FillInTheBlank
+										qs={testQuizUiAdapter}
+										currentlySelected={currentSharedQuestion}
+										submitOnly={true}
+										allowSolution={false}
+										showAnswerPanel={false}
+										showRevealHint={false}
 									/>
-								</div>
+								{/if}
 							{:else if isMatching(currentItem.question.type)}
 								<div class="mt-5 space-y-3 ms-2">
 									<div class="text-xs text-base-content/50 font-medium">
 										Match each prompt to one unique answer.
 									</div>
-									{#each promptsForMatching(currentItem) as prompt (prompt.id)}
-										<div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] gap-3 items-center">
-											<div class="border-2 border-base-300 rounded-full p-3 px-5 bg-base-200/50 tiptap-content text-sm">
-													{@html sanitizeHtml(promptLabel(prompt.text))}
-											</div>
-											<select
-												class="select select-bordered rounded-full w-full bg-base-200/50"
-												value={selectedAnswerIdForPrompt(currentItem._id, prompt.id)}
-												onchange={(e) =>
-													setMatchingSelection(
-														currentItem,
-														prompt.id,
-														(e.target as HTMLSelectElement).value
-													)}
-											>
-												<option value="">Choose a match...</option>
-												{#each availableAnswersForPrompt(currentItem, prompt.id) as ans (ans.id)}
-													<option value={ans.id}>{answerLabel(ans.text)}</option>
-												{/each}
-											</select>
-										</div>
-									{/each}
+									{#if currentSharedQuestion}
+										<Matching
+											qs={testQuizUiAdapter}
+											currentlySelected={currentSharedQuestion}
+											allowSolution={false}
+											allowClear={true}
+										/>
+									{/if}
 								</div>
 							{:else}
 								<div class="text-base-content/60 font-medium text-base sm:text-lg leading-tight my-3 ms-2">
@@ -898,26 +1074,15 @@
 										<span> / {currentItem.question.correctAnswerCount}</span>
 									{/if}
 								</div>
-								<div class="flex flex-col justify-start space-y-2 md:space-y-3 lg:space-y-4">
-									{#each currentItem.question.options as option, i (option.id)}
-										<label
-											class="label cursor-pointer rounded-full flex items-center border-base-300 bg-base-200 transition-colors border-2 p-2 md:p-3
-											{currentResponse.selectedOptions.includes(option.id) ? 'border-primary bg-primary/5' : 'hover:border-primary/30'}"
-										>
-											<input
-												type="checkbox"
-												class="checkbox checkbox-primary checkbox-sm ms-4"
-												checked={currentResponse.selectedOptions.includes(option.id)}
-												onchange={() => toggleOption(currentItem, option.id)}
-											/>
-											<span class="flex-grow text-wrap break-words ml-3 md:ml-4 my-3 text-sm md:text-base">
-												<span class="font-semibold mr-2 select-none">{String.fromCharCode(65 + i)}.</span>
-													<span class="tiptap-content">{@html sanitizeHtml(option.text)}</span>
-											</span>
-										</label>
-									{/each}
-								</div>
+								{#if currentSharedQuestion}
+									<AnswerOptions
+										qs={testQuizUiAdapter}
+										currentlySelected={currentSharedQuestion}
+										allowElimination={true}
+									/>
+								{/if}
 							{/if}
+
 						</div>
 
 						{#if submitError}
@@ -1088,6 +1253,7 @@
 					}}
 				></div>
 			</dialog>
+
 		{/if}
 	{/if}
 </div>

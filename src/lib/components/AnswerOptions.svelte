@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Eye } from 'lucide-svelte';
-	let { qs = $bindable(), currentlySelected, compact = false } = $props();
+	let { qs = $bindable(), currentlySelected, compact = false, allowElimination = true } = $props();
 
 	function handleOptionChange(optionId: string) {
 		qs.toggleOption(optionId);
@@ -59,20 +59,22 @@
 				>
 			</span>
 
-			<div
-				class="flex items-center justify-center {compact
-					? 'w-10 md:w-12 mr-1 md:mr-2'
-					: 'w-12 md:w-16 mr-2 md:mr-4'}"
-			>
-				<button
-					class="btn btn-ghost btn-circle {compact ? 'btn-sm' : 'btn-md'}"
-					onclick={() => handleEliminateOption(option.id)}
-					disabled={qs.showSolution}
-					aria-label="eliminate option {option.id}"
+			{#if allowElimination}
+				<div
+					class="flex items-center justify-center {compact
+						? 'w-10 md:w-12 mr-1 md:mr-2'
+						: 'w-12 md:w-16 mr-2 md:mr-4'}"
 				>
-					<Eye />
-				</button>
-			</div>
+					<button
+						class="btn btn-ghost btn-circle {compact ? 'btn-sm' : 'btn-md'}"
+						onclick={() => handleEliminateOption(option.id)}
+						disabled={qs.showSolution}
+						aria-label="eliminate option {option.id}"
+					>
+						<Eye />
+					</button>
+				</div>
+			{/if}
 		</label>
 	{/each}
 </div>

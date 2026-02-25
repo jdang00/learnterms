@@ -2,7 +2,14 @@
 	import { Eye } from 'lucide-svelte';
 	import { tick } from 'svelte';
 	type Option = { id: string; text: string };
-	let { qs = $bindable(), currentlySelected } = $props();
+	let {
+		qs = $bindable(),
+		currentlySelected,
+		submitOnly = false,
+		allowSolution = true,
+		showAnswerPanel = true,
+		showRevealHint = true
+	} = $props();
 	let inputText: string = $state('');
 	let inputEl: HTMLInputElement | null = null;
 
@@ -56,10 +63,19 @@
 	});
 
 	function handleEnter() {
+		if (submitOnly) {
+			qs.selectedAnswers = inputText ? [inputText] : [];
+			if (qs.selectedAnswers.length > 0) {
+				qs.markCurrentQuestionInteracted?.();
+			}
+			qs.scheduleSave?.();
+			return;
+		}
 		qs.checkFillInTheBlank(inputText ?? '', currentlySelected);
 	}
 
 	function handleToggleSolution() {
+		if (!allowSolution) return;
 		qs.handleSolution();
 	}
 </script>
@@ -80,6 +96,7 @@
 				if (qs.selectedAnswers.length > 0) {
 					qs.markCurrentQuestionInteracted?.();
 				}
+				qs.scheduleSave?.();
 			}}
 			onkeydown={(e) => {
 				if (e.key === 'Enter') {
@@ -95,28 +112,34 @@
 		<button
 			class="btn btn-primary ms-2 rounded-full"
 			onclick={handleEnter}
-			disabled={qs.showSolution || !inputText.trim()}>Enter</button
+			disabled={qs.showSolution || !inputText.trim()}>{submitOnly ? 'Save' : 'Enter'}</button
 		>
 	</div>
 
-	<div class="card bg-base-100 w-72 sm:w-80 shadow-md mt-6 border border-base-content/10 rounded-2xl">
-		<div class="card-body">
-			<h3 class="text-lg font-semibold mb-2 {qs.showSolution ? '' : 'blur'}">{displayAnswer()}</h3>
-			{#if qs.showSolution && alternateAnswers().length > 0}
-				<div class="mt-2">
-					<p class="text-sm opacity-70">Alternate answers:</p>
-					<ul class="mt-1 list-disc list-inside text-sm opacity-80">
-						{#each alternateAnswers() as a, i (i)}
-							<li>{a}</li>
-						{/each}
-					</ul>
-				</div>
-			{/if}
-			<button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle rationale">
-				<Eye />
-			</button>
+	{#if showAnswerPanel}
+		<div class="card bg-base-100 w-72 sm:w-80 shadow-md mt-6 border border-base-content/10 rounded-2xl">
+			<div class="card-body">
+				<h3 class="text-lg font-semibold mb-2 {qs.showSolution ? '' : 'blur'}">{displayAnswer()}</h3>
+				{#if qs.showSolution && alternateAnswers().length > 0}
+					<div class="mt-2">
+						<p class="text-sm opacity-70">Alternate answers:</p>
+						<ul class="mt-1 list-disc list-inside text-sm opacity-80">
+							{#each alternateAnswers() as a, i (i)}
+								<li>{a}</li>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+				{#if allowSolution}
+					<button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle rationale">
+						<Eye />
+					</button>
+				{/if}
+			</div>
 		</div>
-	</div>
+	{/if}
 
-	<p class="text-sm text-base-content/70 mt-6">Press tab to reveal term.</p>
+	{#if showRevealHint}
+		<p class="text-sm text-base-content/70 mt-6">Press tab to reveal term.</p>
+	{/if}
 </div>
