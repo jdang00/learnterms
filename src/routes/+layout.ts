@@ -1,5 +1,4 @@
 import type { LayoutLoad } from './$types';
-import posthog from 'posthog-js';
 import { browser } from '$app/environment';
 
 export const ssr = true;
@@ -8,6 +7,7 @@ export const trailingSlash = 'never';
 
 export const load: LayoutLoad = async ({ data }) => {
 	if (browser) {
+		const posthog = (await import('posthog-js')).default;
 		posthog.init('phc_3eXFYO1aHVEWM75fi3wXFE6OiJZiDNvI5pcl67S19fK', {
 			api_host: 'https://us.i.posthog.com',
 			ui_host: 'https://us.posthog.com',
