@@ -31,6 +31,7 @@ export class QuizState {
 	questionButtons: HTMLButtonElement[] = $state([]);
 	private saveDebounceHandle: number | null = null;
 	private autoNextHandle: number | null = null;
+	pendingSnapshots: Map<string, { questionId: Id<'question'>; selectedAnswers: string[]; eliminatedAnswers: string[]; isFlagged: boolean }> = new Map();
 	private static readonly AUTO_NEXT_DELAY_MS = 1800;
 	private optionOrderCache: Map<string, string[]> = new Map();
 	optionsShuffleEnabled: boolean = $state(false);
@@ -47,6 +48,17 @@ export class QuizState {
 			}
 			this.saveDebounceHandle = null;
 		}, delayMs);
+	}
+
+	snapshotCurrentQuestion() {
+		const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
+		if (!current) return;
+		this.pendingSnapshots.set(current._id, {
+			questionId: current._id,
+			selectedAnswers: [...this.selectedAnswers],
+			eliminatedAnswers: [...this.eliminatedAnswers],
+			isFlagged: this.currentQuestionFlagged
+		});
 	}
 
 	checkAnswer(
@@ -203,6 +215,7 @@ export class QuizState {
 		this.cancelAutoNext();
 		const filteredQuestions = this.getFilteredQuestions();
 		if (filteredQuestions && this.currentQuestionIndex < filteredQuestions.length - 1) {
+			this.snapshotCurrentQuestion();
 			this.scheduleSave();
 
 			this.currentQuestionIndex++;
@@ -227,6 +240,7 @@ export class QuizState {
 		this.cancelAutoNext();
 		const filteredQuestions = this.getFilteredQuestions();
 		if (filteredQuestions && this.currentQuestionIndex > 0) {
+			this.snapshotCurrentQuestion();
 			this.scheduleSave();
 
 			this.currentQuestionIndex--;
@@ -265,6 +279,7 @@ export class QuizState {
 		this.cancelAutoNext();
 		const currentQuestions = this.getCurrentQuestions();
 		if (currentQuestions && index >= 0 && index < currentQuestions.length) {
+			this.snapshotCurrentQuestion();
 			this.scheduleSave();
 
 			this.currentQuestionIndex = index;

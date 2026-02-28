@@ -118,7 +118,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 				emit({ type: 'status', message: 'Processing document with AI...' });
 
-				const { GoogleGenAI, Type } = await import('@google/genai');
+				const { GoogleGenAI, Type, ThinkingLevel } = await import('@google/genai');
 				const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 				const contents: Array<Record<string, unknown>> = [
@@ -134,6 +134,7 @@ export const GET: RequestHandler = async ({ url }) => {
 					config: {
 						temperature: TEMPERATURE,
 						maxOutputTokens: MAX_TOKENS_PDF,
+						thinkingConfig: { thinkingLevel: ThinkingLevel.MEDIUM },
 						responseMimeType: 'application/json',
 						responseSchema: chunkArraySchema(Type as unknown as GType)
 					}

@@ -96,7 +96,7 @@ ${material}`;
 }
 
 async function callModel(contents: Array<Record<string, unknown>>, maxTokens: number) {
-	const { GoogleGenAI, Type } = await import('@google/genai');
+	const { GoogleGenAI, Type, ThinkingLevel } = await import('@google/genai');
 	if (!GEMINI_API_KEY || GEMINI_API_KEY.trim().length === 0) {
 		throw new Error('GEMINI_API_KEY is not configured');
 	}
@@ -109,6 +109,7 @@ async function callModel(contents: Array<Record<string, unknown>>, maxTokens: nu
 			config: {
 				temperature: TEMPERATURE,
 				maxOutputTokens: maxTokens,
+				thinkingConfig: { thinkingLevel: ThinkingLevel.MEDIUM },
 				responseMimeType: 'application/json',
 				responseSchema: chunkArraySchema(Type as unknown as GType)
 			}

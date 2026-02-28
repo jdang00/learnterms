@@ -26,87 +26,102 @@
 	const client = useConvexClient();
 
 	let qs = $state(new QuizState());
+	let loadGeneration = 0;
 
-	// Load persisted user preferences (auto next, shuffle options)
 	$effect(() => {
 		qs.loadUserPreferencesFromStorage?.();
 	});
 
-	async function saveProgress() {
-		if (!userId) {
-			return;
-		}
+	async function saveOneQuestion(
+		questionId: Id<'question'>,
+		selectedOptions: string[],
+		eliminatedOptions: string[],
+		isFlagged: boolean
+	) {
+		const hasSelected = selectedOptions.length > 0;
+		const hasEliminated = eliminatedOptions.length > 0;
 
-		qs.sanitizeStateForCurrentQuestion();
-		const currentQuestion = qs.getCurrentQuestion();
-		if (!currentQuestion) {
-			return;
-		}
-
-		const isFlagged = qs.currentQuestionFlagged;
-
-		const hasSelectedAnswers = qs.selectedAnswers.length > 0;
-		const hasEliminatedAnswers = qs.eliminatedAnswers.length > 0;
-
-		if (!hasSelectedAnswers && !hasEliminatedAnswers && !isFlagged) {
+		if (!hasSelected && !hasEliminated && !isFlagged) {
 			try {
-				const existingProgress = await client.query(api.userProgress.checkExistingRecord, {
-					userId: userId,
-					questionId: currentQuestion._id
+				const existing = await client.query(api.userProgress.checkExistingRecord, {
+					userId: userId!,
+					questionId
 				});
-
-				if (existingProgress) {
+				if (existing) {
 					await client.mutation(api.userProgress.deleteUserProgress, {
-						userId: userId,
-						questionId: currentQuestion._id
+						userId: userId!,
+						questionId
 					});
 				}
-			} catch (error) {
-				return;
+			} catch {
+				// no-op
 			}
 			return;
-		}
-
-		// Mark locally so navigation accent updates immediately
-		if (hasSelectedAnswers || hasEliminatedAnswers || isFlagged) {
-			qs.markCurrentQuestionInteracted?.();
 		}
 
 		try {
-			const existingProgress = await client.query(api.userProgress.checkExistingRecord, {
-				userId: userId,
-				questionId: currentQuestion._id
+			const existing = await client.query(api.userProgress.checkExistingRecord, {
+				userId: userId!,
+				questionId
 			});
 
-			const currentSelected = qs.selectedAnswers.sort();
-			const currentEliminated = qs.eliminatedAnswers.sort();
-			const savedSelected = (existingProgress?.selectedOptions || []).sort();
-			const savedEliminated = (existingProgress?.eliminatedOptions || []).sort();
-			const savedFlagged = existingProgress?.isFlagged || false;
+			const savedSelected = (existing?.selectedOptions || []).sort();
+			const savedEliminated = (existing?.eliminatedOptions || []).sort();
+			const savedFlagged = existing?.isFlagged || false;
+			const sortedSelected = [...selectedOptions].sort();
+			const sortedEliminated = [...eliminatedOptions].sort();
 
-			const selectedChanged =
-				currentSelected.length !== savedSelected.length ||
-				!currentSelected.every((val, index) => val === savedSelected[index]);
-			const eliminatedChanged =
-				currentEliminated.length !== savedEliminated.length ||
-				!currentEliminated.every((val, index) => val === savedEliminated[index]);
-			const flagChanged = isFlagged !== savedFlagged;
+			const changed =
+				isFlagged !== savedFlagged ||
+				sortedSelected.length !== savedSelected.length ||
+				!sortedSelected.every((val, i) => val === savedSelected[i]) ||
+				sortedEliminated.length !== savedEliminated.length ||
+				!sortedEliminated.every((val, i) => val === savedEliminated[i]);
 
-			if (!selectedChanged && !eliminatedChanged && !flagChanged) {
-				return;
-			}
+			if (!changed) return;
 
 			await client.mutation(api.userProgress.saveUserProgress, {
-				userId: userId,
+				userId: userId!,
 				classId: data.classId as Id<'class'>,
-				questionId: currentQuestion._id,
-				selectedOptions: qs.selectedAnswers,
-				eliminatedOptions: qs.eliminatedAnswers,
-				isFlagged: isFlagged,
+				questionId,
+				selectedOptions,
+				eliminatedOptions,
+				isFlagged,
 				clientUtcOffsetMinutes: new Date().getTimezoneOffset()
 			});
-		} catch (error) {
-			return;
+		} catch {
+			// no-op
+		}
+	}
+
+	async function saveProgress() {
+		if (!userId) return;
+
+		const snapshots = new Map(qs.pendingSnapshots);
+		qs.pendingSnapshots.clear();
+
+		qs.sanitizeStateForCurrentQuestion();
+		const currentQuestion = qs.getCurrentFilteredQuestion() || qs.getCurrentQuestion();
+		if (currentQuestion) {
+			snapshots.set(currentQuestion._id, {
+				questionId: currentQuestion._id,
+				selectedAnswers: [...qs.selectedAnswers],
+				eliminatedAnswers: [...qs.eliminatedAnswers],
+				isFlagged: qs.currentQuestionFlagged
+			});
+
+			if (qs.selectedAnswers.length > 0 || qs.eliminatedAnswers.length > 0 || qs.currentQuestionFlagged) {
+				qs.markCurrentQuestionInteracted?.();
+			}
+		}
+
+		for (const snap of snapshots.values()) {
+			await saveOneQuestion(
+				snap.questionId,
+				snap.selectedAnswers,
+				snap.eliminatedAnswers,
+				snap.isFlagged
+			);
 		}
 	}
 
@@ -115,11 +130,15 @@
 			return;
 		}
 
+		const gen = ++loadGeneration;
+
 		try {
 			const savedProgress = await client.query(api.userProgress.checkExistingRecord, {
 				userId: userId,
 				questionId: questionId
 			});
+
+			if (gen !== loadGeneration) return;
 
 			if (savedProgress) {
 				qs.selectedAnswers = savedProgress.selectedOptions || [];
@@ -132,6 +151,7 @@
 				qs.setCurrentQuestionFlagged(false);
 			}
 		} catch (error) {
+			if (gen !== loadGeneration) return;
 			qs.selectedAnswers = [];
 			qs.eliminatedAnswers = [];
 			qs.setCurrentQuestionFlagged(false);
@@ -173,11 +193,15 @@
 		error: moduleProgressQuery.error
 	});
 
+	let hasHydratedFlags = false;
 	$effect(() => {
 		if (moduleProgress.data) {
 			qs.setInteractedQuestionsCount(moduleProgress.data.interactedQuestionIds.length);
 			qs.updateLiveInteractedQuestions(moduleProgress.data.interactedQuestionIds);
-			qs.updateLiveFlaggedQuestions(moduleProgress.data.flaggedQuestionIds);
+			if (!hasHydratedFlags) {
+				qs.updateLiveFlaggedQuestions(moduleProgress.data.flaggedQuestionIds);
+				hasHydratedFlags = true;
+			}
 		}
 	});
 
@@ -205,6 +229,7 @@
 		const currentQuestions = qs.getFilteredQuestions();
 		const index = currentQuestions.findIndex((q) => q._id === question._id);
 		if (index !== -1) {
+			qs.snapshotCurrentQuestion();
 			qs.scheduleSave();
 			qs.currentQuestionIndex = index;
 			qs.checkResult = '';
@@ -243,6 +268,9 @@
 	async function handleResetModalConfirm() {
 		if (userId && data.moduleId && client) {
 			await qs.reset(userId, data.moduleId as Id<'module'>, client);
+			qs.updateLiveFlaggedQuestions([]);
+			qs.updateLiveInteractedQuestions([]);
+			hasHydratedFlags = false;
 			qs.isResetModalOpen = false;
 		}
 	}
@@ -259,12 +287,10 @@
 			case 'ArrowRight':
 				event.preventDefault();
 				await qs.goToNextQuestion();
-				qs.scheduleSave();
 				break;
 			case 'ArrowLeft':
 				event.preventDefault();
 				await qs.goToPreviousQuestion();
-				qs.scheduleSave();
 				break;
 			case 'Tab':
 				event.preventDefault();
@@ -400,7 +426,7 @@
 	});
 
 	$effect(() => {
-		if (qs.showFlagged && qs.liveFlaggedQuestions.length === 0) {
+		if (qs.showFlagged && qs.liveFlaggedQuestions.length === 0 && hasHydratedFlags) {
 			qs.noFlags = true;
 			qs.showFlagged = false;
 		}

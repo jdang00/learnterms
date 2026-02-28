@@ -36,7 +36,8 @@
       "Bash(lsof:*)",
       "Bash(bun ls:*)",
       "Bash(bun outdated:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(bun update:*)"
     ]
   }
 }

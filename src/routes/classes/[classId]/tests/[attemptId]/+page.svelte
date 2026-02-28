@@ -1023,10 +1023,10 @@
 								</div>
 								<div class="flex items-center gap-2">
 									<button
-										class="btn btn-sm btn-warning btn-soft btn-circle"
+										class="btn btn-sm btn-circle {currentResponse?.isFlagged ? 'btn-warning' : 'btn-warning btn-soft'}"
 										onclick={() => toggleFlag(currentItem)}
-										aria-label={currentResponse.isFlagged ? 'Remove flag' : 'Flag for review'}
-										title={currentResponse.isFlagged ? 'Remove flag' : 'Flag for review'}
+										aria-label={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
+										title={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
 									>
 										<Flag size={16} />
 									</button>
@@ -1105,9 +1105,9 @@
 					Clear
 				</button>
 				<button
-					class="btn btn-sm btn-warning btn-soft btn-circle"
+					class="btn btn-sm btn-circle {currentResponse?.isFlagged ? 'btn-warning' : 'btn-warning btn-soft'}"
 					onclick={() => { if (currentItem) toggleFlag(currentItem); }}
-					aria-label="Flag for review"
+					aria-label={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
 				>
 					<Flag size={18} />
 				</button>
@@ -1176,8 +1176,9 @@
 						Clear
 					</button>
 					<button
-						class="btn btn-sm btn-warning btn-soft btn-circle"
+						class="btn btn-sm btn-circle {currentResponse?.isFlagged ? 'btn-warning' : 'btn-warning btn-soft'}"
 						onclick={() => { if (currentItem) toggleFlag(currentItem); }}
+						aria-label={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
 					>
 						<Flag size={14} />
 					</button>

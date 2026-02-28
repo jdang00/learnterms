@@ -144,7 +144,7 @@ async function processWithRetry(
 	pdfUrl: string,
 	initialRetryCount: number
 ): Promise<Chunk[]> {
-	const { GoogleGenAI, Type } = await import('@google/genai');
+	const { GoogleGenAI, Type, ThinkingLevel } = await import('@google/genai');
 	const apiKey = process.env.GEMINI_API_KEY;
 	if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
 
@@ -195,6 +195,7 @@ async function processWithRetry(
 				config: {
 					temperature: TEMPERATURE,
 					maxOutputTokens: MAX_TOKENS_PDF,
+					thinkingConfig: { thinkingLevel: ThinkingLevel.MEDIUM },
 					responseMimeType: 'application/json',
 					responseSchema: chunkArraySchema as any
 				}
