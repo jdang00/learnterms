@@ -266,7 +266,7 @@
 	</div>
 {/if}
 
-<dialog bind:this={attachmentDialog} class="modal">
+<dialog bind:this={attachmentDialog} class="modal" onclose={closeAttachmentDialog}>
 	<div class="modal-box max-w-4xl w-full h-[90vh] rounded-2xl">
 		<button
 			class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-10"

@@ -92,7 +92,7 @@
 		qs.scheduleSave?.();
 	}
 
-	async function handleFlag() {
+	function handleFlag() {
 		qs.toggleFlag();
 	}
 

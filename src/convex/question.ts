@@ -943,7 +943,7 @@ export const generateQuestions = action({
 			throw new Error('GEMINI_API_KEY is not configured');
 		}
 
-		const { GoogleGenAI, Type } = await import('@google/genai');
+		const { GoogleGenAI, Type, ThinkingLevel } = await import('@google/genai');
 		const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 		const focusLabel = (focus || 'optometry').toLowerCase();
@@ -986,7 +986,7 @@ ${material}`;
 			config: {
 				temperature: 0.7,
 				maxOutputTokens: 8192,
-				thinkingConfig: { thinkingLevel: 'high' },
+				thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
 				responseMimeType: 'application/json',
 				responseSchema: {
 					type: Type.ARRAY,
@@ -1086,7 +1086,8 @@ export const generateDistractorsAndExplanation = action({
 		existingOptions: v.optional(v.array(v.string())),
 		focus: v.string(),
 		numDistractors: v.optional(v.number()),
-		existingExplanation: v.optional(v.string())
+		existingExplanation: v.optional(v.string()),
+		model: v.optional(v.string())
 	},
 	handler: async (
 		ctx,
@@ -1096,7 +1097,8 @@ export const generateDistractorsAndExplanation = action({
 			existingOptions = [],
 			focus,
 			numDistractors = 3,
-			existingExplanation = ''
+			existingExplanation = '',
+			model = 'gemini-3-flash-preview'
 		}
 	) => {
 		const identity = await ctx.auth.getUserIdentity();
@@ -1112,7 +1114,7 @@ export const generateDistractorsAndExplanation = action({
 			throw new Error('GEMINI_API_KEY is not configured');
 		}
 
-		const { GoogleGenAI, Type } = await import('@google/genai');
+		const { GoogleGenAI, Type, ThinkingLevel } = await import('@google/genai');
 		const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 		const focusLabel = (focus || 'general').toLowerCase();
@@ -1142,12 +1144,12 @@ Wrong options: plausible, unique, no prefixes. Match style and length of existin
 Explanation: 2-3 sentences explaining the underlying concept. Use notes if provided. Do not reference options or say "this question".`;
 
 		const result = await ai.models.generateContent({
-			model: 'gemini-3-flash-preview',
+			model,
 			contents: [{ role: 'user', parts: [{ text: prompt }] }],
 			config: {
 				temperature: 0.7,
 				maxOutputTokens: 512,
-				thinkingConfig: { thinkingLevel: 'minimal' },
+				thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
 				responseMimeType: 'application/json',
 				responseSchema: {
 					type: Type.OBJECT,
@@ -1210,9 +1212,10 @@ export const generateExplanation = action({
 		stem: v.string(),
 		answer: v.string(),
 		focus: v.string(),
-		existingExplanation: v.optional(v.string())
+		existingExplanation: v.optional(v.string()),
+		model: v.optional(v.string())
 	},
-	handler: async (ctx, { stem, answer, focus, existingExplanation = '' }) => {
+	handler: async (ctx, { stem, answer, focus, existingExplanation = '', model = 'gemini-3-flash-preview' }) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) throw new Error('Unauthenticated');
 
@@ -1225,7 +1228,7 @@ export const generateExplanation = action({
 			throw new Error('GEMINI_API_KEY is not configured');
 		}
 
-		const { GoogleGenAI, Type } = await import('@google/genai');
+		const { GoogleGenAI, Type, ThinkingLevel } = await import('@google/genai');
 		const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 		const focusLabel = (focus || 'general').toLowerCase();
@@ -1244,12 +1247,12 @@ Q: ${stem}
 A: ${answer}${contextHint}`;
 
 		const result = await ai.models.generateContent({
-			model: 'gemini-3-flash-preview',
+			model,
 			contents: [{ role: 'user', parts: [{ text: prompt }] }],
 			config: {
 				temperature: 0.7,
 				maxOutputTokens: 256,
-				thinkingConfig: { thinkingLevel: 'minimal' },
+				thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
 				responseMimeType: 'application/json',
 				responseSchema: {
 					type: Type.OBJECT,

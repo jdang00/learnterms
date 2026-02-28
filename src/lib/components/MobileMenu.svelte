@@ -133,7 +133,7 @@
 		qs.scheduleSave?.();
 	}
 
-	async function handleFlag() {
+	function handleFlag() {
 		qs.toggleFlag();
 	}
 
@@ -228,7 +228,7 @@
 	<button class="btn btn-outline btn-sm rounded-full" onclick={handleClear}>Clear</button>
 	<button class="btn btn-outline btn-success btn-sm btn-circle" onclick={handleCheck}><Check size={18} /></button>
 	<button
-		class="btn btn-sm btn-circle {qs.currentQuestionFlagged ? 'btn-warning' : 'btn-warning btn-outline'}"
+		class="btn btn-sm btn-circle {qs.currentQuestionFlagged ? 'btn-warning' : 'btn-warning btn-soft'}"
 		aria-label={qs.currentQuestionFlagged ? 'Remove flag' : 'Flag question'}
 		onclick={handleFlag}
 	>
