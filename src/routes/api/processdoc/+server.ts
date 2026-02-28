@@ -109,6 +109,7 @@ async function callModel(contents: Array<Record<string, unknown>>, maxTokens: nu
 			config: {
 				temperature: TEMPERATURE,
 				maxOutputTokens: maxTokens,
+				thinkingConfig: { thinkingLevel: 'medium' },
 				responseMimeType: 'application/json',
 				responseSchema: chunkArraySchema(Type as unknown as GType)
 			}

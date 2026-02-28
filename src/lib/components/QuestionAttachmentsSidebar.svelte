@@ -23,7 +23,7 @@
 	} = $props();
 
 	let selectedAttachment = $state<Attachment | null>(null);
-	let isAttachmentModalOpen = $state(false);
+	let attachmentDialog = $state<HTMLDialogElement | null>(null);
 	let showCompactAttachments = $state(false);
 	let attachmentZoom = $state(1);
 	let panX = $state(0);
@@ -31,6 +31,7 @@
 	let isDragging = $state(false);
 	let lastMouseX = $state(0);
 	let lastMouseY = $state(0);
+	let imageContainer = $state<HTMLElement | null>(null);
 
 	const mediaQuery = useQuery((api as any).questionMedia.getByQuestionId, () =>
 		questionId ? { questionId } : 'skip'
@@ -87,9 +88,12 @@
 		if (isDragging && attachmentZoom > 1) {
 			const deltaX = event.clientX - lastMouseX;
 			const deltaY = event.clientY - lastMouseY;
-			const maxPan = (attachmentZoom - 1) * 100;
-			panX = Math.max(-maxPan, Math.min(maxPan, panX + deltaX));
-			panY = Math.max(-maxPan, Math.min(maxPan, panY + deltaY));
+			const w = imageContainer?.clientWidth ?? 800;
+			const h = imageContainer?.clientHeight ?? 600;
+			const maxPanX = (w * (attachmentZoom - 1)) / (2 * attachmentZoom);
+			const maxPanY = (h * (attachmentZoom - 1)) / (2 * attachmentZoom);
+			panX = Math.max(-maxPanX, Math.min(maxPanX, panX + deltaX));
+			panY = Math.max(-maxPanY, Math.min(maxPanY, panY + deltaY));
 			lastMouseX = event.clientX;
 			lastMouseY = event.clientY;
 			event.preventDefault();
@@ -105,7 +109,12 @@
 		attachmentZoom = 1;
 		panX = 0;
 		panY = 0;
-		isAttachmentModalOpen = true;
+		attachmentDialog?.showModal();
+	}
+
+	function closeAttachmentDialog() {
+		attachmentDialog?.close();
+		selectedAttachment = null;
 	}
 
 	function handleCollapsedAttachmentClick() {
@@ -124,8 +133,7 @@
 	$effect(() => {
 		if (!selectedAttachment) return;
 		if (!visibleMedia.find((m) => m._id === selectedAttachment?._id)) {
-			selectedAttachment = null;
-			isAttachmentModalOpen = false;
+			closeAttachmentDialog();
 		}
 	});
 </script>
@@ -258,25 +266,21 @@
 	</div>
 {/if}
 
-<dialog class="modal max-w-full p-4" class:modal-open={isAttachmentModalOpen}>
+<dialog bind:this={attachmentDialog} class="modal">
 	<div class="modal-box max-w-4xl w-full h-[90vh] rounded-2xl">
-		<form method="dialog">
-			<button
-				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-10"
-				onclick={() => {
-					isAttachmentModalOpen = false;
-					selectedAttachment = null;
-				}}
-			>
-				✕
-			</button>
-		</form>
+		<button
+			class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-10"
+			onclick={closeAttachmentDialog}
+		>
+			✕
+		</button>
 
 		{#if selectedAttachment}
 			<div class="flex flex-col h-full">
 				<h3 class="font-bold text-lg mb-4">{selectedAttachment.altText}</h3>
 				<div
-					class="flex-1 relative overflow-hidden bg-base-200 rounded-lg"
+					bind:this={imageContainer}
+					class="flex-1 relative overflow-hidden bg-base-200 rounded-2xl"
 					onmousedown={handleMouseDown}
 					onmousemove={handleMouseMove}
 					onmouseup={handleMouseUp}
@@ -310,19 +314,32 @@
 				</div>
 
 				{#if selectedAttachment.caption}
-					<div class="mt-4 p-3 bg-base-200 rounded-lg">
+					<div class="mt-4 p-3 bg-base-200 rounded-2xl">
 						<p class="text-sm text-base-content/70">{selectedAttachment.caption}</p>
 					</div>
 				{/if}
 
 				<div class="flex justify-center gap-2 mt-4">
-					<button class="btn btn-sm btn-outline btn-circle" onclick={handleZoomOut} aria-label="Zoom out">-</button>
-					<button class="btn btn-sm btn-outline rounded-full" onclick={handleFitToScreen} aria-label="Fit to screen">
-						<span class="text-xs">Fit</span>
+					<button class="btn btn-sm btn-outline rounded-full" onclick={handleZoomOut} aria-label="Zoom out">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+						</svg>
 					</button>
-					<button class="btn btn-sm btn-outline btn-circle" onclick={handleZoomIn} aria-label="Zoom in">+</button>
+					<button class="btn btn-sm btn-outline rounded-full" onclick={handleFitToScreen} aria-label="Fit to screen">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+						</svg>
+					</button>
+					<button class="btn btn-sm btn-outline rounded-full" onclick={handleZoomIn} aria-label="Zoom in">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+						</svg>
+					</button>
 				</div>
 			</div>
 		{/if}
 	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button onclick={closeAttachmentDialog}>close</button>
+	</form>
 </dialog>

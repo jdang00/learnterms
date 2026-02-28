@@ -94,7 +94,6 @@
 
 	async function handleFlag() {
 		qs.toggleFlag();
-		qs.scheduleSave?.();
 	}
 
 	async function handleNext() {
@@ -125,7 +124,7 @@
 			</div>
 		{/if}
 	</div>
-	<button class="btn btn-sm btn-warning btn-soft btn-circle" onclick={handleFlag} aria-label="flag question">
+	<button class="btn btn-sm btn-circle {qs.currentQuestionFlagged ? 'btn-warning' : 'btn-warning btn-soft'}" onclick={handleFlag} aria-label={qs.currentQuestionFlagged ? 'Remove flag' : 'Flag question'}>
 		<Flag size={18} />
 	</button>
 	<button class="btn btn-sm btn-secondary rounded-full" onclick={handleShuffle}>

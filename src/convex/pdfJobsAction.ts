@@ -195,6 +195,7 @@ async function processWithRetry(
 				config: {
 					temperature: TEMPERATURE,
 					maxOutputTokens: MAX_TOKENS_PDF,
+					thinkingConfig: { thinkingLevel: 'medium' },
 					responseMimeType: 'application/json',
 					responseSchema: chunkArraySchema as any
 				}

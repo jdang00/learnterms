@@ -986,6 +986,7 @@ ${material}`;
 			config: {
 				temperature: 0.7,
 				maxOutputTokens: 8192,
+				thinkingConfig: { thinkingLevel: 'high' },
 				responseMimeType: 'application/json',
 				responseSchema: {
 					type: Type.ARRAY,
@@ -1117,34 +1118,36 @@ export const generateDistractorsAndExplanation = action({
 		const focusLabel = (focus || 'general').toLowerCase();
 		const domainHint =
 			focusLabel === 'optometry'
-				? ' If medical, focus on optometry context.'
+				? ' (optometry context)'
 				: focusLabel === 'pharmacy'
-					? ' If medical, focus on pharmacy/pharmacology context.'
+					? ' (pharmacy context)'
 					: '';
 
-		// Build existing options list so AI knows what NOT to duplicate
-		const avoidSection =
-			existingOptions.length > 0
-				? `\nAlready used (DO NOT repeat any of these): ${existingOptions.join('; ')}`
+		const existingDistractors = existingOptions.filter(
+			(o) => o.trim().length > 0 && !correctAnswers.includes(o)
+		);
+		const existingSection =
+			existingDistractors.length > 0
+				? `\nExisting wrong options (match style, do not repeat): ${existingDistractors.join('; ')}`
 				: '';
 
 		const contextHint = existingExplanation.trim() ? `\nNotes: ${existingExplanation.trim()}` : '';
 
-		// Compact prompt optimized for tokens
-		const prompt = `MCQ. Generate exactly ${numDistractors} NEW wrong options + explanation.${domainHint}
+		const prompt = `${numDistractors} wrong options + explanation.${domainHint}
 
 Q: ${stem}
-A: ${correctAnswers.join('; ')}${avoidSection}${contextHint}
+A: ${correctAnswers.join('; ')}${existingSection}${contextHint}
 
-Wrong options: plausible, no prefixes, match answer length. Each must be unique and different from every existing option listed above.
-Explanation: 2-3 sentences why the answer is correct. Incorporate the notes if provided, rewriting into a clear paragraph. Do not reference wrong options.`;
+Wrong options: plausible, unique, no prefixes. Match style and length of existing options and answer.
+Explanation: 2-3 sentences explaining the underlying concept. Use notes if provided. Do not reference options or say "this question".`;
 
 		const result = await ai.models.generateContent({
-			model: 'gemini-2.5-flash-lite',
+			model: 'gemini-3-flash-preview',
 			contents: [{ role: 'user', parts: [{ text: prompt }] }],
 			config: {
 				temperature: 0.7,
 				maxOutputTokens: 512,
+				thinkingConfig: { thinkingLevel: 'minimal' },
 				responseMimeType: 'application/json',
 				responseSchema: {
 					type: Type.OBJECT,
@@ -1228,24 +1231,25 @@ export const generateExplanation = action({
 		const focusLabel = (focus || 'general').toLowerCase();
 		const domainHint =
 			focusLabel === 'optometry'
-				? ' If medical, focus on optometry context.'
+				? ' (optometry context)'
 				: focusLabel === 'pharmacy'
-					? ' If medical, focus on pharmacy/pharmacology context.'
+					? ' (pharmacy context)'
 					: '';
 
 		const contextHint = existingExplanation.trim() ? `\nNotes: ${existingExplanation.trim()}` : '';
 
-		const prompt = `Explain why this is correct in 2-3 sentences. Incorporate the notes if provided, rewriting into a clear paragraph.${domainHint}
+		const prompt = `2-3 sentence explanation of the concept.${domainHint} Use notes if provided. Do not say "this question".
 
 Q: ${stem}
 A: ${answer}${contextHint}`;
 
 		const result = await ai.models.generateContent({
-			model: 'gemini-2.5-flash-lite',
+			model: 'gemini-3-flash-preview',
 			contents: [{ role: 'user', parts: [{ text: prompt }] }],
 			config: {
 				temperature: 0.7,
 				maxOutputTokens: 256,
+				thinkingConfig: { thinkingLevel: 'minimal' },
 				responseMimeType: 'application/json',
 				responseSchema: {
 					type: Type.OBJECT,
