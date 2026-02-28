@@ -1,5 +1,5 @@
-import posthog from 'posthog-js';
 import { browser } from '$app/environment';
+import { getPostHog } from './posthogClient';
 
 type SubmissionSource = 'button' | 'keyboard' | 'mobile';
 
@@ -62,17 +62,21 @@ export function captureQuestionAnswered(payload: QuestionAnsweredPayload): boole
 
 	recentFingerprints.set(fingerprint, nowMs);
 
-	posthog.capture('question_answered', {
-		questionId: payload.questionId,
-		moduleId: payload.moduleId,
-		classId: payload.classId,
-		questionType: payload.questionType,
-		selectedOptions: payload.selectedOptions,
-		eliminatedOptions: payload.eliminatedOptions,
-		isCorrect: payload.isCorrect,
-		submission_source: payload.submissionSource,
-		submission_id: generateSubmissionId(),
-		client_deduped: true
+	void getPostHog().then((posthog) => {
+		if (!posthog) return;
+
+		posthog.capture('question_answered', {
+			questionId: payload.questionId,
+			moduleId: payload.moduleId,
+			classId: payload.classId,
+			questionType: payload.questionType,
+			selectedOptions: payload.selectedOptions,
+			eliminatedOptions: payload.eliminatedOptions,
+			isCorrect: payload.isCorrect,
+			submission_source: payload.submissionSource,
+			submission_id: generateSubmissionId(),
+			client_deduped: true
+		});
 	});
 
 	return true;
