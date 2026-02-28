@@ -9,9 +9,9 @@
 	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
 	import { setupConvex, useConvexClient } from 'convex-svelte';
 	import { theme, clerkTheme } from '$lib/theme.svelte';
+	import { getPostHog } from '$lib/analytics/posthogClient';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import posthog from 'posthog-js';
 	import { browser } from '$app/environment';
 
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
@@ -84,13 +84,17 @@
 
 	onMount(() => {
 		theme.init();
+		void getPostHog();
 	});
 
 	// Track page views on route changes
 	$effect(() => {
 		if (browser && page.url) {
-			posthog.capture('$pageview', {
-				$current_url: page.url.href
+			void getPostHog().then((posthog) => {
+				if (!posthog) return;
+				posthog.capture('$pageview', {
+					$current_url: page.url.href
+				});
 			});
 		}
 	});
