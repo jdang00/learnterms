@@ -714,7 +714,11 @@
 				toastStore.error('At least one answer is required');
 				return;
 			}
-			const encoded = sanitized.map((row) => ({ text: encodeFitbAnswer(row) }));
+			const existingFitb = mode === 'edit' && editingQuestion ? editingQuestion.options || [] : [];
+			const encoded = sanitized.map((row, i) => ({
+				id: existingFitb[i]?.id,
+				text: encodeFitbAnswer(row)
+			}));
 			options = encoded;
 			correctAnswers = encoded.map((_, i) => i.toString());
 		}
@@ -727,21 +731,9 @@
 				return;
 			}
 
-			function makeOptionId(stem: string, text: string, index: number): string {
-				const input = `${stem}|${text}|${index}`;
-				let hash = 0;
-				for (let i = 0; i < input.length; i++) {
-					const char = input.charCodeAt(i);
-					hash = (hash << 5) - hash + char;
-					hash = hash & hash;
-				}
-				return Math.abs(hash).toString(36).padStart(8, '0').slice(0, 8);
-			}
-
 			const promptOptions = rawPrompts.map((text, i) => {
 				const full = `prompt:${text}`;
 				return {
-					id: makeOptionId(questionStem, full, i),
 					text: full
 				};
 			});
@@ -749,14 +741,13 @@
 			const answerOptions = rawAnswers.map((text, i) => {
 				const full = `answer:${text}`;
 				return {
-					id: makeOptionId(questionStem, full, answersOffset + i),
 					text: full
 				};
 			});
 			const mappings: string[] = [];
 			const n = Math.min(rawPrompts.length, rawAnswers.length);
 			for (let i = 0; i < n; i++) {
-				mappings.push(`${promptOptions[i].id}::${answerOptions[i].id}`);
+				mappings.push(`${i}::${answersOffset + i}`);
 			}
 			options = [...promptOptions, ...answerOptions];
 			correctAnswers = mappings;
@@ -785,11 +776,13 @@
 		try {
 			let questionId: Id<'question'> | undefined;
 
-			// Strip out 'id' field from options - only send 'text'
-			const cleanOptions = filledOptions.map((opt) => ({ text: opt.text }));
+			const cleanOptions = filledOptions.map((opt) => ({
+				id: opt.id,
+				text: opt.text
+			}));
 
 			if (mode === 'edit' && editingQuestion) {
-				await client.mutation(api.question.updateQuestion, {
+				await client.mutation(api.question.updateQuestion as any, {
 					questionId: editingQuestion._id as Id<'question'>,
 					moduleId: moduleId as Id<'module'>,
 					type: questionType,
@@ -817,7 +810,7 @@
 					moduleId: moduleId as Id<'module'>,
 					type: questionType,
 					stem: questionStem,
-					options: cleanOptions,
+					options: cleanOptions.map((opt) => ({ text: opt.text })),
 					correctAnswers,
 					explanation: questionExplanation || '',
 					aiGenerated: false,

@@ -322,8 +322,10 @@
 					} else if (currentlySelected.type === QUESTION_TYPES.MATCHING) {
 						qs.checkMatching(currentlySelected);
 						isCorrect =
-							correctAnswers.length === selectedAnswers.length &&
-							correctAnswers.every((answer: string) => selectedAnswers.includes(answer));
+							typeof qs.evaluateMatchingSelection === 'function'
+								? qs.evaluateMatchingSelection(currentlySelected)
+								: correctAnswers.length === selectedAnswers.length &&
+									correctAnswers.every((answer: string) => selectedAnswers.includes(answer));
 						captureQuestionAnswered({
 							questionId: currentlySelected._id,
 							moduleId: currentlySelected.moduleId,

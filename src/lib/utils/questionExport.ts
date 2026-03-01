@@ -87,9 +87,28 @@ function parseMatchingOptions(question: ExportableQuestion): {
 	// Parse pairs from correctAnswers (format: "promptId::answerId")
 	const pairs: Array<{ prompt: string; answer: string }> = [];
 	for (const pair of question.correctAnswers) {
-		const [promptId, answerId] = pair.split('::');
-		const prompt = prompts.find((p) => p.id === promptId);
-		const answer = answers.find((a) => a.id === answerId);
+		const [promptToken, answerToken] = pair.split('::');
+		const resolveOptionId = (token: string | undefined): string | undefined => {
+			const raw = String(token ?? '').trim();
+			if (!raw) return undefined;
+			const byId = question.options.find((o) => (o.id || '') === raw);
+			if (byId?.id) return byId.id;
+			if (/^\d+$/.test(raw)) {
+				const index = Number(raw);
+				if (Number.isInteger(index) && index >= 0 && index < question.options.length) {
+					return question.options[index]?.id || undefined;
+				}
+			}
+			return undefined;
+		};
+		const promptId = resolveOptionId(promptToken);
+		const answerId = String(answerToken ?? '')
+			.split('|')
+			.map((part) => part.trim())
+			.map((token) => resolveOptionId(token))
+			.find((id): id is string => Boolean(id));
+		const prompt = promptId ? prompts.find((p) => p.id === promptId) : undefined;
+		const answer = answerId ? answers.find((a) => a.id === answerId) : undefined;
 		if (prompt && answer) {
 			pairs.push({ prompt: prompt.text, answer: answer.text });
 		}

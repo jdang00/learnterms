@@ -92,9 +92,38 @@
 	}
 
 	function getCorrectAnswerForPrompt(promptId: string): string | undefined {
-		const pair = (question.correctAnswers || []).find((cid: string) => String(cid).startsWith(`${promptId}::`));
+		const options = (question.options || []) as Option[];
+		const resolveOptionToken = (token: string): string | undefined => {
+			const raw = String(token ?? '').trim();
+			if (!raw) return undefined;
+			if (options.some((o) => o.id === raw)) return raw;
+			if (/^\d+$/.test(raw)) {
+				const index = Number(raw);
+				if (Number.isInteger(index) && index >= 0 && index < options.length) {
+					return options[index]?.id;
+				}
+			}
+			return undefined;
+		};
+
+		const pair = (question.correctAnswers || [])
+			.map((raw: string) => {
+				const value = String(raw ?? '');
+				const sep = value.indexOf('::');
+				if (sep <= 0) return null;
+				const promptToken = value.slice(0, sep).trim();
+				const answerToken = value.slice(sep + 2).trim();
+				const resolvedPromptId = resolveOptionToken(promptToken);
+				return resolvedPromptId === promptId ? answerToken : null;
+			})
+			.find((token): token is string => Boolean(token));
 		if (!pair) return undefined;
-		const answerId = String(pair).split('::')[1];
+		const answerId = pair
+			.split('|')
+			.map((part) => part.trim())
+			.map((token) => resolveOptionToken(token))
+			.find((id): id is string => Boolean(id));
+		if (!answerId) return undefined;
 		const answerOpt = matchingAnswers.find((a) => a.id === answerId);
 		return answerOpt ? getAnswerLabel(answerOpt.text) : undefined;
 	}

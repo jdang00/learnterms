@@ -70,7 +70,16 @@
 	}
 
 	function optionTextById(item: ReviewItem, id: string) {
-		return item.question.options.find((o) => o.id === id)?.text ?? id;
+		const raw = String(id ?? '').trim();
+		const byId = item.question.options.find((o) => o.id === raw)?.text;
+		if (byId) return byId;
+		if (/^\d+$/.test(raw)) {
+			const index = Number(raw);
+			if (Number.isInteger(index) && index >= 0 && index < item.question.options.length) {
+				return item.question.options[index]?.text ?? raw;
+			}
+		}
+		return raw;
 	}
 
 	function answerLabel(text: string) {
@@ -84,7 +93,11 @@
 	function parseMatchingPairs(values: string[]): Array<{ promptId: string; answerId: string }> {
 		return (values || [])
 			.map((value) => {
-				const [promptId, answerId] = String(value).split('::');
+				const [promptId, answerToken] = String(value).split('::');
+				const answerId = String(answerToken ?? '')
+					.split('|')
+					.map((part) => part.trim())
+					.find((id) => id.length > 0);
 				return promptId && answerId ? { promptId, answerId } : null;
 			})
 			.filter((pair): pair is { promptId: string; answerId: string } => Boolean(pair));
