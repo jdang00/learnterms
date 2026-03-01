@@ -47,10 +47,11 @@
 				}, 1);
 			} else if (currentlySelected.type === QUESTION_TYPES.MATCHING) {
 				qs.checkMatching(currentlySelected);
-				// For matching, compare arrays
 				isCorrect =
-					correctAnswers.length === selectedAnswers.length &&
-					correctAnswers.every((answer: string) => selectedAnswers.includes(answer));
+					typeof qs.evaluateMatchingSelection === 'function'
+						? qs.evaluateMatchingSelection(currentlySelected)
+						: correctAnswers.length === selectedAnswers.length &&
+							correctAnswers.every((answer: string) => selectedAnswers.includes(answer));
 				trackQuestionAnswered(selectedAnswers, eliminatedOptions, isCorrect);
 			} else {
 				// Multiple choice - compare sorted arrays

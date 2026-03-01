@@ -113,14 +113,45 @@ function matchingRoleFromOptionText(text: string): 'prompt' | 'answer' | null {
 	return null;
 }
 
-function parseMatchingPair(value: string): { promptId: string; answerId: string } | null {
+function parseMatchingPair(value: string): { promptId: string; answerToken: string } | null {
 	const raw = String(value ?? '').trim();
 	const sep = raw.indexOf('::');
 	if (sep <= 0) return null;
 	const promptId = raw.slice(0, sep).trim();
-	const answerId = raw.slice(sep + 2).trim();
-	if (!promptId || !answerId) return null;
-	return { promptId, answerId };
+	const answerToken = raw.slice(sep + 2).trim();
+	if (!promptId || !answerToken) return null;
+	return { promptId, answerToken };
+}
+
+function splitMatchingAnswerToken(answerToken: string): string[] {
+	return String(answerToken ?? '')
+		.split('|')
+		.map((part) => part.trim())
+		.filter((part) => part.length > 0);
+}
+
+function normalizeMatchingAnswerText(text: string): string {
+	return String(text ?? '')
+		.replace(/^\s*answer:\s*/i, '')
+		.trim()
+		.toLowerCase()
+		.replace(/\s+/g, ' ');
+}
+
+function resolveMatchingOptionTokenToId(
+	token: string,
+	options: Array<{ id: string; text: string }>
+): string | null {
+	const raw = String(token ?? '').trim();
+	if (!raw) return null;
+	if (options.some((opt) => opt.id === raw)) return raw;
+	if (/^\d+$/.test(raw)) {
+		const index = Number(raw);
+		if (Number.isInteger(index) && index >= 0 && index < options.length) {
+			return options[index]?.id ?? null;
+		}
+	}
+	return null;
 }
 
 function normalizeMatchingCorrectPairs(
@@ -133,7 +164,7 @@ function normalizeMatchingCorrectPairs(
 	const promptIdSet = new Set(promptOptions.map((o) => o.id));
 	const raw = (questionSnapshot.correctAnswers || []).map((s) => String(s));
 
-	// Modern format: promptId::answerId
+	// Modern format: promptId::answerId (answer token may include alternatives separated by "|")
 	const pairValues = raw
 		.map(parseMatchingPair)
 		.filter(
@@ -141,9 +172,17 @@ function normalizeMatchingCorrectPairs(
 				pair
 			): pair is {
 				promptId: string;
-				answerId: string;
+				answerToken: string;
 			} => Boolean(pair)
 		)
+			.map((pair) => ({
+				promptId: resolveMatchingOptionTokenToId(pair.promptId, options) ?? '',
+				answerId:
+					splitMatchingAnswerToken(pair.answerToken)
+						.map((token) => resolveMatchingOptionTokenToId(token, options))
+						.filter((id): id is string => Boolean(id))
+						.find((id) => answerIdSet.has(id)) ?? ''
+			}))
 		.filter((pair) => promptIdSet.has(pair.promptId) && answerIdSet.has(pair.answerId));
 	if (pairValues.length > 0) {
 		return Array.from(new Set(pairValues.map((pair) => `${pair.promptId}::${pair.answerId}`)));
@@ -172,6 +211,71 @@ function normalizeMatchingCorrectPairs(
 	return zipped;
 }
 
+function matchingCorrectByPrompt(
+	questionSnapshot: Doc<'quizAttemptItems'>['questionSnapshot']
+): Map<string, Set<string>> {
+	const options = questionSnapshot.options || [];
+	const promptOptions = options.filter((o) => matchingRoleFromOptionText(o.text) === 'prompt');
+	const answerOptions = options.filter((o) => matchingRoleFromOptionText(o.text) === 'answer');
+	const promptIdSet = new Set(promptOptions.map((o) => o.id));
+	const answerIdSet = new Set(answerOptions.map((o) => o.id));
+	const answerKeyById = new Map(answerOptions.map((o) => [o.id, normalizeMatchingAnswerText(o.text)]));
+	const answerIdsByKey = new Map<string, Set<string>>();
+	for (const [id, key] of answerKeyById.entries()) {
+		if (!answerIdsByKey.has(key)) answerIdsByKey.set(key, new Set());
+		answerIdsByKey.get(key)!.add(id);
+	}
+
+	const out = new Map<string, Set<string>>();
+	const raw = (questionSnapshot.correctAnswers || []).map((s) => String(s));
+	const hasPairFormat = raw.some((value) => value.includes('::'));
+
+	if (hasPairFormat) {
+		for (const rawPair of raw) {
+			const parsed = parseMatchingPair(rawPair);
+			if (!parsed) continue;
+			const resolvedPromptId = resolveMatchingOptionTokenToId(parsed.promptId, options);
+			if (!resolvedPromptId || !promptIdSet.has(resolvedPromptId)) continue;
+
+			const directAnswerIds = splitMatchingAnswerToken(parsed.answerToken)
+				.map((token) => resolveMatchingOptionTokenToId(token, options))
+				.filter((id): id is string => Boolean(id))
+				.filter((id) => answerIdSet.has(id));
+			if (directAnswerIds.length === 0) continue;
+
+			const accepted = out.get(resolvedPromptId) ?? new Set<string>();
+			for (const directId of directAnswerIds) {
+				accepted.add(directId);
+				const key = answerKeyById.get(directId);
+				if (!key) continue;
+				const sameMeaning = answerIdsByKey.get(key);
+				if (!sameMeaning) continue;
+				for (const equivalentId of sameMeaning) accepted.add(equivalentId);
+			}
+			out.set(resolvedPromptId, accepted);
+		}
+		return out;
+	}
+
+	const n = Math.min(promptOptions.length, raw.length);
+	for (let i = 0; i < n; i++) {
+		const promptId = promptOptions[i].id;
+		const answerId = resolveMatchingOptionTokenToId(raw[i], options);
+		if (!answerId || !answerIdSet.has(answerId)) continue;
+
+		const accepted = new Set<string>([answerId]);
+		const key = answerKeyById.get(answerId);
+		if (key) {
+			const sameMeaning = answerIdsByKey.get(key);
+			if (sameMeaning) {
+				for (const equivalentId of sameMeaning) accepted.add(equivalentId);
+			}
+		}
+		out.set(promptId, accepted);
+	}
+	return out;
+}
+
 function normalizeMatchingUserPairs(
 	questionSnapshot: Doc<'quizAttemptItems'>['questionSnapshot'],
 	selectedOptions: string[]
@@ -197,13 +301,44 @@ function normalizeMatchingUserPairs(
 						pair
 					): pair is {
 						promptId: string;
-						answerId: string;
+						answerToken: string;
 					} => Boolean(pair)
 				)
+				.map((pair) => ({
+					promptId: resolveMatchingOptionTokenToId(pair.promptId, options) ?? '',
+					answerId:
+						splitMatchingAnswerToken(pair.answerToken)
+							.map((token) => resolveMatchingOptionTokenToId(token, options))
+							.find((id): id is string => Boolean(id)) ?? ''
+				}))
 				.filter((pair) => promptIdSet.has(pair.promptId) && answerIdSet.has(pair.answerId))
 				.map((pair) => `${pair.promptId}::${pair.answerId}`)
 		)
 	);
+}
+
+function evaluateMatchingSelection(
+	questionSnapshot: Doc<'quizAttemptItems'>['questionSnapshot'],
+	selectedOptions: string[]
+): boolean {
+	const correctByPrompt = matchingCorrectByPrompt(questionSnapshot);
+	const userPairs = normalizeMatchingUserPairs(questionSnapshot, selectedOptions || []);
+
+	const userByPrompt = new Map<string, string>();
+	for (const pair of userPairs) {
+		const parsed = parseMatchingPair(pair);
+		if (!parsed) continue;
+		const answerId = splitMatchingAnswerToken(parsed.answerToken)[0] ?? '';
+		if (!answerId) continue;
+		userByPrompt.set(parsed.promptId, answerId);
+	}
+
+	if (userByPrompt.size !== correctByPrompt.size) return false;
+	for (const [promptId, acceptedIds] of correctByPrompt.entries()) {
+		const selectedId = userByPrompt.get(promptId);
+		if (!selectedId || !acceptedIds.has(selectedId)) return false;
+	}
+	return true;
 }
 
 type FitbMode = 'exact' | 'exact_cs' | 'contains' | 'regex';
@@ -318,9 +453,9 @@ function scoreAttemptItem(item: Doc<'quizAttemptItems'>) {
 		const text = item.response.textResponse ?? item.response.selectedOptions[0] ?? '';
 		isCorrect = evaluateFitb(item.questionSnapshot, String(text));
 	} else if (isMatchingType(item.questionSnapshot.type)) {
-		isCorrect = exactSetMatch(
-			normalizeMatchingCorrectPairs(item.questionSnapshot),
-			normalizeMatchingUserPairs(item.questionSnapshot, item.response.selectedOptions || [])
+		isCorrect = evaluateMatchingSelection(
+			item.questionSnapshot,
+			item.response.selectedOptions || []
 		);
 	} else {
 		isCorrect = exactSetMatch(item.questionSnapshot.correctAnswers || [], item.response.selectedOptions || []);

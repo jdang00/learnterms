@@ -26,11 +26,31 @@
     });
 
     let shuffledAnswers = $state<Option[]>([]);
+    let lastShuffleKey = $state('');
 
-    function fisherYates<T>(arr: T[]): T[] {
+    function seededHash(input: string): number {
+        let h = 2166136261 >>> 0;
+        for (let i = 0; i < input.length; i++) {
+            h ^= input.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+        }
+        return h >>> 0;
+    }
+
+    function mulberry32(seed: number) {
+        return function () {
+            let t = (seed += 0x6d2b79f5);
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+    }
+
+    function fisherYatesWithSeed<T>(arr: T[], seedInput: string): T[] {
         const a = [...arr];
+        const rand = mulberry32(seededHash(seedInput));
         for (let i = a.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
+            const j = Math.floor(rand() * (i + 1));
             [a[i], a[j]] = [a[j], a[i]];
         }
         return a;
@@ -38,17 +58,26 @@
 
     $effect(() => {
         const answerOpts = answers();
+        const promptOpts = prompts();
+        const questionId = String((currentlySelected as { _id?: string } | null | undefined)?._id ?? '');
+        const key = `${questionId}|${promptOpts.map((o) => o.id).join(',')}|${answerOpts.map((o) => o.id).join(',')}|${(currentlySelected?.correctAnswers || []).join(',')}`;
+
+        if (key === lastShuffleKey) {
+            return;
+        }
+        lastShuffleKey = key;
+
         if (answerOpts.length <= 1) {
             shuffledAnswers = answerOpts;
             return;
         }
 
-        const answersInPromptOrder = prompts()
+        const answersInPromptOrder = promptOpts
             .map((prompt) => correctAnswerIdForPrompt(prompt.id))
             .map((answerId) => answerOpts.find((opt) => opt.id === answerId))
             .filter((opt): opt is Option => Boolean(opt));
 
-        let out = fisherYates(answerOpts);
+        let out = fisherYatesWithSeed(answerOpts, key);
 
         const matchesOriginalOrder = out.length === answerOpts.length && out.every((o, i) => o.id === answerOpts[i].id);
         const matchesPromptOrder =
@@ -89,9 +118,97 @@
         return shuffledAnswers.filter((a) => a.id === getUserSelectionForPrompt(promptId) || !chosenIds.has(a.id));
     }
 
+    function splitAnswerToken(answerToken: string): string[] {
+        return String(answerToken ?? '')
+            .split('|')
+            .map((part) => part.trim())
+            .filter((part) => part.length > 0);
+    }
+
+    function parsePairToken(value: string): { promptToken: string; answerToken: string } | null {
+        const raw = String(value ?? '').trim();
+        const sep = raw.indexOf('::');
+        if (sep <= 0) return null;
+        const promptToken = raw.slice(0, sep).trim();
+        const answerToken = raw.slice(sep + 2).trim();
+        if (!promptToken || !answerToken) return null;
+        return { promptToken, answerToken };
+    }
+
+    function resolveOptionTokenToId(token: string): string | null {
+        const raw = String(token ?? '').trim();
+        if (!raw) return null;
+
+        const opts = (currentlySelected?.options || []) as Option[];
+        if (opts.some((o) => o.id === raw)) return raw;
+
+        if (/^\d+$/.test(raw)) {
+            const index = Number(raw);
+            if (Number.isInteger(index) && index >= 0 && index < opts.length) {
+                return opts[index]?.id ?? null;
+            }
+        }
+
+        return null;
+    }
+
+    function normalizeAnswerText(text: string): string {
+        return String(text ?? '')
+            .replace(/^\s*answer:\s*/i, '')
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, ' ');
+    }
+
+    function directCorrectAnswerIdsForPrompt(promptId: string): string[] {
+        const parsedPair = ((currentlySelected?.correctAnswers || []) as string[])
+            .map((raw) => parsePairToken(raw))
+            .find((pair): pair is { promptToken: string; answerToken: string } => {
+                if (!pair) return false;
+                const resolvedPromptId = resolveOptionTokenToId(pair.promptToken);
+                return resolvedPromptId === promptId;
+            });
+        if (!parsedPair) return [];
+        const validAnswerIds = new Set(answers().map((a) => a.id));
+        return splitAnswerToken(parsedPair.answerToken)
+            .map((token) => resolveOptionTokenToId(token))
+            .filter((id): id is string => Boolean(id))
+            .filter((id) => validAnswerIds.has(id));
+    }
+
+    function acceptedAnswerIdsForPrompt(promptId: string): Set<string> {
+        const direct = directCorrectAnswerIdsForPrompt(promptId);
+        const accepted = new Set<string>(direct);
+        if (direct.length === 0) return accepted;
+
+        const answerKeyById = new Map<string, string>();
+        for (const answer of answers()) {
+            answerKeyById.set(answer.id, normalizeAnswerText(answer.text));
+        }
+
+        const keys = new Set(direct.map((id) => answerKeyById.get(id)).filter((key): key is string => Boolean(key)));
+        for (const [answerId, answerKey] of answerKeyById.entries()) {
+            if (keys.has(answerKey)) accepted.add(answerId);
+        }
+
+        return accepted;
+    }
+
     function correctAnswerIdForPrompt(promptId: string): string | undefined {
-        const pair = (currentlySelected?.correctAnswers || []).find((cid: string) => String(cid).startsWith(`${promptId}::`));
-        return pair ? String(pair).split('::')[1] : undefined;
+        const direct = directCorrectAnswerIdsForPrompt(promptId);
+        if (direct.length > 0) return direct[0];
+        const accepted = Array.from(acceptedAnswerIdsForPrompt(promptId));
+        return accepted.length > 0 ? accepted[0] : undefined;
+    }
+
+    function isSelectionCorrectForPrompt(promptId: string): boolean {
+        const selectedId = getUserSelectionForPrompt(promptId);
+        if (!selectedId) return false;
+        return acceptedAnswerIdsForPrompt(promptId).has(selectedId);
+    }
+
+    function isAcceptedAnswerForPrompt(promptId: string, answerId: string): boolean {
+        return acceptedAnswerIdsForPrompt(promptId).has(answerId);
     }
 
     function handleToggleSolution() {
@@ -128,7 +245,7 @@
                     <div class="dropdown flex-1">
                         <label
                             tabindex="0"
-                            class="btn select select-bordered w-full rounded-full {qs.showSolution && getUserSelectionForPrompt(p.id) === correctAnswerIdForPrompt(p.id) ? 'select-success' : ''} {qs.showSolution ? 'btn-disabled' : ''}"
+                            class="btn select select-bordered w-full rounded-full {qs.showSolution && isSelectionCorrectForPrompt(p.id) ? 'select-success' : ''} {qs.showSolution ? 'btn-disabled' : ''}"
                         >
                             {#if qs.showSolution && correctAnswerIdForPrompt(p.id)}
                                 {@html (answers().find((a) => a.id === correctAnswerIdForPrompt(p.id))?.text || '').slice('answer:'.length)}
@@ -143,7 +260,7 @@
                                 <li>
                                     <button
                                         onclick={() => !qs.showSolution && setUserSelection(p.id, a.id)}
-                                        class="btn btn-ghost justify-start w-full {qs.showSolution && a.id === correctAnswerIdForPrompt(p.id) ? 'bg-success text-success-content hover:bg-success hover:text-success-content' : ''}"
+                                        class="btn btn-ghost justify-start w-full {qs.showSolution && isAcceptedAnswerForPrompt(p.id, a.id) ? 'bg-success text-success-content hover:bg-success hover:text-success-content' : ''}"
                                         class:pointer-events-none={qs.showSolution}
                                         disabled={qs.showSolution}
                                     >
