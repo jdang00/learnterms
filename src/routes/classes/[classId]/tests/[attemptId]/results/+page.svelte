@@ -31,10 +31,13 @@
 	);
 	type ResultsQueryData = NonNullable<typeof resultsQuery.data>;
 	type ReviewItem = ResultsQueryData['reviewItems'][number];
+	type ReviewFilter = 'all' | 'flagged' | 'unanswered' | 'incorrect';
+	type ReviewEntry = { item: ReviewItem; originalIndex: number };
 	let domPurify: ReturnType<typeof createDOMPurify> | null = null;
 
-	let selectedIndex = $state(0);
 	let tab = $state<'summary' | 'review'>('summary');
+	let reviewFilter = $state<ReviewFilter>('all');
+	let selectedQuestionId = $state<string | null>(null);
 	let hideSidebar = $state(false);
 	let questionButtons = $state<HTMLButtonElement[]>([]);
 
@@ -105,19 +108,27 @@
 
 	function friendlyTypeName(raw: string): string {
 		switch (raw) {
-			case 'multiple_choice': return 'Multiple Choice';
-			case 'fill_in_the_blank': return 'Fill in the Blank';
-			case 'matching': return 'Matching';
-			default: return raw;
+			case 'multiple_choice':
+				return 'Multiple Choice';
+			case 'fill_in_the_blank':
+				return 'Fill in the Blank';
+			case 'matching':
+				return 'Matching';
+			default:
+				return raw;
 		}
 	}
 
 	function friendlyStatus(status: string): string {
 		switch (status) {
-			case 'submitted': return 'Completed';
-			case 'timed_out': return 'Time Expired';
-			case 'abandoned': return 'Abandoned';
-			default: return status.replace('_', ' ');
+			case 'submitted':
+				return 'Completed';
+			case 'timed_out':
+				return 'Time Expired';
+			case 'abandoned':
+				return 'Abandoned';
+			default:
+				return status.replace('_', ' ');
 		}
 	}
 
@@ -146,11 +157,142 @@
 		};
 	}
 
-	const selectedItem = $derived(resultsQuery.data?.reviewItems?.[selectedIndex] ?? null);
+	function isUnansweredItem(item: ReviewItem) {
+		return (
+			!(item.response?.selectedOptions?.length ?? 0) &&
+			!String(item.response?.textResponse ?? '').trim()
+		);
+	}
+
+	function isIncorrectItem(item: ReviewItem) {
+		return !isUnansweredItem(item) && item.score?.isCorrect !== true;
+	}
+
+	function isSkippedItem(item: ReviewItem) {
+		return item.score == null || item.score?.isCorrect === undefined || isUnansweredItem(item);
+	}
+
+	function matchesReviewFilter(item: ReviewItem, filter: ReviewFilter) {
+		switch (filter) {
+			case 'flagged':
+				return item.response?.isFlagged === true;
+			case 'unanswered':
+				return isUnansweredItem(item);
+			case 'incorrect':
+				return isIncorrectItem(item);
+			default:
+				return true;
+		}
+	}
+
+	function normalizeAnswerText(text: string) {
+		return answerLabel(text).trim().toLowerCase().replace(/\s+/g, ' ');
+	}
+
+	function matchingReviewRows(item: ReviewItem) {
+		const promptOptions = (item.question.options || []).filter((option) =>
+			String(option.text).trimStart().toLowerCase().startsWith('prompt:')
+		);
+
+		const userByPrompt = new Map(
+			parseMatchingPairs(item.response?.selectedOptions ?? []).map((pair) => [
+				pair.promptId,
+				pair.answerId
+			])
+		);
+		const correctByPrompt = new Map(
+			parseMatchingPairs(item.correctAnswerDisplay ?? []).map((pair) => [
+				pair.promptId,
+				pair.answerId
+			])
+		);
+
+		return promptOptions.map((prompt) => {
+			const userAnswerId = userByPrompt.get(prompt.id) ?? '';
+			const correctAnswerId = correctByPrompt.get(prompt.id) ?? '';
+			const userAnswerText = userAnswerId
+				? answerLabel(optionTextById(item, userAnswerId))
+				: 'No answer';
+			const correctAnswerText = correctAnswerId
+				? answerLabel(optionTextById(item, correctAnswerId))
+				: 'No answer key';
+			const isAnswered = userAnswerId.length > 0;
+			const isCorrect =
+				isAnswered &&
+				normalizeAnswerText(optionTextById(item, userAnswerId)) ===
+					normalizeAnswerText(optionTextById(item, correctAnswerId));
+			return {
+				promptId: prompt.id,
+				promptText: promptLabel(optionTextById(item, prompt.id)),
+				userAnswerText,
+				correctAnswerText,
+				isAnswered,
+				isCorrect
+			};
+		});
+	}
+
+	function matchingReviewStats(item: ReviewItem) {
+		const rows = matchingReviewRows(item);
+		const correct = rows.filter((row) => row.isCorrect).length;
+		const unanswered = rows.filter((row) => !row.isAnswered).length;
+		return {
+			total: rows.length,
+			correct,
+			unanswered,
+			incorrect: Math.max(0, rows.length - correct - unanswered)
+		};
+	}
+
+	const reviewEntries = $derived.by(() =>
+		(resultsQuery.data?.reviewItems ?? []).map((item, originalIndex) => ({ item, originalIndex }))
+	);
+
+	const filteredReviewEntries = $derived.by(() =>
+		reviewEntries.filter(({ item }) => matchesReviewFilter(item, reviewFilter))
+	);
+
+	const reviewFilterCounts = $derived.by(() => {
+		let flagged = 0;
+		let unanswered = 0;
+		let incorrect = 0;
+		for (const { item } of reviewEntries) {
+			if (item.response?.isFlagged) flagged += 1;
+			if (isUnansweredItem(item)) unanswered += 1;
+			if (isIncorrectItem(item)) incorrect += 1;
+		}
+		return {
+			all: reviewEntries.length,
+			flagged,
+			unanswered,
+			incorrect
+		};
+	});
+
+	const selectedEntry = $derived.by(() => {
+		const entries = filteredReviewEntries;
+		if (entries.length === 0) return null;
+		if (!selectedQuestionId) return entries[0];
+		return entries.find(({ item }) => item._id === selectedQuestionId) ?? entries[0];
+	});
+
+	const selectedItem = $derived(selectedEntry?.item ?? null);
+	const selectedIndex = $derived.by(() => {
+		const current = selectedEntry;
+		if (!current) return 0;
+		return filteredReviewEntries.findIndex(({ item }) => item._id === current.item._id);
+	});
+	const selectedOriginalIndex = $derived(selectedEntry?.originalIndex ?? -1);
 
 	$effect(() => {
-		const len = resultsQuery.data?.reviewItems?.length ?? 0;
-		if (selectedIndex >= len) selectedIndex = Math.max(0, len - 1);
+		const entries = filteredReviewEntries;
+		if (entries.length === 0) {
+			selectedQuestionId = null;
+			return;
+		}
+		if (!selectedQuestionId || !entries.some(({ item }) => item._id === selectedQuestionId)) {
+			selectedQuestionId = entries[0].item._id;
+		}
 	});
 
 	function scrollToCurrentButton() {
@@ -166,7 +308,21 @@
 	}
 
 	function goToReviewQuestion(idx: number) {
-		selectedIndex = idx;
+		const entry = filteredReviewEntries[idx];
+		if (!entry) return;
+		selectedQuestionId = entry.item._id;
+		scrollToCurrentButton();
+	}
+
+	function goToAdjacentReviewQuestion(delta: number) {
+		const len = filteredReviewEntries.length;
+		if (len === 0) return;
+		const next = Math.min(len - 1, Math.max(0, selectedIndex + delta));
+		goToReviewQuestion(next);
+	}
+
+	function setReviewFilter(filter: ReviewFilter) {
+		reviewFilter = filter;
 		scrollToCurrentButton();
 	}
 </script>
@@ -215,17 +371,26 @@
 					</div>
 
 					<!-- Score hero card -->
-					<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm overflow-hidden">
+					<div
+						class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm overflow-hidden"
+					>
 						<div class="card-body p-6 sm:p-8">
 							<div class="flex flex-col sm:flex-row items-center sm:items-start gap-8">
 								<div class="flex flex-col items-center text-center shrink-0">
-									<div class="radial-progress text-4xl font-bold {summary?.passed ? 'text-success' : 'text-error'}"
+									<div
+										class="radial-progress text-4xl font-bold {summary?.passed
+											? 'text-success'
+											: 'text-error'}"
 										style="--value:{summary?.scorePct ?? 0}; --size:10rem; --thickness: 8px;"
 										role="progressbar"
 									>
 										{summary?.scorePct ?? 0}%
 									</div>
-									<div class="badge rounded-full mt-4 {summary?.passed ? 'badge-success' : 'badge-error'} badge-lg font-semibold px-5 py-3">
+									<div
+										class="badge rounded-full mt-4 {summary?.passed
+											? 'badge-success'
+											: 'badge-error'} badge-lg font-semibold px-5 py-3"
+									>
 										{summary?.passed ? 'Passed' : 'Not Passed'}
 									</div>
 								</div>
@@ -234,12 +399,16 @@
 									<div class="grid grid-cols-3 gap-3">
 										<div class="rounded-xl border border-success/20 bg-success/5 p-4 text-center">
 											<CheckCircle2 class="mx-auto text-success mb-1" size={20} />
-											<div class="font-bold text-2xl text-success">{summary?.correctCount ?? 0}</div>
+											<div class="font-bold text-2xl text-success">
+												{summary?.correctCount ?? 0}
+											</div>
 											<div class="text-xs text-base-content/50">Correct</div>
 										</div>
 										<div class="rounded-xl border border-error/20 bg-error/5 p-4 text-center">
 											<XCircle class="mx-auto text-error mb-1" size={20} />
-											<div class="font-bold text-2xl text-error">{summary?.incorrectCount ?? 0}</div>
+											<div class="font-bold text-2xl text-error">
+												{summary?.incorrectCount ?? 0}
+											</div>
 											<div class="text-xs text-base-content/50">Incorrect</div>
 										</div>
 										<div class="rounded-xl border border-base-300 p-4 text-center">
@@ -261,21 +430,27 @@
 											<Clock size={14} class="text-base-content/40 shrink-0" />
 											<div>
 												<div class="text-xs text-base-content/40">Time</div>
-												<div class="font-semibold tabular-nums">{formatDuration(attempt.elapsedMs)}</div>
+												<div class="font-semibold tabular-nums">
+													{formatDuration(attempt.elapsedMs)}
+												</div>
 											</div>
 										</div>
 										<div class="rounded-xl border border-base-300 p-3 flex items-center gap-2">
 											<Flag size={14} class="text-base-content/40 shrink-0" />
 											<div>
 												<div class="text-xs text-base-content/40">Flagged</div>
-												<div class="font-semibold">{attempt.progressCounters?.flaggedCount ?? 0}</div>
+												<div class="font-semibold">
+													{attempt.progressCounters?.flaggedCount ?? 0}
+												</div>
 											</div>
 										</div>
 										<div class="rounded-xl border border-base-300 p-3 flex items-center gap-2">
 											<BookOpen size={14} class="text-base-content/40 shrink-0" />
 											<div>
 												<div class="text-xs text-base-content/40">Questions</div>
-												<div class="font-semibold">{attempt.configSnapshot?.questionCountActual ?? '—'}</div>
+												<div class="font-semibold">
+													{attempt.configSnapshot?.questionCountActual ?? '—'}
+												</div>
 											</div>
 										</div>
 									</div>
@@ -291,7 +466,8 @@
 												<div class="badge badge-soft badge-sm rounded-full">Untimed</div>
 											{/if}
 											<div class="badge badge-soft badge-sm rounded-full">
-												{attempt.configSnapshot.moduleIds.length} {attempt.configSnapshot.moduleIds.length === 1 ? 'module' : 'modules'}
+												{attempt.configSnapshot.moduleIds.length}
+												{attempt.configSnapshot.moduleIds.length === 1 ? 'module' : 'modules'}
 											</div>
 										</div>
 									{/if}
@@ -325,7 +501,14 @@
 											<div class="border border-base-300 rounded-xl p-3">
 												<div class="flex items-center justify-between gap-2">
 													<div class="font-medium text-sm">{row.moduleTitle}</div>
-													<div class="badge badge-soft rounded-full text-xs {row.accuracyPct >= (summary?.passThresholdPct ?? 70) ? 'badge-success' : 'badge-error'}">{row.accuracyPct}%</div>
+													<div
+														class="badge badge-soft rounded-full text-xs {row.accuracyPct >=
+														(summary?.passThresholdPct ?? 70)
+															? 'badge-success'
+															: 'badge-error'}"
+													>
+														{row.accuracyPct}%
+													</div>
 												</div>
 												<div class="flex gap-3 text-xs text-base-content/50 mt-1.5">
 													<span class="text-success">{row.correct} correct</span>
@@ -335,7 +518,10 @@
 													{/if}
 												</div>
 												<progress
-													class="progress progress-sm mt-2 {row.accuracyPct >= (summary?.passThresholdPct ?? 70) ? 'progress-success' : 'progress-error'}"
+													class="progress progress-sm mt-2 {row.accuracyPct >=
+													(summary?.passThresholdPct ?? 70)
+														? 'progress-success'
+														: 'progress-error'}"
 													value={row.accuracyPct}
 													max="100"
 												></progress>
@@ -359,8 +545,17 @@
 										{#each summary.byType as row (row.questionType)}
 											<div class="border border-base-300 rounded-xl p-3">
 												<div class="flex items-center justify-between gap-2">
-													<div class="font-medium text-sm">{friendlyTypeName(row.questionType)}</div>
-													<div class="badge badge-soft rounded-full text-xs {row.accuracyPct >= (summary?.passThresholdPct ?? 70) ? 'badge-success' : 'badge-error'}">{row.accuracyPct}%</div>
+													<div class="font-medium text-sm">
+														{friendlyTypeName(row.questionType)}
+													</div>
+													<div
+														class="badge badge-soft rounded-full text-xs {row.accuracyPct >=
+														(summary?.passThresholdPct ?? 70)
+															? 'badge-success'
+															: 'badge-error'}"
+													>
+														{row.accuracyPct}%
+													</div>
 												</div>
 												<div class="flex gap-3 text-xs text-base-content/50 mt-1.5">
 													<span class="text-success">{row.correct} correct</span>
@@ -370,7 +565,10 @@
 													{/if}
 												</div>
 												<progress
-													class="progress progress-sm mt-2 {row.accuracyPct >= (summary?.passThresholdPct ?? 70) ? 'progress-success' : 'progress-error'}"
+													class="progress progress-sm mt-2 {row.accuracyPct >=
+													(summary?.passThresholdPct ?? 70)
+														? 'progress-success'
+														: 'progress-error'}"
 													value={row.accuracyPct}
 													max="100"
 												></progress>
@@ -412,7 +610,8 @@
 									class="btn btn-ghost font-bold rounded-full"
 									href={`/classes?classId=${classId}`}
 								>
-									<ChevronLeft size={16} /> {attempt.className ?? 'Class'}
+									<ChevronLeft size={16} />
+									{attempt.className ?? 'Class'}
 								</a>
 							</h4>
 							<h2 class="font-semibold text-2xl mt-2 flex items-start gap-3 min-w-0">
@@ -425,7 +624,10 @@
 
 							<div class="mt-6">
 								<div class="flex items-center gap-3 text-sm">
-									<div class="radial-progress text-sm font-bold {summary?.passed ? 'text-success' : 'text-error'}"
+									<div
+										class="radial-progress text-sm font-bold {summary?.passed
+											? 'text-success'
+											: 'text-error'}"
 										style="--value:{summary?.scorePct ?? 0}; --size:3rem; --thickness: 3px;"
 										role="progressbar"
 									>
@@ -433,7 +635,9 @@
 									</div>
 									<div>
 										<div class="font-semibold">{summary?.passed ? 'Passed' : 'Not Passed'}</div>
-										<div class="text-xs text-base-content/50">{summary?.scoreEarned ?? 0}/{summary?.scorePossible ?? 0} points</div>
+										<div class="text-xs text-base-content/50">
+											{summary?.scoreEarned ?? 0}/{summary?.scorePossible ?? 0} points
+										</div>
 									</div>
 								</div>
 							</div>
@@ -455,10 +659,7 @@
 						</div>
 
 						<div class="flex flex-col justify-center m-4 gap-3">
-							<button
-								class="btn btn-soft btn-sm rounded-full"
-								onclick={() => (tab = 'summary')}
-							>
+							<button class="btn btn-soft btn-sm rounded-full" onclick={() => (tab = 'summary')}>
 								<BarChart3 size={16} />
 								Back to Summary
 							</button>
@@ -489,7 +690,9 @@
 								>
 							</a>
 							<div
-								class="radial-progress {summary?.passed ? 'text-success' : 'text-error'} text-xs bg-base-300"
+								class="radial-progress {summary?.passed
+									? 'text-success'
+									: 'text-error'} text-xs bg-base-300"
 								style="--value:{summary?.scorePct ?? 0}; --size:3rem; --thickness: 3px;"
 								role="progressbar"
 							>
@@ -521,34 +724,95 @@
 					>
 						<ChevronLeft size={16} /> Summary
 					</button>
-					<div class="badge rounded-full {summary?.passed ? 'badge-success' : 'badge-error'} badge-sm">
+					<div
+						class="badge rounded-full {summary?.passed ? 'badge-success' : 'badge-error'} badge-sm"
+					>
 						{summary?.scorePct ?? 0}%
 					</div>
 				</div>
 
 				<!-- Main review content -->
-				<div class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative">
-
-					<!-- Horizontal question navigator -->
-					<div class="flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-4 relative items-center border border-base-300 px-6 py-3 rounded-4xl h-20 min-h-20 max-h-20 flex-none">
-						{#each resultsQuery.data.reviewItems as item, idx (item._id)}
-							{@const isCorrect = item.score?.isCorrect === true}
-							{@const unanswered = !item.response?.selectedOptions?.length && !String(item.response?.textResponse ?? '').trim()}
-							<div class="indicator">
-								{#if item.response?.isFlagged}
-										<span class="indicator-item indicator-start badge badge-warning badge-xs -translate-x-1/4 -translate-y-1/4 z-[1]"></span>
-								{/if}
-								<button
-									bind:this={questionButtons[idx]}
-									class="btn btn-circle btn-md btn-soft {idx === selectedIndex ? 'btn-primary' : unanswered ? 'btn-outline' : isCorrect ? 'btn-success' : 'btn-error'}"
-									onclick={() => goToReviewQuestion(idx)}
-									title={`Question ${idx + 1} - ${isCorrect ? 'Correct' : unanswered ? 'Skipped' : 'Incorrect'}`}
-								>
-									{idx + 1}
-								</button>
-							</div>
-						{/each}
+				<div
+					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
+				>
+					<div class="flex flex-wrap gap-2 mb-3">
+						<button
+							class="btn btn-sm rounded-full {reviewFilter === 'all'
+								? 'btn-primary btn-soft'
+								: 'btn-ghost border border-base-300'}"
+							onclick={() => setReviewFilter('all')}
+						>
+							All ({reviewFilterCounts.all})
+						</button>
+						<button
+							class="btn btn-sm rounded-full {reviewFilter === 'flagged'
+								? 'btn-warning'
+								: 'btn-ghost border border-base-300'}"
+							onclick={() => setReviewFilter('flagged')}
+						>
+							Flagged ({reviewFilterCounts.flagged})
+						</button>
+						<button
+							class="btn btn-sm rounded-full {reviewFilter === 'unanswered'
+								? 'btn-info btn-soft'
+								: 'btn-ghost border border-base-300'}"
+							onclick={() => setReviewFilter('unanswered')}
+						>
+							Unanswered ({reviewFilterCounts.unanswered})
+						</button>
+						<button
+							class="btn btn-sm rounded-full {reviewFilter === 'incorrect'
+								? 'btn-error btn-soft'
+								: 'btn-ghost border border-base-300'}"
+							onclick={() => setReviewFilter('incorrect')}
+						>
+							Incorrect only ({reviewFilterCounts.incorrect})
+						</button>
 					</div>
+
+					{#if filteredReviewEntries.length === 0}
+						<div class="rounded-2xl border border-base-300 p-5 text-sm text-base-content/60">
+							No questions match this filter.
+							<button
+								class="btn btn-xs btn-ghost rounded-full ml-2"
+								onclick={() => setReviewFilter('all')}
+							>
+								Show all
+							</button>
+						</div>
+					{:else}
+						<!-- Horizontal question navigator -->
+						<div
+							class="flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-4 relative items-center border border-base-300 px-6 py-3 rounded-4xl h-20 min-h-20 max-h-20 flex-none"
+						>
+							{#each filteredReviewEntries as entry, idx (entry.item._id)}
+								{@const item = entry.item}
+								{@const isCorrect = item.score?.isCorrect === true}
+								{@const unanswered = isUnansweredItem(item)}
+								<div class="indicator">
+									{#if item.response?.isFlagged}
+										<span
+											class="indicator-item indicator-start badge badge-warning badge-xs -translate-x-1/4 -translate-y-1/4 z-[1]"
+										></span>
+									{/if}
+									<button
+										bind:this={questionButtons[idx]}
+										class="btn btn-circle btn-md btn-soft {idx === selectedIndex
+											? 'btn-primary'
+											: unanswered
+												? 'btn-outline'
+												: isCorrect
+													? 'btn-success'
+													: 'btn-error'}"
+										onclick={() => goToReviewQuestion(idx)}
+										title={`Question ${entry.originalIndex + 1} - ${isCorrect ? 'Correct' : unanswered ? 'Skipped' : 'Incorrect'}`}
+									>
+										{entry.originalIndex + 1}
+									</button>
+								</div>
+							{/each}
+						</div>
+					{/if}
 
 					<!-- Selected question review -->
 					{#if selectedItem}
@@ -556,15 +820,29 @@
 							<div class="flex flex-row justify-between items-start mb-1">
 								<div>
 									<div class="text-xs text-base-content/40 font-medium">
-										Question {selectedIndex + 1} of {resultsQuery.data.reviewItems.length}
+										Question {selectedOriginalIndex + 1} of {reviewEntries.length}
+										{#if reviewFilter !== 'all'}
+											<span class="text-base-content/30 mx-1">·</span>
+											<span>Filtered {selectedIndex + 1} of {filteredReviewEntries.length}</span>
+										{/if}
 										{#if selectedItem.moduleTitle}
 											<span class="text-base-content/30 mx-1">·</span>
 											<span>{selectedItem.moduleTitle}</span>
 										{/if}
 									</div>
 									<div class="mt-1.5">
-										<span class="badge rounded-full badge-sm {selectedItem.score?.isCorrect ? 'badge-success' : 'badge-error'}">
-											{selectedItem.score?.isCorrect ? 'Correct' : 'Incorrect'}
+										<span
+											class="badge rounded-full badge-sm {isSkippedItem(selectedItem)
+												? 'badge-warning'
+												: selectedItem.score?.isCorrect
+													? 'badge-success'
+													: 'badge-error'}"
+										>
+											{isSkippedItem(selectedItem)
+												? 'Skipped'
+												: selectedItem.score?.isCorrect
+													? 'Correct'
+													: 'Incorrect'}
 										</span>
 										{#if selectedItem.response?.isFlagged}
 											<span class="badge rounded-full badge-sm badge-warning ml-1">Flagged</span>
@@ -578,7 +856,7 @@
 							</div>
 
 							<div class="text-base sm:text-xl leading-tight tiptap-content font-medium ms-2 mt-4">
-									{@html sanitizeHtml(selectedItem.question.stem)}
+								{@html sanitizeHtml(selectedItem.question.stem)}
 							</div>
 
 							{#if isFitb(selectedItem.question.type)}
@@ -586,52 +864,92 @@
 									<div class="rounded-full border-2 border-base-300 bg-base-200 p-3 px-6">
 										<div class="text-xs text-base-content/40 mb-1">Your answer</div>
 										<div class="font-medium text-sm">
-											{selectedItem.response?.textResponse || selectedItem.response?.selectedOptions?.[0] || 'No answer given'}
+											{selectedItem.response?.textResponse ||
+												selectedItem.response?.selectedOptions?.[0] ||
+												'No answer given'}
 										</div>
 									</div>
 									<div class="rounded-full border-2 border-success/30 bg-success/5 p-3 px-6">
 										<div class="text-xs text-base-content/40 mb-1">Correct answer</div>
 										<div class="font-medium text-sm text-success">
 											{#each selectedItem.correctAnswerDisplay as ans, i (i)}
-												{#if i > 0}, {/if}{ans}
+												{#if i > 0},
+												{/if}{ans}
 											{/each}
 										</div>
 									</div>
 								</div>
 							{:else if isMatching(selectedItem.question.type)}
-								<div class="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-4 ms-2">
-									<div class="rounded-xl border-2 border-base-300 p-4">
-										<div class="text-xs uppercase text-base-content/40 mb-2">Your matches</div>
-										{#if parseMatchingPairs(selectedItem.response?.selectedOptions ?? []).length === 0}
-											<div class="text-sm text-base-content/50">No answer given</div>
-										{:else}
-											<div class="space-y-2">
-												{#each parseMatchingPairs(selectedItem.response?.selectedOptions ?? []) as pair, i (i)}
-													<div class="text-sm flex items-center gap-2">
-														<span class="font-medium">
-															{promptLabel(optionTextById(selectedItem, pair.promptId))}
-														</span>
-														<ArrowRight size={12} class="text-base-content/30 shrink-0" />
-														<span>{answerLabel(optionTextById(selectedItem, pair.answerId))}</span>
-													</div>
-												{/each}
+								{@const rows = matchingReviewRows(selectedItem)}
+								{@const stats = matchingReviewStats(selectedItem)}
+								<div class="mt-5 ms-2 space-y-3">
+									<div class="flex flex-wrap gap-2">
+										<div class="badge badge-soft rounded-full">
+											Matched: {stats.correct}/{stats.total}
+										</div>
+										{#if stats.incorrect > 0}
+											<div class="badge badge-error badge-soft rounded-full">
+												Incorrect: {stats.incorrect}
+											</div>
+										{/if}
+										{#if stats.unanswered > 0}
+											<div class="badge badge-warning badge-soft rounded-full">
+												Skipped: {stats.unanswered}
 											</div>
 										{/if}
 									</div>
-									<div class="rounded-xl border-2 border-success/30 bg-success/5 p-4">
-										<div class="text-xs uppercase text-base-content/40 mb-2">Correct matches</div>
-										<div class="space-y-2">
-											{#each parseMatchingPairs(selectedItem.correctAnswerDisplay ?? []) as pair, i (i)}
-												<div class="text-sm flex items-center gap-2">
-													<span class="font-medium">
-														{promptLabel(optionTextById(selectedItem, pair.promptId))}
-													</span>
-													<ArrowRight size={12} class="text-success/50 shrink-0" />
-													<span class="text-success">{answerLabel(optionTextById(selectedItem, pair.answerId))}</span>
+
+									{#if rows.length === 0}
+										<div class="rounded-xl border border-base-300 p-4 text-sm text-base-content/50">
+											No matching pairs found for this question.
+										</div>
+									{:else}
+										<div
+											class="rounded-xl border border-base-300/60 overflow-hidden divide-y divide-base-300/40"
+										>
+											{#each rows as row (row.promptId)}
+												<div
+													class="flex items-start gap-2.5 px-3 py-2.5 {row.isCorrect
+														? 'bg-success/[0.03]'
+														: row.isAnswered
+															? 'bg-error/[0.03]'
+															: ''}"
+												>
+													<div class="pt-0.5 shrink-0">
+														{#if row.isCorrect}
+															<CheckCircle2 size={15} class="text-success" />
+														{:else if row.isAnswered}
+															<XCircle size={15} class="text-error" />
+														{:else}
+															<MinusCircle size={15} class="text-warning" />
+														{/if}
+													</div>
+													<div class="min-w-0 flex-1">
+														<div class="text-sm font-medium">{row.promptText}</div>
+														{#if row.isCorrect}
+															<div class="text-sm text-success/80 mt-0.5">
+																{row.correctAnswerText}
+															</div>
+														{:else if row.isAnswered}
+															<div class="text-sm text-error/70 line-through mt-0.5">
+																{row.userAnswerText}
+															</div>
+															<div class="text-sm text-success/80 mt-0.5 flex items-center gap-1">
+																<ArrowRight size={11} class="shrink-0 text-success/50" />
+																{row.correctAnswerText}
+															</div>
+														{:else}
+															<div class="text-sm text-warning/70 italic mt-0.5">No answer</div>
+															<div class="text-sm text-success/80 mt-0.5 flex items-center gap-1">
+																<ArrowRight size={11} class="shrink-0 text-success/50" />
+																{row.correctAnswerText}
+															</div>
+														{/if}
+													</div>
 												</div>
 											{/each}
 										</div>
-									</div>
+									{/if}
 								</div>
 							{:else}
 								{@const mcqAnalysis = multiSelectAnalysis(selectedItem)}
@@ -660,21 +978,44 @@
 								</div>
 								<div class="flex flex-col justify-start space-y-2 md:space-y-3 lg:space-y-4 mt-5">
 									{#each selectedItem.question.options as option, i (option.id)}
-										{@const selected = (selectedItem.response?.selectedOptions ?? []).includes(option.id)}
+										{@const selected = (selectedItem.response?.selectedOptions ?? []).includes(
+											option.id
+										)}
 										{@const correct = (selectedItem.correctAnswerDisplay ?? []).includes(option.id)}
 										<label
 											class="label rounded-full flex items-center transition-colors border-2 p-2 md:p-3
-											{correct ? 'border-success bg-success/5' : selected ? 'border-error bg-error/5' : 'border-base-300 bg-base-200'}"
+											{correct
+												? 'border-success bg-success/5'
+												: selected
+													? 'border-error bg-error/5'
+													: 'border-base-300 bg-base-200'}"
 										>
-											<input type="checkbox" class="checkbox checkbox-sm ms-4 {correct ? 'checkbox-success' : selected ? 'checkbox-error' : ''}" checked={selected} disabled />
-											<span class="flex-grow text-wrap break-words ml-3 md:ml-4 my-3 text-sm md:text-base">
-												<span class="font-semibold mr-2 select-none">{String.fromCharCode(65 + i)}.</span>
-													<span class="tiptap-content">{@html sanitizeHtml(option.text)}</span>
+											<input
+												type="checkbox"
+												class="checkbox checkbox-sm ms-4 {correct
+													? 'checkbox-success'
+													: selected
+														? 'checkbox-error'
+														: ''}"
+												checked={selected}
+												disabled
+											/>
+											<span
+												class="flex-grow text-wrap break-words ml-3 md:ml-4 my-3 text-sm md:text-base"
+											>
+												<span class="font-semibold mr-2 select-none"
+													>{String.fromCharCode(65 + i)}.</span
+												>
+												<span class="tiptap-content">{@html sanitizeHtml(option.text)}</span>
 											</span>
 											{#if correct}
-												<span class="badge badge-success badge-soft badge-sm rounded-full mr-4">Correct</span>
+												<span class="badge badge-success badge-soft badge-sm rounded-full mr-4"
+													>Correct</span
+												>
 											{:else if selected}
-												<span class="badge badge-error badge-soft badge-sm rounded-full mr-4">Your pick</span>
+												<span class="badge badge-error badge-soft badge-sm rounded-full mr-4"
+													>Your pick</span
+												>
 											{/if}
 										</label>
 									{/each}
@@ -687,13 +1028,15 @@
 									<div class="card-body">
 										<h3 class="card-title text-base">Rationale</h3>
 										<div class="tiptap-content text-sm text-base-content/80">
-												{@html sanitizeHtml(selectedItem.question.explanation)}
+											{@html sanitizeHtml(selectedItem.question.explanation)}
 										</div>
 									</div>
 								</div>
 							{:else}
 								<div class="rounded-xl border border-base-300 p-4 mt-6 ms-2">
-									<div class="text-sm text-base-content/40">No explanation available for this question.</div>
+									<div class="text-sm text-base-content/40">
+										No explanation available for this question.
+									</div>
 								</div>
 							{/if}
 						</div>
@@ -705,10 +1048,7 @@
 			<div
 				class="items-center gap-2 px-3 sm:px-4 md:px-5 lg:px-6 py-3 sm:py-4 md:py-5 rounded-full backdrop-blur-md border border-base-300 shadow-xl w-auto fixed left-1/2 -translate-x-1/2 bottom-4 z-40 hidden md:inline-flex"
 			>
-				<button
-					class="btn btn-sm btn-soft rounded-full"
-					onclick={() => (tab = 'summary')}
-				>
+				<button class="btn btn-sm btn-soft rounded-full" onclick={() => (tab = 'summary')}>
 					<BarChart3 size={16} />
 					Summary
 				</button>
@@ -718,45 +1058,45 @@
 				<button
 					class="btn btn-sm btn-outline {selectedIndex === 0 ? 'btn-disabled' : ''}"
 					style="border-radius: 9999px 50% 50% 9999px;"
-					onclick={() => goToReviewQuestion(Math.max(0, selectedIndex - 1))}
+					onclick={() => goToAdjacentReviewQuestion(-1)}
 					disabled={selectedIndex === 0}
 				>
 					<ArrowLeft size={18} />
 				</button>
 				<button
-					class="btn btn-sm btn-outline {selectedIndex === (resultsQuery.data?.reviewItems?.length ?? 1) - 1 ? 'btn-disabled' : ''}"
+					class="btn btn-sm btn-outline {selectedIndex === (filteredReviewEntries.length || 1) - 1
+						? 'btn-disabled'
+						: ''}"
 					style="border-radius: 50% 9999px 9999px 50%;"
-					onclick={() => goToReviewQuestion(Math.min((resultsQuery.data?.reviewItems?.length ?? 1) - 1, selectedIndex + 1))}
-					disabled={selectedIndex === (resultsQuery.data?.reviewItems?.length ?? 1) - 1}
+					onclick={() => goToAdjacentReviewQuestion(1)}
+					disabled={selectedIndex === (filteredReviewEntries.length || 1) - 1}
 				>
 					<ArrowRight size={18} />
 				</button>
 			</div>
 
 			<!-- Mobile bottom nav for review -->
-			<div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-100 border-t border-base-300 p-3 flex items-center justify-between gap-2">
+			<div
+				class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-100 border-t border-base-300 p-3 flex items-center justify-between gap-2"
+			>
 				<button
 					class="btn btn-sm btn-outline rounded-full"
-					onclick={() => goToReviewQuestion(Math.max(0, selectedIndex - 1))}
+					onclick={() => goToAdjacentReviewQuestion(-1)}
 					disabled={selectedIndex === 0}
 				>
 					<ArrowLeft size={16} /> Prev
 				</button>
-				<button
-					class="btn btn-sm btn-soft rounded-full"
-					onclick={() => (tab = 'summary')}
-				>
+				<button class="btn btn-sm btn-soft rounded-full" onclick={() => (tab = 'summary')}>
 					Summary
 				</button>
 				<button
 					class="btn btn-sm btn-outline rounded-full"
-					onclick={() => goToReviewQuestion(Math.min((resultsQuery.data?.reviewItems?.length ?? 1) - 1, selectedIndex + 1))}
-					disabled={selectedIndex === (resultsQuery.data?.reviewItems?.length ?? 1) - 1}
+					onclick={() => goToAdjacentReviewQuestion(1)}
+					disabled={selectedIndex === (filteredReviewEntries.length || 1) - 1}
 				>
 					Next <ArrowRight size={16} />
 				</button>
 			</div>
-
 		{/if}
 	{/if}
 </div>
