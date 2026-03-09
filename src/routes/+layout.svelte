@@ -126,6 +126,15 @@
 			(page.url?.search || ''),
 		canonical: (page.url?.origin || 'https://learnterms.com') + (page.url?.pathname || '/')
 	} as Seo);
+
+	const hideFooter = $derived.by(() => {
+		const path = page.url.pathname;
+		const inClassStudyOrTest =
+			path.startsWith('/classes') && (path.includes('/modules/') || path.includes('/tests/'));
+		const inGradeCalculator = path.startsWith('/tools/grade-calculator');
+		const inAdminModule = path.startsWith('/admin/') && path.includes('/module/');
+		return inClassStudyOrTest || inGradeCalculator || inAdminModule;
+	});
 </script>
 
 <svelte:head>
@@ -161,7 +170,7 @@
 			{@render children?.()}
 		</main>
 
-		{#if !(page.url.pathname.startsWith('/classes') && page.url.pathname.includes('/modules/')) && !page.url.pathname.startsWith('/tools/grade-calculator') && !(page.url.pathname.startsWith('/admin/') && page.url.pathname.includes('/module/'))}
+		{#if !hideFooter}
 			<footer class="bg-base-200 text-base-content border-t border-base-300 mt-auto">
 				<div class="mx-auto w-full max-w-6xl px-4 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
 					<div class="col-span-2 sm:col-span-1 pr-8">

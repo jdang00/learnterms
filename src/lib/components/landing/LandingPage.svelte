@@ -290,7 +290,7 @@
 				</div>
 
 				<!-- AI generation — animated pipeline demo -->
-				<div class="feature-card ai-card">
+				<div class="feature-card ai-card min-w-0">
 					<div class="mb-3 flex items-start justify-between">
 						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
 							<BrainCircuit size={18} />
@@ -322,11 +322,11 @@
 						<div class="relative h-[7.5rem] p-3">
 							{#if aiSteps[aiStep] === 'parsing'}
 								<div class="space-y-1.5" in:fade={{ duration: 300 }}>
-									<div class="flex items-center gap-2">
-										<div class="h-5 w-5 rounded bg-error/15 flex items-center justify-center">
+									<div class="flex items-center gap-2 min-w-0">
+										<div class="h-5 w-5 shrink-0 rounded bg-error/15 flex items-center justify-center">
 											<span class="text-[8px] font-bold text-error">PDF</span>
 										</div>
-										<span class="text-[11px] font-medium">Chapter_06_Anterior_Blepharitis_and_Astigmatism.pdf</span>
+										<span class="text-[11px] font-medium truncate">Chapter_06_Anterior_Blepharitis_and_Astigmatism.pdf</span>
 									</div>
 									<div class="mt-2 space-y-1">
 										<div class="ai-scan-line h-1.5 rounded-full bg-info/20">
