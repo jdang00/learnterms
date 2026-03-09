@@ -168,6 +168,10 @@
 		return !isUnansweredItem(item) && item.score?.isCorrect !== true;
 	}
 
+	function isSkippedItem(item: ReviewItem) {
+		return item.score == null || item.score?.isCorrect === undefined || isUnansweredItem(item);
+	}
+
 	function matchesReviewFilter(item: ReviewItem, filter: ReviewFilter) {
 		switch (filter) {
 			case 'flagged':
@@ -186,13 +190,9 @@
 	}
 
 	function matchingReviewRows(item: ReviewItem) {
-		const promptOptions = (item.question.options || [])
-			.filter((option) => String(option.text).trimStart().toLowerCase().startsWith('prompt:'))
-			.sort((a, b) =>
-				promptLabel(optionTextById(item, a.id)).localeCompare(
-					promptLabel(optionTextById(item, b.id))
-				)
-			);
+		const promptOptions = (item.question.options || []).filter((option) =>
+			String(option.text).trimStart().toLowerCase().startsWith('prompt:')
+		);
 
 		const userByPrompt = new Map(
 			parseMatchingPairs(item.response?.selectedOptions ?? []).map((pair) => [
@@ -832,11 +832,17 @@
 									</div>
 									<div class="mt-1.5">
 										<span
-											class="badge rounded-full badge-sm {selectedItem.score?.isCorrect
-												? 'badge-success'
-												: 'badge-error'}"
+											class="badge rounded-full badge-sm {isSkippedItem(selectedItem)
+												? 'badge-warning'
+												: selectedItem.score?.isCorrect
+													? 'badge-success'
+													: 'badge-error'}"
 										>
-											{selectedItem.score?.isCorrect ? 'Correct' : 'Incorrect'}
+											{isSkippedItem(selectedItem)
+												? 'Skipped'
+												: selectedItem.score?.isCorrect
+													? 'Correct'
+													: 'Incorrect'}
 										</span>
 										{#if selectedItem.response?.isFlagged}
 											<span class="badge rounded-full badge-sm badge-warning ml-1">Flagged</span>
@@ -898,9 +904,17 @@
 											No matching pairs found for this question.
 										</div>
 									{:else}
-										<div class="rounded-xl border border-base-300/60 overflow-hidden divide-y divide-base-300/40">
+										<div
+											class="rounded-xl border border-base-300/60 overflow-hidden divide-y divide-base-300/40"
+										>
 											{#each rows as row (row.promptId)}
-												<div class="flex items-start gap-2.5 px-3 py-2.5 {row.isCorrect ? 'bg-success/[0.03]' : row.isAnswered ? 'bg-error/[0.03]' : ''}">
+												<div
+													class="flex items-start gap-2.5 px-3 py-2.5 {row.isCorrect
+														? 'bg-success/[0.03]'
+														: row.isAnswered
+															? 'bg-error/[0.03]'
+															: ''}"
+												>
 													<div class="pt-0.5 shrink-0">
 														{#if row.isCorrect}
 															<CheckCircle2 size={15} class="text-success" />
@@ -913,9 +927,13 @@
 													<div class="min-w-0 flex-1">
 														<div class="text-sm font-medium">{row.promptText}</div>
 														{#if row.isCorrect}
-															<div class="text-sm text-success/80 mt-0.5">{row.correctAnswerText}</div>
+															<div class="text-sm text-success/80 mt-0.5">
+																{row.correctAnswerText}
+															</div>
 														{:else if row.isAnswered}
-															<div class="text-sm text-error/70 line-through mt-0.5">{row.userAnswerText}</div>
+															<div class="text-sm text-error/70 line-through mt-0.5">
+																{row.userAnswerText}
+															</div>
 															<div class="text-sm text-success/80 mt-0.5 flex items-center gap-1">
 																<ArrowRight size={11} class="shrink-0 text-success/50" />
 																{row.correctAnswerText}

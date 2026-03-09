@@ -37,10 +37,13 @@
 			([entry]) => {
 				if (entry.isIntersecting) {
 					targets.forEach((el, i) => {
-						setTimeout(() => {
-							el.style.opacity = '1';
-							el.style.transform = 'translateY(0)';
-						}, delay + i * stagger);
+						setTimeout(
+							() => {
+								el.style.opacity = '1';
+								el.style.transform = 'translateY(0)';
+							},
+							delay + i * stagger
+						);
 					});
 					observer.disconnect();
 				}
@@ -123,9 +126,30 @@
 
 	// Analytics demo — cohort student roster
 	const cohortStudents = [
-		{ initials: 'MR', name: 'Maya R.', progress: 94, flags: 1, color: 'bg-primary', recent: '2m ago' },
-		{ initials: 'JD', name: 'Jake D.', progress: 82, flags: 3, color: 'bg-secondary', recent: '8m ago' },
-		{ initials: 'SP', name: 'Sofia P.', progress: 71, flags: 5, color: 'bg-accent', recent: '14m ago' },
+		{
+			initials: 'MR',
+			name: 'Maya R.',
+			progress: 94,
+			flags: 1,
+			color: 'bg-primary',
+			recent: '2m ago'
+		},
+		{
+			initials: 'JD',
+			name: 'Jake D.',
+			progress: 82,
+			flags: 3,
+			color: 'bg-secondary',
+			recent: '8m ago'
+		},
+		{
+			initials: 'SP',
+			name: 'Sofia P.',
+			progress: 71,
+			flags: 5,
+			color: 'bg-accent',
+			recent: '14m ago'
+		},
 		{ initials: 'LT', name: 'Liam T.', progress: 58, flags: 8, color: 'bg-info', recent: '21m ago' }
 	];
 	let analyticsVisible = $state(false);
@@ -137,11 +161,13 @@
 	const studentSteps = [
 		{
 			title: 'Pick a module and start',
-			detail: 'Select topic scope and question count. Every session has a clear objective from the first click.'
+			detail:
+				'Select topic scope and question count. Every session has a clear objective from the first click.'
 		},
 		{
 			title: 'Answer under exam-style controls',
-			detail: 'Elimination, flagging, and keyboard shortcuts — the same mechanics you use on test day.'
+			detail:
+				'Elimination, flagging, and keyboard shortcuts — the same mechanics you use on test day.'
 		},
 		{
 			title: 'Filter to what you missed',
@@ -168,12 +194,13 @@
 		},
 		{
 			title: 'Monitor and improve',
-			detail: 'Analytics surface weak questions, high flag rates, and emerging gaps. Update the bank live.'
+			detail:
+				'Analytics surface weak questions, high flag rates, and emerging gaps. Update the bank live.'
 		}
 	];
 </script>
 
-<svelte:window bind:scrollY={scrollY} />
+<svelte:window bind:scrollY />
 
 <main class="relative isolate overflow-hidden pb-28">
 	<div class="pointer-events-none absolute inset-0 -z-10">
@@ -220,7 +247,9 @@
 				</p>
 			</div>
 			<div in:scale={{ duration: 600, delay: 120, easing: cubicOut }}>
-				<div class="mockup-browser relative z-10 overflow-visible border border-base-300 bg-base-100">
+				<div
+					class="mockup-browser relative z-10 overflow-visible border border-base-300 bg-base-100"
+				>
 					<div class="mockup-browser-toolbar">
 						<div class="input border border-base-300">app.learnterms.com/classes/module</div>
 					</div>
@@ -256,11 +285,17 @@
 						Mark what you missed and focus your next pass where it matters most.
 					</p>
 
-					<div class="mt-4 flex flex-1 flex-col rounded-xl border border-base-300/60 bg-base-100/50 overflow-hidden">
+					<div
+						class="mt-4 flex flex-1 flex-col rounded-xl border border-base-300/60 bg-base-100/50 overflow-hidden"
+					>
 						<div class="flex items-center justify-between border-b border-base-300/40 px-3 py-2">
-							<span class="text-[10px] text-base-content/50">{visibleQuestions.length} of {mockQuestions.length} questions</span>
+							<span class="text-[10px] text-base-content/50"
+								>{visibleQuestions.length} of {mockQuestions.length} questions</span
+							>
 							<label class="flex cursor-pointer items-center gap-1.5">
-								<span class="text-[10px] font-medium" class:text-warning={showFlaggedOnly}>Flagged</span>
+								<span class="text-[10px] font-medium" class:text-warning={showFlaggedOnly}
+									>Flagged</span
+								>
 								<input
 									type="checkbox"
 									class="toggle toggle-xs toggle-accent"
@@ -272,19 +307,29 @@
 							<div class="grid grid-cols-4 gap-1.5">
 								{#each visibleQuestions as q (q.id)}
 									<button
-										class="flag-q-btn relative flex flex-col items-center justify-center rounded-lg border py-2 px-1 text-[10px] font-medium transition-all duration-200 {q.id === flagActiveQ ? 'ring-1 ring-primary/40' : ''} {q.flagged
+										class="flag-q-btn relative flex flex-col items-center justify-center rounded-lg border py-2 px-1 text-[10px] font-medium transition-all duration-200 {q.id ===
+										flagActiveQ
+											? 'ring-1 ring-primary/40'
+											: ''} {q.flagged
 											? 'bg-warning/10 text-warning border-warning/30 hover:bg-warning/20'
 											: 'bg-base-200/60 text-base-content/60 border-base-300/60 hover:bg-base-200'}"
 										onclick={() => toggleFlag(q.id)}
 									>
 										<span>{q.label}</span>
-										<Flag size={9} class="mt-0.5 transition-all duration-200 {q.flagged ? 'text-warning opacity-100 scale-100' : 'opacity-20 scale-75'}" />
+										<Flag
+											size={9}
+											class="mt-0.5 transition-all duration-200 {q.flagged
+												? 'text-warning opacity-100 scale-100'
+												: 'opacity-20 scale-75'}"
+										/>
 									</button>
 								{/each}
 							</div>
 						</div>
 						<div class="border-t border-base-300/40 px-3 py-1.5">
-							<p class="text-[9px] text-base-content/35 text-center">Click to flag &middot; toggle to filter</p>
+							<p class="text-[9px] text-base-content/35 text-center">
+								Click to flag &middot; toggle to filter
+							</p>
 						</div>
 					</div>
 				</div>
@@ -298,21 +343,48 @@
 					</div>
 					<h3 class="text-xl font-semibold">AI-generated or hand-built</h3>
 					<p class="mt-2 text-sm text-base-content/75">
-						Generate questions from source material in seconds, or create them manually — both work in the same workflow.
+						Generate questions from source material in seconds, or create them manually — both work
+						in the same workflow.
 					</p>
 
-					<div class="ai-pipeline mt-4 overflow-hidden rounded-xl border border-base-300/60 bg-base-100/50">
+					<div
+						class="ai-pipeline mt-4 overflow-hidden rounded-xl border border-base-300/60 bg-base-100/50"
+					>
 						<!-- Step indicators -->
-						<div class="flex items-center gap-0 border-b border-base-300/40 text-[10px] font-medium">
-							<div class="ai-step flex-1 px-3 py-2 text-center transition-all duration-500 {aiSteps[aiStep] === 'parsing' ? 'bg-info/10 text-info' : aiSteps[aiStep] === 'generating' || aiSteps[aiStep] === 'done' ? 'text-base-content/40' : 'text-base-content/30'}">
+						<div
+							class="flex items-center gap-0 border-b border-base-300/40 text-[10px] font-medium"
+						>
+							<div
+								class="ai-step flex-1 px-3 py-2 text-center transition-all duration-500 {aiSteps[
+									aiStep
+								] === 'parsing'
+									? 'bg-info/10 text-info'
+									: aiSteps[aiStep] === 'generating' || aiSteps[aiStep] === 'done'
+										? 'text-base-content/40'
+										: 'text-base-content/30'}"
+							>
 								<FileText size={11} class="mx-auto mb-0.5" />
 								Parse
 							</div>
-							<div class="ai-step flex-1 border-x border-base-300/40 px-3 py-2 text-center transition-all duration-500 {aiSteps[aiStep] === 'generating' ? 'bg-secondary/10 text-secondary' : aiSteps[aiStep] === 'done' ? 'text-base-content/40' : 'text-base-content/30'}">
+							<div
+								class="ai-step flex-1 border-x border-base-300/40 px-3 py-2 text-center transition-all duration-500 {aiSteps[
+									aiStep
+								] === 'generating'
+									? 'bg-secondary/10 text-secondary'
+									: aiSteps[aiStep] === 'done'
+										? 'text-base-content/40'
+										: 'text-base-content/30'}"
+							>
 								<Sparkles size={11} class="mx-auto mb-0.5" />
 								Generate
 							</div>
-							<div class="ai-step flex-1 px-3 py-2 text-center transition-all duration-500 {aiSteps[aiStep] === 'done' ? 'bg-success/10 text-success' : 'text-base-content/30'}">
+							<div
+								class="ai-step flex-1 px-3 py-2 text-center transition-all duration-500 {aiSteps[
+									aiStep
+								] === 'done'
+									? 'bg-success/10 text-success'
+									: 'text-base-content/30'}"
+							>
 								<Check size={11} class="mx-auto mb-0.5" />
 								Ready
 							</div>
@@ -323,35 +395,64 @@
 							{#if aiSteps[aiStep] === 'parsing'}
 								<div class="space-y-1.5" in:fade={{ duration: 300 }}>
 									<div class="flex items-center gap-2 min-w-0">
-										<div class="h-5 w-5 shrink-0 rounded bg-error/15 flex items-center justify-center">
+										<div
+											class="h-5 w-5 shrink-0 rounded bg-error/15 flex items-center justify-center"
+										>
 											<span class="text-[8px] font-bold text-error">PDF</span>
 										</div>
-										<span class="text-[11px] font-medium truncate">Chapter_06_Anterior_Blepharitis_and_Astigmatism.pdf</span>
+										<span class="min-w-0 flex-1 text-[11px] font-medium truncate"
+											>Chapter_06_Anterior_Blepharitis_and_Astigmatism.pdf</span
+										>
 									</div>
 									<div class="mt-2 space-y-1">
 										<div class="ai-scan-line h-1.5 rounded-full bg-info/20">
 											<div class="h-full rounded-full bg-info/60 ai-scan-fill"></div>
 										</div>
-										<div class="ai-scan-line h-1.5 rounded-full bg-info/20" style="animation-delay: 0.3s">
-											<div class="h-full rounded-full bg-info/60 ai-scan-fill" style="animation-delay: 0.3s"></div>
+										<div
+											class="ai-scan-line h-1.5 rounded-full bg-info/20"
+											style="animation-delay: 0.3s"
+										>
+											<div
+												class="h-full rounded-full bg-info/60 ai-scan-fill"
+												style="animation-delay: 0.3s"
+											></div>
 										</div>
-										<div class="ai-scan-line h-1.5 rounded-full bg-info/20" style="animation-delay: 0.6s">
-											<div class="h-full rounded-full bg-info/60 ai-scan-fill" style="animation-delay: 0.6s"></div>
+										<div
+											class="ai-scan-line h-1.5 rounded-full bg-info/20"
+											style="animation-delay: 0.6s"
+										>
+											<div
+												class="h-full rounded-full bg-info/60 ai-scan-fill"
+												style="animation-delay: 0.6s"
+											></div>
 										</div>
 									</div>
 									<p class="text-[10px] text-info/70 mt-1">Extracting content from 23 pages...</p>
 								</div>
 							{:else if aiSteps[aiStep] === 'generating'}
 								<div class="space-y-1" in:fade={{ duration: 300 }}>
-									<div class="ai-gen-line flex items-center gap-2 rounded-lg bg-secondary/5 px-2 py-1.5" style="animation-delay: 0s">
+									<div
+										class="ai-gen-line flex items-center gap-2 rounded-lg bg-secondary/5 px-2 py-1.5"
+										style="animation-delay: 0s"
+									>
 										<span class="text-[10px] text-secondary/60 font-mono">Q1</span>
-										<span class="text-[10px] leading-tight">Which lid finding most strongly suggests anterior blepharitis?</span>
+										<span class="text-[10px] leading-tight"
+											>Which lid finding most strongly suggests anterior blepharitis?</span
+										>
 									</div>
-									<div class="ai-gen-line flex items-center gap-2 rounded-lg bg-secondary/5 px-2 py-1.5" style="animation-delay: 0.2s">
+									<div
+										class="ai-gen-line flex items-center gap-2 rounded-lg bg-secondary/5 px-2 py-1.5"
+										style="animation-delay: 0.2s"
+									>
 										<span class="text-[10px] text-secondary/60 font-mono">Q2</span>
-										<span class="text-[10px] leading-tight">Which refraction change best improves myopic astigmatism?</span>
+										<span class="text-[10px] leading-tight"
+											>Which refraction change best improves myopic astigmatism?</span
+										>
 									</div>
-									<div class="ai-gen-line flex items-center gap-2 rounded-lg bg-secondary/5 px-2 py-1.5" style="animation-delay: 0.4s">
+									<div
+										class="ai-gen-line flex items-center gap-2 rounded-lg bg-secondary/5 px-2 py-1.5"
+										style="animation-delay: 0.4s"
+									>
 										<span class="text-[10px] text-secondary/60 font-mono">Q3</span>
 										<span class="ai-typing text-[10px] text-secondary/50">Generating...</span>
 									</div>
@@ -360,14 +461,24 @@
 								<div in:fade={{ duration: 300 }}>
 									<div class="flex items-center justify-between mb-2">
 										<span class="text-[11px] font-semibold text-success">40 questions ready</span>
-										<span class="rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-medium text-success">MCQ + Case-based</span>
+										<span
+											class="rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-medium text-success"
+											>MCQ + Case-based</span
+										>
 									</div>
 									<div class="grid grid-cols-8 gap-1">
 										{#each Array(16) as _, i}
-											<div class="ai-dot h-2 w-full rounded-full {i < 14 ? 'bg-success/30' : 'bg-warning/30'}" style="animation-delay: {i * 30}ms"></div>
+											<div
+												class="ai-dot h-2 w-full rounded-full {i < 14
+													? 'bg-success/30'
+													: 'bg-warning/30'}"
+												style="animation-delay: {i * 30}ms"
+											></div>
 										{/each}
 									</div>
-									<p class="text-[10px] text-base-content/50 mt-2">2 flagged for review &middot; 38 published</p>
+									<p class="text-[10px] text-base-content/50 mt-2">
+										2 flagged for review &middot; 38 published
+									</p>
 								</div>
 							{/if}
 						</div>
@@ -389,17 +500,28 @@
 
 					<div class="mt-4 rounded-xl border border-base-300/60 bg-base-100/50 p-3">
 						<div class="mb-1.5 flex items-center gap-1.5">
-							<span class="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium text-primary">Question</span>
+							<span class="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium text-primary"
+								>Question</span
+							>
 						</div>
 						<p class="text-[11px] font-medium leading-tight text-base-content/80 mb-2">
 							Why does uncorrected astigmatism create ghosted letters?
 						</p>
 						<div class="flex items-center gap-1.5 mb-1.5">
-							<span class="rounded bg-secondary/10 px-1.5 py-0.5 text-[9px] font-medium text-secondary">Rationale</span>
+							<span
+								class="rounded bg-secondary/10 px-1.5 py-0.5 text-[9px] font-medium text-secondary"
+								>Rationale</span
+							>
 							<span class="text-[9px] text-base-content/35">auto-generated with question</span>
 						</div>
-						<div class="solution-box relative rounded-lg border border-base-300/50 bg-base-200/40 p-2.5 overflow-hidden">
-							<p class="text-[10px] leading-relaxed text-base-content/70 transition-all duration-400 {solutionRevealed ? '' : 'blur-sm select-none'}">
+						<div
+							class="solution-box relative rounded-lg border border-base-300/50 bg-base-200/40 p-2.5 overflow-hidden"
+						>
+							<p
+								class="text-[10px] leading-relaxed text-base-content/70 transition-all duration-400 {solutionRevealed
+									? ''
+									: 'blur-sm select-none'}"
+							>
 								When corneal power differs between meridians, light focuses at different planes
 								instead of one retinal point. That split focus produces blur, shadowing, and
 								double-edge letters.
@@ -408,7 +530,7 @@
 								<div class="absolute inset-0 flex items-center justify-center">
 									<button
 										class="btn btn-xs btn-ghost gap-1 text-base-content/50 hover:text-base-content/80"
-										onclick={() => solutionRevealed = true}
+										onclick={() => (solutionRevealed = true)}
 									>
 										<EyeOff size={12} />
 										<span class="text-[10px]">Reveal</span>
@@ -417,7 +539,7 @@
 							{:else}
 								<button
 									class="absolute top-1 right-1 btn btn-xs btn-ghost btn-circle opacity-40 hover:opacity-100"
-									onclick={() => solutionRevealed = false}
+									onclick={() => (solutionRevealed = false)}
 								>
 									<Eye size={10} />
 								</button>
@@ -431,7 +553,10 @@
 			</div>
 
 			<!-- Second row of feature cards -->
-			<div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" use:reveal={{ y: 18, stagger: 90 }}>
+			<div
+				class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+				use:reveal={{ y: 18, stagger: 90 }}
+			>
 				<!-- Cohort Analytics -->
 				<div class="feature-card">
 					<div class="mb-3 flex items-start justify-between">
@@ -448,29 +573,44 @@
 					<div
 						class="analytics-demo mt-4 rounded-xl border border-base-300/60 bg-base-100/50 p-3"
 						use:reveal={{ y: 0 }}
-						onmouseenter={() => analyticsVisible = true}
+						onmouseenter={() => (analyticsVisible = true)}
 					>
 						<div class="mb-2.5 flex items-center justify-between">
-							<span class="text-[10px] font-medium text-base-content/50">OPT 301 &middot; Lids, Cornea, and Retina</span>
-							<span class="rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-medium text-success">89% avg</span>
+							<span class="text-[10px] font-medium text-base-content/50"
+								>OPT 301 &middot; Lids, Cornea, and Retina</span
+							>
+							<span
+								class="rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-medium text-success"
+								>89% avg</span
+							>
 						</div>
 						<div class="space-y-1.5">
 							{#each cohortStudents as student, i}
 								<div class="flex items-center gap-2">
-									<div class="student-avatar h-5 w-5 shrink-0 rounded-full {student.color}/15 flex items-center justify-center">
-										<span class="text-[7px] font-bold {student.color.replace('bg-', 'text-')}">{student.initials}</span>
+									<div
+										class="student-avatar h-5 w-5 shrink-0 rounded-full {student.color}/15 flex items-center justify-center"
+									>
+										<span class="text-[7px] font-bold {student.color.replace('bg-', 'text-')}"
+											>{student.initials}</span
+										>
 									</div>
 									<div class="w-11 shrink-0">
-										<span class="block text-[9px] text-base-content/70 truncate">{student.name}</span>
+										<span class="block text-[9px] text-base-content/70 truncate"
+											>{student.name}</span
+										>
 										<span class="block text-[7px] text-base-content/30">{student.recent}</span>
 									</div>
 									<div class="flex-1 h-2.5 rounded-full bg-base-200/80 overflow-hidden">
 										<div
 											class="analytics-bar h-full rounded-full {student.color}/50 transition-all duration-700 ease-out"
-											style="width: {analyticsVisible ? student.progress : 0}%{!analyticsVisible ? '; transition-delay: ' + i * 120 + 'ms' : ''}"
+											style="width: {analyticsVisible ? student.progress : 0}%{!analyticsVisible
+												? '; transition-delay: ' + i * 120 + 'ms'
+												: ''}"
 										></div>
 									</div>
-									<span class="w-7 text-right text-[9px] font-mono font-medium text-base-content/60">{student.progress}%</span>
+									<span class="w-7 text-right text-[9px] font-mono font-medium text-base-content/60"
+										>{student.progress}%</span
+									>
 									{#if student.flags > 0}
 										<span class="flex items-center gap-0.5 text-[8px] text-warning/70 w-5">
 											<Flag size={7} />{student.flags}
@@ -488,7 +628,9 @@
 								<Users size={9} class="text-base-content/40" />
 								<span class="text-[9px] text-base-content/40">32 enrolled</span>
 							</div>
-							<span class="text-[9px] text-base-content/35">Hotspots: anterior bleph, astigmatism, AMD</span>
+							<span class="text-[9px] text-base-content/35"
+								>Hotspots: anterior bleph, astigmatism, AMD</span
+							>
 						</div>
 					</div>
 				</div>
@@ -505,7 +647,9 @@
 						Number keys to select, Enter to check, arrows to navigate.
 					</p>
 
-					<div class="mt-4 flex flex-1 flex-col rounded-xl border border-base-300/60 bg-base-100/50 overflow-hidden">
+					<div
+						class="mt-4 flex flex-1 flex-col rounded-xl border border-base-300/60 bg-base-100/50 overflow-hidden"
+					>
 						<!-- Mini quiz context — fixed height to prevent layout shift -->
 						<div class="flex-1 border-b border-base-300/40 p-3">
 							<p class="text-[10px] text-base-content/50 mb-1.5">Q7 of 48</p>
@@ -513,10 +657,19 @@
 								Which sign most strongly supports anterior blepharitis?
 							</p>
 							<div class="space-y-1">
-								<div class="kbd-option rounded-md border px-2 py-1 text-[10px] transition-all duration-300 {activeAction === 'selected-a' || activeAction === 'checking' ? 'border-primary/40 bg-primary/8 text-primary font-medium' : 'border-base-300/50 bg-base-200/40 text-base-content/60'} flex items-center justify-between gap-2">
-									<span class="min-w-0"><span class="text-base-content/30 mr-1">1.</span>Collarettes at lash bases with lid margin erythema</span>
+								<div
+									class="kbd-option rounded-md border px-2 py-1 text-[10px] transition-all duration-300 {activeAction ===
+										'selected-a' || activeAction === 'checking'
+										? 'border-primary/40 bg-primary/8 text-primary font-medium'
+										: 'border-base-300/50 bg-base-200/40 text-base-content/60'} flex items-center justify-between gap-2"
+								>
+									<span class="min-w-0"
+										><span class="text-base-content/30 mr-1">1.</span>Collarettes at lash bases with
+										lid margin erythema</span
+									>
 									<span
-										class="w-3 shrink-0 text-center text-[8px] transition-opacity duration-200 {activeAction === 'checking'
+										class="w-3 shrink-0 text-center text-[8px] transition-opacity duration-200 {activeAction ===
+										'checking'
 											? 'opacity-100 text-success'
 											: 'opacity-0'}"
 										aria-hidden="true"
@@ -524,22 +677,36 @@
 										✓
 									</span>
 								</div>
-								<div class="kbd-option rounded-md border px-2 py-1 text-[10px] transition-all duration-300 border-base-300/50 bg-base-200/40 text-base-content/60">
+								<div
+									class="kbd-option rounded-md border px-2 py-1 text-[10px] transition-all duration-300 border-base-300/50 bg-base-200/40 text-base-content/60"
+								>
 									<span class="text-base-content/30 mr-1">2.</span> Immediate full-thickness corneal melt
 								</div>
-								<div class="kbd-option rounded-md border px-2 py-1 text-[10px] transition-all duration-300 {activeAction === 'selected-c' ? 'border-secondary/40 bg-secondary/8 text-secondary font-medium' : 'border-base-300/50 bg-base-200/40 text-base-content/60'}">
+								<div
+									class="kbd-option rounded-md border px-2 py-1 text-[10px] transition-all duration-300 {activeAction ===
+									'selected-c'
+										? 'border-secondary/40 bg-secondary/8 text-secondary font-medium'
+										: 'border-base-300/50 bg-base-200/40 text-base-content/60'}"
+								>
 									<span class="text-base-content/30 mr-1">3.</span> Cherry-red spot with retinal pallor
 								</div>
 							</div>
 							<!-- Reserved space for contextual feedback — no layout shift -->
 							<div class="mt-1.5 h-5">
 								{#if activeAction === 'flagging'}
-									<div class="flex items-center gap-1 text-[9px] text-warning" in:fade={{ duration: 200 }}>
+									<div
+										class="flex items-center gap-1 text-[9px] text-warning"
+										in:fade={{ duration: 200 }}
+									>
 										<Flag size={9} /> Flagged
 									</div>
 								{:else if activeAction === 'solution'}
-									<p class="text-[9px] text-base-content/50 italic truncate" in:fade={{ duration: 200 }}>
-										Lash collarettes plus lid margin inflammation strongly fit anterior blepharitis...
+									<p
+										class="text-[9px] text-base-content/50 italic truncate"
+										in:fade={{ duration: 200 }}
+									>
+										Lash collarettes plus lid margin inflammation strongly fit anterior
+										blepharitis...
 									</p>
 								{/if}
 							</div>
@@ -555,7 +722,8 @@
 										{shortcut.key}
 									</kbd>
 									<span
-										class="text-[8px] leading-tight transition-colors duration-300 {i === activeKeyIndex
+										class="text-[8px] leading-tight transition-colors duration-300 {i ===
+										activeKeyIndex
 											? 'text-secondary'
 											: 'text-base-content/30'}"
 									>
@@ -581,7 +749,9 @@
 
 					<div class="mt-4 rounded-xl border border-base-300/60 bg-base-100/50 p-3">
 						<!-- Mini rich text toolbar -->
-						<div class="mb-2 flex items-center gap-0.5 rounded-lg border border-base-300/40 bg-base-200/50 px-1.5 py-1">
+						<div
+							class="mb-2 flex items-center gap-0.5 rounded-lg border border-base-300/40 bg-base-200/50 px-1.5 py-1"
+						>
 							<span class="rich-btn text-[10px] font-bold px-1.5 py-0.5 rounded">B</span>
 							<span class="rich-btn text-[10px] italic px-1.5 py-0.5 rounded">I</span>
 							<span class="rich-btn text-[10px] underline px-1.5 py-0.5 rounded">U</span>
@@ -599,29 +769,43 @@
 							<div
 								class="attachment-thumb group relative h-16 overflow-hidden rounded-lg border border-base-300/50 bg-base-200/60 cursor-pointer transition-all duration-300"
 								class:attachment-zoomed={attachmentZoomed}
-								onclick={() => attachmentZoomed = !attachmentZoomed}
+								onclick={() => (attachmentZoomed = !attachmentZoomed)}
 							>
-								<div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10"></div>
+								<div
+									class="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10"
+								></div>
 								<div class="absolute inset-0 flex items-center justify-center">
 									<div class="space-y-0.5 text-center">
-										<div class="mx-auto h-6 w-10 rounded border border-base-content/10 bg-base-100/50 flex items-center justify-center">
+										<div
+											class="mx-auto h-6 w-10 rounded border border-base-content/10 bg-base-100/50 flex items-center justify-center"
+										>
 											<div class="h-3 w-3 rounded-full bg-primary/20"></div>
 										</div>
 										<span class="text-[7px] text-base-content/40">slitlamp_anterior_bleph.png</span>
 									</div>
 								</div>
-								<div class="absolute inset-0 flex items-center justify-center bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+								<div
+									class="absolute inset-0 flex items-center justify-center bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+								>
 									<ZoomIn size={14} class="text-primary/60" />
 								</div>
 							</div>
 							<div class="space-y-1.5">
-								<div class="attachment-thumb h-[29px] overflow-hidden rounded-lg border border-base-300/50 bg-base-200/60">
-									<div class="h-full w-full bg-gradient-to-r from-secondary/8 to-accent/8 flex items-center justify-center">
+								<div
+									class="attachment-thumb h-[29px] overflow-hidden rounded-lg border border-base-300/50 bg-base-200/60"
+								>
+									<div
+										class="h-full w-full bg-gradient-to-r from-secondary/8 to-accent/8 flex items-center justify-center"
+									>
 										<span class="text-[7px] text-base-content/40">keratometry_astigmatism.svg</span>
 									</div>
 								</div>
-								<div class="attachment-thumb h-[29px] overflow-hidden rounded-lg border border-base-300/50 bg-base-200/60">
-									<div class="h-full w-full bg-gradient-to-r from-info/8 to-primary/8 flex items-center justify-center">
+								<div
+									class="attachment-thumb h-[29px] overflow-hidden rounded-lg border border-base-300/50 bg-base-200/60"
+								>
+									<div
+										class="h-full w-full bg-gradient-to-r from-info/8 to-primary/8 flex items-center justify-center"
+									>
 										<span class="text-[7px] text-base-content/40">fundus_drusen_macular.png</span>
 									</div>
 								</div>
@@ -638,11 +822,10 @@
 		<!-- Workflow sections -->
 		<section class="mt-20" aria-labelledby="workflow-title" use:reveal={{ y: 22 }}>
 			<div class="mb-10 max-w-3xl">
-				<h2 id="workflow-title" class="text-3xl font-bold sm:text-4xl">
-					Two loops, one platform
-				</h2>
+				<h2 id="workflow-title" class="text-3xl font-bold sm:text-4xl">Two loops, one platform</h2>
 				<p class="mt-3 text-base-content/75">
-					Students practice and review. Content teams build and improve. Both happen live without getting in each other's way.
+					Students practice and review. Content teams build and improve. Both happen live without
+					getting in each other's way.
 				</p>
 			</div>
 
@@ -688,9 +871,7 @@
 		<!-- Bottom CTA -->
 		<section class="mt-20 mb-4" use:reveal={{ y: 20 }}>
 			<div class="cta-section text-center py-14 px-6 sm:px-10">
-				<h2 class="text-3xl font-bold sm:text-4xl">
-					Ready to study smarter?
-				</h2>
+				<h2 class="text-3xl font-bold sm:text-4xl">Ready to study smarter?</h2>
 				<p class="mx-auto mt-4 max-w-lg text-base-content/70">
 					Join your class or start your own. Reach out to get your cohort started today.
 				</p>
@@ -967,8 +1148,12 @@
 	}
 
 	@keyframes scan-fill {
-		0% { width: 0%; }
-		100% { width: 100%; }
+		0% {
+			width: 0%;
+		}
+		100% {
+			width: 100%;
+		}
 	}
 
 	.ai-gen-line {
@@ -996,8 +1181,13 @@
 	}
 
 	@keyframes blink {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0; }
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0;
+		}
 	}
 
 	.ai-dot {
@@ -1042,7 +1232,6 @@
 		will-change: width;
 	}
 
-
 	/* Rationale blur transition */
 	.solution-box {
 		transition: border-color 0.3s ease;
@@ -1066,7 +1255,7 @@
 
 	/* Attachment hover */
 	.attachment-thumb {
-		transition: all 0.3s cubic-bezier(.16,1,.3,1);
+		transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	.attachment-zoomed {
