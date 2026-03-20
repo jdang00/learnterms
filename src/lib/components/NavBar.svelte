@@ -1,70 +1,177 @@
 <script lang="ts">
-	import { Palette } from 'lucide-svelte';
-	import { themeChange } from 'theme-change';
 	import { SignedIn, SignedOut, SignInButton, UserButton } from 'svelte-clerk';
+	import { useClerkContext } from 'svelte-clerk/client';
+	import ThemeToggle from './ThemeToggle.svelte';
+	import { useConvexClient, useQuery } from 'convex-svelte';
+	import { api } from '../../convex/_generated/api';
+	import type { Id } from '../../convex/_generated/dataModel';
+	import { Search } from 'lucide-svelte';
+	import PowerBar from './power-bar/PowerBar.svelte';
+	import type { CohortItem, QuickLinkItem } from './power-bar/types';
 
-	const themes = ['light', 'dark', 'dracula', 'nord'];
+	const ctx = useClerkContext();
+	const user = $derived(ctx.user);
+
+	const client = useConvexClient();
+
+	const userDataQuery = useQuery(api.users.getUserById, () => (user ? { id: user.id } : 'skip'));
+
+	const subscriptionQuery = useQuery(api.polar.getCurrentUserWithSubscription, () =>
+		user ? {} : 'skip'
+	);
+
+	const dev = $derived(userDataQuery.data?.role === 'dev');
+	const isPro = $derived(
+		subscriptionQuery.data?.isPro ||
+			subscriptionQuery.data?.subscription?.status === 'active' ||
+			subscriptionQuery.data?.subscription?.status === 'trialing'
+	);
+
+	const cohortsList = useQuery(api.cohort.listCohortsWithSchools, () => (dev ? {} : 'skip'));
+
+	let selectedCohortId = $state('');
+	let isPowerBarOpen = $state(false);
+	let isSwitchingCohort = $state(false);
+
+	const allCohorts = $derived((cohortsList?.data ?? []) as CohortItem[]);
+	const activeCohortId = $derived.by(
+		() => selectedCohortId || (userDataQuery.data?.cohortId as string | undefined) || ''
+	);
+
+	const quickLinks = $derived.by(() => {
+		const links: QuickLinkItem[] = [];
+		const role = userDataQuery.data?.role;
+		const hasPrivilegedRole = role === 'dev' || role === 'admin' || role === 'curator';
+
+		if (hasPrivilegedRole) {
+			links.push({
+				title: 'Admin Dashboard',
+				description: 'Manage classes and settings',
+				href: '/admin',
+				icon: '✏️'
+			});
+			links.push({
+				title: 'Content Library',
+				description: 'Organize notes, docs, and lectures',
+				href: '/admin/library',
+				icon: '📚'
+			});
+			links.push({
+				title: 'Question Studio',
+				description: 'AI-powered question generation',
+				href: '/admin/question-studio',
+				icon: '✨'
+			});
+			links.push({
+				title: 'Class Progress',
+				description: 'Track student performance',
+				href: '/admin/progress',
+				icon: '📊'
+			});
+			links.push({
+				title: 'Landing Page',
+				description: 'Open the internal landing view',
+				href: '/landing',
+				icon: '🚀'
+			});
+		}
+
+		if (!role) {
+			links.push({
+				title: 'My Dashboard',
+				description: 'Your classes and modules',
+				href: '/classes',
+				icon: '🏠'
+			});
+		}
+
+		if (userDataQuery.data?.cohortId) {
+			links.push({
+				title: 'Class Activity',
+				description: 'See classmate badges and stats',
+				href: '/cohort',
+				icon: '🏅'
+			});
+		}
+
+		return links;
+	});
 
 	$effect(() => {
-		themeChange(false);
+		if (userDataQuery && !userDataQuery.isLoading && userDataQuery.data) {
+			const dbCohortId = userDataQuery.data.cohortId as string | undefined;
+			selectedCohortId = dbCohortId || '';
+		}
 	});
+
+	$effect(() => {
+		if (!user) {
+			selectedCohortId = '';
+			isPowerBarOpen = false;
+		}
+	});
+
+	async function handleCohortChange(cohortIdStr: string) {
+		if (!user) return;
+		if (!cohortIdStr || cohortIdStr === activeCohortId) {
+			isPowerBarOpen = false;
+			return;
+		}
+		selectedCohortId = cohortIdStr;
+		isSwitchingCohort = true;
+		try {
+			await client.mutation(api.authQueries.switchCohort, {
+				cohortId: cohortIdStr as Id<'cohort'>
+			});
+			isPowerBarOpen = false;
+			setTimeout(() => location.reload(), 10);
+		} finally {
+			isSwitchingCohort = false;
+		}
+	}
 </script>
 
 <div class="navbar bg-base-100 h-16">
 	<div class="navbar-start">
-		<div class="dropdown">
-			<div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="h-5 w-5"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M4 6h16M4 12h8m-8 6h16"
-					/>
-				</svg>
-			</div>
-			<ul
-				tabindex="-1"
-				class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
-			>
-				<li><a href="/blog">Blog</a></li>
-			</ul>
-		</div>
-		<a class="btn btn-ghost text-xl" href="/">LearnTerms</a>
+		<a class="btn btn-ghost rounded-full text-xl" href="/">LearnTerms</a>
 	</div>
 
-	<div class="navbar-center hidden lg:flex">
-		<ul class="menu menu-horizontal px-1">
-			<li><a href="/blog">Blog</a></li>
-		</ul>
-	</div>
+	{#if user}
+		<div class="navbar-center flex sm:hidden">
+			<button
+				type="button"
+				class="btn btn-ghost btn-sm btn-circle"
+				onclick={() => (isPowerBarOpen = true)}
+				aria-label="Open search"
+			>
+				<Search size={16} />
+			</button>
+		</div>
+
+		<div class="navbar-center hidden sm:flex">
+			<button
+				type="button"
+				class="btn btn-outline btn-sm rounded-full border-base-300 hover:border-primary hover:bg-primary/5 px-3 max-w-[24rem]"
+				onclick={() => (isPowerBarOpen = true)}
+			>
+				<Search size={12} class="shrink-0 opacity-50" />
+				<span class="truncate text-xs">
+					<span class="font-medium">Search</span>
+				</span>
+				<kbd class="kbd kbd-xs hidden lg:inline-flex opacity-40">⌘K</kbd>
+			</button>
+		</div>
+	{/if}
 
 	<div class="navbar-end">
-		<div class="flex flex-row">
-			<div class="dropdown dropdown-end">
-				<div tabindex="-1" class="btn btn-ghost m-1">
-					<Palette size="22" />
-				</div>
+		<div class="flex flex-row gap-4">
+			<ThemeToggle variant="ghost" size="md" class="btn-circle m-1" />
 
-				<ul
-					tabindex="-1"
-					class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
-				>
-					{#each themes as themeOption (themeOption)}
-						<li>
-							<button data-set-theme={themeOption} data-act-class="active">
-								{themeOption}
-							</button>
-						</li>
-					{/each}
-				</ul>
-			</div>
+			{#if isPro}
+				<div class="self-center">
+					<div class="badge badge-primary badge-outline rounded-full hidden sm:block">PRO</div>
+				</div>
+			{/if}
 
 			<div class="self-center">
 				<SignedIn>
@@ -73,7 +180,7 @@
 					</div>
 				</SignedIn>
 				<SignedOut>
-					<div class="btn btn-outline btn-primary self-end">
+					<div class="btn btn-outline btn-primary rounded-full self-end">
 						<SignInButton
 							forceRedirectUrl="/sign-in"
 							fallbackRedirectUrl="/sign-in"
@@ -86,3 +193,15 @@
 		</div>
 	</div>
 </div>
+
+{#if user}
+	<PowerBar
+		bind:isOpen={isPowerBarOpen}
+		canSwitchCohorts={dev}
+		cohorts={allCohorts}
+		{activeCohortId}
+		{isSwitchingCohort}
+		{quickLinks}
+		onSwitchCohort={handleCohortChange}
+	/>
+{/if}

@@ -12,13 +12,29 @@ export const ourFileRouter = {
 			 * For full list of options and defaults, see the File Route API reference
 			 * @see https://docs.uploadthing.com/file-routes#route-config
 			 */
-			maxFileSize: '4MB',
+			maxFileSize: '1024MB',
 			maxFileCount: 1
 		}
 	}).onUploadComplete(async ({ file }) => {
-		// This code RUNS ON YOUR SERVER after upload
-		console.log('Upload complete');
 		console.log('file url', file.ufsUrl);
+	}),
+	pdfUploader: f({
+		pdf: {
+			maxFileSize: '16MB',
+			maxFileCount: 1
+		}
+	}).onUploadComplete(async ({ file }) => {
+		console.log('file url', file.ufsUrl);
+		console.log('file key', file.key);
+	}),
+	questionMediaUploader: f({
+		image: {
+			maxFileSize: '8MB',
+			maxFileCount: 1
+		}
+	}).onUploadComplete(async ({ file }) => {
+		console.log('question media url', file.ufsUrl);
+		console.log('question media key', file.key);
 	})
 } satisfies FileRouter;
 

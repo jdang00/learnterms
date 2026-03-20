@@ -1,63 +1,219 @@
 <script lang="ts">
 	import '../app.css';
-	import type { Snippet } from 'svelte';
 	import { ClerkProvider } from 'svelte-clerk';
-	import { PUBLIC_CLERK_PUBLISHABLE_KEY } from '$env/static/public';
+	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import NavBar from '$lib/components/NavBar.svelte';
+	import BadgeAwardModal from '$lib/components/BadgeAwardModal.svelte';
+	import Toast from '$lib/components/Toast.svelte';
+	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
+	import { setupConvex, useConvexClient } from 'convex-svelte';
+	import { theme, clerkTheme } from '$lib/theme.svelte';
+	import { getPostHog } from '$lib/analytics/posthogClient';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { browser } from '$app/environment';
+
+	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
+
+	injectSpeedInsights();
+
+	setupConvex(PUBLIC_CONVEX_URL);
 
 	injectAnalytics();
 
-	const { children }: { children: Snippet } = $props();
+	const { data, children } = $props();
+
+	const convexClient = useConvexClient();
+
+	// Keep both a mutable token for first use and a backup for fallback
+	let initialToken: string | null = data?.token ?? null;
+	const ssrTokenBackup: string | null = data?.token ?? null;
+
+	// Helper to wait for Clerk session with timeout
+	async function waitForClerkSession(timeoutMs: number = 5000): Promise<boolean> {
+		if (window.Clerk?.session) return true;
+
+		const startTime = Date.now();
+		while (Date.now() - startTime < timeoutMs) {
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			if (window.Clerk?.session) return true;
+		}
+		return false;
+	}
+
+	$effect(() => {
+		convexClient.setAuth(async (args) => {
+			const forceRefreshToken = args?.forceRefreshToken ?? false;
+
+			// Use initial SSR token on first call (non-forced)
+			if (!forceRefreshToken && initialToken) {
+				const token = initialToken;
+				initialToken = null;
+				return token;
+			}
+
+			// Wait for Clerk to be ready (with timeout)
+			const clerkReady = await waitForClerkSession(3000);
+
+			if (!clerkReady || !window.Clerk?.session) {
+				console.warn('[Convex Auth] Clerk session not available, using SSR token fallback');
+				// Use the backup SSR token if Clerk isn't ready
+				// This keeps the session alive while Clerk initializes
+				return ssrTokenBackup ?? undefined;
+			}
+
+			try {
+				const token = await window.Clerk.session.getToken({
+					template: 'convex',
+					skipCache: forceRefreshToken
+				});
+
+				if (!token) {
+					console.warn('[Convex Auth] Clerk returned null token, user may be signed out');
+				}
+
+				return token ?? undefined;
+			} catch (error) {
+				console.error('[Convex Auth] Error fetching token from Clerk:', error);
+				// On error, try the backup token as last resort
+				return ssrTokenBackup ?? undefined;
+			}
+		});
+	});
+
+	onMount(() => {
+		theme.init();
+		void getPostHog();
+	});
+
+	// Track page views on route changes
+	$effect(() => {
+		if (browser && page.url) {
+			void getPostHog().then((posthog) => {
+				if (!posthog) return;
+				posthog.capture('$pageview', {
+					$current_url: page.url.href
+				});
+			});
+		}
+	});
+
+	const year = new Date().getFullYear();
+
+	const defaultSeo = {
+		title: 'LearnTerms is Smarter Studying, Simplified.',
+		description:
+			'LearnTerms gives you a live quiz workspace where answers, flags, and progress sync instantly, so every study session stays focused and uninterrupted.',
+		image: 'https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w',
+		siteName: 'LearnTerms'
+	};
+
+	type Seo = {
+		title: string;
+		description: string;
+		image: string;
+		canonical: string;
+		fullUrl: string;
+	};
+	let seo: Seo = $derived({
+		title: page.data?.seo?.title ?? defaultSeo.title,
+		description: page.data?.seo?.description ?? defaultSeo.description,
+		image: page.data?.seo?.image ?? defaultSeo.image,
+		fullUrl:
+			(page.url?.origin || 'https://learnterms.com') +
+			(page.url?.pathname || '/') +
+			(page.url?.search || ''),
+		canonical: (page.url?.origin || 'https://learnterms.com') + (page.url?.pathname || '/')
+	} as Seo);
+
+	const hideFooter = $derived.by(() => {
+		const path = page.url.pathname;
+		const inClassStudyOrTest =
+			path.startsWith('/classes') && (path.includes('/modules/') || path.includes('/tests/'));
+		const inGradeCalculator = path.startsWith('/tools/grade-calculator');
+		const inAdminModule = path.startsWith('/admin/') && path.includes('/module/');
+		return inClassStudyOrTest || inGradeCalculator || inAdminModule;
+	});
 </script>
 
 <svelte:head>
-	<title>LearnTerms</title>
-	<meta
-		name="description"
-		content="Smarter Studying, Simplified. Adaptive learning powered by AI."
-	/>
+	<title>{seo.title}</title>
+	<meta name="description" content={seo.description} />
+	<link rel="canonical" href={seo.canonical} />
+	<meta name="robots" content="index,follow" />
 
-	<meta property="og:url" content="https://learnterms.com" />
+	<meta property="og:url" content={seo.fullUrl} />
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="LearnTerms" />
-	<meta property="og:description" content="Smarter Studying, Simplified." />
-	<meta
-		property="og:image"
-		content="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w"
-	/>
+	<meta property="og:site_name" content={defaultSeo.siteName} />
+	<meta property="og:title" content={seo.title} />
+	<meta property="og:description" content={seo.description} />
+	<meta property="og:image" content={seo.image} />
 
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta property="twitter:domain" content="learnterms.com" />
-	<meta property="twitter:url" content="https://learnterms.com" />
-	<meta name="twitter:title" content="LearnTerms" />
-	<meta name="twitter:description" content="Learn terms the fast and easy way. Free forever." />
-	<meta
-		name="twitter:image"
-		content="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w"
-	/>
+	<meta property="twitter:url" content={seo.fullUrl} />
+	<meta name="twitter:title" content={seo.title} />
+	<meta name="twitter:description" content={seo.description} />
+	<meta name="twitter:image" content={seo.image} />
 </svelte:head>
 
-<ClerkProvider publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}>
-	<div class="flex flex-col min-h-screen">
+<ClerkProvider
+	publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}
+	appearance={{ baseTheme: $clerkTheme }}
+>
+	<PostHogIdentify />
+	<div class="flex min-h-screen flex-col">
 		<NavBar />
 
-		<div class="flex flex-1 flex-col overflow-hidden">
-			<div class="flex-1 w-full overflow-y-auto">
-				{@render children?.()}
-			</div>
+		<main class="flex-1 w-full">
+			{@render children?.()}
+		</main>
 
-			<footer class="footer footer-center text-base-content p-4">
-				<aside class="flex flex-col flex-wrap justify-center lg:flex-row">
-					<p class="hidden lg:block">
-						Copyright © {new Date().getFullYear()} - Oklahoma College of Optometry Class of 2028 |
+		{#if !hideFooter}
+			<footer class="bg-base-200 text-base-content border-t border-base-300 mt-auto">
+				<div class="mx-auto w-full max-w-6xl px-4 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
+					<div class="col-span-2 sm:col-span-1 pr-8">
+						<a href="/" class="text-lg font-semibold">LearnTerms</a>
+						<p class="mt-2 text-sm text-base-content/70">
+							Study smarter today—build your board prep as you learn.
+						</p>
+					</div>
+
+					<nav aria-label="Product" class="flex flex-col space-y-1">
+						<h6 class="footer-title">Product</h6>
+						<a class="link link-hover" href="/">Features</a>
+						<a class="link link-hover" href="/pricing">Pricing</a>
+						<a class="link link-hover" href="/changelog">Changelog</a>
+					</nav>
+
+					<nav aria-label="Resources" class="flex flex-col space-y-1">
+						<h6 class="footer-title">Resources</h6>
+						<a class="link link-hover" href="/docs">Docs</a>
+						<a class="link link-hover" href="/blog">Blog</a>
+						<a class="link link-hover" href="/status">Status</a>
+					</nav>
+
+					<nav aria-label="Development" class="flex flex-col space-y-1">
+						<h6 class="footer-title">Development</h6>
+						<a
+							class="link link-hover"
+							href="https://github.com/jdang00/learnterms"
+							target="_blank"
+							rel="noopener noreferrer">GitHub</a
+						>
+						<a class="link link-hover" href="/about-us">About Us</a>
+						<a class="link link-hover" href="/contact">Contact</a>
+					</nav>
+				</div>
+				<div class="border-t border-base-300">
+					<p class="mx-auto max-w-6xl px-4 py-6 text-sm text-base-content/70 text-center">
+						© {year} LearnTerms. All rights reserved.
 					</p>
-					<p class="lg:hidden">
-						Copyright © {new Date().getFullYear()} - NSUOCO Class of 2028
-					</p>
-					<a class="link" href="/changelog">Changelog</a>
-				</aside>
+				</div>
 			</footer>
-		</div>
+		{/if}
 	</div>
+	<Toast />
+	<BadgeAwardModal />
 </ClerkProvider>

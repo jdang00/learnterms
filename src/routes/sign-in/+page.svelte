@@ -3,5 +3,5 @@
 </script>
 
 <div class="min-h-screen flex items-center justify-center">
-	<SignIn path="/sign-in" routing="path" redirectUrl="/" />
+	<SignIn path="/sign-in" routing="path" fallbackRedirectUrl="/" />
 </div>

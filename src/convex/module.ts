@@ -1,0 +1,586 @@
+import { authQuery, authAdminMutation } from './authQueries';
+import { mutation } from './_generated/server';
+import { v } from 'convex/values';
+import type { Id } from './_generated/dataModel';
+
+type TagSummary = { _id: string; name: string; color?: string };
+
+function containsOnlyEmoji(input: string): boolean {
+	const allowedJoiners = new Set(['\u200d', '\ufe0f']);
+	for (const ch of Array.from(input)) {
+		if (allowedJoiners.has(ch)) continue;
+		if (!/\p{Extended_Pictographic}/u.test(ch)) return false;
+	}
+	return true;
+}
+
+async function attachTagsForModules(ctx: { db: any }, classId: string, modules: any[]) {
+	if (modules.length === 0) return modules;
+
+	try {
+		const moduleIdSet = new Set(modules.map((module) => module._id));
+		const links = await ctx.db
+			.query('moduleTags')
+			.withIndex('by_classId', (q: any) => q.eq('classId', classId))
+			.collect();
+
+		const filteredLinks = links.filter((link: any) => moduleIdSet.has(link.moduleId));
+		const tagIdSet = new Set(filteredLinks.map((link: any) => link.tagId));
+		const tags = await Promise.all(Array.from(tagIdSet).map((id) => ctx.db.get(id)));
+
+		const tagMap = new Map<string, TagSummary>();
+		for (const tag of tags) {
+			if (tag && !tag.deletedAt && tag.classId === classId) {
+				tagMap.set(tag._id, { _id: tag._id, name: tag.name, color: tag.color });
+			}
+		}
+
+		const tagsByModule = new Map<string, TagSummary[]>();
+		for (const link of filteredLinks) {
+			const tag = tagMap.get(link.tagId);
+			if (!tag) continue;
+			const existing = tagsByModule.get(link.moduleId) || [];
+			existing.push(tag);
+			tagsByModule.set(link.moduleId, existing);
+		}
+
+		return modules.map((module) => {
+			const tags = tagsByModule.get(module._id) || [];
+			tags.sort((a, b) => a.name.localeCompare(b.name));
+			return { ...module, tags };
+		});
+	} catch {
+		return modules.map((module) => ({ ...module, tags: [] }));
+	}
+}
+
+export const getClassModules = authQuery({
+	// Enter class ID
+	args: { id: v.id('class') },
+	handler: async (ctx, args) => {
+		const modules = await ctx.db
+			.query('module')
+			.withIndex('by_classId', (q) => q.eq('classId', args.id))
+			.filter((q) => q.eq(q.field('status'), 'published'))
+			.collect();
+
+		// Include questionCount for user-facing display
+		const modulesWithCounts = modules.map((module) => ({
+			...module,
+			questionCount: module.questionCount ?? 0
+		}));
+
+		const sorted = modulesWithCounts.sort((a, b) => a.order - b.order);
+		return await attachTagsForModules(ctx, args.id, sorted);
+	}
+});
+
+export const getAdminModule = authQuery({
+	// Enter class ID
+	args: { id: v.id('class') },
+	handler: async (ctx, args) => {
+		const modules = await ctx.db
+			.query('module')
+			.withIndex('by_classId', (q) => q.eq('classId', args.id))
+			.collect();
+
+		return modules.sort((a, b) => a.order - b.order);
+	}
+});
+
+export const getModuleById = authQuery({
+	args: { id: v.id('module') },
+	handler: async (ctx, args) => {
+		return await ctx.db.get(args.id);
+	}
+});
+
+export const getModuleQuestionCount = authQuery({
+	args: { moduleId: v.id('module') },
+	handler: async (ctx, args) => {
+		const module = await ctx.db.get(args.moduleId);
+		return module?.questionCount ?? 0;
+	}
+});
+
+export const getAdminModulesWithQuestionCounts = authQuery({
+	args: { classId: v.id('class') },
+	handler: async (ctx, args) => {
+		const modules = await ctx.db
+			.query('module')
+			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
+			.collect();
+
+		// Use stored questionCount field (falls back to 0 for unbackfilled modules)
+		const modulesWithCounts = modules.map((module) => ({
+			...module,
+			questionCount: module.questionCount ?? 0
+		}));
+
+		const sorted = modulesWithCounts.sort((a, b) => a.order - b.order);
+		return await attachTagsForModules(ctx, args.classId, sorted);
+	}
+});
+
+export const updateModuleOrder = authAdminMutation({
+	args: {
+		moduleId: v.id('module'),
+		newOrder: v.number(),
+		classId: v.id('class')
+	},
+	handler: async (ctx, args) => {
+		const allModules = await ctx.db
+			.query('module')
+			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
+			.collect();
+
+		// Sort modules by their current order to get the correct sequence
+		allModules.sort((a, b) => a.order - b.order);
+
+		const movedModule = allModules.find((m) => m._id === args.moduleId);
+		if (!movedModule) return;
+
+		// Find the current position of the moved module in the sorted array
+		const oldIndex = allModules.findIndex((m) => m._id === args.moduleId);
+		const newIndex = args.newOrder;
+
+		// Remove the moved module from its current position
+		allModules.splice(oldIndex, 1);
+		// Insert it at the new position
+		allModules.splice(newIndex, 0, movedModule);
+
+		// Update all modules with their new order based on their position in the array
+		for (let i = 0; i < allModules.length; i++) {
+			await ctx.db.patch(allModules[i]._id, { order: i });
+		}
+	}
+});
+
+export const insertModule = authAdminMutation({
+	args: {
+		title: v.string(),
+		emoji: v.optional(v.string()),
+		description: v.string(),
+		status: v.string(),
+		classId: v.id('class'),
+		order: v.number(),
+		metadata: v.object({}),
+		updatedAt: v.number()
+	},
+	handler: async (ctx, args) => {
+		const trimmedTitle = args.title.trim();
+		const trimmedEmoji = args.emoji?.trim();
+		const trimmedDescription = args.description.trim();
+		const trimmedStatus = args.status.trim().toLowerCase();
+
+		if (!trimmedTitle) {
+			throw new Error('Module title is required and cannot be empty');
+		}
+		if (!trimmedDescription) {
+			throw new Error('Module description is required and cannot be empty');
+		}
+
+		if (trimmedTitle.length < 2) {
+			throw new Error('Module title must be at least 2 characters long');
+		}
+		if (trimmedTitle.length > 100) {
+			throw new Error('Module title cannot exceed 100 characters');
+		}
+		if (trimmedDescription.length < 10) {
+			throw new Error('Module description must be at least 10 characters long');
+		}
+		if (trimmedDescription.length > 500) {
+			throw new Error('Module description cannot exceed 500 characters');
+		}
+
+		if (trimmedEmoji != null && trimmedEmoji.length > 0) {
+			const emojiCharCount = Array.from(trimmedEmoji).length;
+			if (emojiCharCount > 8) {
+				throw new Error('Emoji must be at most 8 characters');
+			}
+			if (!containsOnlyEmoji(trimmedEmoji)) {
+				throw new Error('Please enter only emoji characters');
+			}
+		}
+
+		const validStatuses = ['draft', 'published', 'archived'];
+		if (!validStatuses.includes(trimmedStatus)) {
+			throw new Error('Module status must be draft, published, or archived');
+		}
+
+		const classDoc = await ctx.db.get(args.classId);
+		if (!classDoc) {
+			throw new Error('Class not found');
+		}
+
+		const existingModules = await ctx.db
+			.query('module')
+			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
+			.collect();
+
+		const titleExists = existingModules.some(
+			(existingModule) => existingModule.title.toLowerCase() === trimmedTitle.toLowerCase()
+		);
+		if (titleExists) {
+			throw new Error('A module with this title already exists in this class');
+		}
+
+		const id = await ctx.db.insert('module', {
+			...args,
+			title: trimmedTitle,
+			emoji: trimmedEmoji,
+			description: trimmedDescription,
+			status: trimmedStatus,
+			cohortId: classDoc.cohortId
+		});
+		return id;
+	}
+});
+
+export const deleteModule = authAdminMutation({
+	args: {
+		moduleId: v.id('module'),
+		classId: v.id('class')
+	},
+	handler: async (ctx, args) => {
+		const moduleToDelete = await ctx.db.get(args.moduleId);
+		if (!moduleToDelete || moduleToDelete.classId !== args.classId) {
+			throw new Error('Module not found or access denied');
+		}
+
+		const questions = await ctx.db
+			.query('question')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
+			.collect();
+
+		for (const question of questions) {
+			await ctx.db.delete(question._id);
+		}
+
+		const moduleTags = await ctx.db
+			.query('moduleTags')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
+			.collect();
+		for (const link of moduleTags) {
+			await ctx.db.delete(link._id);
+		}
+
+		await ctx.db.delete(args.moduleId);
+		return { deleted: true, questionsDeleted: questions.length };
+	}
+});
+
+export const updateModule = authAdminMutation({
+	args: {
+		moduleId: v.id('module'),
+		classId: v.id('class'),
+		title: v.string(),
+		emoji: v.optional(v.string()),
+		description: v.string(),
+		status: v.string()
+	},
+	handler: async (ctx, args) => {
+		const moduleToUpdate = await ctx.db.get(args.moduleId);
+		if (!moduleToUpdate || moduleToUpdate.classId !== args.classId) {
+			throw new Error('Module not found or access denied');
+		}
+
+		const trimmedTitle = args.title.trim();
+		const trimmedEmoji = args.emoji?.trim();
+		const trimmedDescription = args.description.trim();
+		const trimmedStatus = args.status.trim().toLowerCase();
+
+		if (!trimmedTitle) {
+			throw new Error('Module title is required and cannot be empty');
+		}
+		if (!trimmedDescription) {
+			throw new Error('Module description is required and cannot be empty');
+		}
+
+		if (trimmedTitle.length < 2) {
+			throw new Error('Module title must be at least 2 characters long');
+		}
+		if (trimmedTitle.length > 100) {
+			throw new Error('Module title cannot exceed 100 characters');
+		}
+		if (trimmedDescription.length < 10) {
+			throw new Error('Module description must be at least 10 characters long');
+		}
+		if (trimmedDescription.length > 500) {
+			throw new Error('Module description cannot exceed 500 characters');
+		}
+
+		if (trimmedEmoji != null && trimmedEmoji.length > 0) {
+			const emojiCharCount = Array.from(trimmedEmoji).length;
+			if (emojiCharCount > 8) {
+				throw new Error('Emoji must be at most 8 characters');
+			}
+			if (!containsOnlyEmoji(trimmedEmoji)) {
+				throw new Error('Please enter only emoji characters');
+			}
+		}
+
+		const validStatuses = ['draft', 'published', 'archived'];
+		if (!validStatuses.includes(trimmedStatus)) {
+			throw new Error('Module status must be draft, published, or archived');
+		}
+
+		const existingModules = await ctx.db
+			.query('module')
+			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
+			.collect();
+
+		const titleExists = existingModules.some(
+			(existingModule) =>
+				existingModule._id !== args.moduleId &&
+				existingModule.title.toLowerCase() === trimmedTitle.toLowerCase()
+		);
+		if (titleExists) {
+			throw new Error('A module with this title already exists in this class');
+		}
+
+		await ctx.db.patch(args.moduleId, {
+			title: trimmedTitle,
+			emoji: trimmedEmoji,
+			description: trimmedDescription,
+			status: trimmedStatus,
+			updatedAt: Date.now()
+		});
+
+		return { updated: true };
+	}
+});
+
+export const getAllModules = authQuery({
+	args: {},
+	handler: async (ctx) => {
+		const modules = await ctx.db.query('module').collect();
+		return modules;
+	}
+});
+
+function computeModuleSearchScore(
+	query: string,
+	moduleItem: { title: string; description: string; status: string }
+) {
+	const title = moduleItem.title.toLowerCase();
+	const description = moduleItem.description.toLowerCase();
+	let score = 0;
+
+	if (title === query) score += 280;
+	else if (title.startsWith(query)) score += 210;
+	else if (title.includes(query)) score += 145;
+
+	if (description.startsWith(query)) score += 80;
+	else if (description.includes(query)) score += 45;
+
+	if (moduleItem.status === 'published') score += 4;
+	return score;
+}
+
+async function assertCohortSearchAccess(
+	ctx: { db: any; identity: { subject: string } },
+	cohortId: Id<'cohort'>
+) {
+	const viewer = await ctx.db
+		.query('users')
+		.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', ctx.identity.subject))
+		.first();
+	if (!viewer) throw new Error('Unauthorized');
+	if (viewer.role !== 'dev' && viewer.cohortId !== cohortId) {
+		throw new Error('Unauthorized');
+	}
+}
+
+export const searchModulesByCohort = authQuery({
+	args: {
+		cohortId: v.id('cohort'),
+		query: v.string(),
+		limit: v.optional(v.number())
+	},
+	handler: async (ctx, { cohortId, query, limit }) => {
+		const trimmed = query.trim().toLowerCase();
+		if (trimmed.length < 3) return [];
+		await assertCohortSearchAccess(ctx, cohortId);
+
+		const max = Math.min(Math.max(limit ?? 16, 1), 50);
+		const searchWindow = Math.min(max * 4, 120);
+		const cohortClasses = await ctx.db
+			.query('class')
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', cohortId))
+			.collect();
+
+		if (cohortClasses.length === 0) return [];
+
+		const sortedClasses = cohortClasses
+			.filter((classItem) => !classItem.deletedAt)
+			.sort((a, b) => a.order - b.order);
+		if (sortedClasses.length === 0) return [];
+
+		const classMap = new Map(
+			sortedClasses.map((classItem) => [
+				classItem._id,
+				{ name: classItem.name, code: classItem.code, order: classItem.order }
+			])
+		);
+
+		const merged = new Map<
+			string,
+			{
+				_id: string;
+				title: string;
+				description: string;
+				classId: Id<'class'>;
+				className: string;
+				classCode: string;
+				emoji?: string;
+				status: string;
+				questionCount: number;
+				order: number;
+				classOrder: number;
+				score: number;
+			}
+		>();
+
+		const addMatches = (moduleItems: Array<any>, boost: number) => {
+			for (const moduleItem of moduleItems) {
+				if (moduleItem.deletedAt) continue;
+				const classItem = classMap.get(moduleItem.classId);
+				if (!classItem) continue;
+
+				const className = classItem.name.toLowerCase();
+				const classCode = classItem.code.toLowerCase();
+				const classBoost =
+					(className.includes(trimmed) ? 20 : 0) + (classCode.includes(trimmed) ? 32 : 0);
+				const score = computeModuleSearchScore(trimmed, moduleItem) + classBoost + boost;
+				const key = moduleItem._id;
+				const existing = merged.get(key);
+				if (existing) {
+					existing.score = Math.max(existing.score, score);
+					continue;
+				}
+
+				merged.set(key, {
+					_id: moduleItem._id,
+					title: moduleItem.title,
+					description: moduleItem.description,
+					classId: moduleItem.classId,
+					className: classItem.name,
+					classCode: classItem.code,
+					emoji: moduleItem.emoji,
+					status: moduleItem.status,
+					questionCount: moduleItem.questionCount ?? 0,
+					order: moduleItem.order,
+					classOrder: classItem.order,
+					score
+				});
+			}
+		};
+
+		// Primary path: cohort-level search indexes (efficient at scale).
+		try {
+			const [titleMatches, descriptionMatches] = await Promise.all([
+				ctx.db
+					.query('module')
+					.withSearchIndex('by_classId_cohortId_title', (q) =>
+						q.search('title', trimmed).eq('cohortId', cohortId)
+					)
+					.take(searchWindow),
+				ctx.db
+					.query('module')
+					.withSearchIndex('by_classId_cohortId_description', (q) =>
+						q.search('description', trimmed).eq('cohortId', cohortId)
+					)
+					.take(searchWindow)
+			]);
+			addMatches(titleMatches, 12);
+			addMatches(descriptionMatches, 0);
+		} catch {
+			// Ignore and allow fallback scan below.
+		}
+
+		// Fallback while legacy modules may still be missing cohortId.
+		if (merged.size === 0) {
+			const scannedModulesByClass = await Promise.all(
+				sortedClasses.map((classItem) =>
+					ctx.db
+						.query('module')
+						.withIndex('by_classId', (q) => q.eq('classId', classItem._id))
+						.collect()
+				)
+			);
+			for (const modules of scannedModulesByClass) {
+				addMatches(
+					modules.filter((moduleItem) =>
+						`${moduleItem.title} ${moduleItem.description}`.toLowerCase().includes(trimmed)
+					),
+					0
+				);
+			}
+		}
+
+		return Array.from(merged.values())
+			.filter((item) => item.score > 0)
+			.sort((a, b) => b.score - a.score || a.classOrder - b.classOrder || a.order - b.order)
+			.slice(0, max)
+			.map(({ classOrder: _classOrder, order: _order, score: _score, ...item }) => item);
+	}
+});
+
+/**
+ * Backfill module.cohortId from each module's class.cohortId.
+ * Run via CLI: bunx convex run module:backfillModuleCohortIds
+ */
+export const backfillModuleCohortIds = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const modules = await ctx.db.query('module').collect();
+		let updated = 0;
+		let skipped = 0;
+
+		for (const moduleItem of modules) {
+			const classItem = await ctx.db.get(moduleItem.classId);
+			if (!classItem) {
+				skipped += 1;
+				continue;
+			}
+			if (moduleItem.cohortId !== classItem.cohortId) {
+				await ctx.db.patch(moduleItem._id, { cohortId: classItem.cohortId });
+				updated += 1;
+			}
+		}
+
+		return {
+			totalModules: modules.length,
+			updated,
+			skippedMissingClass: skipped
+		};
+	}
+});
+
+/**
+ * Backfill questionCount for all modules.
+ * Run via CLI: bunx convex run module:backfillQuestionCounts
+ */
+export const backfillQuestionCounts = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const modules = await ctx.db.query('module').collect();
+		let updated = 0;
+
+		for (const module of modules) {
+			const questions = await ctx.db
+				.query('question')
+				.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
+				.collect();
+
+			const count = questions.length;
+			if (module.questionCount !== count) {
+				await ctx.db.patch(module._id, { questionCount: count });
+				updated++;
+			}
+		}
+
+		return { totalModules: modules.length, updated };
+	}
+});

@@ -1,128 +1,44 @@
-export interface authLog {
-	loggedIn: boolean;
-	userName: string;
+import type { Doc } from '../convex/_generated/dataModel';
+
+export interface ClassWithSemester extends Doc<'class'> {
+	semester: {
+		_id: string;
+		name: string;
+	} | null;
 }
 
-export type NewQuestionInput = Omit<
-	AdminChallengeQuestions,
-	'id' | 'created_at' | 'chapter' | 'pic_url'
->;
-
-export interface Option {
-	text: string;
-	isSelected: boolean;
-	letter: string;
-	isEliminated: boolean;
+export interface CohortInfo {
+	cohort: Doc<'cohort'>;
+	school: Doc<'school'>;
 }
 
-export type Ticket = {
-	ticketid: string;
-	customername: string;
-	customeremail: string | null;
-	subject: string;
-	description: string | null;
-	dateopened: string;
-	dateclosed: string | null;
-	status: string | null;
-	resolution: string | null;
+export type ModuleProgress = {
+	moduleTitle: string;
+	moduleOrder: number;
+	totalQuestions: number;
+	interactedQuestions: number;
+	flaggedQuestions: number;
+	masteredQuestions: number;
+	completionPercentage: number;
+	masteryPercentage: number;
 };
 
-export interface ExtendedOption extends Option {
-	isCorrect?: boolean;
-}
+export type ClassProgress = Record<string, ModuleProgress>;
 
-export interface QuestionData {
-	options: string[];
-	question: string;
-	explanation: string;
-	correct_answers: string[];
-}
+export const QUESTION_TYPES = {
+	MULTIPLE_CHOICE: 'multiple_choice',
+	TRUE_FALSE: 'true_false',
+    FILL_IN_THE_BLANK: 'fill_in_the_blank',
+    MATCHING: 'matching'
+} as const;
 
-export interface Question {
-	id: string;
-	question_data: QuestionData;
-}
+export const DISPLAY_QUESTION_TYPES = {
+	[QUESTION_TYPES.MULTIPLE_CHOICE]: 'Multiple Choice',
+	[QUESTION_TYPES.TRUE_FALSE]: 'True/False',
+    [QUESTION_TYPES.FILL_IN_THE_BLANK]: 'Fill in the Blank',
+    [QUESTION_TYPES.MATCHING]: 'Matching'
+} as const;
 
-export interface ChallengeQuestion {
-	id: string;
-	question_data: QuestionData;
-	pic_url: string;
-}
+export type QuestionType = (typeof QUESTION_TYPES)[keyof typeof QUESTION_TYPES];
 
-export interface QuestionProgress {
-	question_id: string;
-	selected_options: Option[];
-	eliminated_options: Option[];
-	is_flagged: boolean;
-}
-
-export interface AdminQuestions {
-	id: string;
-	question_data: {
-		options: string[];
-		question: string;
-		explanation: string;
-		correct_answers: string[];
-	};
-	chapter: string;
-	created_at: string;
-}
-
-export interface AdminChallengeQuestions {
-	id: string;
-	question_data: {
-		options: string[];
-		question: string;
-		explanation: string;
-		correct_answers: string[];
-	};
-	chapter: string;
-	pic_url: string | null;
-	created_at: string;
-}
-
-export interface Chapter {
-	name: string;
-	desc: string;
-	numprobs: number;
-	chapter: number;
-	emoji: string;
-}
-
-export interface ChatMessage {
-	role: 'user' | 'assistant';
-	content: string;
-}
-
-export interface ChatState {
-	messages: ChatMessage[];
-	loading: boolean;
-	input: string;
-}
-
-export interface RawUserProgress {
-	user_id: string;
-	user_name: string;
-	chapter_id: number;
-	chapter_name: string;
-	total_questions: number;
-	attempted_questions: number;
-	progress_percentage: number | null;
-}
-
-export interface ChapterProgress {
-	chapter_id: number;
-	chapter_name: string;
-	total_questions: number;
-	attempted_questions: number;
-	progress_percentage: number | null;
-}
-
-export interface UserProgress {
-	user_id: string;
-	user_name: string;
-	chapters: ChapterProgress[];
-	total_attempted: number;
-	total_questions: number;
-	overall_progress: number;
-}
+export type StatusFilter = 'all' | 'published' | 'draft' | 'archived';

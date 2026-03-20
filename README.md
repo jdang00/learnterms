@@ -9,10 +9,8 @@ LearnTerms is a free, open-source study tool built to make mastering complex top
 - **Svelte** - We use Svelte because it aligns with our functional first, performance oriented philosophy of developing software. Svelte framework ships minimal JavaScript to the front end and its syntax and coding style to implement reactivity is a joy to write.
 - **TailwindCSS** - Modern web devs use TailwindCSS. It provides CSS utility classes and a decent default look while giving fine grain control over everything else.
 - **DaisyUI** - LearnTerms ships features first. To help with this, a good looking component library that plays nice with TailwindCSS is essential. We also take heavy advantage of the color system for themes.
-- **Supabase** - An integrated Postgres web service lets us fire up tables for any situation. Supabase is easy to work with an highly scalable for our use.
-- **Vercel** - Vercel hosts LearnTerms and works with GitHub to deploy the site with every new push. It runs CI/CD, analytics, and manages our domains.
-- **DataStax Astra + LangFlow** - Used as a vector database and our AI engine.
-- **OpenAI API** - We use ChatGPT-4o as our workhorse language model.
+- **Convex** - A modern, reactive database that simplifies data management and enables real-time features.
+- **Vercel** - Vercel hosts LearnTerms and works with GitHub to deploy the site with every new push. It runs CI/CD, analytics, manages our domains, and serves our AI infrastructure via the AI SDK.
 
 ## FAQs
 
@@ -46,3 +44,19 @@ We're always looking for collaborators! Here are ways you can contribute:
 - **Support Financially**: Running LearnTerms comes with costs—domain fees, infrastructure, and database management, to name a few. If you'd like to support us, reach out to the development team.
 
 LearnTerms thrives because of its community. Whether you're a casual user or an active contributor, we're grateful for your support!
+
+## License
+
+LearnTerms is released under the **MIT License**. See [LICENSE](./LICENSE) for full terms.
+
+## Open Source
+
+1. **Fork & Customize**  
+   You’re free to fork the repo, modify the code, contribute back—whatever you like. The codebase itself is 100% open and not behind any paywall.
+
+2. **Official Hosted Deployment**  
+   While the code is free, hosting and operating the service incurs infrastructure costs. The official LearnTerms platform offers:
+   - **Free Tier**: Core features, community support, and basic analytics at no cost.
+   - **Pro Plan**: Advanced analytics, priority support, team/collaboration tools, and higher usage limits.
+
+To use the hosted service, [create an account](<[https://www.learnterms.app/signup](https://accounts.learnterms.com/sign-up)>) and select the Free or Pro plan that suits your needs.
