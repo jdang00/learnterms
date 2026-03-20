@@ -18,13 +18,10 @@
 
 	if (!dev) {
 		injectSpeedInsights();
+		injectAnalytics();
 	}
 
 	setupConvex(PUBLIC_CONVEX_URL);
-
-	if (!dev) {
-		injectAnalytics();
-	}
 
 	const { data, children } = $props();
 

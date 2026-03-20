@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../../../convex/_generated/api';
@@ -519,17 +520,23 @@
 			for (const [itemId, localResponse] of Object.entries(cached.responses ?? {})) {
 				if (!serverResponses[itemId]) continue;
 				const server = serverResponses[itemId];
-				const localSelected = localResponse.selectedOptions ?? [];
+				const hasLocalSelectedOptions = Object.prototype.hasOwnProperty.call(
+					localResponse,
+					'selectedOptions'
+				);
+				const hasLocalTextResponse = Object.prototype.hasOwnProperty.call(
+					localResponse,
+					'textResponse'
+				);
 				const serverSelected = server.selectedOptions ?? [];
-				const selectedOptions = localSelected.length > 0 ? localSelected : serverSelected;
+				const selectedOptions = hasLocalSelectedOptions
+					? (localResponse.selectedOptions ?? [])
+					: serverSelected;
 				mergedResponses[itemId] = {
 					...server,
 					selectedOptions: [...selectedOptions],
 					eliminatedOptions: [...(localResponse.eliminatedOptions ?? [])],
-					textResponse:
-						(localResponse.textResponse ?? '').trim().length > 0
-							? localResponse.textResponse
-							: server.textResponse,
+					textResponse: hasLocalTextResponse ? localResponse.textResponse : server.textResponse,
 					isFlagged: localResponse.isFlagged ?? server.isFlagged,
 					visited: localResponse.visited || server.visited,
 					timeSpentMs: Math.max(server.timeSpentMs ?? 0, localResponse.timeSpentMs ?? 0)
@@ -583,7 +590,9 @@
 			if (typeof window !== 'undefined') {
 				window.localStorage.removeItem(cacheKey(String(attemptId)));
 			}
-			await goto(`/classes/${classId}/tests/${attemptId}/results${auto ? '?autoSubmit=1' : ''}`);
+			await goto(
+				resolve(`/classes/${classId}/tests/${attemptId}/results${auto ? '?autoSubmit=1' : ''}`)
+			);
 		} catch (error: any) {
 			submitError = error?.message ?? 'Something went wrong while submitting. Please try again.';
 		} finally {

@@ -350,7 +350,8 @@ export function exportAsJson(
  * Export questions as CSV (simple format for spreadsheets)
  * Dynamically handles any number of options
  */
-export function exportAsCsv(questions: ExportableQuestion[], moduleTitle: string): string {
+export function exportAsCsv(questions: ExportableQuestion[], options: ExportOptions = {}): string {
+	const { includeRationales = true } = options;
 	const rows: string[] = [];
 
 	// Find max options across all questions (for multiple choice)
@@ -366,13 +367,15 @@ export function exportAsCsv(questions: ExportableQuestion[], moduleTitle: string
 		String.fromCharCode('A'.charCodeAt(0) + i)
 	).map((letter) => `Option ${letter}`);
 
-	rows.push(
-		['Question #', 'Type', 'Question', ...optionHeaders, 'Correct Answer(s)', 'Rationale'].join(',')
-	);
+	const header = ['Question #', 'Type', 'Question', ...optionHeaders, 'Correct Answer(s)'];
+	if (includeRationales) {
+		header.push('Rationale');
+	}
+	rows.push(header.join(','));
 
 	questions.forEach((q, index) => {
 		const stem = escapeCsv(q.stem);
-		const rationale = getRationale(q) ? escapeCsv(getRationale(q)) : '';
+		const rationale = includeRationales && getRationale(q) ? escapeCsv(getRationale(q)) : '';
 
 		let optionValues: string[];
 		let correctAnswerStr: string;
@@ -399,7 +402,10 @@ export function exportAsCsv(questions: ExportableQuestion[], moduleTitle: string
 		// Pad options to match header
 		while (optionValues.length < maxOptions) optionValues.push('');
 
-		const row = [index + 1, q.type, stem, ...optionValues, correctAnswerStr, rationale];
+		const row = [index + 1, q.type, stem, ...optionValues, correctAnswerStr];
+		if (includeRationales) {
+			row.push(rationale);
+		}
 
 		rows.push(row.join(','));
 	});
@@ -461,7 +467,7 @@ export function exportModuleQuestions(
 			mimeType = 'application/json';
 			break;
 		case 'csv':
-			content = exportAsCsv(questions, moduleTitle);
+			content = exportAsCsv(questions, options);
 			filename = `${baseFilename}-questions-${timestamp}.csv`;
 			mimeType = 'text/csv';
 			break;

@@ -5,17 +5,7 @@
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-	import {
-		Pencil,
-		Trash2,
-		Plus,
-		ArrowLeft,
-		GripVertical,
-		Download,
-		FileText,
-		FileJson,
-		FileSpreadsheet
-	} from 'lucide-svelte';
+	import { Pencil, Trash2, Plus, ArrowLeft, GripVertical, Download } from 'lucide-svelte';
 	import { resolve } from '$app/paths';
 	import { exportModuleQuestions, type ExportableQuestion } from '$lib/utils/questionExport';
 	import EditModuleModal from '$lib/admin/EditModuleModal.svelte';
@@ -42,7 +32,6 @@
 	const userDataQuery = useQuery(api.users.getUserById, () =>
 		clerkUser ? { id: clerkUser.id } : 'skip'
 	);
-	const dev = $derived(userDataQuery.data?.role === 'dev');
 	const admin = $derived(
 		userDataQuery.data?.role === 'admin' || userDataQuery.data?.role === 'dev'
 	);

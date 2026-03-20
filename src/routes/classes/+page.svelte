@@ -593,7 +593,7 @@
 
 				<div class="mt-6 flex items-center justify-between gap-3">
 					<a
-						href="/changelog"
+						href={resolve('/changelog')}
 						class="text-xs text-base-content/40 hover:text-primary transition-colors duration-150"
 						onclick={dismissFeatureSpotlight}
 					>

@@ -3,14 +3,20 @@ export type WithLegacyRationale = {
 	explanation?: string | null;
 };
 
+function normalizeRationaleValue(value: string | null | undefined): string {
+	if (typeof value !== 'string') return '';
+	const trimmed = value.trim();
+	if (!trimmed) return '';
+	const normalized = trimmed.toLowerCase();
+	if (normalized === 'undefined' || normalized === 'null') return '';
+	return trimmed;
+}
+
 export function getRationale(value?: WithLegacyRationale | null): string {
 	if (!value) return '';
-	if (typeof value.rationale === 'string') return value.rationale;
-	if (typeof value.explanation === 'string') return value.explanation;
-	return '';
+	return normalizeRationaleValue(value.rationale) || normalizeRationaleValue(value.explanation);
 }
 
 export function hasRationale(value?: WithLegacyRationale | null): boolean {
-	const normalized = getRationale(value).trim().toLowerCase();
-	return normalized.length > 0 && normalized !== 'undefined' && normalized !== 'null';
+	return getRationale(value).length > 0;
 }

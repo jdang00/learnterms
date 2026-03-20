@@ -3,12 +3,14 @@
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
+	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 
 	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
 	let hideSidebar = $state(false);
 	let isInfoModalOpen = $state(false);
 	let isSolutionModalOpen = $state(false);
 	let isSettingsModalOpen = $state(false);
+	const sanitizedRationale = $derived(sanitizeHtml(getRationale(currentlySelected)));
 
 	async function handleReset() {
 		if (userId && moduleId && client) {
@@ -88,7 +90,7 @@
 						<div
 							class={`mt-2 break-words hyphens-auto transition-all duration-300 tiptap-content ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
 						>
-							{@html getRationale(currentlySelected)}
+							{@html sanitizedRationale}
 						</div>
 					</div>
 				</div>
@@ -183,7 +185,7 @@
 		</form>
 		<h3 class="text-lg font-bold">Rationale</h3>
 		{#if hasRationale(currentlySelected)}
-			<div class="py-4 tiptap-content">{@html getRationale(currentlySelected)}</div>
+			<div class="py-4 tiptap-content">{@html sanitizedRationale}</div>
 		{/if}
 	</div>
 </dialog>

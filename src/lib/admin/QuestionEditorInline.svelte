@@ -352,8 +352,18 @@
 		caption: string,
 		showOnSolution?: boolean
 	) {
-		updateExistingMediaMeta(id, altText, caption, showOnSolution);
-		onChange();
+		return updateExistingMediaMeta(id, altText, caption, showOnSolution).then(() => {
+			onChange();
+		});
+	}
+
+	async function commitExistingMediaChange(
+		id: string,
+		altText: string,
+		caption: string,
+		showOnSolution?: boolean
+	) {
+		await handleExistingMediaChange(id, altText, caption, showOnSolution);
 	}
 
 	function mediaTypeFromMime(mime: string | undefined): string {
@@ -1427,8 +1437,8 @@
 												class="input input-bordered input-sm w-full"
 												placeholder="Alt text"
 												bind:value={m.altText}
-												oninput={() =>
-													handleExistingMediaChange(
+												onblur={() =>
+													commitExistingMediaChange(
 														m._id,
 														m.altText,
 														m.caption || '',
@@ -1439,8 +1449,8 @@
 												class="input input-bordered input-sm w-full"
 												placeholder="Caption (optional)"
 												bind:value={m.caption}
-												oninput={() =>
-													handleExistingMediaChange(
+												onblur={() =>
+													commitExistingMediaChange(
 														m._id,
 														m.altText,
 														m.caption || '',
@@ -1453,7 +1463,7 @@
 													class="checkbox checkbox-xs"
 													bind:checked={m.showOnSolution}
 													onchange={() =>
-														handleExistingMediaChange(
+														commitExistingMediaChange(
 															m._id,
 															m.altText,
 															m.caption || '',

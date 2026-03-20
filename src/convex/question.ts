@@ -427,7 +427,7 @@ function normalizeIncomingRationale(input: {
 	rationale?: string | null;
 	explanation?: string | null;
 }): string {
-	return getRationale(input).trim();
+	return getRationale(input);
 }
 
 export const getQuestionsByModule = authQuery({
@@ -1199,7 +1199,7 @@ export const backfillQuestionRationales = mutation({
 
 		let updated = 0;
 		for (const question of questions) {
-			const rationale = getRationale(question).trim();
+			const rationale = getRationale(question);
 			if (!rationale || question.rationale === rationale) continue;
 			await ctx.db.patch(question._id, {
 				rationale,
@@ -1410,7 +1410,7 @@ ${material}`;
 				stem: q.stem.trim(),
 				options,
 				correctAnswers: validIndexes,
-				rationale: getRationale(q).trim(),
+				rationale: getRationale(q),
 				aiGenerated: true,
 				status: 'published',
 				order: i,
@@ -1548,7 +1548,7 @@ Rationale: 2-3 sentences explaining the underlying concept. Use notes if provide
 
 		return {
 			distractors: cleanedDistractors,
-			rationale: getRationale(parsed).trim()
+			rationale: getRationale(parsed)
 		};
 	}
 });
@@ -1633,7 +1633,7 @@ A: ${answer}${contextHint}`;
 		}
 
 		return {
-			rationale: getRationale(parsed).trim()
+			rationale: getRationale(parsed)
 		};
 	}
 });

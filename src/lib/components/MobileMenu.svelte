@@ -24,6 +24,7 @@
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { captureQuestionAnswered } from '$lib/analytics/questionAnswered';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
+	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
@@ -53,6 +54,7 @@
 	});
 
 	const canShowRationale = $derived.by(() => hasRationale(currentlySelected));
+	const sanitizedRationale = $derived(sanitizeHtml(getRationale(currentlySelected)));
 
 	$effect(() => {
 		if (!qs.showSolution || !canShowRationale) {
@@ -285,7 +287,7 @@
 			</form>
 			<h3 class="text-lg font-bold">Rationale</h3>
 			{#if canShowRationale}
-				<div class="py-4 tiptap-content">{@html getRationale(currentlySelected)}</div>
+				<div class="py-4 tiptap-content">{@html sanitizedRationale}</div>
 			{/if}
 		</div>
 	</dialog>

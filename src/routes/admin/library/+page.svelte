@@ -21,6 +21,7 @@
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
 	import { useClerkContext } from 'svelte-clerk';
 	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
 	const client = useConvexClient();
@@ -51,7 +52,7 @@
 			currentDocView = openId;
 			currentDocument = target;
 			params.delete('open');
-			const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+			const newUrl = `${resolve('/admin/library')}${params.toString() ? `?${params.toString()}` : ''}`;
 			replaceState(newUrl, {});
 		}
 	});

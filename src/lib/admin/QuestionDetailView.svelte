@@ -11,6 +11,7 @@
 	} from 'lucide-svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
+	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import type { Doc } from '../../convex/_generated/dataModel';
 
 	type QuestionItem = Doc<'question'>;
@@ -56,7 +57,7 @@
 	const isFillInTheBlank = $derived(question.type === 'fill_in_the_blank');
 	const isMatching = $derived(question.type === 'matching');
 	const isMultipleChoice = $derived(!isFillInTheBlank && !isMatching);
-	const questionRationale = $derived(getRationale(question));
+	const questionRationale = $derived(sanitizeHtml(getRationale(question)));
 
 	// FITB helpers
 	function decodeFitbAnswer(text: string): string {

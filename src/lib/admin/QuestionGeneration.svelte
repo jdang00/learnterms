@@ -14,6 +14,7 @@
 		defaultProductModelId,
 		productModelOptions
 	} from '$lib/config/generation';
+	import { resolve } from '$app/paths';
 	import ModuleLimitModal from './ModuleLimitModal.svelte';
 
 	export interface Props {
@@ -282,7 +283,8 @@
 							</div>
 						</div>
 						<div class="flex flex-col gap-3 w-full">
-							<a href="/sign-up" target="_blank" class="btn btn-primary btn-block">Upgrade to Pro</a
+							<a href={resolve('/sign-up')} target="_blank" class="btn btn-primary btn-block"
+								>Upgrade to Pro</a
 							>
 							<button class="btn btn-ghost btn-xs" onclick={() => (limitReached = false)}
 								>Maybe later</button

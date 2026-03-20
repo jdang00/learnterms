@@ -9,6 +9,7 @@
 	import { createUploader } from '$lib/utils/uploadthing';
 	import { UploadDropzone } from '@uploadthing/svelte';
 	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	const client = useConvexClient();
 
@@ -172,7 +173,7 @@
 					params.delete('processing');
 					params.delete('pdfUrl');
 					params.delete('fileKey');
-					const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+					const newUrl = `${resolve('/admin/library')}${params.toString() ? `?${params.toString()}` : ''}`;
 					replaceState(newUrl, {});
 				})
 				.catch(console.error);
