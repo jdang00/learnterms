@@ -101,6 +101,41 @@
 
 	const changelog: ChangelogEntry[] = [
 		{
+			version: 'Mar 2026',
+			date: 'March 2026',
+			title: 'LearnTerms v3 Released',
+			highlights: [
+				{
+					icon: Sparkles,
+					title: 'v3 is officially live',
+					description:
+						'Published the LearnTerms v3 release and merged the full v3 branch into main, marking the largest platform update to date.',
+					href: 'https://github.com/jdang00/learnterms/releases/tag/v3'
+				},
+				{
+					icon: ClipboardCheck,
+					title: 'Custom tests shipped',
+					description:
+						'Launched custom test building with module and tag selection, timed sessions, scored results, review flows, and recent-attempt tracking.',
+					href: 'https://github.com/jdang00/learnterms/commit/31d2bc0'
+				},
+				{
+					icon: CircleGauge,
+					title: 'Power bar and study flow polish',
+					description:
+						'Added the power bar and refined mobile answer flow, solution display, question switching, and jump-back study ergonomics.',
+					href: 'https://github.com/jdang00/learnterms/commit/8bd4172'
+				},
+				{
+					icon: FileText,
+					title: 'What’s new and launch cleanup',
+					description:
+						'Added the changelog and rollout messaging while tightening test mode behavior, truncation, sorting, formatting, and landing-page presentation.',
+					href: 'https://github.com/jdang00/learnterms/commit/db1cc89'
+				}
+			]
+		},
+		{
 			version: 'Feb 2026',
 			date: 'February 2026',
 			title: 'Enhancing the Learning Experience',
