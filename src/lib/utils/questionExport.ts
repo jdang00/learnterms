@@ -12,12 +12,15 @@
  * - Special characters and newlines
  */
 
+import { getRationale } from './rationale';
+
 export interface ExportableQuestion {
 	_id?: string;
 	type: string;
 	stem: string;
 	options: Array<{ id?: string; text: string }>;
 	correctAnswers: string[];
+	rationale?: string | null;
 	explanation?: string | null;
 	status?: string;
 	order?: number;
@@ -29,7 +32,7 @@ export interface ExportableQuestion {
 export interface ExportOptions {
 	includeMetadata?: boolean;
 	includeIds?: boolean;
-	includeExplanations?: boolean;
+	includeRationales?: boolean;
 }
 
 /**
@@ -190,7 +193,7 @@ export function exportAsText(
 	moduleTitle: string,
 	options: ExportOptions = {}
 ): string {
-	const { includeExplanations = true } = options;
+	const { includeRationales = true } = options;
 	const lines: string[] = [];
 
 	lines.push('='.repeat(60));
@@ -252,10 +255,11 @@ export function exportAsText(
 			lines.push(`Correct Answer(s): ${correctLetters.join(', ')}`);
 		}
 
-		if (includeExplanations && q.explanation) {
+		const rationale = getRationale(q);
+		if (includeRationales && rationale) {
 			lines.push('');
-			lines.push('Explanation:');
-			lines.push(stripHtml(q.explanation));
+			lines.push('Rationale:');
+			lines.push(stripHtml(rationale));
 		}
 
 		lines.push('');
@@ -277,7 +281,7 @@ export function exportAsJson(
 	moduleTitle: string,
 	options: ExportOptions = {}
 ): string {
-	const { includeMetadata = false, includeIds = false, includeExplanations = true } = options;
+	const { includeMetadata = false, includeIds = false, includeRationales = true } = options;
 
 	const exportData = {
 		module: moduleTitle,
@@ -317,8 +321,9 @@ export function exportAsJson(
 				questionData.correctAnswerLetters = correctLetters;
 			}
 
-			if (includeExplanations && q.explanation) {
-				questionData.explanation = stripHtml(q.explanation);
+			const rationale = getRationale(q);
+			if (includeRationales && rationale) {
+				questionData.rationale = stripHtml(rationale);
 			}
 
 			if (includeMetadata) {
@@ -345,10 +350,8 @@ export function exportAsJson(
  * Export questions as CSV (simple format for spreadsheets)
  * Dynamically handles any number of options
  */
-export function exportAsCsv(
-	questions: ExportableQuestion[],
-	moduleTitle: string
-): string {
+export function exportAsCsv(questions: ExportableQuestion[], options: ExportOptions = {}): string {
+	const { includeRationales = true } = options;
 	const rows: string[] = [];
 
 	// Find max options across all questions (for multiple choice)
@@ -364,15 +367,15 @@ export function exportAsCsv(
 		String.fromCharCode('A'.charCodeAt(0) + i)
 	).map((letter) => `Option ${letter}`);
 
-	rows.push(
-		['Question #', 'Type', 'Question', ...optionHeaders, 'Correct Answer(s)', 'Explanation'].join(
-			','
-		)
-	);
+	const header = ['Question #', 'Type', 'Question', ...optionHeaders, 'Correct Answer(s)'];
+	if (includeRationales) {
+		header.push('Rationale');
+	}
+	rows.push(header.join(','));
 
 	questions.forEach((q, index) => {
 		const stem = escapeCsv(q.stem);
-		const explanation = q.explanation ? escapeCsv(q.explanation) : '';
+		const rationale = includeRationales && getRationale(q) ? escapeCsv(getRationale(q)) : '';
 
 		let optionValues: string[];
 		let correctAnswerStr: string;
@@ -399,14 +402,10 @@ export function exportAsCsv(
 		// Pad options to match header
 		while (optionValues.length < maxOptions) optionValues.push('');
 
-		const row = [
-			index + 1,
-			q.type,
-			stem,
-			...optionValues,
-			correctAnswerStr,
-			explanation
-		];
+		const row = [index + 1, q.type, stem, ...optionValues, correctAnswerStr];
+		if (includeRationales) {
+			row.push(rationale);
+		}
 
 		rows.push(row.join(','));
 	});
@@ -468,7 +467,7 @@ export function exportModuleQuestions(
 			mimeType = 'application/json';
 			break;
 		case 'csv':
-			content = exportAsCsv(questions, moduleTitle);
+			content = exportAsCsv(questions, options);
 			filename = `${baseFilename}-questions-${timestamp}.csv`;
 			mimeType = 'text/csv';
 			break;

@@ -20,6 +20,8 @@
 	import { api } from '../../../convex/_generated/api';
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
 	import { useClerkContext } from 'svelte-clerk';
+	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
 	const client = useConvexClient();
@@ -28,15 +30,15 @@
 	const clerkUser = $derived(clerk.user);
 
 	// useQuery at top level with skip pattern
-	const userDataQuery = useQuery(
-		api.users.getUserById,
-		() => clerkUser ? { id: clerkUser.id } : 'skip'
+	const userDataQuery = useQuery(api.users.getUserById, () =>
+		clerkUser ? { id: clerkUser.id } : 'skip'
 	);
 
 	// useQuery at top level with skip pattern - depends on userDataQuery
-	const userContentLib = useQuery(
-		api.contentLib.getContentLibByCohort,
-		() => userDataQuery.data?.cohortId ? { cohortId: userDataQuery.data.cohortId as Id<'cohort'> } : 'skip'
+	const userContentLib = useQuery(api.contentLib.getContentLibByCohort, () =>
+		userDataQuery.data?.cohortId
+			? { cohortId: userDataQuery.data.cohortId as Id<'cohort'> }
+			: 'skip'
 	);
 
 	$effect(() => {
@@ -50,8 +52,8 @@
 			currentDocView = openId;
 			currentDocument = target;
 			params.delete('open');
-			const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
-			history.replaceState({}, '', newUrl);
+			const newUrl = `${resolve('/admin/library')}${params.toString() ? `?${params.toString()}` : ''}`;
+			replaceState(newUrl, {});
 		}
 	});
 
@@ -188,16 +190,21 @@
 					<div class="space-y-0.5">
 						<h1 class="font-semibold text-2xl">My Documents</h1>
 						<p class="text-base-content/70 text-sm">
-							{totalDocs} {totalDocs === 1 ? 'item' : 'items'} in your library
+							{totalDocs}
+							{totalDocs === 1 ? 'item' : 'items'} in your library
 						</p>
 					</div>
 					<div class="flex flex-wrap gap-2">
-						<button class="btn btn-primary btn-sm rounded-full" onclick={openAddModal}><Plus size={16} /> Add Document</button>
+						<button class="btn btn-primary btn-sm rounded-full" onclick={openAddModal}
+							><Plus size={16} /> Add Document</button
+						>
 					</div>
 				</div>
 
 				<div>
-					<label class="input input-bordered input-sm rounded-full flex items-center gap-2 max-w-md">
+					<label
+						class="input input-bordered input-sm rounded-full flex items-center gap-2 max-w-md"
+					>
 						<Search size={14} class="text-base-content/60" />
 						<input
 							type="text"
@@ -228,7 +235,9 @@
 						<span>Unable to load your library right now.</span>
 					</div>
 				{:else if !userContentLib.data || userContentLib.data.length === 0}
-					<div class="rounded-2xl border-2 border-dashed border-base-300 bg-base-100 p-12 text-center space-y-4">
+					<div
+						class="rounded-2xl border-2 border-dashed border-base-300 bg-base-100 p-12 text-center space-y-4"
+					>
 						<div class="flex items-center justify-center">
 							<div class="p-3 rounded-full bg-primary/10">
 								<File size={24} class="text-primary" />
@@ -240,17 +249,25 @@
 								Start building your library by uploading your first document
 							</p>
 						</div>
-						<button class="btn btn-primary btn-sm rounded-full" onclick={openAddModal}><Plus size={16} /> Add your first document</button>
+						<button class="btn btn-primary btn-sm rounded-full" onclick={openAddModal}
+							><Plus size={16} /> Add your first document</button
+						>
 					</div>
 				{:else if filteredDocs.length === 0}
-					<div class="rounded-2xl border border-base-300 bg-base-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+					<div
+						class="rounded-2xl border border-base-300 bg-base-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-3"
+					>
 						<div>
 							<p class="font-semibold">No matching documents</p>
 							<p class="text-sm text-base-content/70">Try adjusting your search terms</p>
 						</div>
-						<button class="btn btn-ghost btn-sm" type="button" onclick={() => {
-							searchTerm = '';
-						}}>Clear search</button>
+						<button
+							class="btn btn-ghost btn-sm"
+							type="button"
+							onclick={() => {
+								searchTerm = '';
+							}}>Clear search</button
+						>
 					</div>
 				{:else}
 					<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
@@ -267,13 +284,17 @@
 								tabindex="0"
 								role="button"
 							>
-								<div class="absolute inset-0 pointer-events-none rounded-2xl border border-white/10"></div>
+								<div
+									class="absolute inset-0 pointer-events-none rounded-2xl border border-white/10"
+								></div>
 								<div class="card-body p-4 space-y-3">
 									<div class="flex items-start justify-between gap-2">
 										<div class="flex-1 min-w-0 space-y-1.5">
 											<div class="flex items-center gap-1.5 text-base-content">
 												<File size={14} class="shrink-0" />
-												<span class="text-base font-semibold leading-tight truncate">{doc.title}</span>
+												<span class="text-base font-semibold leading-tight truncate"
+													>{doc.title}</span
+												>
 											</div>
 											<p class="text-xs text-base-content/70 line-clamp-2">
 												{doc.description ? doc.description : 'No description'}
@@ -288,7 +309,10 @@
 											>
 												<MoreVertical size={14} />
 											</button>
-											<ul role="menu" class="dropdown-content menu bg-base-100 rounded-2xl w-40 p-1.5 shadow-lg border border-base-300 z-10">
+											<ul
+												role="menu"
+												class="dropdown-content menu bg-base-100 rounded-2xl w-40 p-1.5 shadow-lg border border-base-300 z-10"
+											>
 												<li>
 													<button
 														class="btn btn-xs btn-ghost w-full justify-start"
@@ -323,11 +347,19 @@
 									<div class="mt-auto pt-2 border-t border-base-300/50">
 										<div class="flex items-center gap-1.5 text-xs text-base-content/60">
 											<Clock3 size={12} />
-											<span class="truncate">{doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : 'No date'}</span>
+											<span class="truncate"
+												>{doc.updatedAt
+													? new Date(doc.updatedAt).toLocaleDateString()
+													: 'No date'}</span
+											>
 										</div>
 									</div>
 
-									<div class="text-[10px] uppercase tracking-wider text-base-content/50 font-medium">Click to open</div>
+									<div
+										class="text-[10px] uppercase tracking-wider text-base-content/50 font-medium"
+									>
+										Click to open
+									</div>
 								</div>
 							</div>
 						{/each}
@@ -338,7 +370,12 @@
 
 		<AddDocumentModal {isAddModalOpen} {closeAddModal} userData={userDataQuery.data} />
 
-		<EditDocumentModal {isEditModalOpen} {closeEditModal} {editingDocument} userData={userDataQuery.data} />
+		<EditDocumentModal
+			{isEditModalOpen}
+			{closeEditModal}
+			{editingDocument}
+			userData={userDataQuery.data}
+		/>
 
 		<DeleteConfirmationModal
 			{isDeleteModalOpen}

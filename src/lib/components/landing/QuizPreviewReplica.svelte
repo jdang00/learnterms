@@ -19,7 +19,7 @@
 		stem: string;
 		options: Option[];
 		correctAnswers: string[];
-		explanation: string;
+		rationale: string;
 	};
 
 	const questions: Question[] = [
@@ -33,7 +33,7 @@
 				{ id: 'D', text: 'Optic neuritis' }
 			],
 			correctAnswers: ['A'],
-			explanation:
+			rationale:
 				'Keratoconus causes progressive corneal thinning and cone-like protrusion, creating irregular astigmatism and worsening myopia, often first seen on corneal topography.'
 		},
 		{
@@ -46,7 +46,7 @@
 				{ id: 'D', text: 'Hypopyon in the anterior chamber' }
 			],
 			correctAnswers: ['A'],
-			explanation:
+			rationale:
 				'Anterior blepharitis often presents with inflamed lid margins and lash debris or collarettes. Targeting lid hygiene and inflammation control is central to treatment.'
 		},
 		{
@@ -59,7 +59,7 @@
 				{ id: 'D', text: 'Epiretinal membrane' }
 			],
 			correctAnswers: ['A'],
-			explanation:
+			rationale:
 				'Macular disease commonly distorts central vision and straight lines. Metamorphopsia should raise concern for AMD or other macular pathology.'
 		},
 		{
@@ -72,7 +72,7 @@
 				{ id: 'D', text: 'Use plus cylinder at 90 degrees for all cases' }
 			],
 			correctAnswers: ['A'],
-			explanation:
+			rationale:
 				'Astigmatism correction requires cylindrical power aligned to the refractive axis. Myopic astigmatism specifically needs minus-cylinder correction in the appropriate meridian.'
 		},
 		{
@@ -85,7 +85,7 @@
 				{ id: 'D', text: 'A cylindrical lens only' }
 			],
 			correctAnswers: ['A'],
-			explanation:
+			rationale:
 				'Aphakia removes the natural positive lens power of the eye, so correction requires strong plus power from an intraocular lens or external convex lens.'
 		},
 		{
@@ -98,7 +98,7 @@
 				{ id: 'D', text: 'Blepharitis' }
 			],
 			correctAnswers: ['B'],
-			explanation:
+			rationale:
 				'Diabetic retinopathy frequently shows microvascular retinal damage, including microaneurysms, hemorrhages, and cotton-wool spots on fundus exam.'
 		}
 	];
@@ -106,7 +106,8 @@
 	const moduleInfo = {
 		emoji: '👁️',
 		title: 'Ocular Pathology & Optics',
-		description: 'Focused question reps for astigmatism, anterior blepharitis, retina, and corneal disease.',
+		description:
+			'Focused question reps for astigmatism, anterior blepharitis, retina, and corneal disease.',
 		order: 2
 	};
 
@@ -282,7 +283,7 @@
 							<div
 								class={`tiptap-content mt-2 transition-all duration-300 ${showSolution ? 'blur-none' : 'blur-sm'}`}
 							>
-								{currentQuestion.explanation}
+								{currentQuestion.rationale}
 							</div>
 						</div>
 					</div>

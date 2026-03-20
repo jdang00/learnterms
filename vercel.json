@@ -1,6 +1,46 @@
 {
 	"rewrites": [
 		{
+			"source": "/docs",
+			"has": [
+				{
+					"type": "host",
+					"value": "learnterms.com"
+				}
+			],
+			"destination": "https://learnterms.mintlify.dev/docs"
+		},
+		{
+			"source": "/docs/:match*",
+			"has": [
+				{
+					"type": "host",
+					"value": "learnterms.com"
+				}
+			],
+			"destination": "https://learnterms.mintlify.dev/docs/:match*"
+		},
+		{
+			"source": "/docs",
+			"has": [
+				{
+					"type": "host",
+					"value": "www.learnterms.com"
+				}
+			],
+			"destination": "https://learnterms.mintlify.dev/docs"
+		},
+		{
+			"source": "/docs/:match*",
+			"has": [
+				{
+					"type": "host",
+					"value": "www.learnterms.com"
+				}
+			],
+			"destination": "https://learnterms.mintlify.dev/docs/:match*"
+		},
+		{
 			"source": "/:path*",
 			"has": [
 				{

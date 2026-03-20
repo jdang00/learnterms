@@ -8,6 +8,8 @@
 	import DeleteConfirmationModal from './DeleteConfirmationModal.svelte';
 	import { createUploader } from '$lib/utils/uploadthing';
 	import { UploadDropzone } from '@uploadthing/svelte';
+	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	const client = useConvexClient();
 
@@ -24,9 +26,7 @@
 	const isProcessing = $derived(
 		getJob.data?.status === 'pending' || getJob.data?.status === 'processing'
 	);
-	const processingError = $derived(
-		getJob.data?.status === 'failed' ? getJob.data.error : ''
-	);
+	const processingError = $derived(getJob.data?.status === 'failed' ? getJob.data.error : '');
 	const processingStatus = $derived(getJob.data?.progress?.currentStep ?? '');
 	const chunksReceived = $derived(getJob.data?.progress?.chunksProcessed ?? 0);
 	const totalChunks = $derived(getJob.data?.progress?.totalChunks ?? 0);
@@ -163,17 +163,20 @@
 		const fileKey = params.get('fileKey');
 
 		if (shouldProcess && pdfUrl && !getJob.data) {
-			client.mutation(api.pdfJobs.createJob, {
-				documentId: currentDocView as Id<'contentLib'>,
-				pdfUrl,
-				fileKey: fileKey || undefined
-			}).then(() => {
-				params.delete('processing');
-				params.delete('pdfUrl');
-				params.delete('fileKey');
-				const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
-				history.replaceState({}, '', newUrl);
-			}).catch(console.error);
+			client
+				.mutation(api.pdfJobs.createJob, {
+					documentId: currentDocView as Id<'contentLib'>,
+					pdfUrl,
+					fileKey: fileKey || undefined
+				})
+				.then(() => {
+					params.delete('processing');
+					params.delete('pdfUrl');
+					params.delete('fileKey');
+					const newUrl = `${resolve('/admin/library')}${params.toString() ? `?${params.toString()}` : ''}`;
+					replaceState(newUrl, {});
+				})
+				.catch(console.error);
 		}
 	});
 </script>
@@ -225,11 +228,7 @@
 		<div class="mt-6 mb-4" in:fade={{ duration: 150 }}>
 			<div class="alert alert-error">
 				<span>{processingError}</span>
-				<button
-					class="btn btn-sm btn-ghost gap-2"
-					onclick={retryFailedJob}
-					disabled={isRetrying}
-				>
+				<button class="btn btn-sm btn-ghost gap-2" onclick={retryFailedJob} disabled={isRetrying}>
 					{#if isRetrying}
 						<span class="loading loading-spinner loading-xs"></span>
 					{:else}
@@ -534,8 +533,14 @@
 
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
-				<button class="btn btn-ghost rounded-full" onclick={closeEdit} disabled={isSubmitting}>Cancel</button>
-				<button class="btn btn-primary rounded-full gap-2" onclick={saveEdit} disabled={isSubmitting}>
+				<button class="btn btn-ghost rounded-full" onclick={closeEdit} disabled={isSubmitting}
+					>Cancel</button
+				>
+				<button
+					class="btn btn-primary rounded-full gap-2"
+					onclick={saveEdit}
+					disabled={isSubmitting}
+				>
 					{#if isSubmitting}
 						<span class="loading loading-spinner loading-sm"></span>
 						<span>Saving...</span>

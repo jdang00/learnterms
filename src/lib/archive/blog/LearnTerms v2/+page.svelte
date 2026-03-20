@@ -48,11 +48,11 @@
 			<section>
 				<h2 class="mb-6 text-4xl font-bold /90">Introduction</h2>
 				<p class="text-lg leading-relaxed">
-					Welcome to the launch of <strong>LearnTerms v2</strong> – a revolutionary upgrade designed
-					to transform your exam preparation. With smarter study tools and an AI-powered backend, LearnTerms
-					v2 is set to become the go-to platform for our class. In this post, we'll walk you through
-					the evolution of the platform, explain the technology behind the upgrade, and show you how
-					these changes will make your study sessions more efficient and effective.
+					Welcome to the launch of <strong>LearnTerms v2</strong> – a revolutionary upgrade designed to
+					transform your exam preparation. With smarter study tools and an AI-powered backend, LearnTerms
+					v2 is set to become the go-to platform for our class. In this post, we'll walk you through the
+					evolution of the platform, explain the technology behind the upgrade, and show you how these
+					changes will make your study sessions more efficient and effective.
 				</p>
 			</section>
 
@@ -75,8 +75,8 @@
 						restricted its potential.
 					</li>
 					<li class="leading-relaxed">
-						<strong>Manual Verification:</strong> A significant amount of manual effort was required
-						to verify terms and maintain accuracy, consuming countless hours.
+						<strong>Manual Verification:</strong> A significant amount of manual effort was required to
+						verify terms and maintain accuracy, consuming countless hours.
 					</li>
 					<li class="leading-relaxed">
 						<strong>Scalability Challenges:</strong> The system needed to evolve to accommodate a broader
@@ -107,8 +107,8 @@
 						accurate study questions quickly.
 					</li>
 					<li class="leading-relaxed">
-						<strong>Personalized Learning:</strong> Maintain domain-specific expertise to ensure the
-						content is tailored to your course and study habits.
+						<strong>Personalized Learning:</strong> Maintain domain-specific expertise to ensure the content
+						is tailored to your course and study habits.
 					</li>
 				</ul>
 				<p class="mb-8 text-lg leading-relaxed">
@@ -188,8 +188,8 @@
 						<strong>Lean and Lightweight:</strong> The library is now 61% smaller and dependency-free.
 					</li>
 					<li class="leading-relaxed">
-						<strong>Enhanced Aesthetics:</strong> A cleaner, more mature look that still retains the
-						playful essence of the original design.
+						<strong>Enhanced Aesthetics:</strong> A cleaner, more mature look that still retains the playful
+						essence of the original design.
 					</li>
 					<li class="leading-relaxed">
 						<strong>Quick Deployment:</strong> Simplifies the process of building and deploying new features,
@@ -222,8 +222,7 @@
 				</p>
 				<ul class="mb-8 ml-6 space-y-3 text-lg">
 					<li class="leading-relaxed">
-						<strong>Faster Builds:</strong> Both full and incremental build times have significantly
-						decreased.
+						<strong>Faster Builds:</strong> Both full and incremental build times have significantly decreased.
 					</li>
 					<li class="leading-relaxed">
 						<strong>Optimized Styling:</strong> The high-performance engine ensures our custom styles
@@ -281,10 +280,9 @@
 
 				<h3 class="mb-4 mt-8 text-2xl font-semibold">Introduction to AI Integration</h3>
 				<p class="mb-8 text-lg leading-relaxed">
-					LearnTerms v2 leverages advanced <strong>Large Language Models (LLMs)</strong> to generate
-					personalized study questions quickly and accurately. By fine-tuning these models and utilizing
-					effective prompt engineering, we ensure that every generated question is both relevant and
-					accurate.
+					LearnTerms v2 leverages advanced <strong>Large Language Models (LLMs)</strong> to generate personalized
+					study questions quickly and accurately. By fine-tuning these models and utilizing effective
+					prompt engineering, we ensure that every generated question is both relevant and accurate.
 				</p>
 
 				<h3 class="mb-4 mt-10 text-2xl font-semibold">The AI Workflow</h3>
@@ -305,9 +303,7 @@
 						<ul class="mb-4 ml-6 space-y-2">
 							<li>A numbered question format</li>
 							<li>Multiple-choice options</li>
-							<li>
-								An explanation section that details why certain options are correct or incorrect
-							</li>
+							<li>A rationale section that details why certain options are correct or incorrect</li>
 						</ul>
 						<p class="mb-2 italic">Example Prompt Block:</p>
 						<pre class="bg-base-300 p-6 rounded-lg text-sm overflow-x-auto mb-4">
@@ -345,9 +341,9 @@ multiple answers."
 
 				<h3 class="mb-4 mt-8 text-2xl font-semibold">Overview of the Exam Module</h3>
 				<p class="mb-8 text-lg leading-relaxed">
-					The <strong>Exam Module</strong> is designed to replicate the experience of ExamSoft while
-					integrating modern features inspired by user feedback. This module is at the heart of LearnTerms
-					v2 and is built to provide a comprehensive exam preparation experience.
+					The <strong>Exam Module</strong> is designed to replicate the experience of ExamSoft while integrating
+					modern features inspired by user feedback. This module is at the heart of LearnTerms v2 and
+					is built to provide a comprehensive exam preparation experience.
 				</p>
 
 				<h3 class="mb-4 mt-10 text-2xl font-semibold">Core Features</h3>
@@ -369,8 +365,8 @@ multiple answers."
 						seamless cross-device study sessions.
 					</li>
 					<li class="leading-relaxed">
-						<strong>Keyboard Shortcuts:</strong> Use intuitive shortcuts (like Tab for solutions and
-						arrow keys for navigation) to speed up your study sessions.
+						<strong>Keyboard Shortcuts:</strong> Use intuitive shortcuts (like Tab for solutions and arrow
+						keys for navigation) to speed up your study sessions.
 					</li>
 				</ul>
 
@@ -402,8 +398,8 @@ multiple answers."
 						can boost your confidence on test day.
 					</li>
 					<li class="leading-relaxed">
-						<strong>Improved Performance:</strong> Regular practice with tailored questions leads to
-						deeper understanding and better exam results.
+						<strong>Improved Performance:</strong> Regular practice with tailored questions leads to deeper
+						understanding and better exam results.
 					</li>
 					<li class="leading-relaxed">
 						<strong>Reduced Anxiety:</strong> With tools like progress tracking and the ability to reset
@@ -489,9 +485,9 @@ multiple answers."
 			<li class="flex gap-3 items-start">
 				<span class="text-primary mt-1">✨</span>
 				<span class="text-base-content/90"
-					>Thanks to <span class="font-medium">Colby and Austin</span> for case testing the platform
-					in real time during the beta period. This natural interaction helped me dial in the typical
-					user interaction.</span
+					>Thanks to <span class="font-medium">Colby and Austin</span> for case testing the platform in
+					real time during the beta period. This natural interaction helped me dial in the typical user
+					interaction.</span
 				>
 			</li>
 

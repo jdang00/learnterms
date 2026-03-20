@@ -494,7 +494,7 @@
 					</div>
 					<h3 class="text-xl font-semibold">Rationale-first questions</h3>
 					<p class="mt-2 text-sm text-base-content/75">
-						Every question is built with an explanation baked in — AI-generated or hand-written.
+						Every question is built with a rationale baked in — AI-generated or hand-written.
 						Students don't just get answers, they get the why.
 					</p>
 

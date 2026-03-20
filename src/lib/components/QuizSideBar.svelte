@@ -2,12 +2,15 @@
 	import { PanelRight, Eye, Info, ChevronLeft, Settings } from 'lucide-svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
+	import { getRationale, hasRationale } from '$lib/utils/rationale';
+	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 
 	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
 	let hideSidebar = $state(false);
 	let isInfoModalOpen = $state(false);
 	let isSolutionModalOpen = $state(false);
 	let isSettingsModalOpen = $state(false);
+	const sanitizedRationale = $derived(sanitizeHtml(getRationale(currentlySelected)));
 
 	async function handleReset() {
 		if (userId && moduleId && client) {
@@ -15,7 +18,6 @@
 			qs.isResetModalOpen = false;
 		}
 	}
-
 </script>
 
 <div
@@ -46,10 +48,7 @@
 	{#if !hideSidebar}
 		<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<a
-					class="btn btn-ghost font-bold rounded-full"
-					href={`/classes?classId=${classId}`}
-				>
+				<a class="btn btn-ghost font-bold rounded-full" href={`/classes?classId=${classId}`}>
 					<ChevronLeft size={16} /> MODULE {module.data.order + 1}
 				</a>
 			</h4>
@@ -76,10 +75,7 @@
 				solutionOnlyBehavior="blur"
 			/>
 
-			{#if typeof currentlySelected.explanation === 'string' && (() => {
-					const t = currentlySelected.explanation.trim().toLowerCase();
-					return t.length > 0 && t !== 'undefined' && t !== 'null';
-				})()}
+			{#if hasRationale(currentlySelected)}
 				<div class="card bg-base-100 shadow-xl mt-6 rounded-2xl">
 					<div class="card-body">
 						<div class="flex flex-row flex-wrap justify-between border-b pb-2">
@@ -94,14 +90,17 @@
 						<div
 							class={`mt-2 break-words hyphens-auto transition-all duration-300 tiptap-content ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
 						>
-							{@html currentlySelected.explanation}
+							{@html sanitizedRationale}
 						</div>
 					</div>
 				</div>
 			{/if}
 
 			<div class="flex flex-row mt-6 justify-center">
-				<button class="btn btn-soft btn-sm rounded-full" onclick={() => (isSettingsModalOpen = true)}>
+				<button
+					class="btn btn-soft btn-sm rounded-full"
+					onclick={() => (isSettingsModalOpen = true)}
+				>
 					<Settings size={16} />
 					<span class="ml-1 hidden sm:inline">Settings</span>
 				</button>
@@ -156,10 +155,7 @@
 			</button>
 		</div>
 	{/if}
-
 </div>
-
- 
 
 <dialog class="modal max-w-full p-4" class:modal-open={isInfoModalOpen}>
 	<div class="modal-box rounded-2xl">
@@ -188,8 +184,8 @@
 			>
 		</form>
 		<h3 class="text-lg font-bold">Rationale</h3>
-		{#if typeof currentlySelected.explanation === 'string' && currentlySelected.explanation.trim().length > 0}
-			<div class="py-4 tiptap-content">{@html currentlySelected.explanation}</div>
+		{#if hasRationale(currentlySelected)}
+			<div class="py-4 tiptap-content">{@html sanitizedRationale}</div>
 		{/if}
 	</div>
 </dialog>

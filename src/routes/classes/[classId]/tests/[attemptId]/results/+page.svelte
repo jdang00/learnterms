@@ -4,6 +4,7 @@
 	import { api } from '../../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../../convex/_generated/dataModel';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
+	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { fade, slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import createDOMPurify from 'dompurify';
@@ -619,7 +620,7 @@
 								<span class="break-words hyphens-auto overflow-hidden">Review Mode</span>
 							</h2>
 							<p class="text-base-content/60 mt-2 text-sm">
-								Step through each question to see the correct answer and explanation.
+								Step through each question to see the correct answer and rationale.
 							</p>
 
 							<div class="mt-6">
@@ -1023,19 +1024,19 @@
 							{/if}
 
 							<!-- Rationale -->
-							{#if selectedItem.question.explanation}
+							{#if hasRationale(selectedItem.question)}
 								<div class="card bg-base-100 shadow-xl mt-6 rounded-2xl ms-2">
 									<div class="card-body">
 										<h3 class="card-title text-base">Rationale</h3>
 										<div class="tiptap-content text-sm text-base-content/80">
-											{@html sanitizeHtml(selectedItem.question.explanation)}
+											{@html sanitizeHtml(getRationale(selectedItem.question))}
 										</div>
 									</div>
 								</div>
 							{:else}
 								<div class="rounded-xl border border-base-300 p-4 mt-6 ms-2">
 									<div class="text-sm text-base-content/40">
-										No explanation available for this question.
+										No rationale available for this question.
 									</div>
 								</div>
 							{/if}

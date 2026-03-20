@@ -12,9 +12,8 @@
 	const productsQuery = useQuery(api.polar.listAllProducts, {});
 
 	// Get current subscription if authenticated curator/admin
-	const subscriptionQuery = useQuery(
-		api.polar.getCurrentUserWithSubscription,
-		() => (data.isCuratorOrAdmin ? {} : 'skip')
+	const subscriptionQuery = useQuery(api.polar.getCurrentUserWithSubscription, () =>
+		data.isCuratorOrAdmin ? {} : 'skip'
 	);
 
 	// Find semester and annual pro products
@@ -85,7 +84,8 @@
 		<div class="text-center mb-12">
 			<h1 class="text-4xl font-bold">How LearnTerms Works</h1>
 			<p class="text-base-content/70 mt-3 text-lg max-w-2xl mx-auto">
-				LearnTerms is a study platform where students access curated question banks created by their program's content curators.
+				LearnTerms is a study platform where students access curated question banks created by their
+				program's content curators.
 			</p>
 		</div>
 
@@ -93,7 +93,9 @@
 			<!-- Students -->
 			<div class="card bg-base-100 border border-base-300">
 				<div class="card-body text-center">
-					<div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+					<div
+						class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4"
+					>
 						<GraduationCap size={32} class="text-primary" />
 					</div>
 					<h2 class="card-title justify-center text-xl">Students</h2>
@@ -113,7 +115,7 @@
 						</li>
 						<li class="flex items-center gap-2">
 							<Check size={16} class="text-success" />
-							View explanations
+							View rationales
 						</li>
 					</ul>
 				</div>
@@ -122,7 +124,9 @@
 			<!-- Curators -->
 			<div class="card bg-base-100 border border-base-300">
 				<div class="card-body text-center">
-					<div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+					<div
+						class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4"
+					>
 						<Users size={32} class="text-secondary" />
 					</div>
 					<h2 class="card-title justify-center text-xl">Curators</h2>
@@ -151,7 +155,9 @@
 			<!-- Pro -->
 			<div class="card bg-base-100 border border-primary/40">
 				<div class="card-body text-center">
-					<div class="w-16 h-16 bg-gradient-to-br from-primary/20 to-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
+					<div
+						class="w-16 h-16 bg-gradient-to-br from-primary/20 to-success/20 rounded-full flex items-center justify-center mx-auto mb-4"
+					>
 						<Zap size={32} class="text-primary" />
 					</div>
 					<h2 class="card-title justify-center text-xl">Curator Pro</h2>
@@ -184,7 +190,7 @@
 		</div>
 	</div>
 
-<!-- Student View - Not a curator/admin -->
+	<!-- Student View - Not a curator/admin -->
 {:else if !data.isCuratorOrAdmin}
 	<div class="min-h-[70vh] flex items-center justify-center px-4">
 		<div class="max-w-lg text-center">
@@ -211,7 +217,7 @@
 					</li>
 					<li class="flex items-center gap-2">
 						<Check size={16} class="text-success" />
-						View detailed explanations
+						View detailed rationales
 					</li>
 					<li class="flex items-center gap-2">
 						<Check size={16} class="text-success" />
@@ -230,7 +236,7 @@
 		</div>
 	</div>
 
-<!-- Pro User View - Already subscribed -->
+	<!-- Pro User View - Already subscribed -->
 {:else if isPro}
 	<div class="mx-auto max-w-4xl px-4 py-12">
 		<div class="text-center mb-8">
@@ -241,7 +247,9 @@
 			<h1 class="text-3xl font-bold mb-2">You're on Curator Pro</h1>
 			<p class="text-base-content/70">
 				{#if subscriptionQuery.data?.subscription?.currentPeriodEnd}
-					Your subscription renews on {new Date(subscriptionQuery.data.subscription.currentPeriodEnd).toLocaleDateString()}
+					Your subscription renews on {new Date(
+						subscriptionQuery.data.subscription.currentPeriodEnd
+					).toLocaleDateString()}
 				{:else}
 					You have full access to all Pro features.
 				{/if}
@@ -253,7 +261,9 @@
 				<h3 class="font-semibold mb-4">Your Pro Benefits</h3>
 				<div class="grid sm:grid-cols-2 gap-4">
 					<div class="flex items-start gap-3">
-						<div class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center shrink-0">
+						<div
+							class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center shrink-0"
+						>
 							<span class="font-bold text-success">300</span>
 						</div>
 						<div>
@@ -262,7 +272,9 @@
 						</div>
 					</div>
 					<div class="flex items-start gap-3">
-						<div class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center shrink-0">
+						<div
+							class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center shrink-0"
+						>
 							<span class="font-bold text-success">∞</span>
 						</div>
 						<div>
@@ -271,7 +283,9 @@
 						</div>
 					</div>
 					<div class="flex items-start gap-3">
-						<div class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center shrink-0">
+						<div
+							class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center shrink-0"
+						>
 							<Check size={20} class="text-success" />
 						</div>
 						<div>
@@ -280,7 +294,9 @@
 						</div>
 					</div>
 					<div class="flex items-start gap-3">
-						<div class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center shrink-0">
+						<div
+							class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center shrink-0"
+						>
 							<Check size={20} class="text-success" />
 						</div>
 						<div>
@@ -296,20 +312,16 @@
 			<button class="btn btn-outline" onclick={handleManageSubscription}>
 				Manage Subscription
 			</button>
-			<a href="/admin/question-studio" class="btn btn-primary">
-				Open Question Studio
-			</a>
+			<a href="/admin/question-studio" class="btn btn-primary"> Open Question Studio </a>
 		</div>
 	</div>
 
-<!-- Curator/Admin Free View - Can upgrade -->
+	<!-- Curator/Admin Free View - Can upgrade -->
 {:else}
 	<div class="mx-auto max-w-6xl px-4 py-12">
 		<div class="text-center mb-12">
 			<h1 class="text-4xl font-bold">Curator Plans</h1>
-			<p class="text-base-content/70 mt-3 text-lg">
-				Scale your content creation with Pro
-			</p>
+			<p class="text-base-content/70 mt-3 text-lg">Scale your content creation with Pro</p>
 		</div>
 
 		<!-- Billing Toggle -->
@@ -399,7 +411,9 @@
 				</div>
 				<div class="card-body">
 					<h2 class="card-title text-xl">Curator Pro</h2>
-					<p class="text-base-content/70 text-sm">Scale your content creation with expanded limits.</p>
+					<p class="text-base-content/70 text-sm">
+						Scale your content creation with expanded limits.
+					</p>
 
 					<div class="mt-6">
 						{#if productsQuery.isLoading}
@@ -408,7 +422,9 @@
 							<span class="text-4xl font-extrabold">
 								{formatPrice(currentProduct.prices?.[0]?.priceAmount)}
 							</span>
-							<span class="text-base-content/70">/{selectedInterval === 'semester' ? '6 months' : 'year'}</span>
+							<span class="text-base-content/70"
+								>/{selectedInterval === 'semester' ? '6 months' : 'year'}</span
+							>
 						{:else}
 							<span class="text-4xl font-extrabold">$15</span>
 							<span class="text-base-content/70">/6 months</span>
@@ -473,13 +489,21 @@
 				<details class="collapse collapse-arrow bg-base-200">
 					<summary class="collapse-title font-medium text-sm">Can I cancel anytime?</summary>
 					<div class="collapse-content text-sm text-base-content/70">
-						<p>Yes, you can cancel your subscription at any time. You'll retain Pro access until the end of your billing period.</p>
+						<p>
+							Yes, you can cancel your subscription at any time. You'll retain Pro access until the
+							end of your billing period.
+						</p>
 					</div>
 				</details>
 				<details class="collapse collapse-arrow bg-base-200">
-					<summary class="collapse-title font-medium text-sm">What happens when I hit my limits?</summary>
+					<summary class="collapse-title font-medium text-sm"
+						>What happens when I hit my limits?</summary
+					>
 					<div class="collapse-content text-sm text-base-content/70">
-						<p>On the free plan, you'll see a message when you've used your daily AI generations or PDF upload. Limits reset every 24 hours.</p>
+						<p>
+							On the free plan, you'll see a message when you've used your daily AI generations or
+							PDF upload. Limits reset every 24 hours.
+						</p>
 					</div>
 				</details>
 			</div>
