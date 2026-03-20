@@ -23,6 +23,7 @@
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { captureQuestionAnswered } from '$lib/analytics/questionAnswered';
+	import { getRationale, hasRationale } from '$lib/utils/rationale';
 
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
@@ -51,15 +52,10 @@
 		error: mediaQuery.error
 	});
 
-	const hasRationale = $derived.by(() => {
-		const explanation = currentlySelected?.explanation;
-		if (typeof explanation !== 'string') return false;
-		const normalized = explanation.trim().toLowerCase();
-		return normalized.length > 0 && normalized !== 'undefined' && normalized !== 'null';
-	});
+	const canShowRationale = $derived.by(() => hasRationale(currentlySelected));
 
 	$effect(() => {
-		if (!qs.showSolution || !hasRationale) {
+		if (!qs.showSolution || !canShowRationale) {
 			qs.isModalOpen = false;
 		}
 	});
@@ -228,9 +224,13 @@
 		</ul>
 	</div>
 	<button class="btn btn-outline btn-sm rounded-full" onclick={handleClear}>Clear</button>
-	<button class="btn btn-outline btn-success btn-sm btn-circle" onclick={handleCheck}><Check size={18} /></button>
+	<button class="btn btn-outline btn-success btn-sm btn-circle" onclick={handleCheck}
+		><Check size={18} /></button
+	>
 	<button
-		class="btn btn-sm btn-circle {qs.currentQuestionFlagged ? 'btn-warning' : 'btn-warning btn-soft'}"
+		class="btn btn-sm btn-circle {qs.currentQuestionFlagged
+			? 'btn-warning'
+			: 'btn-warning btn-soft'}"
 		aria-label={qs.currentQuestionFlagged ? 'Remove flag' : 'Flag question'}
 		onclick={handleFlag}
 	>
@@ -272,7 +272,10 @@
 		<ArrowRight size={20} />
 	</button>
 
-	<dialog class="modal modal-bottom sm:modal-middle max-w-full p-0 sm:p-4" class:modal-open={qs.isModalOpen}>
+	<dialog
+		class="modal modal-bottom sm:modal-middle max-w-full p-0 sm:p-4"
+		class:modal-open={qs.isModalOpen}
+	>
 		<div class="modal-box rounded-t-3xl sm:rounded-2xl max-h-[65vh]">
 			<form method="dialog">
 				<button
@@ -281,8 +284,8 @@
 				>
 			</form>
 			<h3 class="text-lg font-bold">Rationale</h3>
-			{#if hasRationale}
-				<div class="py-4 tiptap-content">{@html currentlySelected.explanation}</div>
+			{#if canShowRationale}
+				<div class="py-4 tiptap-content">{@html getRationale(currentlySelected)}</div>
 			{/if}
 		</div>
 	</dialog>
@@ -358,7 +361,7 @@
 	<SettingsModal bind:qs bind:isOpen={isSettingsModalOpen} />
 </div>
 
-{#if qs.showSolution && hasRationale && !qs.isModalOpen}
+{#if qs.showSolution && canShowRationale && !qs.isModalOpen}
 	<button
 		class="fixed right-4 z-[60] md:hidden btn btn-sm btn-soft rounded-full border border-base-300/70 bg-base-100/85 backdrop-blur-sm normal-case shadow-sm"
 		style="bottom: calc(env(safe-area-inset-bottom, 0px) + 6.25rem);"

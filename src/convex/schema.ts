@@ -172,6 +172,8 @@ export default defineSchema({
 		stem: v.string(),
 		options: v.array(v.object({ id: v.string(), text: v.string() })),
 		correctAnswers: v.array(v.string()),
+		rationale: v.optional(v.string()),
+		// DEPRECATED: retained temporarily for legacy question records
 		explanation: v.optional(v.string()),
 		aiGenerated: v.boolean(),
 		createdBy: v.optional(
@@ -353,11 +355,7 @@ export default defineSchema({
 			moduleIds: v.array(v.id('module')),
 			questionCountRequested: v.number(),
 			questionCountActual: v.number(),
-			sourceFilter: v.union(
-				v.literal('all'),
-				v.literal('flagged'),
-				v.literal('incomplete')
-			),
+			sourceFilter: v.union(v.literal('all'), v.literal('flagged'), v.literal('incomplete')),
 			questionTypes: v.optional(v.array(v.string())),
 			shuffleQuestions: v.boolean(),
 			shuffleOptions: v.boolean(),
@@ -431,6 +429,8 @@ export default defineSchema({
 			stem: v.string(),
 			options: v.array(v.object({ id: v.string(), text: v.string() })),
 			correctAnswers: v.array(v.string()),
+			rationale: v.optional(v.string()),
+			// DEPRECATED: retained temporarily for legacy attempt snapshots
 			explanation: v.optional(v.string()),
 			questionUpdatedAt: v.number()
 		}),

@@ -19,7 +19,7 @@
 		X
 	} from 'lucide-svelte';
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ModuleCard from '../../lib/components/ModuleCard.svelte';
 	import Sidebar from '../../lib/components/Sidebar.svelte';
@@ -61,7 +61,8 @@
 
 	function checkScroll() {
 		if (!jumpBackScroller) return;
-		canScrollRight = jumpBackScroller.scrollLeft + jumpBackScroller.clientWidth < jumpBackScroller.scrollWidth - 4;
+		canScrollRight =
+			jumpBackScroller.scrollLeft + jumpBackScroller.clientWidth < jumpBackScroller.scrollWidth - 4;
 	}
 
 	function scrollRight() {
@@ -76,14 +77,12 @@
 		return () => ro.disconnect();
 	});
 
-	const classesQuery = useQuery(
-		api.class.getUserClasses,
-		() => userData?.cohortId ? { id: userData.cohortId as Id<'cohort'> } : 'skip'
+	const classesQuery = useQuery(api.class.getUserClasses, () =>
+		userData?.cohortId ? { id: userData.cohortId as Id<'cohort'> } : 'skip'
 	);
 
-	const featureAnnouncementQuery = useQuery(
-		api.featureAnnouncements.getCurrentForViewer,
-		() => userData?.cohortId ? {} : 'skip'
+	const featureAnnouncementQuery = useQuery(api.featureAnnouncements.getCurrentForViewer, () =>
+		userData?.cohortId ? {} : 'skip'
 	);
 
 	const classes = $derived({
@@ -119,9 +118,8 @@
 		progress: number;
 	};
 
-	const recentModuleActivityQuery = useQuery(
-		api.progress.getRecentModuleActivity,
-		() => (currentView === 'classes' && userData?.cohortId) ? { limit: 4 } : 'skip'
+	const recentModuleActivityQuery = useQuery(api.progress.getRecentModuleActivity, () =>
+		currentView === 'classes' && userData?.cohortId ? { limit: 4 } : 'skip'
 	);
 
 	const recentModuleIds = $derived.by(() => {
@@ -129,9 +127,10 @@
 		return activity.map((item) => item.moduleId);
 	});
 
-	const recentModuleProgressQuery = useQuery(
-		api.progress.getRecentModulesProgress,
-		() => (currentView === 'classes' && recentModuleIds.length > 0) ? { moduleIds: recentModuleIds } : 'skip'
+	const recentModuleProgressQuery = useQuery(api.progress.getRecentModulesProgress, () =>
+		currentView === 'classes' && recentModuleIds.length > 0
+			? { moduleIds: recentModuleIds }
+			: 'skip'
 	);
 
 	const recentModules = $derived.by(() => {
@@ -156,9 +155,8 @@
 		recentModuleActivityQuery.error ?? recentModuleProgressQuery.error
 	);
 
-	const modulesQuery = useQuery(
-		api.module.getClassModules,
-		() => (selectedClass && currentView === 'modules') ? { id: selectedClass._id } : 'skip'
+	const modulesQuery = useQuery(api.module.getClassModules, () =>
+		selectedClass && currentView === 'modules' ? { id: selectedClass._id } : 'skip'
 	);
 
 	const modules = $derived({
@@ -192,7 +190,7 @@
 		if (classItem != null) {
 			const classesUrl = new URL(resolve('/classes'), page.url.origin);
 			classesUrl.searchParams.set('classId', classItem._id);
-			window.history.replaceState(window.history.state, '', classesUrl.toString());
+			replaceState(classesUrl, page.state);
 		}
 	}
 
@@ -223,9 +221,7 @@
 		if (item.href === '/cohort') return resolve('/cohort');
 		if (item.title === 'Build your own test') {
 			const classId = selectedClass?._id ?? firstClassId;
-			return classId
-				? resolve('/classes/[classId]/tests/new', { classId })
-				: resolve('/classes');
+			return classId ? resolve('/classes/[classId]/tests/new', { classId }) : resolve('/classes');
 		}
 		if (item.title === 'Pick up where you left off') {
 			return resolve('/classes');
@@ -242,7 +238,7 @@
 		featureSpotlightAcknowledging = true;
 		featureSpotlightError = null;
 		try {
-				await client.mutation(api.featureAnnouncements.markSeen, {
+			await client.mutation(api.featureAnnouncements.markSeen, {
 				announcementId: announcement.id
 			});
 			featureSpotlightSeenLocal = true;
@@ -261,8 +257,7 @@
 		openedAnnouncementId = announcement.id;
 		featureSpotlightOpen = true;
 	});
-
-	</script>
+</script>
 
 <main class="min-h-screen p-6 sm:p-8 mb-56">
 	<div class="mb-8 flex flex-col gap-2">
@@ -280,7 +275,9 @@
 		{:else}
 			<div class="flex flex-row gap-5 items-center">
 				<div class="avatar hidden xl:block">
-					<div class="ring-primary ring-offset-base-100 w-14 rounded-full ring ring-offset-2 transition-shadow duration-300 hover:shadow-md hover:shadow-primary/10">
+					<div
+						class="ring-primary ring-offset-base-100 w-14 rounded-full ring ring-offset-2 transition-shadow duration-300 hover:shadow-md hover:shadow-primary/10"
+					>
 						<img src={user.imageUrl} alt="user profile" />
 					</div>
 				</div>
@@ -292,12 +289,12 @@
 					{#if userData === null}
 						<div class="skeleton h-4 w-72 rounded-full"></div>
 					{:else}
-							<p class="text-base-content/60 text-sm">{userSchoolName}</p>
-							{#if userData && !classes.isLoading}
-								<div class="flex flex-wrap gap-1.5 mt-2">
-									<div class="badge badge-primary rounded-full badge-soft">
-										{userCohortName}
-									</div>
+						<p class="text-base-content/60 text-sm">{userSchoolName}</p>
+						{#if userData && !classes.isLoading}
+							<div class="flex flex-wrap gap-1.5 mt-2">
+								<div class="badge badge-primary rounded-full badge-soft">
+									{userCohortName}
+								</div>
 								{#if dev}
 									<div class="badge badge-error rounded-full badge-soft">
 										<ShieldCheckIcon size={14} /> Dev
@@ -330,7 +327,9 @@
 						<div class="overflow-x-auto pb-1">
 							<div class="flex min-w-max gap-2">
 								{#each Array(3), i (i)}
-									<div class="rounded-xl border border-base-300 bg-base-100 px-3 py-2.5 animate-pulse min-w-[19rem]">
+									<div
+										class="rounded-xl border border-base-300 bg-base-100 px-3 py-2.5 animate-pulse min-w-[19rem]"
+									>
 										<div class="flex items-center gap-3">
 											<div class="skeleton h-5 w-5 rounded"></div>
 											<div class="skeleton h-3.5 w-32"></div>
@@ -350,17 +349,26 @@
 					<div in:fade={{ duration: 300, easing: cubicOut }} class="mb-10">
 						<div class="flex items-center justify-between mb-3">
 							<div class="flex items-center gap-2">
-								<h3 class="text-sm font-semibold text-base-content/70">Pick up where you left off</h3>
+								<h3 class="text-sm font-semibold text-base-content/70">
+									Pick up where you left off
+								</h3>
 							</div>
 							{#if canScrollRight}
-								<button onclick={scrollRight} class="flex items-center gap-0.5 text-xs text-base-content/40 hover:text-primary transition-colors duration-150">
+								<button
+									onclick={scrollRight}
+									class="flex items-center gap-0.5 text-xs text-base-content/40 hover:text-primary transition-colors duration-150"
+								>
 									<span>More</span>
 									<ChevronRight size={14} />
 								</button>
 							{/if}
 						</div>
 						<div class="relative">
-							<div bind:this={jumpBackScroller} onscroll={checkScroll} class="overflow-x-auto scrollbar-none">
+							<div
+								bind:this={jumpBackScroller}
+								onscroll={checkScroll}
+								class="overflow-x-auto scrollbar-none"
+							>
 								<div class="flex min-w-max gap-2">
 									{#each recentModules as recentModule (recentModule.moduleId)}
 										<a
@@ -370,14 +378,21 @@
 											})}
 											class="group flex items-center gap-2.5 rounded-xl bg-base-100 border border-base-300 pl-3 pr-4 py-2 transition-colors duration-150 hover:border-primary/40"
 										>
-											<span class="text-base leading-none shrink-0">{recentModule.moduleEmoji || '📘'}</span>
+											<span class="text-base leading-none shrink-0"
+												>{recentModule.moduleEmoji || '📘'}</span
+											>
 											<div class="min-w-0 flex flex-col gap-0.5">
-												<span class="font-medium text-xs text-base-content truncate max-w-40 leading-tight group-hover:text-primary transition-colors duration-150">
+												<span
+													class="font-medium text-xs text-base-content truncate max-w-40 leading-tight group-hover:text-primary transition-colors duration-150"
+												>
 													{recentModule.moduleTitle}
 												</span>
-												<span class="flex items-center gap-1.5 text-[11px] text-base-content/45 leading-tight">
+												<span
+													class="flex items-center gap-1.5 text-[11px] text-base-content/45 leading-tight"
+												>
 													<span>{recentModule.classCode}</span>
-													<span class="inline-block w-0.5 h-0.5 rounded-full bg-base-content/25"></span>
+													<span class="inline-block w-0.5 h-0.5 rounded-full bg-base-content/25"
+													></span>
 													<span>{recentModule.progress}%</span>
 												</span>
 											</div>
@@ -394,7 +409,9 @@
 								</div>
 							</div>
 							{#if canScrollRight}
-								<div class="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-base-200/80 to-transparent rounded-r-xl"></div>
+								<div
+									class="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-base-200/80 to-transparent rounded-r-xl"
+								></div>
 							{/if}
 						</div>
 					</div>
@@ -404,29 +421,39 @@
 			{:else if currentView === 'modules' && selectedClass}
 				<div in:fade={{ duration: 400, easing: cubicOut }} class="w-full">
 					<div class="flex items-center gap-3 mb-4">
-						<button onclick={goBackToClasses} class="btn btn-sm btn-ghost rounded-full hover:bg-base-200 transition-colors duration-200">
+						<button
+							onclick={goBackToClasses}
+							class="btn btn-sm btn-ghost rounded-full hover:bg-base-200 transition-colors duration-200"
+						>
 							<ArrowLeft size={16} />
 						</button>
 						<div class="flex items-center gap-2 min-w-0">
 							<h3 class="text-lg font-semibold text-base-content truncate">{selectedClass.name}</h3>
-							<span class="badge badge-soft badge-sm rounded-full font-mono opacity-60 shrink-0">{selectedClass.code}</span>
+							<span class="badge badge-soft badge-sm rounded-full font-mono opacity-60 shrink-0"
+								>{selectedClass.code}</span
+							>
 						</div>
 					</div>
 
-						<a
-							href={resolve('/classes/[classId]/tests/new', { classId: selectedClass._id })}
-							class="group flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 mb-6 transition-all duration-200 hover:border-primary/40 hover:bg-primary/10 hover:shadow-md hover:-translate-y-0.5"
+					<a
+						href={resolve('/classes/[classId]/tests/new', { classId: selectedClass._id })}
+						class="group flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 mb-6 transition-all duration-200 hover:border-primary/40 hover:bg-primary/10 hover:shadow-md hover:-translate-y-0.5"
+					>
+						<div
+							class="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/15 text-primary shrink-0 transition-transform duration-200 group-hover:scale-110"
 						>
-						<div class="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/15 text-primary shrink-0 transition-transform duration-200 group-hover:scale-110">
 							<ClipboardCheck size={22} />
 						</div>
 						<div class="flex-1 min-w-0">
 							<div class="font-semibold text-sm text-base-content">Test yourself</div>
 							<p class="text-xs text-base-content/50 mt-0.5">
-								Build a timed, scored practice test from any combination of modules. See exactly where you stand.
+								Build a timed, scored practice test from any combination of modules. See exactly
+								where you stand.
 							</p>
 						</div>
-						<div class="text-primary shrink-0 transition-transform duration-200 group-hover:translate-x-1">
+						<div
+							class="text-primary shrink-0 transition-transform duration-200 group-hover:translate-x-1"
+						>
 							<ArrowRightIcon size={18} />
 						</div>
 					</a>
@@ -487,7 +514,9 @@
 
 {#if featureAnnouncement}
 	<dialog class="modal max-w-full p-4 z-[1000]" class:modal-open={featureSpotlightOpen}>
-		<div class="modal-box max-w-2xl rounded-4xl border border-base-300 p-0 overflow-hidden shadow-2xl backdrop-blur-md">
+		<div
+			class="modal-box max-w-2xl rounded-4xl border border-base-300 p-0 overflow-hidden shadow-2xl backdrop-blur-md"
+		>
 			<!-- Header -->
 			<div class="relative p-6 sm:p-8 pb-5">
 				<button
@@ -500,7 +529,9 @@
 				</button>
 
 				<div class="flex items-center gap-3 mb-4">
-					<div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+					<div
+						class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0"
+					>
 						<Sparkles size={20} />
 					</div>
 					<div class="badge badge-primary badge-soft rounded-full text-xs">
@@ -528,7 +559,9 @@
 							}}
 						>
 							<div class="flex items-center gap-4">
-								<div class="w-10 h-10 rounded-xl bg-base-200 text-base-content/60 flex items-center justify-center shrink-0 group-hover:bg-primary/15 group-hover:text-primary transition-all duration-200 group-hover:scale-110">
+								<div
+									class="w-10 h-10 rounded-xl bg-base-200 text-base-content/60 flex items-center justify-center shrink-0 group-hover:bg-primary/15 group-hover:text-primary transition-all duration-200 group-hover:scale-110"
+								>
 									<Icon size={18} />
 								</div>
 								<div class="min-w-0 flex-1">
@@ -542,7 +575,9 @@
 										{item.description}
 									</p>
 								</div>
-								<div class="text-base-content/20 shrink-0 transition-all duration-200 group-hover:text-primary group-hover:translate-x-1">
+								<div
+									class="text-base-content/20 shrink-0 transition-all duration-200 group-hover:text-primary group-hover:translate-x-1"
+								>
 									<ArrowRightIcon size={16} />
 								</div>
 							</div>
@@ -557,7 +592,11 @@
 				{/if}
 
 				<div class="mt-6 flex items-center justify-between gap-3">
-					<a href="/changelog" class="text-xs text-base-content/40 hover:text-primary transition-colors duration-150" onclick={dismissFeatureSpotlight}>
+					<a
+						href="/changelog"
+						class="text-xs text-base-content/40 hover:text-primary transition-colors duration-150"
+						onclick={dismissFeatureSpotlight}
+					>
 						See all updates
 					</a>
 					<div class="flex items-center gap-2">
@@ -615,5 +654,4 @@
 	.scrollbar-none::-webkit-scrollbar {
 		display: none;
 	}
-
 </style>

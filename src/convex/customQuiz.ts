@@ -2,6 +2,7 @@ import { query, mutation } from './_generated/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
+import { getRationale } from '../lib/utils/rationale';
 
 type SourceFilter = 'all' | 'flagged' | 'incomplete';
 type AttemptStatus = 'in_progress' | 'submitted' | 'timed_out' | 'abandoned';
@@ -57,12 +58,16 @@ async function requireAttemptOwner(
 	return attempt;
 }
 
-function hasInteraction(record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions'>) {
+function hasInteraction(
+	record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions'>
+) {
 	return record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0;
 }
 
 function normalizeQuestionType(type: string): string {
-	return String(type || '').trim().toLowerCase();
+	return String(type || '')
+		.trim()
+		.toLowerCase();
 }
 
 function seededHash(input: string): number {
@@ -107,7 +112,9 @@ function exactSetMatch(correctAnswers: string[], userAnswers: string[]) {
 }
 
 function matchingRoleFromOptionText(text: string): 'prompt' | 'answer' | null {
-	const normalized = String(text ?? '').trimStart().toLowerCase();
+	const normalized = String(text ?? '')
+		.trimStart()
+		.toLowerCase();
 	if (normalized.startsWith('prompt:')) return 'prompt';
 	if (normalized.startsWith('answer:')) return 'answer';
 	return null;
@@ -175,14 +182,14 @@ function normalizeMatchingCorrectPairs(
 				answerToken: string;
 			} => Boolean(pair)
 		)
-			.map((pair) => ({
-				promptId: resolveMatchingOptionTokenToId(pair.promptId, options) ?? '',
-				answerId:
-					splitMatchingAnswerToken(pair.answerToken)
-						.map((token) => resolveMatchingOptionTokenToId(token, options))
-						.filter((id): id is string => Boolean(id))
-						.find((id) => answerIdSet.has(id)) ?? ''
-			}))
+		.map((pair) => ({
+			promptId: resolveMatchingOptionTokenToId(pair.promptId, options) ?? '',
+			answerId:
+				splitMatchingAnswerToken(pair.answerToken)
+					.map((token) => resolveMatchingOptionTokenToId(token, options))
+					.filter((id): id is string => Boolean(id))
+					.find((id) => answerIdSet.has(id)) ?? ''
+		}))
 		.filter((pair) => promptIdSet.has(pair.promptId) && answerIdSet.has(pair.answerId));
 	if (pairValues.length > 0) {
 		return Array.from(new Set(pairValues.map((pair) => `${pair.promptId}::${pair.answerId}`)));
@@ -219,7 +226,9 @@ function matchingCorrectByPrompt(
 	const answerOptions = options.filter((o) => matchingRoleFromOptionText(o.text) === 'answer');
 	const promptIdSet = new Set(promptOptions.map((o) => o.id));
 	const answerIdSet = new Set(answerOptions.map((o) => o.id));
-	const answerKeyById = new Map(answerOptions.map((o) => [o.id, normalizeMatchingAnswerText(o.text)]));
+	const answerKeyById = new Map(
+		answerOptions.map((o) => [o.id, normalizeMatchingAnswerText(o.text)])
+	);
 	const answerIdsByKey = new Map<string, Set<string>>();
 	for (const [id, key] of answerKeyById.entries()) {
 		if (!answerIdsByKey.has(key)) answerIdsByKey.set(key, new Set());
@@ -282,14 +291,10 @@ function normalizeMatchingUserPairs(
 ): string[] {
 	const options = questionSnapshot.options || [];
 	const promptIdSet = new Set(
-		options
-			.filter((o) => matchingRoleFromOptionText(o.text) === 'prompt')
-			.map((o) => o.id)
+		options.filter((o) => matchingRoleFromOptionText(o.text) === 'prompt').map((o) => o.id)
 	);
 	const answerIdSet = new Set(
-		options
-			.filter((o) => matchingRoleFromOptionText(o.text) === 'answer')
-			.map((o) => o.id)
+		options.filter((o) => matchingRoleFromOptionText(o.text) === 'answer').map((o) => o.id)
 	);
 
 	return Array.from(
@@ -365,11 +370,17 @@ function normalizeForFlags(
 function looksUnsafeRegexPattern(pattern: string): boolean {
 	if (pattern.length > 200) return true;
 	// Heuristic for catastrophic backtracking patterns like (.+)+ or (a*){2,}
-	if (/\((?:[^()\\]|\\.)*(?:\+|\*|\{\d+(?:,\d*)?\})(?:[^()\\]|\\.)*\)\s*(?:\+|\*|\{\d+(?:,\d*)?\})/.test(pattern)) {
+	if (
+		/\((?:[^()\\]|\\.)*(?:\+|\*|\{\d+(?:,\d*)?\})(?:[^()\\]|\\.)*\)\s*(?:\+|\*|\{\d+(?:,\d*)?\})/.test(
+			pattern
+		)
+	) {
 		return true;
 	}
 	// Heuristic for repeated wildcard groups such as (.*.*)+
-	if (/\((?:[^()\\]|\\.)*(?:\.\*|\.\+)(?:[^()\\]|\\.)*(?:\.\*|\.\+)(?:[^()\\]|\\.)*\)/.test(pattern)) {
+	if (
+		/\((?:[^()\\]|\\.)*(?:\.\*|\.\+)(?:[^()\\]|\\.)*(?:\.\*|\.\+)(?:[^()\\]|\\.)*\)/.test(pattern)
+	) {
 		return true;
 	}
 	return false;
@@ -458,7 +469,10 @@ function scoreAttemptItem(item: Doc<'quizAttemptItems'>) {
 			item.response.selectedOptions || []
 		);
 	} else {
-		isCorrect = exactSetMatch(item.questionSnapshot.correctAnswers || [], item.response.selectedOptions || []);
+		isCorrect = exactSetMatch(
+			item.questionSnapshot.correctAnswers || [],
+			item.response.selectedOptions || []
+		);
 	}
 
 	return {
@@ -481,7 +495,10 @@ function computeAttemptCounters(items: Doc<'quizAttemptItems'>[]) {
 	return { visitedCount, answeredCount, flaggedCount };
 }
 
-async function getClassPublishedModules(ctx: ConvexCtx, classId: Id<'class'>): Promise<Doc<'module'>[]> {
+async function getClassPublishedModules(
+	ctx: ConvexCtx,
+	classId: Id<'class'>
+): Promise<Doc<'module'>[]> {
 	const modules = (await ctx.db
 		.query('module')
 		.withIndex('by_classId', (q) => q.eq('classId', classId))
@@ -527,7 +544,10 @@ async function getModuleTagsForClass(
 		.filter((link) => !link.deletedAt && moduleIdSet.has(link.moduleId))
 		.filter((link) => tagById.has(link.tagId));
 
-	const tagsByModuleId = new Map<Id<'module'>, Array<{ _id: Id<'tags'>; name: string; color?: string }>>();
+	const tagsByModuleId = new Map<
+		Id<'module'>,
+		Array<{ _id: Id<'tags'>; name: string; color?: string }>
+	>();
 	const moduleIdsByTagId = new Map<Id<'tags'>, Set<Id<'module'>>>();
 
 	for (const link of filteredLinks) {
@@ -565,13 +585,16 @@ async function getModuleTagsForClass(
 	return { tagsByModuleId, tagCollections };
 }
 
-async function getEligibleQuestionsForAttempt(ctx: ConvexCtx, params: {
-	userId: Id<'users'>;
-	classId: Id<'class'>;
-	moduleIds: Id<'module'>[];
-	sourceFilter: SourceFilter;
-	questionTypes?: string[];
-}): Promise<{
+async function getEligibleQuestionsForAttempt(
+	ctx: ConvexCtx,
+	params: {
+		userId: Id<'users'>;
+		classId: Id<'class'>;
+		moduleIds: Id<'module'>[];
+		sourceFilter: SourceFilter;
+		questionTypes?: string[];
+	}
+): Promise<{
 	questions: Doc<'question'>[];
 	modulesById: Map<Id<'module'>, Doc<'module'>>;
 }> {
@@ -594,11 +617,11 @@ async function getEligibleQuestionsForAttempt(ctx: ConvexCtx, params: {
 
 	const questionLists = await Promise.all(
 		params.moduleIds.map(async (moduleId) => {
-				const q = await ctx.db
-					.query('question')
-					.withIndex('by_moduleId_order', (indexQ) => indexQ.eq('moduleId', moduleId))
-					.filter((qb) => qb.eq(qb.field('status'), 'published'))
-					.collect();
+			const q = await ctx.db
+				.query('question')
+				.withIndex('by_moduleId_order', (indexQ) => indexQ.eq('moduleId', moduleId))
+				.filter((qb) => qb.eq(qb.field('status'), 'published'))
+				.collect();
 			return q as Doc<'question'>[];
 		})
 	);
@@ -614,9 +637,7 @@ async function getEligibleQuestionsForAttempt(ctx: ConvexCtx, params: {
 
 	const progress = (await ctx.db
 		.query('userProgress')
-		.withIndex('by_user_class', (q) =>
-			q.eq('userId', params.userId).eq('classId', params.classId)
-		)
+		.withIndex('by_user_class', (q) => q.eq('userId', params.userId).eq('classId', params.classId))
 		.collect()) as Doc<'userProgress'>[];
 
 	const progressByQuestionId = new Map<Id<'question'>, Doc<'userProgress'>>(
@@ -624,7 +645,9 @@ async function getEligibleQuestionsForAttempt(ctx: ConvexCtx, params: {
 	);
 
 	if (params.sourceFilter === 'flagged') {
-		questions = questions.filter((question) => progressByQuestionId.get(question._id)?.isFlagged === true);
+		questions = questions.filter(
+			(question) => progressByQuestionId.get(question._id)?.isFlagged === true
+		);
 	} else if (params.sourceFilter === 'incomplete') {
 		questions = questions.filter((question) => {
 			const record = progressByQuestionId.get(question._id);
@@ -712,19 +735,19 @@ export const getClassQuizBuilderData = query({
 				code: classDoc.code,
 				description: classDoc.description
 			},
-				modules: modules.map((m: Doc<'module'>) => ({
-					_id: m._id,
-					title: m.title,
-					emoji: m.emoji,
-					order: m.order,
-					description: m.description,
-					questionCount: m.questionCount ?? 0,
-					tags: tagsByModuleId.get(m._id) ?? []
-				})),
-				tagCollections: tagCollectionsWithCounts,
-				limits: {
-					maxQuestionsPerAttempt: MAX_QUESTIONS_PER_ATTEMPT
-				}
+			modules: modules.map((m: Doc<'module'>) => ({
+				_id: m._id,
+				title: m.title,
+				emoji: m.emoji,
+				order: m.order,
+				description: m.description,
+				questionCount: m.questionCount ?? 0,
+				tags: tagsByModuleId.get(m._id) ?? []
+			})),
+			tagCollections: tagCollectionsWithCounts,
+			limits: {
+				maxQuestionsPerAttempt: MAX_QUESTIONS_PER_ATTEMPT
+			}
 		};
 	}
 });
@@ -771,7 +794,9 @@ export const getEligibleQuestionPoolSummary = query({
 
 		return {
 			totalEligible: questions.length,
-			byModule: Array.from(byModule.values()).sort((a, b) => a.moduleTitle.localeCompare(b.moduleTitle)),
+			byModule: Array.from(byModule.values()).sort((a, b) =>
+				a.moduleTitle.localeCompare(b.moduleTitle)
+			),
 			byType: Array.from(byType.entries())
 				.map(([questionType, count]) => ({ questionType, count }))
 				.sort((a, b) => a.questionType.localeCompare(b.questionType))
@@ -816,7 +841,9 @@ export const createCustomQuizAttempt = mutation({
 		const seed = `${nowTs()}_${Math.random().toString(36).slice(2)}`;
 		const shuffledPool = shuffledWithSeed(questions, `pool:${seed}`);
 		const selected = shuffledPool.slice(0, actualCount);
-		const orderedQuestions = args.shuffleQuestions ? selected : [...selected].sort((a, b) => a.order - b.order);
+		const orderedQuestions = args.shuffleQuestions
+			? selected
+			: [...selected].sort((a, b) => a.order - b.order);
 		const now = nowTs();
 
 		const attemptId = await ctx.db.insert('quizAttempts', {
@@ -830,7 +857,8 @@ export const createCustomQuizAttempt = mutation({
 				questionCountRequested: requestedCount,
 				questionCountActual: actualCount,
 				sourceFilter: args.sourceFilter,
-				questionTypes: args.questionTypes && args.questionTypes.length > 0 ? args.questionTypes : undefined,
+				questionTypes:
+					args.questionTypes && args.questionTypes.length > 0 ? args.questionTypes : undefined,
 				shuffleQuestions: args.shuffleQuestions,
 				shuffleOptions: args.shuffleOptions,
 				timeLimitSec,
@@ -871,7 +899,7 @@ export const createCustomQuizAttempt = mutation({
 					stem: question.stem,
 					options: question.options || [],
 					correctAnswers: question.correctAnswers || [],
-					explanation: question.explanation,
+					rationale: getRationale(question),
 					questionUpdatedAt: question.updatedAt
 				},
 				response: {
@@ -903,7 +931,7 @@ export const getAttemptRunnerBundle = query({
 			.withIndex('by_attempt_order', (q) => q.eq('attemptId', args.attemptId))
 			.collect()) as Doc<'quizAttemptItems'>[];
 
-			const classDoc = (await ctx.db.get(attempt.classId)) as Doc<'class'> | null;
+		const classDoc = (await ctx.db.get(attempt.classId)) as Doc<'class'> | null;
 		const modules = await Promise.all(
 			Array.from(new Set(items.map((item) => item.moduleId))).map(async (moduleId) => {
 				const module = await ctx.db.get(moduleId);
@@ -915,7 +943,7 @@ export const getAttemptRunnerBundle = query({
 			attempt: {
 				_id: attempt._id,
 				classId: attempt.classId,
-					className: isClassDoc(classDoc) ? classDoc.name : 'Class',
+				className: isClassDoc(classDoc) ? classDoc.name : 'Class',
 				status: attempt.status as AttemptStatus,
 				startedAt: attempt.startedAt,
 				lastActivityAt: attempt.lastActivityAt,
@@ -960,7 +988,9 @@ export const patchAttemptResponses = mutation({
 
 		const now = nowTs();
 		const elapsedMsArg =
-			args.elapsedMs !== undefined ? Math.max(0, clampInt(args.elapsedMs, 0, 7 * 24 * 60 * 60 * 1000)) : undefined;
+			args.elapsedMs !== undefined
+				? Math.max(0, clampInt(args.elapsedMs, 0, 7 * 24 * 60 * 60 * 1000))
+				: undefined;
 
 		for (const change of args.changes) {
 			const item = (await ctx.db.get(change.itemId)) as Doc<'quizAttemptItems'> | null;
@@ -993,7 +1023,8 @@ export const patchAttemptResponses = mutation({
 			}
 
 			const answerPresent = fitb
-				? String(nextResponse.textResponse ?? nextResponse.selectedOptions[0] ?? '').trim().length > 0
+				? String(nextResponse.textResponse ?? nextResponse.selectedOptions[0] ?? '').trim().length >
+					0
 				: (nextResponse.selectedOptions || []).length > 0;
 
 			if (answerPresent && nextResponse.answeredAt === undefined) {
@@ -1021,7 +1052,9 @@ export const patchAttemptResponses = mutation({
 			progressCounters: counters,
 			lastActivityAt: now,
 			elapsedMs:
-				elapsedMsArg !== undefined ? Math.max(attempt.elapsedMs ?? 0, elapsedMsArg) : attempt.elapsedMs,
+				elapsedMsArg !== undefined
+					? Math.max(attempt.elapsedMs ?? 0, elapsedMsArg)
+					: attempt.elapsedMs,
 			updatedAt: now
 		});
 
@@ -1044,7 +1077,10 @@ export const heartbeatAttempt = mutation({
 		const now = nowTs();
 		await ctx.db.patch(attempt._id, {
 			lastActivityAt: now,
-			elapsedMs: Math.max(attempt.elapsedMs ?? 0, Math.max(0, clampInt(args.elapsedMs, 0, 7 * 24 * 60 * 60 * 1000))),
+			elapsedMs: Math.max(
+				attempt.elapsedMs ?? 0,
+				Math.max(0, clampInt(args.elapsedMs, 0, 7 * 24 * 60 * 60 * 1000))
+			),
 			updatedAt: now
 		});
 		return { ok: true };
@@ -1068,13 +1104,17 @@ export const submitAttempt = mutation({
 
 		const now = nowTs();
 		const elapsedMsSubmitted =
-			args.elapsedMs !== undefined ? Math.max(0, clampInt(args.elapsedMs, 0, 7 * 24 * 60 * 60 * 1000)) : undefined;
+			args.elapsedMs !== undefined
+				? Math.max(0, clampInt(args.elapsedMs, 0, 7 * 24 * 60 * 60 * 1000))
+				: undefined;
 		const effectiveElapsedMs = Math.max(
 			attempt.elapsedMs ?? 0,
 			elapsedMsSubmitted ?? 0,
 			now - attempt.startedAt
 		);
-		const expiryAt = attempt.timeLimitSec ? attempt.startedAt + attempt.timeLimitSec * 1000 : undefined;
+		const expiryAt = attempt.timeLimitSec
+			? attempt.startedAt + attempt.timeLimitSec * 1000
+			: undefined;
 		const timedOut = expiryAt !== undefined && now >= expiryAt;
 
 		const items = (await ctx.db
@@ -1090,11 +1130,23 @@ export const submitAttempt = mutation({
 
 		const byType = new Map<
 			string,
-			{ questionType: string; total: number; correct: number; incorrect: number; unanswered: number }
+			{
+				questionType: string;
+				total: number;
+				correct: number;
+				incorrect: number;
+				unanswered: number;
+			}
 		>();
 		const byModule = new Map<
 			Id<'module'>,
-			{ moduleId: Id<'module'>; total: number; correct: number; incorrect: number; unanswered: number }
+			{
+				moduleId: Id<'module'>;
+				total: number;
+				correct: number;
+				incorrect: number;
+				unanswered: number;
+			}
 		>();
 
 		for (const item of items) {
@@ -1106,23 +1158,26 @@ export const submitAttempt = mutation({
 			else incorrectCount += 1;
 
 			const typeKey = normalizeQuestionType(item.questionSnapshot.type);
-			const typeAcc =
-				byType.get(typeKey) ??
-				{ questionType: typeKey, total: 0, correct: 0, incorrect: 0, unanswered: 0 };
+			const typeAcc = byType.get(typeKey) ?? {
+				questionType: typeKey,
+				total: 0,
+				correct: 0,
+				incorrect: 0,
+				unanswered: 0
+			};
 			typeAcc.total += 1;
 			if (score.unanswered) typeAcc.unanswered += 1;
 			else if (score.isCorrect) typeAcc.correct += 1;
 			else typeAcc.incorrect += 1;
 			byType.set(typeKey, typeAcc);
 
-			const moduleAcc =
-				byModule.get(item.moduleId) ?? {
-					moduleId: item.moduleId,
-					total: 0,
-					correct: 0,
-					incorrect: 0,
-					unanswered: 0
-				};
+			const moduleAcc = byModule.get(item.moduleId) ?? {
+				moduleId: item.moduleId,
+				total: 0,
+				correct: 0,
+				incorrect: 0,
+				unanswered: 0
+			};
 			moduleAcc.total += 1;
 			if (score.unanswered) moduleAcc.unanswered += 1;
 			else if (score.isCorrect) moduleAcc.correct += 1;
@@ -1144,9 +1199,7 @@ export const submitAttempt = mutation({
 		const passThresholdPct = clampInt(attempt.configSnapshot.passThresholdPct, 0, 100);
 		const moduleIds = Array.from(byModule.keys());
 		const moduleDocs = await Promise.all(moduleIds.map((moduleId) => ctx.db.get(moduleId)));
-		const moduleTitleMap = new Map(
-			moduleDocs.filter(isModuleDoc).map((m) => [m._id, m.title])
-		);
+		const moduleTitleMap = new Map(moduleDocs.filter(isModuleDoc).map((m) => [m._id, m.title]));
 
 		const byModuleSummary = Array.from(byModule.values()).map((row) => ({
 			moduleId: row.moduleId,
@@ -1225,7 +1278,7 @@ export const getAttemptResults = query({
 			attempt: {
 				_id: attempt._id,
 				classId: attempt.classId,
-					className: isClassDoc(classDoc) ? classDoc.name : 'Class',
+				className: isClassDoc(classDoc) ? classDoc.name : 'Class',
 				status: attempt.status,
 				startedAt: attempt.startedAt,
 				submittedAt: attempt.submittedAt,
@@ -1254,7 +1307,7 @@ export const getAttemptResults = query({
 						type: item.questionSnapshot.type,
 						stem: item.questionSnapshot.stem,
 						options: orderedOptions,
-						explanation: item.questionSnapshot.explanation ?? ''
+						rationale: getRationale(item.questionSnapshot)
 					},
 					response: item.response,
 					score: item.score,
@@ -1273,9 +1326,7 @@ export const getUserAttemptsForClass = query({
 
 		const attempts = (await ctx.db
 			.query('quizAttempts')
-			.withIndex('by_user_class', (q) =>
-				q.eq('userId', user._id).eq('classId', args.classId)
-			)
+			.withIndex('by_user_class', (q) => q.eq('userId', user._id).eq('classId', args.classId))
 			.collect()) as Doc<'quizAttempts'>[];
 
 		return attempts

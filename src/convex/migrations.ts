@@ -2,6 +2,7 @@ import { internalMutation, mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import type { Id } from './_generated/dataModel';
 import { authAdminMutation } from './authQueries';
+import { getRationale } from '../lib/utils/rationale';
 
 /**
  * Get stats about questions and userProgress for migration planning (paginated).
@@ -22,9 +23,7 @@ export const getStats = query({
 				.paginate({ cursor: args.cursor ?? null, numItems: batchSize });
 
 			const withFlagCount = page.filter((q) => q.flagCount !== undefined && q.flagCount !== null);
-			const needingBackfill = page.filter(
-				(q) => q.flagCount === undefined || q.flagCount === null
-			);
+			const needingBackfill = page.filter((q) => q.flagCount === undefined || q.flagCount === null);
 
 			return {
 				type: 'questions',
@@ -70,9 +69,7 @@ export const findClassByName = query({
 			}));
 		}
 		const searchLower = args.search!.toLowerCase();
-		const matches = classes.filter(
-			(c) => c.name && c.name.toLowerCase().includes(searchLower)
-		);
+		const matches = classes.filter((c) => c.name && c.name.toLowerCase().includes(searchLower));
 		return matches.map((c) => ({
 			id: c._id,
 			name: c.name
@@ -208,6 +205,47 @@ export const resetFlagCounts = mutation({
 			totalQuestions: questions.length,
 			reset: updated,
 			message: `Reset ${updated} questions to flagCount=0`
+		};
+	}
+});
+
+/**
+ * Backfill legacy explanation fields into rationale for quiz attempt snapshots.
+ * Run via CLI: bunx convex run migrations:backfillAttemptItemRationales
+ */
+export const backfillAttemptItemRationales = mutation({
+	args: {
+		batchSize: v.optional(v.number()),
+		cursor: v.optional(v.string())
+	},
+	handler: async (ctx, args) => {
+		const {
+			page: items,
+			isDone,
+			continueCursor
+		} = await ctx.db
+			.query('quizAttemptItems')
+			.paginate({ cursor: args.cursor ?? null, numItems: args.batchSize ?? 200 });
+
+		let updated = 0;
+		for (const item of items) {
+			const rationale = getRationale(item.questionSnapshot).trim();
+			if (!rationale || item.questionSnapshot.rationale === rationale) continue;
+
+			await ctx.db.patch(item._id, {
+				questionSnapshot: {
+					...item.questionSnapshot,
+					rationale
+				},
+				updatedAt: Date.now()
+			});
+			updated += 1;
+		}
+
+		return {
+			updated,
+			done: isDone,
+			cursor: continueCursor
 		};
 	}
 });
@@ -360,8 +398,7 @@ export const backfillCohortStats = mutation({
 				if (student.progressStats) {
 					const pct =
 						student.progressStats.totalQuestions > 0
-							? (student.progressStats.questionsInteracted /
-									student.progressStats.totalQuestions) *
+							? (student.progressStats.questionsInteracted / student.progressStats.totalQuestions) *
 								100
 							: 0;
 					totalProgressSum += pct;
@@ -385,8 +422,7 @@ export const backfillCohortStats = mutation({
 			}
 		}
 
-		const averageCompletion =
-			totalStudents > 0 ? Math.round(totalProgressSum / totalStudents) : 0;
+		const averageCompletion = totalStudents > 0 ? Math.round(totalProgressSum / totalStudents) : 0;
 
 		// Update cohort with stats
 		await ctx.db.patch(args.cohortId, {
@@ -572,8 +608,7 @@ export const getAllCohortsStatus = query({
 					totalStudents: students.length,
 					studentsWithProgressStats: studentsWithStats.length,
 					totalClasses: classes.length,
-					needsBackfill:
-						!cohort.stats || studentsWithStats.length < students.length
+					needsBackfill: !cohort.stats || studentsWithStats.length < students.length
 				};
 			})
 		);
@@ -788,9 +823,7 @@ export const clearPlanField = mutation({
 			page: users,
 			isDone,
 			continueCursor
-		} = await ctx.db
-			.query('users')
-			.paginate({ cursor: args.cursor ?? null, numItems: batchSize });
+		} = await ctx.db.query('users').paginate({ cursor: args.cursor ?? null, numItems: batchSize });
 
 		let processed = 0;
 		let cleared = 0;

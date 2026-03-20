@@ -12,15 +12,19 @@
 	import { getPostHog } from '$lib/analytics/posthogClient';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { browser } from '$app/environment';
+	import { browser, dev } from '$app/environment';
 
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
 
-	injectSpeedInsights();
+	if (!dev) {
+		injectSpeedInsights();
+	}
 
 	setupConvex(PUBLIC_CONVEX_URL);
 
-	injectAnalytics();
+	if (!dev) {
+		injectAnalytics();
+	}
 
 	const { data, children } = $props();
 
@@ -189,7 +193,7 @@
 
 					<nav aria-label="Resources" class="flex flex-col space-y-1">
 						<h6 class="footer-title">Resources</h6>
-						<a class="link link-hover" href="/docs">Docs</a>
+						<a class="link link-hover" href="https://docs.learnterms.com/">Docs</a>
 						<a class="link link-hover" href="/blog">Blog</a>
 						<a class="link link-hover" href="/status">Status</a>
 					</nav>

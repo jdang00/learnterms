@@ -6,6 +6,7 @@ import { internal, components } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { applyQuestionCreationDeltaAndEvaluateBadges } from './badgeEngine';
+import { getRationale } from '../lib/utils/rationale';
 
 const MAX_QUESTIONS_PER_MODULE = 150;
 const LIMIT_FREE = 15;
@@ -130,7 +131,9 @@ function generateOptionId(used: Set<string>): string {
 }
 
 function matchingRoleFromText(text: string): 'prompt' | 'answer' | null {
-	const normalized = String(text ?? '').trimStart().toLowerCase();
+	const normalized = String(text ?? '')
+		.trimStart()
+		.toLowerCase();
 	if (normalized.startsWith('prompt:')) return 'prompt';
 	if (normalized.startsWith('answer:')) return 'answer';
 	return null;
@@ -154,7 +157,9 @@ function matchingOptionKey(text: string): string {
 	return `${role}:${normalizeWhitespaceLower(withoutPrefix)}`;
 }
 
-function parseMatchingPairToken(value: string): { promptToken: string; answerToken: string } | null {
+function parseMatchingPairToken(
+	value: string
+): { promptToken: string; answerToken: string } | null {
 	const raw = String(value ?? '').trim();
 	const sep = raw.indexOf('::');
 	if (sep <= 0) return null;
@@ -282,9 +287,10 @@ function assignMatchingOptionIds(
 	return { optionsWithIds, legacyIdMap };
 }
 
-function assignFreshOptionIds(
-	inputOptions: Array<{ text: string; id?: string }>
-): { optionsWithIds: Array<{ id: string; text: string }>; legacyIdMap: Map<string, string> } {
+function assignFreshOptionIds(inputOptions: Array<{ text: string; id?: string }>): {
+	optionsWithIds: Array<{ id: string; text: string }>;
+	legacyIdMap: Map<string, string>;
+} {
 	const used = new Set<string>();
 	const optionsWithIds: Array<{ id: string; text: string }> = [];
 	const legacyIdMap = new Map<string, string>();
@@ -389,6 +395,7 @@ function convertQuestionType(type: string): string {
 
 function computeSearchText(input: {
 	stem: string;
+	rationale?: string | null;
 	explanation?: string | null;
 	type: string;
 	status: string;
@@ -399,7 +406,8 @@ function computeSearchText(input: {
 }): string {
 	const parts: Array<string> = [];
 	parts.push(input.stem || '');
-	if (input.explanation) parts.push(input.explanation);
+	const rationale = getRationale(input);
+	if (rationale) parts.push(rationale);
 	parts.push(convertQuestionType(input.type));
 	parts.push((input.status || '').toLowerCase());
 	parts.push(input.aiGenerated ? 'ai' : 'user');
@@ -413,6 +421,13 @@ function computeSearchText(input: {
 		if (g.customPromptUsed) parts.push('custom');
 	}
 	return parts.join(' ').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function normalizeIncomingRationale(input: {
+	rationale?: string | null;
+	explanation?: string | null;
+}): string {
+	return getRationale(input).trim();
 }
 
 export const getQuestionsByModule = authQuery({
@@ -461,7 +476,8 @@ export const insertQuestion = authCuratorMutation({
 		stem: v.string(),
 		options: v.array(v.object({ text: v.string() })),
 		correctAnswers: v.array(v.string()),
-		explanation: v.string(),
+		rationale: v.optional(v.string()),
+		explanation: v.optional(v.string()),
 		aiGenerated: v.boolean(),
 		status: v.string(),
 		order: v.number(),
@@ -484,6 +500,10 @@ export const insertQuestion = authCuratorMutation({
 	},
 	handler: async (ctx, args) => {
 		await checkModuleCapacity(ctx, args.moduleId, 1);
+		const rationale = normalizeIncomingRationale(args);
+		if (!rationale) {
+			throw new Error('Question rationale is required');
+		}
 
 		const { optionsWithIds } = assignOptionIds(args.options);
 
@@ -502,7 +522,7 @@ export const insertQuestion = authCuratorMutation({
 
 		const searchText = computeSearchText({
 			stem: args.stem,
-			explanation: args.explanation,
+			rationale,
 			type: args.type,
 			status: args.status,
 			aiGenerated: args.aiGenerated,
@@ -513,6 +533,7 @@ export const insertQuestion = authCuratorMutation({
 
 		const id = await ctx.db.insert('question', {
 			...args,
+			rationale,
 			type: convertQuestionType(args.type),
 			status: args.status.toLowerCase(),
 			options: optionsWithIds,
@@ -591,13 +612,18 @@ export const updateQuestion = authCuratorMutation({
 		stem: v.string(),
 		options: v.array(v.object({ text: v.string(), id: v.optional(v.string()) })),
 		correctAnswers: v.array(v.string()),
-		explanation: v.string(),
+		rationale: v.optional(v.string()),
+		explanation: v.optional(v.string()),
 		status: v.string()
 	},
 	handler: async (ctx, args) => {
 		const questionToUpdate = await ctx.db.get(args.questionId);
 		if (!questionToUpdate || questionToUpdate.moduleId !== args.moduleId) {
 			throw new Error('Question not found or access denied');
+		}
+		const rationale = normalizeIncomingRationale(args);
+		if (!rationale) {
+			throw new Error('Question rationale is required');
 		}
 
 		const isMatching = convertQuestionType(args.type) === 'matching';
@@ -636,7 +662,7 @@ export const updateQuestion = authCuratorMutation({
 
 		const searchText = computeSearchText({
 			stem: args.stem,
-			explanation: args.explanation,
+			rationale,
 			type: args.type,
 			status: args.status,
 			aiGenerated: questionToUpdate.aiGenerated,
@@ -650,7 +676,7 @@ export const updateQuestion = authCuratorMutation({
 			stem: args.stem,
 			options: optionsWithIds,
 			correctAnswers: correctAnswerIds,
-			explanation: args.explanation,
+			rationale,
 			status: args.status.toLowerCase(),
 			updatedAt: Date.now(),
 			searchText
@@ -667,7 +693,8 @@ export const createQuestion = authCuratorMutation({
 		stem: v.string(),
 		options: v.array(v.object({ id: v.string(), text: v.string() })),
 		correctAnswers: v.array(v.string()),
-		explanation: v.string(),
+		rationale: v.optional(v.string()),
+		explanation: v.optional(v.string()),
 		aiGenerated: v.boolean(),
 		status: v.string(),
 		order: v.number(),
@@ -684,6 +711,10 @@ export const createQuestion = authCuratorMutation({
 	},
 	handler: async (ctx, args) => {
 		await checkModuleCapacity(ctx, args.moduleId, 1);
+		const rationale = normalizeIncomingRationale(args);
+		if (!rationale) {
+			throw new Error('Question rationale is required');
+		}
 
 		const identity = await ctx.auth.getUserIdentity();
 		const createdBy =
@@ -709,7 +740,7 @@ export const createQuestion = authCuratorMutation({
 
 		const searchText = computeSearchText({
 			stem: args.stem,
-			explanation: args.explanation,
+			rationale,
 			type: args.type,
 			status: args.status,
 			aiGenerated: args.aiGenerated,
@@ -719,6 +750,7 @@ export const createQuestion = authCuratorMutation({
 		});
 		const id = await ctx.db.insert('question', {
 			...args,
+			rationale,
 			options: optionsWithIds,
 			correctAnswers: normalizedCorrectAnswers,
 			searchText,
@@ -739,7 +771,8 @@ export const bulkInsertQuestions = authCuratorMutation({
 				stem: v.string(),
 				options: v.array(v.object({ text: v.string() })),
 				correctAnswers: v.array(v.string()),
-				explanation: v.string(),
+				rationale: v.optional(v.string()),
+				explanation: v.optional(v.string()),
 				aiGenerated: v.boolean(),
 				status: v.string(),
 				order: v.number(),
@@ -762,6 +795,10 @@ export const bulkInsertQuestions = authCuratorMutation({
 		const insertedIds: string[] = [];
 
 		for (const q of questions) {
+			const rationale = normalizeIncomingRationale(q);
+			if (!rationale) {
+				throw new Error('Each imported question must include a rationale');
+			}
 			const isMatching = convertQuestionType(q.type) === 'matching';
 			if (isMatching) {
 				const hasPairs = (q.correctAnswers || []).every((s) => String(s).includes('::'));
@@ -782,7 +819,7 @@ export const bulkInsertQuestions = authCuratorMutation({
 				stem: q.stem,
 				options: optionsWithIds,
 				correctAnswers: correctAnswerIds,
-				explanation: q.explanation,
+				rationale,
 				aiGenerated: q.aiGenerated,
 				status: q.status.toLowerCase(),
 				order: q.order,
@@ -790,7 +827,7 @@ export const bulkInsertQuestions = authCuratorMutation({
 				updatedAt: q.updatedAt,
 				searchText: computeSearchText({
 					stem: q.stem,
-					explanation: q.explanation,
+					rationale,
 					type: q.type,
 					status: q.status,
 					aiGenerated: q.aiGenerated,
@@ -930,8 +967,16 @@ export const duplicateQuestion = authCuratorMutation({
 		const { optionsWithIds, legacyIdMap } = assignFreshOptionIds(original.options || []);
 		const normalizedCorrectAnswers =
 			convertQuestionType(original.type) === 'matching'
-				? normalizeMatchingCorrectAnswers(original.correctAnswers || [], optionsWithIds, legacyIdMap)
-				: normalizeStandardCorrectAnswers(original.correctAnswers || [], optionsWithIds, legacyIdMap);
+				? normalizeMatchingCorrectAnswers(
+						original.correctAnswers || [],
+						optionsWithIds,
+						legacyIdMap
+					)
+				: normalizeStandardCorrectAnswers(
+						original.correctAnswers || [],
+						optionsWithIds,
+						legacyIdMap
+					);
 
 		const id = await ctx.db.insert('question', {
 			moduleId: original.moduleId,
@@ -939,7 +984,7 @@ export const duplicateQuestion = authCuratorMutation({
 			stem: original.stem,
 			options: optionsWithIds,
 			correctAnswers: normalizedCorrectAnswers,
-			explanation: original.explanation,
+			rationale: getRationale(original),
 			aiGenerated: original.aiGenerated,
 			status: original.status,
 			order: nextOrder,
@@ -947,7 +992,7 @@ export const duplicateQuestion = authCuratorMutation({
 			updatedAt: Date.now(),
 			searchText: computeSearchText({
 				stem: original.stem,
-				explanation: original.explanation,
+				rationale: getRationale(original),
 				type: original.type,
 				status: original.status,
 				aiGenerated: original.aiGenerated,
@@ -986,8 +1031,16 @@ export const duplicateQuestionMany = authCuratorMutation({
 			const { optionsWithIds, legacyIdMap } = assignFreshOptionIds(original.options || []);
 			const normalizedCorrectAnswers =
 				convertQuestionType(original.type) === 'matching'
-					? normalizeMatchingCorrectAnswers(original.correctAnswers || [], optionsWithIds, legacyIdMap)
-					: normalizeStandardCorrectAnswers(original.correctAnswers || [], optionsWithIds, legacyIdMap);
+					? normalizeMatchingCorrectAnswers(
+							original.correctAnswers || [],
+							optionsWithIds,
+							legacyIdMap
+						)
+					: normalizeStandardCorrectAnswers(
+							original.correctAnswers || [],
+							optionsWithIds,
+							legacyIdMap
+						);
 
 			const id = await ctx.db.insert('question', {
 				moduleId: original.moduleId,
@@ -995,7 +1048,7 @@ export const duplicateQuestionMany = authCuratorMutation({
 				stem: original.stem,
 				options: optionsWithIds,
 				correctAnswers: normalizedCorrectAnswers,
-				explanation: original.explanation,
+				rationale: getRationale(original),
 				aiGenerated: original.aiGenerated,
 				status: original.status,
 				order: nextOrder + i,
@@ -1003,7 +1056,7 @@ export const duplicateQuestionMany = authCuratorMutation({
 				updatedAt: Date.now(),
 				searchText: computeSearchText({
 					stem: original.stem,
-					explanation: original.explanation,
+					rationale: getRationale(original),
 					type: original.type,
 					status: original.status,
 					aiGenerated: original.aiGenerated,
@@ -1082,7 +1135,7 @@ export const backfillQuestionSearchTextForModule = mutation({
 		for (const q of items) {
 			const searchText = computeSearchText({
 				stem: q.stem,
-				explanation: q.explanation ?? '',
+				rationale: getRationale(q),
 				type: q.type,
 				status: q.status,
 				aiGenerated: q.aiGenerated,
@@ -1112,7 +1165,7 @@ export const backfillSearchTextForAllModules = mutation({
 			for (const q of items) {
 				const searchText = computeSearchText({
 					stem: q.stem,
-					explanation: q.explanation ?? '',
+					rationale: getRationale(q),
 					type: q.type,
 					status: q.status,
 					aiGenerated: q.aiGenerated,
@@ -1127,6 +1180,49 @@ export const backfillSearchTextForAllModules = mutation({
 			}
 		}
 		return { updated: totalUpdated };
+	}
+});
+
+export const backfillQuestionRationales = mutation({
+	args: {
+		batchSize: v.optional(v.number()),
+		cursor: v.optional(v.string())
+	},
+	handler: async (ctx, args) => {
+		const {
+			page: questions,
+			isDone,
+			continueCursor
+		} = await ctx.db
+			.query('question')
+			.paginate({ cursor: args.cursor ?? null, numItems: args.batchSize ?? 200 });
+
+		let updated = 0;
+		for (const question of questions) {
+			const rationale = getRationale(question).trim();
+			if (!rationale || question.rationale === rationale) continue;
+			await ctx.db.patch(question._id, {
+				rationale,
+				searchText: computeSearchText({
+					stem: question.stem,
+					rationale,
+					type: question.type,
+					status: question.status,
+					aiGenerated: question.aiGenerated,
+					options: question.options,
+					correctAnswers: question.correctAnswers,
+					metadata: question.metadata
+				}),
+				updatedAt: Date.now()
+			});
+			updated += 1;
+		}
+
+		return {
+			updated,
+			done: isDone,
+			cursor: continueCursor
+		};
 	}
 });
 
@@ -1156,7 +1252,7 @@ export const repairMatchingPairsForModule = authCuratorMutation({
 
 			const searchText = computeSearchText({
 				stem: q.stem,
-				explanation: q.explanation ?? '',
+				rationale: getRationale(q),
 				type: q.type,
 				status: q.status,
 				aiGenerated: q.aiGenerated,
@@ -1222,9 +1318,9 @@ Instructions:
 - When generating questions with multiple correct answers, never indicate to select all that apply. Do not use ("Select 3, Select all that apply, etc").
 ${domainHint}
 - Do NOT include any references to the material or meta-instructions.
-- Stems and explanations must be self-contained and must not mention or quote the source material.
-- Do not use phrases like: "the material", "the text", "the passage", "the document", "the slides", "the notes", "according to", "as stated", "as mentioned" in either the question, the options or the explanations.
-- Explanations must justify the correct answer and why distractors are incorrect without referencing the source.
+- Stems and rationales must be self-contained and must not mention or quote the source material.
+- Do not use phrases like: "the material", "the text", "the passage", "the document", "the slides", "the notes", "according to", "as stated", "as mentioned" in either the question, the options or the rationales.
+- Rationales must justify the correct answer and why distractors are incorrect without referencing the source.
 - Options must be plain strings with NO leading letters, numbers, or punctuation (no prefixes like "A.", "1)", or "-").
 ${extra ? `\nAdditional guidance:\n${extra}\n` : ''}
 
@@ -1247,10 +1343,10 @@ ${material}`;
 							stem: { type: Type.STRING },
 							options: { type: Type.ARRAY, minItems: 3, maxItems: 6, items: { type: Type.STRING } },
 							correctAnswerIndexes: { type: Type.ARRAY, minItems: 1, items: { type: Type.NUMBER } },
-							explanation: { type: Type.STRING }
+							rationale: { type: Type.STRING }
 						},
-						required: ['stem', 'options', 'correctAnswerIndexes', 'explanation'],
-						propertyOrdering: ['stem', 'options', 'correctAnswerIndexes', 'explanation']
+						required: ['stem', 'options', 'correctAnswerIndexes', 'rationale'],
+						propertyOrdering: ['stem', 'options', 'correctAnswerIndexes', 'rationale']
 					}
 				}
 				// Using default HIGH thinking level for better question quality
@@ -1267,7 +1363,8 @@ ${material}`;
 			stem: string;
 			options: string[];
 			correctAnswerIndexes: number[];
-			explanation: string;
+			rationale?: string;
+			explanation?: string;
 		}>;
 		try {
 			parsed = JSON.parse(responseText.trim());
@@ -1297,8 +1394,8 @@ ${material}`;
 			if (!Array.isArray(q.correctAnswerIndexes) || q.correctAnswerIndexes.length === 0) {
 				throw new Error(`Question ${i + 1} missing correct answer indexes`);
 			}
-			if (!q.explanation || typeof q.explanation !== 'string') {
-				throw new Error(`Question ${i + 1} missing or invalid explanation`);
+			if (!getRationale(q)) {
+				throw new Error(`Question ${i + 1} missing or invalid rationale`);
 			}
 		}
 
@@ -1313,7 +1410,7 @@ ${material}`;
 				stem: q.stem.trim(),
 				options,
 				correctAnswers: validIndexes,
-				explanation: typeof q.explanation === 'string' ? q.explanation.trim() : '',
+				rationale: getRationale(q).trim(),
 				aiGenerated: true,
 				status: 'published',
 				order: i,
@@ -1327,17 +1424,17 @@ ${material}`;
 });
 
 /**
- * Generate plausible distractor options and explanation from a stem and correct answer(s).
+ * Generate plausible distractor options and rationale from a stem and correct answer(s).
  * This helps educators who write their own questions but need assistance with distractors.
  */
-export const generateDistractorsAndExplanation = action({
+export const generateDistractorsAndRationale = action({
 	args: {
 		stem: v.string(),
 		correctAnswers: v.array(v.string()),
 		existingOptions: v.optional(v.array(v.string())),
 		focus: v.string(),
 		numDistractors: v.optional(v.number()),
-		existingExplanation: v.optional(v.string()),
+		existingRationale: v.optional(v.string()),
 		model: v.optional(v.string())
 	},
 	handler: async (
@@ -1348,7 +1445,7 @@ export const generateDistractorsAndExplanation = action({
 			existingOptions = [],
 			focus,
 			numDistractors = 3,
-			existingExplanation = '',
+			existingRationale = '',
 			model = 'gemini-3-flash-preview'
 		}
 	) => {
@@ -1384,15 +1481,15 @@ export const generateDistractorsAndExplanation = action({
 				? `\nExisting wrong options (match style, do not repeat): ${existingDistractors.join('; ')}`
 				: '';
 
-		const contextHint = existingExplanation.trim() ? `\nNotes: ${existingExplanation.trim()}` : '';
+		const contextHint = existingRationale.trim() ? `\nNotes: ${existingRationale.trim()}` : '';
 
-		const prompt = `${numDistractors} wrong options + explanation.${domainHint}
+		const prompt = `${numDistractors} wrong options + rationale.${domainHint}
 
 Q: ${stem}
 A: ${correctAnswers.join('; ')}${existingSection}${contextHint}
 
 Wrong options: plausible, unique, no prefixes. Match style and length of existing options and answer.
-Explanation: 2-3 sentences explaining the underlying concept. Use notes if provided. Do not reference options or say "this question".`;
+Rationale: 2-3 sentences explaining the underlying concept. Use notes if provided. Do not reference options or say "this question".`;
 
 		const result = await ai.models.generateContent({
 			model,
@@ -1411,9 +1508,9 @@ Explanation: 2-3 sentences explaining the underlying concept. Use notes if provi
 							minItems: numDistractors,
 							maxItems: numDistractors
 						},
-						explanation: { type: Type.STRING }
+						rationale: { type: Type.STRING }
 					},
-					required: ['distractors', 'explanation']
+					required: ['distractors', 'rationale']
 				}
 			}
 		});
@@ -1425,16 +1522,17 @@ Explanation: 2-3 sentences explaining the underlying concept. Use notes if provi
 
 		let parsed: {
 			distractors: string[];
-			explanation: string;
+			rationale?: string;
+			explanation?: string;
 		};
 		try {
 			parsed = JSON.parse(responseText.trim());
-			if (!Array.isArray(parsed.distractors) || typeof parsed.explanation !== 'string') {
+			if (!Array.isArray(parsed.distractors) || !getRationale(parsed)) {
 				throw new Error('Invalid response structure');
 			}
 		} catch (err) {
 			console.error('Failed to parse AI response:', err);
-			throw new Error('Failed to parse AI-generated distractors and explanation');
+			throw new Error('Failed to parse AI-generated distractors and rationale');
 		}
 
 		// Validate, clean up, and deduplicate against existing options
@@ -1450,23 +1548,26 @@ Explanation: 2-3 sentences explaining the underlying concept. Use notes if provi
 
 		return {
 			distractors: cleanedDistractors,
-			explanation: parsed.explanation.trim()
+			rationale: getRationale(parsed).trim()
 		};
 	}
 });
 
 /**
- * Generate an explanation only (for FITB questions).
+ * Generate a rationale only (for FITB questions).
  */
-export const generateExplanation = action({
+export const generateRationale = action({
 	args: {
 		stem: v.string(),
 		answer: v.string(),
 		focus: v.string(),
-		existingExplanation: v.optional(v.string()),
+		existingRationale: v.optional(v.string()),
 		model: v.optional(v.string())
 	},
-	handler: async (ctx, { stem, answer, focus, existingExplanation = '', model = 'gemini-3-flash-preview' }) => {
+	handler: async (
+		ctx,
+		{ stem, answer, focus, existingRationale = '', model = 'gemini-3-flash-preview' }
+	) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) throw new Error('Unauthenticated');
 
@@ -1490,9 +1591,9 @@ export const generateExplanation = action({
 					? ' (pharmacy context)'
 					: '';
 
-		const contextHint = existingExplanation.trim() ? `\nNotes: ${existingExplanation.trim()}` : '';
+		const contextHint = existingRationale.trim() ? `\nNotes: ${existingRationale.trim()}` : '';
 
-		const prompt = `2-3 sentence explanation of the concept.${domainHint} Use notes if provided. Do not say "this question".
+		const prompt = `2-3 sentence rationale of the concept.${domainHint} Use notes if provided. Do not say "this question".
 
 Q: ${stem}
 A: ${answer}${contextHint}`;
@@ -1508,9 +1609,9 @@ A: ${answer}${contextHint}`;
 				responseSchema: {
 					type: Type.OBJECT,
 					properties: {
-						explanation: { type: Type.STRING }
+						rationale: { type: Type.STRING }
 					},
-					required: ['explanation']
+					required: ['rationale']
 				}
 			}
 		});
@@ -1520,19 +1621,19 @@ A: ${answer}${contextHint}`;
 			throw new Error('AI response text is empty or invalid');
 		}
 
-		let parsed: { explanation: string };
+		let parsed: { rationale?: string; explanation?: string };
 		try {
 			parsed = JSON.parse(responseText.trim());
-			if (typeof parsed.explanation !== 'string') {
+			if (!getRationale(parsed)) {
 				throw new Error('Invalid response structure');
 			}
 		} catch (err) {
 			console.error('Failed to parse AI response:', err);
-			throw new Error('Failed to parse AI-generated explanation');
+			throw new Error('Failed to parse AI-generated rationale');
 		}
 
 		return {
-			explanation: parsed.explanation.trim()
+			rationale: getRationale(parsed).trim()
 		};
 	}
 });

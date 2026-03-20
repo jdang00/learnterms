@@ -1,10 +1,22 @@
 <script lang="ts">
-	import { Eye, Flag, Shuffle, ArrowRight, ArrowLeft, BookOpenText, Settings, Check } from 'lucide-svelte';
+	import {
+		Eye,
+		Flag,
+		Shuffle,
+		ArrowRight,
+		ArrowLeft,
+		BookOpenText,
+		Settings,
+		Check
+	} from 'lucide-svelte';
 </script>
 
 <h1>Study Flow</h1>
 
-<p>You’ll move through one question at a time, check your work, and track your progress without losing focus. This page shows you how the study screen works and what each control does.</p>
+<p>
+	You’ll move through one question at a time, check your work, and track your progress without
+	losing focus. This page shows you how the study screen works and what each control does.
+</p>
 
 <h2>Start a module</h2>
 <ol>
@@ -14,7 +26,9 @@
 </ol>
 
 <h2>Answering questions</h2>
-<p>Select your answers, optionally eliminate distractors, then check your result when you’re ready.</p>
+<p>
+	Select your answers, optionally eliminate distractors, then check your result when you’re ready.
+</p>
 
 <h3>Answer options</h3>
 <ul>
@@ -33,7 +47,9 @@
 					<span class="font-semibold mr-2 select-none">A.</span>
 					Option text goes here
 				</span>
-				<button class="btn btn-ghost btn-circle btn-sm mr-4" title="Eliminate"><Eye size={16} /></button>
+				<button class="btn btn-ghost btn-circle btn-sm mr-4" title="Eliminate"
+					><Eye size={16} /></button
+				>
 			</label>
 			<label class="label cursor-pointer rounded-full border-2 p-3 bg-base-200">
 				<input type="checkbox" class="checkbox checkbox-primary checkbox-sm ms-4" />
@@ -41,7 +57,9 @@
 					<span class="font-semibold mr-2 select-none">B.</span>
 					This option has been eliminated
 				</span>
-				<button class="btn btn-ghost btn-circle btn-sm mr-4" title="Eliminate"><Eye size={16} /></button>
+				<button class="btn btn-ghost btn-circle btn-sm mr-4" title="Eliminate"
+					><Eye size={16} /></button
+				>
 			</label>
 		</div>
 	</div>
@@ -66,7 +84,9 @@
 
 <div class="flex flex-row w-full overflow-x-auto space-x-4 border border-base-300 p-4 rounded-xl">
 	<div class="indicator">
-		<span class="indicator-item indicator-start badge badge-warning badge-xs translate-x-[-1/4] translate-y-[-1/4]"></span>
+		<span
+			class="indicator-item indicator-start badge badge-warning badge-xs translate-x-[-1/4] translate-y-[-1/4]"
+		></span>
 		<button class="btn btn-circle btn-soft btn-primary">1</button>
 	</div>
 	<div class="indicator">
@@ -83,10 +103,14 @@
 <h3>Action bar (desktop)</h3>
 <p>Quick controls appear centered near the bottom on larger screens.</p>
 
-<div class="flex flex-wrap items-center gap-2 p-3 rounded-full border border-base-300 shadow bg-base-100">
+<div
+	class="flex flex-wrap items-center gap-2 p-3 rounded-full border border-base-300 shadow bg-base-100"
+>
 	<button class="btn btn-sm btn-outline">Clear</button>
 	<button class="btn btn-sm btn-success btn-soft"><Check size={16} class="mr-1" /> Check</button>
-	<button class="btn btn-sm btn-warning btn-soft" aria-label="flag question"><Flag size={16} class="mr-1" /> Flag</button>
+	<button class="btn btn-sm btn-warning btn-soft" aria-label="flag question"
+		><Flag size={16} class="mr-1" /> Flag</button
+	>
 	<button class="btn btn-sm btn-secondary"><Shuffle size={16} class="mr-1" /> Shuffle</button>
 	<div class="divider divider-horizontal mx-1"></div>
 	<button class="btn btn-sm btn-outline"><ArrowLeft size={16} class="mr-1" /> Prev</button>
@@ -117,24 +141,51 @@
 
 <h2>Why this design works for you</h2>
 <ul>
-	<li><strong>Focus over noise</strong>: One-question-at-a-time keeps your working memory clear so you can think, not hunt UI. This aligns with LearnTerms’ focus-first study flow.</li>
-	<li><strong>Mastery feedback</strong>: Immediate <em>Check</em> results help you course-correct quickly, building mastery through tight feedback loops.</li>
-	<li><strong>Personal pace</strong>: Progress, flags, and elimination tools let you tailor practice to what you need right now.</li>
-	<li><strong>Exam realism</strong>: Shuffle and fast navigation simulate test conditions and reduce order-memory bias.</li>
-	<li><strong>Cohort-aligned</strong>: Questions come from your class’s modules so every rep is relevant to your exams.</li>
+	<li>
+		<strong>Focus over noise</strong>: One-question-at-a-time keeps your working memory clear so you
+		can think, not hunt UI. This aligns with LearnTerms’ focus-first study flow.
+	</li>
+	<li>
+		<strong>Mastery feedback</strong>: Immediate <em>Check</em> results help you course-correct quickly,
+		building mastery through tight feedback loops.
+	</li>
+	<li>
+		<strong>Personal pace</strong>: Progress, flags, and elimination tools let you tailor practice
+		to what you need right now.
+	</li>
+	<li>
+		<strong>Exam realism</strong>: Shuffle and fast navigation simulate test conditions and reduce
+		order-memory bias.
+	</li>
+	<li>
+		<strong>Cohort-aligned</strong>: Questions come from your class’s modules so every rep is
+		relevant to your exams.
+	</li>
 </ul>
 
 <h2>Tips</h2>
 <ul>
-	<li><strong>One-at-a-time</strong>: Focus on the current question while keeping navigation nearby.</li>
+	<li>
+		<strong>One-at-a-time</strong>: Focus on the current question while keeping navigation nearby.
+	</li>
 	<li><strong>Use flags</strong>: Mark tricky questions to revisit before finishing a module.</li>
-	<li><strong>Shuffle</strong>: Mix the order to simulate exam conditions and reduce memorization effects.</li>
+	<li>
+		<strong>Shuffle</strong>: Mix the order to simulate exam conditions and reduce memorization
+		effects.
+	</li>
 	<li><strong>Reset progress</strong>: Start fresh anytime from the sidebar reset control.</li>
 </ul>
 
 <h2>FAQ</h2>
 <ul>
-	<li><strong>Will I lose answers when navigating?</strong> No—your selections are saved as you go.</li>
-	<li><strong>Where’s the rationale?</strong> Use the Rationale control in the sidebar; it reveals the explanation when available.</li>
-	<li><strong>Mobile view?</strong> The layout adapts; controls stay accessible and unobtrusive.</li>
+	<li>
+		<strong>Will I lose answers when navigating?</strong> No—your selections are saved as you go.
+	</li>
+	<li>
+		<strong>Where’s the rationale?</strong> Use the Rationale control in the sidebar; it reveals the rationale
+		when available.
+	</li>
+	<li>
+		<strong>Mobile view?</strong> The layout adapts; controls stay accessible and unobtrusive.
+	</li>
 </ul>

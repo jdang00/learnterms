@@ -1,6 +1,19 @@
 <script lang="ts">
-	import { Check, Trash2, Zap, ChevronDown, Settings, FileText, Sparkles, CheckCircle } from 'lucide-svelte';
-	import { resolveProduct, defaultProductModelId, productModelOptions } from '$lib/config/generation';
+	import {
+		Check,
+		Trash2,
+		Zap,
+		ChevronDown,
+		Settings,
+		FileText,
+		Sparkles,
+		CheckCircle
+	} from 'lucide-svelte';
+	import {
+		resolveProduct,
+		defaultProductModelId,
+		productModelOptions
+	} from '$lib/config/generation';
 	import ModuleLimitModal from './ModuleLimitModal.svelte';
 
 	export interface Props {
@@ -37,7 +50,7 @@
 		stem: string;
 		options: { text: string }[];
 		correctAnswers: string[];
-		explanation: string;
+		rationale: string;
 		aiGenerated: boolean;
 		status: string;
 		order: number;
@@ -114,7 +127,10 @@
 			selected = new Set();
 		} catch (error: any) {
 			console.error('Failed to add questions:', error);
-			if (error.message?.includes('Module limit reached') || error.toString().includes('Module limit reached')) {
+			if (
+				error.message?.includes('Module limit reached') ||
+				error.toString().includes('Module limit reached')
+			) {
 				isLimitModalOpen = true;
 			}
 		} finally {
@@ -140,11 +156,7 @@
 			</div>
 
 			{#if generated.length === 0}
-				<button
-					class="btn btn-primary btn-sm gap-2"
-					disabled={isDisabled}
-					onclick={generate}
-				>
+				<button class="btn btn-primary btn-sm gap-2" disabled={isDisabled} onclick={generate}>
 					{#if isGenerating}
 						<span class="loading loading-spinner loading-xs"></span>
 						Generating...
@@ -158,7 +170,10 @@
 					<button
 						class="btn btn-ghost btn-sm"
 						disabled={isGenerating || isAdding}
-						onclick={() => { generated = []; selected = new Set(); }}
+						onclick={() => {
+							generated = [];
+							selected = new Set();
+						}}
 					>
 						Discard
 					</button>
@@ -228,37 +243,50 @@
 							<Sparkles size={32} class="text-primary" />
 						{/if}
 					</div>
-					
+
 					{#if limitType === 'pro'}
 						<h3 class="card-title text-xl font-bold mb-2">Wow, that's a lot of questions!</h3>
 						<p class="text-sm text-base-content/70 mb-6">
-							You've hit the daily Pro limit. That is some serious dedication to studying! To keep things running smoothly for everyone, we'll reset your limit tomorrow.
+							You've hit the daily Pro limit. That is some serious dedication to studying! To keep
+							things running smoothly for everyone, we'll reset your limit tomorrow.
 						</p>
 						<div class="flex flex-col gap-3 w-full">
-							<button class="btn btn-primary btn-block" onclick={() => limitReached = false}>Take a break</button>
+							<button class="btn btn-primary btn-block" onclick={() => (limitReached = false)}
+								>Take a break</button
+							>
 						</div>
 					{:else}
 						<h3 class="card-title text-xl font-bold mb-2">Daily Limit Reached</h3>
 						<p class="text-sm text-base-content/70 mb-6">
-							You've hit the limit for today, but don't stop learning! Upgrading to Pro unlocks the full power of LearnTerms AI.
+							You've hit the limit for today, but don't stop learning! Upgrading to Pro unlocks the
+							full power of LearnTerms AI.
 						</p>
 						<div class="text-left w-full space-y-3 mb-6 bg-base-200/50 p-4 rounded-2xl">
 							<div class="flex items-start gap-3">
 								<CheckCircle class="text-success mt-0.5 shrink-0" size={16} />
-								<span class="text-xs"><strong>Unlimited Generation:</strong> Create as many practice questions as you need.</span>
+								<span class="text-xs"
+									><strong>Unlimited Generation:</strong> Create as many practice questions as you need.</span
+								>
 							</div>
 							<div class="flex items-start gap-3">
 								<CheckCircle class="text-success mt-0.5 shrink-0" size={16} />
-								<span class="text-xs"><strong>Deeper Understanding:</strong> Get detailed explanations for every answer.</span>
+								<span class="text-xs"
+									><strong>Deeper Understanding:</strong> Get detailed rationales for every answer.</span
+								>
 							</div>
 							<div class="flex items-start gap-3">
 								<CheckCircle class="text-success mt-0.5 shrink-0" size={16} />
-								<span class="text-xs"><strong>Custom Tailored:</strong> Questions specific to your exact curriculum.</span>
+								<span class="text-xs"
+									><strong>Custom Tailored:</strong> Questions specific to your exact curriculum.</span
+								>
 							</div>
 						</div>
 						<div class="flex flex-col gap-3 w-full">
-							<a href="/sign-up" target="_blank" class="btn btn-primary btn-block">Upgrade to Pro</a>
-							<button class="btn btn-ghost btn-xs" onclick={() => limitReached = false}>Maybe later</button>
+							<a href="/sign-up" target="_blank" class="btn btn-primary btn-block">Upgrade to Pro</a
+							>
+							<button class="btn btn-ghost btn-xs" onclick={() => (limitReached = false)}
+								>Maybe later</button
+							>
 						</div>
 					{/if}
 				</div>
@@ -275,7 +303,9 @@
 		{#if generated.length === 0}
 			<div class="mb-4">
 				<details class="group">
-					<summary class="flex items-center gap-2 text-xs text-base-content/60 cursor-pointer hover:text-base-content/80">
+					<summary
+						class="flex items-center gap-2 text-xs text-base-content/60 cursor-pointer hover:text-base-content/80"
+					>
 						<Settings size={12} />
 						<span>Advanced options</span>
 						<ChevronDown size={12} class="group-open:rotate-180 transition-transform" />
@@ -283,7 +313,11 @@
 					<div class="mt-3 p-3 bg-base-200/50 rounded-2xl space-y-3">
 						<div>
 							<label class="text-xs font-medium mb-1 block" for="model-select">AI Model</label>
-							<select id="model-select" class="select select-sm select-bordered w-full" bind:value={productModelId}>
+							<select
+								id="model-select"
+								class="select select-sm select-bordered w-full"
+								bind:value={productModelId}
+							>
 								{#each productModelOptions as o (o.value)}
 									<option value={o.value}>{o.label}</option>
 								{/each}
@@ -291,7 +325,9 @@
 							<p class="text-xs text-base-content/50 mt-1">Focus: {resolved.focus}</p>
 						</div>
 						<div>
-							<label class="text-xs font-medium mb-1 block" for="custom-prompt">Custom instructions</label>
+							<label class="text-xs font-medium mb-1 block" for="custom-prompt"
+								>Custom instructions</label
+							>
 							<textarea
 								id="custom-prompt"
 								class="textarea textarea-bordered textarea-sm w-full"
@@ -321,12 +357,15 @@
 				</div>
 				<div class="bg-base-200/50 rounded-2xl p-4 max-h-[50vh] overflow-auto">
 					{#if material}
-						<pre class="text-sm whitespace-pre-wrap break-words text-base-content/80">{material}</pre>
+						<pre
+							class="text-sm whitespace-pre-wrap break-words text-base-content/80">{material}</pre>
 					{:else}
 						<div class="flex flex-col items-center justify-center py-12 text-center">
 							<FileText size={40} class="text-base-content/20 mb-3" />
 							<p class="text-sm text-base-content/50">No content selected</p>
-							<p class="text-xs text-base-content/40 mt-1">Select chunks from the document browser</p>
+							<p class="text-xs text-base-content/40 mt-1">
+								Select chunks from the document browser
+							</p>
 						</div>
 					{/if}
 				</div>
@@ -381,7 +420,9 @@
 												? 'bg-success/10 text-success'
 												: 'bg-base-200/50'}"
 										>
-											<span class="w-5 h-5 rounded-full bg-base-300 flex items-center justify-center font-mono text-xs flex-shrink-0">
+											<span
+												class="w-5 h-5 rounded-full bg-base-300 flex items-center justify-center font-mono text-xs flex-shrink-0"
+											>
 												{String.fromCharCode('A'.charCodeAt(0) + oi)}
 											</span>
 											<span class="flex-1">{opt.text}</span>
@@ -392,12 +433,12 @@
 									{/each}
 								</div>
 
-								{#if q.explanation?.trim()}
+								{#if q.rationale?.trim()}
 									<details class="text-xs">
 										<summary class="text-base-content/50 cursor-pointer hover:text-base-content/70">
-											Show explanation
+											Show rationale
 										</summary>
-										<p class="mt-2 p-2 bg-info/10 rounded text-base-content/70">{q.explanation}</p>
+										<p class="mt-2 p-2 bg-info/10 rounded text-base-content/70">{q.rationale}</p>
 									</details>
 								{/if}
 							</div>
@@ -408,5 +449,5 @@
 		{/if}
 	</div>
 
-	<ModuleLimitModal isOpen={isLimitModalOpen} onClose={() => isLimitModalOpen = false} />
+	<ModuleLimitModal isOpen={isLimitModalOpen} onClose={() => (isLimitModalOpen = false)} />
 </div>

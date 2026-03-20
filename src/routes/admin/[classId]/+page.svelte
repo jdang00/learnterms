@@ -5,7 +5,17 @@
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-	import { Pencil, Trash2, Plus, ArrowLeft, GripVertical, Download, FileText, FileJson, FileSpreadsheet } from 'lucide-svelte';
+	import {
+		Pencil,
+		Trash2,
+		Plus,
+		ArrowLeft,
+		GripVertical,
+		Download,
+		FileText,
+		FileJson,
+		FileSpreadsheet
+	} from 'lucide-svelte';
 	import { resolve } from '$app/paths';
 	import { exportModuleQuestions, type ExportableQuestion } from '$lib/utils/questionExport';
 	import EditModuleModal from '$lib/admin/EditModuleModal.svelte';
@@ -29,20 +39,21 @@
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
 
-	const userDataQuery = useQuery(
-		api.users.getUserById,
-		() => clerkUser ? { id: clerkUser.id } : 'skip'
+	const userDataQuery = useQuery(api.users.getUserById, () =>
+		clerkUser ? { id: clerkUser.id } : 'skip'
 	);
 	const dev = $derived(userDataQuery.data?.role === 'dev');
-	const admin = $derived(userDataQuery.data?.role === 'admin' || userDataQuery.data?.role === 'dev');
+	const admin = $derived(
+		userDataQuery.data?.role === 'admin' || userDataQuery.data?.role === 'dev'
+	);
 	const userData = $derived(userDataQuery.data ?? null);
 
 	// Check Pro status for export gating
 	const subscriptionQuery = useQuery(api.polar.getCurrentUserWithSubscription, {});
 	const isPro = $derived(
 		subscriptionQuery.data?.isPro ||
-		subscriptionQuery.data?.subscription?.status === 'active' ||
-		subscriptionQuery.data?.subscription?.status === 'trialing'
+			subscriptionQuery.data?.subscription?.status === 'active' ||
+			subscriptionQuery.data?.subscription?.status === 'trialing'
 	);
 
 	type ClassItem = Doc<'class'>;
@@ -58,11 +69,11 @@
 	let isDeleteModuleModalOpen = $state(false);
 	let moduleToDelete = $state<ModuleItem | null>(null);
 	let moduleQuestionCount = $state<number>(0);
-	
+
 	// Export state
 	let isExportModalOpen = $state(false);
 	let exportModuleItem = $state<ModuleItem | null>(null);
-	
+
 	// UI State
 	let reorderMode = $state(false);
 
@@ -243,7 +254,7 @@
 			}
 
 			exportModuleQuestions(questions as ExportableQuestion[], exportModuleItem.title, format, {
-				includeExplanations: true,
+				includeRationales: true,
 				includeMetadata: format === 'json'
 			});
 			closeExportModal();
@@ -257,7 +268,8 @@
 </script>
 
 <div class="min-h-screen p-8 max-w-7xl mx-auto">
-	<a class="btn mb-4 btn-ghost rounded-full" href={resolve('/admin')}><ArrowLeft size={16} />Back</a>
+	<a class="btn mb-4 btn-ghost rounded-full" href={resolve('/admin')}><ArrowLeft size={16} />Back</a
+	>
 	<div class="mb-8 flex flex-col gap-2">
 		<div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
 			{#if classInfo.isLoading}
@@ -281,16 +293,17 @@
 				<div>
 					<h1 class="text-xl sm:text-2xl font-bold text-base-content">{classInfo.data.name}</h1>
 					<p class="text-sm sm:text-base text-base-content/70">
-						Manage your learning modules for {classInfo.data.code}. {#if reorderMode}Drag to reorder.{/if}
+						Manage your learning modules for {classInfo.data.code}. {#if reorderMode}Drag to
+							reorder.{/if}
 					</p>
 				</div>
 			{/if}
 
 			<div class="flex items-center gap-2 self-start sm:self-auto">
 				{#if admin}
-					<button 
-						class="btn rounded-full gap-2 {reorderMode ? 'btn-primary' : 'btn-ghost'}" 
-						onclick={() => reorderMode = !reorderMode}
+					<button
+						class="btn rounded-full gap-2 {reorderMode ? 'btn-primary' : 'btn-ghost'}"
+						onclick={() => (reorderMode = !reorderMode)}
 					>
 						<GripVertical size={16} />
 						<span class="hidden sm:inline">{reorderMode ? 'Done' : 'Reorder'}</span>
@@ -371,12 +384,18 @@
 												class="font-semibold text-base-content text-left hover:text-primary transition-colors cursor-pointer block"
 												title={`Go to questions for ${moduleItem.title}`}
 											>
-												<span class="mr-2 text-xl inline-block align-middle">{moduleItem.emoji || '📘'}</span>
+												<span class="mr-2 text-xl inline-block align-middle"
+													>{moduleItem.emoji || '📘'}</span
+												>
 												<span class="align-middle break-words">{moduleItem.title}</span>
 											</a>
 										</div>
 									</div>
-									<div class="text-xs text-base-content/60 flex items-center gap-1 {reorderMode ? 'pl-7' : ''}">
+									<div
+										class="text-xs text-base-content/60 flex items-center gap-1 {reorderMode
+											? 'pl-7'
+											: ''}"
+									>
 										<span>
 											{moduleItem.questionCount} question{moduleItem.questionCount === 1 ? '' : 's'}
 										</span>
@@ -384,7 +403,9 @@
 									{#if moduleItem.tags && moduleItem.tags.length > 0}
 										<div class="flex flex-wrap items-center gap-2 mt-2">
 											{#each moduleItem.tags.slice(0, 3) as tag (tag._id)}
-												<span class="inline-flex items-center gap-1 rounded-full border border-base-300 px-2 py-0.5 text-xs">
+												<span
+													class="inline-flex items-center gap-1 rounded-full border border-base-300 px-2 py-0.5 text-xs"
+												>
 													<span
 														class="h-2 w-2 rounded-full"
 														style={`background-color: ${tag.color || '#94a3b8'}`}
@@ -406,7 +427,9 @@
 													>
 														<div class="flex flex-col gap-1">
 															{#each moduleItem.tags.slice(3) as tag (tag._id)}
-																<div class="flex items-center gap-2 rounded-md px-2 py-1 text-xs hover:bg-base-200/70">
+																<div
+																	class="flex items-center gap-2 rounded-md px-2 py-1 text-xs hover:bg-base-200/70"
+																>
 																	<span
 																		class="h-2 w-2 rounded-full"
 																		style={`background-color: ${tag.color || '#94a3b8'}`}
@@ -524,7 +547,7 @@
 	questionCount={moduleQuestionCount}
 />
 
-<ExportModuleModal 
+<ExportModuleModal
 	isOpen={isExportModalOpen}
 	onClose={closeExportModal}
 	onExport={handleExport}

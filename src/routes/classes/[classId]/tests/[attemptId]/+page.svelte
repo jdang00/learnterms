@@ -137,7 +137,9 @@
 	}
 
 	function matchingRole(text: string): 'prompt' | 'answer' | null {
-		const normalized = String(text ?? '').trimStart().toLowerCase();
+		const normalized = String(text ?? '')
+			.trimStart()
+			.toLowerCase();
 		if (normalized.startsWith('prompt:')) return 'prompt';
 		if (normalized.startsWith('answer:')) return 'answer';
 		return null;
@@ -320,12 +322,11 @@
 			set selectedAnswers(next: string[]) {
 				const current = getCurrentItem();
 				if (!current) return;
-				const textValue =
-					isFitb(current.question.type) ? String((next ?? [])[0] ?? '') : undefined;
+				const textValue = isFitb(current.question.type) ? String((next ?? [])[0] ?? '') : undefined;
 				setResponse(current._id, (prev) => ({
 					...prev,
 					selectedOptions: [...(next ?? [])],
-					textResponse: isFitb(current.question.type) ? (textValue || undefined) : prev.textResponse
+					textResponse: isFitb(current.question.type) ? textValue || undefined : prev.textResponse
 				}));
 			},
 			get eliminatedAnswers() {
@@ -396,7 +397,9 @@
 			},
 			isOptionEliminated(_optionId: string) {
 				const current = getCurrentItem();
-				return current ? (responses[current._id]?.eliminatedOptions ?? []).includes(_optionId) : false;
+				return current
+					? (responses[current._id]?.eliminatedOptions ?? []).includes(_optionId)
+					: false;
 			},
 			isCorrect(_optionId: string) {
 				return false;
@@ -426,41 +429,41 @@
 			return;
 		}
 
-			const ids = Array.from(dirtyItemIds);
+		const ids = Array.from(dirtyItemIds);
 
-			syncStatus = 'syncing';
+		syncStatus = 'syncing';
 		syncError = null;
 		syncInFlight = true;
 
 		try {
 			const changes = ids
-					.map((id) => {
-						const r = responses[id];
-						if (!r) return null;
-						return {
-							itemId: id as Id<'quizAttemptItems'>,
-							selectedOptions: r.selectedOptions,
-							textResponse: r.textResponse ?? '',
-							isFlagged: r.isFlagged,
+				.map((id) => {
+					const r = responses[id];
+					if (!r) return null;
+					return {
+						itemId: id as Id<'quizAttemptItems'>,
+						selectedOptions: r.selectedOptions,
+						textResponse: r.textResponse ?? '',
+						isFlagged: r.isFlagged,
 						markVisited: r.visited,
 						timeSpentDeltaMs: pendingTimeDeltas[id] ?? 0
 					};
-					})
-					.filter(
-						(
-							change
-						): change is {
-							itemId: Id<'quizAttemptItems'>;
-							selectedOptions: string[];
-							textResponse: string;
-							isFlagged: boolean;
-							markVisited: boolean;
-							timeSpentDeltaMs: number;
-						} => change !== null
-					);
+				})
+				.filter(
+					(
+						change
+					): change is {
+						itemId: Id<'quizAttemptItems'>;
+						selectedOptions: string[];
+						textResponse: string;
+						isFlagged: boolean;
+						markVisited: boolean;
+						timeSpentDeltaMs: number;
+					} => change !== null
+				);
 
 			if (changes.length > 0 || force) {
-					await client.mutation(api.customQuiz.patchAttemptResponses, {
+				await client.mutation(api.customQuiz.patchAttemptResponses, {
 					attemptId,
 					elapsedMs: elapsedMsLocal,
 					changes
@@ -506,30 +509,33 @@
 		let nextElapsedMs = Math.max(bundle.attempt.elapsedMs ?? 0, 0);
 
 		if (cached) {
-			nextCurrentIndex = Math.min(Math.max(0, cached.currentIndex ?? 0), Math.max(bundle.items.length - 1, 0));
+			nextCurrentIndex = Math.min(
+				Math.max(0, cached.currentIndex ?? 0),
+				Math.max(bundle.items.length - 1, 0)
+			);
 			nextElapsedMs = Math.max(nextElapsedMs, cached.elapsedMs ?? 0);
 			nextPendingDeltas = cached.pendingTimeDeltas ?? {};
 
 			for (const [itemId, localResponse] of Object.entries(cached.responses ?? {})) {
 				if (!serverResponses[itemId]) continue;
-					const server = serverResponses[itemId];
-					const localSelected = localResponse.selectedOptions ?? [];
-					const serverSelected = server.selectedOptions ?? [];
-					const selectedOptions = localSelected.length > 0 ? localSelected : serverSelected;
-						mergedResponses[itemId] = {
-							...server,
-							selectedOptions: [...selectedOptions],
-							eliminatedOptions: [...(localResponse.eliminatedOptions ?? [])],
-							textResponse:
-								(localResponse.textResponse ?? '').trim().length > 0
-									? localResponse.textResponse
-								: server.textResponse,
-						isFlagged: localResponse.isFlagged ?? server.isFlagged,
-						visited: localResponse.visited || server.visited,
-						timeSpentMs: Math.max(server.timeSpentMs ?? 0, localResponse.timeSpentMs ?? 0)
-					};
-					dirtyItemIds.add(itemId);
-				}
+				const server = serverResponses[itemId];
+				const localSelected = localResponse.selectedOptions ?? [];
+				const serverSelected = server.selectedOptions ?? [];
+				const selectedOptions = localSelected.length > 0 ? localSelected : serverSelected;
+				mergedResponses[itemId] = {
+					...server,
+					selectedOptions: [...selectedOptions],
+					eliminatedOptions: [...(localResponse.eliminatedOptions ?? [])],
+					textResponse:
+						(localResponse.textResponse ?? '').trim().length > 0
+							? localResponse.textResponse
+							: server.textResponse,
+					isFlagged: localResponse.isFlagged ?? server.isFlagged,
+					visited: localResponse.visited || server.visited,
+					timeSpentMs: Math.max(server.timeSpentMs ?? 0, localResponse.timeSpentMs ?? 0)
+				};
+				dirtyItemIds.add(itemId);
+			}
 		}
 
 		responses = mergedResponses;
@@ -570,7 +576,7 @@
 		isSubmitting = true;
 		try {
 			await flushSync(true);
-				await client.mutation(api.customQuiz.submitAttempt, {
+			await client.mutation(api.customQuiz.submitAttempt, {
 				attemptId,
 				elapsedMs: elapsedMsLocal
 			});
@@ -578,19 +584,23 @@
 				window.localStorage.removeItem(cacheKey(String(attemptId)));
 			}
 			await goto(`/classes/${classId}/tests/${attemptId}/results${auto ? '?autoSubmit=1' : ''}`);
-			} catch (error: any) {
-				submitError = error?.message ?? 'Something went wrong while submitting. Please try again.';
-			} finally {
-				isSubmitting = false;
-			}
+		} catch (error: any) {
+			submitError = error?.message ?? 'Something went wrong while submitting. Please try again.';
+		} finally {
+			isSubmitting = false;
 		}
+	}
 
 	function promptsForMatching(item: any) {
-		return (item.question.options || []).filter((o: any) => matchingRole(String(o.text)) === 'prompt');
+		return (item.question.options || []).filter(
+			(o: any) => matchingRole(String(o.text)) === 'prompt'
+		);
 	}
 
 	function answersForMatching(item: any) {
-		return (item.question.options || []).filter((o: any) => matchingRole(String(o.text)) === 'answer');
+		return (item.question.options || []).filter(
+			(o: any) => matchingRole(String(o.text)) === 'answer'
+		);
 	}
 
 	function selectedAnswerIdForPrompt(itemId: string, promptId: string) {
@@ -648,21 +658,31 @@
 
 	function syncStatusIcon(status: string) {
 		switch (status) {
-			case 'synced': return 'text-success';
-			case 'syncing': return 'text-info';
-			case 'offline': return 'text-warning';
-			case 'error': return 'text-error';
-			default: return 'text-base-content/40';
+			case 'synced':
+				return 'text-success';
+			case 'syncing':
+				return 'text-info';
+			case 'offline':
+				return 'text-warning';
+			case 'error':
+				return 'text-error';
+			default:
+				return 'text-base-content/40';
 		}
 	}
 
 	function syncStatusLabel(status: string) {
 		switch (status) {
-			case 'synced': return 'Saved';
-			case 'syncing': return 'Saving...';
-			case 'offline': return 'Offline';
-			case 'error': return 'Save failed';
-			default: return 'Ready';
+			case 'synced':
+				return 'Saved';
+			case 'syncing':
+				return 'Saving...';
+			case 'offline':
+				return 'Offline';
+			case 'error':
+				return 'Save failed';
+			default:
+				return 'Ready';
 		}
 	}
 
@@ -769,12 +789,14 @@
 			if (dirtyItemIds.size > 0 || Object.keys(pendingTimeDeltas).length > 0) {
 				void flushSync();
 			}
-				void client.mutation(api.customQuiz.heartbeatAttempt, {
-				attemptId,
-				elapsedMs: elapsedMsLocal
-			}).catch(() => {
-				// no-op
-			});
+			void client
+				.mutation(api.customQuiz.heartbeatAttempt, {
+					attemptId,
+					elapsedMs: elapsedMsLocal
+				})
+				.catch(() => {
+					// no-op
+				});
 		}, 5000);
 
 		return () => {
@@ -788,7 +810,7 @@
 	});
 </script>
 
-	<div class="flex flex-col h-[calc(100vh-4rem)]">
+<div class="flex flex-col h-[calc(100vh-4rem)]">
 	{#if runnerQuery.isLoading}
 		<div class="flex-1 flex items-center justify-center">
 			<div class="text-center">
@@ -809,9 +831,7 @@
 					<div class="card-body text-center">
 						<CheckCircle2 class="mx-auto text-success mb-2" size={48} />
 						<h1 class="card-title justify-center text-xl">Test Complete</h1>
-						<p class="text-sm text-base-content/60 mt-1">
-							This test has already been submitted.
-						</p>
+						<p class="text-sm text-base-content/60 mt-1">This test has already been submitted.</p>
 						<div class="card-actions justify-center mt-4">
 							<a
 								class="btn btn-primary rounded-full"
@@ -851,7 +871,8 @@
 									class="btn btn-ghost font-bold rounded-full"
 									href={`/classes?classId=${classId}`}
 								>
-									<ChevronLeft size={16} /> {runnerQuery.data.attempt.className}
+									<ChevronLeft size={16} />
+									{runnerQuery.data.attempt.className}
 								</a>
 							</h4>
 							<h2 class="font-semibold text-2xl mt-2 flex items-start gap-3 min-w-0">
@@ -876,14 +897,20 @@
 							<div class="grid grid-cols-2 gap-2 text-sm mt-5">
 								<div class="rounded-xl border border-base-300 p-3">
 									<div class="text-xs text-base-content/50">Answered</div>
-									<div class="font-bold text-lg">{answeredCount}<span class="text-base-content/40 text-sm font-normal"> / {runnerQuery.data.items.length}</span></div>
+									<div class="font-bold text-lg">
+										{answeredCount}<span class="text-base-content/40 text-sm font-normal">
+											/ {runnerQuery.data.items.length}</span
+										>
+									</div>
 								</div>
 								<div class="rounded-xl border border-base-300 p-3">
 									<div class="text-xs text-base-content/50 flex items-center gap-1">
 										<Flag size={10} />
 										Flagged
 									</div>
-									<div class="font-bold text-lg {flaggedCount > 0 ? 'text-warning' : ''}">{flaggedCount}</div>
+									<div class="font-bold text-lg {flaggedCount > 0 ? 'text-warning' : ''}">
+										{flaggedCount}
+									</div>
 								</div>
 							</div>
 						</div>
@@ -895,9 +922,15 @@
 										<Clock size={14} class="text-base-content/50" />
 										<span class="text-xs uppercase tracking-wide text-base-content/50">Timer</span>
 									</div>
-									<div class="text-3xl font-bold tabular-nums">{formatDuration(elapsedMsLocal)}</div>
+									<div class="text-3xl font-bold tabular-nums">
+										{formatDuration(elapsedMsLocal)}
+									</div>
 									{#if remainingMs !== null}
-										<div class="text-sm mt-1 {remainingMs <= 60_000 ? 'text-error font-semibold animate-pulse' : 'text-base-content/60'}">
+										<div
+											class="text-sm mt-1 {remainingMs <= 60_000
+												? 'text-error font-semibold animate-pulse'
+												: 'text-base-content/60'}"
+										>
 											{remainingMs <= 60_000 ? 'Hurry! ' : ''}{formatDuration(remainingMs)} remaining
 										</div>
 									{:else}
@@ -912,7 +945,7 @@
 								{:else}
 									<Wifi size={12} class={syncStatusIcon(syncStatus)} />
 								{/if}
-								<span class="{syncStatusIcon(syncStatus)}">{syncStatusLabel(syncStatus)}</span>
+								<span class={syncStatusIcon(syncStatus)}>{syncStatusLabel(syncStatus)}</span>
 							</div>
 							{#if syncError}
 								<div class="text-error text-xs text-center mt-1">{syncError}</div>
@@ -940,13 +973,17 @@
 							<div class="text-center">
 								<div class="text-xs font-bold tabular-nums">{formatDuration(elapsedMsLocal)}</div>
 								{#if remainingMs !== null}
-									<div class="text-[10px] text-base-content/50 tabular-nums">{formatDuration(remainingMs)}</div>
+									<div class="text-[10px] text-base-content/50 tabular-nums">
+										{formatDuration(remainingMs)}
+									</div>
 								{/if}
 							</div>
 
 							<div
 								class="radial-progress text-primary text-xs bg-base-300"
-								style="--value:{Math.round((answeredCount / Math.max(1, runnerQuery.data?.items?.length ?? 1)) * 100)}; --size:3rem; --thickness: 3px;"
+								style="--value:{Math.round(
+									(answeredCount / Math.max(1, runnerQuery.data?.items?.length ?? 1)) * 100
+								)}; --size:3rem; --thickness: 3px;"
 								role="progressbar"
 							>
 								{answeredCount}
@@ -983,7 +1020,11 @@
 							{formatDuration(elapsedMsLocal)}
 						</div>
 						{#if remainingMs !== null}
-							<span class="text-xs {remainingMs <= 60_000 ? 'text-error font-semibold' : 'text-base-content/50'}">
+							<span
+								class="text-xs {remainingMs <= 60_000
+									? 'text-error font-semibold'
+									: 'text-base-content/50'}"
+							>
 								{formatDuration(remainingMs)}
 							</span>
 						{/if}
@@ -991,20 +1032,33 @@
 				</div>
 
 				<!-- Main content area -->
-				<div class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative">
-
+				<div
+					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
+				>
 					<!-- Horizontal question navigator (matches QuizNavigation style) -->
-					<div class="flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-4 relative items-center border border-base-300 px-6 py-3 rounded-4xl h-20 min-h-20 max-h-20 flex-none">
+					<div
+						class="flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-4 relative items-center border border-base-300 px-6 py-3 rounded-4xl h-20 min-h-20 max-h-20 flex-none"
+					>
 						{#each runnerQuery.data.items as item, index (item._id)}
 							{@const r = responses[item._id]}
-							{@const answered = r ? (isFitb(item.question.type) ? String(r.textResponse ?? r.selectedOptions[0] ?? '').trim().length > 0 : r.selectedOptions.length > 0) : false}
+							{@const answered = r
+								? isFitb(item.question.type)
+									? String(r.textResponse ?? r.selectedOptions[0] ?? '').trim().length > 0
+									: r.selectedOptions.length > 0
+								: false}
 							<div class="indicator">
 								{#if r?.isFlagged}
-										<span class="indicator-item indicator-start badge badge-warning badge-xs -translate-x-1/4 -translate-y-1/4 z-[1]"></span>
+									<span
+										class="indicator-item indicator-start badge badge-warning badge-xs -translate-x-1/4 -translate-y-1/4 z-[1]"
+									></span>
 								{/if}
 								<button
 									bind:this={questionButtons[index]}
-									class="btn btn-circle btn-md btn-soft {index === currentIndex ? 'btn-primary' : answered ? 'btn-accent' : 'btn-outline'}"
+									class="btn btn-circle btn-md btn-soft {index === currentIndex
+										? 'btn-primary'
+										: answered
+											? 'btn-accent'
+											: 'btn-outline'}"
 									onclick={() => jumpToQuestion(index)}
 									title={`Question ${index + 1}`}
 								>
@@ -1023,7 +1077,9 @@
 								</div>
 								<div class="flex items-center gap-2">
 									<button
-										class="btn btn-sm btn-circle {currentResponse?.isFlagged ? 'btn-warning' : 'btn-warning btn-soft'}"
+										class="btn btn-sm btn-circle {currentResponse?.isFlagged
+											? 'btn-warning'
+											: 'btn-warning btn-soft'}"
 										onclick={() => toggleFlag(currentItem)}
 										aria-label={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
 										title={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
@@ -1034,8 +1090,10 @@
 							</div>
 
 							{#if !isFitb(currentItem.question.type)}
-								<div class="text-base sm:text-xl leading-tight tiptap-content font-medium ms-2 mt-3">
-										{@html sanitizeHtml(currentItem.question.stem)}
+								<div
+									class="text-base sm:text-xl leading-tight tiptap-content font-medium ms-2 mt-3"
+								>
+									{@html sanitizeHtml(currentItem.question.stem)}
 								</div>
 							{/if}
 
@@ -1065,7 +1123,9 @@
 									{/if}
 								</div>
 							{:else}
-								<div class="text-base-content/60 font-medium text-base sm:text-lg leading-tight my-3 ms-2">
+								<div
+									class="text-base-content/60 font-medium text-base sm:text-lg leading-tight my-3 ms-2"
+								>
 									Select {currentItem.question.correctAnswerCount ?? 'all that apply'}.
 								</div>
 								<div class="text-xs text-base-content/45 ms-2 mb-2">
@@ -1082,7 +1142,6 @@
 									/>
 								{/if}
 							{/if}
-
 						</div>
 
 						{#if submitError}
@@ -1100,13 +1159,19 @@
 			>
 				<button
 					class="btn btn-sm btn-outline rounded-full"
-					onclick={() => { if (currentItem) clearAnswer(currentItem); }}
+					onclick={() => {
+						if (currentItem) clearAnswer(currentItem);
+					}}
 				>
 					Clear
 				</button>
 				<button
-					class="btn btn-sm btn-circle {currentResponse?.isFlagged ? 'btn-warning' : 'btn-warning btn-soft'}"
-					onclick={() => { if (currentItem) toggleFlag(currentItem); }}
+					class="btn btn-sm btn-circle {currentResponse?.isFlagged
+						? 'btn-warning'
+						: 'btn-warning btn-soft'}"
+					onclick={() => {
+						if (currentItem) toggleFlag(currentItem);
+					}}
 					aria-label={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
 				>
 					<Flag size={18} />
@@ -1130,7 +1195,9 @@
 					<ArrowLeft size={18} />
 				</button>
 				<button
-					class="btn btn-sm btn-outline {currentIndex === (runnerQuery.data?.items?.length ?? 1) - 1 ? 'btn-disabled' : ''}"
+					class="btn btn-sm btn-outline {currentIndex === (runnerQuery.data?.items?.length ?? 1) - 1
+						? 'btn-disabled'
+						: ''}"
 					style="border-radius: 50% 9999px 9999px 50%;"
 					onclick={nextQuestion}
 					disabled={currentIndex === (runnerQuery.data?.items?.length ?? 1) - 1}
@@ -1151,7 +1218,9 @@
 			</div>
 
 			<!-- Mobile bottom bar -->
-			<div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-100 border-t border-base-300 p-3 flex items-center justify-between gap-2">
+			<div
+				class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-100 border-t border-base-300 p-3 flex items-center justify-between gap-2"
+			>
 				<div class="flex gap-2">
 					<button
 						class="btn btn-sm btn-outline rounded-full"
@@ -1171,13 +1240,19 @@
 				<div class="flex gap-2">
 					<button
 						class="btn btn-sm btn-ghost rounded-full"
-						onclick={() => { if (currentItem) clearAnswer(currentItem); }}
+						onclick={() => {
+							if (currentItem) clearAnswer(currentItem);
+						}}
 					>
 						Clear
 					</button>
 					<button
-						class="btn btn-sm btn-circle {currentResponse?.isFlagged ? 'btn-warning' : 'btn-warning btn-soft'}"
-						onclick={() => { if (currentItem) toggleFlag(currentItem); }}
+						class="btn btn-sm btn-circle {currentResponse?.isFlagged
+							? 'btn-warning'
+							: 'btn-warning btn-soft'}"
+						onclick={() => {
+							if (currentItem) toggleFlag(currentItem);
+						}}
 						aria-label={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
 					>
 						<Flag size={14} />
@@ -1207,16 +1282,25 @@
 					<h3 class="text-lg font-bold">Submit Your Test?</h3>
 					<div class="py-4 space-y-3">
 						<p class="text-base-content/70">
-							Once submitted, you won't be able to change your answers. You'll be able to review each question with the correct answers and explanations.
+							Once submitted, you won't be able to change your answers. You'll be able to review
+							each question with the correct answers and rationales.
 						</p>
 						<div class="grid grid-cols-2 gap-2 text-sm">
 							<div class="rounded-xl border border-base-300 p-3">
 								<div class="text-xs text-base-content/50">Answered</div>
-								<div class="font-semibold">{answeredCount} / {runnerQuery.data?.items?.length ?? 0}</div>
+								<div class="font-semibold">
+									{answeredCount} / {runnerQuery.data?.items?.length ?? 0}
+								</div>
 							</div>
 							<div class="rounded-xl border border-base-300 p-3">
 								<div class="text-xs text-base-content/50">Unanswered</div>
-								<div class="font-semibold {(runnerQuery.data?.items?.length ?? 0) - answeredCount > 0 ? 'text-warning' : ''}">{(runnerQuery.data?.items?.length ?? 0) - answeredCount}</div>
+								<div
+									class="font-semibold {(runnerQuery.data?.items?.length ?? 0) - answeredCount > 0
+										? 'text-warning'
+										: ''}"
+								>
+									{(runnerQuery.data?.items?.length ?? 0) - answeredCount}
+								</div>
 							</div>
 						</div>
 						{#if (runnerQuery.data?.items?.length ?? 0) - answeredCount > 0}
@@ -1232,7 +1316,10 @@
 						</button>
 						<button
 							class="btn btn-primary rounded-full gap-1"
-							onclick={() => { showSubmitModal = false; void submitAttempt(false); }}
+							onclick={() => {
+								showSubmitModal = false;
+								void submitAttempt(false);
+							}}
 							disabled={isSubmitting}
 						>
 							<Send size={14} />
@@ -1254,7 +1341,6 @@
 					}}
 				></div>
 			</dialog>
-
 		{/if}
 	{/if}
 </div>

@@ -24,24 +24,18 @@
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
 
-	const convexUser = useQuery(
-		api.users.getUserById,
-		() => clerkUser ? { id: clerkUser.id } : 'skip'
+	const convexUser = useQuery(api.users.getUserById, () =>
+		clerkUser ? { id: clerkUser.id } : 'skip'
 	);
 
-	const semesters = useQuery(
-		api.semester.getAllSemesters,
-		() => clerkUser ? {} : 'skip'
+	const semesters = useQuery(api.semester.getAllSemesters, () => (clerkUser ? {} : 'skip'));
+
+	const classes = useQuery(api.class.getUserClasses, () =>
+		convexUser.data?.cohortId ? { id: convexUser.data.cohortId as Id<'cohort'> } : 'skip'
 	);
 
-	const classes = useQuery(
-		api.class.getUserClasses,
-		() => convexUser.data?.cohortId ? { id: convexUser.data.cohortId as Id<'cohort'> } : 'skip'
-	);
-
-	const modules = useQuery(
-		api.module.getClassModules,
-		() => selectedClass ? { id: selectedClass._id } : 'skip'
+	const modules = useQuery(api.module.getClassModules, () =>
+		selectedClass ? { id: selectedClass._id } : 'skip'
 	);
 	let currentSemester = $state('');
 	let classSearch = $state('');
@@ -54,7 +48,7 @@
 		stem: string;
 		options: { text: string }[];
 		correctAnswers: string[];
-		explanation: string;
+		rationale: string;
 		aiGenerated: boolean;
 		status: string;
 		order: number;
@@ -107,18 +101,17 @@
 	const searchedClasses = $derived(
 		!filteredClasses
 			? []
-			: filteredClasses.filter((c) =>
-				c.name.toLowerCase().includes(classSearch.toLowerCase()) ||
-				(c.code?.toLowerCase().includes(classSearch.toLowerCase()) ?? false)
-			)
+			: filteredClasses.filter(
+					(c) =>
+						c.name.toLowerCase().includes(classSearch.toLowerCase()) ||
+						(c.code?.toLowerCase().includes(classSearch.toLowerCase()) ?? false)
+				)
 	);
 
 	const searchedModules = $derived(
 		!modules.data
 			? []
-			: modules.data.filter((m) =>
-				m.title.toLowerCase().includes(moduleSearch.toLowerCase())
-			)
+			: modules.data.filter((m) => m.title.toLowerCase().includes(moduleSearch.toLowerCase()))
 	);
 
 	const isReady = $derived(selectedClass && selectedModuleId);
@@ -134,11 +127,15 @@
 			<div class="h-6 w-px bg-base-300"></div>
 			<div>
 				<h1 class="text-xl font-semibold">Question Studio</h1>
-				<p class="text-xs text-base-content/60 hidden sm:block">Generate questions from your content</p>
+				<p class="text-xs text-base-content/60 hidden sm:block">
+					Generate questions from your content
+				</p>
 			</div>
 		</div>
 
-		<div class="flex flex-wrap items-center gap-2 mb-6 p-3 bg-base-100 rounded-2xl border border-base-300">
+		<div
+			class="flex flex-wrap items-center gap-2 mb-6 p-3 bg-base-100 rounded-2xl border border-base-300"
+		>
 			<div class="dropdown">
 				<div tabindex="0" role="button" class="btn btn-sm btn-ghost rounded-full gap-2">
 					<FolderOpen size={14} class="text-base-content/60" />
@@ -146,7 +143,10 @@
 					<ChevronDown size={12} />
 				</div>
 				{#if semesters.data}
-					<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-56 p-1 shadow-lg border border-base-300">
+					<ul
+						tabindex="0"
+						class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-56 p-1 shadow-lg border border-base-300"
+					>
 						{#each semesters.data as semester (semester._id)}
 							<li>
 								<button
@@ -174,15 +174,26 @@
 					type="button"
 					class="btn btn-sm btn-ghost rounded-full gap-2"
 					class:btn-disabled={!currentSemester}
-					onclick={() => { classOpen = !classOpen; classSearch = ''; }}
+					onclick={() => {
+						classOpen = !classOpen;
+						classSearch = '';
+					}}
 				>
 					<BookOpen size={14} class="text-base-content/60" />
 					<span class="text-sm truncate max-w-[140px]">{selectedClass?.name || 'Class'}</span>
 					<ChevronDown size={12} />
 				</button>
 				{#if classOpen && filteredClasses && filteredClasses.length > 0}
-					<div class="fixed inset-0 z-10" onclick={() => { classOpen = false; }} role="none"></div>
-					<div class="absolute top-full left-0 mt-1 z-20 w-64 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-2">
+					<div
+						class="fixed inset-0 z-10"
+						onclick={() => {
+							classOpen = false;
+						}}
+						role="none"
+					></div>
+					<div
+						class="absolute top-full left-0 mt-1 z-20 w-64 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-2"
+					>
 						<input
 							type="text"
 							placeholder="Search classes..."
@@ -226,15 +237,26 @@
 					type="button"
 					class="btn btn-sm btn-ghost rounded-full gap-2"
 					class:btn-disabled={!selectedClass}
-					onclick={() => { moduleOpen = !moduleOpen; moduleSearch = ''; }}
+					onclick={() => {
+						moduleOpen = !moduleOpen;
+						moduleSearch = '';
+					}}
 				>
 					<Layers size={14} class="text-base-content/60" />
 					<span class="text-sm truncate max-w-[140px]">{selectedModuleTitle || 'Module'}</span>
 					<ChevronDown size={12} />
 				</button>
 				{#if moduleOpen && modules.data && modules.data.length > 0}
-					<div class="fixed inset-0 z-10" onclick={() => { moduleOpen = false; }} role="none"></div>
-					<div class="absolute top-full left-0 mt-1 z-20 w-64 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-2">
+					<div
+						class="fixed inset-0 z-10"
+						onclick={() => {
+							moduleOpen = false;
+						}}
+						role="none"
+					></div>
+					<div
+						class="absolute top-full left-0 mt-1 z-20 w-64 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-2"
+					>
 						<input
 							type="text"
 							placeholder="Search modules..."
@@ -281,7 +303,9 @@
 
 		<div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
 			<div class="xl:col-span-4 2xl:col-span-3">
-				<div class="bg-base-100 rounded-2xl border border-base-300 h-[calc(100vh-220px)] overflow-hidden">
+				<div
+					class="bg-base-100 rounded-2xl border border-base-300 h-[calc(100vh-220px)] overflow-hidden"
+				>
 					{#if convexUser.isLoading}
 						<div class="p-4 space-y-2">
 							{#each Array(5) as _}
@@ -306,7 +330,9 @@
 			</div>
 
 			<div class="xl:col-span-8 2xl:col-span-9">
-				<div class="bg-base-100 rounded-2xl border border-base-300 h-[calc(100vh-220px)] overflow-hidden">
+				<div
+					class="bg-base-100 rounded-2xl border border-base-300 h-[calc(100vh-220px)] overflow-hidden"
+				>
 					<QuestionsGeneration
 						material={selectedText}
 						{wordCount}

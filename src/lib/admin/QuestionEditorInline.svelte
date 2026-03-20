@@ -42,6 +42,7 @@
 	import { useClerkContext } from 'svelte-clerk';
 	import type { Focus } from '$lib/config/generation';
 	import { Loader2 } from 'lucide-svelte';
+	import { getRationale } from '$lib/utils/rationale';
 
 	type QuestionItem = Doc<'question'>;
 
@@ -64,7 +65,7 @@
 	} = $props();
 
 	let editor = $state() as Readable<Editor>;
-	let explanationEditor = $state() as Readable<Editor>;
+	let rationaleEditor = $state() as Readable<Editor>;
 
 	function handleKeyboardSave(e: KeyboardEvent) {
 		if ((e.metaKey || e.ctrlKey) && e.key === 's') {
@@ -84,12 +85,13 @@
 			}
 		});
 
-		explanationEditor = createEditor({
+		rationaleEditor = createEditor({
 			extensions: getEditorExtensions(),
-			content: editingQuestion?.explanation || '',
+			content: getRationale(editingQuestion),
 			editorProps: {
 				attributes: {
-					class: 'prose prose-sm max-w-none focus:outline-none min-h-[3rem] p-3 tiptap-content text-sm'
+					class:
+						'prose prose-sm max-w-none focus:outline-none min-h-[3rem] p-3 tiptap-content text-sm'
 				}
 			}
 		});
@@ -117,25 +119,75 @@
 	const menuItems = $derived([
 		{ name: 'bold', command: toggleBold, icon: Bold, active: () => isActive('bold') },
 		{ name: 'italic', command: toggleItalic, icon: Italic, active: () => isActive('italic') },
-		{ name: 'underline', command: toggleUnderline, icon: UnderlineIcon, active: () => isActive('underline') },
-		{ name: 'strike', command: toggleStrike, icon: StrikethroughIcon, active: () => isActive('strike') },
+		{
+			name: 'underline',
+			command: toggleUnderline,
+			icon: UnderlineIcon,
+			active: () => isActive('underline')
+		},
+		{
+			name: 'strike',
+			command: toggleStrike,
+			icon: StrikethroughIcon,
+			active: () => isActive('strike')
+		},
 		{ name: 'code', command: toggleCode, icon: CodeIcon, active: () => isActive('code') },
-		{ name: 'highlight', command: toggleHighlight, icon: HighlighterIcon, active: () => isActive('highlight') },
-		{ name: 'link', command: isActive('link') ? unsetLink : setLink, icon: LinkIcon, active: () => isActive('link') },
-		{ name: 'blockquote', command: toggleBlockquote, icon: QuoteIcon, active: () => isActive('blockquote') },
-		{ name: 'bullet-list', command: toggleBulletList, icon: ListIcon, active: () => isActive('bulletList') },
-		{ name: 'ordered-list', command: toggleOrderedList, icon: ListOrderedIcon, active: () => isActive('orderedList') }
+		{
+			name: 'highlight',
+			command: toggleHighlight,
+			icon: HighlighterIcon,
+			active: () => isActive('highlight')
+		},
+		{
+			name: 'link',
+			command: isActive('link') ? unsetLink : setLink,
+			icon: LinkIcon,
+			active: () => isActive('link')
+		},
+		{
+			name: 'blockquote',
+			command: toggleBlockquote,
+			icon: QuoteIcon,
+			active: () => isActive('blockquote')
+		},
+		{
+			name: 'bullet-list',
+			command: toggleBulletList,
+			icon: ListIcon,
+			active: () => isActive('bulletList')
+		},
+		{
+			name: 'ordered-list',
+			command: toggleOrderedList,
+			icon: ListOrderedIcon,
+			active: () => isActive('orderedList')
+		}
 	]);
 
-	const toggleExpBold = () => $explanationEditor.chain().focus().toggleBold().run();
-	const toggleExpItalic = () => $explanationEditor.chain().focus().toggleItalic().run();
-	const toggleExpUnderline = () => $explanationEditor.chain().focus().toggleUnderline().run();
-	const isExpActive = (name: string) => $explanationEditor?.isActive(name) ?? false;
+	const toggleRationaleBold = () => $rationaleEditor.chain().focus().toggleBold().run();
+	const toggleRationaleItalic = () => $rationaleEditor.chain().focus().toggleItalic().run();
+	const toggleRationaleUnderline = () => $rationaleEditor.chain().focus().toggleUnderline().run();
+	const isRationaleActive = (name: string) => $rationaleEditor?.isActive(name) ?? false;
 
-	const expMenuItems = $derived([
-		{ name: 'bold', command: toggleExpBold, icon: Bold, active: () => isExpActive('bold') },
-		{ name: 'italic', command: toggleExpItalic, icon: Italic, active: () => isExpActive('italic') },
-		{ name: 'underline', command: toggleExpUnderline, icon: UnderlineIcon, active: () => isExpActive('underline') }
+	const rationaleMenuItems = $derived([
+		{
+			name: 'bold',
+			command: toggleRationaleBold,
+			icon: Bold,
+			active: () => isRationaleActive('bold')
+		},
+		{
+			name: 'italic',
+			command: toggleRationaleItalic,
+			icon: Italic,
+			active: () => isRationaleActive('italic')
+		},
+		{
+			name: 'underline',
+			command: toggleRationaleUnderline,
+			icon: UnderlineIcon,
+			active: () => isRationaleActive('underline')
+		}
 	]);
 
 	const questionTypeOptions = [
@@ -146,7 +198,12 @@
 	];
 
 	const statusOptions = [
-		{ value: 'published', label: 'Published', icon: CheckCircle, colorClass: 'btn-success btn-soft' },
+		{
+			value: 'published',
+			label: 'Published',
+			icon: CheckCircle,
+			colorClass: 'btn-success btn-soft'
+		},
 		{ value: 'draft', label: 'Draft', icon: FileText, colorClass: 'btn-info btn-soft' },
 		{ value: 'archived', label: 'Archived', icon: Archive, colorClass: 'btn-error btn-soft' }
 	];
@@ -163,13 +220,13 @@
 	});
 
 	$effect(() => {
-		if ($explanationEditor) {
-			const updateExp = () => {
-				questionExplanation = $explanationEditor.getHTML();
+		if ($rationaleEditor) {
+			const updateRationale = () => {
+				questionRationale = $rationaleEditor.getHTML();
 				onChange();
 			};
-			$explanationEditor.on('update', updateExp);
-			return () => $explanationEditor.off('update', updateExp);
+			$rationaleEditor.on('update', updateRationale);
+			return () => $rationaleEditor.off('update', updateRationale);
 		}
 	});
 
@@ -178,13 +235,15 @@
 	const clerkUser = $derived(clerk.user);
 
 	let questionStem: string = $state(editingQuestion?.stem || '');
-	let questionExplanation: string = $state(editingQuestion?.explanation || '');
+	let questionRationale: string = $state(getRationale(editingQuestion));
 	let questionStatus: string = $state(editingQuestion?.status || defaultStatus);
 	let questionType: string = $state(editingQuestion?.type || 'multiple_choice');
 	let options: Array<{ id?: string; text: string }> = $state(
-		editingQuestion?.options?.length ? [...editingQuestion.options] : [{ text: '' }, { text: '' }, { text: '' }, { text: '' }]
+		editingQuestion?.options?.length
+			? [...editingQuestion.options]
+			: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }]
 	);
-	
+
 	// Convert option IDs to indices for correct answers
 	let correctAnswers: string[] = $state(
 		editingQuestion?.correctAnswers && editingQuestion?.options
@@ -268,7 +327,12 @@
 	}
 
 	// Update existing media metadata
-	async function updateExistingMediaMeta(id: string, altText: string, caption: string, showOnSolution?: boolean) {
+	async function updateExistingMediaMeta(
+		id: string,
+		altText: string,
+		caption: string,
+		showOnSolution?: boolean
+	) {
 		try {
 			await client.mutation((api as any).questionMedia.update, {
 				mediaId: id,
@@ -282,7 +346,12 @@
 		}
 	}
 
-	function handleExistingMediaChange(id: string, altText: string, caption: string, showOnSolution?: boolean) {
+	function handleExistingMediaChange(
+		id: string,
+		altText: string,
+		caption: string,
+		showOnSolution?: boolean
+	) {
 		updateExistingMediaMeta(id, altText, caption, showOnSolution);
 		onChange();
 	}
@@ -541,7 +610,12 @@
 	);
 
 	function addOption() {
-		if (questionType === QUESTION_TYPES.TRUE_FALSE || questionType === QUESTION_TYPES.FILL_IN_THE_BLANK || questionType === QUESTION_TYPES.MATCHING) return;
+		if (
+			questionType === QUESTION_TYPES.TRUE_FALSE ||
+			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+			questionType === QUESTION_TYPES.MATCHING
+		)
+			return;
 		options = [...options, { text: '' }];
 		onChange();
 	}
@@ -590,22 +664,22 @@
 					.filter((t) => t.length > 0)
 					.join('; ');
 
-				const result = await client.action(api.question.generateExplanation, {
+				const result = await client.action(api.question.generateRationale, {
 					stem: questionStem,
 					answer,
 					focus: userFocus,
-					existingExplanation: questionExplanation.trim() || undefined
+					existingRationale: questionRationale.trim() || undefined
 				});
 
-				if (result.explanation) {
-					questionExplanation = result.explanation;
-					if ($explanationEditor) {
-						$explanationEditor.commands.setContent(result.explanation);
+				if (result.rationale) {
+					questionRationale = result.rationale;
+					if ($rationaleEditor) {
+						$rationaleEditor.commands.setContent(result.rationale);
 					}
 				}
 
 				onChange();
-				toastStore.success('Explanation generated');
+				toastStore.success('Rationale generated');
 			} else {
 				const correctTexts = correctAnswers
 					.map((idx) => options[parseInt(idx)]?.text || '')
@@ -616,13 +690,13 @@
 				const emptyCount = options.filter((o) => o.text.trim().length === 0).length;
 				const numDistractors = Math.max(1, emptyCount);
 
-				const result = await client.action(api.question.generateDistractorsAndExplanation, {
+				const result = await client.action(api.question.generateDistractorsAndRationale, {
 					stem: questionStem,
 					correctAnswers: correctTexts,
 					existingOptions: existingTexts,
 					focus: userFocus,
 					numDistractors,
-					existingExplanation: questionExplanation.trim() || undefined
+					existingRationale: questionRationale.trim() || undefined
 				});
 
 				// Fill empty slots with generated distractors
@@ -634,10 +708,10 @@
 					return o;
 				});
 
-				if (result.explanation) {
-					questionExplanation = result.explanation;
-					if ($explanationEditor) {
-						$explanationEditor.commands.setContent(result.explanation);
+				if (result.rationale) {
+					questionRationale = result.rationale;
+					if ($rationaleEditor) {
+						$rationaleEditor.commands.setContent(result.rationale);
 					}
 				}
 
@@ -657,7 +731,12 @@
 	}
 
 	function removeOption(index: number) {
-		if (questionType === QUESTION_TYPES.TRUE_FALSE || questionType === QUESTION_TYPES.FILL_IN_THE_BLANK || questionType === QUESTION_TYPES.MATCHING) return;
+		if (
+			questionType === QUESTION_TYPES.TRUE_FALSE ||
+			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+			questionType === QUESTION_TYPES.MATCHING
+		)
+			return;
 		if (options.length <= 2) return;
 		options = options.filter((_, i) => i !== index);
 		correctAnswers = correctAnswers
@@ -671,7 +750,11 @@
 
 	function toggleCorrectAnswer(index: number) {
 		const indexStr = index.toString();
-		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK || questionType === QUESTION_TYPES.MATCHING) return;
+		if (
+			questionType === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+			questionType === QUESTION_TYPES.MATCHING
+		)
+			return;
 		if (questionType === QUESTION_TYPES.TRUE_FALSE) {
 			correctAnswers = correctAnswers.includes(indexStr) ? [] : [indexStr];
 		} else if (correctAnswers.includes(indexStr)) {
@@ -789,7 +872,7 @@
 					stem: questionStem,
 					options: cleanOptions,
 					correctAnswers,
-					explanation: questionExplanation || '',
+					rationale: questionRationale || '',
 					status: questionStatus.toLowerCase()
 				});
 				questionId = editingQuestion._id as Id<'question'>;
@@ -812,7 +895,7 @@
 					stem: questionStem,
 					options: cleanOptions.map((opt) => ({ text: opt.text })),
 					correctAnswers,
-					explanation: questionExplanation || '',
+					rationale: questionRationale || '',
 					aiGenerated: false,
 					status: questionStatus.toLowerCase(),
 					order: nextOrder,
@@ -857,10 +940,14 @@
 
 <div class="h-full flex flex-col overflow-hidden bg-base-100">
 	<!-- Top Bar: Title & Actions -->
-	<div class="flex items-center justify-between px-4 py-3 border-b border-base-300 bg-base-100 flex-shrink-0">
+	<div
+		class="flex items-center justify-between px-4 py-3 border-b border-base-300 bg-base-100 flex-shrink-0"
+	>
 		<h3 class="text-base font-semibold">{mode === 'edit' ? 'Edit Question' : 'New Question'}</h3>
 		<div class="flex items-center gap-2">
-			<button class="btn btn-sm btn-ghost rounded-full" onclick={onCancel} disabled={isSubmitting}>Cancel</button>
+			<button class="btn btn-sm btn-ghost rounded-full" onclick={onCancel} disabled={isSubmitting}
+				>Cancel</button
+			>
 			<button
 				class="btn btn-sm btn-primary rounded-full gap-2"
 				onclick={handleSubmit}
@@ -877,14 +964,20 @@
 	</div>
 
 	<!-- Toolbar: Type & Status -->
-	<div class="flex flex-wrap items-center gap-8 px-6 py-4 border-b border-base-300 bg-base-200/30 flex-shrink-0">
+	<div
+		class="flex flex-wrap items-center gap-8 px-6 py-4 border-b border-base-300 bg-base-200/30 flex-shrink-0"
+	>
 		<!-- Type Selector -->
 		<div class="flex flex-col gap-2">
-			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1">Type</span>
+			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1"
+				>Type</span
+			>
 			<div class="flex shadow-sm bg-base-100 rounded-full border border-base-300 p-1 gap-0.5">
 				{#each questionTypeOptions as option (option.value)}
 					<button
-						class="btn btn-xs sm:btn-sm rounded-full border-0 {questionType === option.value ? 'btn-active font-medium' : 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
+						class="btn btn-xs sm:btn-sm rounded-full border-0 {questionType === option.value
+							? 'btn-active font-medium'
+							: 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
 						onclick={() => {
 							questionType = option.value;
 							handleTypeChange();
@@ -903,11 +996,15 @@
 
 		<!-- Status Selector -->
 		<div class="flex flex-col gap-2">
-			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1">Status</span>
+			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1"
+				>Status</span
+			>
 			<div class="flex shadow-sm bg-base-100 rounded-full border border-base-300 p-1 gap-0.5">
 				{#each statusOptions as option (option.value)}
 					<button
-						class="btn btn-xs sm:btn-sm rounded-full border-0 {questionStatus === option.value ? option.colorClass + ' btn-active font-medium' : 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
+						class="btn btn-xs sm:btn-sm rounded-full border-0 {questionStatus === option.value
+							? option.colorClass + ' btn-active font-medium'
+							: 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
 						onclick={() => {
 							questionStatus = option.value;
 							onChange();
@@ -925,22 +1022,31 @@
 	<!-- Main Scrollable Content -->
 	<div class="flex-1 overflow-y-auto min-h-0 p-4 pb-40 sm:p-6 sm:pb-40" onpaste={handlePaste}>
 		<div class="w-full max-w-none space-y-8">
-			
 			<!-- Question Stem -->
 			<div class="space-y-2">
 				<div class="flex items-center justify-between">
-					<label class="text-xs font-semibold uppercase tracking-wide text-base-content/60 flex items-center gap-2">
+					<label
+						class="text-xs font-semibold uppercase tracking-wide text-base-content/60 flex items-center gap-2"
+					>
 						<MessageSquare size={14} /> Question
 					</label>
-					<span class="text-[10px] text-base-content/40 font-medium hidden sm:inline">Ctrl + S to save</span>
+					<span class="text-[10px] text-base-content/40 font-medium hidden sm:inline"
+						>Ctrl + S to save</span
+					>
 				</div>
-				<div class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 shadow-sm group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+				<div
+					class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 shadow-sm group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all"
+				>
 					{#if editor}
-						<div class="bg-base-200/50 border-b border-base-300 p-1 flex gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+						<div
+							class="bg-base-200/50 border-b border-base-300 p-1 flex gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+						>
 							{#each menuItems as item (item.name)}
 								<button
 									type="button"
-									class="btn btn-ghost btn-xs btn-square {item.active() ? 'btn-active text-primary' : ''}"
+									class="btn btn-ghost btn-xs btn-square {item.active()
+										? 'btn-active text-primary'
+										: ''}"
 									onclick={item.command}
 									title={item.name}
 								>
@@ -960,12 +1066,14 @@
 				{#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
 					<div class="space-y-4">
 						<div class="flex items-center justify-between mb-2">
-							<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60">Accepted Answers</div>
+							<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60">
+								Accepted Answers
+							</div>
 							<button
 								class="btn btn-xs btn-ghost gap-1"
 								onclick={generateAIOptions}
 								disabled={!canGenerateAI()}
-								title={canGenerateAI() ? 'Generate explanation with AI' : 'Add stem and answer first'}
+								title={canGenerateAI() ? 'Generate rationale with AI' : 'Add stem and answer first'}
 							>
 								{#if isGeneratingAI}
 									<Loader2 size={12} class="animate-spin" />
@@ -975,17 +1083,24 @@
 								<span class="hidden sm:inline">AI</span>
 							</button>
 						</div>
-						<div class="card bg-base-100 border border-base-300 shadow-sm rounded-3xl overflow-hidden">
+						<div
+							class="card bg-base-100 border border-base-300 shadow-sm rounded-3xl overflow-hidden"
+						>
 							<div class="card-body p-4 gap-4">
 								{#each fitbAnswers as row, index (index)}
 									<div class="flex flex-col sm:flex-row gap-3 items-start">
 										<div class="flex-1 w-full">
 											<div class="flex items-center gap-2 mb-1">
-												<span class="badge badge-sm {index === 0 ? 'badge-success' : 'badge-ghost'}">
+												<span
+													class="badge badge-sm {index === 0 ? 'badge-success' : 'badge-ghost'}"
+												>
 													{index === 0 ? 'Primary' : 'Alt'}
 												</span>
 												{#if fitbAnswers.length > 1}
-													<button class="btn btn-ghost btn-xs text-error ml-auto sm:hidden" onclick={() => removeFitbRow(index)}>
+													<button
+														class="btn btn-ghost btn-xs text-error ml-auto sm:hidden"
+														onclick={() => removeFitbRow(index)}
+													>
 														<X size={14} />
 													</button>
 												{/if}
@@ -1008,16 +1123,22 @@
 													<option value={mode}>{label}</option>
 												{/each}
 											</select>
-											<div class="flex items-center rounded-full border border-base-300 p-0.5 gap-0.5">
+											<div
+												class="flex items-center rounded-full border border-base-300 p-0.5 gap-0.5"
+											>
 												<button
-													class="btn btn-sm rounded-full border-0 {row.flags.ignorePunct ? 'btn-active' : 'btn-ghost'}"
+													class="btn btn-sm rounded-full border-0 {row.flags.ignorePunct
+														? 'btn-active'
+														: 'btn-ghost'}"
 													onclick={() => toggleFitbFlag(index, 'ignorePunct')}
 													title="Ignore Punctuation"
 												>
 													Punct
 												</button>
-												<button 
-													class="btn btn-sm rounded-full border-0 {row.flags.normalizeWs ? 'btn-active' : 'btn-ghost'}"
+												<button
+													class="btn btn-sm rounded-full border-0 {row.flags.normalizeWs
+														? 'btn-active'
+														: 'btn-ghost'}"
 													onclick={() => toggleFitbFlag(index, 'normalizeWs')}
 													title="Normalize Whitespace"
 												>
@@ -1025,7 +1146,10 @@
 												</button>
 											</div>
 											{#if fitbAnswers.length > 1}
-												<button class="btn btn-ghost btn-sm btn-square text-error hidden sm:flex" onclick={() => removeFitbRow(index)}>
+												<button
+													class="btn btn-ghost btn-sm btn-square text-error hidden sm:flex"
+													onclick={() => removeFitbRow(index)}
+												>
 													<X size={16} />
 												</button>
 											{/if}
@@ -1043,10 +1167,11 @@
 							</div>
 						</div>
 					</div>
-
 				{:else if questionType === QUESTION_TYPES.MATCHING}
 					<div class="space-y-4">
-						<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2">Matching Pairs</div>
+						<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2">
+							Matching Pairs
+						</div>
 						<div class="space-y-3">
 							{#each Array(Math.max(matchingPrompts.length, matchingAnswers.length)) as _, i (i)}
 								<div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
@@ -1070,17 +1195,24 @@
 												</button>
 											{/if}
 										{:else}
-											<div class="h-12 w-full rounded-3xl border border-dashed border-base-300 bg-base-100/50 flex items-center justify-center text-xs text-base-content/30 italic">
+											<div
+												class="h-12 w-full rounded-3xl border border-dashed border-base-300 bg-base-100/50 flex items-center justify-center text-xs text-base-content/30 italic"
+											>
 												Distractor (No Prompt)
 											</div>
 										{/if}
 									</div>
-									
+
 									<!-- Center: Arrow -->
 									<div class="text-base-content/30 rotate-90 sm:rotate-0 w-5 flex justify-center">
 										{#if i < matchingPrompts.length && i < matchingAnswers.length}
 											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M13 7l5 5m0 0l-5 5m5-5H6"
+												/>
 											</svg>
 										{/if}
 									</div>
@@ -1105,7 +1237,9 @@
 												</button>
 											{/if}
 										{:else}
-											<div class="h-12 w-full rounded-3xl border border-dashed border-base-300 bg-base-100/50 flex items-center justify-center text-xs text-base-content/30 italic">
+											<div
+												class="h-12 w-full rounded-3xl border border-dashed border-base-300 bg-base-100/50 flex items-center justify-center text-xs text-base-content/30 italic"
+											>
 												No Answer
 											</div>
 										{/if}
@@ -1113,28 +1247,37 @@
 								</div>
 							{/each}
 						</div>
-						
+
 						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
 							<div class="flex justify-center sm:justify-start">
-								<button class="btn btn-sm btn-outline gap-2 w-full sm:w-auto" onclick={addMatchingPrompt}>
+								<button
+									class="btn btn-sm btn-outline gap-2 w-full sm:w-auto"
+									onclick={addMatchingPrompt}
+								>
 									<Plus size={14} /> Add Prompt
 								</button>
 							</div>
 							<div class="flex justify-center sm:justify-end">
-								<button class="btn btn-sm btn-outline gap-2 w-full sm:w-auto" onclick={addMatchingAnswer}>
+								<button
+									class="btn btn-sm btn-outline gap-2 w-full sm:w-auto"
+									onclick={addMatchingAnswer}
+								>
 									<Plus size={14} /> Add Answer
 								</button>
 							</div>
 						</div>
 					</div>
-
 				{:else}
 					<!-- Multiple Choice / True False -->
 					<div class="space-y-4">
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-3">
-								<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60">Options</div>
-								<span class="text-[10px] text-base-content/40 font-medium hidden sm:inline">Ctrl + Enter to toggle correct</span>
+								<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60">
+									Options
+								</div>
+								<span class="text-[10px] text-base-content/40 font-medium hidden sm:inline"
+									>Ctrl + Enter to toggle correct</span
+								>
 							</div>
 							<div class="flex items-center gap-1">
 								{#if questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
@@ -1142,7 +1285,9 @@
 										class="btn btn-xs btn-ghost gap-1"
 										onclick={generateAIOptions}
 										disabled={!canGenerateAI()}
-										title={canGenerateAI() ? 'Generate distractor options with AI' : 'Add stem and correct answer first'}
+										title={canGenerateAI()
+											? 'Generate distractor options with AI'
+											: 'Add stem and correct answer first'}
 									>
 										{#if isGeneratingAI}
 											<Loader2 size={12} class="animate-spin" />
@@ -1161,15 +1306,25 @@
 						<div class="space-y-3">
 							{#each options as option, index (index)}
 								<div class="relative group">
-									<div class="flex items-center rounded-full border-2 transition-colors bg-base-100 pl-3 pr-2 py-1 {correctAnswers.includes(index.toString()) ? 'border-success bg-success/5' : 'border-base-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20'}">
+									<div
+										class="flex items-center rounded-full border-2 transition-colors bg-base-100 pl-3 pr-2 py-1 {correctAnswers.includes(
+											index.toString()
+										)
+											? 'border-success bg-success/5'
+											: 'border-base-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20'}"
+									>
 										<input
 											type="checkbox"
-											class="checkbox checkbox-sm {correctAnswers.includes(index.toString()) ? 'checkbox-success' : 'checkbox-primary'}"
+											class="checkbox checkbox-sm {correctAnswers.includes(index.toString())
+												? 'checkbox-success'
+												: 'checkbox-primary'}"
 											checked={correctAnswers.includes(index.toString())}
 											onclick={() => toggleCorrectAnswer(index)}
 											tabindex={-1}
 										/>
-										<span class="font-semibold text-sm ml-3 text-base-content/50 select-none w-6">{String.fromCharCode(65 + index)}.</span>
+										<span class="font-semibold text-sm ml-3 text-base-content/50 select-none w-6"
+											>{String.fromCharCode(65 + index)}.</span
+										>
 										<input
 											type="text"
 											class="flex-1 bg-transparent border-none focus:ring-0 text-sm px-2 h-9"
@@ -1185,10 +1340,10 @@
 											}}
 										/>
 										{#if options.length > 2 && questionType !== QUESTION_TYPES.TRUE_FALSE}
-											<button 
-												type="button" 
-												class="btn btn-ghost btn-xs btn-circle text-base-content/30 hover:text-error ml-1" 
-												tabindex={-1} 
+											<button
+												type="button"
+												class="btn btn-ghost btn-xs btn-circle text-base-content/30 hover:text-error ml-1"
+												tabindex={-1}
 												onclick={() => removeOption(index)}
 											>
 												<X size={14} />
@@ -1202,7 +1357,10 @@
 						</div>
 
 						{#if questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
-							<button class="btn btn-sm btn-ghost gap-2 w-full border-2 border-dashed border-base-300 hover:border-primary hover:text-primary mt-2" onclick={addOption}>
+							<button
+								class="btn btn-sm btn-ghost gap-2 w-full border-2 border-dashed border-base-300 hover:border-primary hover:text-primary mt-2"
+								onclick={addOption}
+							>
 								<Plus size={14} /> Add Option
 							</button>
 						{/if}
@@ -1210,18 +1368,24 @@
 				{/if}
 			</div>
 
-			<!-- Explanation & Attachments -->
+			<!-- Rationale & Attachments -->
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-base-200">
 				<div>
-					<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-1 flex items-center gap-2">
-						<MessageSquare size={14} /> Explanation
+					<div
+						class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-1 flex items-center gap-2"
+					>
+						<MessageSquare size={14} /> Rationale
 					</div>
-					<p class="text-[10px] text-base-content/40 mb-2">Add notes or context here to guide AI-generated explanations</p>
+					<p class="text-[10px] text-base-content/40 mb-2">
+						Add notes or context here to guide AI-generated rationales
+					</p>
 					<div class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 group">
-						{#if explanationEditor}
-							<EditorContent editor={$explanationEditor} />
-							<div class="bg-base-200/50 border-t border-base-300 p-1 flex gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
-								{#each expMenuItems as item (item.name)}
+						{#if rationaleEditor}
+							<EditorContent editor={$rationaleEditor} />
+							<div
+								class="bg-base-200/50 border-t border-base-300 p-1 flex gap-1 opacity-50 group-hover:opacity-100 transition-opacity"
+							>
+								{#each rationaleMenuItems as item (item.name)}
 									<button
 										type="button"
 										class="btn btn-ghost btn-xs btn-square {item.active() ? 'btn-active' : ''}"
@@ -1237,10 +1401,12 @@
 				</div>
 
 				<div>
-					<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2 flex items-center gap-2">
+					<div
+						class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2 flex items-center gap-2"
+					>
 						<ImageIcon size={14} /> Attachments
 					</div>
-					
+
 					<div class="space-y-3">
 						{#if existingMedia.length > 0 || queuedMedia.length > 0}
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1249,7 +1415,7 @@
 									<div class="border border-base-300 rounded-2xl overflow-hidden bg-base-100">
 										<div class="relative group">
 											<img src={m.url} alt={m.altText} class="w-full h-32 object-cover" />
-											<button 
+											<button
 												class="absolute top-1 right-1 btn btn-circle btn-xs btn-error opacity-0 group-hover:opacity-100 transition-opacity"
 												onclick={() => removeExistingMedia(m._id)}
 											>
@@ -1261,34 +1427,54 @@
 												class="input input-bordered input-sm w-full"
 												placeholder="Alt text"
 												bind:value={m.altText}
-												oninput={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+												oninput={() =>
+													handleExistingMediaChange(
+														m._id,
+														m.altText,
+														m.caption || '',
+														m.showOnSolution
+													)}
 											/>
 											<input
 												class="input input-bordered input-sm w-full"
 												placeholder="Caption (optional)"
 												bind:value={m.caption}
-												oninput={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+												oninput={() =>
+													handleExistingMediaChange(
+														m._id,
+														m.altText,
+														m.caption || '',
+														m.showOnSolution
+													)}
 											/>
 											<label class="label cursor-pointer gap-2 text-xs p-0 justify-start">
 												<input
 													type="checkbox"
 													class="checkbox checkbox-xs"
 													bind:checked={m.showOnSolution}
-													onchange={() => handleExistingMediaChange(m._id, m.altText, m.caption || '', m.showOnSolution)}
+													onchange={() =>
+														handleExistingMediaChange(
+															m._id,
+															m.altText,
+															m.caption || '',
+															m.showOnSolution
+														)}
 												/>
 												<span>Show on rationale</span>
 											</label>
 										</div>
 									</div>
 								{/each}
-								
+
 								<!-- Queued Media -->
 								{#each queuedMedia as m, idx (idx)}
-									<div class="border border-primary/50 rounded-2xl overflow-hidden bg-base-100 relative">
+									<div
+										class="border border-primary/50 rounded-2xl overflow-hidden bg-base-100 relative"
+									>
 										<div class="absolute top-2 left-2 badge badge-primary badge-xs z-10">New</div>
 										<div class="relative">
 											<img src={m.url} alt={m.name} class="w-full h-32 object-cover" />
-											<button 
+											<button
 												class="absolute top-1 right-1 btn btn-circle btn-xs btn-error z-10"
 												onclick={() => removeQueuedMedia(idx)}
 											>
@@ -1325,12 +1511,16 @@
 
 						<div class="relative">
 							{#if isPasteUploading}
-								<div class="border-2 border-dashed border-primary rounded-2xl p-6 flex flex-col items-center justify-center h-32 bg-base-100/50">
+								<div
+									class="border-2 border-dashed border-primary rounded-2xl p-6 flex flex-col items-center justify-center h-32 bg-base-100/50"
+								>
 									<span class="loading loading-spinner text-primary mb-2"></span>
 									<span class="text-xs text-primary font-medium">Processing pasted image...</span>
 								</div>
 							{:else}
-								<div class="group relative h-36 w-full border-2 border-dashed border-base-300 rounded-xl hover:border-primary transition-colors bg-base-100/50 flex flex-col items-center justify-center text-center overflow-hidden">
+								<div
+									class="group relative h-36 w-full border-2 border-dashed border-base-300 rounded-xl hover:border-primary transition-colors bg-base-100/50 flex flex-col items-center justify-center text-center overflow-hidden"
+								>
 									<!-- The Dropzone covers everything but is invisible -->
 									<div class="absolute inset-0 z-10 opacity-0 cursor-pointer">
 										<UploadDropzone
@@ -1344,10 +1534,14 @@
 											}}
 										/>
 									</div>
-									
+
 									<!-- Visible Content -->
-									<div class="flex flex-col items-center gap-2 p-4 text-base-content/60 group-hover:text-primary transition-colors">
-										<div class="p-3 bg-base-200 rounded-full group-hover:bg-primary/10 transition-colors">
+									<div
+										class="flex flex-col items-center gap-2 p-4 text-base-content/60 group-hover:text-primary transition-colors"
+									>
+										<div
+											class="p-3 bg-base-200 rounded-full group-hover:bg-primary/10 transition-colors"
+										>
 											<ImageIcon size={24} />
 										</div>
 										<div class="flex flex-col gap-0.5">
