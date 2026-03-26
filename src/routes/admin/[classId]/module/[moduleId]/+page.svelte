@@ -23,6 +23,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { curationState, type QuestionItem } from './states.svelte.js';
 
 	let { data }: { data: PageData } = $props();
@@ -447,7 +448,8 @@
 											<GripVertical size={16} class="text-base-content/30 shrink-0" />
 											<span class="text-xs font-medium text-base-content/50 w-6">#{index + 1}</span>
 											<p class="flex-1 text-sm text-base-content truncate tiptap-content-inline">
-												{@html questionItem.stem}
+												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+												{@html sanitizeHtml(questionItem.stem)}
 											</p>
 										</div>
 									</div>
@@ -510,7 +512,8 @@
 											<GripVertical size={16} class="text-base-content/30 shrink-0" />
 											<span class="text-xs font-medium text-base-content/50 w-6">#{index + 1}</span>
 											<p class="flex-1 text-sm text-base-content truncate tiptap-content-inline">
-												{@html questionItem.stem}
+												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+												{@html sanitizeHtml(questionItem.stem)}
 											</p>
 										</div>
 									</div>
@@ -625,6 +628,7 @@
 					>
 				</div>
 				<button
+					type="button"
 					class="btn btn-sm btn-ghost btn-circle"
 					onclick={() => curationState.clearMobileSelection()}
 				>

@@ -468,6 +468,7 @@
 										>
 									</div>
 									<div class="grid grid-cols-8 gap-1">
+										<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 										{#each Array(16) as _, i (i)}
 											<div
 												class="ai-dot h-2 w-full rounded-full {i < 14
@@ -501,7 +502,8 @@
 
 					<div class="mt-4 rounded-xl border border-base-300/60 bg-base-100/50 p-3">
 						<div class="mb-1.5 flex items-center gap-1.5">
-							<span class="rounded-sm bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium text-primary"
+							<span
+								class="rounded-sm bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium text-primary"
 								>Question</span
 							>
 						</div>

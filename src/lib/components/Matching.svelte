@@ -163,6 +163,10 @@
 			.replace(/\s+/g, ' ');
 	}
 
+	function getAnswerLabel(text: string): string {
+		return String(text).replace(/^\s*answer:\s*/i, '');
+	}
+
 	function directCorrectAnswerIdsForPrompt(promptId: string): string[] {
 		const parsedPair = ((currentlySelected?.correctAnswers || []) as string[])
 			.map((raw) => parsePairToken(raw))
@@ -248,56 +252,57 @@
 				</div>
 				<div class="text-base-content/60" aria-hidden="true">→</div>
 				<div class="flex-1 flex gap-2 items-center">
-					{#key p.id}
-						<div class="dropdown flex-1">
-							<button
-								type="button"
-								class="btn select select-bordered w-full rounded-full {qs.showSolution &&
-								isSelectionCorrectForPrompt(p.id)
-									? 'select-success'
-									: ''} {qs.showSolution ? 'btn-disabled' : ''}"
-							>
-								{#if qs.showSolution && correctAnswerIdForPrompt(p.id)}
-									{@html (
-										answers().find((a) => a.id === correctAnswerIdForPrompt(p.id))?.text || ''
-									).slice('answer:'.length)}
-								{:else if getUserSelectionForPrompt(p.id)}
-									{@html (
-										shuffledAnswers.find((a) => a.id === getUserSelectionForPrompt(p.id))?.text ||
-										''
-									).slice('answer:'.length)}
-								{:else}
-									Select a choice
-								{/if}
-							</button>
-							<ul class="dropdown-content menu p-2 shadow-xs bg-base-100 rounded-2xl w-full z-[1]">
-								{#each qs.showSolution ? shuffledAnswers : availableAnswersForPrompt(p.id) as a (a.id)}
-									<li>
-										<button
-											onclick={() => !qs.showSolution && setUserSelection(p.id, a.id)}
-											class="btn btn-ghost justify-start w-full {qs.showSolution &&
-											isAcceptedAnswerForPrompt(p.id, a.id)
-												? 'bg-success text-success-content hover:bg-success hover:text-success-content'
-												: ''}"
-											class:pointer-events-none={qs.showSolution}
-											disabled={qs.showSolution}
-										>
-											{@html a.text.slice('answer:'.length)}
-										</button>
-									</li>
-								{/each}
-							</ul>
-						</div>
-						{#if !qs.showSolution && getUserSelectionForPrompt(p.id)}
-							<button
-								class="btn btn-ghost btn-sm btn-circle"
-								onclick={() => clearSelection(p.id)}
-								aria-label="clear selection"
-							>
-								<X size={16} />
-							</button>
-						{/if}
-					{/key}
+					<div class="dropdown flex-1">
+						<button
+							type="button"
+							class="btn select select-bordered w-full rounded-full {qs.showSolution &&
+							isSelectionCorrectForPrompt(p.id)
+								? 'select-success'
+								: ''} {qs.showSolution ? 'btn-disabled' : ''}"
+							disabled={qs.showSolution}
+							aria-disabled={qs.showSolution}
+						>
+							{#if qs.showSolution && correctAnswerIdForPrompt(p.id)}
+								{getAnswerLabel(
+									answers().find((a) => a.id === correctAnswerIdForPrompt(p.id))?.text || ''
+								)}
+							{:else if getUserSelectionForPrompt(p.id)}
+								{getAnswerLabel(
+									shuffledAnswers.find((a) => a.id === getUserSelectionForPrompt(p.id))?.text || ''
+								)}
+							{:else}
+								Select a choice
+							{/if}
+						</button>
+						<ul class="dropdown-content menu p-2 shadow-xs bg-base-100 rounded-2xl w-full z-[1]">
+							{#each qs.showSolution ? shuffledAnswers : availableAnswersForPrompt(p.id) as a (a.id)}
+								<li>
+									<button
+										type="button"
+										onclick={() => !qs.showSolution && setUserSelection(p.id, a.id)}
+										class="btn btn-ghost justify-start w-full {qs.showSolution &&
+										isAcceptedAnswerForPrompt(p.id, a.id)
+											? 'bg-success text-success-content hover:bg-success hover:text-success-content'
+											: ''}"
+										class:pointer-events-none={qs.showSolution}
+										disabled={qs.showSolution}
+									>
+										{getAnswerLabel(a.text)}
+									</button>
+								</li>
+							{/each}
+						</ul>
+					</div>
+					{#if !qs.showSolution && getUserSelectionForPrompt(p.id)}
+						<button
+							type="button"
+							class="btn btn-ghost btn-sm btn-circle"
+							onclick={() => clearSelection(p.id)}
+							aria-label="clear selection"
+						>
+							<X size={16} />
+						</button>
+					{/if}
 				</div>
 			</div>
 		{/each}

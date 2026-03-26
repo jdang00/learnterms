@@ -1,14 +1,5 @@
 <script lang="ts">
-	import {
-		Pencil,
-		Trash2,
-		Copy,
-		CopyPlus,
-		ArrowRightLeft,
-		Paperclip,
-		Check,
-		MoreVertical
-	} from 'lucide-svelte';
+	import { Pencil, Trash2, Copy, CopyPlus, ArrowRightLeft, Paperclip, Check } from 'lucide-svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
@@ -191,7 +182,11 @@
 					</button>
 					{#if onDuplicateMany}
 						<div class="dropdown dropdown-end">
-							<button class="btn btn-sm btn-ghost btn-circle" aria-label="Open duplicate options">
+							<button
+								type="button"
+								class="btn btn-sm btn-ghost btn-circle"
+								aria-label="Open duplicate options"
+							>
 								<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
 										stroke-linecap="round"
@@ -232,7 +227,8 @@
 					? 'text-base'
 					: 'text-lg'} font-medium text-base-content leading-relaxed tiptap-content"
 			>
-				{@html question.stem}
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+				{@html sanitizeHtml(question.stem)}
 			</div>
 		</div>
 
@@ -300,7 +296,7 @@
 										: 'px-5 py-3'}"
 								>
 									<span class="font-semibold {isMobile ? 'text-xs' : 'text-sm'} tiptap-content"
-										>{@html getPromptLabel(prompt.text)}</span
+										>{getPromptLabel(prompt.text)}</span
 									>
 								</div>
 							</div>
@@ -330,7 +326,7 @@
 									>
 										<Check size={isMobile ? 14 : 16} class="text-success shrink-0" />
 										<span class="{isMobile ? 'text-xs' : 'text-sm'} tiptap-content"
-											>{@html correctAnswer}</span
+											>{correctAnswer}</span
 										>
 									</div>
 								{:else}
@@ -391,20 +387,19 @@
 								disabled
 							/>
 							<span
-								class="grow text-wrap break-words {isMobile
-									? 'ml-2 text-xs'
-									: 'ml-4 text-sm'} my-2"
+								class="grow text-wrap break-words {isMobile ? 'ml-2 text-xs' : 'ml-4 text-sm'} my-2"
 							>
 								<span class="font-semibold mr-2 select-none"
 									>{String.fromCharCode(65 + optIndex)}.</span
 								>
-								<span class="tiptap-content">{@html option.text}</span>
+								<span class="tiptap-content">
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+									{@html sanitizeHtml(option.text)}
+								</span>
 							</span>
 							{#if question.correctAnswers.includes(option.id)}
-								<span
-									class="text-success text-xs font-medium {isMobile
-										? 'mr-3'
-										: 'mr-4'} shrink-0">{isMobile ? '✓' : '✓ Correct'}</span
+								<span class="text-success text-xs font-medium {isMobile ? 'mr-3' : 'mr-4'} shrink-0"
+									>{isMobile ? '✓' : '✓ Correct'}</span
 								>
 							{/if}
 						</label>
@@ -428,6 +423,7 @@
 					class:p-3={isMobile}
 					class:p-4={!isMobile}
 				>
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					<div class="text-sm text-base-content/80 tiptap-content">{@html questionRationale}</div>
 				</div>
 			</div>

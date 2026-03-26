@@ -47,7 +47,7 @@
 
 {#if chunks.isLoading}
 	<div class="space-y-2">
-		{#each Array(4) as _, i (i)}
+		{#each Array.from({ length: 4 }, (_, i) => i) as i (i)}
 			<div class="skeleton h-16 w-full rounded-2xl"></div>
 		{/each}
 	</div>
@@ -92,6 +92,7 @@
 				}}
 				onkeydown={(e) => {
 					if (e.key === 'Enter' || e.key === ' ') {
+						if ((e.target as HTMLElement).closest('details')) return;
 						e.preventDefault();
 						toggleSelect(chunk._id);
 					}

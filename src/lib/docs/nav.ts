@@ -1,5 +1,7 @@
 export type DocsPath =
 	| '/docs'
+	| '/docs/admin'
+	| '/docs/getting-started'
 	| '/docs/onboarding'
 	| '/docs/admin/content-library'
 	| '/docs/lt-models'
@@ -46,6 +48,20 @@ export function getPathToTitle(): Record<string, string> {
 	return map;
 }
 
+const validDocsPaths = new Set<DocsPath>([
+	'/docs',
+	'/docs/admin',
+	'/docs/getting-started',
+	'/docs/onboarding',
+	'/docs/admin/content-library',
+	'/docs/lt-models',
+	'/docs/students/study-flow'
+]);
+
+function isDocsPath(path: string): path is DocsPath {
+	return validDocsPaths.has(path as DocsPath);
+}
+
 export function buildBreadcrumbTrail(pathname: string): DocsNavItem[] {
 	const pathToTitle = getPathToTitle();
 	const segments = pathname.replace(/\/+$/, '').split('/').filter(Boolean);
@@ -55,7 +71,9 @@ export function buildBreadcrumbTrail(pathname: string): DocsNavItem[] {
 	for (const segment of segments) {
 		accum += `/${segment}`;
 		const title = pathToTitle[accum] ?? toTitleCase(segment);
-		trail.push({ title, path: accum as DocsPath });
+		if (isDocsPath(accum)) {
+			trail.push({ title, path: accum });
+		}
 	}
 	return trail;
 }

@@ -59,15 +59,14 @@
 		onDeleteSelected
 	}: Props = $props();
 
-	const statusFilterLabel = $derived(
-		statusFilter === 'all'
-			? 'All'
-			: statusFilter === 'published'
-				? 'Published'
-				: statusFilter === 'draft'
-					? 'Drafts'
-					: 'Archived'
-	);
+	const statusFilterLabels: Record<StatusFilter, string> = {
+		all: 'All',
+		published: 'Published',
+		draft: 'Drafts',
+		archived: 'Archived'
+	};
+
+	const statusFilterLabel = $derived(statusFilterLabels[statusFilter] ?? statusFilterLabels.all);
 
 	const isMobile = $derived(variant === 'mobile');
 </script>

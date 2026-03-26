@@ -590,9 +590,12 @@
 			if (typeof window !== 'undefined') {
 				window.localStorage.removeItem(cacheKey(String(attemptId)));
 			}
-			await goto(
-				resolve(`/classes/${classId}/tests/${attemptId}/results${auto ? '?autoSubmit=1' : ''}`)
-			);
+			const resultsHref = resolve('/classes/[classId]/tests/[attemptId]/results', {
+				classId,
+				attemptId
+			});
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
+			await goto(auto ? `${resultsHref}?autoSubmit=1` : resultsHref);
 		} catch (error: any) {
 			submitError = error?.message ?? 'Something went wrong while submitting. Please try again.';
 		} finally {
@@ -844,7 +847,10 @@
 						<div class="card-actions justify-center mt-4">
 							<a
 								class="btn btn-primary rounded-full"
-								href={resolve('/classes/[classId]/tests/[attemptId]/results', { classId, attemptId })}
+								href={resolve('/classes/[classId]/tests/[attemptId]/results', {
+									classId,
+									attemptId
+								})}
 							>
 								View Results
 							</a>
@@ -876,10 +882,7 @@
 					{#if !hideSidebar}
 						<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 							<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-								<a
-									class="btn btn-ghost font-bold rounded-full"
-									href={resolve('/classes')}
-								>
+								<a class="btn btn-ghost font-bold rounded-full" href={resolve('/classes')}>
 									<ChevronLeft size={16} />
 									{runnerQuery.data.attempt.className}
 								</a>
@@ -1016,10 +1019,7 @@
 
 				<!-- Mobile header -->
 				<div class="lg:hidden flex items-center justify-between gap-2 px-2">
-					<a
-						class="btn btn-ghost btn-sm rounded-full text-secondary"
-						href={resolve('/classes')}
-					>
+					<a class="btn btn-ghost btn-sm rounded-full text-secondary" href={resolve('/classes')}>
 						<ChevronLeft size={16} />
 						<span class="truncate max-w-[120px]">{runnerQuery.data.attempt.className}</span>
 					</a>

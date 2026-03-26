@@ -637,11 +637,11 @@
 		matchingAnswers = nextMatching.answers;
 
 		if ($editor && $editor.getHTML() !== nextStem) {
-			$editor.commands.setContent(nextStem);
+			$editor.commands.setContent(nextStem, { emitUpdate: false });
 		}
 
 		if ($rationaleEditor && $rationaleEditor.getHTML() !== nextRationale) {
-			$rationaleEditor.commands.setContent(nextRationale);
+			$rationaleEditor.commands.setContent(nextRationale, { emitUpdate: false });
 		}
 	});
 

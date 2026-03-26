@@ -218,9 +218,10 @@
 		}
 	}
 
-	function featureHref(
-		item: { title: string; href?: string }
-	): '/cohort' | '/classes' | `/classes/${string}/tests/new` {
+	function featureHref(item: {
+		title: string;
+		href?: string;
+	}): '/cohort' | '/classes' | `/classes/${string}/tests/new` {
 		if (item.href === '/cohort') return '/cohort';
 		if (item.title === 'Build your own test') {
 			const classId = selectedClass?._id ?? firstClassId;
@@ -604,9 +605,14 @@
 							type="button"
 							class="btn btn-ghost btn-sm rounded-full text-base-content/60"
 							onclick={async () => {
-								const href = featureAnnouncement.ctaHref === '/classes' ? '/classes' : '/classes';
+								const href =
+									featureAnnouncement.ctaHref === '/cohort'
+										? resolve('/cohort')
+										: featureAnnouncement.ctaHref === '/changelog'
+											? resolve('/changelog')
+											: resolve('/classes');
 								await dismissFeatureSpotlight();
-								await goto(resolve(href));
+								await goto(href);
 							}}
 						>
 							{featureAnnouncement.ctaLabel}

@@ -7,7 +7,6 @@
 	import MainQuiz from '$lib/components/MainQuiz.svelte';
 	import QuizErrorHandler from '$lib/components/QuizErrorHandler.svelte';
 	import { onMount, tick, untrack } from 'svelte';
-	import { RotateCcw } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import { resolve } from '$app/paths';
 	import { BookOpen } from 'lucide-svelte';

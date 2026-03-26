@@ -308,7 +308,7 @@
 				>
 					{#if convexUser.isLoading}
 						<div class="p-4 space-y-2">
-							{#each Array(5) as _, i (i)}
+							{#each Array.from({ length: 5 }, (_, i) => i) as i (i)}
 								<div class="skeleton h-12 w-full"></div>
 							{/each}
 						</div>

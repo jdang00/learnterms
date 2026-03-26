@@ -161,7 +161,7 @@
 		<!-- Overview Tab -->
 		{#if cohortStats.isLoading}
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-				{#each Array(4) as _, i (i)}
+				{#each Array.from({ length: 4 }, (_, i) => i) as i (i)}
 					<div class="bg-base-100 rounded-xl border border-base-300 p-5 animate-pulse">
 						<div class="skeleton h-4 w-20 mb-2"></div>
 						<div class="skeleton h-8 w-16"></div>

@@ -53,21 +53,24 @@
 		});
 
 		const observer = new IntersectionObserver(
-				([entry]) => {
-					if (entry.isIntersecting) {
-						if (reduceMotion) {
-							targets.forEach((el) => {
+			([entry]) => {
+				if (entry.isIntersecting) {
+					if (reduceMotion) {
+						targets.forEach((el) => {
+							el.style.opacity = '1';
+							el.style.transform = 'translateY(0)';
+						});
+						observer.disconnect();
+						return;
+					}
+					targets.forEach((el, i) => {
+						setTimeout(
+							() => {
 								el.style.opacity = '1';
 								el.style.transform = 'translateY(0)';
-							});
-							observer.disconnect();
-							return;
-						}
-						targets.forEach((el, i) => {
-							setTimeout(() => {
-								el.style.opacity = '1';
-							el.style.transform = 'translateY(0)';
-						}, delay + i * stagger);
+							},
+							delay + i * stagger
+						);
 					});
 					observer.disconnect();
 				}
@@ -408,16 +411,11 @@
 		<!-- Timeline -->
 		<div class="changelog-timeline">
 			{#each changelog as entry, entryIdx (entry.version)}
-				<section
-					class="changelog-entry"
-					use:reveal={{ y: 22, delay: entryIdx * 60 }}
-				>
+				<section class="changelog-entry" use:reveal={{ y: 22, delay: entryIdx * 60 }}>
 					<!-- Timeline dot & connector -->
 					<div class="timeline-track">
 						<div
-							class="timeline-dot {entryIdx === 0
-								? 'timeline-dot-active'
-								: 'timeline-dot-past'}"
+							class="timeline-dot {entryIdx === 0 ? 'timeline-dot-active' : 'timeline-dot-past'}"
 						></div>
 						{#if entryIdx < changelog.length - 1}
 							<div class="timeline-line"></div>
@@ -427,9 +425,7 @@
 					<!-- Content -->
 					<div class="timeline-content">
 						<div class="flex flex-wrap items-center gap-2 mb-1">
-							<span class="font-mono text-sm font-bold text-base-content/80"
-								>{entry.version}</span
-							>
+							<span class="font-mono text-sm font-bold text-base-content/80">{entry.version}</span>
 							<span class="text-xs text-base-content/35">&middot;</span>
 							<span class="text-xs text-base-content/45">{entry.date}</span>
 						</div>
@@ -443,9 +439,7 @@
 							{#each entry.highlights as highlight (highlight.title)}
 								{@const Icon = highlight.icon}
 								<div class="highlight-card">
-									<div
-										class="rounded-xl border border-base-300/80 bg-base-100/70 p-2 mb-3 w-fit"
-									>
+									<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2 mb-3 w-fit">
 										<Icon size={16} />
 									</div>
 									<h3 class="text-sm font-semibold">{highlight.title}</h3>
@@ -456,7 +450,7 @@
 										<a
 											href={highlight.href}
 											target="_blank"
-											rel="external noreferrer"
+											rel="noopener noreferrer"
 											class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80"
 										>
 											View source commits

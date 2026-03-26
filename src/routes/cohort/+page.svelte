@@ -83,7 +83,7 @@
 	{#if boardQuery.isLoading}
 		<div class="space-y-4">
 			<div class="skeleton h-44 w-full rounded-2xl"></div>
-			{#each Array(6) as _, i (i)}
+			{#each Array.from({ length: 6 }, (_, i) => i) as i (i)}
 				<div class="skeleton h-16 w-full rounded-xl" style={`--i:${i}`}></div>
 			{/each}
 		</div>
@@ -229,7 +229,7 @@
 										/>
 									</div>
 								{/each}
-								{#each Array(mysterySlotsFor(member.recentAwards.length)) as _, mysteryIdx (mysteryIdx)}
+								{#each Array.from({ length: mysterySlotsFor(member.recentAwards.length) }, (_, mysteryIdx) => mysteryIdx) as mysteryIdx (mysteryIdx)}
 									<div class="tooltip tooltip-top z-20 mystery-badge-wrap" data-tip="?">
 										<div class="mystery-badge">
 											<BadgeShield

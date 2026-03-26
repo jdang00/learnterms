@@ -11,12 +11,7 @@
 	import { api } from '../../convex/_generated/api';
 	import ResultBanner from '$lib/components/ResultBanner.svelte';
 	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
-	import {
-		Flag,
-		BookmarkCheck,
-		ArrowDownNarrowWide,
-		Pencil
-	} from 'lucide-svelte';
+	import { Flag, BookmarkCheck, ArrowDownNarrowWide, Pencil } from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { slide, fade, scale } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
@@ -37,11 +32,14 @@
 	} = $props();
 
 	const clerk = useClerkContext();
-	const userDataQuery = useQuery(
-		api.users.getUserById,
-		() => clerk.user ? { id: clerk.user.id } : 'skip'
+	const userDataQuery = useQuery(api.users.getUserById, () =>
+		clerk.user ? { id: clerk.user.id } : 'skip'
 	);
-	const canEdit = $derived(userDataQuery.data?.role === 'dev' || userDataQuery.data?.role === 'admin' || userDataQuery.data?.role === 'curator');
+	const canEdit = $derived(
+		userDataQuery.data?.role === 'dev' ||
+			userDataQuery.data?.role === 'admin' ||
+			userDataQuery.data?.role === 'curator'
+	);
 
 	function isAuthError(error: any): boolean {
 		if (!error) return false;
@@ -84,7 +82,7 @@
 			{client}
 			classId={data.classId}
 		/>
-		<MobileInfo {module} classId={data.classId} />
+		<MobileInfo {module} />
 
 		<div
 			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
@@ -127,7 +125,9 @@
 						{#if canEdit && currentlySelected}
 							<a
 								class="btn btn-soft btn-secondary m-1 btn-circle"
-								href={resolve(`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`)}
+								href={resolve(
+									`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`
+								)}
 								target="_blank"
 								rel="noopener noreferrer"
 								title="Edit"
@@ -160,17 +160,16 @@
 					</div>
 				</div>
 
-
-			
-
 				{#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}
 					<FillInTheBlank bind:qs {currentlySelected} />
 				{:else if currentlySelected.type === QUESTION_TYPES.MATCHING}
 					<Matching bind:qs {currentlySelected} />
 				{:else}
-				<div class="text-base-content/70 font-medium text-base sm:text-lg leading-tight my-3 ms-2">
-					Select {currentlySelected.correctAnswers.length}.
-				</div>
+					<div
+						class="text-base-content/70 font-medium text-base sm:text-lg leading-tight my-3 ms-2"
+					>
+						Select {currentlySelected.correctAnswers.length}.
+					</div>
 					<AnswerOptions bind:qs {currentlySelected} />
 				{/if}
 

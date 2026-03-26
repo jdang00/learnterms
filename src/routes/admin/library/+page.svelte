@@ -52,7 +52,10 @@
 			currentDocView = openId;
 			currentDocument = target;
 			params.delete('open');
-			replaceState(resolve(`/admin/library${params.toString() ? `?${params.toString()}` : ''}`), {});
+			replaceState(
+				resolve(`/admin/library${params.toString() ? `?${params.toString()}` : ''}`),
+				{}
+			);
 		}
 	});
 
@@ -158,7 +161,9 @@
 			><ArrowLeft size={16} />Back to Library</button
 		>
 	{:else}
-		<a class="btn mb-4 btn-ghost rounded-full" href={resolve('/admin')}><ArrowLeft size={16} />Back</a>
+		<a class="btn mb-4 btn-ghost rounded-full" href={resolve('/admin')}
+			><ArrowLeft size={16} />Back</a
+		>
 	{/if}
 
 	<div class="mb-8">
@@ -216,7 +221,7 @@
 
 				{#if userContentLib.isLoading}
 					<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-						{#each Array(10) as _, i (i)}
+						{#each Array.from({ length: 10 }, (_, i) => i) as i (i)}
 							<div class="card aspect-[8.5/11] bg-base-100 border border-base-300 rounded-2xl">
 								<div class="card-body p-4 space-y-3">
 									<div class="skeleton h-4 w-3/4"></div>

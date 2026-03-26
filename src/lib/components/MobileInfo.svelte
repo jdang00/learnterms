@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { module, classId } = $props();
+	let { module } = $props();
 	import { ArrowLeft } from 'lucide-svelte';
 	import { resolve } from '$app/paths';
 </script>
@@ -7,10 +7,7 @@
 <div
 	class="lg:hidden flex flex-row mt-2 items-center w-full justify-between sticky top-0 bg-base-100 z-40 py-2 px-2"
 >
-	<a
-		class="btn btn-ghost btn-sm btn-circle shrink-0 flex items-center"
-		href={resolve('/classes')}
-	>
+	<a class="btn btn-ghost btn-sm btn-circle shrink-0 flex items-center" href={resolve('/classes')}>
 		<ArrowLeft size={20} />
 	</a>
 	<div
