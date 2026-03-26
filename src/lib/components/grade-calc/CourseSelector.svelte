@@ -14,7 +14,7 @@
 		bind:value={gradeStore.selectedCourseId}
 		onchange={() => gradeStore.selectCourse(gradeStore.selectedCourseId)}
 	>
-		{#each courses as course}
+		{#each courses as course (course.id)}
 			<option value={course.id}>{course.code} - {course.name}</option>
 		{/each}
 	</select>
@@ -30,5 +30,4 @@
 		</button>
 	</div>
 </div>
-
 

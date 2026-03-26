@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import {
 		Sparkles,
 		BrainCircuit,
@@ -455,7 +456,7 @@
 										<a
 											href={highlight.href}
 											target="_blank"
-											rel="noreferrer"
+											rel="external noreferrer"
 											class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80"
 										>
 											View source commits
@@ -478,11 +479,11 @@
 					LearnTerms is actively developed. Have a feature request or idea? We'd love to hear it.
 				</p>
 				<div class="mt-6 flex flex-wrap items-center justify-center gap-3">
-					<a href="/sign-in" class="btn btn-primary rounded-full px-6">
+					<a href={resolve('/sign-in')} class="btn btn-primary rounded-full px-6">
 						Start studying
 						<ArrowRight size={16} />
 					</a>
-					<a href="/contact" class="btn btn-ghost rounded-full px-5"> Get in touch </a>
+					<a href={resolve('/contact')} class="btn btn-ghost rounded-full px-5"> Get in touch </a>
 				</div>
 			</div>
 		</section>

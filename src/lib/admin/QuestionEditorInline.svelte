@@ -20,20 +20,20 @@
 		MessageSquare,
 		Plus,
 		Shuffle,
-		Clipboard,
 		Trash2,
 		Save,
 		Image as ImageIcon,
-		Check,
 		FileText,
 		Sparkles
 	} from 'lucide-svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
+	import type { FunctionArgs, FunctionReturnType } from 'convex/server';
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
 	import { QUESTION_TYPES } from '$lib/types';
 	import { createUploader, createUploadThing } from '$lib/utils/uploadthing';
 	import { UploadDropzone } from '@uploadthing/svelte';
+	import type { ClientUploadedFileData } from 'uploadthing/types';
 	import { onMount } from 'svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import type { Readable } from 'svelte/store';
@@ -45,6 +45,11 @@
 	import { getRationale } from '$lib/utils/rationale';
 
 	type QuestionItem = Doc<'question'>;
+	type QuestionMediaItem = FunctionReturnType<typeof api.questionMedia.getByQuestionId>[number];
+	type DeleteQuestionMediaResult = FunctionReturnType<typeof api.questionMedia.softDelete>;
+	type UpdateQuestionMediaArgs = FunctionArgs<typeof api.questionMedia.update>;
+	type CreateQuestionMediaArgs = FunctionArgs<typeof api.questionMedia.create>;
+	type UploadedQuestionMediaFile = ClientUploadedFileData<unknown>;
 
 	let {
 		moduleId,
@@ -80,7 +85,7 @@
 			content: editingQuestion?.stem || '',
 			editorProps: {
 				attributes: {
-					class: 'prose prose-sm max-w-none focus:outline-none min-h-[3rem] p-3 tiptap-content'
+					class: 'prose prose-sm max-w-none focus:outline-hidden min-h-[3rem] p-3 tiptap-content'
 				}
 			}
 		});
@@ -91,7 +96,7 @@
 			editorProps: {
 				attributes: {
 					class:
-						'prose prose-sm max-w-none focus:outline-none min-h-[3rem] p-3 tiptap-content text-sm'
+						'prose prose-sm max-w-none focus:outline-hidden min-h-[3rem] p-3 tiptap-content text-sm'
 				}
 			}
 		});
@@ -234,34 +239,102 @@
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
 
-	let questionStem: string = $state(editingQuestion?.stem || '');
-	let questionRationale: string = $state(getRationale(editingQuestion));
-	let questionStatus: string = $state(editingQuestion?.status || defaultStatus);
-	let questionType: string = $state(editingQuestion?.type || 'multiple_choice');
-	let options: Array<{ id?: string; text: string }> = $state(
-		editingQuestion?.options?.length
-			? [...editingQuestion.options]
-			: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }]
-	);
+	function getInitialQuestionStem() {
+		return editingQuestion?.stem ?? '';
+	}
 
-	// Convert option IDs to indices for correct answers
-	let correctAnswers: string[] = $state(
-		editingQuestion?.correctAnswers && editingQuestion?.options
-			? editingQuestion.correctAnswers
-					.map((answerId) => {
-						const index = editingQuestion.options.findIndex((opt) => opt.id === answerId);
-						return index !== -1 ? index.toString() : null;
-					})
-					.filter((idx): idx is string => idx !== null)
-			: []
-	);
+	function getInitialQuestionRationale() {
+		return getRationale(editingQuestion);
+	}
+
+	function getInitialQuestionStatus() {
+		return editingQuestion?.status ?? defaultStatus;
+	}
+
+	function getInitialQuestionType() {
+		return editingQuestion?.type ?? QUESTION_TYPES.MULTIPLE_CHOICE;
+	}
+
+	function getInitialOptions() {
+		return editingQuestion?.options?.length
+			? [...editingQuestion.options]
+			: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
+	}
+
+	function getInitialCorrectAnswers() {
+		if (!editingQuestion?.correctAnswers || !editingQuestion.options) return [];
+		return editingQuestion.correctAnswers
+			.map((answerId) => {
+				const index = editingQuestion?.options?.findIndex((opt) => opt.id === answerId) ?? -1;
+				return index !== -1 ? index.toString() : null;
+			})
+			.filter((idx): idx is string => idx !== null);
+	}
+
+	function getInitialFitbAnswers(): FitbAnswerRow[] {
+		if (
+			editingQuestion?.type !== QUESTION_TYPES.FILL_IN_THE_BLANK ||
+			!editingQuestion.options?.length
+		) {
+			return [{ value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }];
+		}
+
+		return editingQuestion.options.map((opt) => {
+			const [before, flagsPart] = (opt.text || '').split(' | flags=');
+			const [modeMaybe, ...rest] = before.split(':');
+			const mode = ['exact', 'exact_cs', 'contains', 'regex'].includes(modeMaybe)
+				? (modeMaybe as FitbMode)
+				: 'exact';
+			const value = rest.join(':');
+			return {
+				value,
+				mode,
+				flags: {
+					ignorePunct: !!flagsPart?.includes('ignore_punct'),
+					normalizeWs: !!flagsPart?.includes('normalize_ws')
+				}
+			};
+		});
+	}
+
+	function getInitialMatchingState() {
+		if (editingQuestion?.type !== QUESTION_TYPES.MATCHING || !editingQuestion.options?.length) {
+			return {
+				prompts: ['', ''],
+				answers: ['', '']
+			};
+		}
+
+		const prompts = editingQuestion.options
+			.filter((option) => option.text?.startsWith('prompt:'))
+			.map((option) => option.text.slice('prompt:'.length));
+		const answers = editingQuestion.options
+			.filter((option) => option.text?.startsWith('answer:'))
+			.map((option) => option.text.slice('answer:'.length));
+
+		return {
+			prompts: prompts.length > 0 ? prompts : ['', ''],
+			answers: answers.length > 0 ? answers : ['', '']
+		};
+	}
+
+	let questionStem: string = $state('');
+	let questionRationale: string = $state('');
+	let questionStatus: string = $state('draft');
+	let questionType: string = $state(QUESTION_TYPES.MULTIPLE_CHOICE);
+	let options: Array<{ id?: string; text: string }> = $state([
+		{ text: '' },
+		{ text: '' },
+		{ text: '' },
+		{ text: '' }
+	]);
+	let correctAnswers: string[] = $state([]);
 	let isSubmitting: boolean = $state(false);
 	let isGeneratingAI: boolean = $state(false);
 
 	// Get user's domain focus from metadata or default to 'general'
 	let userFocus: Focus = $state('general'); // TODO: fetch from user settings/metadata when available
 
-	let mediaError: string = $state('');
 	let queuedMedia: Array<{
 		url: string;
 		key?: string;
@@ -273,23 +346,16 @@
 	}> = $state([]);
 
 	// Existing media from database (for edit mode)
-	let existingMedia: Array<{
-		_id: string;
-		url: string;
-		altText: string;
-		caption?: string;
-		order: number;
-		showOnSolution?: boolean;
-	}> = $state([]);
+	let existingMedia: QuestionMediaItem[] = $state([]);
 
 	// Fetch existing media when in edit mode
 	async function refreshMedia() {
 		if (!editingQuestion) return;
 		try {
-			const r = await client.query((api as any).questionMedia.getByQuestionId, {
+			const media = await client.query(api.questionMedia.getByQuestionId, {
 				questionId: editingQuestion._id as Id<'question'>
 			});
-			existingMedia = (r || []).sort((a: any, b: any) => a.order - b.order);
+			existingMedia = [...(media ?? [])].sort((a, b) => a.order - b.order);
 		} catch (e) {
 			console.error('Failed to fetch media:', e);
 		}
@@ -307,22 +373,26 @@
 	// Remove existing media from database
 	async function removeExistingMedia(id: string) {
 		try {
-			const res = await client.mutation((api as any).questionMedia.softDelete, { mediaId: id });
+			const res = await client.mutation(api.questionMedia.softDelete, {
+				mediaId: id as Id<'questionMedia'>
+			});
 			// Try to delete from uploadthing
-			try {
-				const key = (res as any)?.fileKey;
-				if (typeof key === 'string' && key.length > 0) {
+			const key: DeleteQuestionMediaResult['fileKey'] = res?.fileKey;
+			if (typeof key === 'string' && key.length > 0) {
+				try {
 					await fetch('/api/uploads/delete', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({ fileKey: key })
 					});
+				} catch (uploadDeleteError) {
+					console.error('Failed to delete uploaded media file:', uploadDeleteError);
 				}
-			} catch {}
+			}
 			await refreshMedia();
 			onChange();
 		} catch (e) {
-			mediaError = e instanceof Error ? e.message : 'Failed to remove media';
+			console.error('Failed to remove media:', e);
 		}
 	}
 
@@ -334,12 +404,13 @@
 		showOnSolution?: boolean
 	) {
 		try {
-			await client.mutation((api as any).questionMedia.update, {
-				mediaId: id,
+			const payload: UpdateQuestionMediaArgs = {
+				mediaId: id as Id<'questionMedia'>,
 				altText,
 				caption,
 				showOnSolution
-			});
+			};
+			await client.mutation(api.questionMedia.update, payload);
 			await refreshMedia();
 		} catch (e) {
 			console.error('Failed to update media:', e);
@@ -379,78 +450,65 @@
 		onChange();
 	}
 
-	function setMediaError(error: string) {
-		mediaError = error;
+	function getUploadedQuestionMediaFile(
+		res: UploadedQuestionMediaFile[] | undefined
+	): UploadedQuestionMediaFile | null {
+		return Array.isArray(res) ? (res[0] ?? null) : null;
+	}
+
+	function toQueuedMediaItem(file: UploadedQuestionMediaFile): (typeof queuedMedia)[0] | null {
+		const url = file.ufsUrl ?? file.url;
+		if (!url) return null;
+
+		return {
+			url,
+			key: file.key,
+			name: file.name,
+			caption: '',
+			sizeBytes: file.size || undefined,
+			mimeType: file.type || undefined,
+			showOnSolution: false
+		};
 	}
 
 	const mediaUploader = createUploader('questionMediaUploader', {
 		onClientUploadComplete: (res) => {
 			try {
-				const f = Array.isArray(res) ? res[0] : null;
+				const f = getUploadedQuestionMediaFile(res);
 				if (!f) return;
-				const url = (f as any)?.ufsUrl ?? (f as any)?.url;
-				const key = (f as any)?.key ?? (f as any)?.fileKey;
-				const name = (f as any)?.name ?? '';
-				const size = Number((f as any)?.size ?? 0);
-				const mime = (f as any)?.type ?? '';
-
-				if (!url) {
-					setMediaError('Missing file URL');
+				const mediaItem = toQueuedMediaItem(f);
+				if (!mediaItem) {
+					console.error('Missing uploaded file URL');
 					return;
 				}
-
-				addMediaItem({
-					url,
-					key,
-					name,
-					caption: '',
-					sizeBytes: size || undefined,
-					mimeType: mime || undefined,
-					showOnSolution: false
-				});
-				setMediaError('');
+				addMediaItem(mediaItem);
 			} catch (e) {
-				setMediaError(e instanceof Error ? e.message : 'Upload failed');
+				console.error('Upload failed:', e);
 			}
 		},
 		onUploadError: (error: Error) => {
-			setMediaError(error.message);
+			console.error('Upload failed:', error);
 		}
 	});
 
 	// Paste upload support
-	const { startUpload, isUploading } = createUploadThing('questionMediaUploader', {
+	const { startUpload } = createUploadThing('questionMediaUploader', {
 		onClientUploadComplete: (res) => {
 			try {
-				const f = Array.isArray(res) ? res[0] : null;
+				const f = getUploadedQuestionMediaFile(res);
 				if (!f) return;
-				const url = (f as any)?.ufsUrl ?? (f as any)?.url;
-				const key = (f as any)?.key ?? (f as any)?.fileKey;
-				const name = (f as any)?.name ?? '';
-				const size = Number((f as any)?.size ?? 0);
-				const mime = (f as any)?.type ?? '';
-
-				if (!url) {
-					setMediaError('Missing file URL');
+				const mediaItem = toQueuedMediaItem(f);
+				if (!mediaItem) {
+					console.error('Missing uploaded file URL');
 					return;
 				}
-
-				addMediaItem({
-					url,
-					key,
-					name,
-					caption: '',
-					sizeBytes: size || undefined,
-					mimeType: mime || undefined,
-					showOnSolution: false
-				});
-				setMediaError('');
+				addMediaItem(mediaItem);
 			} catch (e) {
-				setMediaError(e instanceof Error ? e.message : 'Upload failed');
+				console.error('Upload failed:', e);
 			}
 		},
 		onUploadError: (error: Error) => {
-			setMediaError(error.message);
+			console.error('Upload failed:', error);
 		}
 	});
 
@@ -472,12 +530,11 @@
 
 		e.preventDefault();
 		isPasteUploading = true;
-		setMediaError('');
 
 		try {
 			await startUpload(files);
 		} catch (err) {
-			setMediaError(err instanceof Error ? err.message : 'Paste upload failed');
+			console.error('Paste upload failed:', err);
 		} finally {
 			isPasteUploading = false;
 		}
@@ -520,40 +577,6 @@
 		{ value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }
 	]);
 
-	// Initialize FITB and Matching from editingQuestion
-	$effect(() => {
-		if (editingQuestion && editingQuestion.type && editingQuestion.options) {
-			if (editingQuestion.type === QUESTION_TYPES.FILL_IN_THE_BLANK) {
-				const decoded = editingQuestion.options.map((opt) => {
-					const [before, flagsPart] = (opt.text || '').split(' | flags=');
-					const [modeMaybe, ...rest] = before.split(':');
-					const mode = ['exact', 'exact_cs', 'contains', 'regex'].includes(modeMaybe)
-						? (modeMaybe as FitbMode)
-						: 'exact';
-					const value = rest.join(':');
-					const flags = {
-						ignorePunct: !!flagsPart?.includes('ignore_punct'),
-						normalizeWs: !!flagsPart?.includes('normalize_ws')
-					};
-					return { value, mode, flags } as FitbAnswerRow;
-				});
-				if (decoded.length > 0) {
-					fitbAnswers = decoded;
-				}
-			} else if (editingQuestion.type === QUESTION_TYPES.MATCHING) {
-				const opts = editingQuestion.options;
-				const prompts = opts
-					.filter((o) => o.text && o.text.startsWith('prompt:'))
-					.map((o) => o.text.slice('prompt:'.length));
-				const answers = opts
-					.filter((o) => o.text && o.text.startsWith('answer:'))
-					.map((o) => o.text.slice('answer:'.length));
-				if (prompts.length > 0) matchingPrompts = prompts;
-				if (answers.length > 0) matchingAnswers = answers;
-			}
-		}
-	});
-
 	function addFitbRow() {
 		fitbAnswers = [
 			...fitbAnswers,
@@ -591,6 +614,36 @@
 	// Matching editor state
 	let matchingPrompts: string[] = $state(['', '']);
 	let matchingAnswers: string[] = $state(['', '']);
+	const matchingRowIndexes = $derived.by(() =>
+		Array.from(
+			{ length: Math.max(matchingPrompts.length, matchingAnswers.length) },
+			(_, index) => index
+		)
+	);
+
+	$effect(() => {
+		const nextStem = getInitialQuestionStem();
+		const nextRationale = getInitialQuestionRationale();
+		const nextMatching = getInitialMatchingState();
+
+		questionStem = nextStem;
+		questionRationale = nextRationale;
+		questionStatus = getInitialQuestionStatus();
+		questionType = getInitialQuestionType();
+		options = getInitialOptions();
+		correctAnswers = getInitialCorrectAnswers();
+		fitbAnswers = getInitialFitbAnswers();
+		matchingPrompts = nextMatching.prompts;
+		matchingAnswers = nextMatching.answers;
+
+		if ($editor && $editor.getHTML() !== nextStem) {
+			$editor.commands.setContent(nextStem);
+		}
+
+		if ($rationaleEditor && $rationaleEditor.getHTML() !== nextRationale) {
+			$rationaleEditor.commands.setContent(nextRationale);
+		}
+	});
 
 	function addMatchingPrompt() {
 		matchingPrompts = [...matchingPrompts, ''];
@@ -614,8 +667,7 @@
 		onChange();
 	}
 
-	const questions = useQuery(
-		api.question.getQuestionsByModule,
+	const questions = useQuery(api.question.getQuestionsByModule, () =>
 		moduleId ? { id: moduleId as Id<'module'> } : 'skip'
 	);
 
@@ -728,9 +780,9 @@
 				onChange();
 				toastStore.success('Options generated');
 			}
-		} catch (err: any) {
+		} catch (err: unknown) {
 			console.error('AI generation error:', err);
-			if (err.message?.includes('Daily generation limit')) {
+			if (err instanceof Error && err.message.includes('Daily generation limit')) {
 				toastStore.error(err.message);
 			} else {
 				toastStore.error('Failed to generate. Try again.');
@@ -824,14 +876,14 @@
 				return;
 			}
 
-			const promptOptions = rawPrompts.map((text, i) => {
+			const promptOptions = rawPrompts.map((text) => {
 				const full = `prompt:${text}`;
 				return {
 					text: full
 				};
 			});
 			const answersOffset = promptOptions.length;
-			const answerOptions = rawAnswers.map((text, i) => {
+			const answerOptions = rawAnswers.map((text) => {
 				const full = `answer:${text}`;
 				return {
 					text: full
@@ -875,7 +927,7 @@
 			}));
 
 			if (mode === 'edit' && editingQuestion) {
-				await client.mutation(api.question.updateQuestion as any, {
+				await client.mutation(api.question.updateQuestion, {
 					questionId: editingQuestion._id as Id<'question'>,
 					moduleId: moduleId as Id<'module'>,
 					type: questionType,
@@ -919,7 +971,7 @@
 				const startOrder = existingMedia.length;
 				for (let i = 0; i < queuedMedia.length; i++) {
 					const m = queuedMedia[i];
-					await client.mutation((api as any).questionMedia.create, {
+					const payload: CreateQuestionMediaArgs = {
 						questionId: questionId,
 						url: m.url,
 						mediaType: mediaTypeFromMime(m.mimeType),
@@ -933,7 +985,8 @@
 							sizeBytes: m.sizeBytes || 0,
 							originalFileName: m.name || ''
 						}
-					});
+					};
+					await client.mutation(api.questionMedia.create, payload);
 				}
 			}
 
@@ -951,7 +1004,7 @@
 <div class="h-full flex flex-col overflow-hidden bg-base-100">
 	<!-- Top Bar: Title & Actions -->
 	<div
-		class="flex items-center justify-between px-4 py-3 border-b border-base-300 bg-base-100 flex-shrink-0"
+		class="flex items-center justify-between px-4 py-3 border-b border-base-300 bg-base-100 shrink-0"
 	>
 		<h3 class="text-base font-semibold">{mode === 'edit' ? 'Edit Question' : 'New Question'}</h3>
 		<div class="flex items-center gap-2">
@@ -975,14 +1028,14 @@
 
 	<!-- Toolbar: Type & Status -->
 	<div
-		class="flex flex-wrap items-center gap-8 px-6 py-4 border-b border-base-300 bg-base-200/30 flex-shrink-0"
+		class="flex flex-wrap items-center gap-8 px-6 py-4 border-b border-base-300 bg-base-200/30 shrink-0"
 	>
 		<!-- Type Selector -->
 		<div class="flex flex-col gap-2">
 			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1"
 				>Type</span
 			>
-			<div class="flex shadow-sm bg-base-100 rounded-full border border-base-300 p-1 gap-0.5">
+			<div class="flex shadow-xs bg-base-100 rounded-full border border-base-300 p-1 gap-0.5">
 				{#each questionTypeOptions as option (option.value)}
 					<button
 						class="btn btn-xs sm:btn-sm rounded-full border-0 {questionType === option.value
@@ -1009,7 +1062,7 @@
 			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1"
 				>Status</span
 			>
-			<div class="flex shadow-sm bg-base-100 rounded-full border border-base-300 p-1 gap-0.5">
+			<div class="flex shadow-xs bg-base-100 rounded-full border border-base-300 p-1 gap-0.5">
 				{#each statusOptions as option (option.value)}
 					<button
 						class="btn btn-xs sm:btn-sm rounded-full border-0 {questionStatus === option.value
@@ -1045,7 +1098,7 @@
 					>
 				</div>
 				<div
-					class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 shadow-sm group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all"
+					class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 shadow-xs group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all"
 				>
 					{#if editor}
 						<div
@@ -1094,7 +1147,7 @@
 							</button>
 						</div>
 						<div
-							class="card bg-base-100 border border-base-300 shadow-sm rounded-3xl overflow-hidden"
+							class="card bg-base-100 border border-base-300 shadow-xs rounded-3xl overflow-hidden"
 						>
 							<div class="card-body p-4 gap-4">
 								{#each fitbAnswers as row, index (index)}
@@ -1129,7 +1182,7 @@
 												value={row.mode}
 												onchange={(e) => updateFitbMode(index, e.currentTarget.value as FitbMode)}
 											>
-												{#each Object.entries(FITB_MODE_LABELS) as [mode, label]}
+												{#each Object.entries(FITB_MODE_LABELS) as [mode, label] (mode)}
 													<option value={mode}>{label}</option>
 												{/each}
 											</select>
@@ -1183,7 +1236,7 @@
 							Matching Pairs
 						</div>
 						<div class="space-y-3">
-							{#each Array(Math.max(matchingPrompts.length, matchingAnswers.length)) as _, i (i)}
+							{#each matchingRowIndexes as i (i)}
 								<div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
 									<!-- Left Column: Prompt -->
 									<div class="flex-1 w-full relative">

@@ -37,13 +37,13 @@
 	<li>After <strong>Check</strong>, correct options are highlighted for quick feedback.</li>
 </ul>
 
-<div class="card bg-base-100 border border-base-300 shadow-sm">
+<div class="card bg-base-100 border border-base-300 shadow-xs">
 	<div class="card-body">
 		<p class="text-sm text-base-content/70 mb-2">Example options preview</p>
 		<div class="flex flex-col space-y-3">
 			<label class="label cursor-pointer rounded-full border-2 p-3 bg-base-200">
 				<input type="checkbox" class="checkbox checkbox-primary checkbox-sm ms-4" />
-				<span class="flex-grow ml-3 my-3 text-sm">
+				<span class="grow ml-3 my-3 text-sm">
 					<span class="font-semibold mr-2 select-none">A.</span>
 					Option text goes here
 				</span>
@@ -53,7 +53,7 @@
 			</label>
 			<label class="label cursor-pointer rounded-full border-2 p-3 bg-base-200">
 				<input type="checkbox" class="checkbox checkbox-primary checkbox-sm ms-4" />
-				<span class="flex-grow ml-3 my-3 text-sm line-through opacity-50">
+				<span class="grow ml-3 my-3 text-sm line-through opacity-50">
 					<span class="font-semibold mr-2 select-none">B.</span>
 					This option has been eliminated
 				</span>
@@ -104,7 +104,7 @@
 <p>Quick controls appear centered near the bottom on larger screens.</p>
 
 <div
-	class="flex flex-wrap items-center gap-2 p-3 rounded-full border border-base-300 shadow bg-base-100"
+	class="flex flex-wrap items-center gap-2 p-3 rounded-full border border-base-300 shadow-xs bg-base-100"
 >
 	<button class="btn btn-sm btn-outline">Clear</button>
 	<button class="btn btn-sm btn-success btn-soft"><Check size={16} class="mr-1" /> Check</button>
@@ -120,7 +120,7 @@
 <h2>Sidebar</h2>
 <p>Your sidebar keeps you oriented with module info, progress, rationale reveal, and settings.</p>
 
-<div class="card bg-base-100 border border-base-300 shadow-sm">
+<div class="card bg-base-100 border border-base-300 shadow-xs">
 	<div class="card-body">
 		<h4 class="text-sm tracking-wide text-secondary">MODULE 2</h4>
 		<h2 class="font-semibold text-2xl mt-1 flex items-center gap-2">

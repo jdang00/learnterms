@@ -1,6 +1,13 @@
+export type DocsPath =
+	| '/docs'
+	| '/docs/onboarding'
+	| '/docs/admin/content-library'
+	| '/docs/lt-models'
+	| '/docs/students/study-flow';
+
 export type DocsNavItem = {
 	title: string;
-	path: string;
+	path: DocsPath;
 };
 
 export type DocsNavSection = {
@@ -48,7 +55,7 @@ export function buildBreadcrumbTrail(pathname: string): DocsNavItem[] {
 	for (const segment of segments) {
 		accum += `/${segment}`;
 		const title = pathToTitle[accum] ?? toTitleCase(segment);
-		trail.push({ title, path: accum });
+		trail.push({ title, path: accum as DocsPath });
 	}
 	return trail;
 }

@@ -1,3 +1,12 @@
+export type QuickLinkPath =
+	| '/admin'
+	| '/admin/library'
+	| '/admin/question-studio'
+	| '/admin/progress'
+	| '/landing'
+	| '/classes'
+	| '/cohort';
+
 export type CohortItem = {
 	_id: string;
 	name: string;
@@ -16,7 +25,7 @@ export type CohortItem = {
 export type QuickLinkItem = {
 	title: string;
 	description: string;
-	href: string;
+	href: QuickLinkPath;
 	icon: string;
 };
 

@@ -21,6 +21,7 @@
 	import { slide, fade, scale } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import { useClerkContext } from 'svelte-clerk/client';
+	import { resolve } from '$app/paths';
 
 	let {
 		qs,
@@ -86,7 +87,7 @@
 		<MobileInfo {module} classId={data.classId} />
 
 		<div
-			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
+			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
 		>
 			<ResultBanner bind:qs />
 			{#if qs.noFlags}
@@ -126,7 +127,7 @@
 						{#if canEdit && currentlySelected}
 							<a
 								class="btn btn-soft btn-secondary m-1 btn-circle"
-								href={`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`}
+								href={resolve(`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`)}
 								target="_blank"
 								rel="noopener noreferrer"
 								title="Edit"
@@ -140,7 +141,7 @@
 							</div>
 							<ul
 								tabindex="-1"
-								class="dropdown-content menu bg-base-100 rounded-2xl z-[1] w-52 p-2 shadow-sm"
+								class="dropdown-content menu bg-base-100 rounded-2xl z-[1] w-52 p-2 shadow-xs"
 							>
 								<li>
 									<button onclick={() => handleFilterToggle('flagged')}>

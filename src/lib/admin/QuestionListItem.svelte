@@ -46,7 +46,7 @@
 			{isRecentlyAdded ? 'bg-success/5' : ''} border border-base-300/60 bg-base-100"
 	>
 		<div class="flex items-center {isMobile ? 'gap-2' : 'gap-3'}">
-			<GripVertical size={16} class="text-base-content/30 flex-shrink-0" />
+			<GripVertical size={16} class="text-base-content/30 shrink-0" />
 			<span class="text-xs font-medium text-base-content/50 {isMobile ? '' : 'w-6'}">#{index + 1}</span>
 			<p class="flex-1 {textSize} text-base-content {isMobile ? 'line-clamp-2' : 'truncate'} tiptap-content-inline">{@html question.stem}</p>
 		</div>
@@ -67,7 +67,7 @@
 		<div class="flex items-start {isMobile ? 'gap-2' : 'gap-3'}">
 			<input
 				type="checkbox"
-				class="checkbox {checkboxSize} checkbox-primary mt-0.5 flex-shrink-0"
+				class="checkbox {checkboxSize} checkbox-primary mt-0.5 shrink-0"
 				aria-label="Select question"
 				checked={isSelected}
 				onclick={(e) => {
@@ -78,10 +78,10 @@
 			<div class="flex-1 min-w-0">
 				<div class="flex items-center {isMobile ? 'gap-1.5' : 'gap-2'} mb-1">
 					<span class="text-xs font-medium text-base-content/50">#{index + 1}</span>
-					<span class="{typeSize} {isMobile ? 'px-1' : 'px-1.5'} py-0.5 rounded bg-base-200 text-base-content/60 uppercase font-medium whitespace-nowrap">
+					<span class="{typeSize} {isMobile ? 'px-1' : 'px-1.5'} py-0.5 rounded-sm bg-base-200 text-base-content/60 uppercase font-medium whitespace-nowrap">
 						{abbreviateType(question.type)}
 					</span>
-					<span class="{dotSize} rounded-full flex-shrink-0
+					<span class="{dotSize} rounded-full shrink-0
 						{question.status === 'published' ? 'bg-success' : question.status === 'draft' ? 'bg-warning' : 'bg-base-300'}"
 						title={question.status}></span>
 					{#if hasAttachment}

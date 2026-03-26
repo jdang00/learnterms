@@ -8,6 +8,7 @@
 	import { fade, slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import createDOMPurify from 'dompurify';
+	import { resolve } from '$app/paths';
 	import {
 		ChevronLeft,
 		PanelRight,
@@ -354,7 +355,7 @@
 						<div>
 							<a
 								class="btn btn-ghost btn-sm font-bold rounded-full text-secondary mb-2"
-								href="/classes?classId={classId}"
+								href={resolve('/classes')}
 							>
 								<ChevronLeft size={16} /> Back to Class
 							</a>
@@ -364,7 +365,7 @@
 							</p>
 						</div>
 						<div class="flex gap-2">
-							<a class="btn btn-ghost btn-sm rounded-full" href={`/classes/${classId}/tests/new`}>
+							<a class="btn btn-ghost btn-sm rounded-full" href={resolve('/classes/[classId]/tests/new', { classId })}>
 								<Plus size={16} />
 								New Test
 							</a>
@@ -373,7 +374,7 @@
 
 					<!-- Score hero card -->
 					<div
-						class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm overflow-hidden"
+						class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs overflow-hidden"
 					>
 						<div class="card-body p-6 sm:p-8">
 							<div class="flex flex-col sm:flex-row items-center sm:items-start gap-8">
@@ -488,7 +489,7 @@
 
 					<!-- Breakdowns -->
 					<div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm">
+						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs">
 							<div class="card-body">
 								<h2 class="card-title text-base flex items-center gap-2">
 									<BarChart3 size={16} class="text-base-content/50" />
@@ -533,7 +534,7 @@
 							</div>
 						</div>
 
-						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm">
+						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs">
 							<div class="card-body">
 								<h2 class="card-title text-base flex items-center gap-2">
 									<BarChart3 size={16} class="text-base-content/50" />
@@ -590,7 +591,7 @@
 			>
 				<!-- Sidebar -->
 				<div
-					class="hidden lg:flex lg:flex-col relative overflow-y-auto overflow-x-hidden border border-base-300 rounded-4xl p-3 px-4 transition-all duration-200 ease-out bg-base-100 backdrop-blur-md bg-opacity-80 shadow-lg flex-shrink-0 h-full
+					class="hidden lg:flex lg:flex-col relative overflow-y-auto overflow-x-hidden border border-base-300 rounded-4xl p-3 px-4 transition-all duration-200 ease-out bg-base-100/80 backdrop-blur-md shadow-lg shrink-0 h-full
 					{hideSidebar ? 'w-[72px]' : 'w-[min(22rem,30vw)] xl:w-[min(24rem,28vw)]'}"
 				>
 					<button
@@ -609,7 +610,7 @@
 							<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
 								<a
 									class="btn btn-ghost font-bold rounded-full"
-									href={`/classes?classId=${classId}`}
+									href={resolve('/classes')}
 								>
 									<ChevronLeft size={16} />
 									{attempt.className ?? 'Class'}
@@ -666,7 +667,7 @@
 							</button>
 							<a
 								class="btn btn-soft btn-primary btn-sm rounded-full"
-								href={`/classes/${classId}/tests/new`}
+								href={resolve('/classes/[classId]/tests/new', { classId })}
 							>
 								<Plus size={16} />
 								New Test
@@ -683,7 +684,7 @@
 						<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
 							<a
 								class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
-								href={`/classes?classId=${classId}`}
+								href={resolve('/classes')}
 							>
 								<span class="group-hover:hidden">📋</span>
 								<span class="hidden group-hover:inline-flex items-center justify-center"
@@ -734,7 +735,7 @@
 
 				<!-- Main review content -->
 				<div
-					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
+					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
 				>
 					<div class="flex flex-wrap gap-2 mb-3">
 						<button
@@ -1002,7 +1003,7 @@
 												disabled
 											/>
 											<span
-												class="flex-grow text-wrap break-words ml-3 md:ml-4 my-3 text-sm md:text-base"
+												class="grow text-wrap break-words ml-3 md:ml-4 my-3 text-sm md:text-base"
 											>
 												<span class="font-semibold mr-2 select-none"
 													>{String.fromCharCode(65 + i)}.</span

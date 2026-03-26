@@ -69,7 +69,7 @@
 	{@const overall = userStats.data.overall}
 	<!-- Overall Stats -->
 	<div
-		class="stats stats-vertical sm:stats-horizontal shadow-sm border border-base-300 mb-4 rounded-2xl"
+		class="stats stats-vertical sm:stats-horizontal shadow-xs border border-base-300 mb-4 rounded-2xl"
 	>
 		<div class="stat py-3">
 			<div class="stat-figure text-primary">
@@ -123,7 +123,7 @@
 			</div>
 		{:else}
 			<div class="space-y-2">
-				{#each [...classesBySemester().entries()] as [semesterName, classes]}
+				{#each [...classesBySemester().entries()] as [semesterName, classes] (semesterName)}
 					<!-- Semester Header -->
 					<div class="collapse collapse-arrow bg-base-200 rounded-2xl">
 						<input
@@ -139,7 +139,7 @@
 						</div>
 						<div class="collapse-content px-2 pb-2">
 							<div class="space-y-2 pt-2">
-								{#each classes as cls}
+								{#each classes as cls (cls.classId)}
 									<!-- Class -->
 									<div
 										class="collapse collapse-arrow bg-base-100 border border-base-300 rounded-2xl"
@@ -179,7 +179,7 @@
 														</tr>
 													</thead>
 													<tbody>
-														{#each cls.modules as mod}
+														{#each cls.modules as mod (mod.moduleId)}
 															<tr class="hover">
 																<td>
 																	<div class="flex items-center gap-2">

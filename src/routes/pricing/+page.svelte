@@ -3,6 +3,7 @@
 	import { api } from '../../convex/_generated/api';
 	import { Check, Loader2, Sparkles, X, BookOpen, GraduationCap, Users, Zap } from 'lucide-svelte';
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
 
@@ -186,7 +187,7 @@
 
 		<div class="text-center">
 			<p class="text-base-content/60 mb-4">Ready to get started?</p>
-			<a href="/sign-up" class="btn btn-primary">Create an account</a>
+			<a href={resolve('/sign-up')} class="btn btn-primary">Create an account</a>
 		</div>
 	</div>
 
@@ -229,7 +230,7 @@
 				Pro subscriptions are for <span class="font-medium">question curators</span> who create and manage
 				content for their cohorts. If you're interested in becoming a curator, talk to your program admin.
 			</p>
-			<a href="/classes" class="btn btn-primary">
+			<a href={resolve('/classes')} class="btn btn-primary">
 				<BookOpen size={18} />
 				Continue studying
 			</a>
@@ -312,7 +313,7 @@
 			<button class="btn btn-outline" onclick={handleManageSubscription}>
 				Manage Subscription
 			</button>
-			<a href="/admin/question-studio" class="btn btn-primary"> Open Question Studio </a>
+			<a href={resolve('/admin/question-studio')} class="btn btn-primary"> Open Question Studio </a>
 		</div>
 	</div>
 
@@ -331,7 +332,7 @@
 					<button
 						class="px-4 py-2 rounded-md text-sm font-medium transition-colors {selectedInterval ===
 						'semester'
-							? 'bg-base-100 shadow-sm'
+							? 'bg-base-100 shadow-xs'
 							: 'text-base-content/70 hover:text-base-content'}"
 						onclick={() => (selectedInterval = 'semester')}
 					>
@@ -340,7 +341,7 @@
 					<button
 						class="px-4 py-2 rounded-md text-sm font-medium transition-colors {selectedInterval ===
 						'annual'
-							? 'bg-base-100 shadow-sm'
+							? 'bg-base-100 shadow-xs'
 							: 'text-base-content/70 hover:text-base-content'}"
 						onclick={() => (selectedInterval = 'annual')}
 					>
@@ -417,7 +418,7 @@
 
 					<div class="mt-6">
 						{#if productsQuery.isLoading}
-							<div class="h-10 w-24 bg-base-200 animate-pulse rounded"></div>
+							<div class="h-10 w-24 bg-base-200 animate-pulse rounded-sm"></div>
 						{:else if currentProduct}
 							<span class="text-4xl font-extrabold">
 								{formatPrice(currentProduct.prices?.[0]?.priceAmount)}

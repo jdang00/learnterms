@@ -23,17 +23,16 @@
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
 	import { useClerkContext } from 'svelte-clerk/client';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
-	const userData = data.userData;
+	const userData = $derived(data.userData);
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
 
-	const classes = userData?.cohortId
-		? useQuery(api.class.getUserClasses, {
-				id: userData.cohortId as Id<'cohort'>
-			})
-		: { data: undefined, isLoading: false, error: null };
+	const classes = useQuery(api.class.getUserClasses, () =>
+		userData?.cohortId ? { id: userData.cohortId as Id<'cohort'> } : 'skip'
+	);
 
 	const client = useConvexClient();
 
@@ -143,10 +142,7 @@
 		}
 	}
 
-	const semesters = useQuery(
-		api.semester.getAllSemesters,
-		() => clerkUser ? {} : 'skip'
-	);
+	const semesters = useQuery(api.semester.getAllSemesters, () => (clerkUser ? {} : 'skip'));
 	let currentSemester = $state('');
 	let viewMode = $state<'normal' | 'reorder'>('normal');
 
@@ -196,14 +192,16 @@
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 			<div>
 				<h1 class="text-3xl sm:text-4xl font-bold text-base-content">Admin Dashboard</h1>
-				<p class="text-base text-base-content/70">{userData?.schoolName} - {userData?.cohortName}</p>
+				<p class="text-base text-base-content/70">
+					{userData?.schoolName} - {userData?.cohortName}
+				</p>
 			</div>
 		</div>
 
 		<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8" role="list">
 			<a
-				href="/admin/library"
-				class="group rounded-2xl bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
+				href={resolve('/admin/library')}
+				class="group rounded-2xl bg-base-100 p-5 shadow-xs border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Content Library"
 			>
 				<div class="rounded-xl border bg-primary-content border-base-300 p-2">
@@ -220,8 +218,8 @@
 			</a>
 
 			<a
-				href="/admin/question-studio"
-				class="group rounded-2xl bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
+				href={resolve('/admin/question-studio')}
+				class="group rounded-2xl bg-base-100 p-5 shadow-xs border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Question Studio"
 			>
 				<div class="rounded-xl bg-primary-content border border-base-300 p-2">
@@ -238,8 +236,8 @@
 			</a>
 
 			<a
-				href="/admin/progress"
-				class="group rounded-2xl bg-base-100 p-5 shadow-sm border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-none focus-visible:ring focus-visible:ring-primary/30 flex items-start gap-4"
+				href={resolve('/admin/progress')}
+				class="group rounded-2xl bg-base-100 p-5 shadow-xs border border-base-300 transition hover:shadow-md hover:border-primary/70 focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Class Progress"
 			>
 				<div class="rounded-xl bg-primary-content border border-base-300 p-2">
@@ -297,7 +295,9 @@
 							{currentSemester}
 							<ChevronDownIcon size={16} />
 						</summary>
-						<ul class="menu dropdown-content w-48 rounded-2xl bg-base-100 shadow-sm border border-base-300">
+						<ul
+							class="menu dropdown-content w-48 rounded-2xl bg-base-100 shadow-xs border border-base-300"
+						>
 							{#each semesters.data as semester (semester._id)}
 								<li>
 									<button
@@ -314,11 +314,14 @@
 				</div>
 
 				{#if viewMode === 'reorder'}
-					<button class="btn btn-ghost gap-2 btn-circle" onclick={() => viewMode = 'normal'}>
+					<button class="btn btn-ghost gap-2 btn-circle" onclick={() => (viewMode = 'normal')}>
 						<span><X size={16} /></span>
 					</button>
 				{:else}
-					<button class="btn btn-outline rounded-full gap-2 btn-sm" onclick={() => viewMode = 'reorder'}>
+					<button
+						class="btn btn-outline rounded-full gap-2 btn-sm"
+						onclick={() => (viewMode = 'reorder')}
+					>
 						<GripVertical size={16} />
 						<span>Reorder</span>
 					</button>
@@ -351,7 +354,7 @@
 					<div class="space-y-3">
 						{#each filteredClassList as classItem (classItem._id)}
 							<div
-								class="rounded-2xl bg-base-100 p-4 shadow-sm border border-base-300
+								class="rounded-2xl bg-base-100 p-4 shadow-xs border border-base-300
 								transition-all duration-200 hover:shadow-md hover:border-primary"
 								aria-label={`Class card: ${classItem.name}`}
 							>
@@ -361,8 +364,8 @@
 									<div class="flex-1 min-w-0">
 										<a
 											data-select-btn
-											class="interactive group flex w-full items-start gap-2 text-left focus:outline-none focus-visible:ring focus-visible:ring-primary/40 sm:items-center"
-											href="admin/{classItem._id}"
+											class="interactive group flex w-full items-start gap-2 text-left focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/40 sm:items-center"
+											href={resolve('/admin/[classId]', { classId: classItem._id })}
 											title={classItem.name}
 											style="min-height:44px"
 										>
@@ -392,41 +395,44 @@
 									</div>
 
 									{#if admin || dev}
-									<div class="flex items-center gap-2 sm:shrink-0">
-								<div class="dropdown dropdown-end">
-									<button class="btn btn-ghost btn-circle btn-sm interactive" tabindex="0" aria-haspopup="menu" aria-label="Open menu">⋮</button>
-									<ul
-										tabindex="0"
-										role="menu"
-										class="dropdown-content menu bg-base-100 rounded-2xl z-1 w-52 p-2 shadow-sm"
-									>
-												<li>
-													<button
-														data-edit-btn
-														class="btn btn-sm btn-ghost w-full justify-start font-medium"
-														type="button"
-														aria-label="Edit class"
-														onclick={() => editClass(classItem)}
-													>
-														<Pencil size={16} />
-														<span>Edit</span>
-													</button>
-												</li>
-												<li>
-													<button
-														data-delete-btn
-														class="btn btn-sm btn-ghost text-error w-full justify-start font-medium"
-														type="button"
-														aria-label="Delete class"
-														onclick={() => handleDelete(classItem._id)}
-													>
-														<Trash2 size={16} />
-														<span>Delete</span>
-													</button>
-												</li>
-											</ul>
+										<div class="flex items-center gap-2 sm:shrink-0">
+											<div class="dropdown dropdown-end">
+												<button
+													class="btn btn-ghost btn-circle btn-sm interactive"
+													aria-haspopup="menu"
+													aria-label="Open menu">⋮</button
+												>
+												<ul
+													role="menu"
+													class="dropdown-content menu bg-base-100 rounded-2xl z-1 w-52 p-2 shadow-xs"
+												>
+													<li>
+														<button
+															data-edit-btn
+															class="btn btn-sm btn-ghost w-full justify-start font-medium"
+															type="button"
+															aria-label="Edit class"
+															onclick={() => editClass(classItem)}
+														>
+															<Pencil size={16} />
+															<span>Edit</span>
+														</button>
+													</li>
+													<li>
+														<button
+															data-delete-btn
+															class="btn btn-sm btn-ghost text-error w-full justify-start font-medium"
+															type="button"
+															aria-label="Delete class"
+															onclick={() => handleDelete(classItem._id)}
+														>
+															<Trash2 size={16} />
+															<span>Delete</span>
+														</button>
+													</li>
+												</ul>
+											</div>
 										</div>
-									</div>
 									{/if}
 								</div>
 
@@ -459,17 +465,15 @@
 							use:draggable={{
 								container: index.toString(),
 								dragData: classItem,
-								interactive: [
-									'[data-delete-btn]',
-									'[data-edit-btn]',
-									'.interactive'
-								]
+								interactive: ['[data-delete-btn]', '[data-edit-btn]', '.interactive']
 							}}
-							class="flex items-center gap-3 p-3 sm:gap-4 sm:p-4 bg-base-100 rounded-2xl border border-base-300 shadow-sm hover:shadow-md transition-all duration-200 svelte-dnd-touch-feedback touch-manipulation"
+							class="flex items-center gap-3 p-3 sm:gap-4 sm:p-4 bg-base-100 rounded-2xl border border-base-300 shadow-xs hover:shadow-md transition-all duration-200 svelte-dnd-touch-feedback touch-manipulation"
 							animate:flip={{ duration: 300 }}
 						>
 							<!-- Drag Handle -->
-							<div class="flex-none flex items-center justify-center w-10 h-10 rounded-xl bg-base-200 hover:bg-base-300 transition-colors cursor-move active:cursor-grabbing">
+							<div
+								class="flex-none flex items-center justify-center w-10 h-10 rounded-xl bg-base-200 hover:bg-base-300 transition-colors cursor-move active:cursor-grabbing"
+							>
 								<GripVertical size={20} class="text-base-content/70" />
 							</div>
 
@@ -483,18 +487,24 @@
 										<span class="badge badge-secondary badge-xs sm:badge-sm font-mono">
 											{classItem.code}
 										</span>
-										<span class="badge badge-soft badge-xs sm:badge-sm font-mono truncate max-w-[100px] sm:max-w-none">
+										<span
+											class="badge badge-soft badge-xs sm:badge-sm font-mono truncate max-w-[100px] sm:max-w-none"
+										>
 											{classItem.semester?.name || 'No semester'}
 										</span>
 									</div>
 								</div>
-								<p class="text-xs sm:text-sm text-base-content/70 mt-1 line-clamp-1 sm:line-clamp-2">
+								<p
+									class="text-xs sm:text-sm text-base-content/70 mt-1 line-clamp-1 sm:line-clamp-2"
+								>
 									{classItem.description || 'No description available'}
 								</p>
 							</div>
 
 							<!-- Order Indicator -->
-							<div class="flex-none flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary font-bold text-xs sm:text-sm">
+							<div
+								class="flex-none flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary font-bold text-xs sm:text-sm"
+							>
 								{index + 1}
 							</div>
 						</div>

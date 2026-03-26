@@ -7,7 +7,7 @@
 			<div class="mt-8 flex flex-row flex-wrap gap-6">
 				<a href="https://www.justindang.dev/" target="_blank">
 					<div class="avatar">
-						<div class="ring-primary ring-offset-base-100 w-14 rounded-full ring ring-offset-2">
+						<div class="ring-primary ring-offset-base-100 w-14 rounded-full ring-3 ring-offset-2">
 							<img
 								src="https://utfs.io/f/DYlXFqnaImOrNYQ0L9zP0UTz89wOGJKi17DasVtufbylgkQF"
 								alt="Justin Dang"
@@ -72,14 +72,14 @@
 				starred terms or those you missed.
 			</li>
 			<li>
-				<b>Decks Tab:</b> <a class="link-secondary" target="_blank" href="/terms">This tab</a> allows
+				<b>Decks Tab:</b> <a class="link-secondary" target="_blank" href="https://learnterms.com/terms">This tab</a> allows
 				you to view all cards from the current week. You can toggle between a flashcard view or a table
 				of terms and definitions. The search bar is perfect for open-note quizzes, providing fast and
 				precise results through partial or full searches.
 			</li>
 			<li>
 				<b>Changelog:</b> Stay updated on site improvements via the
-				<a class="link-secondary" target="_blank" href="/changelog">changelog </a> in the footer. I’m
+				<a class="link-secondary" target="_blank" href="https://learnterms.com/changelog">changelog </a> in the footer. I’m
 				continuously refining the platform to improve your study experience.
 			</li>
 			<li>
@@ -119,7 +119,7 @@
 			</li>
 			<li>
 				<b
-					>Eric, Sam, Kaity, <a href="/student-of-the-week" class="link-secondary" target="_blanks"
+					>Eric, Sam, Kaity, <a href="https://learnterms.com/student-of-the-week" class="link-secondary" target="_blanks"
 						>Courtney</a
 					>, Cooper, Nate, Austin, Colby:</b
 				> Your feedback has been invaluable. Knowing LearnTerms has been helpful makes my heart warm.
@@ -140,3 +140,6 @@
 		list-style-type: '✨ ';
 	}
 </style>
+<script lang="ts">
+	import { resolve } from '$app/paths';
+</script>

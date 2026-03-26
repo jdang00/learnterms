@@ -20,7 +20,7 @@
 			</div>
 		</div>
 		<aside
-			class="hidden lg:flex lg:flex-col overflow-y-auto overflow-x-hidden border border-base-300 rounded-4xl p-6 bg-base-100 backdrop-blur-md bg-opacity-80 shadow-lg w-[min(28rem,40vw)] xl:w-[min(32rem,38vw)] "
+			class="hidden lg:flex lg:flex-col overflow-y-auto overflow-x-hidden border border-base-300 rounded-4xl p-6 bg-base-100/80 backdrop-blur-md shadow-lg w-[min(28rem,40vw)] xl:w-[min(32rem,38vw)] "
 		>
 			<div class="space-y-6">
 				<CourseSelector />
@@ -31,7 +31,7 @@
 			<div class="space-y-6 pb-36 lg:pr-4">
 				<h3 class="text-lg font-semibold text-base-content">Course Components</h3>
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-					{#each gradeStore.selectedCourse.components as component}
+					{#each gradeStore.selectedCourse.components as component (component.id)}
 						<ComponentInput {component} />
 					{/each}
 				</div>

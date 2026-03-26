@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { docsNav } from '$lib/docs/nav.js';
 </script>
 
@@ -16,11 +17,11 @@
 		</p>
 
 		<div class="grid gap-6 md:grid-cols-2">
-			{#each docsNav.find(section => section.title === 'Admin')?.items || [] as item}
+			{#each docsNav.find(section => section.title === 'Admin')?.items || [] as item (item.path)}
 				<div class="card bg-base-100 shadow-lg">
 					<div class="card-body">
 						<h2 class="card-title text-primary">
-							<a href={item.path} class="hover:text-primary-focus">
+							<a href={resolve(item.path)} class="hover:text-primary-focus">
 								{item.title}
 							</a>
 						</h2>
@@ -30,7 +31,7 @@
 								: 'Learn about the AI models and generation systems used by LearnTerms.'}
 						</p>
 						<div class="card-actions justify-end">
-							<a href={item.path} class="btn btn-primary btn-sm">Read Guide</a>
+							<a href={resolve(item.path)} class="btn btn-primary btn-sm">Read Guide</a>
 						</div>
 					</div>
 				</div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
 	import DocsMenu from '$lib/docs/DocsMenu.svelte';
@@ -51,7 +52,7 @@
 
 			<nav class="mt-10 flex items-center justify-between">
 				{#if prevItem}
-					<a rel="prev" href={prevItem.path} class="btn btn-outline py-8">
+					<a rel="prev" href={resolve(prevItem.path)} class="btn btn-outline py-8">
 						<div class="flex flex-col gap-1">
 							<p class="text-xs text-base-content/70 self-start">Previous</p>
 							<p class="text-base-content/90">← {prevItem.title}</p>
@@ -61,7 +62,7 @@
 					<span></span>
 				{/if}
 				{#if nextItem}
-					<a rel="next" href={nextItem.path} class="btn btn-outline py-8">
+					<a rel="next" href={resolve(nextItem.path)} class="btn btn-outline py-8">
 						<div class="flex flex-col gap-1">
 							<p class="text-xs text-base-content/70 self-start">Next</p>
 							<p class="text-base-content/90">{nextItem.title} →</p>

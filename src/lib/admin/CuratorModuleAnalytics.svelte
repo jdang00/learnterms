@@ -296,7 +296,7 @@
 							<li>
 								<button
 									type="button"
-									class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200"
+									class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200"
 									class:bg-primary={!selectedSemesterId}
 									class:text-primary-content={!selectedSemesterId}
 									onclick={() => onSemesterSelect('')}
@@ -304,11 +304,11 @@
 									All semesters
 								</button>
 							</li>
-							{#each semesters.data ?? [] as semester}
+							{#each semesters.data ?? [] as semester (semester._id)}
 								<li>
 									<button
 										type="button"
-										class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200"
+										class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200"
 										class:bg-primary={selectedSemesterId === semester._id}
 										class:text-primary-content={selectedSemesterId === semester._id}
 										onclick={() => onSemesterSelect(semester._id)}
@@ -353,11 +353,11 @@
 							bind:value={classSearch}
 						/>
 						<ul class="max-h-56 overflow-y-auto">
-							{#each searchedClasses as classItem}
+							{#each searchedClasses as classItem (classItem._id)}
 								<li>
 									<button
 										type="button"
-										class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200 flex items-center gap-2"
+										class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200 flex items-center gap-2"
 										class:bg-primary={selectedClassId === classItem._id}
 										class:text-primary-content={selectedClassId === classItem._id}
 										onclick={() => onClassSelect(classItem._id)}
@@ -414,11 +414,11 @@
 							bind:value={moduleSearch}
 						/>
 						<ul class="max-h-56 overflow-y-auto">
-							{#each searchedModules as module}
+							{#each searchedModules as module (module._id)}
 								<li>
 									<button
 										type="button"
-										class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200"
+										class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200"
 										class:bg-primary={selectedModuleId === module._id}
 										class:text-primary-content={selectedModuleId === module._id}
 										onclick={() => onModuleSelect(module._id)}
@@ -518,7 +518,7 @@
 
 				{#if !questionData}
 					<div class="p-4 space-y-2">
-						{#each Array(6) as _}
+						{#each Array(6) as _, i (i)}
 							<div class="skeleton h-8 w-full"></div>
 						{/each}
 					</div>
@@ -574,7 +574,7 @@
 						>
 							<ChevronLeft size={12} />
 						</button>
-						{#each pageNumbers as page}
+						{#each pageNumbers as page, i (page === 'ellipsis' ? `ellipsis-${i}` : page)}
 							{#if page === 'ellipsis'}
 								<button class="btn btn-xs btn-ghost rounded-full btn-disabled">...</button>
 							{:else}
@@ -622,7 +622,7 @@
 						</div>
 					{:else}
 						<div class="space-y-3">
-							{#each visibleParticipants as participant}
+							{#each visibleParticipants as participant (participant._id)}
 								<div class="flex items-center gap-3">
 									<div class="avatar shrink-0">
 										<div class="w-8 h-8 rounded-full">
@@ -689,7 +689,7 @@
 						</div>
 					{:else}
 						<div class="space-y-3">
-							{#each visibleHotspots as question}
+							{#each visibleHotspots as question (question.questionId)}
 								<div class="rounded-2xl bg-warning/5 border border-warning/15 p-3">
 									<div class="flex items-start justify-between gap-2">
 										<p class="text-xs font-medium leading-snug line-clamp-2" title={stripHtml(question.stem)}>
@@ -735,7 +735,7 @@
 						</div>
 					{:else}
 						<div class="space-y-0">
-							{#each visibleRecent as activity, i}
+							{#each visibleRecent as activity, i (`${activity.userId}-${activity.questionId}-${activity.timestamp}`)}
 								<div class="flex gap-3 {i > 0 ? 'pt-3' : ''}">
 									<div class="flex flex-col items-center">
 										<div class="avatar shrink-0">

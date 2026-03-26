@@ -45,7 +45,7 @@
 </script>
 
 <div class="h-full flex flex-col">
-	<div class="p-4 border-b border-base-300 flex-shrink-0">
+	<div class="p-4 border-b border-base-300 shrink-0">
 		{#if selectedDocument}
 			<div class="flex items-center gap-2">
 				<button class="btn btn-ghost btn-xs rounded-full gap-1" onclick={backToDocuments}>
@@ -76,7 +76,7 @@
 		{#if !selectedDocument}
 			{#if docs.isLoading}
 				<div class="space-y-2">
-					{#each Array(5) as _}
+					{#each Array(5) as _, i (i)}
 						<div class="skeleton h-14 w-full rounded-2xl"></div>
 					{/each}
 				</div>
@@ -99,7 +99,7 @@
 							onclick={() => selectDoc(doc as Doc<'contentLib'>)}
 						>
 							<div class="flex items-center gap-3">
-								<div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+								<div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
 									<FileText size={16} class="text-primary" />
 								</div>
 								<div class="flex-1 min-w-0">

@@ -1,8 +1,8 @@
-import { query, internalMutation } from './_generated/server';
+import { query } from './_generated/server';
 import { v } from 'convex/values';
 import { mutation } from './_generated/server';
 import { authAdminMutation } from './authQueries';
-import type { Id } from './_generated/dataModel';
+import type { Doc } from './_generated/dataModel';
 
 export const getUserById = query({
 	args: { id: v.string() },
@@ -14,15 +14,13 @@ export const getUserById = query({
 
 		if (!user) return null;
 
-		if (!user.cohortId) return user;
-
-		const cohort = await ctx.db.get(user.cohortId);
+		const cohort = user.cohortId ? await ctx.db.get(user.cohortId) : null;
 		const school = cohort ? await ctx.db.get(cohort.schoolId) : null;
 
 		return {
 			...user,
-			cohortName: cohort?.name || null,
-			schoolName: school?.name || null
+			cohortName: cohort?.name ?? null,
+			schoolName: school?.name ?? null
 		};
 	}
 });
@@ -116,7 +114,7 @@ export const updateUserRole = authAdminMutation({
 
 		const callerRole = caller?.role || 'student';
 		const targetCurrentRole = targetUser.role || 'student';
-		const targetNewRole = args.role === null ? 'student' : (args.role || targetCurrentRole);
+		const targetNewRole = args.role === null ? 'student' : args.role || targetCurrentRole;
 
 		// Rule 1: Users cannot change their own role
 		if (caller?._id === args.userId && args.role !== undefined) {
@@ -125,7 +123,9 @@ export const updateUserRole = authAdminMutation({
 
 		// Rule 2: Dev can do ANYTHING (skip all other checks)
 		if (callerRole === 'dev') {
-			const updates: Record<string, any> = { updatedAt: Date.now() };
+			const updates: { updatedAt: number; role?: Doc<'users'>['role'] } = {
+				updatedAt: Date.now()
+			};
 			if (args.role !== undefined) {
 				updates.role = args.role === null ? undefined : args.role;
 			}
@@ -135,9 +135,6 @@ export const updateUserRole = authAdminMutation({
 
 		// Rule 3: Admin restrictions
 		if (callerRole === 'admin') {
-			// Admins can ONLY toggle between student and curator
-			const allowedRoles = ['student', 'curator'];
-			
 			// Check if trying to modify a user with admin/dev role
 			if (targetCurrentRole === 'admin' || targetCurrentRole === 'dev') {
 				throw new Error('Admins cannot manage other admins or devs');
@@ -149,7 +146,9 @@ export const updateUserRole = authAdminMutation({
 			}
 
 			// If we got here, admin is changing student ↔ curator which is allowed
-			const updates: Record<string, any> = { updatedAt: Date.now() };
+			const updates: { updatedAt: number; role?: Doc<'users'>['role'] } = {
+				updatedAt: Date.now()
+			};
 			if (args.role !== undefined) {
 				updates.role = args.role === null ? undefined : args.role;
 			}

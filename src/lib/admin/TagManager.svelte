@@ -218,7 +218,7 @@
 								</button>
 							</div>
 						{:else}
-							<div class="inline-flex items-center gap-1.5 rounded-full border border-base-300 bg-base-50 px-2.5 py-1 text-xs transition-all hover:border-primary/30 hover:shadow-sm">
+							<div class="inline-flex items-center gap-1.5 rounded-full border border-base-300 bg-base-50 px-2.5 py-1 text-xs transition-all hover:border-primary/30 hover:shadow-xs">
 								<span
 									class="h-2 w-2 rounded-full ring-1 ring-base-content/10"
 									style={`background-color: ${tag.color || '#94a3b8'}`}

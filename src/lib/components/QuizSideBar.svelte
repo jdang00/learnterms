@@ -4,6 +4,7 @@
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { resolve } from '$app/paths';
 
 	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
 	let hideSidebar = $state(false);
@@ -28,8 +29,8 @@
 	 rounded-4xl
 	 p-3 px-4
 	 transition-all duration-200 ease-out
-	 bg-base-100 backdrop-blur-md bg-opacity-80 shadow-lg
-	 flex-shrink-0 h-full
+	 bg-base-100/80 backdrop-blur-md shadow-lg
+	 shrink-0 h-full
 	 {hideSidebar ? 'w-[72px]' : 'w-[min(22rem,30vw)] xl:w-[min(24rem,28vw)]'}
 
 	"
@@ -48,7 +49,7 @@
 	{#if !hideSidebar}
 		<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<a class="btn btn-ghost font-bold rounded-full" href={`/classes?classId=${classId}`}>
+				<a class="btn btn-ghost font-bold rounded-full" href={resolve('/classes')}>
 					<ChevronLeft size={16} /> MODULE {module.data.order + 1}
 				</a>
 			</h4>
@@ -88,7 +89,7 @@
 							</div>
 						</div>
 						<div
-							class={`mt-2 break-words hyphens-auto transition-all duration-300 tiptap-content ${qs.showSolution ? 'blur-none' : 'blur-sm'}`}
+							class={`mt-2 break-words hyphens-auto transition-all duration-300 tiptap-content ${qs.showSolution ? 'blur-none' : 'blur-xs'}`}
 						>
 							{@html sanitizedRationale}
 						</div>
@@ -111,7 +112,7 @@
 			<div class="flex flex-col items-center space-y-4">
 				<a
 					class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
-					href={`/classes?classId=${classId}`}
+					href={resolve('/classes')}
 				>
 					<span class="group-hover:hidden">{module.data.order + 1}</span>
 					<span class="hidden group-hover:inline-flex items-center justify-center"

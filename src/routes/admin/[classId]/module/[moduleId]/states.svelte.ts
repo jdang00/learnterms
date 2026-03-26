@@ -2,6 +2,7 @@ import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
 import type { ConvexClient } from 'convex/browser';
 import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 import { toastStore } from '$lib/stores/toast.svelte';
 import type { StatusFilter } from '$lib/types';
 
@@ -211,8 +212,10 @@ export class QuestionCurationState {
 			const url = new URL(window.location.href);
 			if (url.searchParams.has('edit')) {
 				url.searchParams.delete('edit');
-				const newPath = url.pathname + (url.search ? `?${url.searchParams.toString()}` : '');
-				await goto(newPath, { replaceState: true, noScroll: true });
+				await goto(resolve(url.pathname as `/admin/${string}/module/${string}`), {
+					replaceState: true,
+					noScroll: true
+				});
 			}
 		} catch {}
 		this.isEditQuestionModalOpen = false;

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../convex/_generated/dataModel';
@@ -186,7 +187,7 @@
 				timeLimitSec: timed ? Math.max(1, timeLimitMinutes) * 60 : undefined,
 				passThresholdPct
 			});
-			await goto(`/classes/${classId}/tests/${result.attemptId}`);
+			await goto(resolve('/classes/[classId]/tests/[attemptId]', { classId, attemptId: result.attemptId }));
 		} catch (error: any) {
 			createError = error?.message ?? 'Something went wrong. Please try again.';
 		} finally {
@@ -221,7 +222,7 @@
 				<div>
 					<a
 						class="btn btn-ghost btn-sm font-bold rounded-full text-secondary mb-2"
-						href="/classes?classId={classId}"
+						href={resolve('/classes')}
 					>
 						<ChevronLeft size={16} /> Back to Class
 					</a>
@@ -233,7 +234,7 @@
 			</div>
 
 			{#if builderQuery.isLoading}
-				<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm">
+				<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs">
 					<div class="card-body">
 						<div class="skeleton h-6 w-56"></div>
 						<div class="skeleton h-4 w-full mt-2"></div>
@@ -247,7 +248,7 @@
 			{:else if builderQuery.data}
 				<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 					<section class="xl:col-span-2 space-y-6">
-						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm">
+						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs">
 							<div class="card-body">
 								<h2 class="card-title">
 									{builderQuery.data.class.name}
@@ -400,7 +401,7 @@
 							</div>
 						</div>
 
-						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm">
+						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs">
 							<div class="card-body space-y-5">
 								<h2 class="card-title">Test Settings</h2>
 
@@ -525,7 +526,7 @@
 					</section>
 
 					<aside class="space-y-4">
-						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm sticky top-4">
+						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs sticky top-4">
 							<div class="card-body gap-4">
 								<!-- Start Test CTA -->
 								{#if createError}
@@ -600,7 +601,11 @@
 												{#each attemptsQuery.data.slice(0, 4) as attempt (attempt._id)}
 													<a
 														class="block border border-base-300 rounded-xl p-2.5 hover:border-primary/40 transition-all duration-200"
-														href={`/classes/${classId}/tests/${attempt._id}${attempt.status === 'in_progress' ? '' : '/results'}`}
+														href={resolve(
+															attempt.status === 'in_progress'
+																? `/classes/${classId}/tests/${attempt._id}`
+																: `/classes/${classId}/tests/${attempt._id}/results`
+														)}
 													>
 														<div class="flex justify-between items-center gap-2 text-xs">
 															<span class="badge badge-xs badge-soft rounded-full {statusBadgeClass(attempt.status)}">

@@ -5,6 +5,9 @@
 	const grade = $derived(gradeStore.calculatedGrade);
 	const course = $derived(gradeStore.selectedCourse);
 	const gradeColor = $derived(getGradeColor(grade.letterGrade));
+	const pointsGrade = $derived(
+		course.calculationType === 'points' && 'earnedPoints' in grade ? grade : null
+	);
 
 	function getGradeColor(letter: 'A' | 'B' | 'C' | 'F') {
 		switch (letter) {
@@ -38,17 +41,17 @@
 				<span class="text-4xl font-bold text-base-content">
 					{grade.percentage.toFixed(2)}%
 				</span>
-				<div class={"badge badge-" + gradeColor + " badge-lg"}>
+				<div class={'badge badge-' + gradeColor + ' badge-lg'}>
 					{grade.letterGrade}
 				</div>
 			</div>
 		</div>
 
-		{#if course.calculationType === 'points'}
+		{#if pointsGrade}
 			<div class="text-right">
 				<div class="text-sm text-base-content/70">Points Earned</div>
 				<div class="text-2xl font-bold text-base-content">
-					{grade.earnedPoints.toFixed(2)} / {grade.totalPoints.toFixed(2)}
+					{pointsGrade.earnedPoints.toFixed(2)} / {pointsGrade.totalPoints.toFixed(2)}
 				</div>
 			</div>
 		{/if}
@@ -59,9 +62,9 @@
 	<div class="divider">Grading Scale</div>
 
 	<div class="flex flex-col gap-2">
-		{#each Object.entries(course.gradingScale) as [letter, scale]}
-			<div class={"flex items-center justify-between p-3 rounded-lg " + getBgClass(letter)}>
-				<div class={"badge badge-lg badge-" + getGradeColor(letter as 'A' | 'B' | 'C' | 'F')}>
+		{#each Object.entries(course.gradingScale) as [letter, scale] (letter)}
+			<div class={'flex items-center justify-between p-3 rounded-lg ' + getBgClass(letter)}>
+				<div class={'badge badge-lg badge-' + getGradeColor(letter as 'A' | 'B' | 'C' | 'F')}>
 					{letter}
 				</div>
 				<span class="text-sm">
@@ -71,5 +74,3 @@
 		{/each}
 	</div>
 </div>
-
-

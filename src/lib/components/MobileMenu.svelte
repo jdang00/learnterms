@@ -25,6 +25,7 @@
 	import { captureQuestionAnswered } from '$lib/analytics/questionAnswered';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { resolve } from '$app/paths';
 
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
@@ -185,7 +186,7 @@
 		<div tabindex="0" role="button" class="btn btn-sm btn-soft btn-accent btn-circle m-1">
 			<ArrowUpWideNarrow />
 		</div>
-		<ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-2xl z-1 w-52 p-2 shadow-sm">
+		<ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-2xl z-1 w-52 p-2 shadow-xs">
 			<li>
 				<button class="text-error" onclick={() => (qs.isResetModalOpen = true)}
 					><ListRestart size="18" />Reset</button
@@ -210,7 +211,7 @@
 			{#if canEdit && currentlySelected}
 				<li>
 					<a
-						href={`/admin/${classId}/module/${moduleId}?edit=${currentlySelected._id}`}
+						href={resolve(`/admin/${classId}/module/${moduleId}?edit=${currentlySelected._id}`)}
 						target="_blank"
 						rel="noopener noreferrer"
 					>
@@ -306,7 +307,7 @@
 			<div class="grid grid-cols-2 gap-3 mt-3">
 				{#each media.data as attachment (attachment._id)}
 					<button
-						class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
+						class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary"
 						onclick={() => {
 							handleAttachmentClick(attachment);
 							closeAttachmentsGrid();
@@ -365,7 +366,7 @@
 
 {#if qs.showSolution && canShowRationale && !qs.isModalOpen}
 	<button
-		class="fixed right-4 z-[60] md:hidden btn btn-sm btn-soft rounded-full border border-base-300/70 bg-base-100/85 backdrop-blur-sm normal-case shadow-sm"
+		class="fixed right-4 z-[60] md:hidden btn btn-sm btn-soft rounded-full border border-base-300/70 bg-base-100/85 backdrop-blur-xs normal-case shadow-xs"
 		style="bottom: calc(env(safe-area-inset-bottom, 0px) + 6.25rem);"
 		onclick={() => (qs.isModalOpen = true)}
 		aria-label="Show rationale"

@@ -836,7 +836,7 @@
 	{:else if runnerQuery.data}
 		{#if runnerQuery.data.attempt.status !== 'in_progress'}
 			<div class="flex-1 flex items-center justify-center p-4">
-				<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm max-w-md w-full">
+				<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs max-w-md w-full">
 					<div class="card-body text-center">
 						<CheckCircle2 class="mx-auto text-success mb-2" size={48} />
 						<h1 class="card-title justify-center text-xl">Test Complete</h1>
@@ -844,7 +844,7 @@
 						<div class="card-actions justify-center mt-4">
 							<a
 								class="btn btn-primary rounded-full"
-								href={`/classes/${classId}/tests/${attemptId}/results`}
+								href={resolve('/classes/[classId]/tests/[attemptId]/results', { classId, attemptId })}
 							>
 								View Results
 							</a>
@@ -859,7 +859,7 @@
 			>
 				<!-- Sidebar -->
 				<div
-					class="hidden lg:flex lg:flex-col relative overflow-y-auto overflow-x-hidden border border-base-300 rounded-4xl p-3 px-4 transition-all duration-200 ease-out bg-base-100 backdrop-blur-md bg-opacity-80 shadow-lg flex-shrink-0 h-full
+					class="hidden lg:flex lg:flex-col relative overflow-y-auto overflow-x-hidden border border-base-300 rounded-4xl p-3 px-4 transition-all duration-200 ease-out bg-base-100/80 backdrop-blur-md shadow-lg shrink-0 h-full
 					{hideSidebar ? 'w-[72px]' : 'w-[min(22rem,30vw)] xl:w-[min(24rem,28vw)]'}"
 				>
 					<button
@@ -878,7 +878,7 @@
 							<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
 								<a
 									class="btn btn-ghost font-bold rounded-full"
-									href={`/classes?classId=${classId}`}
+									href={resolve('/classes')}
 								>
 									<ChevronLeft size={16} />
 									{runnerQuery.data.attempt.className}
@@ -971,7 +971,7 @@
 						<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
 							<a
 								class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
-								href={`/classes?classId=${classId}`}
+								href={resolve('/classes')}
 							>
 								<span class="group-hover:hidden">📝</span>
 								<span class="hidden group-hover:inline-flex items-center justify-center"
@@ -1018,7 +1018,7 @@
 				<div class="lg:hidden flex items-center justify-between gap-2 px-2">
 					<a
 						class="btn btn-ghost btn-sm rounded-full text-secondary"
-						href={`/classes?classId=${classId}`}
+						href={resolve('/classes')}
 					>
 						<ChevronLeft size={16} />
 						<span class="truncate max-w-[120px]">{runnerQuery.data.attempt.className}</span>
@@ -1042,7 +1042,7 @@
 
 				<!-- Main content area -->
 				<div
-					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
+					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
 				>
 					<!-- Horizontal question navigator (matches QuizNavigation style) -->
 					<div

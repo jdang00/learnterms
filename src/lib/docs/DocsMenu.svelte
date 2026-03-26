@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { docsNav } from './nav';
 
@@ -11,11 +12,11 @@
 
 <aside class="">
 	<ul class="menu bg-base-200 rounded-box p-3 w-56">
-		{#each docsNav as section}
+		{#each docsNav as section (section.title)}
 			<li class="menu-title text-xs uppercase opacity-70">{section.title}</li>
-			{#each section.items as item}
+			{#each section.items as item (item.path)}
 				<li>
-					<a href={item.path} class:active={isActive(item.path)}>{item.title}</a>
+					<a href={resolve(item.path)} class:active={isActive(item.path)}>{item.title}</a>
 				</li>
 			{/each}
 		{/each}

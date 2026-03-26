@@ -1,6 +1,6 @@
 <div class="max-w-3xl px-10">
 	<h1 class="mb-5 mt-5 text-4xl font-semibold">Blog</h1>
-	<a href="/blog/LearnTerms v2" class="card lg:card-side bg-base-100 hover:bg-base-200">
+	<a href="https://learnterms.com/blog/LearnTerms%20v2" class="card lg:card-side bg-base-100 hover:bg-base-200">
 		<div class="card-body">
 			<h2 class="card-title">LearnTerms v2 Release</h2>
 			<p class="text-secondary text-sm">February 28, 2025</p>
@@ -11,7 +11,7 @@
 		</div>
 	</a>
 
-	<a href="/blog/LearnTerms v2 Beta" class="card lg:card-side bg-base-100 hover:bg-base-200">
+	<a href="https://learnterms.com/blog/LearnTerms%20v2%20Beta" class="card lg:card-side bg-base-100 hover:bg-base-200">
 		<div class="card-body">
 			<h2 class="card-title">LearnTerms v2 Beta</h2>
 			<p class="text-secondary text-sm">Janurary 15, 2025</p>
@@ -22,7 +22,7 @@
 		</div>
 	</a>
 
-	<a href="/blog/LENS" class="card lg:card-side bg-base-100 hover:bg-base-200">
+	<a href="https://learnterms.com/blog/LENS" class="card lg:card-side bg-base-100 hover:bg-base-200">
 		<div class="card-body">
 			<h2 class="card-title">The LENS Algorithm: Playing the Numbers Game</h2>
 			<p class="text-secondary text-sm">October 16, 2024</p>
@@ -34,7 +34,7 @@
 		</div>
 	</a>
 
-	<a href="/blog/LearnTerms 1.0" class="card lg:card-side bg-base-100 hover:bg-base-200">
+	<a href="https://learnterms.com/blog/LearnTerms%201.0" class="card lg:card-side bg-base-100 hover:bg-base-200">
 		<div class="card-body">
 			<h2 class="card-title">LearnTerms 1.0 Release</h2>
 			<p class="text-secondary text-sm">September 23, 2024</p>

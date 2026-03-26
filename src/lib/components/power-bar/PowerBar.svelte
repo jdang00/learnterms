@@ -366,7 +366,7 @@
 			<Search size={15} class="shrink-0 text-base-content/40" />
 			<input
 				type="text"
-				class="h-12 w-full bg-transparent text-sm outline-none placeholder:text-base-content/40"
+				class="h-12 w-full bg-transparent text-sm outline-hidden placeholder:text-base-content/40"
 				placeholder="Search cohorts, classes, modules, links, settings..."
 				bind:value={searchQuery}
 				bind:this={searchInputRef}
