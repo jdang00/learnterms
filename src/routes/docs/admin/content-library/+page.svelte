@@ -1,3 +1,7 @@
+<script lang="ts">
+	import { resolve } from '$app/paths';
+</script>
+
 <h1>Content Library</h1>
 
 <p>The Content Library is where admins and contributors collect study materials and turn them into <strong>AI-generated learning chunks</strong> that power question creation and module prep.</p>
@@ -14,7 +18,7 @@
 <p>Admins and approved contributors in your cohort. Content is scoped to your cohort.</p>
 
 <h2>Open the Library</h2>
-<p>Go to <a href="/admin/library">Admin → Content Library</a>.</p>
+<p>Go to <a href={resolve('/admin/library')}>Admin → Content Library</a>.</p>
 
 <h2>Upload a PDF</h2>
 <ol>

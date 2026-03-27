@@ -87,7 +87,7 @@
 						<div
 							class="ring-primary ring-offset-base-100 {showConfirmation
 								? 'w-16'
-								: 'w-32'} rounded-full ring ring-offset-2 transition-all duration-300"
+								: 'w-32'} rounded-full ring-[3px] ring-offset-2 transition-all duration-300"
 						>
 							<img src={user.imageUrl} alt="user profile" />
 						</div>
@@ -97,7 +97,7 @@
 						<div
 							class="bg-secondary text-neutral-content {showConfirmation
 								? 'w-16'
-								: 'w-32'} rounded-full ing-primary ring-offset-base-100 ring ring-offset-2 transition-all duration-300"
+								: 'w-32'} rounded-full ring-primary ring-offset-base-100 ring-[3px] ring-offset-2 transition-all duration-300"
 						>
 							<span class={showConfirmation ? 'text-xl' : 'text-3xl'}
 								><School size={showConfirmation ? 24 : 48} /></span
@@ -176,7 +176,7 @@
 							<div class="flex justify-center mb-4">
 								<div class="avatar">
 									<div
-										class="ring-success ring-offset-base-100 w-20 rounded-full ring ring-offset-2"
+										class="ring-success ring-offset-base-100 w-20 rounded-full ring-[3px] ring-offset-2"
 									>
 										<img src={cohortInfo?.cohort.pic_url} alt="Cohort Avatar" />
 									</div>

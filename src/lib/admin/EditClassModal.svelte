@@ -136,14 +136,18 @@
 	}
 </script>
 
-<dialog class="modal p-6" class:modal-open={isEditModalOpen} onclick={(e) => {
-	if (e.target === e.currentTarget) {
-		e.stopPropagation();
-		resetForm();
-		closeEditModal();
-	}
-}}>
-	<div class="modal-box w-full max-w-2xl rounded-2xl border border-base-300 shadow-2xl" onclick={(e) => e.stopPropagation()}>
+<dialog
+	class="modal p-6"
+	class:modal-open={isEditModalOpen}
+	onclick={(e) => {
+		if (e.target === e.currentTarget) {
+			e.stopPropagation();
+			resetForm();
+			closeEditModal();
+		}
+	}}
+>
+	<div class="modal-box w-full max-w-2xl rounded-2xl border border-base-300 shadow-2xl">
 		<form method="dialog">
 			<button
 				class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4"

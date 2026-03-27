@@ -233,7 +233,7 @@
 		class="flex min-h-[38rem] h-full flex-col gap-3 overflow-visible bg-base-100 md:gap-4 lg:min-h-[46rem] lg:flex-row lg:gap-8"
 	>
 		<div
-			class="relative hidden self-stretch flex-shrink-0 overflow-x-hidden overflow-y-auto rounded-4xl border border-base-300 bg-base-100/80 p-3 px-4 shadow-lg backdrop-blur-md transition-all duration-200 ease-out lg:flex lg:flex-col {hideSidebar
+			class="relative hidden self-stretch shrink-0 overflow-x-hidden overflow-y-auto rounded-4xl border border-base-300 bg-base-100/80 p-3 px-4 shadow-lg backdrop-blur-md transition-all duration-200 ease-out lg:flex lg:flex-col {hideSidebar
 				? 'w-[72px]'
 				: 'w-[min(22rem,30vw)] xl:w-[min(24rem,28vw)]'}"
 		>
@@ -281,7 +281,7 @@
 								</button>
 							</div>
 							<div
-								class={`tiptap-content mt-2 transition-all duration-300 ${showSolution ? 'blur-none' : 'blur-sm'}`}
+							class={`tiptap-content mt-2 transition-all duration-300 ${showSolution ? 'blur-none' : 'blur-xs'}`}
 							>
 								{currentQuestion.rationale}
 							</div>
@@ -383,7 +383,7 @@
 							</button>
 							<ul
 								tabindex="-1"
-								class="dropdown-content menu z-[1] w-52 rounded-2xl bg-base-100 p-2 shadow-sm"
+								class="dropdown-content menu z-[1] w-52 rounded-2xl bg-base-100 p-2 shadow-xs"
 							>
 								<li><button>Show Flagged</button></li>
 								<li><button>Show Incomplete</button></li>
@@ -409,7 +409,7 @@
 								onchange={() => toggleOption(option.id)}
 								disabled={eliminatedAnswers.includes(option.id) || showSolution}
 							/>
-							<span class="my-3 ml-3 flex-grow break-words text-sm text-wrap md:ml-4 md:text-base">
+							<span class="my-3 ml-3 grow break-words text-sm text-wrap md:ml-4 md:text-base">
 								<span class="mr-2 select-none font-semibold">{String.fromCharCode(65 + i)}.</span>
 								<span class={eliminatedAnswers.includes(option.id) ? 'line-through opacity-50' : ''}
 									>{option.text}</span

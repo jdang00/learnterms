@@ -9,6 +9,7 @@
 	import type { ClassWithSemester } from '$lib/types';
 	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
 	import { useClerkContext } from 'svelte-clerk';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
 	const client = useConvexClient();
@@ -120,7 +121,7 @@
 <div class="min-h-screen bg-base-200/30">
 	<div class="max-w-[1800px] mx-auto p-4 sm:p-6">
 		<div class="flex items-center gap-4 mb-6">
-			<a class="btn btn-ghost btn-sm rounded-full gap-2" href="/admin">
+			<a class="btn btn-ghost btn-sm rounded-full gap-2" href={resolve('/admin')}>
 				<ArrowLeft size={16} />
 				<span class="hidden sm:inline">Back</span>
 			</a>
@@ -144,7 +145,6 @@
 				</div>
 				{#if semesters.data}
 					<ul
-						tabindex="0"
 						class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-56 p-1 shadow-lg border border-base-300"
 					>
 						{#each semesters.data as semester (semester._id)}
@@ -205,7 +205,7 @@
 								<li>
 									<button
 										type="button"
-										class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200 flex items-center gap-2"
+										class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200 flex items-center gap-2"
 										class:bg-primary={selectedClass?._id === c._id}
 										class:text-primary-content={selectedClass?._id === c._id}
 										onclick={() => {
@@ -268,7 +268,7 @@
 								<li>
 									<button
 										type="button"
-										class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200 truncate"
+										class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200 truncate"
 										class:bg-primary={selectedModuleId === m._id}
 										class:text-primary-content={selectedModuleId === m._id}
 										onclick={() => {
@@ -308,7 +308,7 @@
 				>
 					{#if convexUser.isLoading}
 						<div class="p-4 space-y-2">
-							{#each Array(5) as _}
+							{#each Array.from({ length: 5 }, (_, i) => i) as i (i)}
 								<div class="skeleton h-12 w-full"></div>
 							{/each}
 						</div>

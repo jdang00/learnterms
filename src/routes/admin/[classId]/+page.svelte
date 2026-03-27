@@ -16,7 +16,7 @@
 	import { useClerkContext } from 'svelte-clerk';
 
 	let { data }: { data: PageData } = $props();
-	const classId = data.classId;
+	const classId = $derived(data.classId);
 
 	const modules = useQuery(api.module.getAdminModulesWithQuestionCounts, () => ({
 		classId: classId as Id<'class'>
@@ -338,7 +338,7 @@
 						callbacks: { onDrop: handleDrop },
 						disabled: !reorderEnabled
 					}}
-					class="relative rounded-2xl bg-base-100 shadow-sm border border-base-300 p-4
+					class="relative rounded-2xl bg-base-100 shadow-xs border border-base-300 p-4
                            transition-all duration-300 hover:shadow-md hover:border-primary/30
                            svelte-dnd-touch-feedback overflow-visible"
 					animate:flip={{ duration: 300 }}
@@ -369,7 +369,7 @@
 										{/if}
 										<div class="flex-1 min-w-0">
 											<a
-												href={`/admin/${classId}/module/${moduleItem._id}`}
+												href={resolve('/admin/[classId]/module/[moduleId]', { classId, moduleId: moduleItem._id })}
 												class="font-semibold text-base-content text-left hover:text-primary transition-colors cursor-pointer block"
 												title={`Go to questions for ${moduleItem.title}`}
 											>
@@ -438,14 +438,12 @@
 										<div class="dropdown dropdown-end">
 											<button
 												class="btn btn-ghost btn-circle btn-sm interactive"
-												tabindex="0"
 												aria-haspopup="menu"
 												aria-label="Open menu">⋮</button
 											>
 											<ul
-												tabindex="0"
 												role="menu"
-												class="dropdown-content menu bg-base-100 rounded-2xl z-1 w-52 p-2 shadow-sm border border-base-300"
+												class="dropdown-content menu bg-base-100 rounded-2xl z-1 w-52 p-2 shadow-xs border border-base-300"
 											>
 												<li>
 													<button

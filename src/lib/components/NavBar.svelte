@@ -6,6 +6,7 @@
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { Search } from 'lucide-svelte';
+	import { resolve } from '$app/paths';
 	import PowerBar from './power-bar/PowerBar.svelte';
 	import type { CohortItem, QuickLinkItem } from './power-bar/types';
 
@@ -133,7 +134,7 @@
 
 <div class="navbar bg-base-100 h-16">
 	<div class="navbar-start">
-		<a class="btn btn-ghost rounded-full text-xl" href="/">LearnTerms</a>
+		<a class="btn btn-ghost rounded-full text-xl" href={resolve('/')}>LearnTerms</a>
 	</div>
 
 	{#if user}

@@ -4,6 +4,7 @@
 	import { Sparkles, PartyPopper, Rocket, ArrowRight, Loader2 } from 'lucide-svelte';
 	import { Confetti } from 'svelte-confetti';
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
 
@@ -107,11 +108,11 @@
 
 			<!-- CTA -->
 			<div class="flex flex-col sm:flex-row gap-3 justify-center">
-				<a href="/admin/question-studio" class="btn btn-primary">
+				<a href={resolve('/admin/question-studio')} class="btn btn-primary">
 					Open Question Studio
 					<ArrowRight size={18} />
 				</a>
-				<a href="/admin" class="btn btn-outline">
+				<a href={resolve('/admin')} class="btn btn-outline">
 					Go to Dashboard
 				</a>
 			</div>

@@ -7,11 +7,6 @@
 		<span class="text-sm font-medium text-base-content">Progress</span>
 		<span class="text-sm font-medium text-base-content">{(percentage ?? 0).toFixed(2)}%</span>
 	</div>
-	<progress
-		class={"progress progress-" + color + " w-full h-4"}
-		value={percentage ?? 0}
-		max="100"
-	/>
+	<progress class={'progress progress-' + color + ' w-full h-4'} value={percentage ?? 0} max="100"
+	></progress>
 </div>
-
-

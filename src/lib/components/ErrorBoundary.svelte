@@ -57,9 +57,9 @@
 </script>
 
 {#if !shouldSuppress}
-	<div class="rounded-lg border-l-4 {isAuthError ? 'border-primary bg-primary/5' : 'border-error bg-error/5'} p-4 shadow-sm {className}" role="alert">
+	<div class="rounded-lg border-l-4 {isAuthError ? 'border-primary bg-primary/5' : 'border-error bg-error/5'} p-4 shadow-xs {className}" role="alert">
 	<div class="flex items-start gap-3">
-		<div class="flex-shrink-0 mt-0.5">
+		<div class="shrink-0 mt-0.5">
 			{#if isAuthError}
 				<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
@@ -83,7 +83,7 @@
 					<div class="text-sm text-base-content/80">
 						<p class="mb-2">{message}</p>
 						{#if error?.message}
-							<div class="bg-base-200 border border-base-300 rounded p-2 mt-2">
+							<div class="bg-base-200 border border-base-300 rounded-sm p-2 mt-2">
 								<p class="text-error font-mono text-xs">{error.message}</p>
 							</div>
 						{/if}
@@ -92,7 +92,7 @@
 			</div>
 
 		{#if showReload}
-				<div class="flex-shrink-0">
+				<div class="shrink-0">
 					<button
 						class="btn btn-sm {isAuthError ? 'btn-primary' : 'btn-outline btn-error'} gap-2"
 						onclick={handleReload}

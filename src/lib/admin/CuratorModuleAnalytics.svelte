@@ -124,8 +124,7 @@
 	);
 
 	const selectedModuleName = $derived(
-		(selectorOptions.data?.modules ?? []).find((m) => m._id === selectedModuleId)?.title ??
-			'Module'
+		(selectorOptions.data?.modules ?? []).find((m) => m._id === selectedModuleId)?.title ?? 'Module'
 	);
 
 	const searchedClasses = $derived(
@@ -296,7 +295,7 @@
 							<li>
 								<button
 									type="button"
-									class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200"
+									class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200"
 									class:bg-primary={!selectedSemesterId}
 									class:text-primary-content={!selectedSemesterId}
 									onclick={() => onSemesterSelect('')}
@@ -304,11 +303,11 @@
 									All semesters
 								</button>
 							</li>
-							{#each semesters.data ?? [] as semester}
+							{#each semesters.data ?? [] as semester (semester._id)}
 								<li>
 									<button
 										type="button"
-										class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200"
+										class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200"
 										class:bg-primary={selectedSemesterId === semester._id}
 										class:text-primary-content={selectedSemesterId === semester._id}
 										onclick={() => onSemesterSelect(semester._id)}
@@ -353,11 +352,11 @@
 							bind:value={classSearch}
 						/>
 						<ul class="max-h-56 overflow-y-auto">
-							{#each searchedClasses as classItem}
+							{#each searchedClasses as classItem (classItem._id)}
 								<li>
 									<button
 										type="button"
-										class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200 flex items-center gap-2"
+										class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200 flex items-center gap-2"
 										class:bg-primary={selectedClassId === classItem._id}
 										class:text-primary-content={selectedClassId === classItem._id}
 										onclick={() => onClassSelect(classItem._id)}
@@ -414,11 +413,11 @@
 							bind:value={moduleSearch}
 						/>
 						<ul class="max-h-56 overflow-y-auto">
-							{#each searchedModules as module}
+							{#each searchedModules as module (module._id)}
 								<li>
 									<button
 										type="button"
-										class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-base-200"
+										class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200"
 										class:bg-primary={selectedModuleId === module._id}
 										class:text-primary-content={selectedModuleId === module._id}
 										onclick={() => onModuleSelect(module._id)}
@@ -461,7 +460,9 @@
 
 	<!-- Content -->
 	{#if !selectedModuleId}
-		<div class="bg-base-100 rounded-2xl border border-base-300 p-8 text-center text-base-content/50">
+		<div
+			class="bg-base-100 rounded-2xl border border-base-300 p-8 text-center text-base-content/50"
+		>
 			<BookOpen size={28} class="mx-auto mb-2 opacity-40" />
 			<p class="text-sm">Select a class and module to view analytics.</p>
 		</div>
@@ -476,7 +477,9 @@
 	{:else if moduleOverview.data}
 		<!-- Module Header + Inline Stats -->
 		<div class="bg-base-100 rounded-2xl border border-base-300">
-			<div class="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-base-300">
+			<div
+				class="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-base-300"
+			>
 				<div class="min-w-0">
 					<h3 class="font-semibold text-sm">
 						{moduleOverview.data.module.emoji
@@ -484,14 +487,17 @@
 							: ''}{moduleOverview.data.module.title}
 					</h3>
 					<p class="text-xs text-base-content/50">
-						{moduleOverview.data.module.className} &middot; {moduleOverview.data.module.semesterName}
+						{moduleOverview.data.module.className} &middot; {moduleOverview.data.module
+							.semesterName}
 					</p>
 				</div>
 				<div class="flex flex-wrap items-center gap-3 text-xs">
 					<span class="flex items-center gap-1 text-base-content/70">
 						<Users size={12} />
 						{moduleOverview.data.totals.participants}/{moduleOverview.data.totals.studentsInCohort}
-						<span class="text-base-content/50">({moduleOverview.data.totals.participationRate}%)</span>
+						<span class="text-base-content/50"
+							>({moduleOverview.data.totals.participationRate}%)</span
+						>
 					</span>
 					<span class="flex items-center gap-1 text-base-content/70">
 						<Activity size={12} />
@@ -518,7 +524,7 @@
 
 				{#if !questionData}
 					<div class="p-4 space-y-2">
-						{#each Array(6) as _}
+						{#each Array.from({ length: 6 }, (_, i) => i) as i (i)}
 							<div class="skeleton h-8 w-full"></div>
 						{/each}
 					</div>
@@ -546,10 +552,21 @@
 												{truncate(question.stem, 100)}
 											</div>
 										</td>
-										<td class="capitalize text-xs text-base-content/70">{formatQuestionType(question.type)}</td>
-										<td class="text-xs">{question.interactionCount} <span class="text-base-content/40">({question.interactionRate}%)</span></td>
-										<td class="text-xs">{question.flaggedCount} <span class="text-base-content/40">({question.flagRate}%)</span></td>
-										<td class="text-xs text-base-content/60" title={formatDateTime(question.lastInteractionAt)}>
+										<td class="capitalize text-xs text-base-content/70"
+											>{formatQuestionType(question.type)}</td
+										>
+										<td class="text-xs"
+											>{question.interactionCount}
+											<span class="text-base-content/40">({question.interactionRate}%)</span></td
+										>
+										<td class="text-xs"
+											>{question.flaggedCount}
+											<span class="text-base-content/40">({question.flagRate}%)</span></td
+										>
+										<td
+											class="text-xs text-base-content/60"
+											title={formatDateTime(question.lastInteractionAt)}
+										>
 											{formatRelativeTime(question.lastInteractionAt)}
 										</td>
 									</tr>
@@ -574,7 +591,7 @@
 						>
 							<ChevronLeft size={12} />
 						</button>
-						{#each pageNumbers as page}
+						{#each pageNumbers as page, i (page === 'ellipsis' ? `ellipsis-${i}` : page)}
 							{#if page === 'ellipsis'}
 								<button class="btn btn-xs btn-ghost rounded-full btn-disabled">...</button>
 							{:else}
@@ -610,7 +627,8 @@
 							Participants
 						</h4>
 						<span class="text-xs text-base-content/50">
-							{moduleOverview.data.totals.participants} of {moduleOverview.data.totals.studentsInCohort}
+							{moduleOverview.data.totals.participants} of {moduleOverview.data.totals
+								.studentsInCohort}
 						</span>
 					</div>
 				</div>
@@ -622,14 +640,16 @@
 						</div>
 					{:else}
 						<div class="space-y-3">
-							{#each visibleParticipants as participant}
+							{#each visibleParticipants as participant (participant._id)}
 								<div class="flex items-center gap-3">
 									<div class="avatar shrink-0">
 										<div class="w-8 h-8 rounded-full">
 											{#if participant.imageUrl}
 												<img src={participant.imageUrl} alt={participant.name} />
 											{:else}
-												<div class="bg-neutral text-neutral-content w-full h-full flex items-center justify-center text-[10px] font-medium">
+												<div
+													class="bg-neutral text-neutral-content w-full h-full flex items-center justify-center text-[10px] font-medium"
+												>
 													{initials(participant.name)}
 												</div>
 											{/if}
@@ -638,18 +658,26 @@
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center justify-between gap-2">
 											<span class="text-xs font-medium truncate">{participant.name}</span>
-											<span class="text-[10px] text-base-content/40 shrink-0">{formatRelativeTime(participant.lastAttemptAt)}</span>
+											<span class="text-[10px] text-base-content/40 shrink-0"
+												>{formatRelativeTime(participant.lastAttemptAt)}</span
+											>
 										</div>
 										<div class="flex items-center gap-2 mt-1">
 											<div class="flex-1 bg-base-200 rounded-full h-1.5 overflow-hidden">
 												<div
 													class="h-full rounded-full bg-primary/70"
-													style="width: {Math.round((participant.interactions / maxParticipantInteractions) * 100)}%"
+													style="width: {Math.round(
+														(participant.interactions / maxParticipantInteractions) * 100
+													)}%"
 												></div>
 											</div>
-											<span class="text-[10px] text-base-content/50 tabular-nums shrink-0">{participant.interactions}</span>
+											<span class="text-[10px] text-base-content/50 tabular-nums shrink-0"
+												>{participant.interactions}</span
+											>
 											{#if participant.flagged > 0}
-												<span class="text-[10px] text-warning tabular-nums shrink-0">{participant.flagged} flagged</span>
+												<span class="text-[10px] text-warning tabular-nums shrink-0"
+													>{participant.flagged} flagged</span
+												>
 											{/if}
 										</div>
 									</div>
@@ -661,7 +689,9 @@
 								class="btn btn-ghost btn-xs w-full mt-3"
 								onclick={() => (showAllParticipants = !showAllParticipants)}
 							>
-								{showAllParticipants ? 'Show less' : `+${moduleOverview.data.participants.length - 5} more`}
+								{showAllParticipants
+									? 'Show less'
+									: `+${moduleOverview.data.participants.length - 5} more`}
 							</button>
 						{/if}
 					{/if}
@@ -677,7 +707,9 @@
 							Flagged Hotspots
 						</h4>
 						{#if moduleOverview.data.totals.totalFlags > 0}
-							<span class="badge badge-warning badge-xs">{moduleOverview.data.totals.totalFlags}</span>
+							<span class="badge badge-warning badge-xs"
+								>{moduleOverview.data.totals.totalFlags}</span
+							>
 						{/if}
 					</div>
 				</div>
@@ -689,20 +721,30 @@
 						</div>
 					{:else}
 						<div class="space-y-3">
-							{#each visibleHotspots as question}
+							{#each visibleHotspots as question (question.questionId)}
 								<div class="rounded-2xl bg-warning/5 border border-warning/15 p-3">
 									<div class="flex items-start justify-between gap-2">
-										<p class="text-xs font-medium leading-snug line-clamp-2" title={stripHtml(question.stem)}>
+										<p
+											class="text-xs font-medium leading-snug line-clamp-2"
+											title={stripHtml(question.stem)}
+										>
 											<span class="text-warning font-semibold">Q{question.order + 1}</span>
 											{truncate(question.stem, 60)}
 										</p>
-										<span class="badge badge-warning badge-xs shrink-0 mt-0.5">{question.flaggedCount}</span>
+										<span class="badge badge-warning badge-xs shrink-0 mt-0.5"
+											>{question.flaggedCount}</span
+										>
 									</div>
 									<div class="flex items-center gap-3 mt-2">
 										<div class="flex-1 bg-base-200 rounded-full h-1.5 overflow-hidden">
-											<div class="h-full rounded-full bg-warning/70" style="width: {question.flagRate}%"></div>
+											<div
+												class="h-full rounded-full bg-warning/70"
+												style="width: {question.flagRate}%"
+											></div>
 										</div>
-										<span class="text-[10px] text-base-content/50 shrink-0">{question.flagRate}% flagged</span>
+										<span class="text-[10px] text-base-content/50 shrink-0"
+											>{question.flagRate}% flagged</span
+										>
 									</div>
 								</div>
 							{/each}
@@ -712,7 +754,9 @@
 								class="btn btn-ghost btn-xs w-full mt-3"
 								onclick={() => (showAllHotspots = !showAllHotspots)}
 							>
-								{showAllHotspots ? 'Show less' : `+${moduleOverview.data.mostFlaggedQuestions.length - 4} more`}
+								{showAllHotspots
+									? 'Show less'
+									: `+${moduleOverview.data.mostFlaggedQuestions.length - 4} more`}
 							</button>
 						{/if}
 					{/if}
@@ -735,7 +779,7 @@
 						</div>
 					{:else}
 						<div class="space-y-0">
-							{#each visibleRecent as activity, i}
+							{#each visibleRecent as activity, i (`${activity.userId}-${activity.questionId}-${activity.timestamp}`)}
 								<div class="flex gap-3 {i > 0 ? 'pt-3' : ''}">
 									<div class="flex flex-col items-center">
 										<div class="avatar shrink-0">
@@ -743,7 +787,9 @@
 												{#if activity.userImageUrl}
 													<img src={activity.userImageUrl} alt={activity.userName} />
 												{:else}
-													<div class="bg-neutral text-neutral-content w-full h-full flex items-center justify-center text-[10px] font-medium">
+													<div
+														class="bg-neutral text-neutral-content w-full h-full flex items-center justify-center text-[10px] font-medium"
+													>
 														{initials(activity.userName)}
 													</div>
 												{/if}
@@ -756,12 +802,20 @@
 									<div class="pb-3 min-w-0 flex-1">
 										<div class="flex items-center justify-between gap-2">
 											<span class="text-xs font-medium truncate">{activity.userName}</span>
-											<span class="text-[10px] text-base-content/40 shrink-0" title={formatDateTime(activity.timestamp)}>
+											<span
+												class="text-[10px] text-base-content/40 shrink-0"
+												title={formatDateTime(activity.timestamp)}
+											>
 												{formatRelativeTime(activity.timestamp)}
 											</span>
 										</div>
-										<p class="text-xs text-base-content/60 mt-1 leading-relaxed" title={stripHtml(activity.questionStem)}>
-											Attempted <span class="font-medium text-base-content/70">Q{activity.questionOrder + 1}</span>: {truncate(activity.questionStem, 45)}
+										<p
+											class="text-xs text-base-content/60 mt-1 leading-relaxed"
+											title={stripHtml(activity.questionStem)}
+										>
+											Attempted <span class="font-medium text-base-content/70"
+												>Q{activity.questionOrder + 1}</span
+											>: {truncate(activity.questionStem, 45)}
 										</p>
 									</div>
 								</div>
@@ -772,7 +826,9 @@
 								class="btn btn-ghost btn-xs w-full mt-2"
 								onclick={() => (showAllRecent = !showAllRecent)}
 							>
-								{showAllRecent ? 'Show less' : `+${moduleOverview.data.recentActivity.length - 5} more`}
+								{showAllRecent
+									? 'Show less'
+									: `+${moduleOverview.data.recentActivity.length - 5} more`}
 							</button>
 						{/if}
 					{/if}

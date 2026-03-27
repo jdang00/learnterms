@@ -56,7 +56,7 @@
 			<span>Lowest {component.dropLowest} score{(component.dropLowest ?? 0) > 1 ? 's' : ''} will be dropped</span>
 		</div>
 	{/if}
-	{#each component.instances ?? [] as _, index}
+	{#each component.instances ?? [] as _, index (`${component.id}-${index}`)}
 		<div class="form-control w-full">
 			<label class="label" for={component.id + '-' + index}>
 				<span class="label-text">
@@ -88,5 +88,4 @@
 		</div>
 	{/each}
 </div>
-
 

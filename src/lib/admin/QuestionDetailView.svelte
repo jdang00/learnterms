@@ -1,14 +1,5 @@
 <script lang="ts">
-	import {
-		Pencil,
-		Trash2,
-		Copy,
-		CopyPlus,
-		ArrowRightLeft,
-		Paperclip,
-		Check,
-		MoreVertical
-	} from 'lucide-svelte';
+	import { Pencil, Trash2, Copy, CopyPlus, ArrowRightLeft, Paperclip, Check } from 'lucide-svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
@@ -191,7 +182,11 @@
 					</button>
 					{#if onDuplicateMany}
 						<div class="dropdown dropdown-end">
-							<button tabindex="0" class="btn btn-sm btn-ghost btn-circle">
+							<button
+								type="button"
+								class="btn btn-sm btn-ghost btn-circle"
+								aria-label="Open duplicate options"
+							>
 								<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
 										stroke-linecap="round"
@@ -202,7 +197,6 @@
 								</svg>
 							</button>
 							<ul
-								tabindex="0"
 								class="dropdown-content menu bg-base-100 rounded-2xl z-20 w-44 p-1 shadow-lg border border-base-300"
 							>
 								<li>
@@ -233,7 +227,8 @@
 					? 'text-base'
 					: 'text-lg'} font-medium text-base-content leading-relaxed tiptap-content"
 			>
-				{@html question.stem}
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+				{@html sanitizeHtml(question.stem)}
 			</div>
 		</div>
 
@@ -247,7 +242,7 @@
 				>
 					Accepted Answers
 				</div>
-				<div class="card bg-base-100 border border-base-300 shadow-sm rounded-3xl">
+				<div class="card bg-base-100 border border-base-300 shadow-xs rounded-3xl">
 					<div class="card-body {isMobile ? 'p-3' : 'p-4'}">
 						{#if fitbAnswers.length > 0}
 							<div class="flex items-center gap-2 mb-2">
@@ -301,12 +296,12 @@
 										: 'px-5 py-3'}"
 								>
 									<span class="font-semibold {isMobile ? 'text-xs' : 'text-sm'} tiptap-content"
-										>{@html getPromptLabel(prompt.text)}</span
+										>{getPromptLabel(prompt.text)}</span
 									>
 								</div>
 							</div>
 							<!-- Arrow -->
-							<div class="text-base-content/40 flex-shrink-0">
+							<div class="text-base-content/40 shrink-0">
 								<svg
 									class={isMobile ? 'w-4 h-4' : 'w-5 h-5'}
 									fill="none"
@@ -329,9 +324,9 @@
 											? 'px-4 py-2'
 											: 'px-5 py-3'} flex items-center gap-2"
 									>
-										<Check size={isMobile ? 14 : 16} class="text-success flex-shrink-0" />
+										<Check size={isMobile ? 14 : 16} class="text-success shrink-0" />
 										<span class="{isMobile ? 'text-xs' : 'text-sm'} tiptap-content"
-											>{@html correctAnswer}</span
+											>{correctAnswer}</span
 										>
 									</div>
 								{:else}
@@ -392,20 +387,19 @@
 								disabled
 							/>
 							<span
-								class="flex-grow text-wrap break-words {isMobile
-									? 'ml-2 text-xs'
-									: 'ml-4 text-sm'} my-2"
+								class="grow text-wrap break-words {isMobile ? 'ml-2 text-xs' : 'ml-4 text-sm'} my-2"
 							>
 								<span class="font-semibold mr-2 select-none"
 									>{String.fromCharCode(65 + optIndex)}.</span
 								>
-								<span class="tiptap-content">{@html option.text}</span>
+								<span class="tiptap-content">
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+									{@html sanitizeHtml(option.text)}
+								</span>
 							</span>
 							{#if question.correctAnswers.includes(option.id)}
-								<span
-									class="text-success text-xs font-medium {isMobile
-										? 'mr-3'
-										: 'mr-4'} flex-shrink-0">{isMobile ? '✓' : '✓ Correct'}</span
+								<span class="text-success text-xs font-medium {isMobile ? 'mr-3' : 'mr-4'} shrink-0"
+									>{isMobile ? '✓' : '✓ Correct'}</span
 								>
 							{/if}
 						</label>
@@ -429,6 +423,7 @@
 					class:p-3={isMobile}
 					class:p-4={!isMobile}
 				>
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					<div class="text-sm text-base-content/80 tiptap-content">{@html questionRationale}</div>
 				</div>
 			</div>
@@ -446,7 +441,7 @@
 				<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
 					{#each media as attachment (attachment._id)}
 						<button
-							class="group border-2 border-base-300 rounded-2xl overflow-hidden cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+							class="group border-2 border-base-300 rounded-2xl overflow-hidden cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary focus:border-primary"
 							onclick={() => onAttachmentClick?.(attachment)}
 							aria-label={`View attachment: ${attachment.altText}`}
 						>

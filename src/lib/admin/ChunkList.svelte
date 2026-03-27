@@ -47,7 +47,7 @@
 
 {#if chunks.isLoading}
 	<div class="space-y-2">
-		{#each Array(4) as _}
+		{#each Array.from({ length: 4 }, (_, i) => i) as i (i)}
 			<div class="skeleton h-16 w-full rounded-2xl"></div>
 		{/each}
 	</div>
@@ -71,7 +71,9 @@
 		</span>
 		<div class="flex gap-1">
 			<button class="btn btn-ghost btn-xs" onclick={selectAll}>All</button>
-			<button class="btn btn-ghost btn-xs" onclick={clearSelection} disabled={selectedCount === 0}>Clear</button>
+			<button class="btn btn-ghost btn-xs" onclick={clearSelection} disabled={selectedCount === 0}
+				>Clear</button
+			>
 		</div>
 	</div>
 
@@ -84,9 +86,13 @@
 					: 'border-base-300 hover:border-base-content/20'}"
 				role="button"
 				tabindex="0"
-				onclick={() => toggleSelect(chunk._id)}
+				onclick={(event) => {
+					if ((event.target as HTMLElement).closest('details')) return;
+					toggleSelect(chunk._id);
+				}}
 				onkeydown={(e) => {
 					if (e.key === 'Enter' || e.key === ' ') {
+						if ((e.target as HTMLElement).closest('details')) return;
 						e.preventDefault();
 						toggleSelect(chunk._id);
 					}
@@ -96,7 +102,7 @@
 					<div class="flex items-start gap-3">
 						<div class="pt-0.5">
 							<div
-								class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors {isSelected
+								class="w-5 h-5 rounded-sm border-2 flex items-center justify-center transition-colors {isSelected
 									? 'bg-primary border-primary'
 									: 'border-base-300'}"
 							>
@@ -108,14 +114,18 @@
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 mb-1">
 								<span class="text-sm font-medium truncate">{chunk.title}</span>
-								<span class="badge badge-ghost badge-xs capitalize flex-shrink-0">{chunk.chunk_type}</span>
+								<span class="badge badge-ghost badge-xs capitalize shrink-0"
+									>{chunk.chunk_type}</span
+								>
 							</div>
 							<p class="text-xs text-base-content/60 line-clamp-2">{chunk.summary}</p>
 						</div>
 					</div>
 
-					<details class="mt-2" onclick={(e) => e.stopPropagation()}>
-						<summary class="text-xs text-base-content/50 cursor-pointer hover:text-base-content/70 flex items-center gap-1">
+					<details class="mt-2">
+						<summary
+							class="text-xs text-base-content/50 cursor-pointer hover:text-base-content/70 flex items-center gap-1"
+						>
 							<ChevronDown size={12} />
 							Preview content
 						</summary>

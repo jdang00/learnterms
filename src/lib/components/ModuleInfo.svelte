@@ -2,6 +2,7 @@
 	import { ChevronLeft, RotateCcw, Play } from 'lucide-svelte';
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
+	import { resolve } from '$app/paths';
 
     type QsControls = {
 		isResetModalOpen: boolean;
@@ -86,7 +87,7 @@
 				</div>
 			{/if}
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<a class="btn btn-ghost font-bold" href={`/classes?classId=${classId}`}>
+				<a class="btn btn-ghost font-bold" href={resolve('/classes')}>
 					<ChevronLeft size={16} /> Back to Module {(module.data?.order ?? 0) + 1}
 				</a>
 			</h4>

@@ -95,7 +95,7 @@
 	{#if classes.isLoading}
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			{#each Array(4), index (index)}
-				<div class="rounded-2xl bg-base-100 shadow-sm border border-base-300 p-5 animate-pulse">
+				<div class="rounded-2xl bg-base-100 shadow-xs border border-base-300 p-5 animate-pulse">
 					<div class="flex items-start gap-3 mb-3">
 						<div class="skeleton h-8 w-8 rounded-lg shrink-0"></div>
 						<div class="flex-1 space-y-2">
@@ -115,7 +115,7 @@
 			{/each}
 		</div>
 	{:else if classes.error}
-		<div class="alert alert-error rounded-2xl shadow-sm border border-error/20">
+		<div class="alert alert-error rounded-2xl shadow-xs border border-error/20">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				class="stroke-current shrink-0 h-6 w-6"
@@ -132,7 +132,7 @@
 			<span>Failed to load classes: {classes.error.toString()}</span>
 		</div>
 	{:else if !filteredClasses || filteredClasses.length === 0}
-		<div class="rounded-2xl bg-base-100 shadow-sm border border-base-300 p-8">
+		<div class="rounded-2xl bg-base-100 shadow-xs border border-base-300 p-8">
 			<div class="text-center py-8">
 				<div class="text-5xl mb-4">📚</div>
 				<h3 class="text-lg font-semibold mb-2 text-base-content">No classes yet</h3>

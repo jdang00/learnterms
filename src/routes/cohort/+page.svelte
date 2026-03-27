@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { useQuery } from 'convex-svelte';
+	import { resolve } from '$app/paths';
 	import { api } from '../../convex/_generated/api';
 	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
 	import {
@@ -74,7 +75,7 @@
 </script>
 
 <main class="mx-auto min-h-screen w-full max-w-7xl px-4 py-10 md:px-8">
-	<a class="btn btn-ghost btn-sm rounded-full mb-4" href="/classes">
+	<a class="btn btn-ghost btn-sm rounded-full mb-4" href={resolve('/classes')}>
 		<ArrowLeft size={16} />
 		Back to classes
 	</a>
@@ -82,7 +83,7 @@
 	{#if boardQuery.isLoading}
 		<div class="space-y-4">
 			<div class="skeleton h-44 w-full rounded-2xl"></div>
-			{#each Array(6) as _, i}
+			{#each Array.from({ length: 6 }, (_, i) => i) as i (i)}
 				<div class="skeleton h-16 w-full rounded-xl" style={`--i:${i}`}></div>
 			{/each}
 		</div>
@@ -143,7 +144,7 @@
 						<Search size={14} class="text-base-content/50" />
 						<input
 							type="text"
-							class="w-full bg-transparent py-2 text-sm outline-none"
+							class="w-full bg-transparent py-2 text-sm outline-hidden"
 							placeholder="Search classmate..."
 							bind:value={searchQuery}
 						/>
@@ -178,7 +179,7 @@
 				</div>
 			{:else}
 				<div class="mt-4 divide-y divide-base-300">
-					{#each filteredMembers as member}
+					{#each filteredMembers as member (member.userId)}
 						{@const isCurrentUser = currentUserId && member.userId === currentUserId}
 						<div
 							class="member-row flex items-center gap-4 px-3 py-3"
@@ -216,7 +217,7 @@
 							</div>
 
 							<div class="flex shrink-0 items-center gap-1.5">
-								{#each member.recentAwards.slice(0, BADGE_SLOT_COUNT) as award}
+								{#each member.recentAwards.slice(0, BADGE_SLOT_COUNT) as award (award.awardId)}
 									{@const BadgeIcon = iconMap[award.iconKey] ?? Star}
 									<div class="tooltip tooltip-top z-20" data-tip={award.name}>
 										<BadgeShield
@@ -228,7 +229,7 @@
 										/>
 									</div>
 								{/each}
-								{#each Array(mysterySlotsFor(member.recentAwards.length)) as _, mysteryIdx}
+								{#each Array.from({ length: mysterySlotsFor(member.recentAwards.length) }, (_, mysteryIdx) => mysteryIdx) as mysteryIdx (mysteryIdx)}
 									<div class="tooltip tooltip-top z-20 mystery-badge-wrap" data-tip="?">
 										<div class="mystery-badge">
 											<BadgeShield

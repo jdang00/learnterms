@@ -173,8 +173,10 @@
 					params.delete('processing');
 					params.delete('pdfUrl');
 					params.delete('fileKey');
-					const newUrl = `${resolve('/admin/library')}${params.toString() ? `?${params.toString()}` : ''}`;
-					replaceState(newUrl, {});
+					replaceState(
+						resolve(`/admin/library${params.toString() ? `?${params.toString()}` : ''}`),
+						{}
+					);
 				})
 				.catch(console.error);
 		}
@@ -182,7 +184,7 @@
 </script>
 
 <div
-	class="border border-base-300 mt-12 rounded-2xl shadow-sm bg-base-100 p-8"
+	class="border border-base-300 mt-12 rounded-2xl shadow-xs bg-base-100 p-8"
 	in:fade={{ duration: 180 }}
 	out:fade={{ duration: 120 }}
 >
@@ -350,7 +352,7 @@
 										</svg>
 									</div>
 									<ul
-										class="dropdown-content menu p-2 shadow bg-base-100 rounded-2xl w-44 z-20 border border-base-300"
+										class="dropdown-content menu p-2 shadow-xs bg-base-100 rounded-2xl w-44 z-20 border border-base-300"
 									>
 										<li>
 											<button class="text-sm" onclick={() => openEdit(chunk)}>Edit chunk</button>

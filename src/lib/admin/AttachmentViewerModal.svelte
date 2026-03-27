@@ -111,7 +111,7 @@
 					aria-label="Image viewer - click to zoom, drag to pan when zoomed"
 				>
 					<div
-						class="w-full h-full focus:outline-none focus:ring-2 focus:ring-primary {zoom > 1
+						class="w-full h-full focus:outline-hidden focus:ring-2 focus:ring-primary {zoom > 1
 							? isDragging
 								? 'cursor-grabbing'
 								: 'cursor-grab'
