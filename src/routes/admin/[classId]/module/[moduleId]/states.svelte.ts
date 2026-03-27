@@ -65,9 +65,40 @@ export class QuestionCurationState {
 
 	// Initialize with dependencies
 	init(client: ConvexClient, moduleId: string) {
+		const didModuleChange = this.moduleId !== '' && this.moduleId !== moduleId;
+		if (didModuleChange) {
+			this.reset();
+		}
 		this.client = client;
 		this.moduleId = moduleId;
 		this.loadPreferences();
+	}
+
+	reset() {
+		this.questionList = [];
+		this.pendingSelectId = null;
+		this.selectedQuestionId = null;
+		this.selectedQuestions = new Set();
+		this.recentlyAddedIds = new Set();
+		this.reorderMode = false;
+		this.editorMode = 'view';
+		this.editingQuestionForInline = null;
+		this.hasUnsavedChanges = false;
+		this.pendingQuestionId = null;
+		this.showUnsavedChangesModal = false;
+		this.isEditQuestionModalOpen = false;
+		this.isAddQuestionModalOpen = false;
+		this.isDeleteQuestionModalOpen = false;
+		this.isDuplicateModalOpen = false;
+		this.isBulkDeleteModalOpen = false;
+		this.isMoveModalOpen = false;
+		this.isAttachmentModalOpen = false;
+		this.isLimitModalOpen = false;
+		this.editingQuestion = null;
+		this.questionToDelete = null;
+		this.duplicateTarget = null;
+		this.moveQuestionIds = [];
+		this.selectedAttachment = null;
 	}
 
 	// Preferences
@@ -95,7 +126,9 @@ export class QuestionCurationState {
 	}
 
 	toggleDefaultQuestionStatus() {
-		this.setDefaultQuestionStatus(this.defaultQuestionStatus === 'published' ? 'draft' : 'published');
+		this.setDefaultQuestionStatus(
+			this.defaultQuestionStatus === 'published' ? 'draft' : 'published'
+		);
 	}
 
 	// Computed values
@@ -106,8 +139,11 @@ export class QuestionCurationState {
 
 	getSelectedQuestion(questionsData?: QuestionItem[] | null): QuestionItem | null {
 		if (!this.selectedQuestionId) return null;
-		return this.questionList.find((q) => q._id === this.selectedQuestionId) ??
-			questionsData?.find((q) => q._id === this.selectedQuestionId) ?? null;
+		return (
+			this.questionList.find((q) => q._id === this.selectedQuestionId) ??
+			questionsData?.find((q) => q._id === this.selectedQuestionId) ??
+			null
+		);
 	}
 
 	// Search operations
@@ -191,8 +227,11 @@ export class QuestionCurationState {
 	editQuestion(questionItem: QuestionItem) {
 		const isDesktopOrTablet = typeof window !== 'undefined' && window.innerWidth >= 768;
 		if (isDesktopOrTablet) {
-			if ((this.editorMode === 'edit' || this.editorMode === 'add') && this.hasUnsavedChanges &&
-				this.editingQuestionForInline?._id !== questionItem._id) {
+			if (
+				(this.editorMode === 'edit' || this.editorMode === 'add') &&
+				this.hasUnsavedChanges &&
+				this.editingQuestionForInline?._id !== questionItem._id
+			) {
 				this.pendingQuestionId = `edit:${questionItem._id}`;
 				this.showUnsavedChangesModal = true;
 				return;
@@ -296,7 +335,9 @@ export class QuestionCurationState {
 				moduleId: this.moduleId as Id<'module'>
 			});
 			if (result.success) {
-				toastStore.success(`Deleted ${result.deletedCount} question${result.deletedCount !== 1 ? 's' : ''}`);
+				toastStore.success(
+					`Deleted ${result.deletedCount} question${result.deletedCount !== 1 ? 's' : ''}`
+				);
 			}
 			if (this.selectedQuestionId && this.selectedQuestions.has(this.selectedQuestionId)) {
 				this.selectedQuestionId = null;
@@ -366,7 +407,10 @@ export class QuestionCurationState {
 			toastStore.success(`Duplicated ${count} cop${count !== 1 ? 'ies' : 'y'}`);
 		} catch (error: any) {
 			console.error('Failed to duplicate questions');
-			if (error.message?.includes('Module limit reached') || error.toString().includes('Module limit reached')) {
+			if (
+				error.message?.includes('Module limit reached') ||
+				error.toString().includes('Module limit reached')
+			) {
 				this.isLimitModalOpen = true;
 			} else {
 				toastStore.error('Failed to duplicate');
@@ -393,7 +437,10 @@ export class QuestionCurationState {
 			}
 			toastStore.success('Question duplicated');
 		} catch (error: any) {
-			if (error.message?.includes('Module limit reached') || error.toString().includes('Module limit reached')) {
+			if (
+				error.message?.includes('Module limit reached') ||
+				error.toString().includes('Module limit reached')
+			) {
 				this.isLimitModalOpen = true;
 			} else {
 				toastStore.error('Failed to duplicate');
@@ -506,10 +553,7 @@ export class QuestionCurationState {
 	}
 
 	// Handle edit param from URL
-	handleEditParam(
-		editParam: string | null,
-		questionsData: QuestionItem[] | null | undefined
-	) {
+	handleEditParam(editParam: string | null, questionsData: QuestionItem[] | null | undefined) {
 		if (!this.isEditQuestionModalOpen && this.editorMode === 'view' && questionsData && editParam) {
 			const found = questionsData.find((q) => q._id === editParam);
 			if (found) {

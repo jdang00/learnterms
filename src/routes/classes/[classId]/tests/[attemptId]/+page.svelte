@@ -10,9 +10,9 @@
 	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
 	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
+	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
-	import createDOMPurify from 'dompurify';
 	import {
 		PanelRight,
 		ChevronLeft,
@@ -77,23 +77,9 @@
 	let syncInFlight = false;
 	let syncRequestedWhileInFlight = false;
 	let questionButtons = $state<HTMLButtonElement[]>([]);
-	let domPurify: ReturnType<typeof createDOMPurify> | null = null;
 
 	function cacheKey(id: string) {
 		return `lt:testAttempt:${id}`;
-	}
-
-	function sanitizeHtml(value: string | undefined | null) {
-		const raw = String(value ?? '');
-		if (typeof window === 'undefined') {
-			return raw
-				.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-				.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-				.replace(/\son[a-z]+\s*=\s*(["'])[\s\S]*?\1/gi, '')
-				.replace(/\s(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi, ' $1="#"');
-		}
-		domPurify ??= createDOMPurify(window);
-		return domPurify.sanitize(raw);
 	}
 
 	function loadCache(id: string): LocalCache | null {
@@ -882,7 +868,10 @@
 					{#if !hideSidebar}
 						<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 							<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-								<a class="btn btn-ghost font-bold rounded-full" href={resolve('/classes')}>
+								<a
+									class="btn btn-ghost font-bold rounded-full"
+									href={`${resolve('/classes')}?classId=${classId}`}
+								>
 									<ChevronLeft size={16} />
 									{runnerQuery.data.attempt.className}
 								</a>
@@ -974,7 +963,7 @@
 						<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
 							<a
 								class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
-								href={resolve('/classes')}
+								href={`${resolve('/classes')}?classId=${classId}`}
 							>
 								<span class="group-hover:hidden">📝</span>
 								<span class="hidden group-hover:inline-flex items-center justify-center"
@@ -1019,7 +1008,10 @@
 
 				<!-- Mobile header -->
 				<div class="lg:hidden flex items-center justify-between gap-2 px-2">
-					<a class="btn btn-ghost btn-sm rounded-full text-secondary" href={resolve('/classes')}>
+					<a
+						class="btn btn-ghost btn-sm rounded-full text-secondary"
+						href={`${resolve('/classes')}?classId=${classId}`}
+					>
 						<ChevronLeft size={16} />
 						<span class="truncate max-w-[120px]">{runnerQuery.data.attempt.className}</span>
 					</a>

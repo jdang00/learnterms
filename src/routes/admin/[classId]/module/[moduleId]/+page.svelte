@@ -630,6 +630,7 @@
 				<button
 					type="button"
 					class="btn btn-sm btn-ghost btn-circle"
+					aria-label="Close question details"
 					onclick={() => curationState.clearMobileSelection()}
 				>
 					<X size={18} />

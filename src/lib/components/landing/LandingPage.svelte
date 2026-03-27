@@ -837,7 +837,7 @@
 				<div>
 					<h3 class="text-lg font-bold mb-4">How students study</h3>
 					<div class="wf-timeline wf-timeline-student">
-						{#each studentSteps as step, i (step.title)}
+						{#each studentSteps as step (step.title)}
 							<div class="wf-step">
 								<div class="wf-dot"></div>
 								<div class="wf-content">
@@ -853,7 +853,7 @@
 				<div>
 					<h3 class="text-lg font-bold mb-4">How content stays sharp</h3>
 					<div class="wf-timeline wf-timeline-admin">
-						{#each adminSteps as step, i (step.title)}
+						{#each adminSteps as step (step.title)}
 							<div class="wf-step">
 								<div class="wf-dot"></div>
 								<div class="wf-content">

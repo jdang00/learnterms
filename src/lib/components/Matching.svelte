@@ -258,9 +258,7 @@
 							class="btn select select-bordered w-full rounded-full {qs.showSolution &&
 							isSelectionCorrectForPrompt(p.id)
 								? 'select-success'
-								: ''} {qs.showSolution ? 'btn-disabled' : ''}"
-							disabled={qs.showSolution}
-							aria-disabled={qs.showSolution}
+								: ''}"
 						>
 							{#if qs.showSolution && correctAnswerIdForPrompt(p.id)}
 								{getAnswerLabel(
@@ -285,7 +283,6 @@
 											? 'bg-success text-success-content hover:bg-success hover:text-success-content'
 											: ''}"
 										class:pointer-events-none={qs.showSolution}
-										disabled={qs.showSolution}
 									>
 										{getAnswerLabel(a.text)}
 									</button>
@@ -298,7 +295,7 @@
 							type="button"
 							class="btn btn-ghost btn-sm btn-circle"
 							onclick={() => clearSelection(p.id)}
-							aria-label="clear selection"
+							aria-label={`Clear selection for ${getPromptLabel(p.text) || p.id}`}
 						>
 							<X size={16} />
 						</button>
@@ -310,12 +307,18 @@
 
 	<div class="mt-2 flex gap-2">
 		{#if allowSolution}
-			<button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle rationale">
+			<button
+				type="button"
+				class="btn rounded-full"
+				onclick={handleToggleSolution}
+				aria-label="toggle rationale"
+			>
 				<Eye />
 			</button>
 		{/if}
 		{#if allowClear && !qs.showSolution && qs.selectedAnswers && qs.selectedAnswers.length > 0}
 			<button
+				type="button"
 				class="btn rounded-full"
 				onclick={clearAllSelections}
 				aria-label="clear all selections"

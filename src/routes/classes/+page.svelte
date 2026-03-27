@@ -605,12 +605,8 @@
 							type="button"
 							class="btn btn-ghost btn-sm rounded-full text-base-content/60"
 							onclick={async () => {
-								const href =
-									featureAnnouncement.ctaHref === '/cohort'
-										? resolve('/cohort')
-										: featureAnnouncement.ctaHref === '/changelog'
-											? resolve('/changelog')
-											: resolve('/classes');
+								const resolveHref = resolve as unknown as (href: string) => string;
+								const href = resolveHref(featureAnnouncement.ctaHref ?? '/classes');
 								await dismissFeatureSpotlight();
 								await goto(href);
 							}}

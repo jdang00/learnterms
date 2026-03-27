@@ -45,6 +45,14 @@
 	let leftPanelOpen = $state(true);
 	let rightPanelOpen = $state(true);
 	let activeTab: 'sources' | 'notes' = $state('sources');
+	const QUICK_NOTES_STORAGE_KEY = 'lt:study-space:quick-notes';
+	const DEFAULT_QUICK_NOTES = `Frank-Starling = more stretch → stronger contraction
+
+Remember: preload ↑ = SV ↑ (up to a point)
+
+TODO: Review pressure-volume loops before exam...`;
+	let quickNotes = $state(DEFAULT_QUICK_NOTES);
+	let quickNotesHydrated = $state(false);
 
 	// Question panel state
 	let currentQuestionIndex = $state(0);
@@ -53,6 +61,29 @@
 	let isFlagged = $state(false);
 	let checkResult: '' | 'correct' | 'incorrect' = $state('');
 	let showRationale = $state(false);
+
+	$effect(() => {
+		if (typeof window === 'undefined' || quickNotesHydrated) return;
+		try {
+			const stored = window.localStorage.getItem(QUICK_NOTES_STORAGE_KEY);
+			if (stored !== null) {
+				quickNotes = stored;
+			}
+		} catch {
+			// Ignore storage errors in the demo view.
+		} finally {
+			quickNotesHydrated = true;
+		}
+	});
+
+	$effect(() => {
+		if (typeof window === 'undefined' || !quickNotesHydrated) return;
+		try {
+			window.localStorage.setItem(QUICK_NOTES_STORAGE_KEY, quickNotes);
+		} catch {
+			// Ignore storage errors in the demo view.
+		}
+	});
 
 	const mockSources = [
 		{
@@ -260,7 +291,7 @@
 		if (selectedOptions.includes(optionId)) {
 			selectedOptions = selectedOptions.filter((id) => id !== optionId);
 		} else {
-			selectedOptions = [optionId];
+			selectedOptions = [...selectedOptions, optionId];
 		}
 		clearCheckState();
 		syncQuestionInteractionState(selectedOptions, eliminatedOptions);
@@ -512,15 +543,12 @@
 									<NotebookPen size={14} class="text-base-content/50" />
 									<span class="text-xs font-medium text-base-content/60">Quick Notes</span>
 								</div>
-								<div
-									class="text-xs text-base-content/40 leading-relaxed"
-									contenteditable="true"
-									role="textbox"
-								>
-									Frank-Starling = more stretch → stronger contraction<br /><br />
-									Remember: preload ↑ = SV ↑ (up to a point)<br /><br />
-									TODO: Review pressure-volume loops before exam...
-								</div>
+								<textarea
+									bind:value={quickNotes}
+									class="textarea min-h-[12rem] w-full resize-none border-0 bg-transparent px-0 text-xs leading-relaxed text-base-content/60 focus:outline-hidden"
+									placeholder="Capture quick study notes here..."
+									aria-label="Quick notes"
+								></textarea>
 							</div>
 						</div>
 					{/if}
@@ -772,8 +800,9 @@
 												80}ms both;"
 										>
 											<button
+												type="button"
 												class="option-btn w-full text-left rounded-xl px-3 py-2.5 text-xs leading-snug transition-all duration-150 border
-													{state === 'selected'
+														{state === 'selected'
 													? 'bg-primary/10 border-primary/40 text-base-content font-medium'
 													: state === 'eliminated'
 														? 'bg-base-200/50 border-base-300/30 text-base-content/25 line-through'
@@ -817,11 +846,12 @@
 											<!-- Eliminate button on hover -->
 											{#if !checkResult && state !== 'eliminated'}
 												<button
-													class="absolute top-1/2 -translate-y-1/2 right-1.5 w-5 h-5 rounded-md flex items-center justify-center
-														opacity-0 group-hover:opacity-100 bg-base-300/60 hover:bg-warning/20 text-base-content/30 hover:text-warning
-														transition-all duration-150 text-[9px]"
+													type="button"
+													class="absolute top-1/2 right-1.5 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-md border border-base-300/60
+															bg-base-100/90 text-base-content/45 shadow-xs transition-all duration-150 hover:border-warning/40 hover:bg-warning/10 hover:text-warning
+															focus-visible:border-warning/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/30"
 													onclick={() => toggleElimination(option.id)}
-													title="Eliminate (right-click)"
+													aria-label={`Eliminate option ${String.fromCharCode(65 + i)}`}
 												>
 													<X size={9} strokeWidth={3} />
 												</button>
@@ -911,21 +941,21 @@
 									<ChevronLeft size={14} />
 								</button>
 
-								{#if !checkResult}
-									<button
-										class="btn btn-xs btn-primary btn-soft rounded-lg px-3 font-semibold
-											{selectedOptions.length === 0 ? 'btn-disabled opacity-40' : ''}"
-										onclick={checkAnswer}
-									>
-										Check
-									</button>
-								{:else}
+								{#if checkResult === 'correct' && currentQuestionIndex < questions.length - 1}
 									<button
 										class="btn btn-xs btn-primary rounded-lg px-3 font-semibold gap-1"
 										onclick={nextQuestion}
 									>
 										Next
 										<ArrowRight size={11} />
+									</button>
+								{:else}
+									<button
+										class="btn btn-xs btn-primary btn-soft rounded-lg px-3 font-semibold
+												{selectedOptions.length === 0 ? 'btn-disabled opacity-40' : ''}"
+										onclick={checkAnswer}
+									>
+										Check
 									</button>
 								{/if}
 

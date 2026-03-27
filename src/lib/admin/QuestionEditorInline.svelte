@@ -248,7 +248,7 @@
 	}
 
 	function getInitialQuestionStatus() {
-		return editingQuestion?.status ?? defaultStatus;
+		return editingQuestion?.status ?? initialAddStatus;
 	}
 
 	function getInitialQuestionType() {
@@ -471,23 +471,41 @@
 		};
 	}
 
+	function handleUploadFailure(message: string, error?: unknown) {
+		if (error) {
+			console.error(message, error);
+		} else {
+			console.error(message);
+		}
+		toastStore.error(message);
+	}
+
+	function handleUploadedMediaResult(res: UploadedQuestionMediaFile[] | undefined) {
+		const file = getUploadedQuestionMediaFile(res);
+		if (!file) {
+			handleUploadFailure('Upload failed: missing uploaded file');
+			return;
+		}
+
+		const mediaItem = toQueuedMediaItem(file);
+		if (!mediaItem) {
+			handleUploadFailure('Upload failed: missing URL');
+			return;
+		}
+
+		addMediaItem(mediaItem);
+	}
+
 	const mediaUploader = createUploader('questionMediaUploader', {
 		onClientUploadComplete: (res) => {
 			try {
-				const f = getUploadedQuestionMediaFile(res);
-				if (!f) return;
-				const mediaItem = toQueuedMediaItem(f);
-				if (!mediaItem) {
-					console.error('Missing uploaded file URL');
-					return;
-				}
-				addMediaItem(mediaItem);
+				handleUploadedMediaResult(res);
 			} catch (e) {
-				console.error('Upload failed:', e);
+				handleUploadFailure(e instanceof Error ? e.message : 'Upload failed', e);
 			}
 		},
 		onUploadError: (error: Error) => {
-			console.error('Upload failed:', error);
+			handleUploadFailure(error.message || 'Upload failed', error);
 		}
 	});
 
@@ -495,20 +513,13 @@
 	const { startUpload } = createUploadThing('questionMediaUploader', {
 		onClientUploadComplete: (res) => {
 			try {
-				const f = getUploadedQuestionMediaFile(res);
-				if (!f) return;
-				const mediaItem = toQueuedMediaItem(f);
-				if (!mediaItem) {
-					console.error('Missing uploaded file URL');
-					return;
-				}
-				addMediaItem(mediaItem);
+				handleUploadedMediaResult(res);
 			} catch (e) {
-				console.error('Upload failed:', e);
+				handleUploadFailure(e instanceof Error ? e.message : 'Upload failed', e);
 			}
 		},
 		onUploadError: (error: Error) => {
-			console.error('Upload failed:', error);
+			handleUploadFailure(error.message || 'Upload failed', error);
 		}
 	});
 
@@ -534,7 +545,7 @@
 		try {
 			await startUpload(files);
 		} catch (err) {
-			console.error('Paste upload failed:', err);
+			handleUploadFailure(err instanceof Error ? err.message : 'Paste upload failed', err);
 		} finally {
 			isPasteUploading = false;
 		}
@@ -576,6 +587,20 @@
 	let fitbAnswers: FitbAnswerRow[] = $state([
 		{ value: '', mode: 'exact', flags: { ignorePunct: false, normalizeWs: false } }
 	]);
+	let initialAddStatus: 'published' | 'draft' = $state('draft');
+	let addSessionVersion = $state(0);
+	let previousMode: 'add' | 'edit' | null = $state(null);
+
+	$effect(() => {
+		const currentMode = mode;
+
+		if (currentMode === 'add' && previousMode !== 'add') {
+			initialAddStatus = defaultStatus;
+			addSessionVersion += 1;
+		}
+
+		previousMode = currentMode;
+	});
 
 	function addFitbRow() {
 		fitbAnswers = [
@@ -614,6 +639,9 @@
 	// Matching editor state
 	let matchingPrompts: string[] = $state(['', '']);
 	let matchingAnswers: string[] = $state(['', '']);
+	const editorResetKey = $derived(
+		mode === 'add' ? `add:${addSessionVersion}` : `edit:${editingQuestion?._id ?? 'none'}`
+	);
 	const matchingRowIndexes = $derived.by(() =>
 		Array.from(
 			{ length: Math.max(matchingPrompts.length, matchingAnswers.length) },
@@ -622,6 +650,7 @@
 	);
 
 	$effect(() => {
+		void editorResetKey;
 		const nextStem = getInitialQuestionStem();
 		const nextRationale = getInitialQuestionRationale();
 		const nextMatching = getInitialMatchingState();

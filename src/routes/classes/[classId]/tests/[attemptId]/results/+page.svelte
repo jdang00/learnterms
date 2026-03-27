@@ -5,9 +5,9 @@
 	import type { Id } from '../../../../../../convex/_generated/dataModel';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
+	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { fade, slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
-	import createDOMPurify from 'dompurify';
 	import { resolve } from '$app/paths';
 	import {
 		ChevronLeft,
@@ -35,7 +35,6 @@
 	type ReviewItem = ResultsQueryData['reviewItems'][number];
 	type ReviewFilter = 'all' | 'flagged' | 'unanswered' | 'incorrect';
 	type ReviewEntry = { item: ReviewItem; originalIndex: number };
-	let domPurify: ReturnType<typeof createDOMPurify> | null = null;
 
 	let tab = $state<'summary' | 'review'>('summary');
 	let reviewFilter = $state<ReviewFilter>('all');
@@ -59,19 +58,6 @@
 
 	function isMatching(type: string) {
 		return String(type || '').toLowerCase() === 'matching';
-	}
-
-	function sanitizeHtml(value: string | undefined | null) {
-		const raw = String(value ?? '');
-		if (typeof window === 'undefined') {
-			return raw
-				.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-				.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-				.replace(/\son[a-z]+\s*=\s*(["'])[\s\S]*?\1/gi, '')
-				.replace(/\s(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi, ' $1="#"');
-		}
-		domPurify ??= createDOMPurify(window);
-		return domPurify.sanitize(raw);
 	}
 
 	function optionTextById(item: ReviewItem, id: string) {
@@ -365,7 +351,10 @@
 							</p>
 						</div>
 						<div class="flex gap-2">
-							<a class="btn btn-ghost btn-sm rounded-full" href={resolve('/classes/[classId]/tests/new', { classId })}>
+							<a
+								class="btn btn-ghost btn-sm rounded-full"
+								href={resolve('/classes/[classId]/tests/new', { classId })}
+							>
 								<Plus size={16} />
 								New Test
 							</a>
@@ -608,10 +597,7 @@
 					{#if !hideSidebar}
 						<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 							<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-								<a
-									class="btn btn-ghost font-bold rounded-full"
-									href={resolve('/classes')}
-								>
+								<a class="btn btn-ghost font-bold rounded-full" href={resolve('/classes')}>
 									<ChevronLeft size={16} />
 									{attempt.className ?? 'Class'}
 								</a>

@@ -19,6 +19,11 @@
 
 	type SourceFilter = 'all' | 'flagged' | 'incomplete';
 	type QuestionTypeKey = 'multiple_choice' | 'fill_in_the_blank' | 'matching';
+	const questionTypeOptions: QuestionTypeKey[] = [
+		'multiple_choice',
+		'fill_in_the_blank',
+		'matching'
+	];
 
 	const client = useConvexClient();
 
@@ -291,9 +296,7 @@
 												class="btn btn-xs btn-primary btn-soft rounded-full"
 												onclick={() => {
 													createError = null;
-													selectedModuleIds = (builderQuery.data.modules ?? []).map(
-														(m: any) => m._id
-													);
+													selectedModuleIds = (builderQuery.data.modules ?? []).map((m) => m._id);
 												}}
 											>
 												Select All
@@ -489,7 +492,7 @@
 								<div>
 									<div class="text-sm font-medium mb-2">Question Types</div>
 									<div class="flex flex-wrap gap-2">
-										{#each ['multiple_choice', 'fill_in_the_blank', 'matching'] as QuestionTypeKey[] as type (type)}
+										{#each questionTypeOptions as type (type)}
 											<button
 												class="btn btn-sm rounded-full transition-all duration-200
 												{selectedQuestionTypes.includes(type)
