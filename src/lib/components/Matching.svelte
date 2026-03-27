@@ -167,47 +167,68 @@
 		return String(text).replace(/^\s*answer:\s*/i, '');
 	}
 
+	const promptAnswerLookup = $derived.by(() => {
+		const promptToDirectAnswerIds = new Map<string, string[]>();
+		const promptToAcceptedAnswerIds = new Map<string, Set<string>>();
+		const promptToCanonicalCorrectId = new Map<string, string>();
+		const answerOptions = answers();
+		const validAnswerIds = new Set(answerOptions.map((answer) => answer.id));
+		const answerKeyById = new Map(
+			answerOptions.map((answer) => [answer.id, normalizeAnswerText(answer.text)])
+		);
+
+		for (const raw of (currentlySelected?.correctAnswers || []) as string[]) {
+			const parsedPair = parsePairToken(raw);
+			if (!parsedPair) continue;
+
+			const promptId = resolveOptionTokenToId(parsedPair.promptToken);
+			if (!promptId || promptToDirectAnswerIds.has(promptId)) continue;
+
+			const directAnswerIds = splitAnswerToken(parsedPair.answerToken)
+				.map((token) => resolveOptionTokenToId(token))
+				.filter((id): id is string => Boolean(id))
+				.filter((id) => validAnswerIds.has(id));
+
+			promptToDirectAnswerIds.set(promptId, directAnswerIds);
+
+			const acceptedAnswerIds = new Set<string>(directAnswerIds);
+			if (directAnswerIds.length > 0) {
+				const acceptedKeys = new Set(
+					directAnswerIds
+						.map((id) => answerKeyById.get(id))
+						.filter((key): key is string => Boolean(key))
+				);
+				for (const [answerId, answerKey] of answerKeyById.entries()) {
+					if (acceptedKeys.has(answerKey)) {
+						acceptedAnswerIds.add(answerId);
+					}
+				}
+			}
+
+			promptToAcceptedAnswerIds.set(promptId, acceptedAnswerIds);
+			const canonicalId = directAnswerIds[0] ?? Array.from(acceptedAnswerIds)[0];
+			if (canonicalId) {
+				promptToCanonicalCorrectId.set(promptId, canonicalId);
+			}
+		}
+
+		return {
+			promptToDirectAnswerIds,
+			promptToAcceptedAnswerIds,
+			promptToCanonicalCorrectId
+		};
+	});
+
 	function directCorrectAnswerIdsForPrompt(promptId: string): string[] {
-		const parsedPair = ((currentlySelected?.correctAnswers || []) as string[])
-			.map((raw) => parsePairToken(raw))
-			.find((pair): pair is { promptToken: string; answerToken: string } => {
-				if (!pair) return false;
-				const resolvedPromptId = resolveOptionTokenToId(pair.promptToken);
-				return resolvedPromptId === promptId;
-			});
-		if (!parsedPair) return [];
-		const validAnswerIds = new Set(answers().map((a) => a.id));
-		return splitAnswerToken(parsedPair.answerToken)
-			.map((token) => resolveOptionTokenToId(token))
-			.filter((id): id is string => Boolean(id))
-			.filter((id) => validAnswerIds.has(id));
+		return promptAnswerLookup.promptToDirectAnswerIds.get(promptId) ?? [];
 	}
 
 	function acceptedAnswerIdsForPrompt(promptId: string): Set<string> {
-		const direct = directCorrectAnswerIdsForPrompt(promptId);
-		const accepted = new Set<string>(direct);
-		if (direct.length === 0) return accepted;
-
-		const answerKeyById = new Map<string, string>();
-		for (const answer of answers()) {
-			answerKeyById.set(answer.id, normalizeAnswerText(answer.text));
-		}
-
-		const keys = new Set(
-			direct.map((id) => answerKeyById.get(id)).filter((key): key is string => Boolean(key))
-		);
-		for (const [answerId, answerKey] of answerKeyById.entries()) {
-			if (keys.has(answerKey)) accepted.add(answerId);
-		}
-
-		return accepted;
+		return promptAnswerLookup.promptToAcceptedAnswerIds.get(promptId) ?? new Set<string>();
 	}
 
 	function correctAnswerIdForPrompt(promptId: string): string | undefined {
-		const direct = directCorrectAnswerIdsForPrompt(promptId);
-		if (direct.length > 0) return direct[0];
-		const accepted = Array.from(acceptedAnswerIdsForPrompt(promptId));
-		return accepted.length > 0 ? accepted[0] : undefined;
+		return promptAnswerLookup.promptToCanonicalCorrectId.get(promptId);
 	}
 
 	function isSelectionCorrectForPrompt(promptId: string): boolean {
@@ -311,7 +332,9 @@
 				type="button"
 				class="btn rounded-full"
 				onclick={handleToggleSolution}
-				aria-label="toggle rationale"
+				aria-pressed={qs.showSolution}
+				aria-label={qs.showSolution ? 'Hide rationale' : 'Show rationale'}
+				title={qs.showSolution ? 'Hide rationale' : 'Show rationale'}
 			>
 				<Eye />
 			</button>

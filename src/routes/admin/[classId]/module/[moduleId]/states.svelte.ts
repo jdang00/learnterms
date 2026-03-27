@@ -2,9 +2,9 @@ import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
 import type { ConvexClient } from 'convex/browser';
 import { goto } from '$app/navigation';
-import { resolve } from '$app/paths';
 import { toastStore } from '$lib/stores/toast.svelte';
 import type { StatusFilter } from '$lib/types';
+import { SvelteSet } from 'svelte/reactivity';
 
 export type QuestionItem = Doc<'question'>;
 export type MediaItem = { _id: string; url: string; altText: string; caption?: string };
@@ -33,8 +33,8 @@ export class QuestionCurationState {
 	// Question list state
 	questionList: QuestionItem[] = $state([]);
 	selectedQuestionId: string | null = $state(null);
-	selectedQuestions: Set<string> = $state(new Set());
-	recentlyAddedIds: Set<string> = $state(new Set());
+	selectedQuestions: SvelteSet<string> = $state(new SvelteSet<string>());
+	recentlyAddedIds: SvelteSet<string> = $state(new SvelteSet<string>());
 
 	// UI mode state
 	reorderMode: boolean = $state(false);
@@ -78,8 +78,8 @@ export class QuestionCurationState {
 		this.questionList = [];
 		this.pendingSelectId = null;
 		this.selectedQuestionId = null;
-		this.selectedQuestions = new Set();
-		this.recentlyAddedIds = new Set();
+		this.selectedQuestions = new SvelteSet<string>();
+		this.recentlyAddedIds = new SvelteSet<string>();
 		this.reorderMode = false;
 		this.editorMode = 'view';
 		this.editingQuestionForInline = null;
@@ -206,7 +206,7 @@ export class QuestionCurationState {
 	}
 
 	toggleQuestionSelection(questionId: string) {
-		const newSelected = new Set(this.selectedQuestions);
+		const newSelected = new SvelteSet(this.selectedQuestions);
 		if (newSelected.has(questionId)) {
 			newSelected.delete(questionId);
 		} else {
@@ -216,11 +216,11 @@ export class QuestionCurationState {
 	}
 
 	selectAllQuestions() {
-		this.selectedQuestions = new Set(this.questionList.map((q) => q._id));
+		this.selectedQuestions = new SvelteSet(this.questionList.map((q) => q._id));
 	}
 
 	deselectAllQuestions() {
-		this.selectedQuestions = new Set();
+		this.selectedQuestions = new SvelteSet<string>();
 	}
 
 	// Edit operations
@@ -251,7 +251,7 @@ export class QuestionCurationState {
 			const url = new URL(window.location.href);
 			if (url.searchParams.has('edit')) {
 				url.searchParams.delete('edit');
-				await goto(resolve(url.pathname as `/admin/${string}/module/${string}`), {
+				await goto(url.pathname, {
 					replaceState: true,
 					noScroll: true
 				});
@@ -342,7 +342,7 @@ export class QuestionCurationState {
 			if (this.selectedQuestionId && this.selectedQuestions.has(this.selectedQuestionId)) {
 				this.selectedQuestionId = null;
 			}
-			this.selectedQuestions = new Set();
+			this.selectedQuestions = new SvelteSet<string>();
 		} catch (error) {
 			console.error('Failed to bulk delete questions', error);
 			toastStore.error('Failed to delete questions');
@@ -371,7 +371,7 @@ export class QuestionCurationState {
 			if (this.selectedQuestionId && this.selectedQuestions.has(this.selectedQuestionId)) {
 				this.selectedQuestionId = null;
 			}
-			this.selectedQuestions = new Set();
+			this.selectedQuestions = new SvelteSet<string>();
 			toastStore.success(`Moved ${count} question${count !== 1 ? 's' : ''}`);
 		}
 	}
@@ -397,11 +397,11 @@ export class QuestionCurationState {
 				count
 			});
 			if (result?.insertedIds && Array.isArray(result.insertedIds)) {
-				const next = new Set(this.recentlyAddedIds);
+				const next = new SvelteSet(this.recentlyAddedIds);
 				for (const id of result.insertedIds) next.add(id);
 				this.recentlyAddedIds = next;
 				setTimeout(() => {
-					this.recentlyAddedIds = new Set();
+					this.recentlyAddedIds = new SvelteSet<string>();
 				}, 4000);
 			}
 			toastStore.success(`Duplicated ${count} cop${count !== 1 ? 'ies' : 'y'}`);
@@ -428,11 +428,11 @@ export class QuestionCurationState {
 				questionId: questionId as Id<'question'>
 			});
 			if (result) {
-				const next = new Set(this.recentlyAddedIds);
+				const next = new SvelteSet(this.recentlyAddedIds);
 				next.add(result);
 				this.recentlyAddedIds = next;
 				setTimeout(() => {
-					this.recentlyAddedIds = new Set();
+					this.recentlyAddedIds = new SvelteSet<string>();
 				}, 4000);
 			}
 			toastStore.success('Question duplicated');

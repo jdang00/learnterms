@@ -51,6 +51,7 @@
 	const client = useConvexClient();
 	const classId = $derived(page.params.classId as Id<'class'>);
 	const attemptId = $derived(page.params.attemptId as Id<'quizAttempts'>);
+	const classBackHref = $derived(`/classes?${new URLSearchParams({ classId }).toString()}`);
 
 	const runnerQuery = useQuery(api.customQuiz.getAttemptRunnerBundle, () =>
 		attemptId ? { attemptId } : 'skip'
@@ -868,10 +869,7 @@
 					{#if !hideSidebar}
 						<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 							<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-								<a
-									class="btn btn-ghost font-bold rounded-full"
-									href={`${resolve('/classes')}?classId=${classId}`}
-								>
+								<a class="btn btn-ghost font-bold rounded-full" href={classBackHref}>
 									<ChevronLeft size={16} />
 									{runnerQuery.data.attempt.className}
 								</a>
@@ -963,7 +961,7 @@
 						<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
 							<a
 								class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
-								href={`${resolve('/classes')}?classId=${classId}`}
+								href={classBackHref}
 							>
 								<span class="group-hover:hidden">📝</span>
 								<span class="hidden group-hover:inline-flex items-center justify-center"
@@ -1008,10 +1006,7 @@
 
 				<!-- Mobile header -->
 				<div class="lg:hidden flex items-center justify-between gap-2 px-2">
-					<a
-						class="btn btn-ghost btn-sm rounded-full text-secondary"
-						href={`${resolve('/classes')}?classId=${classId}`}
-					>
+					<a class="btn btn-ghost btn-sm rounded-full text-secondary" href={classBackHref}>
 						<ChevronLeft size={16} />
 						<span class="truncate max-w-[120px]">{runnerQuery.data.attempt.className}</span>
 					</a>

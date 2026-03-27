@@ -680,13 +680,19 @@
 											</summary>
 											<div class="space-y-2 mt-3">
 												{#each attemptsQuery.data.slice(0, 4) as attempt (attempt._id)}
+													{@const attemptHref =
+														attempt.status === 'in_progress' || !attempt.resultSummary
+															? resolve('/classes/[classId]/tests/[attemptId]', {
+																	classId,
+																	attemptId: attempt._id
+																})
+															: resolve('/classes/[classId]/tests/[attemptId]/results', {
+																	classId,
+																	attemptId: attempt._id
+																})}
 													<a
 														class="block border border-base-300 rounded-xl p-2.5 hover:border-primary/40 transition-all duration-200"
-														href={resolve(
-															attempt.status === 'in_progress'
-																? `/classes/${classId}/tests/${attempt._id}`
-																: `/classes/${classId}/tests/${attempt._id}/results`
-														)}
+														href={attemptHref}
 													>
 														<div class="flex justify-between items-center gap-2 text-xs">
 															<span

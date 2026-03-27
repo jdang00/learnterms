@@ -556,7 +556,7 @@
 							class="group w-full text-left rounded-2xl border-2 border-base-300 p-4 transition-all duration-200 hover:border-primary/40 hover:bg-primary/5 hover:-translate-y-0.5 hover:shadow-md"
 							onclick={async () => {
 								await dismissFeatureSpotlight();
-								await goto(resolve(featureHref(item)));
+								await goto(featureHref(item));
 							}}
 						>
 							<div class="flex items-center gap-4">
@@ -605,8 +605,10 @@
 							type="button"
 							class="btn btn-ghost btn-sm rounded-full text-base-content/60"
 							onclick={async () => {
-								const resolveHref = resolve as unknown as (href: string) => string;
-								const href = resolveHref(featureAnnouncement.ctaHref ?? '/classes');
+								const href =
+									featureAnnouncement.ctaHref && !/\[[^/]+\]/.test(featureAnnouncement.ctaHref)
+										? featureAnnouncement.ctaHref
+										: '/classes';
 								await dismissFeatureSpotlight();
 								await goto(href);
 							}}
