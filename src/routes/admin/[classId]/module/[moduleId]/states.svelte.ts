@@ -23,6 +23,7 @@ export class QuestionCurationState {
 	sortMode: SortMode = $state('order');
 	statusFilter: StatusFilter = $state('all');
 	private searchTimeout: ReturnType<typeof setTimeout> | null = null;
+	private recentlyAddedTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 	// Auto-select after create
 	pendingSelectId: string | null = $state(null);
@@ -75,6 +76,10 @@ export class QuestionCurationState {
 	}
 
 	reset() {
+		for (const timeout of this.recentlyAddedTimeouts.values()) {
+			clearTimeout(timeout);
+		}
+		this.recentlyAddedTimeouts.clear();
 		this.questionList = [];
 		this.pendingSelectId = null;
 		this.selectedQuestionId = null;
@@ -99,6 +104,34 @@ export class QuestionCurationState {
 		this.duplicateTarget = null;
 		this.moveQuestionIds = [];
 		this.selectedAttachment = null;
+	}
+
+	private markAsRecentlyAdded(ids: string[]) {
+		const next = new SvelteSet(this.recentlyAddedIds);
+		for (const id of ids) {
+			next.add(id);
+			const existingTimeout = this.recentlyAddedTimeouts.get(id);
+			if (existingTimeout) {
+				clearTimeout(existingTimeout);
+			}
+
+			const timeout = setTimeout(() => {
+				const updated = new SvelteSet(this.recentlyAddedIds);
+				updated.delete(id);
+				this.recentlyAddedIds = updated;
+				this.recentlyAddedTimeouts.delete(id);
+			}, 4000);
+
+			this.recentlyAddedTimeouts.set(id, timeout);
+		}
+		this.recentlyAddedIds = next;
+	}
+
+	private errorToString(error: unknown): string {
+		if (typeof error === 'object' && error !== null && 'message' in error) {
+			return String((error as { message?: unknown }).message);
+		}
+		return String(error);
 	}
 
 	// Preferences
@@ -251,6 +284,7 @@ export class QuestionCurationState {
 			const url = new URL(window.location.href);
 			if (url.searchParams.has('edit')) {
 				url.searchParams.delete('edit');
+				// eslint-disable-next-line svelte/no-navigation-without-resolve -- pathname comes from the current URL after removing only the edit query param.
 				await goto(url.pathname, {
 					replaceState: true,
 					noScroll: true
@@ -397,20 +431,13 @@ export class QuestionCurationState {
 				count
 			});
 			if (result?.insertedIds && Array.isArray(result.insertedIds)) {
-				const next = new SvelteSet(this.recentlyAddedIds);
-				for (const id of result.insertedIds) next.add(id);
-				this.recentlyAddedIds = next;
-				setTimeout(() => {
-					this.recentlyAddedIds = new SvelteSet<string>();
-				}, 4000);
+				this.markAsRecentlyAdded(result.insertedIds);
 			}
 			toastStore.success(`Duplicated ${count} cop${count !== 1 ? 'ies' : 'y'}`);
-		} catch (error: any) {
-			console.error('Failed to duplicate questions');
-			if (
-				error.message?.includes('Module limit reached') ||
-				error.toString().includes('Module limit reached')
-			) {
+		} catch (error: unknown) {
+			const errStr = this.errorToString(error);
+			console.error('Failed to duplicate questions', error);
+			if (errStr.includes('Module limit reached')) {
 				this.isLimitModalOpen = true;
 			} else {
 				toastStore.error('Failed to duplicate');
@@ -428,19 +455,13 @@ export class QuestionCurationState {
 				questionId: questionId as Id<'question'>
 			});
 			if (result) {
-				const next = new SvelteSet(this.recentlyAddedIds);
-				next.add(result);
-				this.recentlyAddedIds = next;
-				setTimeout(() => {
-					this.recentlyAddedIds = new SvelteSet<string>();
-				}, 4000);
+				this.markAsRecentlyAdded([result]);
 			}
 			toastStore.success('Question duplicated');
-		} catch (error: any) {
-			if (
-				error.message?.includes('Module limit reached') ||
-				error.toString().includes('Module limit reached')
-			) {
+		} catch (error: unknown) {
+			const errStr = this.errorToString(error);
+			console.error('Failed to duplicate question', error);
+			if (errStr.includes('Module limit reached')) {
 				this.isLimitModalOpen = true;
 			} else {
 				toastStore.error('Failed to duplicate');

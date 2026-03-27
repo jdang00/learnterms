@@ -219,10 +219,6 @@
 		};
 	});
 
-	function directCorrectAnswerIdsForPrompt(promptId: string): string[] {
-		return promptAnswerLookup.promptToDirectAnswerIds.get(promptId) ?? [];
-	}
-
 	function acceptedAnswerIdsForPrompt(promptId: string): Set<string> {
 		return promptAnswerLookup.promptToAcceptedAnswerIds.get(promptId) ?? new Set<string>();
 	}

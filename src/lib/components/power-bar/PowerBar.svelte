@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
@@ -112,8 +113,9 @@
 		window.location.assign(href);
 	}
 
-	function goToClass(classId: string) {
-		goToLink(`/classes?classId=${classId}`);
+	async function goToClass(classId: string) {
+		isOpen = false;
+		await goto('/classes', { state: { classId } });
 	}
 
 	function goToModule(classId: string, moduleId: string) {

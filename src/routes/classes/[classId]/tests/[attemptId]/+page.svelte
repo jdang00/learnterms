@@ -51,11 +51,14 @@
 	const client = useConvexClient();
 	const classId = $derived(page.params.classId as Id<'class'>);
 	const attemptId = $derived(page.params.attemptId as Id<'quizAttempts'>);
-	const classBackHref = $derived(`/classes?${new URLSearchParams({ classId }).toString()}`);
 
 	const runnerQuery = useQuery(api.customQuiz.getAttemptRunnerBundle, () =>
 		attemptId ? { attemptId } : 'skip'
 	);
+
+	async function goBackToClasses() {
+		await goto('/classes', { state: { classId } });
+	}
 
 	let initializedAttemptId = $state<string | null>(null);
 	let currentIndex = $state(0);
@@ -869,10 +872,14 @@
 					{#if !hideSidebar}
 						<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 							<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-								<a class="btn btn-ghost font-bold rounded-full" href={classBackHref}>
+								<button
+									type="button"
+									class="btn btn-ghost font-bold rounded-full"
+									onclick={goBackToClasses}
+								>
 									<ChevronLeft size={16} />
 									{runnerQuery.data.attempt.className}
-								</a>
+								</button>
 							</h4>
 							<h2 class="font-semibold text-2xl mt-2 flex items-start gap-3 min-w-0">
 								<span class="text-2xl shrink-0">📝</span>
@@ -959,15 +966,16 @@
 						</div>
 					{:else}
 						<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
-							<a
+							<button
+								type="button"
 								class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
-								href={classBackHref}
+								onclick={goBackToClasses}
 							>
 								<span class="group-hover:hidden">📝</span>
 								<span class="hidden group-hover:inline-flex items-center justify-center"
 									><ChevronLeft size={24} /></span
 								>
-							</a>
+							</button>
 
 							<div class="text-center">
 								<div class="text-xs font-bold tabular-nums">{formatDuration(elapsedMsLocal)}</div>
@@ -1006,10 +1014,14 @@
 
 				<!-- Mobile header -->
 				<div class="lg:hidden flex items-center justify-between gap-2 px-2">
-					<a class="btn btn-ghost btn-sm rounded-full text-secondary" href={classBackHref}>
+					<button
+						type="button"
+						class="btn btn-ghost btn-sm rounded-full text-secondary"
+						onclick={goBackToClasses}
+					>
 						<ChevronLeft size={16} />
 						<span class="truncate max-w-[120px]">{runnerQuery.data.attempt.className}</span>
-					</a>
+					</button>
 					<div class="flex items-center gap-3 text-sm">
 						<div class="flex items-center gap-1 tabular-nums font-medium">
 							<Clock size={14} class="text-base-content/50" />
