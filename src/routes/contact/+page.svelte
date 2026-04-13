@@ -13,7 +13,7 @@
 			rel="noopener"
 			aria-label="Open Instagram profile @justin_a_dang in a new tab"
 			class="card bg-base-200 shadow-md transition-colors hover:bg-base-300
-		  focus:outline-none focus-visible:ring focus-visible:ring-primary/40"
+		  focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/40"
 		>
 			<div class="card-body">
 				<div class="flex items-center gap-4">

@@ -147,7 +147,7 @@
 </script>
 
 <div class="h-full flex flex-col">
-	<div class="p-4 border-b border-base-300 flex-shrink-0">
+	<div class="p-4 border-b border-base-300 shrink-0">
 		<div class="flex items-center justify-between gap-4 mb-4">
 			<div>
 				<h2 class="text-sm font-semibold">Generate Questions</h2>
@@ -235,7 +235,7 @@
 
 	<div class="flex-1 overflow-y-auto p-4">
 		{#if limitReached}
-			<div class="card bg-base-100 border border-base-200 shadow-sm mb-4">
+			<div class="card bg-base-100 border border-base-200 shadow-xs mb-4">
 				<div class="card-body p-6 text-center items-center">
 					<div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
 						{#if limitType === 'pro'}
@@ -393,7 +393,7 @@
 					>
 						<div class="flex items-start gap-3">
 							<button
-								class="mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0 {isSelected
+								class="mt-0.5 w-5 h-5 rounded-sm border-2 flex items-center justify-center transition-colors shrink-0 {isSelected
 									? 'bg-primary border-primary'
 									: 'border-base-300 hover:border-base-content/30'}"
 								onclick={() => toggleOne(i)}
@@ -407,7 +407,7 @@
 								<div class="flex items-start justify-between gap-2 mb-2">
 									<p class="text-sm font-medium leading-relaxed">{q.stem}</p>
 									<button
-										class="btn btn-ghost btn-xs flex-shrink-0 opacity-50 hover:opacity-100"
+										class="btn btn-ghost btn-xs shrink-0 opacity-50 hover:opacity-100"
 										onclick={() => removeOne(i)}
 									>
 										<Trash2 size={14} />
@@ -418,12 +418,12 @@
 									{#each q.options as opt, oi (oi)}
 										{@const isCorrect = q.correctAnswers.includes(String(oi))}
 										<div
-											class="flex items-center gap-2 p-2 rounded text-xs {isCorrect
+											class="flex items-center gap-2 p-2 rounded-sm text-xs {isCorrect
 												? 'bg-success/10 text-success'
 												: 'bg-base-200/50'}"
 										>
 											<span
-												class="w-5 h-5 rounded-full bg-base-300 flex items-center justify-center font-mono text-xs flex-shrink-0"
+												class="w-5 h-5 rounded-full bg-base-300 flex items-center justify-center font-mono text-xs shrink-0"
 											>
 												{String.fromCharCode('A'.charCodeAt(0) + oi)}
 											</span>
@@ -440,7 +440,7 @@
 										<summary class="text-base-content/50 cursor-pointer hover:text-base-content/70">
 											Show rationale
 										</summary>
-										<p class="mt-2 p-2 bg-info/10 rounded text-base-content/70">{q.rationale}</p>
+										<p class="mt-2 p-2 bg-info/10 rounded-sm text-base-content/70">{q.rationale}</p>
 									</details>
 								{/if}
 							</div>

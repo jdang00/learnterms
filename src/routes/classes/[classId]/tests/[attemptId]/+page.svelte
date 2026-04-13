@@ -10,9 +10,9 @@
 	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
 	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
+	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
-	import createDOMPurify from 'dompurify';
 	import {
 		PanelRight,
 		ChevronLeft,
@@ -56,6 +56,10 @@
 		attemptId ? { attemptId } : 'skip'
 	);
 
+	async function goBackToClasses() {
+		await goto('/classes', { state: { classId } });
+	}
+
 	let initializedAttemptId = $state<string | null>(null);
 	let currentIndex = $state(0);
 	let responses = $state<Record<string, LocalResponse>>({});
@@ -77,23 +81,9 @@
 	let syncInFlight = false;
 	let syncRequestedWhileInFlight = false;
 	let questionButtons = $state<HTMLButtonElement[]>([]);
-	let domPurify: ReturnType<typeof createDOMPurify> | null = null;
 
 	function cacheKey(id: string) {
 		return `lt:testAttempt:${id}`;
-	}
-
-	function sanitizeHtml(value: string | undefined | null) {
-		const raw = String(value ?? '');
-		if (typeof window === 'undefined') {
-			return raw
-				.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-				.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-				.replace(/\son[a-z]+\s*=\s*(["'])[\s\S]*?\1/gi, '')
-				.replace(/\s(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi, ' $1="#"');
-		}
-		domPurify ??= createDOMPurify(window);
-		return domPurify.sanitize(raw);
 	}
 
 	function loadCache(id: string): LocalCache | null {
@@ -590,9 +580,12 @@
 			if (typeof window !== 'undefined') {
 				window.localStorage.removeItem(cacheKey(String(attemptId)));
 			}
-			await goto(
-				resolve(`/classes/${classId}/tests/${attemptId}/results${auto ? '?autoSubmit=1' : ''}`)
-			);
+			const resultsHref = resolve('/classes/[classId]/tests/[attemptId]/results', {
+				classId,
+				attemptId
+			});
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
+			await goto(auto ? `${resultsHref}?autoSubmit=1` : resultsHref);
 		} catch (error: any) {
 			submitError = error?.message ?? 'Something went wrong while submitting. Please try again.';
 		} finally {
@@ -836,7 +829,7 @@
 	{:else if runnerQuery.data}
 		{#if runnerQuery.data.attempt.status !== 'in_progress'}
 			<div class="flex-1 flex items-center justify-center p-4">
-				<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm max-w-md w-full">
+				<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs max-w-md w-full">
 					<div class="card-body text-center">
 						<CheckCircle2 class="mx-auto text-success mb-2" size={48} />
 						<h1 class="card-title justify-center text-xl">Test Complete</h1>
@@ -844,7 +837,10 @@
 						<div class="card-actions justify-center mt-4">
 							<a
 								class="btn btn-primary rounded-full"
-								href={`/classes/${classId}/tests/${attemptId}/results`}
+								href={resolve('/classes/[classId]/tests/[attemptId]/results', {
+									classId,
+									attemptId
+								})}
 							>
 								View Results
 							</a>
@@ -859,7 +855,7 @@
 			>
 				<!-- Sidebar -->
 				<div
-					class="hidden lg:flex lg:flex-col relative overflow-y-auto overflow-x-hidden border border-base-300 rounded-4xl p-3 px-4 transition-all duration-200 ease-out bg-base-100 backdrop-blur-md bg-opacity-80 shadow-lg flex-shrink-0 h-full
+					class="hidden lg:flex lg:flex-col relative overflow-y-auto overflow-x-hidden border border-base-300 rounded-4xl p-3 px-4 transition-all duration-200 ease-out bg-base-100/80 backdrop-blur-md shadow-lg shrink-0 h-full
 					{hideSidebar ? 'w-[72px]' : 'w-[min(22rem,30vw)] xl:w-[min(24rem,28vw)]'}"
 				>
 					<button
@@ -876,13 +872,14 @@
 					{#if !hideSidebar}
 						<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 							<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-								<a
+								<button
+									type="button"
 									class="btn btn-ghost font-bold rounded-full"
-									href={`/classes?classId=${classId}`}
+									onclick={goBackToClasses}
 								>
 									<ChevronLeft size={16} />
 									{runnerQuery.data.attempt.className}
-								</a>
+								</button>
 							</h4>
 							<h2 class="font-semibold text-2xl mt-2 flex items-start gap-3 min-w-0">
 								<span class="text-2xl shrink-0">📝</span>
@@ -969,15 +966,16 @@
 						</div>
 					{:else}
 						<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
-							<a
+							<button
+								type="button"
 								class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
-								href={`/classes?classId=${classId}`}
+								onclick={goBackToClasses}
 							>
 								<span class="group-hover:hidden">📝</span>
 								<span class="hidden group-hover:inline-flex items-center justify-center"
 									><ChevronLeft size={24} /></span
 								>
-							</a>
+							</button>
 
 							<div class="text-center">
 								<div class="text-xs font-bold tabular-nums">{formatDuration(elapsedMsLocal)}</div>
@@ -1016,13 +1014,14 @@
 
 				<!-- Mobile header -->
 				<div class="lg:hidden flex items-center justify-between gap-2 px-2">
-					<a
+					<button
+						type="button"
 						class="btn btn-ghost btn-sm rounded-full text-secondary"
-						href={`/classes?classId=${classId}`}
+						onclick={goBackToClasses}
 					>
 						<ChevronLeft size={16} />
 						<span class="truncate max-w-[120px]">{runnerQuery.data.attempt.className}</span>
-					</a>
+					</button>
 					<div class="flex items-center gap-3 text-sm">
 						<div class="flex items-center gap-1 tabular-nums font-medium">
 							<Clock size={14} class="text-base-content/50" />
@@ -1042,7 +1041,7 @@
 
 				<!-- Main content area -->
 				<div
-					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto flex-grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
+					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
 				>
 					<!-- Horizontal question navigator (matches QuizNavigation style) -->
 					<div

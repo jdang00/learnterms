@@ -13,6 +13,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { browser, dev } from '$app/environment';
+	import { resolve } from '$app/paths';
 
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
 
@@ -28,8 +29,12 @@
 	const convexClient = useConvexClient();
 
 	// Keep both a mutable token for first use and a backup for fallback
-	let initialToken: string | null = data?.token ?? null;
-	const ssrTokenBackup: string | null = data?.token ?? null;
+	let initialToken = $state<string | null>(null);
+	const ssrTokenBackup = $derived(data?.token ?? null);
+
+	$effect(() => {
+		initialToken = data?.token ?? null;
+	});
 
 	// Helper to wait for Clerk session with timeout
 	async function waitForClerkSession(timeoutMs: number = 5000): Promise<boolean> {
@@ -134,7 +139,8 @@
 			path.startsWith('/classes') && (path.includes('/modules/') || path.includes('/tests/'));
 		const inGradeCalculator = path.startsWith('/tools/grade-calculator');
 		const inAdminModule = path.startsWith('/admin/') && path.includes('/module/');
-		return inClassStudyOrTest || inGradeCalculator || inAdminModule;
+		const inStudySpace = path.startsWith('/study-space');
+		return inClassStudyOrTest || inGradeCalculator || inAdminModule || inStudySpace;
 	});
 </script>
 
@@ -175,7 +181,7 @@
 			<footer class="bg-base-200 text-base-content border-t border-base-300 mt-auto">
 				<div class="mx-auto w-full max-w-6xl px-4 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
 					<div class="col-span-2 sm:col-span-1 pr-8">
-						<a href="/" class="text-lg font-semibold">LearnTerms</a>
+						<a href={resolve('/')} class="text-lg font-semibold">LearnTerms</a>
 						<p class="mt-2 text-sm text-base-content/70">
 							Study smarter today—build your board prep as you learn.
 						</p>
@@ -183,16 +189,16 @@
 
 					<nav aria-label="Product" class="flex flex-col space-y-1">
 						<h6 class="footer-title">Product</h6>
-						<a class="link link-hover" href="/">Features</a>
-						<a class="link link-hover" href="/pricing">Pricing</a>
-						<a class="link link-hover" href="/changelog">Changelog</a>
+						<a class="link link-hover" href={resolve('/')}>Features</a>
+						<a class="link link-hover" href={resolve('/pricing')}>Pricing</a>
+						<a class="link link-hover" href={resolve('/changelog')}>Changelog</a>
 					</nav>
 
 					<nav aria-label="Resources" class="flex flex-col space-y-1">
 						<h6 class="footer-title">Resources</h6>
 						<a class="link link-hover" href="https://docs.learnterms.com/">Docs</a>
-						<a class="link link-hover" href="/blog">Blog</a>
-						<a class="link link-hover" href="/status">Status</a>
+						<a class="link link-hover" href={resolve('/blog')}>Blog</a>
+						<a class="link link-hover" href={resolve('/status')}>Status</a>
 					</nav>
 
 					<nav aria-label="Development" class="flex flex-col space-y-1">
@@ -203,8 +209,8 @@
 							target="_blank"
 							rel="noopener noreferrer">GitHub</a
 						>
-						<a class="link link-hover" href="/about-us">About Us</a>
-						<a class="link link-hover" href="/contact">Contact</a>
+						<a class="link link-hover" href={resolve('/about-us')}>About Us</a>
+						<a class="link link-hover" href={resolve('/contact')}>Contact</a>
 					</nav>
 				</div>
 				<div class="border-t border-base-300">

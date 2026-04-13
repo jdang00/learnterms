@@ -102,7 +102,7 @@
 					</button>
 				</div>
 
-				<p class="{qs.showSolution ? '' : 'blur'} mt-2">
+				<p class="{qs.showSolution ? '' : 'blur-xs'} mt-2">
 					{question.solution}
 				</p>
 			</div>
@@ -118,7 +118,7 @@
 
 <div class="container mx-auto lg:w-3/5 flex flex-col items-center">
 	<div class="lg:hidden flex flex-row mt-2 items-center justify-between">
-		<div class="flex-shrink-0 w-24"></div>
+		<div class="shrink-0 w-24"></div>
 	</div>
 
 	<div class="flex flex-row w-full lg:mt-6 mt-4 overflow-y-scroll">

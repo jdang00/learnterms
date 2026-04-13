@@ -32,7 +32,7 @@
 	const user = $derived(ctx.user);
 
 	let { data }: { data: PageData } = $props();
-	const userData = data.userData;
+	const userData = $derived(data.userData);
 	function hasUserDisplayNames(
 		value: unknown
 	): value is { schoolName?: string | null; cohortName?: string | null } {
@@ -173,7 +173,10 @@
 	$effect(() => {
 		if (isNavigatingBack) return;
 
-		const classId = page.url.searchParams.get('classId');
+		const classId =
+			(typeof page.state === 'object' && page.state && 'classId' in page.state
+				? String(page.state.classId)
+				: null) ?? page.url.searchParams.get('classId');
 
 		if (classId && classes.data && classes.data.length > 0) {
 			const foundClass = classes.data.find((cls) => cls._id === classId);
@@ -188,9 +191,7 @@
 		selectedClass = classItem;
 		currentView = 'modules';
 		if (classItem != null) {
-			const classesUrl = new URL(resolve('/classes'), page.url.origin);
-			classesUrl.searchParams.set('classId', classItem._id);
-			replaceState(classesUrl, page.state);
+			replaceState(resolve('/classes'), { ...page.state, classId: classItem._id });
 		}
 	}
 
@@ -217,16 +218,16 @@
 		}
 	}
 
-	function featureHref(item: { title: string; href?: string }) {
-		if (item.href === '/cohort') return resolve('/cohort');
+	function featureHref(item: {
+		title: string;
+		href?: string;
+	}): '/cohort' | '/classes' | `/classes/${string}/tests/new` {
+		if (item.href === '/cohort') return '/cohort';
 		if (item.title === 'Build your own test') {
 			const classId = selectedClass?._id ?? firstClassId;
-			return classId ? resolve('/classes/[classId]/tests/new', { classId }) : resolve('/classes');
+			return classId ? `/classes/${classId}/tests/new` : '/classes';
 		}
-		if (item.title === 'Pick up where you left off') {
-			return resolve('/classes');
-		}
-		return resolve('/classes');
+		return '/classes';
 	}
 
 	async function dismissFeatureSpotlight() {
@@ -243,8 +244,8 @@
 			});
 			featureSpotlightSeenLocal = true;
 			featureSpotlightOpen = false;
-		} catch (error: any) {
-			featureSpotlightError = error?.message ?? 'Could not save this yet.';
+		} catch (error: unknown) {
+			featureSpotlightError = error instanceof Error ? error.message : 'Could not save this yet.';
 		} finally {
 			featureSpotlightAcknowledging = false;
 		}
@@ -276,7 +277,7 @@
 			<div class="flex flex-row gap-5 items-center">
 				<div class="avatar hidden xl:block">
 					<div
-						class="ring-primary ring-offset-base-100 w-14 rounded-full ring ring-offset-2 transition-shadow duration-300 hover:shadow-md hover:shadow-primary/10"
+						class="ring-primary ring-offset-base-100 w-14 rounded-full ring-3 ring-offset-2 transition-shadow duration-300 hover:shadow-md hover:shadow-primary/10"
 					>
 						<img src={user.imageUrl} alt="user profile" />
 					</div>
@@ -331,7 +332,7 @@
 										class="rounded-xl border border-base-300 bg-base-100 px-3 py-2.5 animate-pulse min-w-[19rem]"
 									>
 										<div class="flex items-center gap-3">
-											<div class="skeleton h-5 w-5 rounded"></div>
+											<div class="skeleton h-5 w-5 rounded-sm"></div>
 											<div class="skeleton h-3.5 w-32"></div>
 											<div class="skeleton h-3.5 w-14"></div>
 											<div class="skeleton h-1.5 w-16 rounded-full"></div>
@@ -342,7 +343,7 @@
 						</div>
 					</div>
 				{:else if recentModulesError}
-					<div class="alert alert-error mb-8 rounded-2xl shadow-sm border border-error/20">
+					<div class="alert alert-error mb-8 rounded-2xl shadow-xs border border-error/20">
 						<span>Failed to load recent modules: {recentModulesError.toString()}</span>
 					</div>
 				{:else if recentModules.length > 0}
@@ -462,7 +463,7 @@
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 							{#each Array(4), index (index)}
 								<div
-									class="rounded-2xl bg-base-100 shadow-sm border border-base-300 p-5 animate-pulse"
+									class="rounded-2xl bg-base-100 shadow-xs border border-base-300 p-5 animate-pulse"
 								>
 									<div class="flex items-start gap-3 mb-3">
 										<div class="skeleton h-9 w-9 rounded-lg shrink-0"></div>
@@ -482,11 +483,11 @@
 							{/each}
 						</div>
 					{:else if modules.error}
-						<div class="alert alert-error rounded-2xl shadow-sm border border-error/20">
+						<div class="alert alert-error rounded-2xl shadow-xs border border-error/20">
 							<span>Failed to load modules: {modules.error.toString()}</span>
 						</div>
 					{:else if !modules.data || modules.data.length === 0}
-						<div class="rounded-2xl bg-base-100 shadow-sm border border-base-300 p-8">
+						<div class="rounded-2xl bg-base-100 shadow-xs border border-base-300 p-8">
 							<div class="text-center py-8">
 								<div class="text-5xl mb-4">📚</div>
 								<h3 class="text-lg font-semibold mb-2 text-base-content">No modules yet</h3>
@@ -604,7 +605,10 @@
 							type="button"
 							class="btn btn-ghost btn-sm rounded-full text-base-content/60"
 							onclick={async () => {
-								const href = featureAnnouncement.ctaHref || '/classes';
+								const href =
+									featureAnnouncement.ctaHref && !/\[[^/]+\]/.test(featureAnnouncement.ctaHref)
+										? featureAnnouncement.ctaHref
+										: '/classes';
 								await dismissFeatureSpotlight();
 								await goto(href);
 							}}

@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { ExternalLink } from 'lucide-svelte';
-	import type { QuickLinkItem } from './types';
+	import type { InternalQuickLinkPath, QuickLinkItem } from './types';
 
 	interface Props {
 		quickLinks?: QuickLinkItem[];
@@ -9,6 +10,10 @@
 	}
 
 	let { quickLinks = [], searchQuery = '', onNavigate }: Props = $props();
+	const isExternalLink = (
+		href: QuickLinkItem['href']
+	): href is Exclude<QuickLinkItem['href'], InternalQuickLinkPath> => href.startsWith('http');
+	const getHref = (href: QuickLinkItem['href']) => (isExternalLink(href) ? href : resolve(href));
 
 	const filteredQuickLinks = $derived.by(() => {
 		const query = searchQuery.trim().toLowerCase();
@@ -31,7 +36,9 @@
 	{:else}
 		{#each filteredQuickLinks as link (link.href)}
 			<a
-				href={link.href}
+				href={getHref(link.href)}
+				target={isExternalLink(link.href) ? '_blank' : undefined}
+				rel={isExternalLink(link.href) ? 'noreferrer' : undefined}
 				class="group flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-left transition-colors duration-100 hover:bg-base-200/60"
 				onclick={() => onNavigate?.()}
 				data-power-item="true"

@@ -6,10 +6,9 @@
 	import { QuizState } from './states.svelte';
 	import MainQuiz from '$lib/components/MainQuiz.svelte';
 	import QuizErrorHandler from '$lib/components/QuizErrorHandler.svelte';
-	import { onMount, tick } from 'svelte';
-	import { RotateCcw } from 'lucide-svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { BookOpen } from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { captureQuestionAnswered } from '$lib/analytics/questionAnswered';
@@ -21,7 +20,8 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const userId: Id<'users'> | undefined = data.convexID?._id;
+	const userId = $derived(data.convexID?._id as Id<'users'> | undefined);
+	const moduleId = $derived(data.moduleId as Id<'module'>);
 
 	const client = useConvexClient();
 
@@ -110,7 +110,11 @@
 				isFlagged: qs.currentQuestionFlagged
 			});
 
-			if (qs.selectedAnswers.length > 0 || qs.eliminatedAnswers.length > 0 || qs.currentQuestionFlagged) {
+			if (
+				qs.selectedAnswers.length > 0 ||
+				qs.eliminatedAnswers.length > 0 ||
+				qs.currentQuestionFlagged
+			) {
 				qs.markCurrentQuestionInteracted?.();
 			}
 		}
@@ -158,14 +162,18 @@
 		}
 	}
 
-	// useQuery with function args for reactivity
-	const questions = useQuery(api.question.getQuestionsByModule, () => ({ id: data.moduleId }), {
-		initialData: data.module
-	});
+	// Official convex-svelte pattern for SSR hydration with live updates
+	const questions = useQuery(
+		api.question.getQuestionsByModule,
+		() => ({ id: moduleId }),
+		() => ({ initialData: data.module })
+	);
 
-	const module = useQuery(api.module.getModuleById, () => ({ id: data.moduleId as Id<'module'> }), {
-		initialData: data.moduleInfo
-	});
+	const module = useQuery(
+		api.module.getModuleById,
+		() => ({ id: moduleId }),
+		() => ({ initialData: data.moduleInfo })
+	);
 
 	// Derive stable question IDs from questions data
 	const stableQuestionIds = $derived.by(() => {
@@ -211,12 +219,19 @@
 	});
 
 	$effect(() => {
-		if (questions.data && questions.data.length > 0) {
-			qs.setQuestions(questions.data);
-			const currentQuestion = qs.getCurrentQuestion();
-			if (currentQuestion && userId) {
-				loadProgress(currentQuestion._id);
-			}
+		const questionList = questions.data;
+		if (!questionList || questionList.length === 0) return;
+
+		const currentIndex = untrack(() => qs.currentQuestionIndex);
+		const initialQuestion =
+			questionList[Math.min(currentIndex, questionList.length - 1)] ?? questionList[0];
+
+		untrack(() => {
+			qs.setQuestions(questionList);
+		});
+
+		if (initialQuestion && userId) {
+			void loadProgress(initialQuestion._id);
 		}
 	});
 
@@ -472,7 +487,7 @@
 				{data.seo?.title?.replace(' — LearnTerms', '') ?? 'Study Module'}
 			</h1>
 			<p class="text-base-content/70 mb-6">Sign in to start studying this module on LearnTerms.</p>
-			<a href="{base}/sign-in" class="btn btn-primary">Sign in to study</a>
+			<a href={resolve('/sign-in')} class="btn btn-primary">Sign in to study</a>
 		</div>
 	</div>
 {:else}
@@ -518,6 +533,11 @@
 				>
 			</div>
 		</div>
-		<div class="modal-backdrop bg-black/50" onclick={() => (qs.isResetModalOpen = false)}></div>
+		<button
+			type="button"
+			class="modal-backdrop bg-black/50"
+			aria-label="Close reset progress dialog"
+			onclick={() => (qs.isResetModalOpen = false)}
+		></button>
 	</dialog>
 {/if}

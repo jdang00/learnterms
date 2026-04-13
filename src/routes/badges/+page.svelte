@@ -15,6 +15,8 @@
 		EyeOff
 	} from 'lucide-svelte';
 	import { useQuery } from 'convex-svelte';
+	import type { FunctionReturnType } from 'convex/server';
+	import { resolve } from '$app/paths';
 	import { api } from '../../convex/_generated/api';
 	import type { Doc } from '../../convex/_generated/dataModel';
 	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
@@ -30,7 +32,9 @@
 		return 'LearnTerms';
 	};
 
-	const badgeIconMap: Record<string, any> = {
+	type LucideIconComponent = typeof Users;
+
+	const badgeIconMap: Record<string, LucideIconComponent> = {
 		users: Users,
 		flame: Flame,
 		star: Star,
@@ -42,7 +46,7 @@
 		zap: Zap
 	};
 
-	const issuerIconMap: Record<string, any> = {
+	const issuerIconMap: Record<string, LucideIconComponent> = {
 		platform: Globe,
 		cohort: GraduationCap
 	};
@@ -50,9 +54,10 @@
 	let showInternalDetails = $state(false);
 
 	const badgesQuery = useQuery(api.badges.listBadgeCatalogForViewer, {});
+	type BadgeCatalogItem = FunctionReturnType<typeof api.badges.listBadgeCatalogForViewer>[number];
 
 	const badges = $derived.by(() => {
-		const data = badgesQuery.data ?? [];
+		const data = (badgesQuery.data ?? []) as BadgeCatalogItem[];
 		return data.map((badge) => ({
 			...badge,
 			icon: badgeIconMap[badge.iconKey] ?? Star,
@@ -67,7 +72,7 @@
 		All possible badges users can earn.
 	</p>
 	<div class="flex justify-center mb-5">
-		<a href="/cohort" class="btn btn-sm btn-outline">View Cohort Info</a>
+		<a href={resolve('/cohort')} class="btn btn-sm btn-outline">View Cohort Info</a>
 	</div>
 	<div class="view-toggle-wrap">
 		<label class="view-toggle">
@@ -94,7 +99,7 @@
 		<div class="text-center text-base-content/60">No badges are published yet.</div>
 	{:else}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
-			{#each badges as badge, i}
+			{#each badges as badge, i (badge._id)}
 				<div
 					class="badge-frame flex flex-col items-center text-center w-full max-w-[340px] mx-auto px-6 py-7"
 					style={`--delay: ${i * 45}ms`}
@@ -136,7 +141,7 @@
 							<IssuerIcon size={13} />
 						{/if}
 						{#if badge.issuerUrl}
-							<a href={badge.issuerUrl} target="_blank" rel="noreferrer noopener"
+							<a href={badge.issuerUrl} target="_blank" rel="external noreferrer noopener"
 								>Issued by {badge.issuerName}</a
 							>
 						{:else}

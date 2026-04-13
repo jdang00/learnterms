@@ -147,7 +147,7 @@
 					<div class="grid grid-cols-2 gap-3 mt-2">
 						{#each visibleMedia as attachment (attachment._id)}
 							<button
-								class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+								class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary focus:border-primary"
 								onclick={() => handleAttachmentClick(attachment)}
 								onkeydown={(e) => {
 									if (e.key === 'Enter' || e.key === ' ') {
@@ -234,7 +234,7 @@
 			<div class="grid grid-cols-2 gap-3">
 				{#each visibleMedia as attachment (attachment._id)}
 					<button
-						class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
+						class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary"
 						onclick={() => {
 							handleAttachmentClick(attachment);
 							closeCompactAttachments();
@@ -290,7 +290,7 @@
 					aria-label="Image viewer - click to zoom, drag to pan when zoomed"
 				>
 					<div
-						class="w-full h-full focus:outline-none focus:ring-2 focus:ring-primary {attachmentZoom > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'}"
+						class="w-full h-full focus:outline-hidden focus:ring-2 focus:ring-primary {attachmentZoom > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'}"
 						onclick={attachmentZoom <= 1 ? handleZoomToggle : undefined}
 						onkeydown={(e) => {
 							if (e.key === 'Enter' || e.key === ' ') {

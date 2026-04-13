@@ -19,9 +19,10 @@
 	} from 'lucide-svelte';
 	import StudentDetailModal from '$lib/admin/StudentDetailModal.svelte';
 	import CuratorModuleAnalytics from '$lib/admin/CuratorModuleAnalytics.svelte';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
-	const userData = data.userData;
+	const userData = $derived(data.userData);
 	const client = useConvexClient();
 	const isDev = $derived(userData?.role === 'dev');
 	const isAdmin = $derived(userData?.role === 'dev' || userData?.role === 'admin');
@@ -47,18 +48,18 @@
 		selectedStudentId = null;
 	}
 
-	const cohortStats = userData?.cohortId
-		? useQuery(api.progress.getCohortProgressStats, {
-				cohortId: userData.cohortId as Id<'cohort'>
-			})
-		: { data: undefined, isLoading: false, error: null };
+	const cohortStats = useQuery(api.progress.getCohortProgressStats, () =>
+		userData?.cohortId ? { cohortId: userData.cohortId as Id<'cohort'> } : 'skip'
+	);
 
-	const studentsWithProgress = userData?.cohortId
-		? useQuery(api.progress.getStudentsWithProgress, {
-				cohortId: userData.cohortId as Id<'cohort'>,
-				includeSubscription: false
-			})
-		: { data: undefined, isLoading: false, error: null };
+	const studentsWithProgress = useQuery(api.progress.getStudentsWithProgress, () =>
+		userData?.cohortId
+			? {
+					cohortId: userData.cohortId as Id<'cohort'>,
+					includeSubscription: false
+				}
+			: 'skip'
+	);
 
 	let searchQuery = $state('');
 
@@ -109,7 +110,7 @@
 
 <div class="min-h-screen p-4 sm:p-8 max-w-7xl mx-auto">
 	<!-- Header -->
-	<a class="btn btn-ghost btn-sm rounded-full mb-3" href="/admin">
+	<a class="btn btn-ghost btn-sm rounded-full mb-3" href={resolve('/admin')}>
 		<ArrowLeft size={16} />
 		Back
 	</a>
@@ -160,7 +161,7 @@
 		<!-- Overview Tab -->
 		{#if cohortStats.isLoading}
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-				{#each Array(4) as _}
+				{#each Array.from({ length: 4 }, (_, i) => i) as i (i)}
 					<div class="bg-base-100 rounded-xl border border-base-300 p-5 animate-pulse">
 						<div class="skeleton h-4 w-20 mb-2"></div>
 						<div class="skeleton h-8 w-16"></div>
@@ -173,7 +174,7 @@
 			</div>
 		{:else}
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
+				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-xs">
 					<div class="flex items-center justify-between mb-1">
 						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide"
 							>Students</span
@@ -184,7 +185,7 @@
 					<p class="text-xs text-base-content/50 mt-1">Enrolled in cohort</p>
 				</div>
 
-				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
+				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-xs">
 					<div class="flex items-center justify-between mb-1">
 						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide"
 							>Questions</span
@@ -197,7 +198,7 @@
 					<p class="text-xs text-base-content/50 mt-1">Across all modules</p>
 				</div>
 
-				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
+				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-xs">
 					<div class="flex items-center justify-between mb-1">
 						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide"
 							>Modules</span
@@ -208,7 +209,7 @@
 					<p class="text-xs text-base-content/50 mt-1">Active learning modules</p>
 				</div>
 
-				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-sm">
+				<div class="bg-base-100 rounded-xl border border-base-300 p-5 shadow-xs">
 					<div class="flex items-center justify-between mb-1">
 						<span class="text-xs text-base-content/60 font-medium uppercase tracking-wide"
 							>Active Learners</span
@@ -263,7 +264,7 @@
 					</div>
 				</button>
 				<a
-					href="/admin/badges"
+					href={resolve('/admin/badges')}
 					class="bg-base-100 rounded-xl border border-base-300 p-4 text-left hover:border-primary/40 hover:shadow-md transition-all group cursor-pointer"
 				>
 					<div class="flex items-center gap-3">
@@ -290,7 +291,7 @@
 		{/if}
 	{:else}
 		<!-- Students Tab -->
-		<div class="bg-base-100 rounded-xl border border-base-300 shadow-sm">
+		<div class="bg-base-100 rounded-xl border border-base-300 shadow-xs">
 			<div
 				class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-4 border-b border-base-300"
 			>

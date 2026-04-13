@@ -35,7 +35,7 @@
 			</div>
 			<div class="mt-3 flex items-center justify-between">
 				<div class="flex gap-1.5">
-					{#each landingReviews as _, i}
+					{#each landingReviews as reviewItem, i (reviewItem.id)}
 						<button
 							aria-label="Review {i + 1}"
 							class="h-1.5 rounded-full transition-all duration-300 {i === activeIndex ? 'w-6 bg-primary' : 'w-1.5 bg-base-content/15 hover:bg-base-content/25'}"
@@ -56,7 +56,7 @@
 
 		<!-- Desktop: staggered grid -->
 		<div class="hidden lg:grid lg:grid-cols-3 gap-4">
-			{#each landingReviews as r, i}
+			{#each landingReviews as r, i (r.id)}
 				<div class="review-card {i % 3 === 1 ? 'lg:translate-y-4' : ''}">
 					<Quote size={16} class="text-primary/25 mb-2 shrink-0" />
 					<blockquote class="text-sm leading-relaxed text-base-content/75">

@@ -49,7 +49,7 @@
 				disabled={qs.isOptionEliminated(option.id) || qs.showSolution}
 			/>
 			<span
-				class="flex-grow text-wrap break-words {compact
+				class="grow text-wrap break-words {compact
 					? 'ml-2 md:ml-3 my-2 md:my-3 text-xs md:text-sm'
 					: 'ml-3 md:ml-4 my-3 text-sm md:text-base'}"
 			>

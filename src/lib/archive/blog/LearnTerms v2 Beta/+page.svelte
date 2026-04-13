@@ -7,7 +7,7 @@
 			<div class="mt-8 flex flex-row flex-wrap gap-6">
 				<a href="https://www.justindang.dev/" target="_blank">
 					<div class="avatar">
-						<div class="ring-primary ring-offset-base-100 w-14 rounded-full ring ring-offset-2">
+						<div class="ring-primary ring-offset-base-100 w-14 rounded-full ring-3 ring-offset-2">
 							<img
 								src="https://utfs.io/f/DYlXFqnaImOrNYQ0L9zP0UTz89wOGJKi17DasVtufbylgkQF"
 								alt="Justin Dang"

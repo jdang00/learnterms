@@ -86,13 +86,13 @@
 			<div class="flex items-center gap-4">
 				{#if student?.imageUrl}
 					<div class="avatar">
-						<div class="w-16 h-16 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+						<div class="w-16 h-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2">
 							<img src={student.imageUrl} alt={student.name} />
 						</div>
 					</div>
 				{:else}
 					<div class="avatar placeholder">
-						<div class="bg-neutral text-neutral-content w-16 h-16 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+						<div class="bg-neutral text-neutral-content w-16 h-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2">
 							<span class="text-xl">
 								{student?.name
 									.split(' ')
@@ -164,7 +164,7 @@
 						</div>
 					{:else}
 						<div class="flex w-full gap-2">
-							{#each availableRoles as roleOption}
+							{#each availableRoles as roleOption (roleOption.value ?? 'student')}
 								<button
 									class="btn btn-sm rounded-full flex-1 gap-2"
 									class:btn-active={(student.role ?? null) === roleOption.value}

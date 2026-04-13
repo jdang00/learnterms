@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { authAdminMutation, authAdminQuery, authQuery } from './authQueries';
 import { internalMutation, mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
+import type { DatabaseReader, DatabaseWriter } from './_generated/server';
 
 const scopeTypeValidator = v.union(v.literal('global'), v.literal('cohort'), v.literal('class'));
 const issuerTypeValidator = v.union(v.literal('platform'), v.literal('cohort'));
@@ -126,7 +127,7 @@ function toProperCase(value: string) {
 }
 
 async function resolveScopedReferences(
-	ctx: { db: any },
+	ctx: { db: DatabaseReader },
 	args: UpsertBadgeArgs
 ): Promise<{ cohortId?: Id<'cohort'>; classId?: Id<'class'> }> {
 	if (args.scopeType === 'global') return {};
@@ -150,7 +151,7 @@ async function resolveScopedReferences(
 }
 
 async function normalizeIssuerForBadge(
-	ctx: { db: any },
+	ctx: { db: DatabaseReader },
 	args: UpsertBadgeArgs,
 	resolvedScope: { cohortId?: Id<'cohort'> }
 ) {
@@ -176,15 +177,15 @@ async function normalizeIssuerForBadge(
 	};
 }
 
-async function getCaller(ctx: { db: any; identity: { subject: string } }) {
+async function getCaller(ctx: { db: DatabaseReader; identity: { subject: string } }) {
 	return await ctx.db
 		.query('users')
-		.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', ctx.identity.subject))
+		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
 		.first();
 }
 
 async function enforceAdminScope(
-	ctx: { db: any; identity: { subject: string } },
+	ctx: { db: DatabaseReader; identity: { subject: string } },
 	args: UpsertBadgeArgs,
 	resolvedScope: { cohortId?: Id<'cohort'> }
 ) {
@@ -209,7 +210,7 @@ async function enforceAdminScope(
 }
 
 async function enforceAdminScopeForExistingBadge(
-	ctx: { db: any; identity: { subject: string } },
+	ctx: { db: DatabaseReader; identity: { subject: string } },
 	badge: Doc<'badgeDefinitions'>
 ) {
 	const caller = await getCaller(ctx);
@@ -232,7 +233,11 @@ async function enforceAdminScopeForExistingBadge(
 	}
 }
 
-async function upsertBadge(ctx: { db: any }, args: UpsertBadgeArgs, createdByUserId?: Id<'users'>) {
+async function upsertBadge(
+	ctx: { db: DatabaseWriter },
+	args: UpsertBadgeArgs,
+	createdByUserId?: Id<'users'>
+) {
 	const normalizedKey = args.key.trim().toLowerCase();
 	if (!normalizedKey) throw new Error('Badge key is required');
 
@@ -241,7 +246,7 @@ async function upsertBadge(ctx: { db: any }, args: UpsertBadgeArgs, createdByUse
 
 	const existingWithKey = await ctx.db
 		.query('badgeDefinitions')
-		.withIndex('by_key', (q: any) => q.eq('key', normalizedKey))
+		.withIndex('by_key', (q) => q.eq('key', normalizedKey))
 		.unique();
 
 	if (existingWithKey && (!args.badgeId || existingWithKey._id !== args.badgeId)) {
@@ -283,7 +288,11 @@ async function upsertBadge(ctx: { db: any }, args: UpsertBadgeArgs, createdByUse
 	});
 }
 
-async function upsertRule(ctx: { db: any }, args: UpsertRuleArgs, createdByUserId?: Id<'users'>) {
+async function upsertRule(
+	ctx: { db: DatabaseWriter },
+	args: UpsertRuleArgs,
+	createdByUserId?: Id<'users'>
+) {
 	if (args.allOf.length === 0) {
 		throw new Error('Rule must have at least one condition');
 	}
@@ -315,10 +324,10 @@ async function upsertRule(ctx: { db: any }, args: UpsertRuleArgs, createdByUserI
 	});
 }
 
-async function getVisibleBadgesForViewer(ctx: { db: any }, viewer: Doc<'users'> | null) {
+async function getVisibleBadgesForViewer(ctx: { db: DatabaseReader }, viewer: Doc<'users'> | null) {
 	const badges = await ctx.db
 		.query('badgeDefinitions')
-		.withIndex('by_isActive', (q: any) => q.eq('isActive', true))
+		.withIndex('by_isActive', (q) => q.eq('isActive', true))
 		.collect();
 
 	const supportedBadges = badges.filter((badge) => {
@@ -356,7 +365,7 @@ export const listBadgesForViewer = query({
 		if (identity) {
 			viewer = await ctx.db
 				.query('users')
-				.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', identity.subject))
+				.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
 				.first();
 		}
 
@@ -366,7 +375,7 @@ export const listBadgesForViewer = query({
 		if (viewer) {
 			const awards = await ctx.db
 				.query('userBadgeAwards')
-				.withIndex('by_userId', (q: any) => q.eq('userId', viewer._id))
+				.withIndex('by_userId', (q) => q.eq('userId', viewer._id))
 				.collect();
 			awardsByBadgeId = new Map(awards.map((award) => [award.badgeDefinitionId, award]));
 		}
@@ -383,7 +392,7 @@ export const listBadgesForViewer = query({
 		for (const cohortId of cohortIds) {
 			const users = await ctx.db
 				.query('users')
-				.withIndex('by_cohortId', (q: any) => q.eq('cohortId', cohortId))
+				.withIndex('by_cohortId', (q) => q.eq('cohortId', cohortId))
 				.collect();
 			cohortDenominator.set(cohortId, users.filter((user) => !user.deletedAt).length);
 		}
@@ -393,7 +402,7 @@ export const listBadgesForViewer = query({
 			visible.map(async (badge) => {
 				const awards = await ctx.db
 					.query('userBadgeAwards')
-					.withIndex('by_badgeDefinitionId', (q: any) => q.eq('badgeDefinitionId', badge._id))
+					.withIndex('by_badgeDefinitionId', (q) => q.eq('badgeDefinitionId', badge._id))
 					.collect();
 				return [badge._id, awards] as const;
 			})
@@ -439,7 +448,7 @@ export const listBadgeCatalogForViewer = authQuery({
 	handler: async (ctx) => {
 		const viewer = await ctx.db
 			.query('users')
-			.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', ctx.identity.subject))
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
 			.first();
 		if (!viewer) throw new Error('User not found');
 		const role = viewer.role ?? 'student';
@@ -461,7 +470,7 @@ export const listBadgeCatalogForViewer = authQuery({
 		for (const cohortId of cohortIds) {
 			const users = await ctx.db
 				.query('users')
-				.withIndex('by_cohortId', (q: any) => q.eq('cohortId', cohortId))
+				.withIndex('by_cohortId', (q) => q.eq('cohortId', cohortId))
 				.collect();
 			cohortDenominator.set(cohortId, users.filter((user) => !user.deletedAt).length);
 		}
@@ -471,7 +480,7 @@ export const listBadgeCatalogForViewer = authQuery({
 			visible.map(async (badge) => {
 				const awards = await ctx.db
 					.query('userBadgeAwards')
-					.withIndex('by_badgeDefinitionId', (q: any) => q.eq('badgeDefinitionId', badge._id))
+					.withIndex('by_badgeDefinitionId', (q) => q.eq('badgeDefinitionId', badge._id))
 					.collect();
 				return [badge._id, awards] as const;
 			})
@@ -512,14 +521,14 @@ export const getNextUnseenBadgeAwardForViewer = authQuery({
 	handler: async (ctx) => {
 		const viewer = await ctx.db
 			.query('users')
-			.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', ctx.identity.subject))
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
 			.first();
 
 		if (!viewer) return null;
 
 		const unseenAwards = await ctx.db
 			.query('userBadgeAwards')
-			.withIndex('by_userId_seenAt', (q: any) => q.eq('userId', viewer._id).eq('seenAt', undefined))
+			.withIndex('by_userId_seenAt', (q) => q.eq('userId', viewer._id).eq('seenAt', undefined))
 			.collect();
 
 		if (unseenAwards.length === 0) return null;
@@ -532,10 +541,6 @@ export const getNextUnseenBadgeAwardForViewer = authQuery({
 				!isSupportedIssuerType(badge.issuerType) ||
 				(badge.issuerType === 'platform' && !isSupportedPlatformBadgeKey(badge.key))
 			) {
-				await ctx.db.patch(nextAward._id, {
-					seenAt: Date.now(),
-					updatedAt: Date.now()
-				});
 				continue;
 			}
 
@@ -573,7 +578,7 @@ export const markBadgeAwardSeen = mutation({
 
 		const viewer = await ctx.db
 			.query('users')
-			.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', identity.subject))
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
 			.first();
 
 		if (!viewer) throw new Error('User not found');
@@ -600,7 +605,7 @@ export const getCohortBadgeBoard = authQuery({
 	handler: async (ctx) => {
 		const viewer = await ctx.db
 			.query('users')
-			.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', ctx.identity.subject))
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
 			.first();
 
 		if (!viewer) throw new Error('User not found');
@@ -611,7 +616,7 @@ export const getCohortBadgeBoard = authQuery({
 
 		const members = await ctx.db
 			.query('users')
-			.withIndex('by_cohortId', (q: any) => q.eq('cohortId', viewer.cohortId))
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', viewer.cohortId))
 			.collect();
 		const activeMembers = members
 			.filter((member) => !member.deletedAt)
@@ -620,7 +625,7 @@ export const getCohortBadgeBoard = authQuery({
 
 		const awards = await ctx.db
 			.query('userBadgeAwards')
-			.withIndex('by_cohortId', (q: any) => q.eq('cohortId', viewer.cohortId))
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', viewer.cohortId))
 			.collect();
 		const activeMemberAwards = awards.filter((award) => activeMemberIds.has(award.userId));
 
@@ -790,9 +795,7 @@ export const listBadgeRulesForBadge = authAdminQuery({
 
 		return await ctx.db
 			.query('badgeRules')
-			.withIndex('by_badgeDefinitionId', (q: any) =>
-				q.eq('badgeDefinitionId', args.badgeDefinitionId)
-			)
+			.withIndex('by_badgeDefinitionId', (q) => q.eq('badgeDefinitionId', args.badgeDefinitionId))
 			.collect();
 	}
 });
@@ -880,7 +883,7 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 		for (const definition of definitions) {
 			const existing = await ctx.db
 				.query('badgeDefinitions')
-				.withIndex('by_key', (q: any) => q.eq('key', definition.key))
+				.withIndex('by_key', (q) => q.eq('key', definition.key))
 				.unique();
 
 			const badgeId = await upsertBadge(
@@ -907,7 +910,7 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 
 			const rules = await ctx.db
 				.query('badgeRules')
-				.withIndex('by_badgeDefinitionId', (q: any) => q.eq('badgeDefinitionId', badgeId))
+				.withIndex('by_badgeDefinitionId', (q) => q.eq('badgeDefinitionId', badgeId))
 				.collect();
 
 			const matchingRule = rules.find((rule) => rule.name === definition.ruleName);
@@ -935,7 +938,7 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 		if (args.deactivateOtherPlatformBadges ?? true) {
 			const platformBadges = await ctx.db
 				.query('badgeDefinitions')
-				.withIndex('by_scopeType', (q: any) => q.eq('scopeType', 'global'))
+				.withIndex('by_scopeType', (q) => q.eq('scopeType', 'global'))
 				.collect();
 			for (const badge of platformBadges) {
 				if (badge.issuerType !== 'platform') continue;

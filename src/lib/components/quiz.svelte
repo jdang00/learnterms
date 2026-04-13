@@ -32,7 +32,7 @@
 		<div class="card-body">
 			<div class="flex flex-row justify-between mb-8 mt-4">
 				<div class="flex">
-					<h2 class="card-title {showAnswer ? '' : 'blur'}">Blepharitis</h2>
+					<h2 class="card-title {showAnswer ? '' : 'blur-xs'}">Blepharitis</h2>
 				</div>
 				<button class="btn btn-ghost">
 					<Star class="stroke-current" />

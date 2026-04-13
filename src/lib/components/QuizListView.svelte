@@ -16,7 +16,7 @@
 {:else}
   <div class="space-y-4">
     {#each questions as questionItem, index (questionItem._id)}
-      <div class="group relative rounded-2xl border border-base-200 bg-base-100 p-5 transition-all hover:border-base-300 hover:shadow-sm">
+      <div class="group relative rounded-2xl border border-base-200 bg-base-100 p-5 transition-all hover:border-base-300 hover:shadow-xs">
         <div class="flex flex-col gap-4">
           <!-- Header: Index, Stem & Type -->
           <div class="flex items-start gap-3">
@@ -67,4 +67,3 @@
     {/each}
   </div>
 {/if}
-

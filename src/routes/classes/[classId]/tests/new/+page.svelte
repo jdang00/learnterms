@@ -1,13 +1,29 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../convex/_generated/dataModel';
-	import { ChevronLeft, Clock, Target, Shuffle, Hash, Filter, Play, History, Tags } from 'lucide-svelte';
+	import {
+		ChevronLeft,
+		Clock,
+		Target,
+		Shuffle,
+		Hash,
+		Filter,
+		Play,
+		History,
+		Tags
+	} from 'lucide-svelte';
 
 	type SourceFilter = 'all' | 'flagged' | 'incomplete';
 	type QuestionTypeKey = 'multiple_choice' | 'fill_in_the_blank' | 'matching';
+	const questionTypeOptions: QuestionTypeKey[] = [
+		'multiple_choice',
+		'fill_in_the_blank',
+		'matching'
+	];
 
 	const client = useConvexClient();
 
@@ -69,7 +85,7 @@
 					sourceFilter,
 					questionTypes: selectedQuestionTypes
 				}
-				: 'skip'
+			: 'skip'
 	);
 
 	const attemptsQuery = useQuery(api.customQuiz.getUserAttemptsForClass, () =>
@@ -141,22 +157,26 @@
 		selectedModuleIds = Array.from(new Set([...selectedModuleIds, ...matched]));
 	}
 
-		function typeLabel(type: string): string {
-			switch (type) {
-				case 'multiple_choice': return 'Multiple Choice';
-				case 'fill_in_the_blank': return 'Fill in the Blank';
-				case 'matching': return 'Matching';
-				default: return type;
-			}
+	function typeLabel(type: string): string {
+		switch (type) {
+			case 'multiple_choice':
+				return 'Multiple Choice';
+			case 'fill_in_the_blank':
+				return 'Fill in the Blank';
+			case 'matching':
+				return 'Matching';
+			default:
+				return type;
 		}
+	}
 
-		function safeTagColor(value?: string): string | null {
-			if (!value) return null;
-			const trimmed = value.trim();
-			const isHex = /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(trimmed);
-			const isRgbLike = /^(?:rgb|hsl)a?\([\d\s.,%+-]+\)$/i.test(trimmed);
-			return isHex || isRgbLike ? trimmed : null;
-		}
+	function safeTagColor(value?: string): string | null {
+		if (!value) return null;
+		const trimmed = value.trim();
+		const isHex = /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(trimmed);
+		const isRgbLike = /^(?:rgb|hsl)a?\([\d\s.,%+-]+\)$/i.test(trimmed);
+		return isHex || isRgbLike ? trimmed : null;
+	}
 
 	async function startTest() {
 		createError = null;
@@ -175,7 +195,7 @@
 
 		starting = true;
 		try {
-				const result = await client.mutation(api.customQuiz.createCustomQuizAttempt, {
+			const result = await client.mutation(api.customQuiz.createCustomQuizAttempt, {
 				classId,
 				moduleIds: selectedModuleIds,
 				questionCount: effectiveQuestionCount,
@@ -186,7 +206,9 @@
 				timeLimitSec: timed ? Math.max(1, timeLimitMinutes) * 60 : undefined,
 				passThresholdPct
 			});
-			await goto(`/classes/${classId}/tests/${result.attemptId}`);
+			await goto(
+				resolve('/classes/[classId]/tests/[attemptId]', { classId, attemptId: result.attemptId })
+			);
 		} catch (error: any) {
 			createError = error?.message ?? 'Something went wrong. Please try again.';
 		} finally {
@@ -196,20 +218,29 @@
 
 	function formatAttemptStatus(status: string): string {
 		switch (status) {
-			case 'in_progress': return 'In Progress';
-			case 'submitted': return 'Completed';
-			case 'timed_out': return 'Time Expired';
-			case 'abandoned': return 'Abandoned';
-			default: return status.replace('_', ' ');
+			case 'in_progress':
+				return 'In Progress';
+			case 'submitted':
+				return 'Completed';
+			case 'timed_out':
+				return 'Time Expired';
+			case 'abandoned':
+				return 'Abandoned';
+			default:
+				return status.replace('_', ' ');
 		}
 	}
 
 	function statusBadgeClass(status: string): string {
 		switch (status) {
-			case 'in_progress': return 'badge-warning';
-			case 'submitted': return 'badge-success';
-			case 'timed_out': return 'badge-error';
-			default: return 'badge-ghost';
+			case 'in_progress':
+				return 'badge-warning';
+			case 'submitted':
+				return 'badge-success';
+			case 'timed_out':
+				return 'badge-error';
+			default:
+				return 'badge-ghost';
 		}
 	}
 </script>
@@ -221,7 +252,7 @@
 				<div>
 					<a
 						class="btn btn-ghost btn-sm font-bold rounded-full text-secondary mb-2"
-						href="/classes?classId={classId}"
+						href={resolve('/classes/[classId]', { classId })}
 					>
 						<ChevronLeft size={16} /> Back to Class
 					</a>
@@ -233,7 +264,7 @@
 			</div>
 
 			{#if builderQuery.isLoading}
-				<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm">
+				<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs">
 					<div class="card-body">
 						<div class="skeleton h-6 w-56"></div>
 						<div class="skeleton h-4 w-full mt-2"></div>
@@ -247,11 +278,13 @@
 			{:else if builderQuery.data}
 				<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 					<section class="xl:col-span-2 space-y-6">
-						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm">
+						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs">
 							<div class="card-body">
 								<h2 class="card-title">
 									{builderQuery.data.class.name}
-									<span class="badge badge-soft badge-primary rounded-full text-xs">{builderQuery.data.class.code}</span>
+									<span class="badge badge-soft badge-primary rounded-full text-xs"
+										>{builderQuery.data.class.code}</span
+									>
 								</h2>
 								<p class="text-sm text-base-content/60">{builderQuery.data.class.description}</p>
 
@@ -259,24 +292,24 @@
 									<div class="flex items-center justify-between mb-3">
 										<h3 class="font-semibold">Choose Modules</h3>
 										<div class="flex gap-2">
-												<button
-													class="btn btn-xs btn-primary btn-soft rounded-full"
-													onclick={() => {
-														createError = null;
-														selectedModuleIds = (builderQuery.data.modules ?? []).map((m: any) => m._id);
-													}}
-												>
-													Select All
-												</button>
-												<button
-													class="btn btn-xs btn-ghost rounded-full"
-													onclick={() => {
-														createError = null;
-														selectedModuleIds = [];
-													}}
-												>
-													Clear
-												</button>
+											<button
+												class="btn btn-xs btn-primary btn-soft rounded-full"
+												onclick={() => {
+													createError = null;
+													selectedModuleIds = (builderQuery.data.modules ?? []).map((m) => m._id);
+												}}
+											>
+												Select All
+											</button>
+											<button
+												class="btn btn-xs btn-ghost rounded-full"
+												onclick={() => {
+													createError = null;
+													selectedModuleIds = [];
+												}}
+											>
+												Clear
+											</button>
 										</div>
 									</div>
 
@@ -288,13 +321,13 @@
 														<Tags size={14} class="text-base-content/50" />
 														Build from Tag Collections
 													</div>
-														<div class="text-xs text-base-content/50 mt-1">
-															Use tags like “Quiz 4” or “Midterm” to auto-select all tagged modules.
-														</div>
-														<div class="text-xs text-base-content/40 mt-1">
-															Clicking a tag immediately checks the matching modules below.
-														</div>
+													<div class="text-xs text-base-content/50 mt-1">
+														Use tags like “Quiz 4” or “Midterm” to auto-select all tagged modules.
 													</div>
+													<div class="text-xs text-base-content/40 mt-1">
+														Clicking a tag immediately checks the matching modules below.
+													</div>
+												</div>
 												<div class="flex gap-2">
 													<button
 														class="btn btn-xs btn-primary btn-soft rounded-full"
@@ -310,41 +343,50 @@
 													>
 														Add Modules
 													</button>
-														<button
-															class="btn btn-xs btn-ghost rounded-full"
-															onclick={() => {
-																createError = null;
-																selectedTagCollectionIds = [];
-																selectedModuleIds = [];
-															}}
-															disabled={selectedTagCollectionIds.length === 0}
-														>
-															Clear Tags
+													<button
+														class="btn btn-xs btn-ghost rounded-full"
+														onclick={() => {
+															createError = null;
+															selectedTagCollectionIds = [];
+															selectedModuleIds = [];
+														}}
+														disabled={selectedTagCollectionIds.length === 0}
+													>
+														Clear Tags
 													</button>
 												</div>
 											</div>
 
 											<div class="flex flex-wrap gap-2 mt-3">
-													{#each builderQuery.data.tagCollections as tag (tag._id)}
-														{@const active = selectedTagCollectionIds.includes(tag._id)}
-														{@const tagColor = safeTagColor(tag.color)}
-														<button
-														class="btn btn-sm rounded-full border transition-all duration-200 {active ? 'btn-primary btn-soft border-primary/40' : 'btn-ghost border-base-300'}"
+												{#each builderQuery.data.tagCollections as tag (tag._id)}
+													{@const active = selectedTagCollectionIds.includes(tag._id)}
+													{@const tagColor = safeTagColor(tag.color)}
+													<button
+														class="btn btn-sm rounded-full border transition-all duration-200 {active
+															? 'btn-primary btn-soft border-primary/40'
+															: 'btn-ghost border-base-300'}"
 														onclick={() => toggleTagCollection(tag._id)}
 														title={`Modules: ${tag.moduleCount} · Questions: ${tag.questionCount}`}
 													>
-															{#if tagColor}
-																<span class="inline-block w-2 h-2 rounded-full" style={`background:${tagColor}`}></span>
-															{/if}
+														{#if tagColor}
+															<span
+																class="inline-block w-2 h-2 rounded-full"
+																style={`background:${tagColor}`}
+															></span>
+														{/if}
 														<span>{tag.name}</span>
-														<span class="opacity-60 text-xs">({tag.moduleCount}m · {tag.questionCount}q)</span>
+														<span class="opacity-60 text-xs"
+															>({tag.moduleCount}m · {tag.questionCount}q)</span
+														>
 													</button>
 												{/each}
 											</div>
 
 											{#if selectedTagCollectionIds.length > 0}
 												<div class="text-xs text-base-content/50 mt-3">
-													Selected tags map to <span class="font-semibold text-base-content/70">{matchedTagModuleIds.length}</span>
+													Selected tags map to <span class="font-semibold text-base-content/70"
+														>{matchedTagModuleIds.length}</span
+													>
 													{matchedTagModuleIds.length === 1 ? ' module' : ' modules'}.
 												</div>
 											{/if}
@@ -371,16 +413,22 @@
 															<span class="truncate">{module.title}</span>
 														</div>
 														<div class="text-xs text-base-content/50 mt-1">
-															{module.questionCount} {module.questionCount === 1 ? 'question' : 'questions'}
+															{module.questionCount}
+															{module.questionCount === 1 ? 'question' : 'questions'}
 														</div>
 														{#if module.tags && module.tags.length > 0}
 															<div class="flex flex-wrap gap-1 mt-2">
-																	{#each module.tags as tag (tag._id)}
-																		{@const tagColor = safeTagColor(tag.color)}
-																		<span class="badge badge-soft badge-xs rounded-full border border-base-300">
-																			{#if tagColor}
-																				<span class="inline-block w-1.5 h-1.5 rounded-full mr-1" style={`background:${tagColor}`}></span>
-																			{/if}
+																{#each module.tags as tag (tag._id)}
+																	{@const tagColor = safeTagColor(tag.color)}
+																	<span
+																		class="badge badge-soft badge-xs rounded-full border border-base-300"
+																	>
+																		{#if tagColor}
+																			<span
+																				class="inline-block w-1.5 h-1.5 rounded-full mr-1"
+																				style={`background:${tagColor}`}
+																			></span>
+																		{/if}
 																		{tag.name}
 																	</span>
 																{/each}
@@ -400,7 +448,7 @@
 							</div>
 						</div>
 
-						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm">
+						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs">
 							<div class="card-body space-y-5">
 								<h2 class="card-title">Test Settings</h2>
 
@@ -412,10 +460,7 @@
 												Question Source
 											</span>
 										</div>
-										<select
-											class="select select-bordered rounded-xl"
-											bind:value={sourceFilter}
-										>
+										<select class="select select-bordered rounded-xl" bind:value={sourceFilter}>
 											<option value="all">All questions</option>
 											<option value="flagged">Flagged only</option>
 											<option value="incomplete">Not yet completed</option>
@@ -447,10 +492,12 @@
 								<div>
 									<div class="text-sm font-medium mb-2">Question Types</div>
 									<div class="flex flex-wrap gap-2">
-											{#each (['multiple_choice', 'fill_in_the_blank', 'matching'] as QuestionTypeKey[]) as type (type)}
+										{#each questionTypeOptions as type (type)}
 											<button
 												class="btn btn-sm rounded-full transition-all duration-200
-												{selectedQuestionTypes.includes(type) ? 'btn-primary btn-soft' : 'btn-ghost border border-base-300'}"
+												{selectedQuestionTypes.includes(type)
+													? 'btn-primary btn-soft'
+													: 'btn-ghost border border-base-300'}"
 												onclick={() => toggleQuestionType(type)}
 											>
 												{typeLabel(type)}
@@ -487,7 +534,11 @@
 											</span>
 										</div>
 										<div class="flex items-center gap-2">
-											<input type="checkbox" class="toggle toggle-primary toggle-sm" bind:checked={timed} />
+											<input
+												type="checkbox"
+												class="toggle toggle-primary toggle-sm"
+												bind:checked={timed}
+											/>
 											<input
 												type="number"
 												class="input input-bordered rounded-xl flex-1"
@@ -499,21 +550,31 @@
 											<span class="text-base-content/50 text-sm">min</span>
 										</div>
 										<div class="label">
-											<span class="label-text-alt text-base-content/40">Time is always tracked, even without a limit.</span>
+											<span class="label-text-alt text-base-content/40"
+												>Time is always tracked, even without a limit.</span
+											>
 										</div>
 									</label>
 								</div>
 
 								<div class="flex flex-wrap gap-4 pt-1">
 									<label class="label cursor-pointer gap-2">
-										<input type="checkbox" class="checkbox checkbox-sm checkbox-primary" bind:checked={shuffleQuestions} />
+										<input
+											type="checkbox"
+											class="checkbox checkbox-sm checkbox-primary"
+											bind:checked={shuffleQuestions}
+										/>
 										<span class="label-text flex items-center gap-1.5">
 											<Shuffle size={14} class="text-base-content/50" />
 											Shuffle questions
 										</span>
 									</label>
 									<label class="label cursor-pointer gap-2">
-										<input type="checkbox" class="checkbox checkbox-sm checkbox-primary" bind:checked={shuffleOptions} />
+										<input
+											type="checkbox"
+											class="checkbox checkbox-sm checkbox-primary"
+											bind:checked={shuffleOptions}
+										/>
 										<span class="label-text flex items-center gap-1.5">
 											<Shuffle size={14} class="text-base-content/50" />
 											Shuffle answer choices
@@ -525,7 +586,7 @@
 					</section>
 
 					<aside class="space-y-4">
-						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-sm sticky top-4">
+						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs sticky top-4">
 							<div class="card-body gap-4">
 								<!-- Start Test CTA -->
 								{#if createError}
@@ -537,7 +598,10 @@
 								<button
 									class="btn btn-primary rounded-full w-full py-4 text-base gap-2 group shadow-lg hover:shadow-xl transition-all duration-200"
 									onclick={startTest}
-									disabled={starting || builderQuery.isLoading || selectedModuleIds.length === 0 || totalEligible === 0}
+									disabled={starting ||
+										builderQuery.isLoading ||
+										selectedModuleIds.length === 0 ||
+										totalEligible === 0}
 								>
 									<Play size={20} class="transition-transform group-hover:scale-110" />
 									{starting ? 'Setting up...' : 'Start Test'}
@@ -559,7 +623,9 @@
 										</div>
 										<div class="rounded-xl border border-base-300 p-2.5 text-center">
 											<div class="font-bold text-lg">{timed ? `${timeLimitMinutes}` : '—'}</div>
-											<div class="text-[10px] text-base-content/40">{timed ? 'Minutes' : 'Untimed'}</div>
+											<div class="text-[10px] text-base-content/40">
+												{timed ? 'Minutes' : 'Untimed'}
+											</div>
 										</div>
 										<div class="rounded-xl border border-base-300 p-2.5 text-center">
 											<div class="font-bold text-lg">{passThresholdPct}%</div>
@@ -567,21 +633,24 @@
 										</div>
 									</div>
 
-										<div class="flex items-center justify-between text-xs text-base-content/50">
-											<span>{totalEligible} available from {selectedModuleIds.length} {selectedModuleIds.length === 1 ? 'module' : 'modules'}</span>
+									<div class="flex items-center justify-between text-xs text-base-content/50">
+										<span
+											>{totalEligible} available from {selectedModuleIds.length}
+											{selectedModuleIds.length === 1 ? 'module' : 'modules'}</span
+										>
+									</div>
+									{#if selectedModuleIds.length === 0}
+										<div class="text-xs text-warning">
+											No modules selected. Use tags or pick modules to build a test.
 										</div>
-										{#if selectedModuleIds.length === 0}
-											<div class="text-xs text-warning">
-												No modules selected. Use tags or pick modules to build a test.
-											</div>
-										{/if}
+									{/if}
 
-										{#if summaryQuery.data?.byType?.length > 0}
+									{#if summaryQuery.data?.byType?.length > 0}
 										<div class="flex flex-wrap gap-1.5">
-												{#each summaryQuery.data.byType as row (row.questionType)}
-													<div class="badge badge-soft badge-sm rounded-full">
-														{typeLabel(row.questionType)}: {row.count}
-													</div>
+											{#each summaryQuery.data.byType as row (row.questionType)}
+												<div class="badge badge-soft badge-sm rounded-full">
+													{typeLabel(row.questionType)}: {row.count}
+												</div>
 											{/each}
 										</div>
 									{/if}
@@ -591,19 +660,46 @@
 								{#if !attemptsQuery.isLoading && attemptsQuery.data && attemptsQuery.data.length > 0}
 									<div class="border-t border-base-300 pt-3">
 										<details class="group">
-											<summary class="flex items-center gap-2 cursor-pointer text-sm font-medium text-base-content/60 hover:text-base-content transition-colors select-none">
+											<summary
+												class="flex items-center gap-2 cursor-pointer text-sm font-medium text-base-content/60 hover:text-base-content transition-colors select-none"
+											>
 												<History size={14} />
 												<span>Recent Attempts ({attemptsQuery.data.length})</span>
-												<svg class="w-3 h-3 ml-auto transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+												<svg
+													class="w-3 h-3 ml-auto transition-transform group-open:rotate-180"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+													><path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M19 9l-7 7-7-7"
+													></path></svg
+												>
 											</summary>
 											<div class="space-y-2 mt-3">
 												{#each attemptsQuery.data.slice(0, 4) as attempt (attempt._id)}
+													{@const attemptHref =
+														attempt.status === 'in_progress' || !attempt.resultSummary
+															? resolve('/classes/[classId]/tests/[attemptId]', {
+																	classId,
+																	attemptId: attempt._id
+																})
+															: resolve('/classes/[classId]/tests/[attemptId]/results', {
+																	classId,
+																	attemptId: attempt._id
+																})}
 													<a
 														class="block border border-base-300 rounded-xl p-2.5 hover:border-primary/40 transition-all duration-200"
-														href={`/classes/${classId}/tests/${attempt._id}${attempt.status === 'in_progress' ? '' : '/results'}`}
+														href={attemptHref}
 													>
 														<div class="flex justify-between items-center gap-2 text-xs">
-															<span class="badge badge-xs badge-soft rounded-full {statusBadgeClass(attempt.status)}">
+															<span
+																class="badge badge-xs badge-soft rounded-full {statusBadgeClass(
+																	attempt.status
+																)}"
+															>
 																{formatAttemptStatus(attempt.status)}
 															</span>
 															<span class="text-base-content/40">
@@ -613,7 +709,9 @@
 														<div class="text-xs text-base-content/50 mt-1">
 															{attempt.configSnapshot.questionCountActual} questions
 															{#if attempt.resultSummary}
-																<span class="font-semibold text-base-content/70">· {attempt.resultSummary.scorePct}%</span>
+																<span class="font-semibold text-base-content/70"
+																	>· {attempt.resultSummary.scorePct}%</span
+																>
 															{/if}
 														</div>
 													</a>

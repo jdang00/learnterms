@@ -4,6 +4,8 @@
 	import { api } from '../../convex/_generated/api';
 	import { ChevronRight } from 'lucide-svelte';
 	import { page } from '$app/stores';
+	import { resolve } from '$app/paths';
+	import type { InternalQuickLinkPath, QuickLinkPath } from './power-bar/types';
 
 	const ctx = useClerkContext();
 	const clerkUser = $derived(ctx.user);
@@ -20,7 +22,7 @@
 		title: string;
 		description?: string;
 		icon: string;
-		href?: string;
+		href?: QuickLinkPath;
 		onClick?: () => void;
 	}
 
@@ -50,11 +52,26 @@
 		}
 		if (userDataQuery.data?.cohortId) {
 			computed.push({ title: 'Class Activity', description: 'See classmate badges and stats', icon: '🏅', href: '/cohort' });
+			computed.push({
+				title: 'Clinic',
+				description: 'Open the LearnTerms clinic portal',
+				icon: '🏥',
+				href: 'https://clinic.learnterms.com/'
+			});
+			computed.push({
+				title: 'Eyegnosis',
+				description: 'Play the optometric puzzle game',
+				icon: '🧩',
+				href: 'https://clinic.learnterms.com/eyegnosis'
+			});
 		}
 		finalActions = computed;
 	});
 
 	const currentPath = $derived($page.url.pathname);
+	const isExternalLink = (href: QuickLinkPath): href is Exclude<QuickLinkPath, InternalQuickLinkPath> =>
+		href.startsWith('http');
+	const getHref = (href: QuickLinkPath) => (isExternalLink(href) ? href : resolve(href));
 </script>
 
 <div class="lg:col-span-1">
@@ -65,30 +82,54 @@
 	{#if finalActions.length > 0}
 		<nav class="sidebar-nav flex flex-col gap-1">
 			{#each finalActions as action (action.title)}
-				{@const isActive = action.href && currentPath === action.href}
-				<a
-					href={action.href}
-					class="sidebar-link group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200"
-					class:sidebar-link--active={isActive}
-					onclick={action.onClick}
-				>
-					<span
-						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm transition-transform duration-200 group-hover:scale-110"
-						class:sidebar-icon--active={isActive}
+				{@const isActive = action.href && !isExternalLink(action.href) && currentPath === action.href}
+				{#if action.href}
+					<a
+						href={getHref(action.href)}
+						target={isExternalLink(action.href) ? '_blank' : undefined}
+						rel={isExternalLink(action.href) ? 'noreferrer' : undefined}
+						class="sidebar-link group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200"
+						class:sidebar-link--active={isActive}
+						onclick={action.onClick}
 					>
-						{action.icon}
-					</span>
-					<div class="min-w-0 flex-1">
-						<span class="block text-sm font-medium">{action.title}</span>
-						{#if action.description}
-							<span class="block truncate text-xs text-base-content/50">{action.description}</span>
-						{/if}
-					</div>
-					<ChevronRight
-						size={14}
-						class="text-base-content/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-base-content/60"
-					/>
-				</a>
+						<span
+							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm transition-transform duration-200 group-hover:scale-110"
+							class:sidebar-icon--active={isActive}
+						>
+							{action.icon}
+						</span>
+						<div class="min-w-0 flex-1">
+							<span class="block text-sm font-medium">{action.title}</span>
+							{#if action.description}
+								<span class="block truncate text-xs text-base-content/50">{action.description}</span>
+							{/if}
+						</div>
+						<ChevronRight
+							size={14}
+							class="text-base-content/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-base-content/60"
+						/>
+					</a>
+				{:else}
+					<button
+						type="button"
+						class="sidebar-link group flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200"
+						onclick={action.onClick}
+					>
+						<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm transition-transform duration-200 group-hover:scale-110">
+							{action.icon}
+						</span>
+						<div class="min-w-0 flex-1">
+							<span class="block text-sm font-medium">{action.title}</span>
+							{#if action.description}
+								<span class="block truncate text-xs text-base-content/50">{action.description}</span>
+							{/if}
+						</div>
+						<ChevronRight
+							size={14}
+							class="text-base-content/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-base-content/60"
+						/>
+					</button>
+				{/if}
 			{/each}
 		</nav>
 	{:else}

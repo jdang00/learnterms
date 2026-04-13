@@ -1,3 +1,18 @@
+export type InternalQuickLinkPath =
+	| '/admin'
+	| '/admin/library'
+	| '/admin/question-studio'
+	| '/admin/progress'
+	| '/landing'
+	| '/classes'
+	| '/cohort';
+
+export type ExternalQuickLinkPath =
+	| 'https://clinic.learnterms.com/'
+	| 'https://clinic.learnterms.com/eyegnosis';
+
+export type QuickLinkPath = InternalQuickLinkPath | ExternalQuickLinkPath;
+
 export type CohortItem = {
 	_id: string;
 	name: string;
@@ -16,7 +31,7 @@ export type CohortItem = {
 export type QuickLinkItem = {
 	title: string;
 	description: string;
-	href: string;
+	href: QuickLinkPath;
 	icon: string;
 };
 

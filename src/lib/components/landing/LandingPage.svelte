@@ -18,6 +18,7 @@
 	import ReviewsShowcase from '$lib/components/landing/ReviewsShowcase.svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
+	import { resolve } from '$app/paths';
 
 	function reveal(node: HTMLElement, opts?: { y?: number; delay?: number; stagger?: number }) {
 		const y = opts?.y ?? 24;
@@ -229,7 +230,7 @@
 					instantly, so every study session stays focused and uninterrupted.
 				</p>
 				<div class="mt-8 flex">
-					<a href="/sign-in" class="btn btn-primary rounded-full px-6">
+					<a href={resolve('/sign-in')} class="btn btn-primary rounded-full px-6">
 						Start studying
 						<ArrowRight size={18} />
 					</a>
@@ -396,7 +397,7 @@
 								<div class="space-y-1.5" in:fade={{ duration: 300 }}>
 									<div class="flex items-center gap-2 min-w-0">
 										<div
-											class="h-5 w-5 shrink-0 rounded bg-error/15 flex items-center justify-center"
+											class="h-5 w-5 shrink-0 rounded-sm bg-error/15 flex items-center justify-center"
 										>
 											<span class="text-[8px] font-bold text-error">PDF</span>
 										</div>
@@ -467,7 +468,8 @@
 										>
 									</div>
 									<div class="grid grid-cols-8 gap-1">
-										{#each Array(16) as _, i}
+										<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
+										{#each Array(16) as _, i (i)}
 											<div
 												class="ai-dot h-2 w-full rounded-full {i < 14
 													? 'bg-success/30'
@@ -500,7 +502,8 @@
 
 					<div class="mt-4 rounded-xl border border-base-300/60 bg-base-100/50 p-3">
 						<div class="mb-1.5 flex items-center gap-1.5">
-							<span class="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium text-primary"
+							<span
+								class="rounded-sm bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium text-primary"
 								>Question</span
 							>
 						</div>
@@ -509,7 +512,7 @@
 						</p>
 						<div class="flex items-center gap-1.5 mb-1.5">
 							<span
-								class="rounded bg-secondary/10 px-1.5 py-0.5 text-[9px] font-medium text-secondary"
+								class="rounded-sm bg-secondary/10 px-1.5 py-0.5 text-[9px] font-medium text-secondary"
 								>Rationale</span
 							>
 							<span class="text-[9px] text-base-content/35">auto-generated with question</span>
@@ -520,7 +523,7 @@
 							<p
 								class="text-[10px] leading-relaxed text-base-content/70 transition-all duration-400 {solutionRevealed
 									? ''
-									: 'blur-sm select-none'}"
+									: 'blur-xs select-none'}"
 							>
 								When corneal power differs between meridians, light focuses at different planes
 								instead of one retinal point. That split focus produces blur, shadowing, and
@@ -585,7 +588,7 @@
 							>
 						</div>
 						<div class="space-y-1.5">
-							{#each cohortStudents as student, i}
+							{#each cohortStudents as student, i (student.initials)}
 								<div class="flex items-center gap-2">
 									<div
 										class="student-avatar h-5 w-5 shrink-0 rounded-full {student.color}/15 flex items-center justify-center"
@@ -713,7 +716,7 @@
 						</div>
 						<!-- Key strip -->
 						<div class="flex items-center justify-between px-2 py-2">
-							{#each keySequence as shortcut, i}
+							{#each keySequence as shortcut, i (shortcut.action)}
 								<div class="flex flex-col items-center gap-0.5">
 									<kbd
 										class="kbd text-[10px] leading-none min-w-[1.75rem] text-center transition-all duration-300"
@@ -752,14 +755,14 @@
 						<div
 							class="mb-2 flex items-center gap-0.5 rounded-lg border border-base-300/40 bg-base-200/50 px-1.5 py-1"
 						>
-							<span class="rich-btn text-[10px] font-bold px-1.5 py-0.5 rounded">B</span>
-							<span class="rich-btn text-[10px] italic px-1.5 py-0.5 rounded">I</span>
-							<span class="rich-btn text-[10px] underline px-1.5 py-0.5 rounded">U</span>
+							<span class="rich-btn text-[10px] font-bold px-1.5 py-0.5 rounded-sm">B</span>
+							<span class="rich-btn text-[10px] italic px-1.5 py-0.5 rounded-sm">I</span>
+							<span class="rich-btn text-[10px] underline px-1.5 py-0.5 rounded-sm">U</span>
 							<span class="text-base-300/60 mx-0.5">|</span>
-							<span class="rich-btn text-[10px] px-1.5 py-0.5 rounded">H1</span>
-							<span class="rich-btn text-[10px] px-1.5 py-0.5 rounded">H2</span>
+							<span class="rich-btn text-[10px] px-1.5 py-0.5 rounded-sm">H1</span>
+							<span class="rich-btn text-[10px] px-1.5 py-0.5 rounded-sm">H2</span>
 							<span class="text-base-300/60 mx-0.5">|</span>
-							<span class="rich-btn px-1.5 py-0.5 rounded"><Image size={9} /></span>
+							<span class="rich-btn px-1.5 py-0.5 rounded-sm"><Image size={9} /></span>
 						</div>
 
 						<!-- Attachment grid mockup -->
@@ -777,7 +780,7 @@
 								<div class="absolute inset-0 flex items-center justify-center">
 									<div class="space-y-0.5 text-center">
 										<div
-											class="mx-auto h-6 w-10 rounded border border-base-content/10 bg-base-100/50 flex items-center justify-center"
+											class="mx-auto h-6 w-10 rounded-sm border border-base-content/10 bg-base-100/50 flex items-center justify-center"
 										>
 											<div class="h-3 w-3 rounded-full bg-primary/20"></div>
 										</div>
@@ -834,7 +837,7 @@
 				<div>
 					<h3 class="text-lg font-bold mb-4">How students study</h3>
 					<div class="wf-timeline wf-timeline-student">
-						{#each studentSteps as step, i}
+						{#each studentSteps as step (step.title)}
 							<div class="wf-step">
 								<div class="wf-dot"></div>
 								<div class="wf-content">
@@ -850,7 +853,7 @@
 				<div>
 					<h3 class="text-lg font-bold mb-4">How content stays sharp</h3>
 					<div class="wf-timeline wf-timeline-admin">
-						{#each adminSteps as step, i}
+						{#each adminSteps as step (step.title)}
 							<div class="wf-step">
 								<div class="wf-dot"></div>
 								<div class="wf-content">
@@ -876,11 +879,11 @@
 					Join your class or start your own. Reach out to get your cohort started today.
 				</p>
 				<div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-					<a href="/sign-in" class="btn btn-primary btn-lg rounded-full px-8">
+					<a href={resolve('/sign-in')} class="btn btn-primary btn-lg rounded-full px-8">
 						Start studying
 						<ArrowRight size={18} />
 					</a>
-					<a href="/contact" class="btn btn-ghost btn-lg rounded-full px-6">
+					<a href={resolve('/contact')} class="btn btn-ghost btn-lg rounded-full px-6">
 						Sign your school up
 					</a>
 				</div>
@@ -1237,7 +1240,7 @@
 		transition: border-color 0.3s ease;
 	}
 
-	.solution-box:has(p:not(.blur-sm)) {
+	.solution-box:has(p:not(.blur-xs)) {
 		border-color: color-mix(in oklab, var(--color-success) 30%, transparent);
 	}
 

@@ -4,6 +4,7 @@ import type { ConvexClient } from 'convex/browser';
 import { goto } from '$app/navigation';
 import { toastStore } from '$lib/stores/toast.svelte';
 import type { StatusFilter } from '$lib/types';
+import { SvelteSet } from 'svelte/reactivity';
 
 export type QuestionItem = Doc<'question'>;
 export type MediaItem = { _id: string; url: string; altText: string; caption?: string };
@@ -22,6 +23,7 @@ export class QuestionCurationState {
 	sortMode: SortMode = $state('order');
 	statusFilter: StatusFilter = $state('all');
 	private searchTimeout: ReturnType<typeof setTimeout> | null = null;
+	private recentlyAddedTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 	// Auto-select after create
 	pendingSelectId: string | null = $state(null);
@@ -32,8 +34,8 @@ export class QuestionCurationState {
 	// Question list state
 	questionList: QuestionItem[] = $state([]);
 	selectedQuestionId: string | null = $state(null);
-	selectedQuestions: Set<string> = $state(new Set());
-	recentlyAddedIds: Set<string> = $state(new Set());
+	selectedQuestions: SvelteSet<string> = $state(new SvelteSet<string>());
+	recentlyAddedIds: SvelteSet<string> = $state(new SvelteSet<string>());
 
 	// UI mode state
 	reorderMode: boolean = $state(false);
@@ -64,9 +66,72 @@ export class QuestionCurationState {
 
 	// Initialize with dependencies
 	init(client: ConvexClient, moduleId: string) {
+		const didModuleChange = this.moduleId !== '' && this.moduleId !== moduleId;
+		if (didModuleChange) {
+			this.reset();
+		}
 		this.client = client;
 		this.moduleId = moduleId;
 		this.loadPreferences();
+	}
+
+	reset() {
+		for (const timeout of this.recentlyAddedTimeouts.values()) {
+			clearTimeout(timeout);
+		}
+		this.recentlyAddedTimeouts.clear();
+		this.questionList = [];
+		this.pendingSelectId = null;
+		this.selectedQuestionId = null;
+		this.selectedQuestions = new SvelteSet<string>();
+		this.recentlyAddedIds = new SvelteSet<string>();
+		this.reorderMode = false;
+		this.editorMode = 'view';
+		this.editingQuestionForInline = null;
+		this.hasUnsavedChanges = false;
+		this.pendingQuestionId = null;
+		this.showUnsavedChangesModal = false;
+		this.isEditQuestionModalOpen = false;
+		this.isAddQuestionModalOpen = false;
+		this.isDeleteQuestionModalOpen = false;
+		this.isDuplicateModalOpen = false;
+		this.isBulkDeleteModalOpen = false;
+		this.isMoveModalOpen = false;
+		this.isAttachmentModalOpen = false;
+		this.isLimitModalOpen = false;
+		this.editingQuestion = null;
+		this.questionToDelete = null;
+		this.duplicateTarget = null;
+		this.moveQuestionIds = [];
+		this.selectedAttachment = null;
+	}
+
+	private markAsRecentlyAdded(ids: string[]) {
+		const next = new SvelteSet(this.recentlyAddedIds);
+		for (const id of ids) {
+			next.add(id);
+			const existingTimeout = this.recentlyAddedTimeouts.get(id);
+			if (existingTimeout) {
+				clearTimeout(existingTimeout);
+			}
+
+			const timeout = setTimeout(() => {
+				const updated = new SvelteSet(this.recentlyAddedIds);
+				updated.delete(id);
+				this.recentlyAddedIds = updated;
+				this.recentlyAddedTimeouts.delete(id);
+			}, 4000);
+
+			this.recentlyAddedTimeouts.set(id, timeout);
+		}
+		this.recentlyAddedIds = next;
+	}
+
+	private errorToString(error: unknown): string {
+		if (typeof error === 'object' && error !== null && 'message' in error) {
+			return String((error as { message?: unknown }).message);
+		}
+		return String(error);
 	}
 
 	// Preferences
@@ -94,7 +159,9 @@ export class QuestionCurationState {
 	}
 
 	toggleDefaultQuestionStatus() {
-		this.setDefaultQuestionStatus(this.defaultQuestionStatus === 'published' ? 'draft' : 'published');
+		this.setDefaultQuestionStatus(
+			this.defaultQuestionStatus === 'published' ? 'draft' : 'published'
+		);
 	}
 
 	// Computed values
@@ -105,8 +172,11 @@ export class QuestionCurationState {
 
 	getSelectedQuestion(questionsData?: QuestionItem[] | null): QuestionItem | null {
 		if (!this.selectedQuestionId) return null;
-		return this.questionList.find((q) => q._id === this.selectedQuestionId) ??
-			questionsData?.find((q) => q._id === this.selectedQuestionId) ?? null;
+		return (
+			this.questionList.find((q) => q._id === this.selectedQuestionId) ??
+			questionsData?.find((q) => q._id === this.selectedQuestionId) ??
+			null
+		);
 	}
 
 	// Search operations
@@ -169,7 +239,7 @@ export class QuestionCurationState {
 	}
 
 	toggleQuestionSelection(questionId: string) {
-		const newSelected = new Set(this.selectedQuestions);
+		const newSelected = new SvelteSet(this.selectedQuestions);
 		if (newSelected.has(questionId)) {
 			newSelected.delete(questionId);
 		} else {
@@ -179,19 +249,22 @@ export class QuestionCurationState {
 	}
 
 	selectAllQuestions() {
-		this.selectedQuestions = new Set(this.questionList.map((q) => q._id));
+		this.selectedQuestions = new SvelteSet(this.questionList.map((q) => q._id));
 	}
 
 	deselectAllQuestions() {
-		this.selectedQuestions = new Set();
+		this.selectedQuestions = new SvelteSet<string>();
 	}
 
 	// Edit operations
 	editQuestion(questionItem: QuestionItem) {
 		const isDesktopOrTablet = typeof window !== 'undefined' && window.innerWidth >= 768;
 		if (isDesktopOrTablet) {
-			if ((this.editorMode === 'edit' || this.editorMode === 'add') && this.hasUnsavedChanges &&
-				this.editingQuestionForInline?._id !== questionItem._id) {
+			if (
+				(this.editorMode === 'edit' || this.editorMode === 'add') &&
+				this.hasUnsavedChanges &&
+				this.editingQuestionForInline?._id !== questionItem._id
+			) {
 				this.pendingQuestionId = `edit:${questionItem._id}`;
 				this.showUnsavedChangesModal = true;
 				return;
@@ -211,8 +284,11 @@ export class QuestionCurationState {
 			const url = new URL(window.location.href);
 			if (url.searchParams.has('edit')) {
 				url.searchParams.delete('edit');
-				const newPath = url.pathname + (url.search ? `?${url.searchParams.toString()}` : '');
-				await goto(newPath, { replaceState: true, noScroll: true });
+				// eslint-disable-next-line svelte/no-navigation-without-resolve -- pathname comes from the current URL after removing only the edit query param.
+				await goto(url.pathname, {
+					replaceState: true,
+					noScroll: true
+				});
 			}
 		} catch {}
 		this.isEditQuestionModalOpen = false;
@@ -293,12 +369,14 @@ export class QuestionCurationState {
 				moduleId: this.moduleId as Id<'module'>
 			});
 			if (result.success) {
-				toastStore.success(`Deleted ${result.deletedCount} question${result.deletedCount !== 1 ? 's' : ''}`);
+				toastStore.success(
+					`Deleted ${result.deletedCount} question${result.deletedCount !== 1 ? 's' : ''}`
+				);
 			}
 			if (this.selectedQuestionId && this.selectedQuestions.has(this.selectedQuestionId)) {
 				this.selectedQuestionId = null;
 			}
-			this.selectedQuestions = new Set();
+			this.selectedQuestions = new SvelteSet<string>();
 		} catch (error) {
 			console.error('Failed to bulk delete questions', error);
 			toastStore.error('Failed to delete questions');
@@ -327,7 +405,7 @@ export class QuestionCurationState {
 			if (this.selectedQuestionId && this.selectedQuestions.has(this.selectedQuestionId)) {
 				this.selectedQuestionId = null;
 			}
-			this.selectedQuestions = new Set();
+			this.selectedQuestions = new SvelteSet<string>();
 			toastStore.success(`Moved ${count} question${count !== 1 ? 's' : ''}`);
 		}
 	}
@@ -353,17 +431,13 @@ export class QuestionCurationState {
 				count
 			});
 			if (result?.insertedIds && Array.isArray(result.insertedIds)) {
-				const next = new Set(this.recentlyAddedIds);
-				for (const id of result.insertedIds) next.add(id);
-				this.recentlyAddedIds = next;
-				setTimeout(() => {
-					this.recentlyAddedIds = new Set();
-				}, 4000);
+				this.markAsRecentlyAdded(result.insertedIds);
 			}
 			toastStore.success(`Duplicated ${count} cop${count !== 1 ? 'ies' : 'y'}`);
-		} catch (error: any) {
-			console.error('Failed to duplicate questions');
-			if (error.message?.includes('Module limit reached') || error.toString().includes('Module limit reached')) {
+		} catch (error: unknown) {
+			const errStr = this.errorToString(error);
+			console.error('Failed to duplicate questions', error);
+			if (errStr.includes('Module limit reached')) {
 				this.isLimitModalOpen = true;
 			} else {
 				toastStore.error('Failed to duplicate');
@@ -381,16 +455,13 @@ export class QuestionCurationState {
 				questionId: questionId as Id<'question'>
 			});
 			if (result) {
-				const next = new Set(this.recentlyAddedIds);
-				next.add(result);
-				this.recentlyAddedIds = next;
-				setTimeout(() => {
-					this.recentlyAddedIds = new Set();
-				}, 4000);
+				this.markAsRecentlyAdded([result]);
 			}
 			toastStore.success('Question duplicated');
-		} catch (error: any) {
-			if (error.message?.includes('Module limit reached') || error.toString().includes('Module limit reached')) {
+		} catch (error: unknown) {
+			const errStr = this.errorToString(error);
+			console.error('Failed to duplicate question', error);
+			if (errStr.includes('Module limit reached')) {
 				this.isLimitModalOpen = true;
 			} else {
 				toastStore.error('Failed to duplicate');
@@ -503,10 +574,7 @@ export class QuestionCurationState {
 	}
 
 	// Handle edit param from URL
-	handleEditParam(
-		editParam: string | null,
-		questionsData: QuestionItem[] | null | undefined
-	) {
+	handleEditParam(editParam: string | null, questionsData: QuestionItem[] | null | undefined) {
 		if (!this.isEditQuestionModalOpen && this.editorMode === 'view' && questionsData && editParam) {
 			const found = questionsData.find((q) => q._id === editParam);
 			if (found) {

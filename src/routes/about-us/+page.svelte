@@ -1,3 +1,7 @@
+<script lang="ts">
+	import { resolve } from '$app/paths';
+</script>
+
 <svelte:head>
 	<title>LearnTerms — About Us</title>
 	<meta
@@ -174,7 +178,7 @@
 		<p class="mt-6">
 			Have ideas or want to pilot LearnTerms at your school? <a
 				class="link link-primary"
-				href="/contact">Get in touch</a
+				href={resolve('/contact')}>Get in touch</a
 			>.
 		</p>
 

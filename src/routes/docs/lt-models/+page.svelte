@@ -31,7 +31,7 @@
 		</thead>
 		<tbody>
 			<tr>
-				<td><code class="font-mono bg-base-200 px-2 py-1 rounded">swift-general</code></td>
+				<td><code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-general</code></td>
 				<td>General health sciences</td>
 				<td>Mixed content, interdisciplinary topics</td>
 				<td>
@@ -42,7 +42,7 @@
 				</td>
 			</tr>
 			<tr>
-				<td><code class="font-mono bg-base-200 px-2 py-1 rounded">swift-optometry</code></td>
+				<td><code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-optometry</code></td>
 				<td>Ocular and vision science</td>
 				<td>Ophthalmology, eye care, vision</td>
 				<td>
@@ -53,7 +53,7 @@
 				</td>
 			</tr>
 			<tr>
-				<td><code class="font-mono bg-base-200 px-2 py-1 rounded">swift-pharmacy</code></td>
+				<td><code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-pharmacy</code></td>
 				<td>Pharmacology and therapeutics</td>
 				<td>Drug mechanisms, patient care</td>
 				<td>
@@ -96,21 +96,21 @@
 
 <h3 class="mt-10">When to Use Each Model</h3>
 
-<h4 class="mt-6"><code class="font-mono bg-base-200 px-2 py-1 rounded">swift-general</code></h4>
+<h4 class="mt-6"><code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-general</code></h4>
 <ul>
 	<li>General health sciences courses</li>
 	<li>Mixed content or interdisciplinary topics</li>
 	<li>When you want balanced, comprehensive questions</li>
 </ul>
 
-<h4 class="mt-6"><code class="font-mono bg-base-200 px-2 py-1 rounded">swift-optometry</code></h4>
+<h4 class="mt-6"><code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-optometry</code></h4>
 <ul>
 	<li>Ophthalmology and vision science</li>
 	<li>Eye anatomy and physiology</li>
 	<li>Clinical optometry practice</li>
 </ul>
 
-<h4 class="mt-6"><code class="font-mono bg-base-200 px-2 py-1 rounded">swift-pharmacy</code></h4>
+<h4 class="mt-6"><code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-pharmacy</code></h4>
 <ul>
 	<li>Pharmacology and therapeutics</li>
 	<li>Drug mechanisms and interactions</li>

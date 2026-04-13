@@ -1,17 +1,48 @@
-import { browser } from '$app/environment';
-import createDOMPurify from 'dompurify';
+import sanitizeHtmlLib from 'sanitize-html';
 
-let domPurify: ReturnType<typeof createDOMPurify> | null = null;
+const ALLOWED_TAGS = [
+	'a',
+	'blockquote',
+	'br',
+	'code',
+	'em',
+	'h1',
+	'h2',
+	'h3',
+	'h4',
+	'h5',
+	'h6',
+	'li',
+	'mark',
+	'ol',
+	'p',
+	'pre',
+	's',
+	'span',
+	'strong',
+	'sub',
+	'sup',
+	'u',
+	'ul'
+];
+
+const ALLOWED_ATTRIBUTES: sanitizeHtmlLib.IOptions['allowedAttributes'] = {
+	a: ['href', 'target', 'rel'],
+	'*': ['style']
+};
+
+const ALLOWED_STYLES: sanitizeHtmlLib.IOptions['allowedStyles'] = {
+	'*': {
+		'text-align': [/^left$/, /^right$/, /^center$/, /^justify$/]
+	}
+};
 
 export function sanitizeHtml(value: string | undefined | null): string {
-	const raw = String(value ?? '');
-	if (!browser) {
-		return raw
-			.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-			.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-			.replace(/\son[a-z]+\s*=\s*(["'])[\s\S]*?\1/gi, '')
-			.replace(/\s(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi, ' $1="#"');
-	}
-	domPurify ??= createDOMPurify(window);
-	return domPurify.sanitize(raw);
+	return sanitizeHtmlLib(String(value ?? ''), {
+		allowedTags: ALLOWED_TAGS,
+		allowedAttributes: ALLOWED_ATTRIBUTES,
+		allowedStyles: ALLOWED_STYLES,
+		allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+		allowedSchemesAppliedToAttributes: ['href']
+	});
 }
