@@ -609,6 +609,7 @@
 	let initialAddStatus: 'published' | 'draft' = $state('draft');
 	let addSessionVersion = $state(0);
 	let previousMode: 'add' | 'edit' | null = $state(null);
+	let appliedEditorResetKey: string | null = $state(null);
 
 	$effect(() => {
 		const currentMode = mode;
@@ -669,7 +670,10 @@
 	);
 
 	$effect(() => {
-		void editorResetKey;
+		const resetKey = editorResetKey;
+		if (appliedEditorResetKey === resetKey) return;
+		appliedEditorResetKey = resetKey;
+
 		const nextStem = getInitialQuestionStem();
 		const nextRationale = getInitialQuestionRationale();
 		const nextMatching = getInitialMatchingState();
