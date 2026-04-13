@@ -255,9 +255,16 @@
 		return editingQuestion?.type ?? QUESTION_TYPES.MULTIPLE_CHOICE;
 	}
 
+	function cloneOptions(input?: Array<{ id?: string; text: string }> | null) {
+		return (input ?? []).map((option) => ({
+			id: option.id,
+			text: option.text ?? ''
+		}));
+	}
+
 	function getInitialOptions() {
 		return editingQuestion?.options?.length
-			? [...editingQuestion.options]
+			? cloneOptions(editingQuestion.options)
 			: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
 	}
 
@@ -443,6 +450,18 @@
 		if (t.startsWith('video/')) return 'video';
 		if (t.startsWith('audio/')) return 'audio';
 		return 'file';
+	}
+
+	function getErrorMessage(error: unknown): string {
+		if (error instanceof Error) {
+			const message = error.message.trim();
+			return message.length > 0 ? message : 'Failed to save question';
+		}
+		if (typeof error === 'string') {
+			const message = error.trim();
+			return message.length > 0 ? message : 'Failed to save question';
+		}
+		return 'Failed to save question';
 	}
 
 	function addMediaItem(mediaItem: (typeof queuedMedia)[0]) {
@@ -1022,8 +1041,9 @@
 			toastStore.success(mode === 'edit' ? 'Question saved' : 'Question created');
 			onSave(mode === 'add' ? questionId : undefined);
 		} catch (error) {
+			const message = getErrorMessage(error);
 			console.error('Failed to save question', error);
-			toastStore.error('Failed to save question');
+			toastStore.error(message);
 		} finally {
 			isSubmitting = false;
 		}
