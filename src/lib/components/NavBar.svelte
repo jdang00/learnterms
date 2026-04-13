@@ -93,6 +93,18 @@
 				href: '/cohort',
 				icon: '🏅'
 			});
+			links.push({
+				title: 'Clinic',
+				description: 'Open the LearnTerms clinic portal',
+				href: 'https://clinic.learnterms.com/',
+				icon: '🏥'
+			});
+			links.push({
+				title: 'Eyegnosis',
+				description: 'Play the optometric puzzle game',
+				href: 'https://clinic.learnterms.com/eyegnosis',
+				icon: '🧩'
+			});
 		}
 
 		return links;
