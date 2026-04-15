@@ -1,4 +1,7 @@
 <script module lang="ts">
+	type CardPatternVariant = 'stripes' | 'blobs' | 'bands';
+	type CardPalette = { base: string; light: string; dark: string };
+
 	const palettes = [
 		{ base: '#7c6fcd', light: '#a89be0', dark: '#5a4ea3' },
 		{ base: '#5b8fd9', light: '#87aee6', dark: '#3d6db5' },
@@ -13,6 +16,8 @@
 		{ base: '#5aad8e', light: '#82c5ab', dark: '#3e8e70' },
 		{ base: '#cc7191', light: '#db96ae', dark: '#ab5274' }
 	];
+
+	const patternVariants: CardPatternVariant[] = ['stripes', 'blobs', 'bands'];
 </script>
 
 <script lang="ts">
@@ -35,9 +40,25 @@
 	}
 
 	const hash = $derived(hashStr(classItem._id));
-	const palette = $derived(palettes[hash % palettes.length]);
-	const patternAngle = $derived(25 + (hash % 4) * 15);
-	const patternVariant = $derived(hash % 3);
+	const fallbackPalette = $derived(palettes[hash % palettes.length]);
+	const palette = $derived.by<CardPalette>(() => {
+		const theme = classItem.cardTheme;
+		if (!theme?.base || !theme.light || !theme.dark) return fallbackPalette;
+		return {
+			base: theme.base,
+			light: theme.light,
+			dark: theme.dark
+		};
+	});
+	const fallbackPatternAngle = $derived(25 + (hash % 4) * 15);
+	const patternAngle = $derived.by(() => {
+		const angle = classItem.cardTheme?.patternAngle;
+		return typeof angle === 'number' && Number.isFinite(angle) ? angle : fallbackPatternAngle;
+	});
+	const patternVariant = $derived.by<CardPatternVariant>(() => {
+		const variant = classItem.cardTheme?.patternVariant;
+		return variant && patternVariants.includes(variant) ? variant : patternVariants[hash % 3];
+	});
 </script>
 
 <div in:fade={{ duration: 300 }} class="relative group">
@@ -59,7 +80,7 @@
 						-webkit-mask-image: linear-gradient(to right, transparent 5%, black 60%);
 					"
 				>
-					{#if patternVariant === 0}
+					{#if patternVariant === 'stripes'}
 						<div
 							class="absolute inset-[-50%] w-[200%] h-[200%]"
 							style="background: repeating-linear-gradient(
@@ -74,7 +95,7 @@
 								{palette.light}40 28px
 							);"
 						></div>
-					{:else if patternVariant === 1}
+					{:else if patternVariant === 'blobs'}
 						<div
 							class="absolute inset-0"
 							style="background:

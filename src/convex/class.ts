@@ -2,6 +2,16 @@ import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 
+const cardThemeValidator = v.object({
+	base: v.string(),
+	light: v.string(),
+	dark: v.string(),
+	patternVariant: v.optional(
+		v.union(v.literal('stripes'), v.literal('blobs'), v.literal('bands'))
+	),
+	patternAngle: v.optional(v.number())
+});
+
 // Get user classes by their UserId and looking up their school and cohort
 export const getUserClasses = authQuery({
 	args: { id: v.id('cohort') },
@@ -105,7 +115,8 @@ export const insertClass = authAdminMutation({
 		semesterId: v.id('semester'),
 		code: v.string(),
 		description: v.string(),
-		order: v.number()
+		order: v.number(),
+		cardTheme: v.optional(cardThemeValidator)
 	},
 	handler: async (ctx, args) => {
 		// Trim whitespace from string fields
@@ -236,7 +247,8 @@ export const updateClass = authAdminMutation({
 		name: v.string(),
 		code: v.string(),
 		description: v.string(),
-		semesterId: v.id('semester')
+		semesterId: v.id('semester'),
+		cardTheme: v.optional(cardThemeValidator)
 	},
 	handler: async (ctx, args) => {
 		const classToUpdate = await ctx.db.get(args.classId);
@@ -323,6 +335,7 @@ export const updateClass = authAdminMutation({
 			code: trimmedCode,
 			description: trimmedDescription,
 			semesterId: args.semesterId,
+			cardTheme: args.cardTheme,
 			updatedAt: Date.now()
 		});
 

@@ -94,7 +94,18 @@ export default defineSchema({
 		semesterId: v.id('semester'),
 		code: v.string(),
 		description: v.string(),
-		order: v.number()
+		order: v.number(),
+		cardTheme: v.optional(
+			v.object({
+				base: v.string(),
+				light: v.string(),
+				dark: v.string(),
+				patternVariant: v.optional(
+					v.union(v.literal('stripes'), v.literal('blobs'), v.literal('bands'))
+				),
+				patternAngle: v.optional(v.number())
+			})
+		)
 	})
 		.index('by_cohortId', ['cohortId'])
 		.searchIndex('by_cohortId_name', {
