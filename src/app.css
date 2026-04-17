@@ -60,3 +60,60 @@
 	list-style-type: decimal;
 	margin-left: 1rem;
 }
+
+.tiptap-content > * + * {
+	margin-top: 0.75rem;
+}
+
+.tiptap-content a {
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 0.18em;
+	word-break: break-word;
+}
+
+.tiptap-content mark {
+	border-radius: 0.25rem;
+	padding: 0.05rem 0.2rem;
+	background: color-mix(in srgb, #facc15 40%, transparent);
+}
+
+.tiptap-content blockquote {
+	margin: 0.75rem 0;
+	padding-left: 0.9rem;
+	border-left: 3px solid color-mix(in srgb, currentColor 18%, transparent);
+	opacity: 0.85;
+}
+
+.tiptap-content :not(pre) > code,
+.tiptap-content li > code,
+.tiptap-content p > code {
+	font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Consolas, 'Liberation Mono', Menlo,
+		monospace;
+	font-size: 0.92em;
+	padding: 0.12rem 0.38rem;
+	border-radius: 0.45rem;
+	background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.tiptap-content pre {
+	margin: 0.9rem 0;
+	padding: 0.9rem 1rem;
+	border-radius: 1rem;
+	overflow-x: auto;
+	background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.tiptap-content pre code {
+	display: block;
+	padding: 0;
+	background: transparent;
+	font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Consolas, 'Liberation Mono', Menlo,
+		monospace;
+	font-size: 0.92em;
+	line-height: 1.55;
+}
+
+.tiptap-content li > p {
+	margin: 0;
+}

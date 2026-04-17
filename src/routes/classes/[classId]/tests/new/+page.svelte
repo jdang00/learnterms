@@ -28,6 +28,10 @@
 	const client = useConvexClient();
 
 	const classId = $derived(page.params.classId as Id<'class'>);
+	const classDashboardHref = $derived.by(() => {
+		const href = resolve('/classes');
+		return classId ? `${href}?classId=${encodeURIComponent(classId)}` : href;
+	});
 
 	let sourceFilter = $state<SourceFilter>('all');
 	let questionCount = $state(25);
@@ -252,7 +256,7 @@
 				<div>
 					<a
 						class="btn btn-ghost btn-sm font-bold rounded-full text-secondary mb-2"
-						href={resolve('/classes/[classId]', { classId })}
+						href={classDashboardHref}
 					>
 						<ChevronLeft size={16} /> Back to Class
 					</a>

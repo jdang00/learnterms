@@ -172,7 +172,20 @@
 	const toggleRationaleBold = () => $rationaleEditor.chain().focus().toggleBold().run();
 	const toggleRationaleItalic = () => $rationaleEditor.chain().focus().toggleItalic().run();
 	const toggleRationaleUnderline = () => $rationaleEditor.chain().focus().toggleUnderline().run();
-	const isRationaleActive = (name: string) => $rationaleEditor?.isActive(name) ?? false;
+	const toggleRationaleStrike = () => $rationaleEditor.chain().focus().toggleStrike().run();
+	const toggleRationaleCode = () => $rationaleEditor.chain().focus().toggleCode().run();
+	const toggleRationaleBlockquote = () => $rationaleEditor.chain().focus().toggleBlockquote().run();
+	const toggleRationaleBulletList = () => $rationaleEditor.chain().focus().toggleBulletList().run();
+	const toggleRationaleOrderedList = () => $rationaleEditor.chain().focus().toggleOrderedList().run();
+	const toggleRationaleHighlight = () => $rationaleEditor.chain().focus().toggleHighlight().run();
+	const setRationaleLink = () => {
+		const url = prompt('Enter URL:');
+		if (url) $rationaleEditor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+	};
+	const unsetRationaleLink = () =>
+		$rationaleEditor.chain().focus().extendMarkRange('link').unsetLink().run();
+	const isRationaleActive = (name: string, attrs = {}) =>
+		$rationaleEditor?.isActive(name, attrs) ?? false;
 
 	const rationaleMenuItems = $derived([
 		{
@@ -192,6 +205,48 @@
 			command: toggleRationaleUnderline,
 			icon: UnderlineIcon,
 			active: () => isRationaleActive('underline')
+		},
+		{
+			name: 'strike',
+			command: toggleRationaleStrike,
+			icon: StrikethroughIcon,
+			active: () => isRationaleActive('strike')
+		},
+		{
+			name: 'code',
+			command: toggleRationaleCode,
+			icon: CodeIcon,
+			active: () => isRationaleActive('code')
+		},
+		{
+			name: 'highlight',
+			command: toggleRationaleHighlight,
+			icon: HighlighterIcon,
+			active: () => isRationaleActive('highlight')
+		},
+		{
+			name: 'link',
+			command: isRationaleActive('link') ? unsetRationaleLink : setRationaleLink,
+			icon: LinkIcon,
+			active: () => isRationaleActive('link')
+		},
+		{
+			name: 'blockquote',
+			command: toggleRationaleBlockquote,
+			icon: QuoteIcon,
+			active: () => isRationaleActive('blockquote')
+		},
+		{
+			name: 'bullet-list',
+			command: toggleRationaleBulletList,
+			icon: ListIcon,
+			active: () => isRationaleActive('bulletList')
+		},
+		{
+			name: 'ordered-list',
+			command: toggleRationaleOrderedList,
+			icon: ListOrderedIcon,
+			active: () => isRationaleActive('orderedList')
 		}
 	]);
 
