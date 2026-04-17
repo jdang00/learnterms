@@ -72,6 +72,131 @@
 	let editor = $state() as Readable<Editor>;
 	let rationaleEditor = $state() as Readable<Editor>;
 
+	type ToolbarItem = {
+		name: string;
+		command: () => void;
+		icon:
+			| typeof Bold
+			| typeof Italic
+			| typeof UnderlineIcon
+			| typeof StrikethroughIcon
+			| typeof CodeIcon
+			| typeof HighlighterIcon
+			| typeof LinkIcon
+			| typeof QuoteIcon
+			| typeof ListIcon
+			| typeof ListOrderedIcon;
+		active: () => boolean;
+	};
+
+	function createToolbarCommands(getEditor: () => Editor | undefined) {
+		const withEditor = (command: (editor: Editor) => void) => () => {
+			const currentEditor = getEditor();
+			if (!currentEditor) return;
+			command(currentEditor);
+		};
+
+		const promptForLink = withEditor((currentEditor) => {
+			const url = prompt('Enter URL:');
+			if (!url) return;
+			currentEditor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+		});
+
+		const unsetLink = withEditor((currentEditor) => {
+			currentEditor.chain().focus().extendMarkRange('link').unsetLink().run();
+		});
+
+		const isActive = (name: string, attrs = {}) => getEditor()?.isActive(name, attrs) ?? false;
+
+		const commands = {
+			toggleBold: withEditor((currentEditor) => currentEditor.chain().focus().toggleBold().run()),
+			toggleItalic: withEditor((currentEditor) =>
+				currentEditor.chain().focus().toggleItalic().run()
+			),
+			toggleUnderline: withEditor((currentEditor) =>
+				currentEditor.chain().focus().toggleUnderline().run()
+			),
+			toggleStrike: withEditor((currentEditor) =>
+				currentEditor.chain().focus().toggleStrike().run()
+			),
+			toggleCode: withEditor((currentEditor) => currentEditor.chain().focus().toggleCode().run()),
+			toggleHighlight: withEditor((currentEditor) =>
+				currentEditor.chain().focus().toggleHighlight().run()
+			),
+			toggleBlockquote: withEditor((currentEditor) =>
+				currentEditor.chain().focus().toggleBlockquote().run()
+			),
+			toggleBulletList: withEditor((currentEditor) =>
+				currentEditor.chain().focus().toggleBulletList().run()
+			),
+			toggleOrderedList: withEditor((currentEditor) =>
+				currentEditor.chain().focus().toggleOrderedList().run()
+			),
+			setLink: promptForLink,
+			unsetLink
+		};
+
+		const menuItems = (): ToolbarItem[] => [
+			{ name: 'bold', command: commands.toggleBold, icon: Bold, active: () => isActive('bold') },
+			{
+				name: 'italic',
+				command: commands.toggleItalic,
+				icon: Italic,
+				active: () => isActive('italic')
+			},
+			{
+				name: 'underline',
+				command: commands.toggleUnderline,
+				icon: UnderlineIcon,
+				active: () => isActive('underline')
+			},
+			{
+				name: 'strike',
+				command: commands.toggleStrike,
+				icon: StrikethroughIcon,
+				active: () => isActive('strike')
+			},
+			{
+				name: 'code',
+				command: commands.toggleCode,
+				icon: CodeIcon,
+				active: () => isActive('code')
+			},
+			{
+				name: 'highlight',
+				command: commands.toggleHighlight,
+				icon: HighlighterIcon,
+				active: () => isActive('highlight')
+			},
+			{
+				name: 'link',
+				command: () => (isActive('link') ? commands.unsetLink() : commands.setLink()),
+				icon: LinkIcon,
+				active: () => isActive('link')
+			},
+			{
+				name: 'blockquote',
+				command: commands.toggleBlockquote,
+				icon: QuoteIcon,
+				active: () => isActive('blockquote')
+			},
+			{
+				name: 'bullet-list',
+				command: commands.toggleBulletList,
+				icon: ListIcon,
+				active: () => isActive('bulletList')
+			},
+			{
+				name: 'ordered-list',
+				command: commands.toggleOrderedList,
+				icon: ListOrderedIcon,
+				active: () => isActive('orderedList')
+			}
+		];
+
+		return { commands, isActive, menuItems };
+	}
+
 	function handleKeyboardSave(e: KeyboardEvent) {
 		if ((e.metaKey || e.ctrlKey) && e.key === 's') {
 			e.preventDefault();
@@ -105,150 +230,10 @@
 		return () => window.removeEventListener('keydown', handleKeyboardSave);
 	});
 
-	const toggleBold = () => $editor.chain().focus().toggleBold().run();
-	const toggleItalic = () => $editor.chain().focus().toggleItalic().run();
-	const toggleUnderline = () => $editor.chain().focus().toggleUnderline().run();
-	const toggleStrike = () => $editor.chain().focus().toggleStrike().run();
-	const toggleCode = () => $editor.chain().focus().toggleCode().run();
-	const toggleBlockquote = () => $editor.chain().focus().toggleBlockquote().run();
-	const toggleBulletList = () => $editor.chain().focus().toggleBulletList().run();
-	const toggleOrderedList = () => $editor.chain().focus().toggleOrderedList().run();
-	const setLink = () => {
-		const url = prompt('Enter URL:');
-		if (url) $editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-	};
-	const unsetLink = () => $editor.chain().focus().extendMarkRange('link').unsetLink().run();
-	const toggleHighlight = () => $editor.chain().focus().toggleHighlight().run();
-	const isActive = (name: string, attrs = {}) => $editor?.isActive(name, attrs) ?? false;
-
-	const menuItems = $derived([
-		{ name: 'bold', command: toggleBold, icon: Bold, active: () => isActive('bold') },
-		{ name: 'italic', command: toggleItalic, icon: Italic, active: () => isActive('italic') },
-		{
-			name: 'underline',
-			command: toggleUnderline,
-			icon: UnderlineIcon,
-			active: () => isActive('underline')
-		},
-		{
-			name: 'strike',
-			command: toggleStrike,
-			icon: StrikethroughIcon,
-			active: () => isActive('strike')
-		},
-		{ name: 'code', command: toggleCode, icon: CodeIcon, active: () => isActive('code') },
-		{
-			name: 'highlight',
-			command: toggleHighlight,
-			icon: HighlighterIcon,
-			active: () => isActive('highlight')
-		},
-		{
-			name: 'link',
-			command: isActive('link') ? unsetLink : setLink,
-			icon: LinkIcon,
-			active: () => isActive('link')
-		},
-		{
-			name: 'blockquote',
-			command: toggleBlockquote,
-			icon: QuoteIcon,
-			active: () => isActive('blockquote')
-		},
-		{
-			name: 'bullet-list',
-			command: toggleBulletList,
-			icon: ListIcon,
-			active: () => isActive('bulletList')
-		},
-		{
-			name: 'ordered-list',
-			command: toggleOrderedList,
-			icon: ListOrderedIcon,
-			active: () => isActive('orderedList')
-		}
-	]);
-
-	const toggleRationaleBold = () => $rationaleEditor.chain().focus().toggleBold().run();
-	const toggleRationaleItalic = () => $rationaleEditor.chain().focus().toggleItalic().run();
-	const toggleRationaleUnderline = () => $rationaleEditor.chain().focus().toggleUnderline().run();
-	const toggleRationaleStrike = () => $rationaleEditor.chain().focus().toggleStrike().run();
-	const toggleRationaleCode = () => $rationaleEditor.chain().focus().toggleCode().run();
-	const toggleRationaleBlockquote = () => $rationaleEditor.chain().focus().toggleBlockquote().run();
-	const toggleRationaleBulletList = () => $rationaleEditor.chain().focus().toggleBulletList().run();
-	const toggleRationaleOrderedList = () => $rationaleEditor.chain().focus().toggleOrderedList().run();
-	const toggleRationaleHighlight = () => $rationaleEditor.chain().focus().toggleHighlight().run();
-	const setRationaleLink = () => {
-		const url = prompt('Enter URL:');
-		if (url) $rationaleEditor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-	};
-	const unsetRationaleLink = () =>
-		$rationaleEditor.chain().focus().extendMarkRange('link').unsetLink().run();
-	const isRationaleActive = (name: string, attrs = {}) =>
-		$rationaleEditor?.isActive(name, attrs) ?? false;
-
-	const rationaleMenuItems = $derived([
-		{
-			name: 'bold',
-			command: toggleRationaleBold,
-			icon: Bold,
-			active: () => isRationaleActive('bold')
-		},
-		{
-			name: 'italic',
-			command: toggleRationaleItalic,
-			icon: Italic,
-			active: () => isRationaleActive('italic')
-		},
-		{
-			name: 'underline',
-			command: toggleRationaleUnderline,
-			icon: UnderlineIcon,
-			active: () => isRationaleActive('underline')
-		},
-		{
-			name: 'strike',
-			command: toggleRationaleStrike,
-			icon: StrikethroughIcon,
-			active: () => isRationaleActive('strike')
-		},
-		{
-			name: 'code',
-			command: toggleRationaleCode,
-			icon: CodeIcon,
-			active: () => isRationaleActive('code')
-		},
-		{
-			name: 'highlight',
-			command: toggleRationaleHighlight,
-			icon: HighlighterIcon,
-			active: () => isRationaleActive('highlight')
-		},
-		{
-			name: 'link',
-			command: isRationaleActive('link') ? unsetRationaleLink : setRationaleLink,
-			icon: LinkIcon,
-			active: () => isRationaleActive('link')
-		},
-		{
-			name: 'blockquote',
-			command: toggleRationaleBlockquote,
-			icon: QuoteIcon,
-			active: () => isRationaleActive('blockquote')
-		},
-		{
-			name: 'bullet-list',
-			command: toggleRationaleBulletList,
-			icon: ListIcon,
-			active: () => isRationaleActive('bulletList')
-		},
-		{
-			name: 'ordered-list',
-			command: toggleRationaleOrderedList,
-			icon: ListOrderedIcon,
-			active: () => isRationaleActive('orderedList')
-		}
-	]);
+	const stemToolbar = createToolbarCommands(() => $editor);
+	const rationaleToolbar = createToolbarCommands(() => $rationaleEditor);
+	const menuItems = $derived(stemToolbar.menuItems());
+	const rationaleMenuItems = $derived(rationaleToolbar.menuItems());
 
 	const questionTypeOptions = [
 		{ value: QUESTION_TYPES.MULTIPLE_CHOICE, label: 'Multiple Choice', icon: CheckSquare },

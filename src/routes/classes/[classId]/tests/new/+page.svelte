@@ -30,7 +30,13 @@
 	const classId = $derived(page.params.classId as Id<'class'>);
 	const classDashboardHref = $derived.by(() => {
 		const href = resolve('/classes');
-		return classId ? `${href}?classId=${encodeURIComponent(classId)}` : href;
+		if (!classId) return href;
+		const url = new URL(
+			href,
+			typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
+		);
+		url.searchParams.set('classId', String(classId));
+		return `${url.pathname}${url.search}`;
 	});
 
 	let sourceFilter = $state<SourceFilter>('all');
@@ -254,12 +260,14 @@
 		<div class="max-w-6xl mx-auto space-y-6">
 			<div class="flex items-center justify-between gap-3 flex-wrap">
 				<div>
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						class="btn btn-ghost btn-sm font-bold rounded-full text-secondary mb-2"
 						href={classDashboardHref}
 					>
 						<ChevronLeft size={16} /> Back to Class
 					</a>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					<h1 class="text-2xl sm:text-3xl font-bold">Build Your Test</h1>
 					<p class="text-base-content/60 text-sm mt-1">
 						Pick your modules, set your preferences, and jump in.
@@ -694,6 +702,7 @@
 																	classId,
 																	attemptId: attempt._id
 																})}
+													<!-- eslint-disable svelte/no-navigation-without-resolve -->
 													<a
 														class="block border border-base-300 rounded-xl p-2.5 hover:border-primary/40 transition-all duration-200"
 														href={attemptHref}
@@ -719,6 +728,7 @@
 															{/if}
 														</div>
 													</a>
+													<!-- eslint-enable svelte/no-navigation-without-resolve -->
 												{/each}
 											</div>
 										</details>
