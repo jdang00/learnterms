@@ -454,7 +454,7 @@ export const initialCourses: SeedCourse[] = [
 				category: 'participation',
 				inputType: 'points',
 				aggregation: 'set',
-				pointsPossible: 9,
+				pointsPossible: 10,
 				instances: [
 					{ id: 'primitive-reflex-lab', label: 'Primitive Reflex Lab', pointsPossible: 1 },
 					{ id: 'lab-2-visual-acuity', label: 'Lab 2: Visual Acuity', pointsPossible: 1 },
@@ -479,6 +479,11 @@ export const initialCourses: SeedCourse[] = [
 					{
 						id: 'lab-8-special-needs-autism-class-participation-assignment',
 						label: 'Lab 8: Special Needs/Autism Class Participation Assignment',
+						pointsPossible: 1
+					},
+					{
+						id: 'lab-9-child-abuse-reflection-assignment',
+						label: 'Lab 9: Child Abuse Reflection Assignment',
 						pointsPossible: 1
 					}
 				],
@@ -513,7 +518,7 @@ export const initialCourses: SeedCourse[] = [
 					},
 					{
 						id: 'quiz-8',
-						label: 'Quiz 8',
+						label: 'Quiz 8: Special Needs/ASD',
 						pointsPossible: 5,
 						note: 'Due Apr 28'
 					}
@@ -574,6 +579,16 @@ export const initialCourses: SeedCourse[] = [
 					{
 						id: 'bonus-quiz-binocular-vision-for-peds',
 						label: 'Bonus Quiz: Binocular Vision for Peds'
+					},
+					{
+						id: 'bonus-quiz-peds-presentations',
+						label: 'Bonus Quiz: Peds Presentations'
+					},
+					{
+						id: 'book-reading-extra-credit',
+						label: 'Book Reading Extra Credit',
+						pointsPossible: 2,
+						note: 'Read a book to a baby for 2 extra points.'
 					}
 				],
 				required: false,
