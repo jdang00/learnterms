@@ -82,7 +82,7 @@
 			{client}
 			classId={data.classId}
 		/>
-		<MobileInfo {module} />
+		<MobileInfo {module} classId={data.classId} />
 
 		<div
 			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"

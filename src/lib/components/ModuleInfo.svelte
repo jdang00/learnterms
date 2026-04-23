@@ -35,6 +35,9 @@
 	}
 
 	let shouldShowError = $derived(module.error && !(suppressAuthErrors && isAuthError(module.error)));
+	const moduleSelectionHref = $derived(
+		`${resolve('/classes')}?classId=${encodeURIComponent(String(classId))}`
+	);
 </script>
 
 {#if module.isLoading}
@@ -87,7 +90,7 @@
 				</div>
 			{/if}
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<a class="btn btn-ghost font-bold" href={resolve('/classes')}>
+				<a class="btn btn-ghost font-bold" href={moduleSelectionHref}>
 					<ChevronLeft size={16} /> Back to Module {(module.data?.order ?? 0) + 1}
 				</a>
 			</h4>

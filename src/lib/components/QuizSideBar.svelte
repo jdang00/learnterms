@@ -12,6 +12,9 @@
 	let isSolutionModalOpen = $state(false);
 	let isSettingsModalOpen = $state(false);
 	const sanitizedRationale = $derived(sanitizeHtml(getRationale(currentlySelected)));
+	const moduleSelectionHref = $derived(
+		`${resolve('/classes')}?classId=${encodeURIComponent(String(classId))}`
+	);
 
 	async function handleReset() {
 		if (userId && moduleId && client) {
@@ -49,7 +52,7 @@
 	{#if !hideSidebar}
 		<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<a class="btn btn-ghost font-bold rounded-full" href={resolve('/classes')}>
+				<a class="btn btn-ghost font-bold rounded-full" href={moduleSelectionHref}>
 					<ChevronLeft size={16} /> MODULE {module.data.order + 1}
 				</a>
 			</h4>
@@ -112,7 +115,7 @@
 			<div class="flex flex-col items-center space-y-4">
 				<a
 					class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
-					href={resolve('/classes')}
+					href={moduleSelectionHref}
 				>
 					<span class="group-hover:hidden">{module.data.order + 1}</span>
 					<span class="hidden group-hover:inline-flex items-center justify-center"
