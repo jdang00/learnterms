@@ -307,7 +307,7 @@ Keep the UI simple:
 
 ### Step 4: Test specifically against the school's SSO behavior
 
-For schools like NSUO with QuickLaunch/SAML in front of Learn:
+For schools like NSUOK with QuickLaunch/SAML in front of Learn:
 
 - Start the OAuth flow
 - Complete the SSO login

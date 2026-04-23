@@ -364,10 +364,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Grade Calculator · Browser-only, never stored</title>
-</svelte:head>
-
 <div class="min-h-screen bg-base-100">
 	<div class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
 		<header class="mb-6">
@@ -427,7 +423,7 @@
 																? 'Percentage-based.'
 																: 'Hybrid.'}
 												</strong>
-												{' '}
+												<span aria-hidden="true"> </span>
 											{/if}
 											{selectedCourse.description}
 										</p>
@@ -486,14 +482,18 @@
 
 							{#if bandRequirements.length > 0}
 								<div class="border-t border-base-200 pt-4">
-									<div class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-base-content/60">
+									<div
+										class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-base-content/60"
+									>
 										<Target size={13} />
 										What you need to finish at
 									</div>
 									<div class="overflow-hidden rounded-2xl border border-base-300">
 										<table class="table table-sm m-0">
 											<thead>
-												<tr class="bg-base-200/60 text-xs uppercase tracking-wider text-base-content/60">
+												<tr
+													class="bg-base-200/60 text-xs uppercase tracking-wider text-base-content/60"
+												>
 													<th class="font-semibold">Grade</th>
 													<th class="font-semibold text-right">Needed on remaining</th>
 												</tr>
@@ -514,7 +514,7 @@
 																	out of reach
 																</span>
 															{:else}
-																<span class="{requirementTone(row.neededPercent)}">
+																<span class={requirementTone(row.neededPercent)}>
 																	{row.neededPercent.toFixed(1)}%
 																</span>
 															{/if}
@@ -599,7 +599,7 @@
 
 						<div bind:this={entriesRoot} class="space-y-4">
 							{#if workspaceQuery.isLoading}
-								{#each Array.from({ length: 4 }) as _, i (i)}
+								{#each [0, 1, 2, 3] as i (i)}
 									<div class="skeleton h-24 w-full"></div>
 								{/each}
 							{:else if workspaceQuery.error}

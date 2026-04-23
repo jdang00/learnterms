@@ -150,7 +150,7 @@ export function expandEntry(entry: CalculatorEntry): ExpandedEntry {
 				key: `${entry.id}::${instance.id}`,
 				label: instance.label,
 				note: instance.note ?? null,
-				pointsPossible: instance.pointsPossible ?? null,
+				pointsPossible: instance.pointsPossible ?? entry.pointsPossible ?? null,
 				inputType: entry.inputType,
 				contributionType
 			});
@@ -289,6 +289,22 @@ function getDroppedProjectedItemKeys(entry: CalculatorEntry, items: TrackableIte
 	return new Set(ranked.slice(0, dropCount).map((candidate) => candidate.key));
 }
 
+function getDroppedWeightedItemKeys(
+	entry: CalculatorEntry,
+	candidates: Array<{ key: string; ratio: number; share: number }>
+) {
+	const dropCount = Math.max(0, entry.dropLowestCount ?? 0);
+	if (dropCount === 0 || candidates.length === 0) return new Set<string>();
+
+	const ranked = [...candidates].sort((a, b) => {
+		if (a.ratio !== b.ratio) return a.ratio - b.ratio;
+		if (a.share !== b.share) return a.share - b.share;
+		return a.key.localeCompare(b.key);
+	});
+
+	return new Set(ranked.slice(0, dropCount).map((candidate) => candidate.key));
+}
+
 export function calculateCourseSummary(
 	course: CalculatorCourse | null,
 	inputs: ItemInputMap
@@ -346,27 +362,39 @@ export function calculateCourseSummary(
 					? validItems.reduce((sum, item) => sum + (item.pointsPossible ?? 0), 0)
 					: validItems.length;
 
-			for (const item of validItems) {
-				const value = parseNumericValue(inputs[item.key]);
-				if (value === null) continue;
-				const ratio = getItemScoreRatio(item, value);
-				if (ratio === null) continue;
+			const scoredItems = validItems
+				.map((item) => {
+					const value = parseNumericValue(inputs[item.key]);
+					const ratio = getItemScoreRatio(item, value);
+					const share =
+						validItems.length === 0 || shareBase === 0
+							? 0
+							: standardWeight *
+								(item.pointsPossible !== null &&
+								item.pointsPossible > 0 &&
+								validItems.every(
+									(candidate) => candidate.pointsPossible !== null && candidate.pointsPossible > 0
+								)
+									? (item.pointsPossible ?? 0) / shareBase
+									: 1 / validItems.length);
 
-				const share =
-					validItems.length === 0 || shareBase === 0
-						? 0
-						: standardWeight *
-							(item.pointsPossible !== null &&
-							item.pointsPossible > 0 &&
-							validItems.every(
-								(candidate) => candidate.pointsPossible !== null && candidate.pointsPossible > 0
-							)
-								? (item.pointsPossible ?? 0) / shareBase
-								: 1 / validItems.length);
+					if (value === null || ratio === null) return null;
+
+					return {
+						key: item.key,
+						ratio,
+						share
+					};
+				})
+				.filter((item): item is { key: string; ratio: number; share: number } => item !== null);
+			const droppedWeightedKeys = getDroppedWeightedItemKeys(entry, scoredItems);
+
+			for (const item of scoredItems) {
+				if (droppedWeightedKeys.has(item.key)) continue;
 
 				enteredItemCount += 1;
-				enteredWeight += share;
-				earnedWeight += share * ratio;
+				enteredWeight += item.share;
+				earnedWeight += item.share * item.ratio;
 			}
 		}
 
@@ -419,6 +447,13 @@ export function calculateCourseSummary(
 			totalWeight,
 			enteredWeight
 		};
+	}
+
+	if (
+		course.ruleset.calculationMode === 'percentage' ||
+		course.ruleset.calculationMode === 'hybrid'
+	) {
+		throw new Error(`Unsupported calculation mode: ${course.ruleset.calculationMode}`);
 	}
 
 	let totalKnownPossible = 0;

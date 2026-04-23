@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { authAdminMutation } from './authQueries';
 import { internalMutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
 import {
 	initialCourses,
 	initialRulesets,
@@ -124,7 +125,7 @@ function slugify(value: string) {
 }
 
 async function ensureUniqueSlug(
-	ctx: { db: any },
+	ctx: Pick<MutationCtx, 'db'>,
 	table: 'gradeCalculatorRulesets' | 'gradeCalculatorCourses',
 	name: string
 ) {
@@ -135,7 +136,7 @@ async function ensureUniqueSlug(
 	while (true) {
 		const existing = await ctx.db
 			.query(table)
-			.withIndex('by_slug', (q: any) => q.eq('slug', candidate))
+			.withIndex('by_slug', (q) => q.eq('slug', candidate))
 			.first();
 
 		if (!existing || existing.deletedAt) {
@@ -245,10 +246,10 @@ function buildCourseWrite(
 	};
 }
 
-async function upsertRulesetBySeed(ctx: { db: any }, definition: SeedRuleset) {
+async function upsertRulesetBySeed(ctx: Pick<MutationCtx, 'db'>, definition: SeedRuleset) {
 	const existing = await ctx.db
 		.query('gradeCalculatorRulesets')
-		.withIndex('by_slug', (q: any) => q.eq('slug', definition.slug))
+		.withIndex('by_slug', (q) => q.eq('slug', definition.slug))
 		.first();
 
 	const payload = buildRulesetWrite(definition);
@@ -261,7 +262,7 @@ async function upsertRulesetBySeed(ctx: { db: any }, definition: SeedRuleset) {
 }
 
 async function upsertCourseBySeed(
-	ctx: { db: any },
+	ctx: Pick<MutationCtx, 'db'>,
 	definition: SeedCourse,
 	rulesetId: Id<'gradeCalculatorRulesets'> | undefined
 ) {
@@ -281,7 +282,7 @@ async function upsertCourseBySeed(
 	return (await ctx.db.insert('gradeCalculatorCourses', payload)) as Id<'gradeCalculatorCourses'>;
 }
 
-async function seedInitialCatalog(ctx: { db: any }) {
+async function seedInitialCatalog(ctx: Pick<MutationCtx, 'db'>) {
 	const rulesetIdsBySlug = new Map<string, Id<'gradeCalculatorRulesets'>>();
 
 	for (const ruleset of initialRulesets) {

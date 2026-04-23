@@ -334,7 +334,7 @@ export const initialCourses: SeedCourse[] = [
 		code: 'OPT.5223',
 		sourceDocument: 'OPT 5223 Syllabus Spring 2026.docx',
 		description:
-			'Points-based course that mirrors the counted Blackboard source items. Enter the individual homework, lab, project, and exam scores as shown in Blackboard; the calculator drops the lowest homework automatically and leaves out redundant rollup rows like Overall Homework and Total Homework. Recorded Presentations Quiz is not included yet because it does not appear to be part of the current counted Total row.',
+			'Points-based course that mirrors the counted Blackboard source items. Enter the individual homework, lab, project, and exam scores as shown in Blackboard; the calculator drops the lowest homework automatically and leaves out redundant rollup rows like Overall Homework and Total Homework. Recorded Presentations Quiz replaces Homework Set 4 and is included in the counted homework group.',
 		institution: 'NSU Oklahoma College of Optometry',
 		termLabel: 'Spring 2026',
 		status: 'draft',
@@ -363,7 +363,7 @@ export const initialCourses: SeedCourse[] = [
 				required: true,
 				rules: {
 					notes:
-						'Enter the individual homework sets from Blackboard. The lowest entered homework is dropped automatically, matching the counted homework total.'
+						'Enter the individual homework items from Blackboard, including Recorded Presentations Quiz in place of Homework Set 4. The lowest entered homework is dropped automatically, matching the counted homework total.'
 				}
 			},
 			{
@@ -454,7 +454,7 @@ export const initialCourses: SeedCourse[] = [
 				category: 'participation',
 				inputType: 'points',
 				aggregation: 'set',
-				pointsPossible: 10,
+				pointsPossible: 9,
 				instances: [
 					{ id: 'primitive-reflex-lab', label: 'Primitive Reflex Lab', pointsPossible: 1 },
 					{ id: 'lab-2-visual-acuity', label: 'Lab 2: Visual Acuity', pointsPossible: 1 },
