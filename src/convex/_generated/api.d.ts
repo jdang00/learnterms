@@ -18,6 +18,8 @@ import type * as contentLib from "../contentLib.js";
 import type * as curatorAnalytics from "../curatorAnalytics.js";
 import type * as customQuiz from "../customQuiz.js";
 import type * as featureAnnouncements from "../featureAnnouncements.js";
+import type * as gradeCalculator from "../gradeCalculator.js";
+import type * as gradeCalculatorCatalog from "../gradeCalculatorCatalog.js";
 import type * as http from "../http.js";
 import type * as migrations from "../migrations.js";
 import type * as module from "../module.js";
@@ -52,6 +54,8 @@ declare const fullApi: ApiFromModules<{
   curatorAnalytics: typeof curatorAnalytics;
   customQuiz: typeof customQuiz;
   featureAnnouncements: typeof featureAnnouncements;
+  gradeCalculator: typeof gradeCalculator;
+  gradeCalculatorCatalog: typeof gradeCalculatorCatalog;
   http: typeof http;
   migrations: typeof migrations;
   module: typeof module;

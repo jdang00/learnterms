@@ -466,6 +466,119 @@ export default defineSchema({
 		.index('by_attempt_question', ['attemptId', 'questionId'])
 		.index('by_attempt_module', ['attemptId', 'moduleId'])
 		.index('by_user_attempt', ['userId', 'attemptId']),
+	gradeCalculatorRulesets: defineTable({
+		name: v.string(),
+		slug: v.string(),
+		description: v.optional(v.string()),
+		status: v.union(v.literal('draft'), v.literal('active'), v.literal('archived')),
+		calculationMode: v.union(
+			v.literal('points'),
+			v.literal('weighted'),
+			v.literal('percentage'),
+			v.literal('hybrid')
+		),
+		roundingStrategy: v.union(
+			v.literal('none'),
+			v.literal('nearest_hundredth'),
+			v.literal('nearest_tenth'),
+			v.literal('nearest_whole')
+		),
+		passingPercentage: v.optional(v.number()),
+		gradeBands: v.array(
+			v.object({
+				id: v.string(),
+				label: v.string(),
+				minPercentage: v.number(),
+				maxPercentage: v.optional(v.number()),
+				colorHint: v.optional(v.string())
+			})
+		),
+		policies: v.object({
+			allowAttendance: v.boolean(),
+			allowBonus: v.boolean(),
+			allowDrops: v.boolean(),
+			allowReplacements: v.boolean()
+		}),
+		metadata: v.object({}),
+		updatedAt: v.number(),
+		deletedAt: v.optional(v.number())
+	})
+		.index('by_slug', ['slug'])
+		.index('by_status', ['status']),
+	gradeCalculatorCourses: defineTable({
+		name: v.string(),
+		slug: v.string(),
+		code: v.optional(v.string()),
+		sourceDocument: v.optional(v.string()),
+		description: v.optional(v.string()),
+		institution: v.optional(v.string()),
+		termLabel: v.optional(v.string()),
+		instructor: v.optional(v.string()),
+		status: v.union(v.literal('draft'), v.literal('active'), v.literal('archived')),
+		rulesetId: v.optional(v.id('gradeCalculatorRulesets')),
+		entryCount: v.number(),
+		entries: v.array(
+			v.object({
+				id: v.string(),
+				slug: v.string(),
+				name: v.string(),
+				shortLabel: v.optional(v.string()),
+				category: v.union(
+					v.literal('assignment'),
+					v.literal('quiz'),
+					v.literal('exam'),
+					v.literal('project'),
+					v.literal('lab'),
+					v.literal('attendance'),
+					v.literal('participation'),
+					v.literal('custom')
+				),
+				inputType: v.union(
+					v.literal('points'),
+					v.literal('percentage'),
+					v.literal('attendance'),
+					v.literal('pass_fail'),
+					v.literal('letter')
+				),
+				contributionType: v.optional(v.union(v.literal('standard'), v.literal('bonus'))),
+				aggregation: v.union(v.literal('single'), v.literal('set'), v.literal('running_total')),
+				weight: v.optional(v.number()),
+				pointsPossible: v.optional(v.number()),
+				quantity: v.optional(v.number()),
+				instancePoints: v.optional(v.array(v.number())),
+				instanceLabels: v.optional(v.array(v.string())),
+				instances: v.optional(
+					v.array(
+						v.object({
+							id: v.string(),
+							label: v.string(),
+							pointsPossible: v.optional(v.number()),
+							note: v.optional(v.string())
+						})
+					)
+				),
+				dropLowestCount: v.optional(v.number()),
+				required: v.boolean(),
+				rules: v.optional(
+					v.object({
+						replacementSourceEntryIds: v.optional(v.array(v.string())),
+						replacementCondition: v.optional(v.union(v.literal('if_higher'), v.literal('always'))),
+						bonusTargetEntryId: v.optional(v.string()),
+						bonusCap: v.optional(v.number()),
+						attendanceValuePerSession: v.optional(v.number()),
+						notes: v.optional(v.string())
+					})
+				),
+				metadata: v.object({})
+			})
+		),
+		metadata: v.object({}),
+		updatedAt: v.number(),
+		deletedAt: v.optional(v.number())
+	})
+		.index('by_slug', ['slug'])
+		.index('by_status', ['status'])
+		.index('by_rulesetId', ['rulesetId']),
 	contentLib: defineTable({
 		title: v.string(),
 		description: v.optional(v.string()),
