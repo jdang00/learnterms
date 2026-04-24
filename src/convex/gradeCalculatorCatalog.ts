@@ -217,9 +217,9 @@ export const initialCourses: SeedCourse[] = [
 				inputType: 'points',
 				aggregation: 'single',
 				weight: 20,
-				pointsPossible: 40,
+				pointsPossible: 44,
 				required: true,
-				rules: { notes: 'Scheduled for Feb 18, 2026. Enter as points out of 40.' }
+				rules: { notes: 'Enter as points out of 44, matching the official grade spreadsheet.' }
 			},
 			{
 				id: 'midterm-2',
@@ -698,7 +698,7 @@ export const initialCourses: SeedCourse[] = [
 		code: 'OPT.6023',
 		sourceDocument: 'Glaucoma Syllabus26.pdf',
 		description:
-			'Points-based course that follows the Blackboard total row for posted items. The current Blackboard total is built from Quizzes 1-4, Tests 1-2, plus Clinical Skills Bonus as numerator-only extra credit. Test 3 is estimated at 67 points and the Final Exam at 100 points based on the syllabus until Blackboard posts the exact values.',
+			'Points-based course that follows the Blackboard total row for posted items. The current Blackboard total is built from Quizzes 1-4, Tests 1-3, plus Clinical Skills Bonus as numerator-only extra credit. The Final Exam is estimated at 100 points based on the syllabus until Blackboard posts the exact value.',
 		institution: 'NSU Oklahoma College of Optometry',
 		termLabel: 'Spring 2026',
 		status: 'draft',
@@ -717,14 +717,12 @@ export const initialCourses: SeedCourse[] = [
 					{
 						id: 'test-3',
 						label: 'Test 3 - Apr 24',
-						pointsPossible: 67,
-						note: 'Estimated from the syllabus and prior test point values until Blackboard posts the exact total.'
+						pointsPossible: 68
 					}
 				],
 				required: true,
 				rules: {
-					notes:
-						'Tests 1 and 2 use posted Blackboard point values. Test 3 is currently estimated at 67 points.'
+					notes: 'Tests 1, 2, and 3 use posted Blackboard point values.'
 				}
 			},
 			{
