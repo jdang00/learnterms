@@ -12,11 +12,29 @@ function normalizeRationaleValue(value: string | null | undefined): string {
 	return trimmed;
 }
 
+export function getRationalePlainText(value: string | null | undefined): string {
+	const normalized = normalizeRationaleValue(value);
+	if (!normalized) return '';
+
+	return normalized
+		.replace(/<style[\s\S]*?<\/style>/gi, ' ')
+		.replace(/<script[\s\S]*?<\/script>/gi, ' ')
+		.replace(/<[^>]+>/g, ' ')
+		.replace(/&nbsp;/gi, ' ')
+		.replace(/&lt;/gi, '<')
+		.replace(/&gt;/gi, '>')
+		.replace(/&quot;/gi, '"')
+		.replace(/&#39;/gi, "'")
+		.replace(/&amp;/gi, '&')
+		.replace(/\s+/g, ' ')
+		.trim();
+}
+
 export function getRationale(value?: WithLegacyRationale | null): string {
 	if (!value) return '';
 	return normalizeRationaleValue(value.rationale) || normalizeRationaleValue(value.explanation);
 }
 
 export function hasRationale(value?: WithLegacyRationale | null): boolean {
-	return getRationale(value).length > 0;
+	return getRationalePlainText(getRationale(value)).length > 0;
 }
