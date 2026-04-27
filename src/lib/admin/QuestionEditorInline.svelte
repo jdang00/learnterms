@@ -42,7 +42,7 @@
 	import { useClerkContext } from 'svelte-clerk';
 	import type { Focus } from '$lib/config/generation';
 	import { Loader2 } from 'lucide-svelte';
-	import { getRationale } from '$lib/utils/rationale';
+	import { getRationale, getRationalePlainText } from '$lib/utils/rationale';
 
 	type QuestionItem = Doc<'question'>;
 	type QuestionMediaItem = FunctionReturnType<typeof api.questionMedia.getByQuestionId>[number];
@@ -378,6 +378,8 @@
 	let correctAnswers: string[] = $state([]);
 	let isSubmitting: boolean = $state(false);
 	let isGeneratingAI: boolean = $state(false);
+	let saveError: string | null = $state(null);
+	const rationaleDocsUrl = 'https://docs.learnterms.com/contributors/why-rationales-are-required';
 
 	// Get user's domain focus from metadata or default to 'general'
 	let userFocus: Focus = $state('general'); // TODO: fetch from user settings/metadata when available
@@ -493,15 +495,38 @@
 	}
 
 	function getErrorMessage(error: unknown): string {
+		const fallback = 'Failed to save question. Check the question fields and try again.';
+		const rationaleRequiredMessage =
+			'Add a rationale before publishing or saving this question. Rationales are now required so students can review why an answer is correct.';
+		const knownValidationMessages = [
+			'Matching questions must use pair-formatted correctAnswers',
+			'Question not found or access denied',
+			'Module not found',
+			'Module question limit'
+		];
+
+		const normalizeMessage = (message: string) =>
+			message
+				.replace(/^.*Uncaught Error:\s*/s, '')
+				.replace(/^Error:\s*/, '')
+				.split('\n')[0]
+				.trim();
+		const formatMessage = (rawMessage: string) => {
+			const message = normalizeMessage(rawMessage);
+			if (message.includes('Question rationale is required')) return rationaleRequiredMessage;
+			const knownMessage = knownValidationMessages.find((known) => message.includes(known));
+			if (knownMessage) return message;
+			if (message.includes('ConvexError') || rawMessage.includes('ConvexError')) return fallback;
+			return message.length > 0 ? message : fallback;
+		};
+
 		if (error instanceof Error) {
-			const message = error.message.trim();
-			return message.length > 0 ? message : 'Failed to save question';
+			return formatMessage(error.message);
 		}
 		if (typeof error === 'string') {
-			const message = error.trim();
-			return message.length > 0 ? message : 'Failed to save question';
+			return formatMessage(error);
 		}
-		return 'Failed to save question';
+		return fallback;
 	}
 
 	function addMediaItem(mediaItem: (typeof queuedMedia)[0]) {
@@ -940,8 +965,17 @@
 	}
 
 	async function handleSubmit() {
+		saveError = null;
+
 		if (!questionStem || !moduleId) {
 			toastStore.error('Question stem is required');
+			return;
+		}
+
+		if (!getRationalePlainText(questionRationale)) {
+			saveError =
+				'Add a rationale before saving this question. Rationales help students understand why the answer is correct and are now required for all questions.';
+			toastStore.error('Add a rationale before saving this question.');
 			return;
 		}
 
@@ -1087,6 +1121,7 @@
 		} catch (error) {
 			const message = getErrorMessage(error);
 			console.error('Failed to save question', error);
+			saveError = message;
 			toastStore.error(message);
 		} finally {
 			isSubmitting = false;
@@ -1118,6 +1153,22 @@
 			</button>
 		</div>
 	</div>
+
+	{#if saveError}
+		<div class="px-4 py-3 border-b border-error/20 bg-error/10 text-sm text-error">
+			<div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+				<span>{saveError}</span>
+				<a
+					class="link font-semibold"
+					href={rationaleDocsUrl}
+					target="_blank"
+					rel="noreferrer"
+				>
+					Why rationales are required
+				</a>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Toolbar: Type & Status -->
 	<div
@@ -1533,7 +1584,10 @@
 						<MessageSquare size={14} /> Rationale
 					</div>
 					<p class="text-[10px] text-base-content/40 mb-2">
-						Add notes or context here to guide AI-generated rationales
+						Required for every saved question.
+						<a class="link" href={rationaleDocsUrl} target="_blank" rel="noreferrer">
+							Why?
+						</a>
 					</p>
 					<div class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 group">
 						{#if rationaleEditor}
