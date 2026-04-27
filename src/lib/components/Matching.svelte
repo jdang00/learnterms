@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Eye, X } from 'lucide-svelte';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	type Option = { id: string; text: string };
 	let { qs = $bindable(), currentlySelected, allowSolution = true, allowClear = true } = $props();
 
@@ -110,6 +111,15 @@
 		qs.scheduleSave?.();
 	}
 
+	function handleSelectionChange(promptId: string, event: Event) {
+		const answerId = (event.currentTarget as HTMLSelectElement).value;
+		if (answerId) {
+			setUserSelection(promptId, answerId);
+		} else {
+			clearSelection(promptId);
+		}
+	}
+
 	function availableAnswersForPrompt(promptId: string): Option[] {
 		const chosenIds = new Set(
 			(qs.selectedAnswers || [])
@@ -168,9 +178,9 @@
 	}
 
 	const promptAnswerLookup = $derived.by(() => {
-		const promptToDirectAnswerIds = new Map<string, string[]>();
-		const promptToAcceptedAnswerIds = new Map<string, Set<string>>();
-		const promptToCanonicalCorrectId = new Map<string, string>();
+		const promptToDirectAnswerIds = new SvelteMap<string, string[]>();
+		const promptToAcceptedAnswerIds = new SvelteMap<string, SvelteSet<string>>();
+		const promptToCanonicalCorrectId = new SvelteMap<string, string>();
 		const answerOptions = answers();
 		const validAnswerIds = new Set(answerOptions.map((answer) => answer.id));
 		const answerKeyById = new Map(
@@ -191,7 +201,7 @@
 
 			promptToDirectAnswerIds.set(promptId, directAnswerIds);
 
-			const acceptedAnswerIds = new Set<string>(directAnswerIds);
+			const acceptedAnswerIds = new SvelteSet<string>(directAnswerIds);
 			if (directAnswerIds.length > 0) {
 				const acceptedKeys = new Set(
 					directAnswerIds
@@ -233,10 +243,6 @@
 		return acceptedAnswerIdsForPrompt(promptId).has(selectedId);
 	}
 
-	function isAcceptedAnswerForPrompt(promptId: string, answerId: string): boolean {
-		return acceptedAnswerIdsForPrompt(promptId).has(answerId);
-	}
-
 	function handleToggleSolution() {
 		if (!allowSolution) return;
 		qs.handleSolution();
@@ -269,43 +275,26 @@
 				</div>
 				<div class="text-base-content/60" aria-hidden="true">→</div>
 				<div class="flex-1 flex gap-2 items-center">
-					<div class="dropdown flex-1">
-						<button
-							type="button"
-							class="btn select select-bordered w-full rounded-full {qs.showSolution &&
+					<div class="flex-1">
+						<select
+							class="select select-bordered w-full rounded-full {qs.showSolution &&
 							isSelectionCorrectForPrompt(p.id)
 								? 'select-success'
 								: ''}"
+							value={qs.showSolution
+								? (correctAnswerIdForPrompt(p.id) ?? getUserSelectionForPrompt(p.id) ?? '')
+								: (getUserSelectionForPrompt(p.id) ?? '')}
+							onchange={(event) => handleSelectionChange(p.id, event)}
+							disabled={qs.showSolution}
+							aria-label={`Answer for ${getPromptLabel(p.text) || p.id}`}
 						>
-							{#if qs.showSolution && correctAnswerIdForPrompt(p.id)}
-								{getAnswerLabel(
-									answers().find((a) => a.id === correctAnswerIdForPrompt(p.id))?.text || ''
-								)}
-							{:else if getUserSelectionForPrompt(p.id)}
-								{getAnswerLabel(
-									shuffledAnswers.find((a) => a.id === getUserSelectionForPrompt(p.id))?.text || ''
-								)}
-							{:else}
-								Select a choice
-							{/if}
-						</button>
-						<ul class="dropdown-content menu p-2 shadow-xs bg-base-100 rounded-2xl w-full z-[1]">
+							<option value="">Select a choice</option>
 							{#each qs.showSolution ? shuffledAnswers : availableAnswersForPrompt(p.id) as a (a.id)}
-								<li>
-									<button
-										type="button"
-										onclick={() => !qs.showSolution && setUserSelection(p.id, a.id)}
-										class="btn btn-ghost justify-start w-full {qs.showSolution &&
-										isAcceptedAnswerForPrompt(p.id, a.id)
-											? 'bg-success text-success-content hover:bg-success hover:text-success-content'
-											: ''}"
-										class:pointer-events-none={qs.showSolution}
-									>
-										{getAnswerLabel(a.text)}
-									</button>
-								</li>
+								<option value={a.id}>
+									{getAnswerLabel(a.text)}
+								</option>
 							{/each}
-						</ul>
+						</select>
 					</div>
 					{#if !qs.showSolution && getUserSelectionForPrompt(p.id)}
 						<button
