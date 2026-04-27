@@ -21,11 +21,11 @@ export function getRationalePlainText(value: string | null | undefined): string 
 		.replace(/<script[\s\S]*?<\/script>/gi, ' ')
 		.replace(/<[^>]+>/g, ' ')
 		.replace(/&nbsp;/gi, ' ')
-		.replace(/&amp;/gi, '&')
 		.replace(/&lt;/gi, '<')
 		.replace(/&gt;/gi, '>')
 		.replace(/&quot;/gi, '"')
 		.replace(/&#39;/gi, "'")
+		.replace(/&amp;/gi, '&')
 		.replace(/\s+/g, ' ')
 		.trim();
 }
