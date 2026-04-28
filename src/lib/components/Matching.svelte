@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Eye, X } from 'lucide-svelte';
-	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	type Option = { id: string; text: string };
 	let { qs = $bindable(), currentlySelected, allowSolution = true, allowClear = true } = $props();
 
@@ -178,9 +177,12 @@
 	}
 
 	const promptAnswerLookup = $derived.by(() => {
-		const promptToDirectAnswerIds = new SvelteMap<string, string[]>();
-		const promptToAcceptedAnswerIds = new SvelteMap<string, SvelteSet<string>>();
-		const promptToCanonicalCorrectId = new SvelteMap<string, string>();
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const promptToDirectAnswerIds = new Map<string, string[]>();
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const promptToAcceptedAnswerIds = new Map<string, Set<string>>();
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const promptToCanonicalCorrectId = new Map<string, string>();
 		const answerOptions = answers();
 		const validAnswerIds = new Set(answerOptions.map((answer) => answer.id));
 		const answerKeyById = new Map(
@@ -201,7 +203,8 @@
 
 			promptToDirectAnswerIds.set(promptId, directAnswerIds);
 
-			const acceptedAnswerIds = new SvelteSet<string>(directAnswerIds);
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
+			const acceptedAnswerIds = new Set<string>(directAnswerIds);
 			if (directAnswerIds.length > 0) {
 				const acceptedKeys = new Set(
 					directAnswerIds
@@ -243,6 +246,24 @@
 		return acceptedAnswerIdsForPrompt(promptId).has(selectedId);
 	}
 
+	function solutionSelectClass(promptId: string): string {
+		if (!qs.showSolution || !getUserSelectionForPrompt(promptId)) return '';
+		return isSelectionCorrectForPrompt(promptId) ? 'select-success' : 'select-error';
+	}
+
+	function correctAnswerLabelForPrompt(promptId: string): string {
+		const correctAnswerId = correctAnswerIdForPrompt(promptId);
+		if (!correctAnswerId) return '';
+		return getAnswerLabel(answers().find((answer) => answer.id === correctAnswerId)?.text ?? '');
+	}
+
+	function answerOptionLabel(promptId: string, answer: Option): string {
+		const label = getAnswerLabel(answer.text);
+		return qs.showSolution && answer.id === correctAnswerIdForPrompt(promptId)
+			? `${label} (correct)`
+			: label;
+	}
+
 	function handleToggleSolution() {
 		if (!allowSolution) return;
 		qs.handleSolution();
@@ -277,24 +298,31 @@
 				<div class="flex-1 flex gap-2 items-center">
 					<div class="flex-1">
 						<select
-							class="select select-bordered w-full rounded-full {qs.showSolution &&
-							isSelectionCorrectForPrompt(p.id)
-								? 'select-success'
-								: ''}"
-							value={qs.showSolution
-								? (correctAnswerIdForPrompt(p.id) ?? getUserSelectionForPrompt(p.id) ?? '')
-								: (getUserSelectionForPrompt(p.id) ?? '')}
+							class="select select-bordered w-full rounded-full {solutionSelectClass(p.id)}"
+							value={getUserSelectionForPrompt(p.id) ?? ''}
 							onchange={(event) => handleSelectionChange(p.id, event)}
 							disabled={qs.showSolution}
 							aria-label={`Answer for ${getPromptLabel(p.text) || p.id}`}
 						>
 							<option value="">Select a choice</option>
 							{#each qs.showSolution ? shuffledAnswers : availableAnswersForPrompt(p.id) as a (a.id)}
-								<option value={a.id}>
-									{getAnswerLabel(a.text)}
+								<option
+									value={a.id}
+									data-correct={a.id === correctAnswerIdForPrompt(p.id) ? 'true' : undefined}
+								>
+									{answerOptionLabel(p.id, a)}
 								</option>
 							{/each}
 						</select>
+						{#if qs.showSolution && correctAnswerLabelForPrompt(p.id)}
+							<p
+								class="mt-1 px-3 text-xs {isSelectionCorrectForPrompt(p.id)
+									? 'text-success'
+									: 'text-error'}"
+							>
+								Correct: {correctAnswerLabelForPrompt(p.id)}
+							</p>
+						{/if}
 					</div>
 					{#if !qs.showSolution && getUserSelectionForPrompt(p.id)}
 						<button
