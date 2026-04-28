@@ -110,6 +110,15 @@
 		qs.scheduleSave?.();
 	}
 
+	function handleSelectionChange(promptId: string, event: Event) {
+		const answerId = (event.currentTarget as HTMLSelectElement).value;
+		if (answerId) {
+			setUserSelection(promptId, answerId);
+		} else {
+			clearSelection(promptId);
+		}
+	}
+
 	function availableAnswersForPrompt(promptId: string): Option[] {
 		const chosenIds = new Set(
 			(qs.selectedAnswers || [])
@@ -168,8 +177,11 @@
 	}
 
 	const promptAnswerLookup = $derived.by(() => {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const promptToDirectAnswerIds = new Map<string, string[]>();
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const promptToAcceptedAnswerIds = new Map<string, Set<string>>();
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const promptToCanonicalCorrectId = new Map<string, string>();
 		const answerOptions = answers();
 		const validAnswerIds = new Set(answerOptions.map((answer) => answer.id));
@@ -191,6 +203,7 @@
 
 			promptToDirectAnswerIds.set(promptId, directAnswerIds);
 
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
 			const acceptedAnswerIds = new Set<string>(directAnswerIds);
 			if (directAnswerIds.length > 0) {
 				const acceptedKeys = new Set(
@@ -233,8 +246,22 @@
 		return acceptedAnswerIdsForPrompt(promptId).has(selectedId);
 	}
 
-	function isAcceptedAnswerForPrompt(promptId: string, answerId: string): boolean {
-		return acceptedAnswerIdsForPrompt(promptId).has(answerId);
+	function solutionSelectClass(promptId: string): string {
+		if (!qs.showSolution || !getUserSelectionForPrompt(promptId)) return '';
+		return isSelectionCorrectForPrompt(promptId) ? 'select-success' : 'select-error';
+	}
+
+	function correctAnswerLabelForPrompt(promptId: string): string {
+		const correctAnswerId = correctAnswerIdForPrompt(promptId);
+		if (!correctAnswerId) return '';
+		return getAnswerLabel(answers().find((answer) => answer.id === correctAnswerId)?.text ?? '');
+	}
+
+	function answerOptionLabel(promptId: string, answer: Option): string {
+		const label = getAnswerLabel(answer.text);
+		return qs.showSolution && answer.id === correctAnswerIdForPrompt(promptId)
+			? `${label} (correct)`
+			: label;
 	}
 
 	function handleToggleSolution() {
@@ -269,43 +296,33 @@
 				</div>
 				<div class="text-base-content/60" aria-hidden="true">→</div>
 				<div class="flex-1 flex gap-2 items-center">
-					<div class="dropdown flex-1">
-						<button
-							type="button"
-							class="btn select select-bordered w-full rounded-full {qs.showSolution &&
-							isSelectionCorrectForPrompt(p.id)
-								? 'select-success'
-								: ''}"
+					<div class="flex-1">
+						<select
+							class="select select-bordered w-full rounded-full {solutionSelectClass(p.id)}"
+							value={getUserSelectionForPrompt(p.id) ?? ''}
+							onchange={(event) => handleSelectionChange(p.id, event)}
+							disabled={qs.showSolution}
+							aria-label={`Answer for ${getPromptLabel(p.text) || p.id}`}
 						>
-							{#if qs.showSolution && correctAnswerIdForPrompt(p.id)}
-								{getAnswerLabel(
-									answers().find((a) => a.id === correctAnswerIdForPrompt(p.id))?.text || ''
-								)}
-							{:else if getUserSelectionForPrompt(p.id)}
-								{getAnswerLabel(
-									shuffledAnswers.find((a) => a.id === getUserSelectionForPrompt(p.id))?.text || ''
-								)}
-							{:else}
-								Select a choice
-							{/if}
-						</button>
-						<ul class="dropdown-content menu p-2 shadow-xs bg-base-100 rounded-2xl w-full z-[1]">
+							<option value="">Select a choice</option>
 							{#each qs.showSolution ? shuffledAnswers : availableAnswersForPrompt(p.id) as a (a.id)}
-								<li>
-									<button
-										type="button"
-										onclick={() => !qs.showSolution && setUserSelection(p.id, a.id)}
-										class="btn btn-ghost justify-start w-full {qs.showSolution &&
-										isAcceptedAnswerForPrompt(p.id, a.id)
-											? 'bg-success text-success-content hover:bg-success hover:text-success-content'
-											: ''}"
-										class:pointer-events-none={qs.showSolution}
-									>
-										{getAnswerLabel(a.text)}
-									</button>
-								</li>
+								<option
+									value={a.id}
+									data-correct={a.id === correctAnswerIdForPrompt(p.id) ? 'true' : undefined}
+								>
+									{answerOptionLabel(p.id, a)}
+								</option>
 							{/each}
-						</ul>
+						</select>
+						{#if qs.showSolution && correctAnswerLabelForPrompt(p.id)}
+							<p
+								class="mt-1 px-3 text-xs {isSelectionCorrectForPrompt(p.id)
+									? 'text-success'
+									: 'text-error'}"
+							>
+								Correct: {correctAnswerLabelForPrompt(p.id)}
+							</p>
+						{/if}
 					</div>
 					{#if !qs.showSolution && getUserSelectionForPrompt(p.id)}
 						<button

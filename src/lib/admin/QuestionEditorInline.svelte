@@ -387,7 +387,7 @@
 	const canSubmit = $derived(
 		questionStem.trim().length > 0 && getRationalePlainText(questionRationale).length > 0
 	);
-	const rationaleDocsUrl = 'https://docs.learnterms.com/contributors/why-rationales-are-required';
+	const rationaleDocsUrl = 'https://docs.learnterms.com/docs/contributors/why-rationales-are-required';
 
 	// Get user's domain focus from metadata or default to 'general'
 	let userFocus: Focus = $state('general'); // TODO: fetch from user settings/metadata when available
