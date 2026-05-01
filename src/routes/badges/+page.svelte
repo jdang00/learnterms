@@ -1,28 +1,12 @@
 <script lang="ts">
-	import {
-		Users,
-		Flame,
-		Star,
-		BookOpen,
-		ClipboardCheck,
-		Sunrise,
-		Lightbulb,
-		Heart,
-		Moon,
-		Sun,
-		Target,
-		Zap,
-		Globe,
-		GraduationCap,
-		Eye,
-		EyeOff
-	} from 'lucide-svelte';
+	import { Globe, GraduationCap, Eye, EyeOff } from 'lucide-svelte';
 	import { useQuery } from 'convex-svelte';
 	import type { FunctionReturnType } from 'convex/server';
 	import { resolve } from '$app/paths';
 	import { api } from '../../convex/_generated/api';
 	import type { Doc } from '../../convex/_generated/dataModel';
 	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
+	import { getBadgeIcon } from '$lib/components/badges/icons';
 
 	const percentFormatter = new Intl.NumberFormat('en-US', {
 		minimumFractionDigits: 2,
@@ -35,22 +19,7 @@
 		return 'LearnTerms';
 	};
 
-	type LucideIconComponent = typeof Users;
-
-	const badgeIconMap: Record<string, LucideIconComponent> = {
-		users: Users,
-		flame: Flame,
-		star: Star,
-		book: BookOpen,
-		'clipboard-check': ClipboardCheck,
-		sunrise: Sunrise,
-		sun: Sun,
-		target: Target,
-		lightbulb: Lightbulb,
-		heart: Heart,
-		moon: Moon,
-		zap: Zap
-	};
+	type LucideIconComponent = typeof Globe;
 
 	const issuerIconMap: Record<string, LucideIconComponent> = {
 		platform: Globe,
@@ -66,7 +35,7 @@
 		const data = (badgesQuery.data ?? []) as BadgeCatalogItem[];
 		return data.map((badge) => ({
 			...badge,
-			icon: badgeIconMap[badge.iconKey] ?? Star,
+			icon: getBadgeIcon(badge.iconKey),
 			issuerIcon: issuerIconMap[badge.issuerType] ?? Globe
 		}));
 	});

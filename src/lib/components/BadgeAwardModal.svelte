@@ -5,21 +5,8 @@
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { Confetti } from 'svelte-confetti';
 	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
-	import {
-		Award,
-		BookOpen,
-		ClipboardCheck,
-		Flame,
-		Heart,
-		Lightbulb,
-		Moon,
-		Star,
-		Sun,
-		Sunrise,
-		Target,
-		X,
-		Zap
-	} from 'lucide-svelte';
+	import { Award, X } from 'lucide-svelte';
+	import { getBadgeIcon } from '$lib/components/badges/icons';
 
 	const ctx = useClerkContext();
 	const user = $derived(ctx.user);
@@ -28,21 +15,6 @@
 	const unseenAwardQuery = useQuery(api.badges.getNextUnseenBadgeAwardForViewer, () =>
 		user ? {} : 'skip'
 	);
-
-	const iconMap: Record<string, any> = {
-		users: Award,
-		flame: Flame,
-		star: Star,
-		book: BookOpen,
-		'clipboard-check': ClipboardCheck,
-		sunrise: Sunrise,
-		sun: Sun,
-		target: Target,
-		lightbulb: Lightbulb,
-		heart: Heart,
-		moon: Moon,
-		zap: Zap
-	};
 
 	let hiddenAwardIds = $state<string[]>([]);
 	let isAcknowledging = $state(false);
@@ -56,7 +28,7 @@
 
 	const badgeIcon = $derived.by(() => {
 		if (!activeAward) return Award;
-		return iconMap[activeAward.badge.iconKey] ?? Award;
+		return getBadgeIcon(activeAward.badge.iconKey);
 	});
 
 	async function acknowledge() {
