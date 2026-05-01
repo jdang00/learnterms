@@ -8,12 +8,15 @@
 	import {
 		Award,
 		BookOpen,
+		ClipboardCheck,
 		Flame,
 		Heart,
 		Lightbulb,
 		Moon,
 		Star,
+		Sun,
 		Sunrise,
+		Target,
 		X,
 		Zap
 	} from 'lucide-svelte';
@@ -31,7 +34,10 @@
 		flame: Flame,
 		star: Star,
 		book: BookOpen,
+		'clipboard-check': ClipboardCheck,
 		sunrise: Sunrise,
+		sun: Sun,
+		target: Target,
 		lightbulb: Lightbulb,
 		heart: Heart,
 		moon: Moon,
