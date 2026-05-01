@@ -13,6 +13,8 @@ const metricValidator = v.union(
 	v.literal('early_interactions'),
 	v.literal('late_interactions'),
 	v.literal('questions_created'),
+	v.literal('large_quizzes_submitted'),
+	v.literal('weekend_warrior_weeks'),
 	v.literal('streak_current_days'),
 	v.literal('streak_best_days')
 );
@@ -96,6 +98,8 @@ type UpsertRuleArgs = {
 			| 'early_interactions'
 			| 'late_interactions'
 			| 'questions_created'
+			| 'large_quizzes_submitted'
+			| 'weekend_warrior_weeks'
 			| 'streak_current_days'
 			| 'streak_best_days';
 		op: 'gte' | 'gt' | 'eq' | 'lte' | 'lt';
@@ -108,7 +112,10 @@ const SUPPORTED_PLATFORM_BADGE_KEYS = new Set([
 	'study_streak',
 	'early_bird',
 	'night_owl',
-	'question_creator'
+	'question_creator',
+	'the_hit_list',
+	'dress_rehearsal',
+	'no_days_off'
 ]);
 
 function isSupportedIssuerType(issuerType: string) {
@@ -806,7 +813,7 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 	},
 	handler: async (ctx, args) => {
 		const definitions: Array<
-			UpsertBadgeArgs & { rule: UpsertRuleArgs['allOf']; ruleName: string }
+			UpsertBadgeArgs & { rule?: UpsertRuleArgs['allOf']; ruleName?: string }
 		> = [
 			{
 				key: 'study_streak',
@@ -875,6 +882,60 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 				isActive: true,
 				ruleName: 'question_creator_rule',
 				rule: [{ metric: 'questions_created', op: 'gte', value: 10 }]
+			},
+			{
+				key: 'the_hit_list',
+				name: 'The Hit List',
+				description: 'Flag 10 questions before finals.',
+				iconKey: 'target',
+				iconColor: '#fecdd3',
+				gradient: { from: '#fb7185', mid: '#dc2626', to: '#7f1d1d' },
+				ownedPct: 0,
+				scopeType: 'global',
+				issuerType: 'platform',
+				issuerName: 'LearnTerms',
+				scopeLabel: 'All LearnTerms users',
+				eligibility: 'Flag 10 questions before finals',
+				seasonLabel: 'Finals',
+				isActive: true,
+				ruleName: 'the_hit_list_rule',
+				rule: [{ metric: 'questions_flagged', op: 'gte', value: 10 }]
+			},
+			{
+				key: 'dress_rehearsal',
+				name: 'Dress Rehearsal',
+				description: 'Submit 3 practice exams of 20+ questions.',
+				iconKey: 'clipboard-check',
+				iconColor: '#ccfbf1',
+				gradient: { from: '#5eead4', mid: '#0d9488', to: '#134e4a' },
+				ownedPct: 0,
+				scopeType: 'global',
+				issuerType: 'platform',
+				issuerName: 'LearnTerms',
+				scopeLabel: 'All LearnTerms users',
+				eligibility: 'Submit 3 practice exams of 20+ questions',
+				seasonLabel: 'Finals',
+				isActive: true,
+				ruleName: 'dress_rehearsal_rule',
+				rule: [{ metric: 'large_quizzes_submitted', op: 'gte', value: 3 }]
+			},
+			{
+				key: 'no_days_off',
+				name: 'No Days Off',
+				description: 'Study both Saturday and Sunday during finals week.',
+				iconKey: 'sun',
+				iconColor: '#fed7aa',
+				gradient: { from: '#fbbf24', mid: '#f97316', to: '#9a3412' },
+				ownedPct: 0,
+				scopeType: 'global',
+				issuerType: 'platform',
+				issuerName: 'LearnTerms',
+				scopeLabel: 'All LearnTerms users',
+				eligibility: 'Study both Saturday and Sunday during finals week',
+				seasonLabel: 'Finals',
+				isActive: true,
+				ruleName: 'no_days_off_rule',
+				rule: [{ metric: 'weekend_warrior_weeks', op: 'gte', value: 1 }]
 			}
 		];
 
@@ -902,6 +963,7 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 					issuerName: definition.issuerName,
 					scopeLabel: definition.scopeLabel,
 					eligibility: definition.eligibility,
+					seasonLabel: definition.seasonLabel,
 					isActive: definition.isActive
 				},
 				existing?.createdByUserId
@@ -912,6 +974,15 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 				.query('badgeRules')
 				.withIndex('by_badgeDefinitionId', (q) => q.eq('badgeDefinitionId', badgeId))
 				.collect();
+
+			if (!definition.rule || !definition.ruleName) {
+				for (const rule of rules) {
+					if (rule.isActive) {
+						await ctx.db.patch(rule._id, { isActive: false, updatedAt: Date.now() });
+					}
+				}
+				continue;
+			}
 
 			const matchingRule = rules.find((rule) => rule.name === definition.ruleName);
 			await upsertRule(

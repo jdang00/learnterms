@@ -9,6 +9,8 @@ export type BadgeMetricKey =
 	| 'early_interactions'
 	| 'late_interactions'
 	| 'questions_created'
+	| 'large_quizzes_submitted'
+	| 'weekend_warrior_weeks'
 	| 'streak_current_days'
 	| 'streak_best_days';
 
@@ -37,6 +39,7 @@ export type ProgressMetricDelta = {
 	earlyInteractionsDelta: number;
 	lateInteractionsDelta: number;
 	questionsCreatedDelta?: number;
+	largeQuizzesSubmittedDelta?: number;
 	utcOffsetMinutes?: number;
 	touchStreak: boolean;
 };
@@ -48,6 +51,25 @@ function clampNonNegative(value: number) {
 function toDayKey(ts: number, utcOffsetMinutes?: number) {
 	if (utcOffsetMinutes === undefined) return Math.floor(ts / DAY_MS);
 	return Math.floor((ts - utcOffsetMinutes * 60_000) / DAY_MS);
+}
+
+function getLocalDateForOffset(ts: number, utcOffsetMinutes?: number) {
+	if (utcOffsetMinutes === undefined) return new Date(ts);
+	return new Date(ts - utcOffsetMinutes * 60_000);
+}
+
+function getWeekendStudyState(ts: number, utcOffsetMinutes?: number) {
+	const localDate = getLocalDateForOffset(ts, utcOffsetMinutes);
+	const dayOfWeek = localDate.getUTCDay();
+	if (dayOfWeek !== 0 && dayOfWeek !== 6) return null;
+
+	const dayKey = toDayKey(ts, utcOffsetMinutes);
+	const saturdayDayKey = dayOfWeek === 6 ? dayKey : dayKey - 1;
+
+	return {
+		weekKey: Math.floor(saturdayDayKey / 7),
+		dayMask: dayOfWeek === 6 ? 1 : 2
+	};
 }
 
 function compareMetric(left: number, op: BadgeMetricOp, right: number) {
@@ -65,6 +87,8 @@ function getMetricValue(metricDoc: Doc<'userBadgeMetrics'>, metric: BadgeMetricK
 	if (metric === 'early_interactions') return metricDoc.earlyInteractions;
 	if (metric === 'late_interactions') return metricDoc.lateInteractions;
 	if (metric === 'questions_created') return metricDoc.questionsCreated ?? 0;
+	if (metric === 'large_quizzes_submitted') return metricDoc.largeQuizzesSubmitted ?? 0;
+	if (metric === 'weekend_warrior_weeks') return metricDoc.weekendWarriorWeeks ?? 0;
 	if (metric === 'streak_current_days') return metricDoc.streakCurrentDays;
 	return metricDoc.streakBestDays;
 }
@@ -111,6 +135,7 @@ async function upsertMetricDoc(
 		early: number;
 		late: number;
 		created: number;
+		largeQuizzesSubmitted: number;
 	},
 	streakUpdate: StreakUpdate
 ) {
@@ -128,6 +153,10 @@ async function upsertMetricDoc(
 		earlyInteractions: 0,
 		lateInteractions: 0,
 		questionsCreated: 0,
+		largeQuizzesSubmitted: 0,
+		weekendWarriorWeeks: 0,
+		weekendStudyWeekKey: undefined as number | undefined,
+		weekendStudyDayMask: 0,
 		streakCurrentDays: 0,
 		streakBestDays: 0,
 		lastActivityDayKey: undefined as number | undefined,
@@ -137,6 +166,9 @@ async function upsertMetricDoc(
 	let streakCurrentDays = base.streakCurrentDays;
 	let streakBestDays = base.streakBestDays;
 	let lastActivityDayKey = base.lastActivityDayKey;
+	let weekendWarriorWeeks = base.weekendWarriorWeeks ?? 0;
+	let weekendStudyWeekKey = base.weekendStudyWeekKey;
+	let weekendStudyDayMask = base.weekendStudyDayMask ?? 0;
 
 	if (scope.scopeType === 'global' && streakUpdate.touchStreak) {
 		const dayKey = toDayKey(streakUpdate.occurredAt, streakUpdate.utcOffsetMinutes);
@@ -155,6 +187,20 @@ async function upsertMetricDoc(
 			streakBestDays = Math.max(streakBestDays, 1);
 			lastActivityDayKey = dayKey;
 		}
+
+		const weekendState = getWeekendStudyState(
+			streakUpdate.occurredAt,
+			streakUpdate.utcOffsetMinutes
+		);
+		if (weekendState) {
+			const previousMask = weekendStudyWeekKey === weekendState.weekKey ? weekendStudyDayMask : 0;
+			const nextMask = previousMask | weekendState.dayMask;
+			if (previousMask !== 3 && nextMask === 3) {
+				weekendWarriorWeeks += 1;
+			}
+			weekendStudyWeekKey = weekendState.weekKey;
+			weekendStudyDayMask = nextMask;
+		}
 	}
 
 	const payload = {
@@ -168,6 +214,12 @@ async function upsertMetricDoc(
 		earlyInteractions: clampNonNegative(base.earlyInteractions + delta.early),
 		lateInteractions: clampNonNegative(base.lateInteractions + delta.late),
 		questionsCreated: clampNonNegative((base.questionsCreated ?? 0) + delta.created),
+		largeQuizzesSubmitted: clampNonNegative(
+			(base.largeQuizzesSubmitted ?? 0) + delta.largeQuizzesSubmitted
+		),
+		weekendWarriorWeeks: clampNonNegative(weekendWarriorWeeks),
+		weekendStudyWeekKey,
+		weekendStudyDayMask: clampNonNegative(weekendStudyDayMask),
 		streakCurrentDays: clampNonNegative(streakCurrentDays),
 		streakBestDays: clampNonNegative(streakBestDays),
 		lastActivityDayKey,
@@ -352,7 +404,8 @@ export async function applyProgressDeltaAndEvaluateBadges(ctx: DbCtx, args: Prog
 			flagged: args.flaggedDelta,
 			early: args.earlyInteractionsDelta,
 			late: args.lateInteractionsDelta,
-			created: args.questionsCreatedDelta ?? 0
+			created: args.questionsCreatedDelta ?? 0,
+			largeQuizzesSubmitted: args.largeQuizzesSubmittedDelta ?? 0
 		},
 		{
 			touchStreak: args.touchStreak,
@@ -371,7 +424,8 @@ export async function applyProgressDeltaAndEvaluateBadges(ctx: DbCtx, args: Prog
 			flagged: args.flaggedDelta,
 			early: args.earlyInteractionsDelta,
 			late: args.lateInteractionsDelta,
-			created: args.questionsCreatedDelta ?? 0
+			created: args.questionsCreatedDelta ?? 0,
+			largeQuizzesSubmitted: args.largeQuizzesSubmittedDelta ?? 0
 		},
 		{ touchStreak: false, occurredAt: args.occurredAt }
 	);
@@ -386,7 +440,8 @@ export async function applyProgressDeltaAndEvaluateBadges(ctx: DbCtx, args: Prog
 			flagged: args.flaggedDelta,
 			early: args.earlyInteractionsDelta,
 			late: args.lateInteractionsDelta,
-			created: args.questionsCreatedDelta ?? 0
+			created: args.questionsCreatedDelta ?? 0,
+			largeQuizzesSubmitted: args.largeQuizzesSubmittedDelta ?? 0
 		},
 		{ touchStreak: false, occurredAt: args.occurredAt }
 	);
@@ -432,6 +487,33 @@ export async function applyQuestionCreationDeltaAndEvaluateBadges(
 		earlyInteractionsDelta: 0,
 		lateInteractionsDelta: 0,
 		questionsCreatedDelta: args.questionsCreatedDelta,
+		touchStreak: false
+	});
+}
+
+export async function applyLargeQuizSubmissionDeltaAndEvaluateBadges(
+	ctx: DbCtx,
+	args: {
+		userId: Id<'users'>;
+		classId: Id<'class'>;
+		largeQuizzesSubmittedDelta: number;
+		occurredAt: number;
+	}
+) {
+	if (args.largeQuizzesSubmittedDelta === 0) {
+		return { awardedAwardIds: [] as Id<'userBadgeAwards'>[] };
+	}
+
+	return await applyProgressDeltaAndEvaluateBadges(ctx, {
+		userId: args.userId,
+		classId: args.classId,
+		occurredAt: args.occurredAt,
+		interactedDelta: 0,
+		masteredDelta: 0,
+		flaggedDelta: 0,
+		earlyInteractionsDelta: 0,
+		lateInteractionsDelta: 0,
+		largeQuizzesSubmittedDelta: args.largeQuizzesSubmittedDelta,
 		touchStreak: false
 	});
 }

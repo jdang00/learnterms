@@ -3,6 +3,7 @@ import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 import { getRationale } from '../lib/utils/rationale';
+import { applyLargeQuizSubmissionDeltaAndEvaluateBadges } from './badgeEngine';
 
 type SourceFilter = 'all' | 'flagged' | 'incomplete';
 type AttemptStatus = 'in_progress' | 'submitted' | 'timed_out' | 'abandoned';
@@ -1244,6 +1245,15 @@ export const submitAttempt = mutation({
 			resultSummary,
 			updatedAt: now
 		});
+
+		if (scorePossible >= 20) {
+			await applyLargeQuizSubmissionDeltaAndEvaluateBadges(ctx, {
+				userId: user._id,
+				classId: attempt.classId,
+				largeQuizzesSubmittedDelta: 1,
+				occurredAt: now
+			});
+		}
 
 		return {
 			alreadySubmitted: false,

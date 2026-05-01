@@ -7,6 +7,7 @@
 	import {
 		ArrowLeft,
 		BookOpen,
+		ClipboardCheck,
 		Flame,
 		Heart,
 		HelpCircle,
@@ -14,7 +15,9 @@
 		Moon,
 		Search,
 		Star,
+		Sun,
 		Sunrise,
+		Target,
 		Trophy,
 		Users,
 		Zap
@@ -31,7 +34,10 @@
 		flame: Flame,
 		star: Star,
 		book: BookOpen,
+		'clipboard-check': ClipboardCheck,
 		sunrise: Sunrise,
+		sun: Sun,
+		target: Target,
 		lightbulb: Lightbulb,
 		heart: Heart,
 		moon: Moon,
