@@ -108,22 +108,8 @@ type UpsertRuleArgs = {
 	isActive?: boolean;
 };
 
-const SUPPORTED_PLATFORM_BADGE_KEYS = new Set([
-	'study_streak',
-	'early_bird',
-	'night_owl',
-	'question_creator',
-	'the_hit_list',
-	'dress_rehearsal',
-	'no_days_off'
-]);
-
 function isSupportedIssuerType(issuerType: string) {
 	return issuerType === 'platform' || issuerType === 'cohort';
-}
-
-function isSupportedPlatformBadgeKey(key: string) {
-	return SUPPORTED_PLATFORM_BADGE_KEYS.has(key);
 }
 
 function toProperCase(value: string) {
@@ -339,7 +325,6 @@ async function getVisibleBadgesForViewer(ctx: { db: DatabaseReader }, viewer: Do
 
 	const supportedBadges = badges.filter((badge) => {
 		if (!isSupportedIssuerType(badge.issuerType)) return false;
-		if (badge.issuerType === 'platform' && !isSupportedPlatformBadgeKey(badge.key)) return false;
 		return true;
 	});
 
@@ -543,11 +528,7 @@ export const getNextUnseenBadgeAwardForViewer = authQuery({
 		const sortedAwards = unseenAwards.sort((a, b) => a.awardedAt - b.awardedAt);
 		for (const nextAward of sortedAwards) {
 			const badge = await ctx.db.get(nextAward.badgeDefinitionId);
-			if (
-				!badge ||
-				!isSupportedIssuerType(badge.issuerType) ||
-				(badge.issuerType === 'platform' && !isSupportedPlatformBadgeKey(badge.key))
-			) {
+			if (!badge || !isSupportedIssuerType(badge.issuerType)) {
 				continue;
 			}
 
@@ -636,6 +617,21 @@ export const getCohortBadgeBoard = authQuery({
 			.collect();
 		const activeMemberAwards = awards.filter((award) => activeMemberIds.has(award.userId));
 
+		const memberMetrics = await Promise.all(
+			activeMembers.map((member) =>
+				ctx.db
+					.query('userBadgeMetrics')
+					.withIndex('by_user_scopeType', (q) =>
+						q.eq('userId', member._id).eq('scopeType', 'global')
+					)
+					.first()
+			)
+		);
+		const questionsContributedByUserId = new Map<string, number>();
+		activeMembers.forEach((member, idx) => {
+			questionsContributedByUserId.set(member._id, memberMetrics[idx]?.questionsCreated ?? 0);
+		});
+
 		const awardsByUserId = new Map<string, Doc<'userBadgeAwards'>[]>();
 		for (const award of activeMemberAwards) {
 			const group = awardsByUserId.get(award.userId) ?? [];
@@ -649,7 +645,6 @@ export const getCohortBadgeBoard = authQuery({
 		for (const badge of badgeDocs) {
 			if (!badge) continue;
 			if (!isSupportedIssuerType(badge.issuerType)) continue;
-			if (badge.issuerType === 'platform' && !isSupportedPlatformBadgeKey(badge.key)) continue;
 			badgeById.set(badge._id, badge);
 		}
 
@@ -683,7 +678,9 @@ export const getCohortBadgeBoard = authQuery({
 					firstName: member.firstName,
 					lastName: member.lastName,
 					imageUrl: member.imageUrl,
+					lastActiveAt: member.lastActiveAt,
 					role: member.role ?? 'student',
+					questionsContributed: questionsContributedByUserId.get(member._id) ?? 0,
 					earnedCount: memberAwards.length,
 					recentAwards: memberAwards.slice(0, 6),
 					awards: memberAwards
@@ -886,8 +883,8 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 			{
 				key: 'the_hit_list',
 				name: 'The Hit List',
-				description: 'Flag 10 questions before finals.',
-				iconKey: 'target',
+				description: 'Flag 10 questions.',
+				iconKey: 'crosshair',
 				iconColor: '#fecdd3',
 				gradient: { from: '#fb7185', mid: '#dc2626', to: '#7f1d1d' },
 				ownedPct: 0,
@@ -895,8 +892,7 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 				issuerType: 'platform',
 				issuerName: 'LearnTerms',
 				scopeLabel: 'All LearnTerms users',
-				eligibility: 'Flag 10 questions before finals',
-				seasonLabel: 'Finals',
+				eligibility: 'Flag 10 questions',
 				isActive: true,
 				ruleName: 'the_hit_list_rule',
 				rule: [{ metric: 'questions_flagged', op: 'gte', value: 10 }]
@@ -914,7 +910,6 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 				issuerName: 'LearnTerms',
 				scopeLabel: 'All LearnTerms users',
 				eligibility: 'Submit 3 practice exams of 20+ questions',
-				seasonLabel: 'Finals',
 				isActive: true,
 				ruleName: 'dress_rehearsal_rule',
 				rule: [{ metric: 'large_quizzes_submitted', op: 'gte', value: 3 }]
@@ -922,7 +917,7 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 			{
 				key: 'no_days_off',
 				name: 'No Days Off',
-				description: 'Study both Saturday and Sunday during finals week.',
+				description: 'Study both Saturday and Sunday.',
 				iconKey: 'sun',
 				iconColor: '#fed7aa',
 				gradient: { from: '#fbbf24', mid: '#f97316', to: '#9a3412' },
@@ -931,8 +926,7 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 				issuerType: 'platform',
 				issuerName: 'LearnTerms',
 				scopeLabel: 'All LearnTerms users',
-				eligibility: 'Study both Saturday and Sunday during finals week',
-				seasonLabel: 'Finals',
+				eligibility: 'Study both Saturday and Sunday',
 				isActive: true,
 				ruleName: 'no_days_off_rule',
 				rule: [{ metric: 'weekend_warrior_weeks', op: 'gte', value: 1 }]
@@ -1003,19 +997,6 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 				if (rule.isActive) {
 					await ctx.db.patch(rule._id, { isActive: false, updatedAt: Date.now() });
 				}
-			}
-		}
-
-		if (args.deactivateOtherPlatformBadges ?? true) {
-			const platformBadges = await ctx.db
-				.query('badgeDefinitions')
-				.withIndex('by_scopeType', (q) => q.eq('scopeType', 'global'))
-				.collect();
-			for (const badge of platformBadges) {
-				if (badge.issuerType !== 'platform') continue;
-				if (isSupportedPlatformBadgeKey(badge.key)) continue;
-				if (!badge.isActive) continue;
-				await ctx.db.patch(badge._id, { isActive: false, updatedAt: Date.now() });
 			}
 		}
 
