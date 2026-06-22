@@ -139,8 +139,11 @@
 			path.startsWith('/classes') && (path.includes('/modules/') || path.includes('/tests/'));
 		const inGradeCalculator = path.startsWith('/tools/grade-calculator');
 		const inAdminModule = path.startsWith('/admin/') && path.includes('/module/');
+		const inAdminLibrary = path.startsWith('/admin/library');
 		const inStudySpace = path.startsWith('/study-space');
-		return inClassStudyOrTest || inGradeCalculator || inAdminModule || inStudySpace;
+		return (
+			inClassStudyOrTest || inGradeCalculator || inAdminModule || inAdminLibrary || inStudySpace
+		);
 	});
 </script>
 

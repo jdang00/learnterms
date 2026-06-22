@@ -1,17 +1,22 @@
 <script lang="ts">
-	let { isAddModalOpen, closeAddModal, userData } = $props();
-
-	import { X } from 'lucide-svelte';
+	import { CheckCircle2, FileUp, X } from 'lucide-svelte';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
-	import type { Id, Doc } from '../../convex/_generated/dataModel';
-	import { createUploader } from '$lib/utils/uploadthing';
-	import { UploadDropzone } from '@uploadthing/svelte';
+	import type { Id } from '../../convex/_generated/dataModel';
+
+	let { isAddModalOpen, closeAddModal, userData, onUploaded = () => {} } = $props();
 
 	const client = useConvexClient();
 
-	let isSubmitting: boolean = $state(false);
-	let submitError: string = $state('');
+	let isSubmitting = $state(false);
+	let submitError = $state('');
+	let selectedFile: File | null = $state(null);
+	let uploadProgress = $state(0);
+	let isDragging = $state(false);
+	let dragDepth = 0;
+
+	const maxBytes = 50 * 1024 * 1024;
+	const allowedTypes = ['application/pdf'];
 
 	function toBaseTitle(name: string): string {
 		const withoutExt = name.replace(/\.[^/.]+$/, '');
@@ -19,81 +24,148 @@
 		return trimmed.length === 0 ? 'Untitled Document' : trimmed.slice(0, 100);
 	}
 
-	function generateUniqueTitleFromExisting(base: string, existingTitlesLower: string[]): string {
-		const existing = new Set(existingTitlesLower);
-		if (!existing.has(base.toLowerCase())) return base;
-		for (let i = 2; i < 1000; i++) {
-			const candidate = `${base} (${i})`;
-			if (!existing.has(candidate.toLowerCase())) return candidate;
-		}
-		return `${base} (${Date.now().toString()})`;
+	function formatSize(bytes: number) {
+		if (!bytes) return 'Unknown size';
+		return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 	}
 
-	const uploader = createUploader('pdfUploader', {
-		onClientUploadComplete: async (res) => {
-			try {
-				isSubmitting = true;
-				submitError = '';
-				const file = Array.isArray(res) ? res[0] : null;
-				if (!file) throw new Error('Upload failed');
-				const fileName = (file as any)?.name ?? 'Document.pdf';
-				const sizeBytes = Number((file as any)?.size ?? 0);
-				const sizeMB = sizeBytes > 0 ? (sizeBytes / 1024 / 1024).toFixed(2) : undefined;
-				const base = toBaseTitle(fileName);
-				let existingTitlesLower: string[] = [];
-				try {
-					const cohortId = userData?.cohortId as Id<'cohort'> | undefined;
-					if (cohortId) {
-						const existingDocs = (await client.query(api.contentLib.getContentLibByCohort, {
-							cohortId
-						})) as Doc<'contentLib'>[];
-						existingTitlesLower = existingDocs.map((d) => d.title.toLowerCase());
-					}
-				} catch {}
-				const title = generateUniqueTitleFromExisting(base, existingTitlesLower);
-				const description = sizeMB
-					? `${fileName} • ${sizeMB} MB • uploaded via UploadThing`
-					: `${fileName} • uploaded via UploadThing`;
-				const documentId = await client.mutation(api.contentLib.insertDocument, {
-					title,
-					description,
-					cohortId: userData?.cohortId as Id<'cohort'>,
-					metadata: {
-						uploadthingKey: (file as any)?.key ?? null,
-						uploadthingUrl: (file as any)?.ufsUrl ?? (file as any)?.url ?? null,
-						originalFileName: fileName,
-						sizeBytes: sizeBytes || undefined
-					}
-				});
+	function setSelectedFile(file: File | null) {
+		submitError = '';
 
-				const pdfUrl = (file as any)?.ufsUrl ?? (file as any)?.url;
-				const fileKey = (file as any)?.key ?? (file as any)?.fileKey;
-				// Defer processing to the document page via query params
-
-				// Navigate to the new document's chunk page immediately so the user sees the chunks view
-				try {
-					const url = new URL(window.location.href);
-					url.searchParams.set('open', (documentId as string) ?? '');
-					url.searchParams.set('processing', '1');
-					if (pdfUrl) url.searchParams.set('pdfUrl', pdfUrl);
-					if (fileKey) url.searchParams.set('fileKey', fileKey as string);
-					window.location.assign(url.toString());
-				} catch {}
-				closeAddModal();
-			} catch (e) {
-				submitError = e instanceof Error ? e.message : 'Failed to create document';
-			} finally {
-				isSubmitting = false;
-			}
-		},
-		onUploadError: (error: Error) => {
-			submitError = error.message;
+		if (!file) {
+			selectedFile = null;
+			return;
 		}
-	});
+		if (!allowedTypes.includes(file.type)) {
+			selectedFile = null;
+			submitError = 'Upload a PDF file.';
+			return;
+		}
+		if (file.size > maxBytes) {
+			selectedFile = null;
+			submitError = 'File must be 50MB or smaller.';
+			return;
+		}
+
+		selectedFile = file;
+	}
+
+	function handleFileChange(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		setSelectedFile(input.files?.[0] ?? null);
+	}
+
+	function handleDragEnter(event: DragEvent) {
+		event.preventDefault();
+		if (isSubmitting) return;
+		dragDepth += 1;
+		isDragging = true;
+	}
+
+	function handleDragOver(event: DragEvent) {
+		event.preventDefault();
+		if (event.dataTransfer) {
+			event.dataTransfer.dropEffect = isSubmitting ? 'none' : 'copy';
+		}
+	}
+
+	function handleDragLeave(event: DragEvent) {
+		event.preventDefault();
+		dragDepth = Math.max(0, dragDepth - 1);
+		if (dragDepth === 0) {
+			isDragging = false;
+		}
+	}
+
+	function handleDrop(event: DragEvent) {
+		event.preventDefault();
+		dragDepth = 0;
+		isDragging = false;
+		if (isSubmitting) return;
+
+		const files = event.dataTransfer?.files;
+		setSelectedFile(files?.[0] ?? null);
+	}
+
+	function uploadToSignedUrl(
+		url: string,
+		file: File,
+		onProgress: (progress: { loaded: number; total: number }) => void
+	) {
+		return new Promise<void>((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('PUT', url);
+			xhr.setRequestHeader('Content-Type', file.type);
+			xhr.upload.onprogress = (event) => {
+				onProgress({ loaded: event.loaded, total: event.total });
+			};
+			xhr.onload = () => {
+				if (xhr.status >= 200 && xhr.status < 300) {
+					resolve();
+				} else {
+					reject(new Error(`R2 upload failed with ${xhr.status}`));
+				}
+			};
+			xhr.onerror = () => reject(new Error('R2 upload failed'));
+			xhr.send(file);
+		});
+	}
+
+	async function uploadDocument() {
+		if (!selectedFile || !userData?.cohortId) return;
+
+		isSubmitting = true;
+		submitError = '';
+		uploadProgress = 0;
+
+		try {
+			const cohortId = userData.cohortId as Id<'cohort'>;
+			const { key, url } = await client.mutation(api.r2Documents.generateUploadUrl, {
+				cohortId,
+				fileName: selectedFile.name
+			});
+
+			await uploadToSignedUrl(url, selectedFile, ({ loaded, total }) => {
+				uploadProgress = total > 0 ? Math.round((loaded / total) * 100) : 0;
+			});
+
+			await client.mutation(api.r2Documents.syncMetadata, {
+				key
+			});
+
+			const documentId = await client.mutation(api.contentLib.insertR2Document, {
+				title: toBaseTitle(selectedFile.name),
+				description: `${selectedFile.name} - ${formatSize(selectedFile.size)}`,
+				cohortId,
+				metadata: {
+					originalFileName: selectedFile.name,
+					sizeBytes: selectedFile.size,
+					storageProvider: 'r2',
+					r2Key: key,
+					mimeType: selectedFile.type
+				}
+			});
+
+			void client.action(api.ragKnowledge.indexR2Document, {
+				documentId
+			});
+
+			selectedFile = null;
+			isDragging = false;
+			dragDepth = 0;
+			onUploaded();
+			closeAddModal();
+		} catch (e) {
+			submitError = e instanceof Error ? e.message : 'Failed to upload document';
+		} finally {
+			isSubmitting = false;
+			uploadProgress = 0;
+		}
+	}
 </script>
 
 <dialog class="modal p-6" class:modal-open={isAddModalOpen}>
-	<div class="modal-box w-full max-w-2xl rounded-2xl border border-base-300 shadow-2xl">
+	<div class="modal-box w-full max-w-xl rounded-lg border border-base-300 shadow-2xl">
 		<form method="dialog">
 			<button
 				class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4"
@@ -104,44 +176,89 @@
 			</button>
 		</form>
 
-		<div class="mb-6 flex items-center gap-2">
-			<h3 class="text-2xl font-extrabold tracking-tight">Add New Document</h3>
+		<div class="mb-6">
+			<h3 class="text-xl font-bold tracking-tight">Upload Document</h3>
+			<p class="mt-1 text-sm text-base-content/60">Upload a PDF to make it available for AI indexing.</p>
 		</div>
 
 		{#if submitError}
-			<div class="alert alert-error mb-6">
-				<span>❌ {submitError}</span>
+			<div class="alert alert-error mb-5 text-sm">
+				<span>{submitError}</span>
 			</div>
 		{/if}
 
 		{#if !userData?.cohortId}
-			<div class="alert alert-warning mb-6">
-				<span>⚠️ You need to be assigned to a cohort before creating documents.</span>
+			<div class="alert alert-warning mb-5 text-sm">
+				<span>You need to be assigned to a cohort before creating documents.</span>
 			</div>
 		{/if}
 
-		<div class="card bg-base-100 border border-base-300 shadow-md">
-			<div class="card-body">
-				<h4 class="font-semibold mb-4 text-center">Upload Document</h4>
-				<div class="ut-flex ut-flex-col ut-items-center ut-justify-center ut-gap-4">
-					<UploadDropzone {uploader} />
-					<p class="text-sm text-base-content/70 mt-2 text-center">
-						Max file size: 16MB. PDFs only.<br />Optimized for up to 100 pages/slides.
-					</p>
-				</div>
-				{#if submitError}
-					<div class="alert alert-error alert-sm mt-4">
-						<span class="text-sm">{submitError}</span>
-					</div>
+		<label
+			class="group relative flex min-h-52 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed p-6 text-center transition
+				{isDragging
+				? 'border-primary bg-primary/10 shadow-inner'
+				: selectedFile
+					? 'border-success/60 bg-success/10'
+					: 'border-base-300 bg-base-200/40 hover:border-primary/60 hover:bg-base-200'}
+				{isSubmitting ? 'pointer-events-none opacity-70' : ''}"
+			ondragenter={handleDragEnter}
+			ondragover={handleDragOver}
+			ondragleave={handleDragLeave}
+			ondrop={handleDrop}
+		>
+			<div
+				class="mb-3 rounded-full p-3 transition {isDragging
+					? 'scale-110 bg-primary text-primary-content'
+					: selectedFile
+						? 'bg-success/15 text-success'
+						: 'bg-primary/10 text-primary group-hover:bg-primary/15'}"
+			>
+				{#if selectedFile && !isDragging}
+					<CheckCircle2 size={32} />
+				{:else}
+					<FileUp size={32} />
 				{/if}
 			</div>
-		</div>
+			<span class="text-sm font-semibold">
+				{#if isDragging}
+					Drop to attach this file
+				{:else if selectedFile}
+					{selectedFile.name}
+				{:else}
+					Drag a file here or click to browse
+				{/if}
+			</span>
+			<span class="mt-1 text-xs text-base-content/60">
+				{selectedFile ? formatSize(selectedFile.size) : 'Maximum file size: 50MB'}
+			</span>
+			<span class="mt-3 badge badge-ghost badge-sm">PDF only</span>
+			<input
+				class="hidden"
+				type="file"
+				accept=".pdf,application/pdf"
+				onchange={handleFileChange}
+			/>
+		</label>
 
-		<div class="modal-action mt-8">
-			<form method="dialog" class="flex gap-3">
-				<button class="btn btn-ghost rounded-full" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button
-				>
-			</form>
+		{#if isSubmitting && uploadProgress > 0}
+			<div class="mt-4">
+				<progress class="progress progress-primary w-full" value={uploadProgress} max="100"></progress>
+				<p class="mt-1 text-xs text-base-content/60">{uploadProgress}% uploaded</p>
+			</div>
+		{/if}
+
+		<div class="modal-action mt-6">
+			<button class="btn btn-ghost" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button>
+			<button
+				class="btn btn-primary"
+				onclick={uploadDocument}
+				disabled={!selectedFile || !userData?.cohortId || isSubmitting}
+			>
+				{#if isSubmitting}
+					<span class="loading loading-spinner loading-sm"></span>
+				{/if}
+				Upload
+			</button>
 		</div>
 	</div>
 </dialog>

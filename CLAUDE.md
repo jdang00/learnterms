@@ -55,5 +55,5 @@ bunx convex run migrations:backfillFlagCounts '{"batchSize": 50}'
 - Convex for backend/database
 - TailwindCSS 4 + DaisyUI 5
 - Clerk for authentication
-- UploadThing for file uploads
-- Google Gemini API for AI processing
+- R2 for document storage
+- OpenRouter/OpenAI-backed RAG for AI processing

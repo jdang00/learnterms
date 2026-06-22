@@ -52,7 +52,7 @@ export const create = authCuratorMutation({
     showOnSolution: v.optional(v.boolean()),
     metadata: v.optional(
       v.object({
-        uploadthingKey: v.optional(v.string()),
+        storageKey: v.optional(v.string()),
         sizeBytes: v.optional(v.number()),
         originalFileName: v.optional(v.string())
       })
@@ -86,7 +86,7 @@ export const create = authCuratorMutation({
 
     const id = await db.insert('questionMedia', {
       url: args.url,
-      type: 'uploadthing',
+      type: 'external',
       questionId: args.questionId,
       updatedAt: Date.now(),
       mediaType: args.mediaType,
@@ -111,7 +111,7 @@ export const softDelete = authCuratorMutation({
       throw new Error('Media not found');
     }
     await db.patch(args.mediaId, { deletedAt: Date.now(), updatedAt: Date.now() });
-    const fileKey = (media.metadata as { uploadthingKey?: string } | undefined)?.uploadthingKey;
+    const fileKey = (media.metadata as { storageKey?: string } | undefined)?.storageKey;
     return { success: true, fileKey };
   }
 });
@@ -139,5 +139,4 @@ export const update = authCuratorMutation({
     return { updated: true };
   }
 });
-
 

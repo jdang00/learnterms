@@ -73,7 +73,7 @@
 	Each LearnTerms model is a carefully crafted combination of:
 </p>
 <ul>
-	<li><strong>Base AI Model:</strong> Powered by Google's Gemini Pro for reliable, high-quality output</li>
+	<li><strong>Base AI Model:</strong> Powered by the current RAG-backed model stack for reliable, high-quality output</li>
 	<li><strong>Specialized Focus:</strong> Domain-specific prompting that emphasizes relevant concepts</li>
 	<li><strong>Question Design:</strong> Tailored to your field's learning objectives and exam patterns</li>
 </ul>

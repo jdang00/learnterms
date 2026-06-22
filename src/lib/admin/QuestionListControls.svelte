@@ -7,7 +7,8 @@
 		CheckSquare,
 		FileText,
 		CheckCircle,
-		Filter
+		Filter,
+		Send
 	} from 'lucide-svelte';
 	import type { StatusFilter } from '$lib/types';
 
@@ -32,6 +33,7 @@
 		onReorderToggle: () => void;
 		onSelectAll: () => void;
 		onDeselectAll: () => void;
+		onPublishSelected: () => void;
 		onMoveSelected: () => void;
 		onDeleteSelected: () => void;
 	}
@@ -55,6 +57,7 @@
 		onReorderToggle,
 		onSelectAll,
 		onDeselectAll,
+		onPublishSelected,
 		onMoveSelected,
 		onDeleteSelected
 	}: Props = $props();
@@ -237,6 +240,10 @@
 
 		{#if canEdit && selectedCount > 0}
 			<div class="badge badge-neutral badge-sm rounded-full">{selectedCount} selected</div>
+			<button class="btn btn-sm btn-ghost rounded-full gap-1" onclick={onPublishSelected}>
+				<Send size={14} />
+				<span class="hidden sm:inline">Publish</span>
+			</button>
 			<button class="btn btn-sm btn-ghost rounded-full gap-1" onclick={onMoveSelected}>
 				<ArrowRightLeft size={14} />
 				<span class="hidden sm:inline">Move</span>
@@ -369,6 +376,14 @@
 				<div class="flex-1"></div>
 				<div class="badge badge-neutral badge-sm rounded-full">{selectedCount} selected</div>
 				<div class="w-px h-5 bg-base-300"></div>
+				<button
+					class="btn btn-sm btn-ghost rounded-full gap-1"
+					onclick={onPublishSelected}
+					title="Publish selected"
+				>
+					<Send size={14} />
+					Publish
+				</button>
 				<button
 					class="btn btn-sm btn-ghost rounded-full gap-1"
 					onclick={onMoveSelected}

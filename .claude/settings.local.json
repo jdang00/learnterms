@@ -38,7 +38,8 @@
       "Bash(bun outdated:*)",
       "Bash(find:*)",
       "Bash(bun update:*)",
-      "Bash(bunx convex *)"
+      "Bash(bunx convex *)",
+      "Bash(node *)"
     ]
   }
 }

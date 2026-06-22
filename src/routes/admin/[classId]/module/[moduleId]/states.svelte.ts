@@ -385,6 +385,36 @@ export class QuestionCurationState {
 		}
 	}
 
+	async publishSelectedQuestions() {
+		if (this.selectedQuestions.size === 0 || !this.client) return;
+		try {
+			const result = await this.client.mutation(api.question.bulkPublishQuestions, {
+				questionIds: Array.from(this.selectedQuestions) as Id<'question'>[],
+				moduleId: this.moduleId as Id<'module'>
+			});
+
+			if (result.publishedCount > 0) {
+				toastStore.success(
+					`Published ${result.publishedCount} question${result.publishedCount !== 1 ? 's' : ''}`
+				);
+			} else if (result.skippedCount > 0) {
+				toastStore.success('Selected questions are already published');
+			}
+
+			if (!result.success && result.errors.length > 0) {
+				toastStore.error(`Published with ${result.errors.length} error${result.errors.length === 1 ? '' : 's'}`);
+			}
+
+			this.questionList = this.questionList.map((question) =>
+				this.selectedQuestions.has(question._id) ? { ...question, status: 'published' } : question
+			);
+			this.selectedQuestions = new SvelteSet<string>();
+		} catch (error) {
+			console.error('Failed to publish selected questions', error);
+			toastStore.error('Failed to publish selected questions');
+		}
+	}
+
 	// Move operations
 	openMoveModalForSelected() {
 		if (this.selectedQuestions.size === 0) return;

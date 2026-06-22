@@ -220,6 +220,7 @@
 				onReorderToggle={() => curationState.toggleReorderMode()}
 				onSelectAll={() => curationState.selectAllQuestions()}
 				onDeselectAll={() => curationState.deselectAllQuestions()}
+				onPublishSelected={() => curationState.publishSelectedQuestions()}
 				onMoveSelected={() => curationState.openMoveModalForSelected()}
 				onDeleteSelected={() => curationState.openBulkDeleteModal()}
 			/>
@@ -379,6 +380,7 @@
 							onReorderToggle={() => curationState.toggleReorderMode()}
 							onSelectAll={() => curationState.selectAllQuestions()}
 							onDeselectAll={() => curationState.deselectAllQuestions()}
+							onPublishSelected={() => curationState.publishSelectedQuestions()}
 							onMoveSelected={() => curationState.openMoveModalForSelected()}
 							onDeleteSelected={() => curationState.openBulkDeleteModal()}
 						/>

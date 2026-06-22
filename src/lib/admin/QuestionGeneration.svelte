@@ -23,6 +23,7 @@
 		charCount?: number;
 		canGenerate?: boolean;
 		destinationSummary?: string;
+		disabledReason?: string;
 		onAddSelected?: (payload: { questions: GeneratedQuestionInput[] }) => Promise<void> | void;
 	}
 
@@ -32,6 +33,7 @@
 		charCount = 0,
 		canGenerate = false,
 		destinationSummary = '',
+		disabledReason = '',
 		onAddSelected
 	}: Props = $props();
 
@@ -346,9 +348,11 @@
 				<div class="flex items-center justify-between">
 					<span class="text-xs font-medium text-base-content/70">Content Preview</span>
 					{#if !canGenerate}
-						<span class="text-xs text-warning">Select a destination first</span>
+						<span class="text-xs text-warning">
+							{disabledReason || 'Select a destination first'}
+						</span>
 					{:else if charCount === 0}
-						<span class="text-xs text-base-content/50">Select content from documents</span>
+						<span class="text-xs text-base-content/50">Select a source</span>
 					{:else if qualityStatus === 'over'}
 						<span class="text-xs text-error">Content may be truncated</span>
 					{:else if qualityStatus === 'low'}

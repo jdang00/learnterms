@@ -170,7 +170,7 @@
 						</li>
 						<li class="flex items-center gap-2">
 							<Sparkles size={16} class="text-primary" />
-							Unlimited PDF uploads
+							RAG document indexing
 						</li>
 						<li class="flex items-center gap-2">
 							<Sparkles size={16} class="text-primary" />
@@ -279,8 +279,8 @@
 							<span class="font-bold text-success">∞</span>
 						</div>
 						<div>
-							<p class="font-medium">PDF Uploads</p>
-							<p class="text-sm text-base-content/60">Unlimited ingestion</p>
+							<p class="font-medium">RAG Indexing</p>
+							<p class="text-sm text-base-content/60">Document ingestion</p>
 						</div>
 					</div>
 					<div class="flex items-start gap-3">
@@ -392,7 +392,7 @@
 
 					<div class="mt-4 p-3 bg-base-200 rounded-lg text-sm">
 						<p class="font-medium mb-1">Daily Limits</p>
-						<p class="text-base-content/60">15 AI generations • 1 PDF upload</p>
+						<p class="text-base-content/60">15 AI generations</p>
 					</div>
 
 					<div class="mt-4 text-sm text-base-content/50 flex items-center gap-1">
@@ -443,7 +443,7 @@
 						</li>
 						<li class="flex items-start gap-2">
 							<Check size={18} class="text-success shrink-0 mt-0.5" />
-							<span><strong>Unlimited</strong> PDF uploads</span>
+							<span>RAG document indexing</span>
 						</li>
 						<li class="flex items-start gap-2">
 							<Check size={18} class="text-success shrink-0 mt-0.5" />
@@ -502,8 +502,8 @@
 					>
 					<div class="collapse-content text-sm text-base-content/70">
 						<p>
-							On the free plan, you'll see a message when you've used your daily AI generations or
-							PDF upload. Limits reset every 24 hours.
+							On the free plan, you'll see a message when you've used your daily AI generations.
+							Limits reset every 24 hours.
 						</p>
 					</div>
 				</details>

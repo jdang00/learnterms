@@ -31,9 +31,6 @@
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
 	import { QUESTION_TYPES } from '$lib/types';
-	import { createUploader, createUploadThing } from '$lib/utils/uploadthing';
-	import { UploadDropzone } from '@uploadthing/svelte';
-	import type { ClientUploadedFileData } from 'uploadthing/types';
 	import { onMount } from 'svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import type { Readable } from 'svelte/store';
@@ -46,10 +43,8 @@
 
 	type QuestionItem = Doc<'question'>;
 	type QuestionMediaItem = FunctionReturnType<typeof api.questionMedia.getByQuestionId>[number];
-	type DeleteQuestionMediaResult = FunctionReturnType<typeof api.questionMedia.softDelete>;
 	type UpdateQuestionMediaArgs = FunctionArgs<typeof api.questionMedia.update>;
 	type CreateQuestionMediaArgs = FunctionArgs<typeof api.questionMedia.create>;
-	type UploadedQuestionMediaFile = ClientUploadedFileData<unknown>;
 
 	let {
 		moduleId,
@@ -433,19 +428,6 @@
 			const res = await client.mutation(api.questionMedia.softDelete, {
 				mediaId: id as Id<'questionMedia'>
 			});
-			// Try to delete from uploadthing
-			const key: DeleteQuestionMediaResult['fileKey'] = res?.fileKey;
-			if (typeof key === 'string' && key.length > 0) {
-				try {
-					await fetch('/api/uploads/delete', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ fileKey: key })
-					});
-				} catch (uploadDeleteError) {
-					console.error('Failed to delete uploaded media file:', uploadDeleteError);
-				}
-			}
 			await refreshMedia();
 			onChange();
 		} catch (e) {
@@ -542,27 +524,6 @@
 		onChange();
 	}
 
-	function getUploadedQuestionMediaFile(
-		res: UploadedQuestionMediaFile[] | undefined
-	): UploadedQuestionMediaFile | null {
-		return Array.isArray(res) ? (res[0] ?? null) : null;
-	}
-
-	function toQueuedMediaItem(file: UploadedQuestionMediaFile): (typeof queuedMedia)[0] | null {
-		const url = file.ufsUrl ?? file.url;
-		if (!url) return null;
-
-		return {
-			url,
-			key: file.key,
-			name: file.name,
-			caption: '',
-			sizeBytes: file.size || undefined,
-			mimeType: file.type || undefined,
-			showOnSolution: false
-		};
-	}
-
 	function handleUploadFailure(message: string, error?: unknown) {
 		if (error) {
 			console.error(message, error);
@@ -571,51 +532,6 @@
 		}
 		toastStore.error(message);
 	}
-
-	function handleUploadedMediaResult(res: UploadedQuestionMediaFile[] | undefined) {
-		const file = getUploadedQuestionMediaFile(res);
-		if (!file) {
-			handleUploadFailure('Upload failed: missing uploaded file');
-			return;
-		}
-
-		const mediaItem = toQueuedMediaItem(file);
-		if (!mediaItem) {
-			handleUploadFailure('Upload failed: missing URL');
-			return;
-		}
-
-		addMediaItem(mediaItem);
-	}
-
-	const mediaUploader = createUploader('questionMediaUploader', {
-		onClientUploadComplete: (res) => {
-			try {
-				handleUploadedMediaResult(res);
-			} catch (e) {
-				handleUploadFailure(e instanceof Error ? e.message : 'Upload failed', e);
-			}
-		},
-		onUploadError: (error: Error) => {
-			handleUploadFailure(error.message || 'Upload failed', error);
-		}
-	});
-
-	// Paste upload support
-	const { startUpload } = createUploadThing('questionMediaUploader', {
-		onClientUploadComplete: (res) => {
-			try {
-				handleUploadedMediaResult(res);
-			} catch (e) {
-				handleUploadFailure(e instanceof Error ? e.message : 'Upload failed', e);
-			}
-		},
-		onUploadError: (error: Error) => {
-			handleUploadFailure(error.message || 'Upload failed', error);
-		}
-	});
-
-	let isPasteUploading = $state(false);
 
 	async function handlePaste(e: ClipboardEvent) {
 		const items = e.clipboardData?.items;
@@ -632,31 +548,11 @@
 		if (files.length === 0) return;
 
 		e.preventDefault();
-		isPasteUploading = true;
-
-		try {
-			await startUpload(files);
-		} catch (err) {
-			handleUploadFailure(err instanceof Error ? err.message : 'Paste upload failed', err);
-		} finally {
-			isPasteUploading = false;
-		}
+		handleUploadFailure('Question media uploads are temporarily disabled during the R2 migration.');
 	}
 
 	async function removeQueuedMedia(index: number) {
 		const media = queuedMedia[index];
-		// Delete from UploadThing if we have a key
-		if (media?.key) {
-			try {
-				await fetch('/api/uploads/delete', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ fileKey: media.key })
-				});
-			} catch (e) {
-				console.error('Failed to delete from UploadThing:', e);
-			}
-		}
 		queuedMedia = queuedMedia.filter((_, i) => i !== index);
 		onChange();
 	}
@@ -1117,7 +1013,7 @@
 						order: startOrder + i,
 						showOnSolution: m.showOnSolution ?? false,
 						metadata: {
-							uploadthingKey: m.key || '',
+							storageKey: m.key || '',
 							sizeBytes: m.sizeBytes || 0,
 							originalFileName: m.name || ''
 						}
@@ -1732,48 +1628,18 @@
 							</div>
 						{/if}
 
-						<div class="relative">
-							{#if isPasteUploading}
-								<div
-									class="border-2 border-dashed border-primary rounded-2xl p-6 flex flex-col items-center justify-center h-32 bg-base-100/50"
-								>
-									<span class="loading loading-spinner text-primary mb-2"></span>
-									<span class="text-xs text-primary font-medium">Processing pasted image...</span>
-								</div>
-							{:else}
-								<div
-									class="group relative h-36 w-full border-2 border-dashed border-base-300 rounded-xl hover:border-primary transition-colors bg-base-100/50 flex flex-col items-center justify-center text-center overflow-hidden"
-								>
-									<!-- The Dropzone covers everything but is invisible -->
-									<div class="absolute inset-0 z-10 opacity-0 cursor-pointer">
-										<UploadDropzone
-											uploader={mediaUploader}
-											aria-label="Upload image"
-											appearance={{
-												container: 'h-full w-full',
-												label: 'hidden',
-												allowedContent: 'hidden',
-												button: 'hidden'
-											}}
-										/>
-									</div>
-
-									<!-- Visible Content -->
-									<div
-										class="flex flex-col items-center gap-2 p-4 text-base-content/60 group-hover:text-primary transition-colors"
-									>
-										<div
-											class="p-3 bg-base-200 rounded-full group-hover:bg-primary/10 transition-colors"
-										>
-											<ImageIcon size={24} />
-										</div>
-										<div class="flex flex-col gap-0.5">
-											<span class="text-sm font-semibold">Upload Image</span>
-											<span class="text-xs opacity-70">Drag & drop or paste (Ctrl+V)</span>
-										</div>
-									</div>
-								</div>
-							{/if}
+						<div
+							class="h-36 w-full border-2 border-dashed border-base-300 rounded-xl bg-base-100/50 flex flex-col items-center justify-center text-center"
+						>
+							<div class="p-3 bg-base-200 rounded-full text-base-content/50">
+								<ImageIcon size={24} />
+							</div>
+							<div class="mt-2 flex flex-col gap-0.5 px-4">
+								<span class="text-sm font-semibold">Media uploads paused</span>
+								<span class="text-xs text-base-content/60">
+									Question image uploads will return on the R2 media path.
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>

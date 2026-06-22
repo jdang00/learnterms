@@ -1,4 +1,4 @@
-export type ModelId = 'gemini-3-flash-preview';
+export type ModelId = 'legacy-disabled';
 export type Focus = 'optometry' | 'pharmacy' | 'general';
 
 export type ProductModelId = 'swift-general' | 'swift-optometry' | 'swift-pharmacy';
@@ -10,9 +10,9 @@ type ProductModel = {
 };
 
 export const productModels: Record<ProductModelId, ProductModel> = {
-	'swift-general': { label: 'swift-general', model: 'gemini-3-flash-preview', focus: 'general' },
-	'swift-optometry': { label: 'swift-optometry', model: 'gemini-3-flash-preview', focus: 'optometry' },
-	'swift-pharmacy': { label: 'swift-pharmacy', model: 'gemini-3-flash-preview', focus: 'pharmacy' }
+	'swift-general': { label: 'swift-general', model: 'legacy-disabled', focus: 'general' },
+	'swift-optometry': { label: 'swift-optometry', model: 'legacy-disabled', focus: 'optometry' },
+	'swift-pharmacy': { label: 'swift-pharmacy', model: 'legacy-disabled', focus: 'pharmacy' }
 };
 
 export const defaultProductModelId: ProductModelId = 'swift-general';
@@ -28,5 +28,4 @@ export function resolveProduct(
 	const mapped = productModels[id] ?? productModels[defaultProductModelId];
 	return { productId: id in productModels ? (id as ProductModelId) : defaultProductModelId, model: mapped.model, focus: mapped.focus, label: mapped.label };
 }
-
 
