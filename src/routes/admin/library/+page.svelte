@@ -6,13 +6,13 @@
 		Minimize2,
 		Presentation,
 		Trash2,
-		TriangleAlert,
 		X
 	} from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import AddDocumentModal from '../../../lib/admin/AddDocumentModal.svelte';
 	import ContentLibraryExplorer from '../../../lib/admin/ContentLibraryExplorer.svelte';
 	import ContentLibraryHeader from '../../../lib/admin/ContentLibraryHeader.svelte';
+	import ContentLibraryPreviewUnavailable from '../../../lib/admin/ContentLibraryPreviewUnavailable.svelte';
 	import ContentLibraryPropertiesPanel from '../../../lib/admin/ContentLibraryPropertiesPanel.svelte';
 	import ContentLibrarySourcePanel from '../../../lib/admin/ContentLibrarySourcePanel.svelte';
 	import ContentLibraryToolbar from '../../../lib/admin/ContentLibraryToolbar.svelte';
@@ -559,23 +559,12 @@
 								<p class="text-sm text-base-content/60">Building slide deck preview...</p>
 							</div>
 						{:else if deckPreviewError}
-							<div
-								class="flex h-full min-h-72 flex-col items-center justify-center p-8 text-center"
-							>
-								<div class="mb-3 rounded-2xl bg-base-200 p-4 text-base-content/40">
-									<TriangleAlert size={26} />
-								</div>
-								<p class="text-sm font-semibold">Slide deck preview unavailable</p>
-								<p class="mt-1 max-w-sm text-xs text-base-content/50">
-									{deckPreviewError}
-								</p>
-								<button
-									class="btn btn-primary btn-sm mt-4 rounded-full"
-									onclick={() => loadDeckPreview(selectedDocument)}
-								>
-									Try again
-								</button>
-							</div>
+							<ContentLibraryPreviewUnavailable
+								title="Slide deck preview unavailable"
+								description="We couldn't build a slide deck from this document. Retry, or open the log for details."
+								errorText={deckPreviewError}
+								onRetry={() => selectedDocument && loadDeckPreview(selectedDocument)}
+							/>
 						{:else if deckPreviewHtml}
 							<div class="deck-preview h-full min-h-[60vh] overflow-y-auto p-8 pb-24">
 								{@html styleTag(deckPreviewCss)}
@@ -587,14 +576,10 @@
 								</div>
 							</div>
 						{:else}
-							<div
-								class="flex h-full min-h-72 flex-col items-center justify-center p-8 text-center"
-							>
-								<div class="mb-3 rounded-2xl bg-base-200 p-4 text-base-content/40">
-									<TriangleAlert size={26} />
-								</div>
-								<p class="text-sm font-semibold">No deck preview available</p>
-							</div>
+							<ContentLibraryPreviewUnavailable
+								title="No deck preview available"
+								description="This document doesn't have slide content to render yet."
+							/>
 						{/if}
 					{:else if isMarkdownLoading}
 						<div class="flex h-full min-h-72 flex-col items-center justify-center gap-3">
@@ -602,21 +587,12 @@
 							<p class="text-sm text-base-content/60">Generating markdown preview...</p>
 						</div>
 					{:else if markdownPreviewError}
-						<div class="flex h-full min-h-72 flex-col items-center justify-center p-8 text-center">
-							<div class="mb-3 rounded-2xl bg-base-200 p-4 text-base-content/40">
-								<TriangleAlert size={26} />
-							</div>
-							<p class="text-sm font-semibold">Markdown preview unavailable</p>
-							<p class="mt-1 max-w-sm text-xs text-base-content/50">
-								{markdownPreviewError}
-							</p>
-							<button
-								class="btn btn-primary btn-sm mt-4 rounded-full"
-								onclick={() => loadMarkdownPreview(selectedDocument)}
-							>
-								Try again
-							</button>
-						</div>
+						<ContentLibraryPreviewUnavailable
+							title="Markdown preview unavailable"
+							description="We couldn't render this document's extracted markdown. Retry, or open the log for details."
+							errorText={markdownPreviewError}
+							onRetry={() => selectedDocument && loadMarkdownPreview(selectedDocument)}
+						/>
 					{:else if markdownPreviewHtml}
 						<div class="preview-scroll h-full min-h-[60vh] overflow-y-auto bg-base-100">
 							{#if markdownPreviewTruncated}
@@ -636,15 +612,10 @@
 							</div>
 						</div>
 					{:else}
-						<div class="flex h-full min-h-72 flex-col items-center justify-center p-8 text-center">
-							<div class="mb-3 rounded-2xl bg-base-200 p-4 text-base-content/40">
-								<TriangleAlert size={26} />
-							</div>
-							<p class="text-sm font-semibold">No preview available</p>
-							<p class="mt-1 max-w-xs text-xs text-base-content/50">
-								This file is missing its storage key. Try re-uploading it.
-							</p>
-						</div>
+						<ContentLibraryPreviewUnavailable
+							title="No preview available"
+							description="This file is missing its storage key. Try re-uploading it."
+						/>
 					{/if}
 				</div>
 			{:else if drawerTab === 'source'}

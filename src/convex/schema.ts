@@ -622,6 +622,7 @@ export default defineSchema({
 						v.literal('not_started'),
 						v.literal('indexing'),
 						v.literal('indexed'),
+						v.literal('mapped'),
 						v.literal('failed')
 					)
 				),
@@ -631,6 +632,7 @@ export default defineSchema({
 				extractionProvider: v.optional(v.string()),
 				extractionModel: v.optional(v.string()),
 				indexedAt: v.optional(v.number()),
+				mappedAt: v.optional(v.number()),
 				indexError: v.optional(v.string()),
 				pageCount: v.optional(v.number()),
 				topics: v.optional(

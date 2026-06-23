@@ -459,6 +459,16 @@ export const indexR2Document = action({
 				pageCount
 			});
 
+			try {
+				const identity = await ctx.auth.getUserIdentity();
+				await ctx.scheduler.runAfter(0, (internal as any).questionStudio.autoMapIndexedDocument, {
+					documentId: document._id,
+					triggeredByClerkUserId: identity?.subject
+				});
+			} catch (mappingError) {
+				console.warn('Question Studio topic map scheduling failed', mappingError);
+			}
+
 			return {
 				status: 'indexed',
 				namespace,
@@ -783,7 +793,7 @@ export const askCohort = action({
 	handler: async (ctx, args) => {
 		assertOpenRouterKey();
 		if (!args.sourceDocumentId) {
-			throw new Error('Select an indexed R2 document before asking the RAG tester.');
+			throw new Error('Select an indexed or mapped R2 document before asking the RAG tester.');
 		}
 		const document = await ctx.runQuery(internal.ragKnowledgeInternal.getDocumentForRagIngestion, {
 			documentId: args.sourceDocumentId

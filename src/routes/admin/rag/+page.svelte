@@ -113,7 +113,7 @@
 					<label class="form-control w-full md:max-w-xs">
 						<span class="label-text mb-1 text-xs">Document filter</span>
 						<select class="select select-bordered select-sm" bind:value={selectedDocumentId}>
-							<option value="">Select indexed document</option>
+							<option value="">Select indexed or mapped document</option>
 							{#each indexedDocs as doc (doc._id)}
 								<option value={doc._id}>{doc.title}</option>
 							{/each}
@@ -134,8 +134,8 @@
 							</div>
 							<h2 class="text-base font-semibold">No conversation yet</h2>
 							<p class="mt-1 max-w-md text-sm text-base-content/60">
-								Select an indexed R2 document, then ask about definitions, mechanisms, formulas, or
-								page-specific details.
+								Select an indexed or mapped R2 document, then ask about definitions, mechanisms,
+								formulas, or page-specific details.
 							</p>
 						</div>
 					{:else}
@@ -207,7 +207,7 @@
 					<div class="flex gap-3">
 						<textarea
 							class="textarea textarea-bordered min-h-12 flex-1 resize-none"
-							placeholder="Ask about the selected indexed document..."
+							placeholder="Ask about the selected indexed or mapped document..."
 							rows="2"
 							bind:value={prompt}
 						></textarea>

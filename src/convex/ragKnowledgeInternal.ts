@@ -50,6 +50,7 @@ export const updateDocumentIngestion = internalMutation({
 			v.literal('not_started'),
 			v.literal('indexing'),
 			v.literal('indexed'),
+			v.literal('mapped'),
 			v.literal('failed')
 		),
 		ragNamespace: v.optional(v.string()),
@@ -83,6 +84,27 @@ export const updateDocumentIngestion = internalMutation({
 	}
 });
 
+export const markDocumentMapped = internalMutation({
+	args: {
+		documentId: v.id('contentLib'),
+		mappedAt: v.optional(v.number())
+	},
+	handler: async (ctx, args) => {
+		const document = await ctx.db.get(args.documentId);
+		if (!document) throw new Error('Document not found');
+
+		await ctx.db.patch(args.documentId, {
+			metadata: {
+				...(document.metadata ?? {}),
+				ingestionStatus: 'mapped',
+				mappedAt: args.mappedAt ?? Date.now(),
+				indexError: undefined
+			},
+			updatedAt: Date.now()
+		});
+	}
+});
+
 export const clearDocumentIngestion = internalMutation({
 	args: {
 		documentId: v.id('contentLib')
@@ -99,6 +121,7 @@ export const clearDocumentIngestion = internalMutation({
 			extractionProvider: _extractionProvider,
 			extractionModel: _extractionModel,
 			indexedAt: _indexedAt,
+			mappedAt: _mappedAt,
 			indexError: _indexError,
 			pageCount: _pageCount,
 			topics: _topics,

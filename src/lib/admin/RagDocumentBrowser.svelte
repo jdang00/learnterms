@@ -47,7 +47,8 @@
 		((docs.data ?? []) as Doc<'contentLib'>[]).filter(
 			(doc) =>
 				doc.metadata?.storageProvider === 'r2' &&
-				doc.metadata?.ingestionStatus === 'indexed' &&
+				(doc.metadata?.ingestionStatus === 'indexed' ||
+					doc.metadata?.ingestionStatus === 'mapped') &&
 				Boolean(doc.metadata?.ragEntryId)
 		)
 	);
@@ -70,7 +71,7 @@
 		<div class="mb-3">
 			<h2 class="text-sm font-semibold">Sources</h2>
 			<p class="mt-0.5 text-xs text-base-content/50">
-				Choose an indexed document for the topic map.
+				Choose an indexed or mapped document for the topic map.
 			</p>
 		</div>
 

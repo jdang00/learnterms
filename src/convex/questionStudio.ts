@@ -3,7 +3,14 @@ import { RAG } from '@convex-dev/rag';
 import { RateLimiter, MINUTE } from '@convex-dev/rate-limiter';
 import { createOpenAI } from '@ai-sdk/openai';
 import { v } from 'convex/values';
-import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
+import {
+	action,
+	internalAction,
+	internalMutation,
+	internalQuery,
+	mutation,
+	query
+} from './_generated/server';
 import { components, internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
@@ -95,11 +102,15 @@ type GenerationContext = {
 	existingQuestions: ExistingQuestionSummary[];
 };
 
-type MapNotesResult = {
+type DocumentMappingContext = {
+	user?: { _id: Id<'users'>; role?: 'dev' | 'admin' | 'curator'; cohortId?: Id<'cohort'> };
+	document: Doc<'contentLib'>;
+};
+
+type MapDocumentTopicMapResult = {
 	threadId: string;
 	model: string;
 	documentId: Id<'contentLib'>;
-	moduleId: Id<'module'>;
 	pageRange: { startPage: number; endPage: number };
 	topics: TopicMapItem[];
 	topicMapId?: Id<'questionStudioTopicMaps'>;
@@ -174,6 +185,12 @@ function openRouter() {
 function assertOpenRouterKey() {
 	if (!process.env.OPENROUTER_API_KEY) {
 		throw new Error('OPENROUTER_API_KEY is not configured');
+	}
+}
+
+function assertOperatorToken(token?: string) {
+	if (!process.env.RAG_MIGRATION_TOKEN || token !== process.env.RAG_MIGRATION_TOKEN) {
+		throw new Error('Unauthorized');
 	}
 }
 
@@ -699,12 +716,13 @@ export const getGenerationContext = internalQuery({
 
 		const document = await ctx.db.get(args.documentId);
 		if (!document || document.deletedAt) throw new Error('Document not found');
+		const ingestionStatus = document.metadata?.ingestionStatus;
 		if (
 			document.metadata?.storageProvider !== 'r2' ||
-			document.metadata?.ingestionStatus !== 'indexed' ||
+			(ingestionStatus !== 'indexed' && ingestionStatus !== 'mapped') ||
 			!document.metadata?.ragEntryId
 		) {
-			throw new Error('Select an indexed R2 document before using Question Studio');
+			throw new Error('Select an indexed or mapped R2 document before using Question Studio');
 		}
 
 		const module = await ctx.db.get(args.moduleId);
@@ -737,6 +755,42 @@ export const getGenerationContext = internalQuery({
 				status: question.status,
 				searchText: question.searchText
 			}))
+		};
+	}
+});
+
+export const getDocumentMappingContext = internalQuery({
+	args: {
+		clerkUserId: v.string(),
+		documentId: v.id('contentLib')
+	},
+	handler: async (ctx, args) => {
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
+			.first();
+		if (!user) throw new Error('User not found');
+		if (!(user.role === 'dev' || user.role === 'admin' || user.role === 'curator')) {
+			throw new Error('Unauthorized');
+		}
+
+		const document = await ctx.db.get(args.documentId);
+		if (!document || document.deletedAt) throw new Error('Document not found');
+		const ingestionStatus = document.metadata?.ingestionStatus;
+		if (
+			document.metadata?.storageProvider !== 'r2' ||
+			(ingestionStatus !== 'indexed' && ingestionStatus !== 'mapped') ||
+			!document.metadata?.ragEntryId
+		) {
+			throw new Error('Select an indexed or mapped R2 document before mapping topics');
+		}
+		if (user.role !== 'dev' && user.cohortId !== document.cohortId) {
+			throw new Error('Unauthorized for this cohort');
+		}
+
+		return {
+			user: { _id: user._id, role: user.role, cohortId: user.cohortId },
+			document
 		};
 	}
 });
@@ -811,7 +865,7 @@ export const saveTopicMapForRange = internalMutation({
 	args: {
 		documentId: v.id('contentLib'),
 		cohortId: v.id('cohort'),
-		createdFromModuleId: v.id('module'),
+		createdFromModuleId: v.optional(v.id('module')),
 		startPage: v.number(),
 		endPage: v.number(),
 		pageCount: v.number(),
@@ -868,6 +922,142 @@ export const saveTopicMapForRange = internalMutation({
 			createdAt: now,
 			updatedAt: now
 		});
+	}
+});
+
+export const autoMapIndexedDocument = internalAction({
+	args: {
+		documentId: v.id('contentLib'),
+		triggeredByClerkUserId: v.optional(v.string())
+	},
+	handler: async (ctx, args) => {
+		const document = (await ctx.runQuery(
+			internal.ragKnowledgeInternal.getDocumentForRagIngestion,
+			{
+				documentId: args.documentId
+			}
+		)) as Doc<'contentLib'> | null;
+
+		if (!document || document.deletedAt) throw new Error('Document not found');
+		const ingestionStatus = document.metadata?.ingestionStatus;
+		if (
+			document.metadata?.storageProvider !== 'r2' ||
+			(ingestionStatus !== 'indexed' && ingestionStatus !== 'mapped') ||
+			!document.metadata?.ragEntryId
+		) {
+			throw new Error('Only indexed or mapped R2 documents can be mapped');
+		}
+
+		const pages = selectPages(await loadMarkdownPages(document));
+		const pageRange = {
+			startPage: pages[0].pageNumber,
+			endPage: pages[pages.length - 1].pageNumber
+		};
+		const savedMap = (await ctx.runQuery((internal as any).questionStudio.getSavedTopicMapForRange, {
+			documentId: args.documentId,
+			startPage: pageRange.startPage,
+			endPage: pageRange.endPage
+		})) as Doc<'questionStudioTopicMaps'> | null;
+		const savedMapIsFresh = Boolean(
+			savedMap &&
+				(savedMap.sourceIndexedAt
+					? savedMap.sourceIndexedAt === document.metadata?.indexedAt
+					: savedMap.sourceDocumentUpdatedAt === document.updatedAt)
+		);
+		if (savedMap && savedMapIsFresh) {
+			if (document.metadata?.ingestionStatus !== 'mapped') {
+				await ctx.runMutation(internal.ragKnowledgeInternal.markDocumentMapped, {
+					documentId: args.documentId,
+					mappedAt: savedMap.updatedAt
+				});
+			}
+			return {
+				status: 'cached',
+				topicMapId: savedMap._id,
+				topicCount: savedMap.topics.length
+			};
+		}
+
+		assertOpenRouterKey();
+		const agentUserId = args.triggeredByClerkUserId ?? `document:${args.documentId}`;
+		const creator = args.triggeredByClerkUserId
+			? await ctx.runQuery(internal.ragKnowledgeInternal.getUserForRagAccess, {
+					clerkUserId: args.triggeredByClerkUserId
+				})
+			: null;
+
+		await questionStudioRateLimiter.limit(ctx, 'questionStudioGenerationStart', {
+			key: agentUserId,
+			throws: true
+		});
+		await questionStudioRateLimiter.limit(ctx, 'questionStudioGlobalGenerationStart', {
+			throws: true
+		});
+
+		const sourceText = pagesToPromptText(pages, MAX_TOPIC_SOURCE_CHARS);
+		const tools = {
+			getAllowedSourceText: createTool({
+				description:
+					'Return the indexed source notes for this document. This tool has no access outside the selected document.',
+				inputSchema: z.object({}),
+				execute: async () => ({
+					documentTitle: document.title,
+					pageNumbers: pages.map((page) => page.pageNumber),
+					text: pagesToPromptText(pages, MAX_SOURCE_CHARS)
+				})
+			})
+		};
+		const agent = createQuestionStudioAgent(tools, QUESTION_STUDIO_FLASH_MODEL);
+		const { threadId } = await agent.createThread(ctx, {
+			userId: agentUserId,
+			title: `Auto map document: ${document.title}`
+		});
+
+		const result = await agent.generateObject(
+			ctx,
+			{ threadId, userId: agentUserId },
+			{
+				schema: topicMapSchema,
+				prompt: [
+					'Map this indexed document into reusable teachable topics for future question generation.',
+					'Return coverage-focused topics. Each topic should be narrow enough to support 1-10 questions.',
+					'Use page numbers from the source only.',
+					'Reasoning orders: first = recall; second = mechanism/application; third = multi-step reasoning.',
+					'No destination module has been selected yet, so make this a document-level topic map.',
+					`Selected pages: ${pages.map((page) => page.pageNumber).join(', ')}`,
+					'Source excerpt:',
+					sourceText
+				].join('\n\n')
+			},
+			{ storageOptions: { saveMessages: 'promptAndOutput' } }
+		);
+
+		const topics = result.object.topics.map((topic, index) => clampTopic(topic, pages, index));
+		const topicMapId = (await ctx.runMutation((internal as any).questionStudio.saveTopicMapForRange, {
+			documentId: args.documentId,
+			cohortId: document.cohortId,
+			startPage: pageRange.startPage,
+			endPage: pageRange.endPage,
+			pageCount: pages.length,
+			topics,
+			model: QUESTION_STUDIO_FLASH_MODEL,
+			agentThreadId: threadId,
+			sourceDocumentUpdatedAt: document.updatedAt,
+			sourceIndexedAt: document.metadata?.indexedAt,
+			createdByUserId: creator?._id
+		})) as Id<'questionStudioTopicMaps'>;
+		await ctx.runMutation(internal.ragKnowledgeInternal.markDocumentMapped, {
+			documentId: args.documentId,
+			mappedAt: Date.now()
+		});
+
+		return {
+			status: 'mapped',
+			topicMapId,
+			topicCount: topics.length,
+			threadId,
+			usage: result.usage
+		};
 	}
 });
 
@@ -962,23 +1152,40 @@ export const updateGenerationJob = internalMutation({
 	}
 });
 
-export const mapNotes = action({
+export const mapDocumentTopicMap = action({
 	args: {
 		documentId: v.id('contentLib'),
-		moduleId: v.id('module'),
-		startPage: v.optional(v.number()),
-		endPage: v.optional(v.number())
+		force: v.optional(v.boolean()),
+		operatorToken: v.optional(v.string())
 	},
-	handler: async (ctx, args): Promise<MapNotesResult> => {
+	handler: async (ctx, args): Promise<MapDocumentTopicMapResult> => {
 		const identity = await ctx.auth.getUserIdentity();
-		if (!identity) throw new Error('Unauthorized');
-
-		const context = (await ctx.runQuery((internal as any).questionStudio.getGenerationContext, {
-			clerkUserId: identity.subject,
-			documentId: args.documentId,
-			moduleId: args.moduleId
-		})) as GenerationContext;
-		const pages = selectPages(await loadMarkdownPages(context.document), args.startPage, args.endPage);
+		let context: DocumentMappingContext;
+		if (identity) {
+			context = (await ctx.runQuery((internal as any).questionStudio.getDocumentMappingContext, {
+				clerkUserId: identity.subject,
+				documentId: args.documentId
+			})) as DocumentMappingContext;
+		} else {
+			assertOperatorToken(args.operatorToken);
+			const document = (await ctx.runQuery(
+				internal.ragKnowledgeInternal.getDocumentForRagIngestion,
+				{
+					documentId: args.documentId
+				}
+			)) as Doc<'contentLib'> | null;
+			if (!document || document.deletedAt) throw new Error('Document not found');
+			const ingestionStatus = document.metadata?.ingestionStatus;
+			if (
+				document.metadata?.storageProvider !== 'r2' ||
+				(ingestionStatus !== 'indexed' && ingestionStatus !== 'mapped') ||
+				!document.metadata?.ragEntryId
+			) {
+				throw new Error('Select an indexed or mapped R2 document before mapping topics');
+			}
+			context = { document };
+		}
+		const pages = selectPages(await loadMarkdownPages(context.document));
 		const pageRange = {
 			startPage: pages[0].pageNumber,
 			endPage: pages[pages.length - 1].pageNumber
@@ -994,12 +1201,17 @@ export const mapNotes = action({
 					? savedMap.sourceIndexedAt === context.document.metadata?.indexedAt
 					: savedMap.sourceDocumentUpdatedAt === context.document.updatedAt)
 		);
-		if (savedMap && savedMapIsFresh) {
+		if (savedMap && savedMapIsFresh && !args.force) {
+			if (context.document.metadata?.ingestionStatus !== 'mapped') {
+				await ctx.runMutation(internal.ragKnowledgeInternal.markDocumentMapped, {
+					documentId: args.documentId,
+					mappedAt: savedMap.updatedAt
+				});
+			}
 			return {
 				threadId: savedMap.agentThreadId ?? '',
 				model: savedMap.model,
 				documentId: args.documentId,
-				moduleId: args.moduleId,
 				pageRange,
 				topics: savedMap.topics as TopicMapItem[],
 				topicMapId: savedMap._id,
@@ -1011,7 +1223,7 @@ export const mapNotes = action({
 
 		assertOpenRouterKey();
 		await questionStudioRateLimiter.limit(ctx, 'questionStudioGenerationStart', {
-			key: identity.subject,
+			key: identity?.subject ?? `operator:${args.documentId}`,
 			throws: true
 		});
 		await questionStudioRateLimiter.limit(ctx, 'questionStudioGlobalGenerationStart', {
@@ -1022,7 +1234,8 @@ export const mapNotes = action({
 
 		const tools = {
 			getAllowedSourceText: createTool({
-				description: 'Return the selected source notes. This tool has no access outside the selected document and page range.',
+				description:
+					'Return the selected source notes. This tool has no access outside the selected document and page range.',
 				inputSchema: z.object({}),
 				execute: async () => ({
 					documentTitle: context.document.title,
@@ -1033,13 +1246,13 @@ export const mapNotes = action({
 		};
 		const agent = createQuestionStudioAgent(tools, QUESTION_STUDIO_FLASH_MODEL);
 		const { threadId } = await agent.createThread(ctx, {
-			userId: identity.subject,
+			userId: identity?.subject ?? `operator:${args.documentId}`,
 			title: `Map notes: ${context.document.title}`
 		});
 
 		const result = await agent.generateObject(
 			ctx,
-			{ threadId, userId: identity.subject },
+			{ threadId, userId: identity?.subject ?? `operator:${args.documentId}` },
 			{
 				schema: topicMapSchema,
 				prompt: [
@@ -1047,7 +1260,7 @@ export const mapNotes = action({
 					'Return coverage-focused topics. Each topic should be narrow enough to support 1-10 questions.',
 					'Use page numbers from the source only.',
 					'Reasoning orders: first = recall; second = mechanism/application; third = multi-step reasoning.',
-					`Destination module: ${context.module.title}`,
+					'No destination module has been selected, so make this a document-level topic map.',
 					`Selected pages: ${pages.map((page) => page.pageNumber).join(', ')}`,
 					'Source excerpt:',
 					sourceText
@@ -1060,7 +1273,6 @@ export const mapNotes = action({
 		const topicMapId = (await ctx.runMutation((internal as any).questionStudio.saveTopicMapForRange, {
 			documentId: args.documentId,
 			cohortId: context.document.cohortId,
-			createdFromModuleId: args.moduleId,
 			startPage: pageRange.startPage,
 			endPage: pageRange.endPage,
 			pageCount: pages.length,
@@ -1069,13 +1281,16 @@ export const mapNotes = action({
 			agentThreadId: threadId,
 			sourceDocumentUpdatedAt: context.document.updatedAt,
 			sourceIndexedAt: context.document.metadata?.indexedAt,
-			createdByUserId: context.user._id
+			createdByUserId: context.user?._id
 		})) as Id<'questionStudioTopicMaps'>;
+		await ctx.runMutation(internal.ragKnowledgeInternal.markDocumentMapped, {
+			documentId: args.documentId,
+			mappedAt: Date.now()
+		});
 		return {
 			threadId,
 			model: QUESTION_STUDIO_FLASH_MODEL,
 			documentId: args.documentId,
-			moduleId: args.moduleId,
 			pageRange,
 			topics,
 			topicMapId,

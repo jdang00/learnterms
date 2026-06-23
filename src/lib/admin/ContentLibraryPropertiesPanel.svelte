@@ -27,20 +27,78 @@
 		onCopy: (key: string, value: string) => void;
 	} = $props();
 
-	type Step = { key: string; label: string; icon: typeof FileText; state: string };
+	type Step = {
+		key: string;
+		label: string;
+		icon: typeof FileText;
+		state: 'done' | 'active' | 'idle' | 'error';
+		past: string;
+		present: string;
+		future: string;
+		error: string;
+	};
+
+	function pipelineTooltip(step: Step) {
+		if (step.state === 'done') return `We've already ${step.past}.`;
+		if (step.state === 'active') return `We're currently ${step.present}.`;
+		if (step.state === 'error') return `We couldn't ${step.error}.`;
+		return `We'll ${step.future}.`;
+	}
 
 	const kind = $derived(fileKind(document));
 	const pipeline = $derived.by<Step[]>(() => {
 		const status = document.metadata?.ingestionStatus ?? 'not_started';
 		const hasExtract = Boolean(document.metadata?.extractionModel || document.metadata?.pageCount);
 		const steps: Step[] = [
-			{ key: 'stored', label: 'Stored', icon: HardDrive, state: 'done' },
-			{ key: 'extract', label: 'Extracted', icon: FileSearch, state: 'idle' },
-			{ key: 'index', label: 'Indexed', icon: Database, state: 'idle' }
+			{
+				key: 'stored',
+				label: 'Stored',
+				icon: HardDrive,
+				state: 'done',
+				past: 'stored this file securely',
+				present: 'storing this file securely',
+				future: 'store this file securely after upload',
+				error: 'store this file'
+			},
+			{
+				key: 'extract',
+				label: 'Extracted',
+				icon: FileSearch,
+				state: 'idle',
+				past: 'extracted the text and layout from this document',
+				present: 'extracting the text and layout from this document',
+				future: 'extract the text and layout from this document',
+				error: 'extract text from this document'
+			},
+			{
+				key: 'index',
+				label: 'Indexed',
+				icon: Database,
+				state: 'idle',
+				past: 'indexed this document so AI can search it',
+				present: 'indexing this document so AI can search it',
+				future: 'index this document so AI can search it',
+				error: 'index this document for AI search'
+			},
+			{
+				key: 'mapped',
+				label: 'Mapped',
+				icon: Sparkles,
+				state: 'idle',
+				past: 'mapped this document into reusable topics',
+				present: 'mapping this document into reusable topics',
+				future: 'map this document into reusable topics',
+				error: 'map this document into topics'
+			}
 		];
-		if (status === 'indexed') {
+		if (status === 'mapped') {
 			steps[1].state = 'done';
 			steps[2].state = 'done';
+			steps[3].state = 'done';
+		} else if (status === 'indexed') {
+			steps[1].state = 'done';
+			steps[2].state = 'done';
+			steps[3].state = 'active';
 		} else if (status === 'indexing') {
 			steps[1].state = hasExtract ? 'done' : 'active';
 			steps[2].state = 'active';
@@ -64,7 +122,14 @@
 		</div>
 		<div class="flex items-center">
 			{#each pipeline as step, index}
-				<div class="flex flex-col items-center gap-1.5">
+				<div
+					class="tooltip flex flex-col items-center gap-1.5 {index === 0
+						? 'tooltip-right'
+						: index === pipeline.length - 1
+							? 'tooltip-left'
+							: ''}"
+					data-tip={pipelineTooltip(step)}
+				>
 					<div
 						class="flex h-9 w-9 items-center justify-center rounded-full border-2 {step.state ===
 						'done'
@@ -137,6 +202,7 @@
 			{@render kv('Uploaded', formatDate(document._creationTime))}
 			{@render kv('Updated', formatDate(document.updatedAt))}
 			{@render kv('Indexed', formatDate(document.metadata?.indexedAt))}
+			{@render kv('Mapped', formatDate(document.metadata?.mappedAt))}
 		</div>
 	</section>
 
