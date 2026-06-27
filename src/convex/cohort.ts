@@ -9,7 +9,8 @@ const quickLinkValidator = v.object({
 	title: v.string(),
 	description: v.string(),
 	href: v.string(),
-	icon: v.string()
+	icon: v.string(),
+	hidden: v.optional(v.boolean())
 });
 
 type QuickLink = {
@@ -17,6 +18,7 @@ type QuickLink = {
 	description: string;
 	href: string;
 	icon: string;
+	hidden?: boolean;
 };
 
 type AuthedCtx = {
@@ -123,7 +125,7 @@ function normalizeQuickLinks(links: QuickLink[]) {
 		if (!icon) throw new Error('Each quick link needs an icon');
 		if (icon.length > 12) throw new Error('Quick link icons must be 12 characters or less');
 
-		return { title, description, href, icon };
+		return { title, description, href, icon, hidden: link.hidden === true };
 	});
 }
 
@@ -231,7 +233,7 @@ export const getCurrentUserQuickLinks = authQuery({
 
 		if (user.cohortId) {
 			const cohort = await ctx.db.get(user.cohortId);
-			links.push(...getCohortQuickLinks(cohort));
+			links.push(...getCohortQuickLinks(cohort).filter((link) => !link.hidden));
 		}
 
 		return links;

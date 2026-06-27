@@ -49,7 +49,8 @@ const quickLink = v.object({
 	title: v.string(),
 	description: v.string(),
 	href: v.string(),
-	icon: v.string()
+	icon: v.string(),
+	hidden: v.optional(v.boolean())
 });
 
 const questionStudioGenerationPlan = v.object({

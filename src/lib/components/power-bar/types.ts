@@ -21,6 +21,7 @@ export type QuickLinkItem = {
 	description: string;
 	href: QuickLinkPath;
 	icon: string;
+	hidden?: boolean;
 };
 
 export type CohortClassSearchItem = {
