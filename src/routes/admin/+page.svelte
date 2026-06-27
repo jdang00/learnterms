@@ -16,10 +16,12 @@
 		ChartColumnIncreasing,
 		ChevronDownIcon,
 		GripVertical,
+		Link2,
 		X
 	} from 'lucide-svelte';
 	import EditClassModal from '$lib/admin/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/AddClassModal.svelte';
+	import EditQuickLinksModal from '$lib/admin/EditQuickLinksModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
 	import { useClerkContext } from 'svelte-clerk/client';
@@ -50,6 +52,7 @@
 	let isEditModalOpen = $state(false);
 	let editingClass = $state<ClassItem | null>(null);
 	let isAddModalOpen = $state(false);
+	let isQuickLinksModalOpen = $state(false);
 	let isDeleteModalOpen = $state(false);
 	let classToDelete = $state<ClassItem | null>(null);
 	let classContentCounts = $state<{ moduleCount: number; questionCount: number }>({
@@ -185,6 +188,14 @@
 	function closeAddModal() {
 		isAddModalOpen = false;
 	}
+
+	function openQuickLinksModal() {
+		isQuickLinksModalOpen = true;
+	}
+
+	function closeQuickLinksModal() {
+		isQuickLinksModalOpen = false;
+	}
 </script>
 
 <div class="min-h-screen p-8 mb-24 max-w-7xl mx-auto">
@@ -270,12 +281,18 @@
 					{/if}
 				</p>
 			</div>
-			{#if admin || dev}
-				<button class="btn btn-primary rounded-full gap-2" onclick={openAddModal}>
-					<Plus size={16} />
-					<span>Add New Class</span>
-				</button>
-			{/if}
+			<div class="flex flex-wrap items-center justify-end gap-2">
+				{#if admin || dev}
+					<button class="btn btn-outline btn-sm rounded-full gap-2" onclick={openQuickLinksModal}>
+						<Link2 size={15} />
+						<span>Quick Links</span>
+					</button>
+					<button class="btn btn-primary rounded-full gap-2" onclick={openAddModal}>
+						<Plus size={16} />
+						<span>Add New Class</span>
+					</button>
+				{/if}
+			</div>
 		</div>
 
 		{#if semesters.isLoading}
@@ -517,6 +534,11 @@
 
 <EditClassModal {isEditModalOpen} {closeEditModal} {editingClass} {semesters} {userData} />
 <AddClassModal {isAddModalOpen} {closeAddModal} {semesters} {userData} {currentSemester} />
+<EditQuickLinksModal
+	isOpen={isQuickLinksModalOpen}
+	close={closeQuickLinksModal}
+	cohortId={userData?.cohortId}
+/>
 
 <DeleteConfirmationModal
 	{isDeleteModalOpen}

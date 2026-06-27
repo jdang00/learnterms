@@ -29,6 +29,7 @@
 	);
 
 	const cohortsList = useQuery(api.cohort.listCohortsWithSchools, () => (dev ? {} : 'skip'));
+	const quickLinksQuery = useQuery(api.cohort.getCurrentUserQuickLinks, () => (user ? {} : 'skip'));
 
 	let selectedCohortId = $state('');
 	let isPowerBarOpen = $state(false);
@@ -38,77 +39,7 @@
 	const activeCohortId = $derived.by(
 		() => selectedCohortId || (userDataQuery.data?.cohortId as string | undefined) || ''
 	);
-
-	const quickLinks = $derived.by(() => {
-		const links: QuickLinkItem[] = [];
-		const role = userDataQuery.data?.role;
-		const hasPrivilegedRole = role === 'dev' || role === 'admin' || role === 'curator';
-
-		if (hasPrivilegedRole) {
-			links.push({
-				title: 'Admin Dashboard',
-				description: 'Manage classes and settings',
-				href: '/admin',
-				icon: '✏️'
-			});
-			links.push({
-				title: 'Content Library',
-				description: 'Organize notes, docs, and lectures',
-				href: '/admin/library',
-				icon: '📚'
-			});
-			links.push({
-				title: 'Question Studio',
-				description: 'AI-powered question generation',
-				href: '/admin/question-studio',
-				icon: '✨'
-			});
-			links.push({
-				title: 'Class Progress',
-				description: 'Track student performance',
-				href: '/admin/progress',
-				icon: '📊'
-			});
-			links.push({
-				title: 'Landing Page',
-				description: 'Open the internal landing view',
-				href: '/landing',
-				icon: '🚀'
-			});
-		}
-
-		if (!role) {
-			links.push({
-				title: 'My Dashboard',
-				description: 'Your classes and modules',
-				href: '/classes',
-				icon: '🏠'
-			});
-		}
-
-		if (userDataQuery.data?.cohortId) {
-			links.push({
-				title: 'Class Activity',
-				description: 'See classmate badges and stats',
-				href: '/cohort',
-				icon: '🏅'
-			});
-			links.push({
-				title: 'Clinic',
-				description: 'Open the LearnTerms clinic portal',
-				href: 'https://clinic.learnterms.com/',
-				icon: '🏥'
-			});
-			links.push({
-				title: 'Eyegnosis',
-				description: 'Play the optometric puzzle game',
-				href: 'https://clinic.learnterms.com/eyegnosis',
-				icon: '🧩'
-			});
-		}
-
-		return links;
-	});
+	const quickLinks = $derived((quickLinksQuery.data ?? []) as QuickLinkItem[]);
 
 	$effect(() => {
 		if (userDataQuery && !userDataQuery.isLoading && userDataQuery.data) {

@@ -1,6 +1,13 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
+const quickLink = v.object({
+	title: v.string(),
+	description: v.string(),
+	href: v.string(),
+	icon: v.string()
+});
+
 export default defineSchema({
 	users: defineTable({
 		updatedAt: v.number(),
@@ -67,6 +74,7 @@ export default defineSchema({
 		endYear: v.string(),
 		classCode: v.optional(v.string()),
 		pic_url: v.optional(v.string()),
+		quickLinks: v.optional(v.array(quickLink)),
 		// Denormalized stats for fast dashboard queries
 		stats: v.optional(
 			v.object({

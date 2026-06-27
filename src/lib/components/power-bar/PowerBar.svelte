@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
@@ -110,7 +111,7 @@
 	function goToLink(href: string) {
 		if (typeof window === 'undefined') return;
 		isOpen = false;
-		window.location.assign(href);
+		window.location.assign(href.startsWith('http') ? href : `${base}${href}`);
 	}
 
 	async function goToClass(classId: string) {
