@@ -24,7 +24,9 @@
 		try {
 			const saved = localStorage.getItem(STORAGE_KEY);
 			if (saved) return JSON.parse(saved);
-		} catch {}
+		} catch {
+			// Ignore inaccessible or malformed saved UI preferences.
+		}
 		return { semesterId: '', classId: '', moduleId: '' };
 	}
 
@@ -38,7 +40,9 @@
 					moduleId: selectedModuleId
 				})
 			);
-		} catch {}
+		} catch {
+			// Ignore storage write failures; selection still works in memory.
+		}
 	}
 
 	const saved = loadSavedSelection();

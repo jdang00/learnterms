@@ -41,7 +41,9 @@
 
 		<!-- Icon -->
 		<div class="mb-8">
-			<div class="w-24 h-24 bg-gradient-to-br from-primary/20 to-success/20 rounded-full flex items-center justify-center mx-auto relative">
+			<div
+				class="w-24 h-24 bg-gradient-to-br from-primary/20 to-success/20 rounded-full flex items-center justify-center mx-auto relative"
+			>
 				{#if isSyncing}
 					<Loader2 size={48} class="text-primary animate-spin" />
 				{:else}
@@ -49,8 +51,12 @@
 				{/if}
 				<div class="absolute -top-1 -right-1">
 					<span class="flex h-6 w-6">
-						<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-						<span class="relative inline-flex rounded-full h-6 w-6 bg-success items-center justify-center">
+						<span
+							class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"
+						></span>
+						<span
+							class="relative inline-flex rounded-full h-6 w-6 bg-success items-center justify-center"
+						>
 							<Sparkles size={14} class="text-success-content" />
 						</span>
 					</span>
@@ -112,9 +118,7 @@
 					Open Question Studio
 					<ArrowRight size={18} />
 				</a>
-				<a href={resolve('/admin')} class="btn btn-outline">
-					Go to Dashboard
-				</a>
+				<a href={resolve('/admin')} class="btn btn-outline"> Go to Dashboard </a>
 			</div>
 		{/if}
 	</div>

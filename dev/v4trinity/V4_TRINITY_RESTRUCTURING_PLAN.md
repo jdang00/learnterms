@@ -167,23 +167,23 @@ Organization / School
 
 ### Principal entities
 
-| Entity | Purpose |
-|---|---|
-| `organizations` | Optional school or customer grouping and billing parent |
-| `workspaces` | Tenant and permission boundary for one class |
-| `terms` | Semester dates, lifecycle, retention, and renewal |
-| `memberships` | User role, status, seat, and workspace scope |
-| `knowledgeBases` | Retrieval corpus with access and indexing policy |
-| `sources` | Logical file, URL, note, or curator-authored reference |
-| `sourceVersions` | Immutable ingestion version and checksum |
-| `chunks` | Parsed retrieval units with page/section provenance |
-| `artifacts` | Questions, flashcards, summaries, guides, and explanations |
-| `artifactSources` | Evidence links between artifacts and chunks |
-| `agentThreads` | Conversation state scoped to user and workspace/base |
-| `agentRuns` | Model, retrieval, timing, token, cost, and outcome record |
-| `events` | Append-only product and learning telemetry |
-| `usageLedger` | Billable AI, storage, and seat usage |
-| `auditLog` | Privileged changes and moderation actions |
+| Entity            | Purpose                                                    |
+| ----------------- | ---------------------------------------------------------- |
+| `organizations`   | Optional school or customer grouping and billing parent    |
+| `workspaces`      | Tenant and permission boundary for one class               |
+| `terms`           | Semester dates, lifecycle, retention, and renewal          |
+| `memberships`     | User role, status, seat, and workspace scope               |
+| `knowledgeBases`  | Retrieval corpus with access and indexing policy           |
+| `sources`         | Logical file, URL, note, or curator-authored reference     |
+| `sourceVersions`  | Immutable ingestion version and checksum                   |
+| `chunks`          | Parsed retrieval units with page/section provenance        |
+| `artifacts`       | Questions, flashcards, summaries, guides, and explanations |
+| `artifactSources` | Evidence links between artifacts and chunks                |
+| `agentThreads`    | Conversation state scoped to user and workspace/base       |
+| `agentRuns`       | Model, retrieval, timing, token, cost, and outcome record  |
+| `events`          | Append-only product and learning telemetry                 |
+| `usageLedger`     | Billable AI, storage, and seat usage                       |
+| `auditLog`        | Privileged changes and moderation actions                  |
 
 All tenant-owned records should carry a direct `workspaceId`; records participating in retrieval should also carry `knowledgeBaseId`. Do not rely on multi-hop authorization to determine whether a chunk or artifact is accessible.
 
@@ -217,13 +217,13 @@ Use the Convex Agent component for:
 
 Do not create one unconstrained universal agent. Define a small registry of purpose-specific agents:
 
-| Agent | Primary tools | Publication rights |
-|---|---|---|
-| Study Tutor | retrieve, explain, compare, create personal cards | Personal only |
-| Question Coach | retrieve, explain question, generate similar practice | Personal drafts |
-| Curator Copilot | retrieve, draft artifacts, find conflicts, inspect analytics | Curator review queue |
-| Ingestion Reviewer | inspect extraction, classify content, flag weak chunks | No direct publication |
-| Admin Analyst | query approved aggregate telemetry | No content publication |
+| Agent              | Primary tools                                                | Publication rights     |
+| ------------------ | ------------------------------------------------------------ | ---------------------- |
+| Study Tutor        | retrieve, explain, compare, create personal cards            | Personal only          |
+| Question Coach     | retrieve, explain question, generate similar practice        | Personal drafts        |
+| Curator Copilot    | retrieve, draft artifacts, find conflicts, inspect analytics | Curator review queue   |
+| Ingestion Reviewer | inspect extraction, classify content, flag weak chunks       | No direct publication  |
+| Admin Analyst      | query approved aggregate telemetry                           | No content publication |
 
 Every agent invocation must receive server-derived authorization context. The client must never be trusted to choose an arbitrary `workspaceId`, knowledge base, role, or tool permission.
 
@@ -377,13 +377,13 @@ An artifact should enter `needs_review` when a linked source version changes mat
 
 Suggested workspace roles:
 
-| Role | Capabilities |
-|---|---|
-| Owner | Billing, lifecycle, role assignment, all workspace settings |
-| Admin | Membership, bases, sources, policies, analytics |
-| Curator | Ingest, draft, review, publish, and maintain artifacts |
-| Contributor | Create drafts and suggestions |
-| Student | Study, ask, create personal artifacts, report issues |
+| Role        | Capabilities                                                |
+| ----------- | ----------------------------------------------------------- |
+| Owner       | Billing, lifecycle, role assignment, all workspace settings |
+| Admin       | Membership, bases, sources, policies, analytics             |
+| Curator     | Ingest, draft, review, publish, and maintain artifacts      |
+| Contributor | Create drafts and suggestions                               |
+| Student     | Study, ask, create personal artifacts, report issues        |
 
 Platform administrators should use separate audited capabilities. A workspace role must never implicitly grant platform-wide access.
 
@@ -419,11 +419,11 @@ At 100 seats, this is only `$0.20` per student for an entire semester. Payment p
 
 Start with three concepts:
 
-| Plan | Purpose | Limits |
-|---|---|---|
-| Free trial | Prove ingestion and study value | Small base, few seats, limited AI |
-| Class Semester | Shared workspace and core study tools | Seat/storage allowance plus pooled AI credits |
-| Class Plus | AI-heavy classes | Larger pooled AI budget, advanced agents and telemetry |
+| Plan           | Purpose                               | Limits                                                 |
+| -------------- | ------------------------------------- | ------------------------------------------------------ |
+| Free trial     | Prove ingestion and study value       | Small base, few seats, limited AI                      |
+| Class Semester | Shared workspace and core study tools | Seat/storage allowance plus pooled AI credits          |
+| Class Plus     | AI-heavy classes                      | Larger pooled AI budget, advanced agents and telemetry |
 
 Keep student access to the managed question bank and already-published core study content available even if an AI budget is exhausted. AI generation can pause or offer a top-up without blocking quizzes, tests, or curated flashcards.
 
@@ -632,18 +632,18 @@ No generated class-wide artifact should bypass human review in the initial relea
 
 ## Risks and Mitigations
 
-| Risk | Mitigation |
-|---|---|
-| $20 price cannot fund AI usage | Pooled caps, separate AI allowance, top-ups, and pricing experiments |
-| Retrieval returns another class's content | Direct tenant keys, server-derived filters, isolation tests, audit logs |
+| Risk                                           | Mitigation                                                                       |
+| ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| $20 price cannot fund AI usage                 | Pooled caps, separate AI allowance, top-ups, and pricing experiments             |
+| Retrieval returns another class's content      | Direct tenant keys, server-derived filters, isolation tests, audit logs          |
 | AI gives confident unsupported medical answers | Evidence requirement, citation validation, abstention, reporting, curator review |
-| RAG component limits future flexibility | Keep product truth and gateway interfaces outside the component |
-| Ingestion quality is poor for slides/scans | Extraction QA, OCR fallback, page previews, curator approval |
-| Agent latency harms study flow | Stream, cache, precompute, use smaller models, keep core quizzes non-AI |
-| Curators are overwhelmed by drafts | Quality thresholds, bounded batches, ranked queues, bulk actions |
-| Provider or model changes unexpectedly | Pinned models, evaluation suite, fallback, kill switches |
-| Telemetry becomes invasive | Data minimization, aggregates by default, role limits, retention controls |
-| Self-service enables abuse or piracy | Verified owners, upload limits, moderation, takedown and suspension workflow |
+| RAG component limits future flexibility        | Keep product truth and gateway interfaces outside the component                  |
+| Ingestion quality is poor for slides/scans     | Extraction QA, OCR fallback, page previews, curator approval                     |
+| Agent latency harms study flow                 | Stream, cache, precompute, use smaller models, keep core quizzes non-AI          |
+| Curators are overwhelmed by drafts             | Quality thresholds, bounded batches, ranked queues, bulk actions                 |
+| Provider or model changes unexpectedly         | Pinned models, evaluation suite, fallback, kill switches                         |
+| Telemetry becomes invasive                     | Data minimization, aggregates by default, role limits, retention controls        |
+| Self-service enables abuse or piracy           | Verified owners, upload limits, moderation, takedown and suspension workflow     |
 
 ---
 

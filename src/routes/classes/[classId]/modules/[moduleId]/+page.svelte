@@ -5,7 +5,6 @@
 	import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 	import { QuizState } from './states.svelte';
 	import MainQuiz from '$lib/components/MainQuiz.svelte';
-	import QuizErrorHandler from '$lib/components/QuizErrorHandler.svelte';
 	import { onMount, tick, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { resolve } from '$app/paths';
@@ -97,18 +96,18 @@
 	async function saveProgress() {
 		if (!userId) return;
 
-		const snapshots = new Map(qs.pendingSnapshots);
-		qs.pendingSnapshots.clear();
+		const snapshots = { ...qs.pendingSnapshots };
+		qs.pendingSnapshots = {};
 
 		qs.sanitizeStateForCurrentQuestion();
 		const currentQuestion = qs.getCurrentFilteredQuestion() || qs.getCurrentQuestion();
 		if (currentQuestion) {
-			snapshots.set(currentQuestion._id, {
+			snapshots[currentQuestion._id] = {
 				questionId: currentQuestion._id,
 				selectedAnswers: [...qs.selectedAnswers],
 				eliminatedAnswers: [...qs.eliminatedAnswers],
 				isFlagged: qs.currentQuestionFlagged
-			});
+			};
 
 			if (
 				qs.selectedAnswers.length > 0 ||
@@ -119,7 +118,7 @@
 			}
 		}
 
-		for (const snap of snapshots.values()) {
+		for (const snap of Object.values(snapshots)) {
 			await saveOneQuestion(
 				snap.questionId,
 				snap.selectedAnswers,
@@ -154,7 +153,7 @@
 				qs.eliminatedAnswers = [];
 				qs.setCurrentQuestionFlagged(false);
 			}
-		} catch (error) {
+		} catch {
 			if (gen !== loadGeneration) return;
 			qs.selectedAnswers = [];
 			qs.eliminatedAnswers = [];

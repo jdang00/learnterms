@@ -3,6 +3,12 @@ import { api } from '../../../../../convex/_generated/api';
 import type { ConvexClient } from 'convex/browser';
 
 type QuestionOption = { id: string; text: string };
+type PendingSnapshot = {
+	questionId: Id<'question'>;
+	selectedAnswers: string[];
+	eliminatedAnswers: string[];
+	isFlagged: boolean;
+};
 
 export class QuizState {
 	checkResult: string = $state('');
@@ -31,9 +37,9 @@ export class QuizState {
 	questionButtons: HTMLButtonElement[] = $state([]);
 	private saveDebounceHandle: number | null = null;
 	private autoNextHandle: number | null = null;
-	pendingSnapshots: Map<string, { questionId: Id<'question'>; selectedAnswers: string[]; eliminatedAnswers: string[]; isFlagged: boolean }> = new Map();
+	pendingSnapshots: Record<string, PendingSnapshot> = {};
 	private static readonly AUTO_NEXT_DELAY_MS = 1800;
-	private optionOrderCache: Map<string, string[]> = new Map();
+	private optionOrderCache: Record<string, string[]> = {};
 	optionsShuffleEnabled: boolean = $state(false);
 	fullscreenEnabled: boolean = $state(true);
 
@@ -53,12 +59,12 @@ export class QuizState {
 	snapshotCurrentQuestion() {
 		const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
 		if (!current) return;
-		this.pendingSnapshots.set(current._id, {
+		this.pendingSnapshots[current._id] = {
 			questionId: current._id,
 			selectedAnswers: [...this.selectedAnswers],
 			eliminatedAnswers: [...this.eliminatedAnswers],
 			isFlagged: this.currentQuestionFlagged
-		});
+		};
 	}
 
 	checkAnswer(
@@ -107,7 +113,12 @@ export class QuizState {
 			return s === 'exact' || s === 'exact_cs' || s === 'contains' || s === 'regex';
 		}
 
-		function normalizeForFlags(text: string, ignorePunct: boolean, normalizeWs: boolean, toLower: boolean): string {
+		function normalizeForFlags(
+			text: string,
+			ignorePunct: boolean,
+			normalizeWs: boolean,
+			toLower: boolean
+		): string {
 			let out = String(text || '')
 				.normalize('NFD')
 				.replace(/[\u0300-\u036f]/g, '');
@@ -142,16 +153,25 @@ export class QuizState {
 			const normalizeWs = (flagsPart || '').includes('normalize_ws');
 			if (mode === 'regex') {
 				const re = safeRegex(value);
-				if (re && re.test(userText)) { isAnyMatch = true; break; }
+				if (re && re.test(userText)) {
+					isAnyMatch = true;
+					break;
+				}
 				continue;
 			}
 			const lowerInsensitive = mode !== 'exact_cs';
 			const u = normalizeForFlags(userText, ignorePunct, normalizeWs, lowerInsensitive);
 			const v = normalizeForFlags(value, ignorePunct, normalizeWs, lowerInsensitive);
 			if (mode === 'contains') {
-				if (u.includes(v)) { isAnyMatch = true; break; }
+				if (u.includes(v)) {
+					isAnyMatch = true;
+					break;
+				}
 			} else {
-				if (u === v) { isAnyMatch = true; break; }
+				if (u === v) {
+					isAnyMatch = true;
+					break;
+				}
 			}
 		}
 
@@ -181,10 +201,14 @@ export class QuizState {
 		if (!q) return false;
 
 		const options = (q.options || []) as QuestionOption[];
-		const promptOptions = options.filter((o) => String(o.text).trimStart().toLowerCase().startsWith('prompt:'));
-		const answerOptions = options.filter((o) => String(o.text).trimStart().toLowerCase().startsWith('answer:'));
-		const promptIdSet = new Set(promptOptions.map((o) => o.id));
-		const answerIdSet = new Set(answerOptions.map((o) => o.id));
+		const promptOptions = options.filter((o) =>
+			String(o.text).trimStart().toLowerCase().startsWith('prompt:')
+		);
+		const answerOptions = options.filter((o) =>
+			String(o.text).trimStart().toLowerCase().startsWith('answer:')
+		);
+		const promptIds = promptOptions.map((o) => o.id);
+		const answerIds = answerOptions.map((o) => o.id);
 
 		const normalizeAnswerText = (text: string): string =>
 			String(text ?? '')
@@ -193,14 +217,13 @@ export class QuizState {
 				.toLowerCase()
 				.replace(/\s+/g, ' ');
 
-		const answerKeyById = new Map<string, string>();
+		const answerKeyById: Record<string, string> = {};
+		const answerIdsByKey: Record<string, string[]> = {};
 		for (const answer of answerOptions) {
-			answerKeyById.set(answer.id, normalizeAnswerText(answer.text));
-		}
-		const answerIdsByKey = new Map<string, Set<string>>();
-		for (const [id, key] of answerKeyById.entries()) {
-			if (!answerIdsByKey.has(key)) answerIdsByKey.set(key, new Set());
-			answerIdsByKey.get(key)!.add(id);
+			const key = normalizeAnswerText(answer.text);
+			answerKeyById[answer.id] = key;
+			answerIdsByKey[key] = answerIdsByKey[key] ?? [];
+			answerIdsByKey[key].push(answer.id);
 		}
 
 		const parsePair = (value: string): { promptId: string; answerToken: string } | null => {
@@ -232,68 +255,73 @@ export class QuizState {
 			return null;
 		};
 
-		const normalizeCorrectByPrompt = new Map<string, Set<string>>();
+		const normalizeCorrectByPrompt: Record<string, string[]> = {};
 		const rawCorrect = (q.correctAnswers || []) as string[];
 		const hasPairFormat = rawCorrect.some((value) => String(value).includes('::'));
+		const addUnique = (ids: string[], id: string) => {
+			if (!ids.includes(id)) ids.push(id);
+		};
 
 		if (hasPairFormat) {
 			for (const raw of rawCorrect) {
 				const parsed = parsePair(raw);
 				if (!parsed) continue;
 				const resolvedPromptId = resolveOptionTokenToId(parsed.promptId);
-				if (!resolvedPromptId || !promptIdSet.has(resolvedPromptId)) continue;
+				if (!resolvedPromptId || !promptIds.includes(resolvedPromptId)) continue;
 
 				const directIds = splitAnswerToken(parsed.answerToken)
 					.map((token) => resolveOptionTokenToId(token))
 					.filter((id): id is string => Boolean(id))
-					.filter((id) => answerIdSet.has(id));
+					.filter((id) => answerIds.includes(id));
 				if (directIds.length === 0) continue;
 
-				const accepted = normalizeCorrectByPrompt.get(resolvedPromptId) ?? new Set<string>();
+				const accepted = normalizeCorrectByPrompt[resolvedPromptId] ?? [];
 				for (const directId of directIds) {
-					accepted.add(directId);
-					const key = answerKeyById.get(directId);
+					addUnique(accepted, directId);
+					const key = answerKeyById[directId];
 					if (!key) continue;
-					const sameMeaning = answerIdsByKey.get(key);
+					const sameMeaning = answerIdsByKey[key];
 					if (!sameMeaning) continue;
 					for (const equivalentId of sameMeaning) {
-						accepted.add(equivalentId);
+						addUnique(accepted, equivalentId);
 					}
 				}
-				normalizeCorrectByPrompt.set(resolvedPromptId, accepted);
+				normalizeCorrectByPrompt[resolvedPromptId] = accepted;
 			}
 		} else {
 			const n = Math.min(promptOptions.length, rawCorrect.length);
 			for (let i = 0; i < n; i++) {
 				const promptId = promptOptions[i].id;
 				const answerId = resolveOptionTokenToId(String(rawCorrect[i] ?? '').trim());
-				if (!answerId || !answerIdSet.has(answerId)) continue;
+				if (!answerId || !answerIds.includes(answerId)) continue;
 
-				const accepted = new Set<string>([answerId]);
-				const key = answerKeyById.get(answerId);
+				const accepted = [answerId];
+				const key = answerKeyById[answerId];
 				if (key) {
-					const sameMeaning = answerIdsByKey.get(key);
+					const sameMeaning = answerIdsByKey[key];
 					if (sameMeaning) {
-						for (const equivalentId of sameMeaning) accepted.add(equivalentId);
+						for (const equivalentId of sameMeaning) addUnique(accepted, equivalentId);
 					}
 				}
-				normalizeCorrectByPrompt.set(promptId, accepted);
+				normalizeCorrectByPrompt[promptId] = accepted;
 			}
 		}
 
-		const userByPrompt = new Map<string, string>();
+		const userByPrompt: Record<string, string> = {};
 		for (const raw of this.selectedAnswers || []) {
 			const parsed = parsePair(raw);
 			if (!parsed) continue;
 			const answerId = splitAnswerToken(parsed.answerToken)[0];
-			if (!answerId || !promptIdSet.has(parsed.promptId) || !answerIdSet.has(answerId)) continue;
-			userByPrompt.set(parsed.promptId, answerId);
+			if (!answerId || !promptIds.includes(parsed.promptId) || !answerIds.includes(answerId))
+				continue;
+			userByPrompt[parsed.promptId] = answerId;
 		}
 
-		if (userByPrompt.size !== normalizeCorrectByPrompt.size) return false;
-		for (const [promptId, acceptedAnswerIds] of normalizeCorrectByPrompt.entries()) {
-			const selectedId = userByPrompt.get(promptId);
-			if (!selectedId || !acceptedAnswerIds.has(selectedId)) return false;
+		const correctEntries = Object.entries(normalizeCorrectByPrompt);
+		if (Object.keys(userByPrompt).length !== correctEntries.length) return false;
+		for (const [promptId, acceptedAnswerIds] of correctEntries) {
+			const selectedId = userByPrompt[promptId];
+			if (!selectedId || !acceptedAnswerIds.includes(selectedId)) return false;
 		}
 
 		return true;
@@ -448,16 +476,12 @@ export class QuizState {
 		if (String(current.type) === 'fill_in_the_blank') return;
 		if (String(current.type) === 'matching') {
 			const options = (current.options || []) as QuestionOption[];
-			const promptIdSet = new Set(
-				options
-					.filter((o) => String(o.text).trimStart().toLowerCase().startsWith('prompt:'))
-					.map((o) => o.id)
-			);
-			const answerIdSet = new Set(
-				options
-					.filter((o) => String(o.text).trimStart().toLowerCase().startsWith('answer:'))
-					.map((o) => o.id)
-			);
+			const promptIds = options
+				.filter((o) => String(o.text).trimStart().toLowerCase().startsWith('prompt:'))
+				.map((o) => o.id);
+			const answerIds = options
+				.filter((o) => String(o.text).trimStart().toLowerCase().startsWith('answer:'))
+				.map((o) => o.id);
 
 			const parsePair = (value: string): { promptId: string; answerId: string } | null => {
 				const raw = String(value ?? '').trim();
@@ -473,14 +497,14 @@ export class QuizState {
 				return { promptId, answerId };
 			};
 
-			const seenPrompts = new Set<string>();
+			const seenPrompts: string[] = [];
 			const normalized: string[] = [];
 			for (const raw of this.selectedAnswers || []) {
 				const pair = parsePair(raw);
 				if (!pair) continue;
-				if (!promptIdSet.has(pair.promptId) || !answerIdSet.has(pair.answerId)) continue;
-				if (seenPrompts.has(pair.promptId)) continue;
-				seenPrompts.add(pair.promptId);
+				if (!promptIds.includes(pair.promptId) || !answerIds.includes(pair.answerId)) continue;
+				if (seenPrompts.includes(pair.promptId)) continue;
+				seenPrompts.push(pair.promptId);
 				normalized.push(`${pair.promptId}::${pair.answerId}`);
 			}
 
@@ -548,7 +572,7 @@ export class QuizState {
 		this.scheduleSave();
 	}
 
-		toggleOption(optionId: string) {
+	toggleOption(optionId: string) {
 		if (this.eliminatedAnswers.includes(optionId)) {
 			return;
 		}
@@ -558,7 +582,7 @@ export class QuizState {
 		} else {
 			this.selectedAnswers = [...this.selectedAnswers, optionId];
 		}
-			this.markCurrentQuestionInteracted();
+		this.markCurrentQuestionInteracted();
 		this.scheduleSave();
 	}
 
@@ -670,11 +694,11 @@ export class QuizState {
 		if (!this.optionsShuffleEnabled) {
 			return originalOptions;
 		}
-		let order = this.optionOrderCache.get(question._id);
+		let order = this.optionOrderCache[question._id];
 		if (!order || order.length === 0) {
 			const ids = originalOptions.map((o: QuestionOption) => o.id);
 			const shuffled = this.generateShuffledIds(ids);
-			this.optionOrderCache.set(question._id, shuffled);
+			this.optionOrderCache[question._id] = shuffled;
 			order = shuffled;
 		}
 		const idToOption: Record<string, QuestionOption> = {};
@@ -716,19 +740,19 @@ export class QuizState {
 	}
 
 	private shuffleAllOptions() {
-		const activeQuestionIds = new Set(this.questions.map((q) => String(q._id)));
-		for (const questionId of this.optionOrderCache.keys()) {
-			if (!activeQuestionIds.has(questionId)) {
-				this.optionOrderCache.delete(questionId);
+		const activeQuestionIds = this.questions.map((q) => String(q._id));
+		for (const questionId of Object.keys(this.optionOrderCache)) {
+			if (!activeQuestionIds.includes(questionId)) {
+				delete this.optionOrderCache[questionId];
 			}
 		}
 
 		for (const question of this.questions) {
 			const ids = (question.options || []).map((o: QuestionOption) => o.id);
-			const existing = this.optionOrderCache.get(question._id);
+			const existing = this.optionOrderCache[question._id];
 
 			if (!existing || existing.length === 0) {
-				this.optionOrderCache.set(question._id, this.generateShuffledIds(ids));
+				this.optionOrderCache[question._id] = this.generateShuffledIds(ids);
 				continue;
 			}
 
@@ -736,12 +760,12 @@ export class QuizState {
 			const missing = ids.filter((id) => !preserved.includes(id));
 			const randomizedMissing = missing.length > 1 ? this.generateShuffledIds(missing) : missing;
 
-			this.optionOrderCache.set(question._id, [...preserved, ...randomizedMissing]);
+			this.optionOrderCache[question._id] = [...preserved, ...randomizedMissing];
 		}
 	}
 
 	private resetAllOptionOrdersToOriginal() {
-		this.optionOrderCache.clear();
+		this.optionOrderCache = {};
 	}
 
 	private generateShuffledIds(ids: string[]): string[] {

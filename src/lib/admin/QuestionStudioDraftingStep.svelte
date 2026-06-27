@@ -18,6 +18,8 @@
 	import type {
 		CandidateQuestion,
 		GenerationMode,
+		QuestionStudioModel,
+		QuestionStudioModelOption,
 		ReasoningOrder,
 		TopicMapItem
 	} from './questionStudioTypes';
@@ -30,8 +32,11 @@
 		topics: TopicMapItem[];
 		selectedTopicIds: Set<string>;
 		counts: Record<ReasoningOrder, number>;
+		selectedModel?: QuestionStudioModel;
+		modelOptions: QuestionStudioModelOption[];
 		totalRequested: number;
 		canGenerate: boolean;
+		canStartNewRun: boolean;
 		isGenerating: boolean;
 		isSaving: boolean;
 		agentStatusText: string;
@@ -44,6 +49,7 @@
 		onSetAllTopics: (selected: boolean) => void;
 		onChangeCount: (order: ReasoningOrder, delta: number) => void;
 		onGenerateCandidates: () => void;
+		onStartNewRun: () => void;
 		onSelectCandidate: (index: number) => void;
 		onToggleCandidate: (index: number) => void;
 		onSelectAllCandidates: (selected: boolean) => void;
@@ -60,8 +66,11 @@
 		topics,
 		selectedTopicIds,
 		counts,
+		selectedModel = $bindable<QuestionStudioModel>('deepseek/deepseek-v4-flash'),
+		modelOptions,
 		totalRequested,
 		canGenerate,
+		canStartNewRun,
 		isGenerating,
 		isSaving,
 		agentStatusText,
@@ -74,11 +83,15 @@
 		onSetAllTopics,
 		onChangeCount,
 		onGenerateCandidates,
+		onStartNewRun,
 		onSelectCandidate,
 		onToggleCandidate,
 		onSelectAllCandidates,
 		onSaveSelected
 	}: Props = $props();
+
+	const selectedModelOption = $derived(modelOptions.find((option) => option.id === selectedModel));
+	const modelDescriptor = $derived(selectedModelOption?.description ?? 'Custom OpenRouter slug');
 </script>
 
 <div class="card border border-base-300 bg-base-100 shadow-xs" in:fly={{ y: 14, duration: 260 }}>
@@ -211,25 +224,59 @@
 		{/if}
 
 		<section class="mt-5 border-t border-base-300 pt-5">
-			<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+			<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
 				<div>
 					<h3 class="text-sm font-semibold">Coverage mix</h3>
 					<p class="mt-0.5 text-xs text-base-content/50">
 						{totalRequested}/30 questions requested
 					</p>
 				</div>
-				<button
-					class="btn btn-secondary btn-sm gap-2 rounded-full"
-					disabled={!canGenerate || isGenerating}
-					onclick={onGenerateCandidates}
-				>
-					<Sparkles size={14} />
-					{#if isGenerating}
-						Generating…
-					{:else}
-						Generate candidates
+				<div class="flex flex-wrap items-center gap-1.5">
+					<label class="form-control w-full min-w-52 sm:w-64">
+						<span class="label py-0 pb-1">
+							<span class="label-text text-xs text-base-content/55">Model slug</span>
+							<span class="label-text-alt text-xs text-base-content/45">
+								{modelDescriptor}
+							</span>
+						</span>
+						<input
+							class="input input-bordered input-sm rounded-full"
+							list="question-studio-model-options"
+							placeholder="provider/model-slug"
+							bind:value={selectedModel}
+							disabled={isGenerating || isSaving}
+							spellcheck="false"
+						/>
+						<datalist id="question-studio-model-options">
+							{#each modelOptions as option (option.id)}
+								<option value={option.id}>{option.label}</option>
+							{/each}
+						</datalist>
+					</label>
+					{#if canStartNewRun}
+						<button
+							class="btn btn-ghost btn-sm rounded-full"
+							disabled={isGenerating || isSaving}
+							onclick={onStartNewRun}
+						>
+							New run
+						</button>
 					{/if}
-				</button>
+					<button
+						class="btn btn-secondary btn-sm gap-2 rounded-full"
+						disabled={!canGenerate || isGenerating}
+						onclick={onGenerateCandidates}
+					>
+						<Sparkles size={14} />
+						{#if isGenerating}
+							Generating…
+						{:else if candidates.length > 0}
+							Generate new run
+						{:else}
+							Generate candidates
+						{/if}
+					</button>
+				</div>
 			</div>
 			<div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
 				{#each reasoningOrders as order (order)}
@@ -263,9 +310,12 @@
 						<p class="mt-0.5 text-xs text-base-content/50">
 							{selectedCandidateIndexes.size} of {candidates.length} selected
 							{#if blockedDuplicateCount}
-								· {blockedDuplicateCount} high-risk duplicates hidden
+								· {blockedDuplicateCount} hidden by checks
 							{/if}
 						</p>
+						{#if showGeneratingState}
+							<ShimmerText text={agentStatusText} tone="primary" class="mt-1 text-xs" />
+						{/if}
 					</div>
 					<div class="flex flex-wrap items-center gap-1">
 						<button

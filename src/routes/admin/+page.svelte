@@ -5,7 +5,6 @@
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
 	import { api } from '../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-	import { fade } from 'svelte/transition';
 	import {
 		Pencil,
 		Trash2,
@@ -167,7 +166,7 @@
 
 	// Exit reorder view when semester changes
 	$effect(() => {
-		currentSemester; // Track semester changes
+		Boolean(currentSemester);
 		viewMode = 'normal';
 	});
 

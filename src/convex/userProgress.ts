@@ -1,4 +1,4 @@
-import { query, mutation } from './_generated/server';
+import { mutation } from './_generated/server';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
 import type { Doc, Id } from './_generated/dataModel';

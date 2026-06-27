@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { base } from '$app/paths';
+	import { base, resolve } from '$app/paths';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
@@ -116,7 +116,7 @@
 
 	async function goToClass(classId: string) {
 		isOpen = false;
-		await goto('/classes', { state: { classId } });
+		await goto(resolve('/classes'), { state: { classId } });
 	}
 
 	function goToModule(classId: string, moduleId: string) {
@@ -357,7 +357,6 @@
 	});
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <dialog
 	class="modal max-w-full p-4"
 	class:modal-open={isOpen}

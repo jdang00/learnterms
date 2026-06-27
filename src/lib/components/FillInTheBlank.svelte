@@ -117,9 +117,13 @@
 	</div>
 
 	{#if showAnswerPanel}
-		<div class="card bg-base-100 w-72 sm:w-80 shadow-md mt-6 border border-base-content/10 rounded-2xl">
+		<div
+			class="card bg-base-100 w-72 sm:w-80 shadow-md mt-6 border border-base-content/10 rounded-2xl"
+		>
 			<div class="card-body">
-				<h3 class="text-lg font-semibold mb-2 {qs.showSolution ? '' : 'blur-xs'}">{displayAnswer()}</h3>
+				<h3 class="text-lg font-semibold mb-2 {qs.showSolution ? '' : 'blur-xs'}">
+					{displayAnswer()}
+				</h3>
 				{#if qs.showSolution && alternateAnswers().length > 0}
 					<div class="mt-2">
 						<p class="text-sm opacity-70">Alternate answers:</p>
@@ -131,7 +135,11 @@
 					</div>
 				{/if}
 				{#if allowSolution}
-					<button class="btn rounded-full" onclick={handleToggleSolution} aria-label="toggle rationale">
+					<button
+						class="btn rounded-full"
+						onclick={handleToggleSolution}
+						aria-label="toggle rationale"
+					>
 						<Eye />
 					</button>
 				{/if}

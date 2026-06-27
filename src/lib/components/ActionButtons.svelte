@@ -1,15 +1,38 @@
 <script lang="ts">
-	import type { Id } from '../../convex/_generated/dataModel';
+	import type { Doc, Id } from '../../convex/_generated/dataModel';
 	import { Flag, Shuffle, ArrowRight, ArrowLeft } from 'lucide-svelte';
 	import { Confetti } from 'svelte-confetti';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { captureQuestionAnswered } from '$lib/analytics/questionAnswered';
 
+	type QuizActionState = {
+		checkResult: string;
+		selectedAnswers: string[];
+		eliminatedAnswers: string[];
+		currentQuestionFlagged: boolean;
+		isShuffled: boolean;
+		checkFillInTheBlank: (text: string, question: Doc<'question'>) => void;
+		checkMatching: (question: Doc<'question'>) => void;
+		evaluateMatchingSelection?: (question: Doc<'question'>) => boolean;
+		checkAnswer: (correctAnswers: string[], selectedAnswers: string[]) => void;
+		scheduleSave?: () => void;
+		toggleFlag: () => void;
+		goToNextQuestion: () => Promise<void>;
+		goToPreviousQuestion: () => Promise<void>;
+		toggleShuffle: () => void;
+		canGoPrevious: () => boolean;
+		canGoNext: () => boolean;
+	};
+
 	let {
 		qs = $bindable(),
 		currentlySelected,
 		classId
-	}: { qs: any; currentlySelected: any; classId: Id<'class'> } = $props();
+	}: {
+		qs: QuizActionState;
+		currentlySelected: Doc<'question'> | null;
+		classId: Id<'class'>;
+	} = $props();
 	let showConfetti = $state(false);
 
 	$effect(() => {
@@ -118,14 +141,21 @@
 >
 	<button class="btn btn-sm btn-outline rounded-full" onclick={handleClear}>Clear</button>
 	<div class="relative inline-block">
-		<button class="btn btn-sm btn-success btn-soft rounded-full" onclick={handleCheck}>Check</button>
+		<button class="btn btn-sm btn-success btn-soft rounded-full" onclick={handleCheck}>Check</button
+		>
 		{#if showConfetti && qs.checkResult === 'Correct!'}
 			<div class="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 z-[65] w-0 h-0">
 				<Confetti />
 			</div>
 		{/if}
 	</div>
-	<button class="btn btn-sm btn-circle {qs.currentQuestionFlagged ? 'btn-warning' : 'btn-warning btn-soft'}" onclick={handleFlag} aria-label={qs.currentQuestionFlagged ? 'Remove flag' : 'Flag question'}>
+	<button
+		class="btn btn-sm btn-circle {qs.currentQuestionFlagged
+			? 'btn-warning'
+			: 'btn-warning btn-soft'}"
+		onclick={handleFlag}
+		aria-label={qs.currentQuestionFlagged ? 'Remove flag' : 'Flag question'}
+	>
 		<Flag size={18} />
 	</button>
 	<button class="btn btn-sm btn-secondary rounded-full" onclick={handleShuffle}>

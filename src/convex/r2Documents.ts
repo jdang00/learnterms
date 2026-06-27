@@ -2,11 +2,14 @@ import { R2 } from '@convex-dev/r2';
 import { mutation, query } from './_generated/server';
 import { components } from './_generated/api';
 import type { DataModel, Doc, Id } from './_generated/dataModel';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 
 export const r2 = new R2(components.r2);
 
-async function getCurrentUser(ctx: any): Promise<Doc<'users'>> {
+type ReadCtx = QueryCtx | MutationCtx;
+
+async function getCurrentUser(ctx: ReadCtx): Promise<Doc<'users'>> {
 	const identity = await ctx.auth.getUserIdentity();
 	if (!identity) {
 		throw new Error('Not authenticated');
@@ -14,7 +17,7 @@ async function getCurrentUser(ctx: any): Promise<Doc<'users'>> {
 
 	const user = await ctx.db
 		.query('users')
-		.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', identity.subject))
+		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
 		.first();
 	if (!user) {
 		throw new Error('User not found');
@@ -26,7 +29,7 @@ function canManageDocuments(user: Doc<'users'>) {
 	return user.role === 'dev' || user.role === 'admin' || user.role === 'curator';
 }
 
-async function assertCanUpload(ctx: any) {
+async function assertCanUpload(ctx: ReadCtx) {
 	const user = await getCurrentUser(ctx);
 	if (!canManageDocuments(user)) {
 		throw new Error('Unauthorized');
@@ -35,12 +38,18 @@ async function assertCanUpload(ctx: any) {
 }
 
 function fileExtension(fileName: string) {
-	const match = fileName.trim().toLowerCase().match(/\.([a-z0-9]{1,12})$/);
+	const match = fileName
+		.trim()
+		.toLowerCase()
+		.match(/\.([a-z0-9]{1,12})$/);
 	return match ? `.${match[1]}` : '';
 }
 
 function slugifyFileName(fileName: string) {
-	const baseName = fileName.replace(/\.[^/.]+$/, '').trim().toLowerCase();
+	const baseName = fileName
+		.replace(/\.[^/.]+$/, '')
+		.trim()
+		.toLowerCase();
 	const slug = baseName
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-+|-+$/g, '')
@@ -63,11 +72,11 @@ function documentObjectKey(args: { cohortId: Id<'cohort'>; fileName: string }) {
 	].join('/');
 }
 
-async function findDocumentByR2Key(ctx: any, key: string, user: Doc<'users'>) {
+async function findDocumentByR2Key(ctx: ReadCtx, key: string, user: Doc<'users'>) {
 	if (user.role === 'dev') {
 		return await ctx.db
 			.query('contentLib')
-			.filter((q: any) =>
+			.filter((q) =>
 				q.and(
 					q.eq(q.field('deletedAt'), undefined),
 					q.eq(q.field('metadata.storageProvider'), 'r2'),
@@ -80,11 +89,12 @@ async function findDocumentByR2Key(ctx: any, key: string, user: Doc<'users'>) {
 	if (!user.cohortId) {
 		return null;
 	}
+	const cohortId = user.cohortId;
 
 	return await ctx.db
 		.query('contentLib')
-		.withIndex('by_cohortId', (q: any) => q.eq('cohortId', user.cohortId))
-		.filter((q: any) =>
+		.withIndex('by_cohortId', (q) => q.eq('cohortId', cohortId))
+		.filter((q) =>
 			q.and(
 				q.eq(q.field('deletedAt'), undefined),
 				q.eq(q.field('metadata.storageProvider'), 'r2'),
@@ -94,7 +104,7 @@ async function findDocumentByR2Key(ctx: any, key: string, user: Doc<'users'>) {
 		.first();
 }
 
-async function assertCanReadKey(ctx: any, key: string) {
+async function assertCanReadKey(ctx: ReadCtx, key: string) {
 	const user = await getCurrentUser(ctx);
 	const document = await findDocumentByR2Key(ctx, key, user);
 	if (!document) {

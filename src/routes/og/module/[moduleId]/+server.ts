@@ -47,8 +47,7 @@ export const GET: RequestHandler = async ({ params, getClientAddress, fetch }) =
 	const { title, emoji: rawEmoji, description, questionCount, className, classCode } = moduleData;
 	const emoji = rawEmoji || '\u{1F4DA}'; // 📚 fallback (matches codebase default)
 
-	const truncatedDesc =
-		description.length > 140 ? description.slice(0, 137) + '...' : description;
+	const truncatedDesc = description.length > 140 ? description.slice(0, 137) + '...' : description;
 
 	// DaisyUI light theme semantic colors
 	const colors = {

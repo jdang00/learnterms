@@ -13,14 +13,15 @@ This document describes the role-based access control system with a clear hierar
 
 **What can each role do?**
 
-| Role | Manage Roles | Assign Roles | Change Plans | Switch Cohorts | Edit Content |
-|------|-------------|--------------|--------------|----------------|--------------|
-| **Dev** | ✅ All except devs | Student, Curator, Admin | ✅ Yes | ✅ Yes | ✅ Yes |
-| **Admin** | ✅ Student ↔ Curator only | Student, Curator | ❌ No | ❌ No | ✅ Yes |
-| **Curator** | ❌ No | ❌ No | ❌ No | ❌ No | ✅ Yes |
-| **Student** | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
+| Role        | Manage Roles              | Assign Roles            | Change Plans | Switch Cohorts | Edit Content |
+| ----------- | ------------------------- | ----------------------- | ------------ | -------------- | ------------ |
+| **Dev**     | ✅ All except devs        | Student, Curator, Admin | ✅ Yes       | ✅ Yes         | ✅ Yes       |
+| **Admin**   | ✅ Student ↔ Curator only | Student, Curator        | ❌ No        | ❌ No          | ✅ Yes       |
+| **Curator** | ❌ No                     | ❌ No                   | ❌ No        | ❌ No          | ✅ Yes       |
+| **Student** | ❌ No                     | ❌ No                   | ❌ No        | ❌ No          | ❌ No        |
 
 **Key Design Principles:**
+
 1. **Devs** = System-level access for technical team
 2. **Admins** = Can delegate to curators but cannot create more admins
 3. **Curators** = Content-only access, delegated by admins
@@ -43,6 +44,7 @@ dev > admin > curator > student (no role)
 ### Role Management Rules - SIMPLIFIED
 
 **Dev (Technical Team):**
+
 - ✅ Can change ANY role (student, curator, admin)
 - ✅ Can change ANY plan (free, pro)
 - ✅ Can switch cohorts
@@ -51,6 +53,7 @@ dev > admin > curator > student (no role)
 - ❌ Cannot manage other devs (same level)
 
 **Admin (Cohort Leaders):**
+
 - ✅ Can toggle users between Student ↔ Curator ONLY
 - ❌ Cannot assign admin role (requires dev)
 - ❌ Cannot change plans (dev only)
@@ -59,27 +62,30 @@ dev > admin > curator > student (no role)
 - 💡 Purpose: Delegate content creation to curators
 
 **Curator (Content Creators):**
+
 - ✅ Can create/edit questions and content
 - ❌ Cannot manage any roles
 - ❌ Cannot change plans
 - 💡 Purpose: Help admins with content management
 
 **Student (Regular Users):**
+
 - ✅ Can access learning materials
 - ❌ No administrative permissions
 
 ### Quick Reference Matrix
 
-| User Role | Can Manage Roles | Can Assign To | Can Change Plans | Can Switch Cohorts |
-|-----------|-----------------|---------------|------------------|-------------------|
-| **Dev** | Admin, Curator, Student | Admin, Curator, Student | ✅ Yes | ✅ Yes |
-| **Admin** | Student, Curator | Student, Curator | ❌ No | ❌ No |
-| **Curator** | ❌ None | ❌ None | ❌ No | ❌ No |
-| **Student** | ❌ None | ❌ None | ❌ No | ❌ No |
+| User Role   | Can Manage Roles        | Can Assign To           | Can Change Plans | Can Switch Cohorts |
+| ----------- | ----------------------- | ----------------------- | ---------------- | ------------------ |
+| **Dev**     | Admin, Curator, Student | Admin, Curator, Student | ✅ Yes           | ✅ Yes             |
+| **Admin**   | Student, Curator        | Student, Curator        | ❌ No            | ❌ No              |
+| **Curator** | ❌ None                 | ❌ None                 | ❌ No            | ❌ No              |
+| **Student** | ❌ None                 | ❌ None                 | ❌ No            | ❌ No              |
 
 ### Examples
 
 **✅ Allowed:**
+
 - Dev promotes student to admin
 - Dev changes user's plan to pro
 - Admin promotes student to curator
@@ -87,6 +93,7 @@ dev > admin > curator > student (no role)
 - Admin toggles curator back and forth
 
 **❌ Blocked:**
+
 - Admin tries to promote anyone to admin → Error: "Admins can only assign student or curator roles"
 - Admin tries to change a plan → Error: "Only devs can change user plans"
 - Admin tries to manage another admin → Error: "Admins cannot manage other admins or devs"
@@ -98,37 +105,45 @@ dev > admin > curator > student (no role)
 ### Backend Changes
 
 #### 1. Schema (`src/convex/schema.ts`)
+
 - Added `'dev'` as a role option in users table:
   ```typescript
-  role: v.optional(v.union(v.literal('dev'), v.literal('admin'), v.literal('curator')))
+  role: v.optional(v.union(v.literal('dev'), v.literal('admin'), v.literal('curator')));
   ```
 
 #### 2. Auth System (`src/convex/authQueries.ts`)
+
 - Updated `authAdminQuery` and `authAdminMutation` to accept dev role
 - Updated `authCuratorMutation` to accept dev role
 - Created new `authDevQuery` and `authDevMutation` for dev-only operations
 - Updated `joinCohort` and `switchCohort` mutations to allow dev access
 
 #### 3. Cohort Management (`src/convex/cohort.ts`)
+
 - Updated `listCohortsWithSchools` to check Convex role instead of Clerk metadata
 - Now only accessible to users with `role: 'dev'`
 
 #### 4. User Management (`src/convex/users.ts`)
+
 - Updated `updateUserRoleAndPlan` to support 'dev' role
 
 #### 5. Migrations (`src/convex/migrations.ts`)
+
 - Added `bootstrapDev` mutation for setting dev role manually
 
 #### 6. Server Hooks (`src/hooks.server.ts`)
+
 - Updated `protectAdmin` to allow dev access to admin routes
 
 ### Frontend Changes
 
 #### 1. Navigation Bar (`src/lib/components/NavBar.svelte`)
+
 - Changed dev check from Clerk metadata to Convex role: `userDataQuery.data?.role === 'dev'`
 - Cohort switcher now appears for dev users
 
 #### 2. Updated Role Checks in Components
+
 All components now include dev in permission checks:
 
 - `src/routes/classes/+page.svelte` - Added dev badge display
@@ -141,6 +156,7 @@ All components now include dev in permission checks:
 - `src/lib/components/MobileMenu.svelte` - Updated canEdit
 
 #### 3. Admin Progress Page
+
 - **Removed role and plan columns from main table** - cleaner UI
 - **Role/plan controls moved to student detail modal** - better UX
 - **Dev role removed from dropdown** - can only be set via backend
@@ -149,16 +165,19 @@ All components now include dev in permission checks:
 ## Features for Dev Users
 
 ### 1. Cohort Switching
+
 - Dev users see a cohort switcher in the navbar
 - Can switch between any cohort in the system
 - Page automatically reloads after switch to reflect new cohort context
 
 ### 2. Full Administrative Access
+
 - Access to all admin pages and features
 - Can edit/create/delete content across all cohorts
 - Can manage user roles including promoting other users to dev
 
 ### 3. User Management
+
 - Can assign any role (dev, admin, curator) to users
 - Can manage user plans (pro, free)
 - Full visibility into all student progress
@@ -212,11 +231,13 @@ To set someone as dev, you need their Clerk user ID:
 ## UI/UX Improvements
 
 ### Cleaner Admin Progress Page
+
 - **Role and Plan columns removed** from main student table
 - Table now focuses on key info: name, last sign-in, join date
 - Click any student row to open detailed modal
 
 ### Student Detail Modal
+
 - Role and plan controls moved here for better organization
 - Only visible to admin+ users
 - **Self-protection**: Account Management section **completely hidden** when viewing own profile
@@ -227,6 +248,7 @@ To set someone as dev, you need their Clerk user ID:
 ### Role Selector Behavior
 
 **For Dev users:**
+
 - **Own profile**: Account Management section hidden entirely
 - **Other devs**: Account Management hidden (cannot manage same level)
 - **Other users**: Can see Student, Curator, Admin options
@@ -234,6 +256,7 @@ To set someone as dev, you need their Clerk user ID:
 - Can edit: Anyone except devs and self
 
 **For Admin users:**
+
 - **Own profile**: Account Management section hidden entirely
 - **Students/Curators**: Can see Student, Curator options (toggle only)
 - **Other admins/devs**: Role selector disabled with message
@@ -241,29 +264,34 @@ To set someone as dev, you need their Clerk user ID:
 - Can edit: Only students and curators (toggle between these two)
 
 **For Curator users:**
+
 - Cannot see Account Management at all (not admin+)
 - Content editing only
 
 ### Visual Feedback
 
 **Role Dropdown:**
+
 - **Dev viewing student/curator/admin**: Shows Student, Curator, Admin (all options)
 - **Admin viewing student/curator**: Shows Student, Curator (toggle options only)
 - **Admin viewing admin/dev**: Disabled with "Cannot manage admins or devs"
 - **Own profile**: Entire section hidden
 
 **Plan Dropdown:**
+
 - **Dev**: Active selector with Free/Pro options
 - **Admin**: Disabled selector with "Only devs can change plans"
 - **Own profile**: Entire section hidden
 
 **Special Cases:**
+
 - **Dev role badge**: "⚠️ Dev role (backend only)" shown but selector disabled
 - **Own profile**: No Account Management section at all
 
 ## Security Considerations
 
 ### Dev Role Should Be Rare
+
 - Only assign dev role to trusted administrators
 - Dev users can access ALL cohorts and ALL data
 - ~~Dev users can promote other users to dev~~ **REMOVED** - Only backend can assign dev
@@ -273,9 +301,10 @@ To set someone as dev, you need their Clerk user ID:
 The `updateUserRoleAndPlan` mutation enforces these rules:
 
 1. **Self-Protection Rule** (applies to everyone)
+
    ```typescript
    if (caller?._id === args.userId && args.role !== undefined) {
-     throw new Error('You cannot change your own role');
+   	throw new Error('You cannot change your own role');
    }
    ```
    - Prevents accidental self-demotion
@@ -283,29 +312,31 @@ The `updateUserRoleAndPlan` mutation enforces these rules:
    - Applies to ALL users including devs
 
 2. **Dev Bypass** (devs can do anything)
+
    ```typescript
    if (callerRole === 'dev') {
-     // Can change any role (except other devs and self)
-     // Can change any plan
-     // Full access granted
+   	// Can change any role (except other devs and self)
+   	// Can change any plan
+   	// Full access granted
    }
    ```
 
 3. **Admin Restrictions** (cohort leaders)
+
    ```typescript
    // Can only manage students and curators
    if (targetCurrentRole === 'admin' || targetCurrentRole === 'dev') {
-     throw new Error('Admins cannot manage other admins or devs');
+   	throw new Error('Admins cannot manage other admins or devs');
    }
-   
+
    // Can only assign student or curator roles
    if (targetNewRole === 'admin' || targetNewRole === 'dev') {
-     throw new Error('Admins can only assign student or curator roles');
+   	throw new Error('Admins can only assign student or curator roles');
    }
-   
+
    // Cannot change plans
    if (args.plan !== undefined) {
-     throw new Error('Only devs can change user plans');
+   	throw new Error('Only devs can change user plans');
    }
    ```
 
@@ -315,11 +346,13 @@ The `updateUserRoleAndPlan` mutation enforces these rules:
    ```
 
 ### Audit Trail
+
 - Consider adding logging for role changes
 - Monitor cohort switching activity
 - Track when devs access different cohorts
 
 ### Best Practices
+
 1. Only assign dev to 1-3 core team members
 2. Use admin role for most administrative tasks
 3. Use curator role for content creators
@@ -331,6 +364,7 @@ The `updateUserRoleAndPlan` mutation enforces these rules:
 After implementing dev role:
 
 1. **Set yourself as dev**:
+
    ```bash
    bunx convex run migrations:bootstrapDev '{"clerkUserId": "your_clerk_user_id"}'
    ```
@@ -351,12 +385,14 @@ After implementing dev role:
 ## Common Scenarios & Edge Cases
 
 ### Scenario 1: Admin Delegates to Curator
+
 **Setup:** Admin promotes a student to curator
 **Action:** Admin clicks student → Changes role to Curator
 **Result:** ✅ Success
 **Reason:** Admins can toggle between student ↔ curator
 
 ### Scenario 2: Admin Tries to Promote to Admin
+
 **Setup:** Admin tries to promote curator to admin
 **Action:** Admin clicks curator → Admin option not in dropdown
 **Result:** ❌ Blocked by UI (admin not shown in dropdown)
@@ -364,6 +400,7 @@ After implementing dev role:
 **Solution:** A dev must promote them
 
 ### Scenario 3: Admin Tries to Change Plan
+
 **Setup:** Admin tries to change a student's plan to pro
 **Action:** Admin clicks student → Plan selector is disabled
 **Result:** ❌ Plan selector disabled
@@ -371,6 +408,7 @@ After implementing dev role:
 **Reason:** Plans are dev-only feature
 
 ### Scenario 4: Admin Tries to Manage Another Admin
+
 **Setup:** Admin clicks on another admin's profile
 **Action:** Views their profile
 **Result:** ❌ Role selector disabled
@@ -378,18 +416,21 @@ After implementing dev role:
 **Reason:** Admins cannot manage same-level users
 
 ### Scenario 5: Dev Promotes Student to Admin
+
 **Setup:** Dev promotes a student to admin
 **Action:** Dev clicks student → Changes role to Admin
 **Result:** ✅ Success
 **Reason:** Devs can assign any role (student, curator, admin)
 
 ### Scenario 6: Dev Changes User Plan
+
 **Setup:** Dev changes a user's plan to pro
 **Action:** Dev clicks user → Changes plan to Pro
 **Result:** ✅ Success
 **Reason:** Only devs can manage plans
 
 ### Scenario 7: Anyone Tries Own Profile
+
 **Setup:** Any admin/dev clicks on their own profile
 **Result:** ❌ Account Management section completely hidden
 **Visible:** Only progress stats and personal info
@@ -398,14 +439,17 @@ After implementing dev role:
 ## Important Implications
 
 ### Dev Role is Permanent (by design)
+
 - Once someone is a dev, they **cannot demote themselves**
 - Another dev also **cannot demote them** (same level protection)
 - **Only way to remove dev**: Direct database access or CLI with system permissions
 
 ### Need to Change Dev Users?
+
 If you need to demote a dev or if the only dev needs to step down:
 
 **Option 1: Emergency Bootstrap (Recommended)**
+
 ```bash
 # Promote a trusted admin to dev first
 bunx convex run migrations:bootstrapDev '{"clerkUserId": "new_dev_user_id"}'
@@ -414,6 +458,7 @@ bunx convex run migrations:bootstrapDev '{"clerkUserId": "new_dev_user_id"}'
 ```
 
 **Option 2: Direct Database Manipulation**
+
 ```bash
 # Only use in emergencies - requires careful ID verification
 bunx convex run migrations:updateUserRole '{"userId": "<convex_id>", "role": "admin"}'
@@ -421,28 +466,31 @@ bunx convex run migrations:updateUserRole '{"userId": "<convex_id>", "role": "ad
 
 **Option 3: Create Custom Migration**
 Add a migration in `src/convex/migrations.ts` that bypasses normal auth:
+
 ```typescript
 export const emergencyDemoteDev = mutation({
-  args: { clerkUserId: v.string() },
-  handler: async (ctx, args) => {
-    // This bypasses normal auth checks
-    const user = await ctx.db.query('users')
-      .withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
-      .first();
-    
-    if (!user) throw new Error('User not found');
-    
-    await ctx.db.patch(user._id, { 
-      role: 'admin', // or undefined for student
-      updatedAt: Date.now() 
-    });
-    
-    return { success: true, previousRole: user.role };
-  }
+	args: { clerkUserId: v.string() },
+	handler: async (ctx, args) => {
+		// This bypasses normal auth checks
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
+			.first();
+
+		if (!user) throw new Error('User not found');
+
+		await ctx.db.patch(user._id, {
+			role: 'admin', // or undefined for student
+			updatedAt: Date.now()
+		});
+
+		return { success: true, previousRole: user.role };
+	}
 });
 ```
 
 ### Why This Design?
+
 1. **Prevents Accidents**: No one can accidentally demote themselves
 2. **Audit Trail**: Role changes require deliberate backend actions for devs
 3. **Security**: Harder for compromised accounts to demote admins
@@ -451,16 +499,19 @@ export const emergencyDemoteDev = mutation({
 ## Troubleshooting
 
 ### Cohort Switcher Not Appearing
+
 - Check that `role` field is exactly `'dev'` (not `'developer'`)
 - Verify user data is loaded: check browser console for errors
 - Clear browser cache and reload
 
 ### Can't Access Admin Pages
+
 - Verify role is set in Convex database
 - Check server hooks are updated
 - Ensure no auth errors in server logs
 
 ### Can't Assign Dev Role Through UI
+
 - **This is intentional!** Dev role can only be set via backend
 - Use CLI: `bunx convex run migrations:bootstrapDev '{"clerkUserId": "user_xxxxx"}'`
 - If a user has dev role, it shows with a warning badge but can't be changed in UI
@@ -480,6 +531,7 @@ Potential additions for dev role:
 The dev role provides super-admin capabilities with cohort-switching superpowers. It's designed for core team members who need to manage the entire platform across all cohorts.
 
 **Key Points**:
+
 - ✅ Dev > Admin > Curator > User hierarchy
 - ✅ Cohort switching enabled for dev users
 - ✅ Manual role assignment (no automatic migration)

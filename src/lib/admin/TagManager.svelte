@@ -107,14 +107,28 @@
 				data-tip="Group modules together (e.g., Exam 1 covering modules 1-3). Future features will enable exam review by tags."
 			>
 				<div class="btn btn-ghost btn-xs btn-circle text-base-content/60">
-					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="14"
+						height="14"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg
+					>
 				</div>
 			</div>
 			{#if tagsQuery.data && tagsQuery.data.length > 0}
 				<span class="badge badge-sm">{tagsQuery.data.length}</span>
 			{/if}
 		</div>
-		<button class="btn btn-primary btn-sm rounded-full gap-2" onclick={() => showAddForm = !showAddForm}>
+		<button
+			class="btn btn-primary btn-sm rounded-full gap-2"
+			onclick={() => (showAddForm = !showAddForm)}
+		>
 			<Plus size={14} />
 			<span>New Tag</span>
 		</button>
@@ -133,13 +147,17 @@
 						onkeydown={(e) => e.key === 'Enter' && handleCreate()}
 					/>
 					<div class="flex items-center gap-2">
-						<input 
-							type="color" 
-							class="h-8 w-8 rounded-full border-2 border-base-300 cursor-pointer" 
-							bind:value={newTagColor} 
+						<input
+							type="color"
+							class="h-8 w-8 rounded-full border-2 border-base-300 cursor-pointer"
+							bind:value={newTagColor}
 							title="Choose tag color"
 						/>
-						<button class="btn btn-primary btn-sm rounded-full gap-1" onclick={handleCreate} disabled={isCreating}>
+						<button
+							class="btn btn-primary btn-sm rounded-full gap-1"
+							onclick={handleCreate}
+							disabled={isCreating}
+						>
 							{#if isCreating}
 								<span class="loading loading-spinner loading-xs"></span>
 							{:else}
@@ -147,7 +165,14 @@
 							{/if}
 							<span>Add</span>
 						</button>
-						<button class="btn btn-ghost btn-sm btn-square" onclick={() => { showAddForm = false; createError = ''; newTagName = ''; }}>
+						<button
+							class="btn btn-ghost btn-sm btn-square"
+							onclick={() => {
+								showAddForm = false;
+								createError = '';
+								newTagName = '';
+							}}
+						>
 							<X size={14} />
 						</button>
 					</div>
@@ -160,7 +185,6 @@
 	{/if}
 
 	<div>
-
 		{#if tagsQuery.isLoading}
 			<div class="flex items-center gap-2 text-sm text-base-content/60 py-4">
 				<span class="loading loading-spinner loading-sm"></span>
@@ -172,16 +196,16 @@
 			</div>
 		{:else if !tagsQuery.data || tagsQuery.data.length === 0}
 			<div class="text-center py-6">
-				<div class="text-base-content/40 text-sm">
-					No tags yet. Click "New Tag" to create one.
-				</div>
+				<div class="text-base-content/40 text-sm">No tags yet. Click "New Tag" to create one.</div>
 			</div>
 		{:else}
 			<div>
 				<div class="flex flex-wrap items-center gap-1.5">
 					{#each tagsQuery.data as tag (tag._id)}
 						{#if editingTagId === tag._id}
-							<div class="inline-flex items-center gap-1.5 rounded-full border border-primary bg-base-50 px-2.5 py-1.5 text-xs">
+							<div
+								class="inline-flex items-center gap-1.5 rounded-full border border-primary bg-base-50 px-2.5 py-1.5 text-xs"
+							>
 								<input
 									type="text"
 									class="input input-bordered input-xs w-24"
@@ -195,9 +219,9 @@
 									bind:value={editColor}
 									title="Change color"
 								/>
-								<button 
-									class="btn btn-ghost btn-xs btn-square p-0 h-5 w-5 min-h-0" 
-									onclick={cancelEdit} 
+								<button
+									class="btn btn-ghost btn-xs btn-square p-0 h-5 w-5 min-h-0"
+									onclick={cancelEdit}
 									aria-label="Cancel edit"
 									title="Cancel"
 								>
@@ -218,7 +242,9 @@
 								</button>
 							</div>
 						{:else}
-							<div class="inline-flex items-center gap-1.5 rounded-full border border-base-300 bg-base-50 px-2.5 py-1 text-xs transition-all hover:border-primary/30 hover:shadow-xs">
+							<div
+								class="inline-flex items-center gap-1.5 rounded-full border border-base-300 bg-base-50 px-2.5 py-1 text-xs transition-all hover:border-primary/30 hover:shadow-xs"
+							>
 								<span
 									class="h-2 w-2 rounded-full ring-1 ring-base-content/10"
 									style={`background-color: ${tag.color || '#94a3b8'}`}
@@ -231,7 +257,22 @@
 										aria-label="Tag options"
 										title="Options"
 									>
-										<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="12"
+											height="12"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle
+												cx="12"
+												cy="19"
+												r="1"
+											/></svg
+										>
 									</button>
 									<ul
 										class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-32 p-1.5 shadow-lg border border-base-300"

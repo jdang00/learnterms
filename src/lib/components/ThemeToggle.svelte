@@ -8,7 +8,7 @@
 		class?: string;
 	}
 
-	const { size = 'md', variant = 'ghost', class: className = '' } = $props();
+	const { size = 'md', variant = 'ghost', class: className = '' }: Props = $props();
 
 	const sizeClasses = {
 		sm: 'btn-sm',

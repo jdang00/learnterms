@@ -84,15 +84,15 @@
 	});
 
 	const questionHasAttachments = $derived.by(() => {
-		const map = new Map<string, boolean>();
+		const questionIds: string[] = [];
 		if (allMediaQuery.data && Array.isArray(allMediaQuery.data)) {
 			for (const item of allMediaQuery.data) {
-				if (item?.questionId && item?.hasMedia) {
-					map.set(item.questionId, true);
+				if (item?.questionId && item?.hasMedia && !questionIds.includes(item.questionId)) {
+					questionIds.push(item.questionId);
 				}
 			}
 		}
-		return map;
+		return questionIds;
 	});
 
 	const selectedQuestion = $derived(curationState.getSelectedQuestion(questions.data));
@@ -321,7 +321,7 @@
 									{index}
 									isSelected={curationState.selectedQuestions.has(questionItem._id)}
 									isHighlighted={curationState.selectedQuestionId === questionItem._id}
-									hasAttachment={questionHasAttachments.has(questionItem._id)}
+									hasAttachment={questionHasAttachments.includes(questionItem._id)}
 									isRecentlyAdded={curationState.recentlyAddedIds.has(questionItem._id)}
 									variant="mobile"
 									reorderMode={true}
@@ -339,7 +339,7 @@
 								{index}
 								isSelected={curationState.selectedQuestions.has(questionItem._id)}
 								isHighlighted={curationState.selectedQuestionId === questionItem._id}
-								hasAttachment={questionHasAttachments.has(questionItem._id)}
+								hasAttachment={questionHasAttachments.includes(questionItem._id)}
 								isRecentlyAdded={curationState.recentlyAddedIds.has(questionItem._id)}
 								variant="mobile"
 								onSelect={() => curationState.handleQuestionSelect(questionItem._id)}
@@ -465,7 +465,7 @@
 										{index}
 										isSelected={curationState.selectedQuestions.has(questionItem._id)}
 										isHighlighted={curationState.selectedQuestionId === questionItem._id}
-										hasAttachment={questionHasAttachments.has(questionItem._id)}
+										hasAttachment={questionHasAttachments.includes(questionItem._id)}
 										isRecentlyAdded={curationState.recentlyAddedIds.has(questionItem._id)}
 										variant="desktop"
 										onSelect={() => curationState.handleQuestionSelect(questionItem._id)}

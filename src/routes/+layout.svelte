@@ -29,12 +29,8 @@
 	const convexClient = useConvexClient();
 
 	// Keep both a mutable token for first use and a backup for fallback
-	let initialToken = $state<string | null>(null);
+	let initialToken = $derived(data?.token ?? null);
 	const ssrTokenBackup = $derived(data?.token ?? null);
-
-	$effect(() => {
-		initialToken = data?.token ?? null;
-	});
 
 	// Helper to wait for Clerk session with timeout
 	async function waitForClerkSession(timeoutMs: number = 5000): Promise<boolean> {

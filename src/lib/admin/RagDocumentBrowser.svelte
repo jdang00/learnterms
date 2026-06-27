@@ -1,11 +1,5 @@
 <script lang="ts">
-	import {
-		CheckCircle2,
-		FileText,
-		Layers,
-		Search,
-		TriangleAlert
-	} from 'lucide-svelte';
+	import { CheckCircle2, FileText, Layers, Search, TriangleAlert } from 'lucide-svelte';
 	import { useQuery } from 'convex-svelte';
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 	import { api } from '../../convex/_generated/api';
@@ -126,7 +120,8 @@
 									{/if}
 								</div>
 								<p class="mt-0.5 truncate text-xs text-base-content/50">
-									{doc.metadata?.originalFileName ?? 'Uploaded document'} · {doc.metadata?.pageCount ?? '?'} pages · {formatSize(doc.metadata?.sizeBytes)}
+									{doc.metadata?.originalFileName ?? 'Uploaded document'} · {doc.metadata
+										?.pageCount ?? '?'} pages · {formatSize(doc.metadata?.sizeBytes)}
 								</p>
 							</div>
 						</div>

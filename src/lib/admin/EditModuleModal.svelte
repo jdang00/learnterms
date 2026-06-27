@@ -1,11 +1,18 @@
 <script lang="ts">
-	let { isEditModalOpen, closeEditModal, editingModule, classId } = $props();
-
 	import { X, BookOpenText, AlignLeft, Hash, Laugh } from 'lucide-svelte';
 	import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
-	import type { Id } from '../../convex/_generated/dataModel';
+	import type { Doc, Id } from '../../convex/_generated/dataModel';
+
+	type Props = {
+		isEditModalOpen: boolean;
+		closeEditModal: () => void;
+		editingModule: Doc<'module'> | null;
+		classId: Id<'class'>;
+	};
+
+	let { isEditModalOpen, closeEditModal, editingModule, classId }: Props = $props();
 
 	const client = useConvexClient();
 
@@ -16,17 +23,16 @@
 	let isSubmitting: boolean = $state(false);
 	let validationErrors: Record<string, string> = $state({});
 	let submitError: string = $state('');
-	let selectedTagIds: string[] = $state([]);
+	let selectedTagIds: Id<'tags'>[] = $state([]);
 
 	// useQuery at top level with function args
 	const tags = useQuery(api.tags.getTagsForClass, () => ({
-		classId: classId as Id<'class'>
+		classId
 	}));
 
 	// useQuery at top level with skip pattern
-	const moduleTagsQuery = useQuery(
-		api.tags.getTagsForModule,
-		() => editingModule?._id ? { moduleId: editingModule._id as Id<'module'> } : 'skip'
+	const moduleTagsQuery = useQuery(api.tags.getTagsForModule, () =>
+		editingModule?._id ? { moduleId: editingModule._id } : 'skip'
 	);
 
 	let lastModuleId = $state<string | null>(null);
@@ -36,7 +42,7 @@
 			moduleTitle = editingModule.title;
 			moduleDescription = editingModule.description || '';
 			moduleStatus = editingModule.status;
-			moduleEmoji = (editingModule as any).emoji || '';
+			moduleEmoji = editingModule.emoji || '';
 		}
 	});
 	$effect(() => {
@@ -94,7 +100,7 @@
 	const liveSelectedTagCount = $derived.by(() => {
 		if (!tags.data) return 0;
 		const liveTagIds = new Set(tags.data.map((tag) => tag._id));
-		return selectedTagIds.filter((id) => liveTagIds.has(id as any)).length;
+		return selectedTagIds.filter((id) => liveTagIds.has(id)).length;
 	});
 
 	async function handleSubmit() {
@@ -112,15 +118,15 @@
 		try {
 			await client.mutation(api.module.updateModule, {
 				moduleId: editingModule._id,
-				classId: classId as Id<'class'>,
+				classId,
 				title: moduleTitle.trim(),
 				emoji: sanitizeEmoji(moduleEmoji) || undefined,
 				description: moduleDescription.trim(),
 				status: moduleStatus
 			});
 			await client.mutation(api.tags.setModuleTags, {
-				moduleId: editingModule._id as Id<'module'>,
-				tagIds: selectedTagIds as Id<'tags'>[]
+				moduleId: editingModule._id,
+				tagIds: selectedTagIds
 			});
 
 			validationErrors = {};
@@ -282,7 +288,11 @@
 									<div class="flex flex-wrap gap-2">
 										{#each tags.data as tag (tag._id)}
 											<label
-												class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-base-200/50 {selectedTagIds.includes(tag._id) ? 'border-primary' : 'border-base-300'}"
+												class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-base-200/50 {selectedTagIds.includes(
+													tag._id
+												)
+													? 'border-primary'
+													: 'border-base-300'}"
 											>
 												<input
 													type="checkbox"
@@ -300,7 +310,8 @@
 										{/each}
 									</div>
 									<div class="text-xs text-base-content/60">
-										{liveSelectedTagCount} {liveSelectedTagCount === 1 ? 'tag' : 'tags'} selected
+										{liveSelectedTagCount}
+										{liveSelectedTagCount === 1 ? 'tag' : 'tags'} selected
 										{#if liveSelectedTagCount >= 10}
 											<span class="text-warning ml-1">(max 10)</span>
 										{:else}
@@ -365,8 +376,10 @@
 
 			<div class="modal-action mt-8">
 				<form method="dialog" class="flex gap-3">
-					<button class="btn btn-ghost rounded-full" onclick={closeEditModal} disabled={isSubmitting}
-						>Cancel</button
+					<button
+						class="btn btn-ghost rounded-full"
+						onclick={closeEditModal}
+						disabled={isSubmitting}>Cancel</button
 					>
 					<button
 						class="btn btn-primary gap-2 rounded-full"

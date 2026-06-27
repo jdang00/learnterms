@@ -1,9 +1,10 @@
 import { authQuery, authAdminMutation } from './authQueries';
 import { mutation } from './_generated/server';
 import { v } from 'convex/values';
-import type { Id } from './_generated/dataModel';
+import type { Doc, Id } from './_generated/dataModel';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 
-type TagSummary = { _id: string; name: string; color?: string };
+type TagSummary = { _id: Id<'tags'>; name: string; color?: string };
 
 function containsOnlyEmoji(input: string): boolean {
 	const allowedJoiners = new Set(['\u200d', '\ufe0f']);
@@ -14,18 +15,22 @@ function containsOnlyEmoji(input: string): boolean {
 	return true;
 }
 
-async function attachTagsForModules(ctx: { db: any }, classId: string, modules: any[]) {
-	if (modules.length === 0) return modules;
+async function attachTagsForModules<T extends Doc<'module'>>(
+	ctx: QueryCtx | MutationCtx,
+	classId: Id<'class'>,
+	modules: T[]
+) {
+	if (modules.length === 0) return [];
 
 	try {
 		const moduleIdSet = new Set(modules.map((module) => module._id));
 		const links = await ctx.db
 			.query('moduleTags')
-			.withIndex('by_classId', (q: any) => q.eq('classId', classId))
+			.withIndex('by_classId', (q) => q.eq('classId', classId))
 			.collect();
 
-		const filteredLinks = links.filter((link: any) => moduleIdSet.has(link.moduleId));
-		const tagIdSet = new Set(filteredLinks.map((link: any) => link.tagId));
+		const filteredLinks = links.filter((link) => moduleIdSet.has(link.moduleId));
+		const tagIdSet = new Set(filteredLinks.map((link) => link.tagId));
 		const tags = await Promise.all(Array.from(tagIdSet).map((id) => ctx.db.get(id)));
 
 		const tagMap = new Map<string, TagSummary>();
@@ -379,12 +384,12 @@ function computeModuleSearchScore(
 }
 
 async function assertCohortSearchAccess(
-	ctx: { db: any; identity: { subject: string } },
+	ctx: Pick<QueryCtx, 'db'> & { identity: { subject: string } },
 	cohortId: Id<'cohort'>
 ) {
 	const viewer = await ctx.db
 		.query('users')
-		.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', ctx.identity.subject))
+		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
 		.first();
 	if (!viewer) throw new Error('Unauthorized');
 	if (viewer.role !== 'dev' && viewer.cohortId !== cohortId) {
@@ -427,7 +432,7 @@ export const searchModulesByCohort = authQuery({
 		const merged = new Map<
 			string,
 			{
-				_id: string;
+				_id: Id<'module'>;
 				title: string;
 				description: string;
 				classId: Id<'class'>;
@@ -442,7 +447,7 @@ export const searchModulesByCohort = authQuery({
 			}
 		>();
 
-		const addMatches = (moduleItems: Array<any>, boost: number) => {
+		const addMatches = (moduleItems: Doc<'module'>[], boost: number) => {
 			for (const moduleItem of moduleItems) {
 				if (moduleItem.deletedAt) continue;
 				const classItem = classMap.get(moduleItem.classId);
@@ -523,7 +528,17 @@ export const searchModulesByCohort = authQuery({
 			.filter((item) => item.score > 0)
 			.sort((a, b) => b.score - a.score || a.classOrder - b.classOrder || a.order - b.order)
 			.slice(0, max)
-			.map(({ classOrder: _classOrder, order: _order, score: _score, ...item }) => item);
+			.map((item) => ({
+				_id: item._id,
+				title: item.title,
+				description: item.description,
+				classId: item.classId,
+				className: item.className,
+				classCode: item.classCode,
+				emoji: item.emoji,
+				status: item.status,
+				questionCount: item.questionCount
+			}));
 	}
 });
 

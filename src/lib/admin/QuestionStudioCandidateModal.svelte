@@ -20,7 +20,7 @@
 </script>
 
 {#if selectedCandidateIndex !== null && candidates[selectedCandidateIndex]}
-	<div class="modal modal-open xl:hidden">
+	<div class="modal modal-open">
 		<div class="modal-box max-h-[90vh] max-w-2xl overflow-hidden rounded-2xl p-0">
 			<div class="flex h-[85vh] flex-col">
 				<QuestionStudioCandidateInspector
@@ -31,6 +31,7 @@
 					onToggleInclude={() => onToggleCandidate(selectedCandidateIndex!)}
 					onPrev={() => onNavigateCandidate('prev')}
 					onNext={() => onNavigateCandidate('next')}
+					onClose={() => (selectedCandidateIndex = null)}
 				/>
 			</div>
 		</div>

@@ -2,7 +2,7 @@ import { mutation, action, internalMutation } from './_generated/server';
 import { authCuratorMutation } from './authQueries';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
-import { internal, components } from './_generated/api';
+import { components } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { applyQuestionCreationDeltaAndEvaluateBadges } from './badgeEngine';

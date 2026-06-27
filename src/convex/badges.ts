@@ -808,7 +808,7 @@ export const ensureTrackablePlatformBadgesInternal = internalMutation({
 	args: {
 		deactivateOtherPlatformBadges: v.optional(v.boolean())
 	},
-	handler: async (ctx, args) => {
+	handler: async (ctx) => {
 		const definitions: Array<
 			UpsertBadgeArgs & { rule?: UpsertRuleArgs['allOf']; ruleName?: string }
 		> = [

@@ -300,7 +300,7 @@ export const listCohortsWithSchools = authQuery({
 					startYear: cohort.startYear,
 					endYear: cohort.endYear,
 					classCode: cohort.classCode,
-					stats: cohort.stats,
+					stats: cohort.stats
 				};
 			})
 		);

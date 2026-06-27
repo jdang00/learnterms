@@ -1,13 +1,5 @@
 <script lang="ts">
-	import {
-		ChevronDown,
-		ExternalLink,
-		Maximize2,
-		Minimize2,
-		Presentation,
-		Trash2,
-		X
-	} from 'lucide-svelte';
+	import { ExternalLink, Maximize2, Minimize2, Presentation, Trash2, X } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import AddDocumentModal from '../../../lib/admin/AddDocumentModal.svelte';
 	import ContentLibraryExplorer from '../../../lib/admin/ContentLibraryExplorer.svelte';
@@ -68,7 +60,6 @@
 	let searchTerm = $state('');
 	let selectedDocumentId = $state('');
 	let viewUrl = $state('');
-	let markdownPreviewSource = $state('');
 	let markdownPreviewHtml = $state('');
 	let markdownPreviewError = $state('');
 	let isMarkdownLoading = $state(false);
@@ -214,7 +205,6 @@
 		}
 
 		isMarkdownLoading = true;
-		markdownPreviewSource = '';
 		markdownPreviewHtml = '';
 		markdownPreviewError = '';
 		markdownPreviewDocumentId = document._id;
@@ -232,7 +222,6 @@
 			const cleanedPreview = stripPreviewArtifactReferences(preview.text);
 			pendingTableLabels = resolveTableLabels(extractTableLabels(cleanedPreview));
 			const displayPreview = stripStandaloneTableHeadings(cleanedPreview);
-			markdownPreviewSource = displayPreview;
 			markdownPreviewHtml = sanitizeHtml(String(markdownParser.parse(renderLatex(displayPreview))));
 			markdownPreviewTruncated = preview.truncated;
 		} catch (e) {
@@ -508,15 +497,14 @@
 			</div>
 			<div class="flex-1"></div>
 			{#if viewUrl}
-				<a
+				<button
+					type="button"
 					class="btn btn-primary btn-sm gap-2 rounded-full"
-					href={viewUrl}
-					target="_blank"
-					rel="noreferrer"
+					onclick={() => window.open(viewUrl, '_blank', 'noreferrer')}
 				>
 					<ExternalLink size={14} />
 					<span class="hidden sm:inline">Open</span>
-				</a>
+				</button>
 			{/if}
 			<button
 				class="btn btn-ghost btn-sm gap-2 rounded-full text-error hover:bg-error/10"

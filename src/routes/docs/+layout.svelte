@@ -19,7 +19,6 @@
 		currentIndex >= 0 && currentIndex < flatItems.length - 1 ? flatItems[currentIndex + 1] : null
 	);
 
-	const sectionTitle = $derived('Docs');
 	const pageTitle = $derived(
 		(flatItems[currentIndex]?.title ? `${flatItems[currentIndex]?.title} – ` : '') +
 			'LearnTerms Docs'

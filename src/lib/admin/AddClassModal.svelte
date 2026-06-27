@@ -18,9 +18,8 @@
 	let submitError: string = $state('');
 
 	// Get current classes to calculate next order number - useQuery with skip pattern
-	const classes = useQuery(
-		api.class.getUserClasses,
-		() => userData?.cohortId ? { id: userData.cohortId as Id<'cohort'> } : 'skip'
+	const classes = useQuery(api.class.getUserClasses, () =>
+		userData?.cohortId ? { id: userData.cohortId as Id<'cohort'> } : 'skip'
 	);
 
 	$effect(() => {
@@ -33,7 +32,7 @@
 		const trimmed = value.trim();
 
 		switch (field) {
-			case 'className':
+			case 'className': {
 				if (!trimmed) return 'Class name is required';
 				if (trimmed.length < 2) return 'Class name must be at least 2 characters';
 				if (trimmed.length > 100) return 'Class name cannot exceed 100 characters';
@@ -44,8 +43,9 @@
 					return 'A class with this name already exists';
 				}
 				break;
+			}
 
-			case 'classCode':
+			case 'classCode': {
 				if (!trimmed) return 'Class code is required';
 				if (trimmed.length < 2) return 'Class code must be at least 2 characters';
 				if (trimmed.length > 20) return 'Class code cannot exceed 20 characters';
@@ -61,12 +61,14 @@
 					return 'A class with this code already exists';
 				}
 				break;
+			}
 
-			case 'classDescription':
+			case 'classDescription': {
 				if (!trimmed) return 'Description is required';
 				if (trimmed.length < 10) return 'Description must be at least 10 characters';
 				if (trimmed.length > 500) return 'Description cannot exceed 500 characters';
 				break;
+			}
 		}
 
 		return '';
@@ -398,7 +400,8 @@
 
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
-				<button class="btn btn-ghost rounded-full" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button
+				<button class="btn btn-ghost rounded-full" onclick={closeAddModal} disabled={isSubmitting}
+					>Cancel</button
 				>
 				<button
 					class="btn btn-primary gap-2 rounded-full"

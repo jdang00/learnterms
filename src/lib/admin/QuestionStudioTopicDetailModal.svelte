@@ -25,7 +25,7 @@
 				<div class="mt-4">
 					<p class="mb-1.5 text-xs font-medium text-base-content/50">Key terms</p>
 					<div class="flex flex-wrap gap-1.5">
-						{#each detailTopic.keyTerms as term}
+						{#each detailTopic.keyTerms as term (term)}
 							<span class="badge badge-ghost badge-sm">{term}</span>
 						{/each}
 					</div>

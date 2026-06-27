@@ -79,13 +79,12 @@
 						<kbd class="kbd kbd-sm">enter</kbd>
 						<span>Check</span>
 					</div>
-				<div class="flex items-center gap-4 justify-between">
-					<div class="flex gap-1">
-						<kbd class="kbd kbd-sm">0-9</kbd>
-
+					<div class="flex items-center gap-4 justify-between">
+						<div class="flex gap-1">
+							<kbd class="kbd kbd-sm">0-9</kbd>
+						</div>
+						<span>Select options</span>
 					</div>
-					<span>Select options</span>
-				</div>
 					<div class="flex items-center gap-4 justify-between">
 						<kbd class="kbd kbd-sm">arrows</kbd>
 						<span>Navigation</span>

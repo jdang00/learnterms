@@ -121,7 +121,7 @@
 			</span>
 		</div>
 		<div class="flex items-center">
-			{#each pipeline as step, index}
+			{#each pipeline as step, index (step.label)}
 				<div
 					class="tooltip flex flex-col items-center gap-1.5 {index === 0
 						? 'tooltip-right'

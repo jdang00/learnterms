@@ -4,6 +4,33 @@ export type ReasoningOrder = 'first' | 'second' | 'third';
 export type DuplicateRisk = 'low' | 'medium' | 'high';
 export type GenerationMode = 'auto' | 'guided' | 'manual';
 export type PhaseState = 'done' | 'active' | 'pending';
+export type QuestionStudioModel = string;
+
+export interface QuestionStudioModelOption {
+	id: QuestionStudioModel;
+	label: string;
+	description: string;
+}
+
+export const DEFAULT_QUESTION_STUDIO_MODEL: QuestionStudioModel = 'deepseek/deepseek-v4-flash';
+
+export const QUESTION_STUDIO_MODEL_OPTIONS: QuestionStudioModelOption[] = [
+	{
+		id: 'deepseek/deepseek-v4-flash',
+		label: 'DeepSeek v4 Flash',
+		description: 'Fast default'
+	},
+	{
+		id: 'google/gemini-3.1-pro-preview',
+		label: 'Gemini 3.1 Pro Preview',
+		description: 'Frontier comparison'
+	},
+	{
+		id: 'google/gemini-3-pro-preview',
+		label: 'Gemini 3 Pro Preview',
+		description: 'Alternate Gemini slug'
+	}
+];
 
 export interface QuestionStudioPhase {
 	key: 'source' | 'topics' | 'draft' | 'review';
@@ -32,6 +59,13 @@ export interface CandidateQuestion {
 	topicId: string;
 	topicTitle: string;
 	sourcePageNumbers: number[];
+	sourceCitations?: Array<{
+		citationId: string;
+		pageNumber: number;
+		noteFile: string;
+		chunkTitle: string;
+		chunkIndex: number;
+	}>;
 	duplicateRisk: DuplicateRisk;
 	similarQuestionIds: Id<'question'>[];
 	metadata: {

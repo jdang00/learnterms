@@ -29,7 +29,7 @@
 		const trimmed = value.trim();
 
 		switch (field) {
-			case 'moduleTitle':
+			case 'moduleTitle': {
 				if (!trimmed) return 'Module title is required';
 				if (trimmed.length < 2) return 'Module title must be at least 2 characters';
 				if (trimmed.length > 100) return 'Module title cannot exceed 100 characters';
@@ -40,6 +40,7 @@
 					return 'A module with this title already exists';
 				}
 				break;
+			}
 
 			case 'moduleDescription':
 				if (!trimmed) return 'Description is required';
@@ -317,24 +318,28 @@
 						{:else}
 							<div class="space-y-2">
 								<div class="flex flex-wrap gap-2">
-								{#each tags.data as tag (tag._id)}
-									<label
-										class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-base-200/50 {selectedTagIds.includes(tag._id) ? 'border-primary' : 'border-base-300'}"
-									>
-										<input
-											type="checkbox"
-											class="checkbox checkbox-xs checkbox-primary"
-											value={tag._id}
-											bind:group={selectedTagIds}
-											disabled={selectedTagIds.length >= 10 && !selectedTagIds.includes(tag._id)}
-										/>
-										<span
-											class="h-2 w-2 rounded-full"
-											style={`background-color: ${tag.color || '#94a3b8'}`}
-										></span>
-										<span>{tag.name}</span>
-									</label>
-								{/each}
+									{#each tags.data as tag (tag._id)}
+										<label
+											class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-base-200/50 {selectedTagIds.includes(
+												tag._id
+											)
+												? 'border-primary'
+												: 'border-base-300'}"
+										>
+											<input
+												type="checkbox"
+												class="checkbox checkbox-xs checkbox-primary"
+												value={tag._id}
+												bind:group={selectedTagIds}
+												disabled={selectedTagIds.length >= 10 && !selectedTagIds.includes(tag._id)}
+											/>
+											<span
+												class="h-2 w-2 rounded-full"
+												style={`background-color: ${tag.color || '#94a3b8'}`}
+											></span>
+											<span>{tag.name}</span>
+										</label>
+									{/each}
 								</div>
 								<div class="text-xs text-base-content/60">
 									{selectedTagIds.length} of 10 tags selected
@@ -383,7 +388,8 @@
 
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
-				<button class="btn btn-ghost rounded-full" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button
+				<button class="btn btn-ghost rounded-full" onclick={closeAddModal} disabled={isSubmitting}
+					>Cancel</button
 				>
 				<button
 					class="btn btn-primary gap-2 rounded-full"

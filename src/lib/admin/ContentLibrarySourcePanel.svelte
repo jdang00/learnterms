@@ -14,6 +14,10 @@
 	} = $props();
 
 	const kind = $derived(fileKind(document));
+
+	function openSource() {
+		window.open(viewUrl, '_blank', 'noreferrer');
+	}
 </script>
 
 <div class="h-full overflow-hidden rounded-2xl border border-base-300 bg-base-200/40">
@@ -38,15 +42,14 @@
 			<p class="mt-1 max-w-xs text-sm text-base-content/60">
 				{kind.label} files don't preview inline here.
 			</p>
-			<a
+			<button
+				type="button"
 				class="btn btn-primary btn-sm mt-4 gap-2 rounded-full"
-				href={viewUrl}
-				target="_blank"
-				rel="noreferrer"
+				onclick={openSource}
 			>
 				<ExternalLink size={14} />
 				Open {kind.label.toLowerCase()}
-			</a>
+			</button>
 		</div>
 	{:else}
 		<div class="flex h-full min-h-72 flex-col items-center justify-center p-8 text-center">

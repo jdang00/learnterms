@@ -4,7 +4,7 @@ import type { ConvexClient } from 'convex/browser';
 import { goto } from '$app/navigation';
 import { toastStore } from '$lib/stores/toast.svelte';
 import type { StatusFilter } from '$lib/types';
-import { SvelteSet } from 'svelte/reactivity';
+import { SvelteMap, SvelteSet, SvelteURL } from 'svelte/reactivity';
 
 export type QuestionItem = Doc<'question'>;
 export type MediaItem = { _id: string; url: string; altText: string; caption?: string };
@@ -23,7 +23,7 @@ export class QuestionCurationState {
 	sortMode: SortMode = $state('order');
 	statusFilter: StatusFilter = $state('all');
 	private searchTimeout: ReturnType<typeof setTimeout> | null = null;
-	private recentlyAddedTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+	private recentlyAddedTimeouts = new SvelteMap<string, ReturnType<typeof setTimeout>>();
 
 	// Auto-select after create
 	pendingSelectId: string | null = $state(null);
@@ -281,7 +281,7 @@ export class QuestionCurationState {
 
 	async closeEditQuestionModal() {
 		try {
-			const url = new URL(window.location.href);
+			const url = new SvelteURL(window.location.href);
 			if (url.searchParams.has('edit')) {
 				url.searchParams.delete('edit');
 				// eslint-disable-next-line svelte/no-navigation-without-resolve -- pathname comes from the current URL after removing only the edit query param.
@@ -290,7 +290,9 @@ export class QuestionCurationState {
 					noScroll: true
 				});
 			}
-		} catch {}
+		} catch {
+			// Ignore URL cleanup failures; the editor state is reset below.
+		}
 		this.isEditQuestionModalOpen = false;
 		this.editingQuestion = null;
 		this.editorMode = 'view';
@@ -402,7 +404,9 @@ export class QuestionCurationState {
 			}
 
 			if (!result.success && result.errors.length > 0) {
-				toastStore.error(`Published with ${result.errors.length} error${result.errors.length === 1 ? '' : 's'}`);
+				toastStore.error(
+					`Published with ${result.errors.length} error${result.errors.length === 1 ? '' : 's'}`
+				);
 			}
 
 			this.questionList = this.questionList.map((question) =>

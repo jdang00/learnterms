@@ -5,6 +5,7 @@
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../convex/_generated/dataModel';
+	import { getErrorText } from '$lib/utils/errorHandling';
 	import {
 		ChevronLeft,
 		Clock,
@@ -62,9 +63,15 @@
 
 	let summaryDebounceHandle: number | null = null;
 	let debouncedSelectedModuleIds = $state<Id<'module'>[]>([]);
-	const normalizedSelectedModuleIds = $derived.by(() =>
-		Array.from(new Set(selectedModuleIds)).sort()
-	);
+	const normalizedSelectedModuleIds = $derived.by(() => uniqueSortedIds(selectedModuleIds));
+
+	function uniqueSortedIds<T extends string>(ids: T[]): T[] {
+		const unique: T[] = [];
+		for (const id of ids) {
+			if (!unique.includes(id)) unique.push(id);
+		}
+		return unique.sort();
+	}
 
 	$effect(() => {
 		if (typeof window === 'undefined') {
@@ -109,24 +116,26 @@
 	);
 	const matchedTagModuleIds = $derived.by(() => {
 		const tags = builderQuery.data?.tagCollections ?? [];
-		const selected = new Set(selectedTagCollectionIds);
-		const moduleIds = new Set<Id<'module'>>();
+		const moduleIds: Id<'module'>[] = [];
 		for (const tag of tags) {
-			if (!selected.has(tag._id)) continue;
-			for (const moduleId of tag.moduleIds ?? []) moduleIds.add(moduleId);
+			if (!selectedTagCollectionIds.includes(tag._id)) continue;
+			for (const moduleId of tag.moduleIds ?? []) {
+				if (!moduleIds.includes(moduleId)) moduleIds.push(moduleId);
+			}
 		}
-		return Array.from(moduleIds);
+		return moduleIds;
 	});
 
 	function moduleIdsForTagCollectionIds(tagIds: Id<'tags'>[]): Id<'module'>[] {
 		const tags = builderQuery.data?.tagCollections ?? [];
-		const selected = new Set(tagIds);
-		const moduleIds = new Set<Id<'module'>>();
+		const moduleIds: Id<'module'>[] = [];
 		for (const tag of tags) {
-			if (!selected.has(tag._id)) continue;
-			for (const moduleId of tag.moduleIds ?? []) moduleIds.add(moduleId);
+			if (!tagIds.includes(tag._id)) continue;
+			for (const moduleId of tag.moduleIds ?? []) {
+				if (!moduleIds.includes(moduleId)) moduleIds.push(moduleId);
+			}
 		}
-		return Array.from(moduleIds);
+		return moduleIds;
 	}
 
 	function toggleModule(moduleId: Id<'module'>) {
@@ -164,7 +173,7 @@
 			selectedModuleIds = matched;
 			return;
 		}
-		selectedModuleIds = Array.from(new Set([...selectedModuleIds, ...matched]));
+		selectedModuleIds = uniqueSortedIds([...selectedModuleIds, ...matched]);
 	}
 
 	function typeLabel(type: string): string {
@@ -219,8 +228,8 @@
 			await goto(
 				resolve('/classes/[classId]/tests/[attemptId]', { classId, attemptId: result.attemptId })
 			);
-		} catch (error: any) {
-			createError = error?.message ?? 'Something went wrong. Please try again.';
+		} catch (error: unknown) {
+			createError = getErrorText(error) || 'Something went wrong. Please try again.';
 		} finally {
 			starting = false;
 		}

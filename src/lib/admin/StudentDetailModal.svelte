@@ -2,8 +2,9 @@
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
-	import { X, BookOpen, CheckCircle, Flag, TrendingUp, Shield, PenTool, User, Zap, Info } from 'lucide-svelte';
+	import { X, Shield, PenTool, User, Zap, Info } from 'lucide-svelte';
 	import StudentStatsContent from './StudentStatsContent.svelte';
+	import type { ComponentType } from 'svelte';
 
 	let {
 		isOpen,
@@ -41,17 +42,20 @@
 	const isOwnProfile = $derived(student?.clerkUserId === currentUserClerkId);
 
 	// Fetch subscription status source of truth
-	const subscriptionQuery = useQuery(api.polar.getUserWithSubscriptionById, () => 
+	const subscriptionQuery = useQuery(api.polar.getUserWithSubscriptionById, () =>
 		student ? { userId: student._id } : 'skip'
 	);
-	
+
 	const isPro = $derived(subscriptionQuery.data?.isPro ?? false);
 
 	// Get available role options based on current user's role
 	const availableRoles = $derived.by(() => {
-		const roles: Array<{ value: 'dev' | 'admin' | 'curator' | null; label: string; icon: any; color: string }> = [
-			{ value: null, label: 'Student', icon: User, color: 'ghost' }
-		];
+		const roles: Array<{
+			value: 'dev' | 'admin' | 'curator' | null;
+			label: string;
+			icon: ComponentType;
+			color: string;
+		}> = [{ value: null, label: 'Student', icon: User, color: 'ghost' }];
 
 		if (currentUserRole === 'dev') {
 			roles.push({ value: 'curator', label: 'Curator', icon: PenTool, color: 'info' });
@@ -59,14 +63,14 @@
 		} else if (currentUserRole === 'admin') {
 			roles.push({ value: 'curator', label: 'Curator', icon: PenTool, color: 'info' });
 		}
-		
+
 		return roles;
 	});
 
 	// Can edit role if: admin or dev, not own profile, and not trying to edit admin/dev
 	const canEditRole = $derived.by(() => {
 		if (!(isAdmin || isDev) || isOwnProfile || !student) return false;
-		
+
 		const targetRole = student.role ?? null;
 
 		if (currentUserRole === 'dev') {
@@ -74,7 +78,7 @@
 		} else if (currentUserRole === 'admin') {
 			return targetRole === null || targetRole === 'curator';
 		}
-		
+
 		return false;
 	});
 </script>
@@ -86,13 +90,17 @@
 			<div class="flex items-center gap-4">
 				{#if student?.imageUrl}
 					<div class="avatar">
-						<div class="w-16 h-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2">
+						<div
+							class="w-16 h-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2"
+						>
 							<img src={student.imageUrl} alt={student.name} />
 						</div>
 					</div>
 				{:else}
 					<div class="avatar placeholder">
-						<div class="bg-neutral text-neutral-content w-16 h-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2">
+						<div
+							class="bg-neutral text-neutral-content w-16 h-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2"
+						>
 							<span class="text-xl">
 								{student?.name
 									.split(' ')
@@ -151,12 +159,12 @@
 					<Shield size={18} class="text-primary" />
 					<h4 class="font-bold">Account Management</h4>
 				</div>
-				
+
 				<div class="space-y-3">
 					<div class="flex items-center justify-between">
 						<span class="text-sm font-medium text-base-content/70">Access Level</span>
 					</div>
-					
+
 					{#if student.role === 'dev'}
 						<div class="alert alert-warning py-2 rounded-xl text-xs flex items-center gap-2">
 							<Info size={14} />
@@ -168,9 +176,12 @@
 								<button
 									class="btn btn-sm rounded-full flex-1 gap-2"
 									class:btn-active={(student.role ?? null) === roleOption.value}
-									class:btn-primary={(student.role ?? null) === roleOption.value && roleOption.value === 'admin'}
-									class:btn-info={(student.role ?? null) === roleOption.value && roleOption.value === 'curator'}
-									class:btn-neutral={(student.role ?? null) === roleOption.value && roleOption.value === null}
+									class:btn-primary={(student.role ?? null) === roleOption.value &&
+										roleOption.value === 'admin'}
+									class:btn-info={(student.role ?? null) === roleOption.value &&
+										roleOption.value === 'curator'}
+									class:btn-neutral={(student.role ?? null) === roleOption.value &&
+										roleOption.value === null}
 									onclick={() => updateRole(student._id, roleOption.value)}
 								>
 									<roleOption.icon size={16} />

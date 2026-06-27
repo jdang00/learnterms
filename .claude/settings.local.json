@@ -39,7 +39,8 @@
       "Bash(find:*)",
       "Bash(bun update:*)",
       "Bash(bunx convex *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(bunx eslint *)"
     ]
   }
 }

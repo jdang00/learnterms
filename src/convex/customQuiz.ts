@@ -12,12 +12,18 @@ type ConvexCtx = QueryCtx | MutationCtx;
 const MAX_QUESTIONS_PER_ATTEMPT = 100;
 const MAX_PATCH_CHANGES = 200;
 
-function isClassDoc(value: any): value is Doc<'class'> {
-	return Boolean(value && typeof value.name === 'string' && typeof value.code === 'string');
+function isClassDoc(value: unknown): value is Doc<'class'> {
+	const classDoc = value as Partial<Doc<'class'>> | null;
+	return Boolean(
+		classDoc && typeof classDoc.name === 'string' && typeof classDoc.code === 'string'
+	);
 }
 
-function isModuleDoc(value: any): value is Doc<'module'> {
-	return Boolean(value && typeof value.title === 'string' && typeof value.classId === 'string');
+function isModuleDoc(value: unknown): value is Doc<'module'> {
+	const moduleDoc = value as Partial<Doc<'module'>> | null;
+	return Boolean(
+		moduleDoc && typeof moduleDoc.title === 'string' && typeof moduleDoc.classId === 'string'
+	);
 }
 
 function nowTs() {
@@ -505,7 +511,7 @@ async function getClassPublishedModules(
 		.withIndex('by_classId', (q) => q.eq('classId', classId))
 		.filter((q) => q.eq(q.field('status'), 'published'))
 		.collect()) as Doc<'module'>[];
-	return modules.sort((a: any, b: any) => a.order - b.order);
+	return modules.sort((a, b) => a.order - b.order);
 }
 
 async function getModuleTagsForClass(

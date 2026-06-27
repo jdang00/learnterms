@@ -27,13 +27,13 @@
 {#if isLoading}
 	{#if viewMode === 'grid'}
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6">
-			{#each Array.from({ length: 12 }) as _}
+			{#each Array.from({ length: 12 }, (_, index) => index) as index (index)}
 				<div class="skeleton h-44 w-full rounded-2xl"></div>
 			{/each}
 		</div>
 	{:else}
 		<div class="space-y-2">
-			{#each Array.from({ length: 8 }) as _}
+			{#each Array.from({ length: 8 }, (_, index) => index) as index (index)}
 				<div class="skeleton h-16 w-full rounded-xl"></div>
 			{/each}
 		</div>

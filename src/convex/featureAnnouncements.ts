@@ -32,23 +32,27 @@ const ANNOUNCEMENTS: Announcement[] = [
 		features: [
 			{
 				title: 'New dashboard design',
-				description: 'Cleaner class browsing with updated cards, navigation, and faster entry points.',
+				description:
+					'Cleaner class browsing with updated cards, navigation, and faster entry points.',
 				icon: 'sparkles'
 			},
 			{
 				title: 'Pick up where you left off',
-				description: 'Resume recent module work from the dashboard without digging through classes.',
+				description:
+					'Resume recent module work from the dashboard without digging through classes.',
 				icon: 'history'
 			},
 			{
 				title: 'Class activity',
-				description: 'Jump to cohort activity to see badges, progress, and what is happening in class.',
+				description:
+					'Jump to cohort activity to see badges, progress, and what is happening in class.',
 				icon: 'users',
 				href: '/cohort'
 			},
 			{
 				title: 'Build your own test',
-				description: 'Create timed, scored practice tests from class modules and review results afterward.',
+				description:
+					'Create timed, scored practice tests from class modules and review results afterward.',
 				icon: 'clipboard'
 			}
 		],
@@ -98,7 +102,9 @@ export const markSeen = mutation({
 		const current = ANNOUNCEMENTS.find((a) => a.id === args.announcementId);
 		if (!current) throw new Error('Announcement not found');
 
-		const seenIds = Array.from(new Set([...(user.seenFeatureAnnouncementIds ?? []), args.announcementId]));
+		const seenIds = Array.from(
+			new Set([...(user.seenFeatureAnnouncementIds ?? []), args.announcementId])
+		);
 		await ctx.db.patch(user._id, {
 			seenFeatureAnnouncementIds: seenIds,
 			updatedAt: Date.now()
@@ -108,4 +114,3 @@ export const markSeen = mutation({
 	}
 });
 type ConvexCtx = QueryCtx | MutationCtx;
-

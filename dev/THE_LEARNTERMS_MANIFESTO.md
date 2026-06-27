@@ -2,7 +2,7 @@
 
 **Justin A. Dang**  
 **19 July 2025**  
-*This document was written with the help of GPT-4.1.*
+_This document was written with the help of GPT-4.1._
 
 ---
 

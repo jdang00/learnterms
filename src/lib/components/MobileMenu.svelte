@@ -43,7 +43,7 @@
 	let selectedAttachment = $state<Doc<'questionMedia'> | null>(null);
 
 	// useQuery at top level with skip pattern
-	const mediaQuery = useQuery((api as any).questionMedia.getByQuestionId, () =>
+	const mediaQuery = useQuery(api.questionMedia.getByQuestionId, () =>
 		currentlySelected?._id ? { questionId: currentlySelected._id as Id<'question'> } : 'skip'
 	);
 

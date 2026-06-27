@@ -13,9 +13,14 @@
 	import type {
 		CandidateQuestion,
 		GenerationMode,
+		QuestionStudioModel,
 		QuestionStudioPhase,
 		ReasoningOrder,
 		TopicMapItem
+	} from '$lib/admin/questionStudioTypes';
+	import {
+		DEFAULT_QUESTION_STUDIO_MODEL,
+		QUESTION_STUDIO_MODEL_OPTIONS
 	} from '$lib/admin/questionStudioTypes';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api';
@@ -52,6 +57,7 @@
 
 	let generationMode = $state<GenerationMode | null>(null);
 	let guidanceNotes = $state('');
+	let selectedModel = $state<QuestionStudioModel>(DEFAULT_QUESTION_STUDIO_MODEL);
 
 	let topics = $state<TopicMapItem[]>([]);
 	let selectedTopicIds = $state<Set<string>>(new Set());
@@ -68,8 +74,11 @@
 	let loadedTopicMapId: Id<'questionStudioTopicMaps'> | null = $state(null);
 	let activeJobId: Id<'questionStudioJobs'> | null = $state(null);
 	let loadedGenerationJobId: Id<'questionStudioJobs'> | null = $state(null);
+	let loadedGenerationJobUpdatedAt = $state(0);
 	let savedSelection = $state<SavedStudioSelection | null>(null);
 	let restoredSelection = $state(false);
+	let resumingJobId: Id<'questionStudioJobs'> | null = $state(null);
+	let allowServerResume = $state(true);
 
 	const convexUser = useQuery(api.users.getUserById, () =>
 		clerkUser ? { id: clerkUser.id } : 'skip'
@@ -94,6 +103,10 @@
 			: 'skip'
 	);
 
+	const currentGenerationJob = useQuery(api.questionStudio.getCurrentGenerationJob, () =>
+		clerkUser ? {} : 'skip'
+	);
+
 	const activeJob = useQuery(api.questionStudio.getGenerationJob, () =>
 		activeJobId ? { jobId: activeJobId } : 'skip'
 	);
@@ -104,6 +117,16 @@
 	const isTopicMapLoading = $derived(Boolean(hasStudioContext && savedTopicMap.isLoading));
 	const canGenerate = $derived(
 		hasStudioContext && selectedTopics.length > 0 && totalRequested > 0 && totalRequested <= 30
+	);
+	const canStartNewRun = $derived(
+		Boolean(
+			activeJob.data &&
+			activeJob.data.status !== 'queued' &&
+			activeJob.data.status !== 'running' &&
+			(candidates.length > 0 ||
+				activeJob.data.status === 'ready' ||
+				activeJob.data.status === 'failed')
+		)
 	);
 
 	const agentStatus = $derived.by<{ text: string; working: boolean }>(() => {
@@ -123,7 +146,7 @@
 		const planDone = Boolean(job?.plan);
 		const draftDone = (job?.candidates?.length ?? 0) > 0 || candidates.length > 0;
 		const reviewDone =
-			(job?.reviews?.length ?? 0) > 0 || job?.status === 'ready' || candidates.length > 0;
+			(job?.reviewCount ?? 0) > 0 || job?.status === 'ready' || candidates.length > 0;
 		return [
 			{
 				key: 'source',
@@ -144,7 +167,7 @@
 				key: 'review',
 				label: 'Review',
 				state:
-					running && draftDone && (job?.reviews?.length ?? 0) === 0
+					running && draftDone && (job?.reviewCount ?? 0) === 0
 						? 'active'
 						: reviewDone
 							? 'done'
@@ -164,7 +187,7 @@
 	});
 
 	$effect(() => {
-		if (currentSemester !== (selectedClass as ClassWithSemester)?.semester?.name) {
+		if (selectedClass && currentSemester !== (selectedClass as ClassWithSemester).semester?.name) {
 			selectedClass = null;
 			selectedModuleId = null;
 			selectedModuleTitle = '';
@@ -202,6 +225,11 @@
 		}
 		if (documentId !== lastDocumentId) {
 			lastDocumentId = documentId;
+			if (resumingJobId && activeJobId === resumingJobId) {
+				resumingJobId = null;
+				return;
+			}
+			allowServerResume = false;
 			resetPlan();
 			workflowError = '';
 			workflowMessage = '';
@@ -209,6 +237,7 @@
 			loadedTopicMapId = null;
 			activeJobId = null;
 			loadedGenerationJobId = null;
+			loadedGenerationJobUpdatedAt = 0;
 		}
 	});
 
@@ -217,7 +246,7 @@
 		if (!map || map._id === loadedTopicMapId) return;
 		topics = map.topics as TopicMapItem[];
 		selectedTopicIds = new Set(map.topics.map((topic) => topic.topicId));
-		resetGenerated();
+		if (!activeJobId) resetGenerated();
 		lastThreadId = map.agentThreadId ?? '';
 		loadedTopicMapId = map._id;
 		workflowMessage = `Loaded ${map.topics.length} saved topics.`;
@@ -225,15 +254,57 @@
 	});
 
 	$effect(() => {
+		const job = currentGenerationJob.data;
+		if (!job || activeJobId === job._id) return;
+		if (!allowServerResume && !activeJobId) return;
+		resumingJobId = job._id;
+		activeJobId = job._id;
+	});
+
+	$effect(() => {
 		const job = activeJob.data;
 		if (!job) return;
+		if (selectedDocumentId !== job.documentId || selectedModuleId !== job.moduleId) {
+			resumingJobId = job._id;
+			selectedDocumentId = job.documentId;
+			selectedModuleId = job.moduleId;
+		}
+		if (job.moduleTitle) selectedModuleTitle = job.moduleTitle;
+		if (job.moduleClassId && classes.data) {
+			const classItem = ((classes.data ?? []) as ClassWithSemester[]).find(
+				(item) => String(item._id) === String(job.moduleClassId)
+			);
+			if (classItem) {
+				selectedClass = classItem;
+				currentSemester = classItem.semester?.name ?? currentSemester;
+			}
+		}
+		if (!generationMode) generationMode = 'manual';
+		if (typeof job.model === 'string' && job.model.trim()) {
+			selectedModel = job.model as QuestionStudioModel;
+		}
 		lastThreadId = job.threadId ?? lastThreadId;
 		workflowMessage = job.statusText;
-		if (job.status === 'ready' && job._id !== loadedGenerationJobId && job.candidates) {
-			candidates = job.candidates as CandidateQuestion[];
-			selectedCandidateIndexes = new Set(candidates.map((_, index) => index));
-			selectedCandidateIndex = null;
+		if (job.status === 'queued' || job.status === 'running') {
+			isGenerating = true;
+		}
+		if (job.candidates && job.updatedAt !== loadedGenerationJobUpdatedAt) {
+			const previousCount = candidates.length;
+			const previousSelected = selectedCandidateIndexes;
+			const incoming = job.candidates as CandidateQuestion[];
+			candidates = incoming;
+			selectedCandidateIndexes = new Set(
+				incoming
+					.map((_, index) => (index >= previousCount || previousSelected.has(index) ? index : -1))
+					.filter((index) => index >= 0)
+			);
+			if (selectedCandidateIndex !== null && selectedCandidateIndex >= incoming.length) {
+				selectedCandidateIndex = null;
+			}
 			blockedDuplicateCount = job.blockedDuplicateCount ?? 0;
+			loadedGenerationJobUpdatedAt = job.updatedAt;
+		}
+		if (job.status === 'ready' && job._id !== loadedGenerationJobId) {
 			loadedGenerationJobId = job._id;
 			isGenerating = false;
 		}
@@ -270,6 +341,7 @@
 		blockedDuplicateCount = 0;
 		activeJobId = null;
 		loadedGenerationJobId = null;
+		loadedGenerationJobUpdatedAt = 0;
 	}
 
 	function resetPlan() {
@@ -282,6 +354,7 @@
 	}
 
 	function selectMode(mode: GenerationMode) {
+		allowServerResume = false;
 		generationMode = mode;
 		if (mode === 'auto') setAllTopics(true);
 	}
@@ -303,6 +376,7 @@
 	}
 
 	function selectSemester(name: string) {
+		allowServerResume = false;
 		currentSemester = name;
 		selectedClass = null;
 		selectedModuleId = null;
@@ -312,6 +386,7 @@
 	}
 
 	function selectClass(classItem: ClassWithSemester) {
+		allowServerResume = false;
 		selectedClass = classItem;
 		selectedModuleId = null;
 		selectedModuleTitle = '';
@@ -321,6 +396,7 @@
 	}
 
 	function selectModule(moduleItem: Doc<'module'>) {
+		allowServerResume = false;
 		selectedModuleId = moduleItem._id;
 		selectedModuleTitle = moduleItem.title;
 		resetPlan();
@@ -329,6 +405,7 @@
 	}
 
 	function toggleTopic(topicId: string) {
+		allowServerResume = false;
 		selectedTopicIds = new Set(
 			selectedTopicIds.has(topicId)
 				? [...selectedTopicIds].filter((id) => id !== topicId)
@@ -338,6 +415,7 @@
 	}
 
 	function setAllTopics(selected: boolean) {
+		allowServerResume = false;
 		selectedTopicIds = selected ? new Set(topics.map((topic) => topic.topicId)) : new Set();
 		resetGenerated();
 	}
@@ -378,6 +456,9 @@
 
 	async function generateCandidates() {
 		if (!selectedDocumentId || !selectedModuleId || !canGenerate) return;
+		const model = selectedModel.trim() || DEFAULT_QUESTION_STUDIO_MODEL;
+		selectedModel = model;
+		allowServerResume = true;
 		isGenerating = true;
 		workflowError = '';
 		resetGenerated();
@@ -385,7 +466,8 @@
 			const jobId = await client.mutation(api.questionStudio.createGenerationJob, {
 				documentId: selectedDocumentId,
 				moduleId: selectedModuleId,
-				requestedCount: totalRequested
+				requestedCount: totalRequested,
+				model
 			});
 			activeJobId = jobId;
 			workflowMessage = 'Queued candidate generation.';
@@ -395,6 +477,8 @@
 					moduleId: selectedModuleId,
 					topics: selectedTopics,
 					counts,
+					model,
+					focusNotes: generationMode === 'guided' ? guidanceNotes.trim() : undefined,
 					jobId
 				})
 				.catch((error) => {
@@ -404,6 +488,19 @@
 		} catch (error) {
 			workflowError = error instanceof Error ? error.message : 'Failed to generate questions';
 			isGenerating = false;
+		}
+	}
+
+	async function startNewRun() {
+		allowServerResume = false;
+		isGenerating = false;
+		workflowError = '';
+		try {
+			await client.mutation(api.questionStudio.clearCurrentGenerationJob, {});
+			resetGenerated();
+			workflowMessage = 'Ready for a new run.';
+		} catch (error) {
+			workflowError = error instanceof Error ? error.message : 'Failed to clear current run';
 		}
 	}
 
@@ -521,8 +618,11 @@
 								{topics}
 								{selectedTopicIds}
 								{counts}
+								bind:selectedModel
+								modelOptions={QUESTION_STUDIO_MODEL_OPTIONS}
 								{totalRequested}
 								{canGenerate}
+								{canStartNewRun}
 								{isGenerating}
 								{isSaving}
 								agentStatusText={agentStatus.text}
@@ -535,6 +635,7 @@
 								onSetAllTopics={setAllTopics}
 								onChangeCount={changeCount}
 								onGenerateCandidates={generateCandidates}
+								onStartNewRun={startNewRun}
 								onSelectCandidate={selectCandidate}
 								onToggleCandidate={toggleCandidate}
 								onSelectAllCandidates={selectAllCandidates}
@@ -547,13 +648,10 @@
 
 			<QuestionStudioInspectorPanel
 				activeJob={activeJob.data}
-				{candidates}
-				{selectedCandidateIndexes}
-				{selectedCandidateIndex}
 				{hasStudioContext}
 				topicsLength={topics.length}
-				onToggleCandidate={toggleCandidate}
-				onNavigateCandidate={navigateCandidate}
+				{canStartNewRun}
+				onStartNewRun={startNewRun}
 			/>
 		</div>
 	</div>

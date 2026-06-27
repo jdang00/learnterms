@@ -44,7 +44,7 @@
 				if (trimmed.length > 100) return 'Class name cannot exceed 100 characters';
 				break;
 
-			case 'classCode':
+			case 'classCode': {
 				if (!trimmed) return 'Class code is required';
 				if (trimmed.length < 2) return 'Class code must be at least 2 characters';
 				if (trimmed.length > 20) return 'Class code cannot exceed 20 characters';
@@ -54,6 +54,7 @@
 					return 'Code can only contain letters, numbers, hyphens, underscores, and spaces';
 				}
 				break;
+			}
 
 			case 'classDescription':
 				if (!trimmed) return 'Description is required';

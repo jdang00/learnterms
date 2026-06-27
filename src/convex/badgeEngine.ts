@@ -1,4 +1,5 @@
 import type { Doc, Id } from './_generated/dataModel';
+import type { DatabaseWriter } from './_generated/server';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -22,7 +23,7 @@ export type BadgeRuleCondition = {
 	value: number;
 };
 
-type DbCtx = { db: any };
+type DbCtx = { db: DatabaseWriter };
 
 type ScopeRef =
 	| { scopeType: 'global' }
@@ -97,14 +98,14 @@ async function getMetricDoc(ctx: DbCtx, userId: Id<'users'>, scope: ScopeRef) {
 	if (scope.scopeType === 'global') {
 		return await ctx.db
 			.query('userBadgeMetrics')
-			.withIndex('by_user_scopeType', (q: any) => q.eq('userId', userId).eq('scopeType', 'global'))
+			.withIndex('by_user_scopeType', (q) => q.eq('userId', userId).eq('scopeType', 'global'))
 			.unique();
 	}
 
 	if (scope.scopeType === 'cohort') {
 		return await ctx.db
 			.query('userBadgeMetrics')
-			.withIndex('by_user_scope_cohort', (q: any) =>
+			.withIndex('by_user_scope_cohort', (q) =>
 				q.eq('userId', userId).eq('scopeType', 'cohort').eq('cohortId', scope.cohortId)
 			)
 			.unique();
@@ -112,7 +113,7 @@ async function getMetricDoc(ctx: DbCtx, userId: Id<'users'>, scope: ScopeRef) {
 
 	return await ctx.db
 		.query('userBadgeMetrics')
-		.withIndex('by_user_scope_class', (q: any) =>
+		.withIndex('by_user_scope_class', (q) =>
 			q.eq('userId', userId).eq('scopeType', 'class').eq('classId', scope.classId)
 		)
 		.unique();
@@ -256,13 +257,13 @@ async function awardBadgeIfEligible(
 	if (!args.metricDoc || args.rules.length === 0) return null;
 
 	const meetsRule = args.rules.some((rule) =>
-		evaluateConditions(args.metricDoc!, rule.allOf as any)
+		evaluateConditions(args.metricDoc!, rule.allOf as BadgeRuleCondition[])
 	);
 	if (!meetsRule) return null;
 
 	const existing = await ctx.db
 		.query('userBadgeAwards')
-		.withIndex('by_user_badge', (q: any) =>
+		.withIndex('by_user_badge', (q) =>
 			q.eq('userId', args.userId).eq('badgeDefinitionId', args.badge._id)
 		)
 		.unique();
@@ -270,7 +271,7 @@ async function awardBadgeIfEligible(
 	if (existing) return existing._id;
 
 	const matchingRule = args.rules.find((rule) =>
-		evaluateConditions(args.metricDoc!, rule.allOf as any)
+		evaluateConditions(args.metricDoc!, rule.allOf as BadgeRuleCondition[])
 	);
 
 	const awardId = await ctx.db.insert('userBadgeAwards', {
@@ -302,13 +303,13 @@ async function getCandidateBadges(
 ) {
 	const globalBadges = await ctx.db
 		.query('badgeDefinitions')
-		.withIndex('by_scopeType', (q: any) => q.eq('scopeType', 'global'))
+		.withIndex('by_scopeType', (q) => q.eq('scopeType', 'global'))
 		.collect();
 
 	const cohortBadges = cohortId
 		? await ctx.db
 				.query('badgeDefinitions')
-				.withIndex('by_cohortId', (q: any) => q.eq('cohortId', cohortId))
+				.withIndex('by_cohortId', (q) => q.eq('cohortId', cohortId))
 				.collect()
 		: [];
 
@@ -316,7 +317,7 @@ async function getCandidateBadges(
 		classIds.map((classId) =>
 			ctx.db
 				.query('badgeDefinitions')
-				.withIndex('by_classId', (q: any) => q.eq('classId', classId))
+				.withIndex('by_classId', (q) => q.eq('classId', classId))
 				.collect()
 		)
 	);
@@ -349,7 +350,7 @@ async function evaluateAndAwardForContext(
 
 	const activeRules = await ctx.db
 		.query('badgeRules')
-		.withIndex('by_isActive', (q: any) => q.eq('isActive', true))
+		.withIndex('by_isActive', (q) => q.eq('isActive', true))
 		.collect();
 
 	const rulesByBadgeId = new Map<string, Doc<'badgeRules'>[]>();

@@ -27,8 +27,8 @@
 				<div class="flex-1 text-sm font-medium text-base-content/90 pt-0.5">
 					{toast.message}
 				</div>
-				<button 
-					class="btn btn-ghost btn-xs btn-circle -mr-1 -mt-1 opacity-50 hover:opacity-100" 
+				<button
+					class="btn btn-ghost btn-xs btn-circle -mr-1 -mt-1 opacity-50 hover:opacity-100"
 					onclick={() => toastStore.remove(toast.id)}
 				>
 					<X size={16} />

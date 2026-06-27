@@ -3,6 +3,7 @@
 import { action } from './_generated/server';
 import { components, internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
+import type { ActionCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { RAG, type EntryId } from '@convex-dev/rag';
 import { createOpenAI } from '@ai-sdk/openai';
@@ -80,7 +81,7 @@ function definedMetadata<T extends Record<string, unknown>>(input: T): T {
 	) as T;
 }
 
-async function assertCohortAccess(ctx: any, cohortId: Id<'cohort'>) {
+async function assertCohortAccess(ctx: ActionCtx, cohortId: Id<'cohort'>) {
 	const identity = await ctx.auth.getUserIdentity();
 	if (!identity) throw new Error('Unauthorized');
 
@@ -96,7 +97,7 @@ async function assertCohortAccess(ctx: any, cohortId: Id<'cohort'>) {
 	return user;
 }
 
-async function assertDocumentAccess(ctx: any, document: Doc<'contentLib'>) {
+async function assertDocumentAccess(ctx: ActionCtx, document: Doc<'contentLib'>) {
 	await assertCohortAccess(ctx, document.cohortId);
 }
 
@@ -173,7 +174,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function tableToMarkdown(table: unknown, index: number) {
+function tableToMarkdown(table: unknown) {
 	if (typeof table === 'string') return table.trim();
 	if (!isRecord(table)) return '';
 
@@ -212,7 +213,7 @@ function tableToMarkdown(table: unknown, index: number) {
 function pageMarkdownWithTables(page: MistralOcrPage) {
 	const markdown = (page.markdown ?? '').trim();
 	const tableMarkdown = (page.tables ?? [])
-		.map((table, index) => tableToMarkdown(table, index))
+		.map((table) => tableToMarkdown(table))
 		.filter(Boolean)
 		.filter((table) => !markdown.includes(table));
 
@@ -461,7 +462,7 @@ export const indexR2Document = action({
 
 			try {
 				const identity = await ctx.auth.getUserIdentity();
-				await ctx.scheduler.runAfter(0, (internal as any).questionStudio.autoMapIndexedDocument, {
+				await ctx.scheduler.runAfter(0, internal.questionStudio.autoMapIndexedDocument, {
 					documentId: document._id,
 					triggeredByClerkUserId: identity?.subject
 				});

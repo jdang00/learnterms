@@ -47,7 +47,8 @@ export const landingReviews: LandingReview[] = [
 		name: 'Rad S.',
 		program: 'Pharmacy Student',
 		year: 'P2',
-		outcome: 'Used live corrections and peer-performance tracking to keep practice content effective.'
+		outcome:
+			'Used live corrections and peer-performance tracking to keep practice content effective.'
 	},
 	{
 		id: 'review-08',

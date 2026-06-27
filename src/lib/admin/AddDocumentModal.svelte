@@ -178,7 +178,9 @@
 
 		<div class="mb-6">
 			<h3 class="text-xl font-bold tracking-tight">Upload Document</h3>
-			<p class="mt-1 text-sm text-base-content/60">Upload a PDF to make it available for AI indexing.</p>
+			<p class="mt-1 text-sm text-base-content/60">
+				Upload a PDF to make it available for AI indexing.
+			</p>
 		</div>
 
 		{#if submitError}
@@ -232,17 +234,13 @@
 				{selectedFile ? formatSize(selectedFile.size) : 'Maximum file size: 50MB'}
 			</span>
 			<span class="mt-3 badge badge-ghost badge-sm">PDF only</span>
-			<input
-				class="hidden"
-				type="file"
-				accept=".pdf,application/pdf"
-				onchange={handleFileChange}
-			/>
+			<input class="hidden" type="file" accept=".pdf,application/pdf" onchange={handleFileChange} />
 		</label>
 
 		{#if isSubmitting && uploadProgress > 0}
 			<div class="mt-4">
-				<progress class="progress progress-primary w-full" value={uploadProgress} max="100"></progress>
+				<progress class="progress progress-primary w-full" value={uploadProgress} max="100"
+				></progress>
 				<p class="mt-1 text-xs text-base-content/60">{uploadProgress}% uploaded</p>
 			</div>
 		{/if}

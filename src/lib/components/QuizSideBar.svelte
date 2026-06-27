@@ -4,6 +4,7 @@
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
 	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
@@ -12,9 +13,10 @@
 	let isSolutionModalOpen = $state(false);
 	let isSettingsModalOpen = $state(false);
 	const sanitizedRationale = $derived(sanitizeHtml(getRationale(currentlySelected)));
-	const moduleSelectionHref = $derived(
-		`${resolve('/classes')}?classId=${encodeURIComponent(String(classId))}`
-	);
+
+	async function goToModuleSelection() {
+		await goto(resolve('/classes'), { state: { classId } });
+	}
 
 	async function handleReset() {
 		if (userId && moduleId && client) {
@@ -52,9 +54,13 @@
 	{#if !hideSidebar}
 		<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<a class="btn btn-ghost font-bold rounded-full" href={moduleSelectionHref}>
+				<button
+					type="button"
+					class="btn btn-ghost font-bold rounded-full"
+					onclick={goToModuleSelection}
+				>
 					<ChevronLeft size={16} /> MODULE {module.data.order + 1}
-				</a>
+				</button>
 			</h4>
 			<h2 class="font-semibold text-2xl mt-2 flex items-start gap-3 min-w-0">
 				<span class="text-2xl shrink-0">{module.data?.emoji || '📘'}</span>
@@ -113,15 +119,16 @@
 	{:else}
 		<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
 			<div class="flex flex-col items-center space-y-4">
-				<a
+				<button
+					type="button"
 					class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
-					href={moduleSelectionHref}
+					onclick={goToModuleSelection}
 				>
 					<span class="group-hover:hidden">{module.data.order + 1}</span>
 					<span class="hidden group-hover:inline-flex items-center justify-center"
 						><ChevronLeft size={24} /></span
 					>
-				</a>
+				</button>
 
 				<button
 					class="btn btn-circle btn-lg btn-soft btn-primary"

@@ -382,7 +382,8 @@
 	const canSubmit = $derived(
 		questionStem.trim().length > 0 && getRationalePlainText(questionRationale).length > 0
 	);
-	const rationaleDocsUrl = 'https://docs.learnterms.com/docs/contributors/why-rationales-are-required';
+	const rationaleDocsUrl =
+		'https://docs.learnterms.com/docs/contributors/why-rationales-are-required';
 
 	// Get user's domain focus from metadata or default to 'general'
 	let userFocus: Focus = $state('general'); // TODO: fetch from user settings/metadata when available
@@ -425,7 +426,7 @@
 	// Remove existing media from database
 	async function removeExistingMedia(id: string) {
 		try {
-			const res = await client.mutation(api.questionMedia.softDelete, {
+			await client.mutation(api.questionMedia.softDelete, {
 				mediaId: id as Id<'questionMedia'>
 			});
 			await refreshMedia();
@@ -519,11 +520,6 @@
 		return fallback;
 	}
 
-	function addMediaItem(mediaItem: (typeof queuedMedia)[0]) {
-		queuedMedia = [...queuedMedia, mediaItem];
-		onChange();
-	}
-
 	function handleUploadFailure(message: string, error?: unknown) {
 		if (error) {
 			console.error(message, error);
@@ -552,7 +548,6 @@
 	}
 
 	async function removeQueuedMedia(index: number) {
-		const media = queuedMedia[index];
 		queuedMedia = queuedMedia.filter((_, i) => i !== index);
 		onChange();
 	}
@@ -1066,12 +1061,7 @@
 			<div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
 				<span>{saveError}</span>
 				{#if isRationaleError}
-					<a
-						class="link font-semibold"
-						href={rationaleDocsUrl}
-						target="_blank"
-						rel="noreferrer"
-					>
+					<a class="link font-semibold" href={rationaleDocsUrl} target="_blank" rel="noreferrer">
 						Why rationales are required
 					</a>
 				{/if}
@@ -1494,9 +1484,7 @@
 					</div>
 					<p class="text-[10px] text-base-content/40 mb-2">
 						Required for every saved question.
-						<a class="link" href={rationaleDocsUrl} target="_blank" rel="noreferrer">
-							Why?
-						</a>
+						<a class="link" href={rationaleDocsUrl} target="_blank" rel="noreferrer"> Why? </a>
 					</p>
 					<div class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 group">
 						{#if rationaleEditor}

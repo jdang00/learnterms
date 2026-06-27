@@ -1,11 +1,82 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
+const questionStudioReasoningOrder = v.union(
+	v.literal('first'),
+	v.literal('second'),
+	v.literal('third')
+);
+
+const questionStudioSourceCitation = v.object({
+	citationId: v.string(),
+	pageNumber: v.number(),
+	noteFile: v.string(),
+	chunkTitle: v.string(),
+	chunkIndex: v.number()
+});
+
+const questionStudioCandidate = v.object({
+	type: v.literal('multiple_choice'),
+	stem: v.string(),
+	options: v.array(v.string()),
+	correctAnswers: v.array(v.string()),
+	rationale: v.string(),
+	reasoningOrder: questionStudioReasoningOrder,
+	topicId: v.string(),
+	topicTitle: v.string(),
+	sourcePageNumbers: v.array(v.number()),
+	sourceCitations: v.optional(v.array(questionStudioSourceCitation)),
+	duplicateRisk: v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
+	similarQuestionIds: v.array(v.id('question')),
+	metadata: v.object({
+		model: v.string(),
+		agentThreadId: v.optional(v.string()),
+		sourceDocumentId: v.id('contentLib')
+	})
+});
+
+const questionStudioCandidateReview = v.object({
+	candidateIndex: v.number(),
+	verdict: v.union(v.literal('accept'), v.literal('revise'), v.literal('reject')),
+	reasons: v.array(v.string()),
+	sourceSupport: v.union(v.literal('strong'), v.literal('partial'), v.literal('weak')),
+	answerQuality: v.union(v.literal('clear'), v.literal('ambiguous')),
+	revisedStem: v.optional(v.string()),
+	revisedRationale: v.optional(v.string())
+});
+
 const quickLink = v.object({
 	title: v.string(),
 	description: v.string(),
 	href: v.string(),
 	icon: v.string()
+});
+
+const questionStudioGenerationPlan = v.object({
+	workerBatches: v.array(
+		v.object({
+			taskId: v.string(),
+			label: v.string(),
+			plannedCount: v.number(),
+			reasoningOrder: questionStudioReasoningOrder,
+			topicCount: v.number(),
+			topicTitles: v.array(v.string()),
+			sourcePages: v.array(v.number())
+		})
+	),
+	topicAllocations: v.array(
+		v.object({
+			taskId: v.string(),
+			topicId: v.string(),
+			topicTitle: v.string(),
+			plannedCount: v.number(),
+			reasoningOrder: questionStudioReasoningOrder,
+			sourcePages: v.array(v.number()),
+			notes: v.string()
+		})
+	),
+	coverageNotes: v.array(v.string()),
+	riskNotes: v.array(v.string())
 });
 
 export default defineSchema({
@@ -182,6 +253,17 @@ export default defineSchema({
 					customPromptUsed: v.boolean(),
 					sourceDocumentId: v.optional(v.id('contentLib')),
 					sourcePageNumbers: v.optional(v.array(v.number())),
+					sourceCitations: v.optional(
+						v.array(
+							v.object({
+								citationId: v.string(),
+								pageNumber: v.number(),
+								noteFile: v.string(),
+								chunkTitle: v.string(),
+								chunkIndex: v.number()
+							})
+						)
+					),
 					topicTitle: v.optional(v.string()),
 					reasoningOrder: v.optional(
 						v.union(v.literal('first'), v.literal('second'), v.literal('third'))
@@ -702,70 +784,16 @@ export default defineSchema({
 			v.literal('failed')
 		),
 		statusText: v.string(),
-		events: v.array(
-			v.object({
-				at: v.number(),
-				label: v.string(),
-				detail: v.optional(v.string())
-			})
-		),
 		model: v.string(),
 		threadId: v.optional(v.string()),
 		requestedCount: v.number(),
-		plan: v.optional(
-			v.object({
-				topicAllocations: v.array(
-					v.object({
-						topicId: v.string(),
-						topicTitle: v.string(),
-						plannedCount: v.number(),
-						reasoningOrders: v.array(
-							v.union(v.literal('first'), v.literal('second'), v.literal('third'))
-						),
-						sourcePages: v.array(v.number()),
-						notes: v.string()
-					})
-				),
-				coverageNotes: v.array(v.string()),
-				riskNotes: v.array(v.string())
-			})
-		),
-		reviews: v.optional(
-			v.array(
-				v.object({
-					candidateIndex: v.number(),
-					verdict: v.union(v.literal('accept'), v.literal('revise'), v.literal('reject')),
-					reasons: v.array(v.string()),
-					sourceSupport: v.union(v.literal('strong'), v.literal('partial'), v.literal('weak')),
-					answerQuality: v.union(v.literal('clear'), v.literal('ambiguous')),
-					revisedStem: v.optional(v.string()),
-					revisedRationale: v.optional(v.string())
-				})
-			)
-		),
+		plan: v.optional(questionStudioGenerationPlan),
 		blockedDuplicateCount: v.optional(v.number()),
-		candidates: v.optional(
-			v.array(
-				v.object({
-					type: v.literal('multiple_choice'),
-					stem: v.string(),
-					options: v.array(v.string()),
-					correctAnswers: v.array(v.string()),
-					rationale: v.string(),
-					reasoningOrder: v.union(v.literal('first'), v.literal('second'), v.literal('third')),
-					topicId: v.string(),
-					topicTitle: v.string(),
-					sourcePageNumbers: v.array(v.number()),
-					duplicateRisk: v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
-					similarQuestionIds: v.array(v.id('question')),
-					metadata: v.object({
-						model: v.string(),
-						agentThreadId: v.optional(v.string()),
-						sourceDocumentId: v.id('contentLib')
-					})
-				})
-			)
-		),
+		candidateCount: v.optional(v.number()),
+		reviewCount: v.optional(v.number()),
+		eventCount: v.optional(v.number()),
+		completedWorkerCount: v.optional(v.number()),
+		failedWorkerCount: v.optional(v.number()),
 		error: v.optional(v.string()),
 		createdAt: v.number(),
 		updatedAt: v.number(),
@@ -773,6 +801,31 @@ export default defineSchema({
 	})
 		.index('by_createdByUserId', ['createdByUserId'])
 		.index('by_documentId_moduleId', ['documentId', 'moduleId']),
+	questionStudioJobEvents: defineTable({
+		jobId: v.id('questionStudioJobs'),
+		cohortId: v.id('cohort'),
+		at: v.number(),
+		label: v.string(),
+		detail: v.optional(v.string())
+	}).index('by_jobId', ['jobId']),
+	questionStudioJobCandidates: defineTable({
+		jobId: v.id('questionStudioJobs'),
+		cohortId: v.id('cohort'),
+		index: v.number(),
+		candidate: questionStudioCandidate,
+		createdAt: v.number()
+	})
+		.index('by_jobId', ['jobId'])
+		.index('by_jobId_index', ['jobId', 'index']),
+	questionStudioJobReviews: defineTable({
+		jobId: v.id('questionStudioJobs'),
+		cohortId: v.id('cohort'),
+		candidateIndex: v.number(),
+		review: questionStudioCandidateReview,
+		createdAt: v.number()
+	})
+		.index('by_jobId', ['jobId'])
+		.index('by_jobId_candidateIndex', ['jobId', 'candidateIndex']),
 	chunkContent: defineTable({
 		title: v.string(),
 		summary: v.string(),

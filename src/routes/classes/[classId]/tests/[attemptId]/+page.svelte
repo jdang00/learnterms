@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
+	import type { FunctionReturnType } from 'convex/server';
 	import { api } from '../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../convex/_generated/dataModel';
 	import Matching from '$lib/components/Matching.svelte';
@@ -11,6 +12,7 @@
 	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { getErrorText } from '$lib/utils/errorHandling';
 	import { slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import {
@@ -48,6 +50,11 @@
 		updatedAt: number;
 	};
 
+	type AttemptRunnerBundle = NonNullable<
+		FunctionReturnType<typeof api.customQuiz.getAttemptRunnerBundle>
+	>;
+	type AttemptRunnerItem = AttemptRunnerBundle['items'][number];
+
 	const client = useConvexClient();
 	const classId = $derived(page.params.classId as Id<'class'>);
 	const attemptId = $derived(page.params.attemptId as Id<'quizAttempts'>);
@@ -57,7 +64,7 @@
 	);
 
 	async function goBackToClasses() {
-		await goto('/classes', { state: { classId } });
+		await goto(resolve('/classes'), { state: { classId } });
 	}
 
 	let initializedAttemptId = $state<string | null>(null);
@@ -77,7 +84,7 @@
 	let tickerHandle: number | null = null;
 	let heartbeatHandle: number | null = null;
 	let lastTickAt = 0;
-	const dirtyItemIds = new Set<string>();
+	const dirtyItemIds: Record<string, true> = {};
 	let syncInFlight = false;
 	let syncRequestedWhileInFlight = false;
 	let questionButtons = $state<HTMLButtonElement[]>([]);
@@ -127,16 +134,7 @@
 		return String(type || '').toLowerCase() === 'matching';
 	}
 
-	function matchingRole(text: string): 'prompt' | 'answer' | null {
-		const normalized = String(text ?? '')
-			.trimStart()
-			.toLowerCase();
-		if (normalized.startsWith('prompt:')) return 'prompt';
-		if (normalized.startsWith('answer:')) return 'answer';
-		return null;
-	}
-
-	function getDefaultLocalResponse(item: any): LocalResponse {
+	function getDefaultLocalResponse(item: AttemptRunnerItem): LocalResponse {
 		return {
 			selectedOptions: [...(item.response?.selectedOptions || [])],
 			eliminatedOptions: [],
@@ -148,7 +146,7 @@
 	}
 
 	function markDirty(itemId: string) {
-		dirtyItemIds.add(itemId);
+		dirtyItemIds[itemId] = true;
 		saveCache();
 		scheduleSync();
 	}
@@ -174,7 +172,7 @@
 		markDirty(itemId);
 	}
 
-	function toggleOption(item: any, optionId: string) {
+	function toggleOption(item: AttemptRunnerItem, optionId: string) {
 		if (isFitb(item.question.type) || isMatching(item.question.type)) return;
 		setResponse(item._id, (prev) => {
 			const already = prev.selectedOptions.includes(optionId);
@@ -187,15 +185,7 @@
 		});
 	}
 
-	function setFitbText(item: any, text: string) {
-		setResponse(item._id, (prev) => ({
-			...prev,
-			textResponse: text,
-			selectedOptions: text.trim().length > 0 ? [text] : []
-		}));
-	}
-
-	function clearAnswer(item: any) {
+	function clearAnswer(item: AttemptRunnerItem) {
 		setResponse(item._id, (prev) => ({
 			...prev,
 			selectedOptions: [],
@@ -204,7 +194,7 @@
 		}));
 	}
 
-	function toggleFlag(item: any) {
+	function toggleFlag(item: AttemptRunnerItem) {
 		setResponse(item._id, (prev) => ({
 			...prev,
 			isFlagged: !prev.isFlagged
@@ -267,7 +257,7 @@
 
 	const answeredCount = $derived.by(() => {
 		const items = runnerQuery.data?.items ?? [];
-		return items.filter((item: any) => {
+		return items.filter((item) => {
 			const r = responses[item._id];
 			if (!r) return false;
 			if (isFitb(item.question.type)) {
@@ -290,7 +280,7 @@
 			_id: item.questionId,
 			type: item.question.type,
 			stem: sanitizeHtml(item.question.stem),
-			options: (item.question.options || []).map((option: any) => ({
+			options: (item.question.options || []).map((option) => ({
 				...option,
 				text: sanitizeHtml(option.text)
 			})),
@@ -353,10 +343,12 @@
 			handleSolution() {
 				// No in-test answer reveal.
 			},
-			checkFillInTheBlank(_text: string, _question?: any) {
+			checkFillInTheBlank() {
 				// Submit-only mode in tests.
 			},
-			getOrderedOptions(question: any) {
+			getOrderedOptions(
+				question: Pick<AttemptRunnerItem['question'], 'options'> | null | undefined
+			) {
 				return question?.options || [];
 			},
 			toggleOption(optionId: string) {
@@ -392,7 +384,7 @@
 					? (responses[current._id]?.eliminatedOptions ?? []).includes(_optionId)
 					: false;
 			},
-			isCorrect(_optionId: string) {
+			isCorrect() {
 				return false;
 			}
 		};
@@ -414,13 +406,13 @@
 			syncRequestedWhileInFlight = true;
 			return;
 		}
-		if (!force && dirtyItemIds.size === 0) return;
+		if (!force && Object.keys(dirtyItemIds).length === 0) return;
 		if (typeof navigator !== 'undefined' && !navigator.onLine) {
 			syncStatus = 'offline';
 			return;
 		}
 
-		const ids = Array.from(dirtyItemIds);
+		const ids = Object.keys(dirtyItemIds);
 
 		syncStatus = 'syncing';
 		syncError = null;
@@ -462,7 +454,7 @@
 			}
 
 			for (const id of ids) {
-				dirtyItemIds.delete(id);
+				delete dirtyItemIds[id];
 			}
 			if (ids.length > 0) {
 				const nextDeltas = { ...pendingTimeDeltas };
@@ -471,9 +463,9 @@
 			}
 			saveCache();
 			syncStatus = 'synced';
-		} catch (error: any) {
+		} catch (error: unknown) {
 			syncStatus = 'error';
-			syncError = error?.message ?? 'Sync failed';
+			syncError = getErrorText(error) || 'Sync failed';
 		} finally {
 			syncInFlight = false;
 			if (syncRequestedWhileInFlight) {
@@ -531,7 +523,7 @@
 					visited: localResponse.visited || server.visited,
 					timeSpentMs: Math.max(server.timeSpentMs ?? 0, localResponse.timeSpentMs ?? 0)
 				};
-				dirtyItemIds.add(itemId);
+				dirtyItemIds[itemId] = true;
 			}
 		}
 
@@ -561,7 +553,7 @@
 			...pendingTimeDeltas,
 			[item._id]: nextAccumulatedDelta
 		};
-		dirtyItemIds.add(item._id);
+		dirtyItemIds[item._id] = true;
 		if (nextAccumulatedDelta >= 5_000) {
 			scheduleSync(300);
 		}
@@ -586,59 +578,12 @@
 			});
 			// eslint-disable-next-line svelte/no-navigation-without-resolve
 			await goto(auto ? `${resultsHref}?autoSubmit=1` : resultsHref);
-		} catch (error: any) {
-			submitError = error?.message ?? 'Something went wrong while submitting. Please try again.';
+		} catch (error: unknown) {
+			submitError =
+				getErrorText(error) || 'Something went wrong while submitting. Please try again.';
 		} finally {
 			isSubmitting = false;
 		}
-	}
-
-	function promptsForMatching(item: any) {
-		return (item.question.options || []).filter(
-			(o: any) => matchingRole(String(o.text)) === 'prompt'
-		);
-	}
-
-	function answersForMatching(item: any) {
-		return (item.question.options || []).filter(
-			(o: any) => matchingRole(String(o.text)) === 'answer'
-		);
-	}
-
-	function selectedAnswerIdForPrompt(itemId: string, promptId: string) {
-		const selections = responses[itemId]?.selectedOptions ?? [];
-		const pair = selections.find((s) => String(s).startsWith(`${promptId}::`));
-		return pair ? String(pair).split('::')[1] : '';
-	}
-
-	function setMatchingSelection(item: any, promptId: string, answerId: string) {
-		setResponse(item._id, (prev) => {
-			const others = (prev.selectedOptions ?? []).filter((s) => {
-				const text = String(s);
-				if (text.startsWith(`${promptId}::`)) return false;
-				if (!answerId) return true;
-				return !text.endsWith(`::${answerId}`);
-			});
-			return {
-				...prev,
-				selectedOptions: answerId ? [...others, `${promptId}::${answerId}`] : others
-			};
-		});
-	}
-
-	function availableAnswersForPrompt(item: any, promptId: string) {
-		const allAnswers = answersForMatching(item);
-		const selections = responses[item._id]?.selectedOptions ?? [];
-		const currentSelectedAnswerId = selectedAnswerIdForPrompt(item._id, promptId);
-		const takenByOtherPrompts = new Set(
-			selections
-				.filter((s) => !String(s).startsWith(`${promptId}::`))
-				.map((s) => String(s).split('::')[1])
-				.filter(Boolean)
-		);
-		return allAnswers.filter(
-			(ans: any) => ans.id === currentSelectedAnswerId || !takenByOtherPrompts.has(ans.id)
-		);
 	}
 
 	function selectedCountForCurrentItem() {
@@ -649,13 +594,6 @@
 			return String(resp.textResponse ?? resp.selectedOptions[0] ?? '').trim().length > 0 ? 1 : 0;
 		}
 		return resp.selectedOptions.length;
-	}
-
-	function answerLabel(text: string) {
-		return String(text).replace(/^\s*answer:\s*/i, '');
-	}
-	function promptLabel(text: string) {
-		return String(text).replace(/^\s*prompt:\s*/i, '');
 	}
 
 	function syncStatusIcon(status: string) {
@@ -788,7 +726,7 @@
 		heartbeatHandle = window.setInterval(() => {
 			const bundle = runnerQuery.data;
 			if (!bundle?.attempt || bundle.attempt.status !== 'in_progress') return;
-			if (dirtyItemIds.size > 0 || Object.keys(pendingTimeDeltas).length > 0) {
+			if (Object.keys(dirtyItemIds).length > 0 || Object.keys(pendingTimeDeltas).length > 0) {
 				void flushSync();
 			}
 			void client

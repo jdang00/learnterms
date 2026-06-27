@@ -3,7 +3,9 @@ import { authQuery } from './authQueries';
 import type { Doc, Id } from './_generated/dataModel';
 import { polar } from './polar';
 
-function hasInteraction(record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions'>) {
+function hasInteraction(
+	record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions'>
+) {
 	return record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0;
 }
 
@@ -907,7 +909,9 @@ export const getRecentModulesProgress = authQuery({
 			});
 		}
 
-		const involvedClassIds = Array.from(new Set(cohortModules.map((moduleDoc) => moduleDoc.classId)));
+		const involvedClassIds = Array.from(
+			new Set(cohortModules.map((moduleDoc) => moduleDoc.classId))
+		);
 		for (const classId of involvedClassIds) {
 			const progressRecords = await ctx.db
 				.query('userProgress')

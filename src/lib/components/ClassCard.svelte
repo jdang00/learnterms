@@ -62,10 +62,20 @@
 </script>
 
 <div in:fade={{ duration: 300 }} class="relative group">
-	<button onclick={() => onSelect(classItem)} class="w-full text-left" aria-label={`Open class ${classItem.name}`}>
-		<div class="card-root relative h-64 rounded-2xl bg-base-100 border-2 border-base-300 transition-all duration-300 hover:border-base-content/20 hover:-translate-y-1" style="isolation: isolate;">
+	<button
+		onclick={() => onSelect(classItem)}
+		class="w-full text-left"
+		aria-label={`Open class ${classItem.name}`}
+	>
+		<div
+			class="card-root relative h-64 rounded-2xl bg-base-100 border-2 border-base-300 transition-all duration-300 hover:border-base-content/20 hover:-translate-y-1"
+			style="isolation: isolate;"
+		>
 			<!-- Banner -->
-			<div class="absolute inset-x-0 top-0 h-28 rounded-t-2xl overflow-hidden" style="background: {palette.light};">
+			<div
+				class="absolute inset-x-0 top-0 h-28 rounded-t-2xl overflow-hidden"
+				style="background: {palette.light};"
+			>
 				<!-- Base color fading left to right -->
 				<div
 					class="absolute inset-0"
@@ -136,11 +146,17 @@
 
 				<!-- Chips in banner -->
 				<div class="absolute top-2.5 right-3 flex items-center gap-1.5 pointer-events-none">
-					<span class="text-[0.65rem] font-mono font-medium rounded-full px-2 py-0.5" style="background: rgba(0,0,0,0.25); color: rgba(255,255,255,0.95);">
+					<span
+						class="text-[0.65rem] font-mono font-medium rounded-full px-2 py-0.5"
+						style="background: rgba(0,0,0,0.25); color: rgba(255,255,255,0.95);"
+					>
 						{classItem.code}
 					</span>
 					{#if classItem.semester?.name}
-						<span class="text-[0.65rem] font-medium rounded-full px-2 py-0.5" style="background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.9);">
+						<span
+							class="text-[0.65rem] font-medium rounded-full px-2 py-0.5"
+							style="background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.9);"
+						>
 							{classItem.semester.name}
 						</span>
 					{/if}
@@ -148,11 +164,11 @@
 
 				<!-- Class name -->
 				<div class="absolute inset-x-0 bottom-0 px-5 pb-3 pointer-events-none">
-						<h2
-							class="font-bold text-[1.25rem] leading-snug text-white truncate"
-							title={classItem.name}
-							style="text-shadow: 0 1px 6px {palette.dark}cc, 0 0 24px {palette.dark}aa;"
-						>
+					<h2
+						class="font-bold text-[1.25rem] leading-snug text-white truncate"
+						title={classItem.name}
+						style="text-shadow: 0 1px 6px {palette.dark}cc, 0 0 24px {palette.dark}aa;"
+					>
 						{classItem.name}
 					</h2>
 				</div>
@@ -165,8 +181,13 @@
 				</p>
 
 				<div class="mt-auto flex justify-end pt-3">
-					<div class="btn btn-sm btn-primary btn-soft rounded-full gap-1.5 transition-all duration-200 group-hover:gap-2.5">
-						Study <ArrowRight size={14} class="transition-transform duration-200 group-hover:translate-x-0.5" />
+					<div
+						class="btn btn-sm btn-primary btn-soft rounded-full gap-1.5 transition-all duration-200 group-hover:gap-2.5"
+					>
+						Study <ArrowRight
+							size={14}
+							class="transition-transform duration-200 group-hover:translate-x-0.5"
+						/>
 					</div>
 				</div>
 			</div>

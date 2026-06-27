@@ -38,8 +38,10 @@
 					{#each landingReviews as reviewItem, i (reviewItem.id)}
 						<button
 							aria-label="Review {i + 1}"
-							class="h-1.5 rounded-full transition-all duration-300 {i === activeIndex ? 'w-6 bg-primary' : 'w-1.5 bg-base-content/15 hover:bg-base-content/25'}"
-							onclick={() => activeIndex = i}
+							class="h-1.5 rounded-full transition-all duration-300 {i === activeIndex
+								? 'w-6 bg-primary'
+								: 'w-1.5 bg-base-content/15 hover:bg-base-content/25'}"
+							onclick={() => (activeIndex = i)}
 						></button>
 					{/each}
 				</div>

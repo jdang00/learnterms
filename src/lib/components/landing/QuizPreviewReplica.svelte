@@ -130,7 +130,7 @@
 	const isCurrentFlagged = $derived(flaggedQuestionIds.includes(currentQuestion._id));
 
 	$effect(() => {
-		resultNonce;
+		Boolean(resultNonce);
 		if (!checkResult) {
 			showResultBanner = false;
 			return;
@@ -281,7 +281,7 @@
 								</button>
 							</div>
 							<div
-							class={`tiptap-content mt-2 transition-all duration-300 ${showSolution ? 'blur-none' : 'blur-xs'}`}
+								class={`tiptap-content mt-2 transition-all duration-300 ${showSolution ? 'blur-none' : 'blur-xs'}`}
 							>
 								{currentQuestion.rationale}
 							</div>

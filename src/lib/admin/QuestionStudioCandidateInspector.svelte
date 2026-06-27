@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, ChevronLeft, ChevronRight, CircleAlert, FileText, Plus } from 'lucide-svelte';
+	import { Check, ChevronLeft, ChevronRight, CircleAlert, FileText, Plus, X } from 'lucide-svelte';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import type { CandidateQuestion } from './questionStudioTypes';
 
@@ -11,9 +11,11 @@
 		onToggleInclude: () => void;
 		onPrev: () => void;
 		onNext: () => void;
+		onClose: () => void;
 	}
 
-	let { candidate, index, total, isIncluded, onToggleInclude, onPrev, onNext }: Props = $props();
+	let { candidate, index, total, isIncluded, onToggleInclude, onPrev, onNext, onClose }: Props =
+		$props();
 
 	const riskBadge = $derived(
 		candidate.duplicateRisk === 'high'
@@ -47,6 +49,15 @@
 				onclick={onNext}
 			>
 				<ChevronRight size={16} />
+			</button>
+			<span class="mx-1 h-5 w-px bg-base-300"></span>
+			<button
+				class="btn btn-ghost btn-sm btn-circle"
+				aria-label="Back to progress"
+				title="Back to progress"
+				onclick={onClose}
+			>
+				<X size={16} />
 			</button>
 		</div>
 	</div>
@@ -114,6 +125,29 @@
 				<p class="text-sm leading-relaxed text-base-content/80">{candidate.rationale}</p>
 			</div>
 		</div>
+
+		{#if candidate.sourceCitations?.length}
+			<div class="mb-6">
+				<div class="mb-3 text-xs font-semibold uppercase tracking-wide text-base-content/60">
+					Evidence
+				</div>
+				<div class="space-y-2">
+					{#each candidate.sourceCitations as citation (citation.citationId)}
+						<div class="rounded-xl border border-base-300 bg-base-100 p-3">
+							<div class="flex flex-wrap items-center gap-1.5 text-xs">
+								<span class="badge badge-xs badge-outline">{citation.citationId}</span>
+								<span class="badge badge-xs badge-ghost">page {citation.pageNumber}</span>
+								<span class="badge badge-xs badge-ghost">chunk {citation.chunkIndex + 1}</span>
+							</div>
+							<p class="mt-2 break-words text-xs font-medium text-base-content/70">
+								{citation.noteFile}
+							</p>
+							<p class="mt-1 text-xs text-base-content/50">{citation.chunkTitle}</p>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
 
 		{#if candidate.duplicateRisk !== 'low'}
 			<div

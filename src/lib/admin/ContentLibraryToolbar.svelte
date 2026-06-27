@@ -64,7 +64,7 @@
 		<ul
 			class="dropdown-content menu z-30 mt-2 w-52 rounded-xl border border-base-300 bg-base-100 p-1.5 shadow-lg"
 		>
-			{#each sortOptions as option}
+			{#each sortOptions as option (option.key)}
 				<li>
 					<button
 						class="flex items-center justify-between rounded-lg text-sm {sortKey === option.key

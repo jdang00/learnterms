@@ -9,14 +9,14 @@ export const getEditorExtensions = () => [
 	StarterKit.configure({
 		// Ensure no conflicts with our custom extensions
 		link: false,
-		underline: false,
+		underline: false
 	}),
 	Underline,
 	Link.configure({
 		openOnClick: false,
 		HTMLAttributes: {
-			class: 'text-primary underline',
-		},
+			class: 'text-primary underline'
+		}
 	}),
-	Highlight,
+	Highlight
 ];

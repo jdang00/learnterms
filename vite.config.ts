@@ -8,7 +8,7 @@ export default defineConfig({
 		include: ['lucide-svelte', 'convex-svelte', 'svelte-confetti', 'posthog-js'],
 		esbuildOptions: {
 			target: 'esnext'
-		},
+		}
 	},
 	build: {
 		target: 'esnext'

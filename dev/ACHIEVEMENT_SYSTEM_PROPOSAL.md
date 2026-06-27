@@ -159,4 +159,3 @@ Use:
 - Prefer server-authoritative signals for correctness/speed and streaks.
 - Continue using denormalization for read performance (consistent with existing progress architecture).
 - Ensure issuer metadata is required for every badge definition so source always renders on UI.
-

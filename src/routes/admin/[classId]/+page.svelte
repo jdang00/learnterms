@@ -16,13 +16,13 @@
 	import { useClerkContext } from 'svelte-clerk';
 
 	let { data }: { data: PageData } = $props();
-	const classId = $derived(data.classId);
+	const classId: Id<'class'> = $derived(data.classId as Id<'class'>);
 
 	const modules = useQuery(api.module.getAdminModulesWithQuestionCounts, () => ({
-		classId: classId as Id<'class'>
+		classId
 	}));
 
-	const classInfo = useQuery(api.class.getClassById, () => ({ id: classId as Id<'class'> }));
+	const classInfo = useQuery(api.class.getClassById, () => ({ id: classId }));
 
 	const client = useConvexClient();
 
@@ -369,7 +369,10 @@
 										{/if}
 										<div class="flex-1 min-w-0">
 											<a
-												href={resolve('/admin/[classId]/module/[moduleId]', { classId, moduleId: moduleItem._id })}
+												href={resolve('/admin/[classId]/module/[moduleId]', {
+													classId,
+													moduleId: moduleItem._id
+												})}
 												class="font-semibold text-base-content text-left hover:text-primary transition-colors cursor-pointer block"
 												title={`Go to questions for ${moduleItem.title}`}
 											>

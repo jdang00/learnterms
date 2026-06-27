@@ -5,8 +5,7 @@ export const QUIZ_PREFERENCE_KEYS = {
 	optionsShuffleEnabled: 'lt:optionsShuffleEnabled'
 } as const;
 
-export type QuizPreferenceKey =
-	(typeof QUIZ_PREFERENCE_KEYS)[keyof typeof QUIZ_PREFERENCE_KEYS];
+export type QuizPreferenceKey = (typeof QUIZ_PREFERENCE_KEYS)[keyof typeof QUIZ_PREFERENCE_KEYS];
 
 export type QuizPreferenceChangedDetail = {
 	key: QuizPreferenceKey;

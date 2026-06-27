@@ -4,7 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { api } from '../../convex/_generated/api';
 	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
-	import { ArrowLeft, HelpCircle, Search, Star, Trophy, Users } from 'lucide-svelte';
+	import { ArrowLeft, HelpCircle, Search, Trophy, Users } from 'lucide-svelte';
 	import { getBadgeIcon } from '$lib/components/badges/icons';
 
 	let { data }: { data: PageData } = $props();
@@ -278,7 +278,9 @@
 									{#if selectedMember.imageUrl}
 										<img src={selectedMember.imageUrl} alt={selectedMember.name} />
 									{:else}
-										<div class="flex h-full w-full items-center justify-center text-base-content/50">
+										<div
+											class="flex h-full w-full items-center justify-center text-base-content/50"
+										>
 											<Users size={40} />
 										</div>
 									{/if}

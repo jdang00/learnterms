@@ -61,9 +61,7 @@
 			const result = await client.action(api.ragKnowledge.askCohort, {
 				cohortId: userData.data.cohortId as Id<'cohort'>,
 				prompt: question,
-					sourceDocumentId: selectedDocumentId
-					? (selectedDocumentId as Id<'contentLib'>)
-					: undefined,
+				sourceDocumentId: selectedDocumentId ? (selectedDocumentId as Id<'contentLib'>) : undefined,
 				limit: 8
 			});
 
@@ -139,10 +137,8 @@
 							</p>
 						</div>
 					{:else}
-						{#each messages as message}
-							<div
-								class="flex gap-3 {message.role === 'user' ? 'justify-end' : 'justify-start'}"
-							>
+						{#each messages as message, index (index)}
+							<div class="flex gap-3 {message.role === 'user' ? 'justify-end' : 'justify-start'}">
 								{#if message.role === 'assistant'}
 									<div class="mt-1 rounded-md bg-primary/10 p-2 text-primary">
 										<Bot size={16} />
@@ -160,7 +156,9 @@
 											{message.sourceCount ?? 0} retrieved chunk groups
 										</p>
 										<div class="mt-3 space-y-2">
-											<details class="collapse collapse-arrow rounded-md border border-base-300 bg-base-100">
+											<details
+												class="collapse collapse-arrow rounded-md border border-base-300 bg-base-100"
+											>
 												<summary class="collapse-title min-h-0 px-3 py-2 text-xs font-semibold">
 													<span class="inline-flex items-center gap-2">
 														<ChevronDown size={13} />
@@ -168,19 +166,27 @@
 													</span>
 												</summary>
 												<div class="collapse-content px-3 pb-3">
-													<pre class="max-h-72 overflow-auto rounded bg-base-300/60 p-3 text-[11px] leading-relaxed">{prettyJson({
-															diagnostics: message.diagnostics,
-															usage: message.usage
-														})}</pre>
+													<pre
+														class="max-h-72 overflow-auto rounded bg-base-300/60 p-3 text-[11px] leading-relaxed">{prettyJson(
+															{
+																diagnostics: message.diagnostics,
+																usage: message.usage
+															}
+														)}</pre>
 												</div>
 											</details>
 
-											<details class="collapse collapse-arrow rounded-md border border-base-300 bg-base-100">
+											<details
+												class="collapse collapse-arrow rounded-md border border-base-300 bg-base-100"
+											>
 												<summary class="collapse-title min-h-0 px-3 py-2 text-xs font-semibold">
 													Retrieved context
 												</summary>
 												<div class="collapse-content px-3 pb-3">
-													<pre class="max-h-96 overflow-auto rounded bg-base-300/60 p-3 text-[11px] leading-relaxed">{prettyJson(message.context)}</pre>
+													<pre
+														class="max-h-96 overflow-auto rounded bg-base-300/60 p-3 text-[11px] leading-relaxed">{prettyJson(
+															message.context
+														)}</pre>
 												</div>
 											</details>
 										</div>

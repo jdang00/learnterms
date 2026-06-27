@@ -113,20 +113,18 @@ export const clearDocumentIngestion = internalMutation({
 		const document = await ctx.db.get(documentId);
 		if (!document) throw new Error('Document not found');
 
-		const {
-			ingestionStatus: _ingestionStatus,
-			ragNamespace: _ragNamespace,
-			ragEntryId: _ragEntryId,
-			extractionArtifactKeys: _extractionArtifactKeys,
-			extractionProvider: _extractionProvider,
-			extractionModel: _extractionModel,
-			indexedAt: _indexedAt,
-			mappedAt: _mappedAt,
-			indexError: _indexError,
-			pageCount: _pageCount,
-			topics: _topics,
-			...restMetadata
-		} = document.metadata ?? {};
+		const restMetadata = { ...(document.metadata ?? {}) };
+		delete restMetadata.ingestionStatus;
+		delete restMetadata.ragNamespace;
+		delete restMetadata.ragEntryId;
+		delete restMetadata.extractionArtifactKeys;
+		delete restMetadata.extractionProvider;
+		delete restMetadata.extractionModel;
+		delete restMetadata.indexedAt;
+		delete restMetadata.mappedAt;
+		delete restMetadata.indexError;
+		delete restMetadata.pageCount;
+		delete restMetadata.topics;
 
 		await ctx.db.patch(documentId, {
 			metadata: {

@@ -33,7 +33,7 @@
 	let lastMouseY = $state(0);
 	let imageContainer = $state<HTMLElement | null>(null);
 
-	const mediaQuery = useQuery((api as any).questionMedia.getByQuestionId, () =>
+	const mediaQuery = useQuery(api.questionMedia.getByQuestionId, () =>
 		questionId ? { questionId } : 'skip'
 	);
 
@@ -170,10 +170,14 @@
 											Rationale
 										</span>
 									{/if}
-									<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-200"></div>
+									<div
+										class="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-200"
+									></div>
 								</div>
 								{#if attachment.caption}
-									<div class="p-2 text-xs text-base-content/70 group-hover:text-base-content/90 transition-colors duration-200 break-words hyphens-auto">
+									<div
+										class="p-2 text-xs text-base-content/70 group-hover:text-base-content/90 transition-colors duration-200 break-words hyphens-auto"
+									>
 										{attachment.caption}
 									</div>
 								{/if}
@@ -189,30 +193,37 @@
 			</div>
 		</div>
 	{/if}
-{:else}
-	{#if visibleMedia.length > 0}
-		<button
-			class="btn btn-circle btn-lg btn-soft btn-info relative group"
-			onclick={handleCollapsedAttachmentClick}
-			title="View {visibleMedia.length} attachment{visibleMedia.length > 1 ? 's' : ''}"
-			aria-label="View attachments ({visibleMedia.length})"
-		>
-			<Paperclip size={20} />
-			{#if visibleMedia.length > 1}
-				<span class="absolute -top-1 -right-1 bg-error text-error-content text-xs rounded-full min-w-[1.2rem] h-5 flex items-center justify-center font-bold px-1">
-					{visibleMedia.length}
-				</span>
-			{:else}
-				<span class="absolute -top-1 -right-1 bg-info text-info-content text-xs rounded-full w-3 h-3 flex items-center justify-center">
-					✓
-				</span>
-			{/if}
-		</button>
-	{/if}
+{:else if visibleMedia.length > 0}
+	<button
+		class="btn btn-circle btn-lg btn-soft btn-info relative group"
+		onclick={handleCollapsedAttachmentClick}
+		title="View {visibleMedia.length} attachment{visibleMedia.length > 1 ? 's' : ''}"
+		aria-label="View attachments ({visibleMedia.length})"
+	>
+		<Paperclip size={20} />
+		{#if visibleMedia.length > 1}
+			<span
+				class="absolute -top-1 -right-1 bg-error text-error-content text-xs rounded-full min-w-[1.2rem] h-5 flex items-center justify-center font-bold px-1"
+			>
+				{visibleMedia.length}
+			</span>
+		{:else}
+			<span
+				class="absolute -top-1 -right-1 bg-info text-info-content text-xs rounded-full w-3 h-3 flex items-center justify-center"
+			>
+				✓
+			</span>
+		{/if}
+	</button>
 {/if}
 
 {#if showCompactAttachments && visibleMedia.length > 1}
-	<div class="fixed inset-0 z-40 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="compact-attachments-title">
+	<div
+		class="fixed inset-0 z-40 flex items-center justify-center"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="compact-attachments-title"
+	>
 		<button
 			class="fixed inset-0 bg-black/50 cursor-default"
 			onclick={closeCompactAttachments}
@@ -223,10 +234,19 @@
 			tabindex="-1"
 		></button>
 
-		<div class="bg-base-100 rounded-xl shadow-2xl border border-base-300 p-4 max-w-sm w-full mx-4 max-h-[80vh] overflow-y-auto relative z-10" role="document">
+		<div
+			class="bg-base-100 rounded-xl shadow-2xl border border-base-300 p-4 max-w-sm w-full mx-4 max-h-[80vh] overflow-y-auto relative z-10"
+			role="document"
+		>
 			<div class="flex items-center justify-between mb-4">
-				<h3 id="compact-attachments-title" class="font-semibold text-lg">Attachments ({visibleMedia.length})</h3>
-				<button class="btn btn-sm btn-ghost btn-circle" onclick={closeCompactAttachments} aria-label="Close attachments">
+				<h3 id="compact-attachments-title" class="font-semibold text-lg">
+					Attachments ({visibleMedia.length})
+				</h3>
+				<button
+					class="btn btn-sm btn-ghost btn-circle"
+					onclick={closeCompactAttachments}
+					aria-label="Close attachments"
+				>
 					✕
 				</button>
 			</div>
@@ -254,7 +274,9 @@
 								</span>
 							{/if}
 							{#if attachment.caption}
-								<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+								<div
+									class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2"
+								>
 									<p class="text-white text-xs truncate">{attachment.caption}</p>
 								</div>
 							{/if}
@@ -290,7 +312,12 @@
 					aria-label="Image viewer - click to zoom, drag to pan when zoomed"
 				>
 					<div
-						class="w-full h-full focus:outline-hidden focus:ring-2 focus:ring-primary {attachmentZoom > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'}"
+						class="w-full h-full focus:outline-hidden focus:ring-2 focus:ring-primary {attachmentZoom >
+						1
+							? isDragging
+								? 'cursor-grabbing'
+								: 'cursor-grab'
+							: 'cursor-zoom-in'}"
 						onclick={attachmentZoom <= 1 ? handleZoomToggle : undefined}
 						onkeydown={(e) => {
 							if (e.key === 'Enter' || e.key === ' ') {
@@ -307,7 +334,8 @@
 							alt={selectedAttachment.altText}
 							class:blur-md={shouldBlurAttachment(selectedAttachment)}
 							class="max-w-full max-h-full object-contain absolute inset-0 m-auto select-none"
-							style="transform: scale({attachmentZoom || 1}) translate({panX}px, {panY}px); transform-origin: center; transition: transform 0.1s ease-out;"
+							style="transform: scale({attachmentZoom ||
+								1}) translate({panX}px, {panY}px); transform-origin: center; transition: transform 0.1s ease-out;"
 							draggable="false"
 						/>
 					</div>
@@ -320,19 +348,46 @@
 				{/if}
 
 				<div class="flex justify-center gap-2 mt-4">
-					<button class="btn btn-sm btn-outline rounded-full" onclick={handleZoomOut} aria-label="Zoom out">
+					<button
+						class="btn btn-sm btn-outline rounded-full"
+						onclick={handleZoomOut}
+						aria-label="Zoom out"
+					>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
+							/>
 						</svg>
 					</button>
-					<button class="btn btn-sm btn-outline rounded-full" onclick={handleFitToScreen} aria-label="Fit to screen">
+					<button
+						class="btn btn-sm btn-outline rounded-full"
+						onclick={handleFitToScreen}
+						aria-label="Fit to screen"
+					>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+							/>
 						</svg>
 					</button>
-					<button class="btn btn-sm btn-outline rounded-full" onclick={handleZoomIn} aria-label="Zoom in">
+					<button
+						class="btn btn-sm btn-outline rounded-full"
+						onclick={handleZoomIn}
+						aria-label="Zoom in"
+					>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+							/>
 						</svg>
 					</button>
 				</div>

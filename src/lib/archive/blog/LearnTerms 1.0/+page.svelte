@@ -72,24 +72,26 @@
 				starred terms or those you missed.
 			</li>
 			<li>
-				<b>Decks Tab:</b> <a class="link-secondary" target="_blank" href="https://learnterms.com/terms">This tab</a> allows
+				<b>Decks Tab:</b>
+				<a class="link-secondary" target="_blank" href="https://learnterms.com/terms">This tab</a> allows
 				you to view all cards from the current week. You can toggle between a flashcard view or a table
 				of terms and definitions. The search bar is perfect for open-note quizzes, providing fast and
 				precise results through partial or full searches.
 			</li>
 			<li>
 				<b>Changelog:</b> Stay updated on site improvements via the
-				<a class="link-secondary" target="_blank" href="https://learnterms.com/changelog">changelog </a> in the footer. I’m
-				continuously refining the platform to improve your study experience.
+				<a class="link-secondary" target="_blank" href="https://learnterms.com/changelog"
+					>changelog
+				</a> in the footer. I’m continuously refining the platform to improve your study experience.
 			</li>
 			<li>
 				<b>Customizable Themes:</b> Themes add a fun twist to your study routine. Got a favorite color
 				scheme? Let me know!
 			</li>
 			<li>
-				<b>Login for Enhanced Features:</b> While you can use LearnTerms without an account, logging
-				in allows you to star cards. I don’t collect personal information, and your activity remains
-				private once you’re logged in.
+				<b>Login for Enhanced Features:</b> While you can use LearnTerms without an account, logging in
+				allows you to star cards. I don’t collect personal information, and your activity remains private
+				once you’re logged in.
 			</li>
 		</ul>
 
@@ -119,8 +121,10 @@
 			</li>
 			<li>
 				<b
-					>Eric, Sam, Kaity, <a href="https://learnterms.com/student-of-the-week" class="link-secondary" target="_blanks"
-						>Courtney</a
+					>Eric, Sam, Kaity, <a
+						href="https://learnterms.com/student-of-the-week"
+						class="link-secondary"
+						target="_blanks">Courtney</a
 					>, Cooper, Nate, Austin, Colby:</b
 				> Your feedback has been invaluable. Knowing LearnTerms has been helpful makes my heart warm.
 			</li>
@@ -140,6 +144,3 @@
 		list-style-type: '✨ ';
 	}
 </style>
-<script lang="ts">
-	import { resolve } from '$app/paths';
-</script>
