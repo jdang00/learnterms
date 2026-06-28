@@ -29,6 +29,8 @@ import type * as publicQueries from "../publicQueries.js";
 import type * as question from "../question.js";
 import type * as questionMedia from "../questionMedia.js";
 import type * as questionStudio from "../questionStudio.js";
+import type * as questionStudio_helpers from "../questionStudio/helpers.js";
+import type * as questionStudio_shared from "../questionStudio/shared.js";
 import type * as r2Documents from "../r2Documents.js";
 import type * as ragKnowledge from "../ragKnowledge.js";
 import type * as ragKnowledgeInternal from "../ragKnowledgeInternal.js";
@@ -66,6 +68,8 @@ declare const fullApi: ApiFromModules<{
   question: typeof question;
   questionMedia: typeof questionMedia;
   questionStudio: typeof questionStudio;
+  "questionStudio/helpers": typeof questionStudio_helpers;
+  "questionStudio/shared": typeof questionStudio_shared;
   r2Documents: typeof r2Documents;
   ragKnowledge: typeof ragKnowledge;
   ragKnowledgeInternal: typeof ragKnowledgeInternal;

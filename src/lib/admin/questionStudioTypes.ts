@@ -21,14 +21,14 @@ export const QUESTION_STUDIO_MODEL_OPTIONS: QuestionStudioModelOption[] = [
 		description: 'Fast default'
 	},
 	{
-		id: 'google/gemini-3.1-pro-preview',
-		label: 'Gemini 3.1 Pro Preview',
-		description: 'Frontier comparison'
+		id: 'openai/gpt-5.4-mini',
+		label: 'GPT-5.4 Mini',
+		description: 'OpenAI mini'
 	},
 	{
-		id: 'google/gemini-3-pro-preview',
-		label: 'Gemini 3 Pro Preview',
-		description: 'Alternate Gemini slug'
+		id: 'anthropic/claude-sonnet-4.6',
+		label: 'Claude Sonnet 4.6',
+		description: 'Anthropic Sonnet'
 	}
 ];
 
