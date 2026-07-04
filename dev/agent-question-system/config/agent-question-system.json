@@ -1,0 +1,218 @@
+{
+	"version": "2026-07-04.agent-optimized.v1",
+	"purpose": "Operational question-template configuration for the current agentic Question Studio pipeline.",
+	"runtimeContract": {
+		"type": "multiple_choice",
+		"minOptions": 3,
+		"maxOptions": 5,
+		"liveCorrectAnswerMode": "single",
+		"candidateCorrectAnswersLength": 1,
+		"contextPolicy": {
+			"prefer": ["className", "topicTitle", "sourceCitations"],
+			"avoid": ["classCode", "chapterTitle", "moduleTitle"],
+			"studentFacingTextMustNotMention": [
+				"source",
+				"notes",
+				"document",
+				"page",
+				"slide",
+				"citation",
+				"RAG"
+			]
+		}
+	},
+	"formatTemplates": {
+		"enabled": [
+			{
+				"id": "format.single_best",
+				"outputType": "multiple_choice",
+				"correctAnswerMode": "single",
+				"optionCount": {
+					"min": 3,
+					"max": 5,
+					"recommended": 4
+				},
+				"useWhen": "One option is best-supported by the source and distractors are plausible near-misses."
+			}
+		],
+		"configReadyButDisabled": [
+			{
+				"id": "format.select_all",
+				"outputType": "multiple_choice",
+				"correctAnswerMode": "multiple",
+				"enableWhen": "The candidate schema, coercion, review, and insert path allow correctAnswers.length > 1.",
+				"useWhen": "Several options are independently true and the complete set matters."
+			}
+		],
+		"unsupported": [
+			{
+				"id": "format.fill_blank",
+				"reason": "Current candidate output and grading path are multiple-choice only."
+			},
+			{
+				"id": "format.matching",
+				"reason": "Current candidate output has one flat options array, not prompt-answer pairs."
+			},
+			{
+				"id": "format.media_interpretation",
+				"reason": "Current worker prompt does not guarantee media attachment, rendering, or media-dependent review."
+			},
+			{
+				"id": "format.true_false",
+				"reason": "Current candidate schema requires 3-5 options, so true/false is not a separate two-option format."
+			}
+		]
+	},
+	"cognitiveTemplates": {
+		"enabled": [
+			"recall.definition",
+			"recall.threshold",
+			"recognition.feature",
+			"recognition.feature_set",
+			"discrimination.compare",
+			"mechanism.causal",
+			"diagnosis.case",
+			"interpretation.test",
+			"management.next_step",
+			"safety.contraindication",
+			"sequence.timeline"
+		],
+		"disabledByDefault": [
+			{
+				"id": "negative.exception",
+				"reason": "Negative stems are high-risk for ambiguity and should be used only when the boundary itself is the learning objective."
+			}
+		],
+		"adaptations": {
+			"recognition.feature_set": "Use only when multi-select is enabled; otherwise convert to a single-best feature question.",
+			"interpretation.test": "Use text, measurement, lab, field, or described exam data only; do not require hidden media.",
+			"sequence.timeline": "Use single-step order decisions such as which occurs first/next; do not use matching."
+		},
+		"stemPatterns": {
+			"recall.definition": [
+				"Which term refers to [definition]?",
+				"[Description] is best described by which term?",
+				"What is the name for [structure/finding/process]?",
+				"Which option correctly defines [term]?"
+			],
+			"recall.threshold": [
+				"Which value is the usual cutoff for [criterion]?",
+				"Which range is expected for [measurement] in [context]?",
+				"At what [value/time] should [interpretation/action] occur?",
+				"Which option best represents the threshold for [condition or decision]?"
+			],
+			"recognition.feature": [
+				"Which finding is most associated with [condition]?",
+				"Which feature best identifies [entity]?",
+				"Which statement correctly describes [topic]?",
+				"Which sign would most support [concept]?"
+			],
+			"recognition.feature_set": [
+				"Which option is the best defining feature of [category]?",
+				"Which statement best captures what [items] have in common?",
+				"Which feature most strongly belongs to [category]?",
+				"When multi-select is enabled: Which of the following are associated with [topic]?"
+			],
+			"discrimination.compare": [
+				"Which finding best differentiates [A] from [B]?",
+				"Which feature makes [A] more likely than [B]?",
+				"Which test result would best distinguish [A] from [B]?",
+				"Which option correctly separates [near-neighbor concepts]?"
+			],
+			"mechanism.causal": [
+				"Which mechanism explains [phenomenon]?",
+				"Why does [cause] lead to [outcome]?",
+				"Which pathway is responsible for [effect]?",
+				"Which change best accounts for [observed result]?"
+			],
+			"diagnosis.case": [
+				"A patient has [signal findings]. Which diagnosis is most likely?",
+				"Given [history/exam/test result], which condition best explains the presentation?",
+				"Which diagnosis best fits [key clue set]?",
+				"Which option is most consistent with [timeline plus decisive finding]?"
+			],
+			"interpretation.test": [
+				"Which interpretation is most consistent with [measurement/result]?",
+				"What does [test result] most strongly suggest?",
+				"Given [data], which conclusion is best supported?",
+				"Which option best explains the pattern in [described finding]?"
+			],
+			"management.next_step": [
+				"What is the most appropriate next step?",
+				"Which treatment is most appropriate given [constraint]?",
+				"Which management choice best fits [diagnosis/severity/risk factor]?",
+				"What should be done next after [finding/result]?"
+			],
+			"safety.contraindication": [
+				"Which factor is a contraindication to [action]?",
+				"Which risk matters most before [treatment/action]?",
+				"Which adverse effect should be monitored with [medication/intervention]?",
+				"Which option identifies the main harm to avoid in [scenario]?"
+			],
+			"sequence.timeline": [
+				"Which step should occur first in [process]?",
+				"Which event occurs next after [stage]?",
+				"Which stage is most consistent with [timing/finding]?",
+				"Which option correctly places [event] in the sequence?"
+			],
+			"negative.exception": [
+				"Which option is NOT expected in [condition]?",
+				"Which statement is the exception for [category]?",
+				"Which option is least consistent with [diagnosis/process]?",
+				"Which action would NOT be appropriate in [scenario]?"
+			]
+		}
+	},
+	"reasoningOrderMap": {
+		"first": ["recall.definition", "recall.threshold", "recognition.feature"],
+		"second": [
+			"mechanism.causal",
+			"interpretation.test",
+			"discrimination.compare",
+			"sequence.timeline",
+			"recognition.feature_set"
+		],
+		"third": [
+			"diagnosis.case",
+			"management.next_step",
+			"safety.contraindication",
+			"discrimination.compare",
+			"interpretation.test"
+		]
+	},
+	"defaultMix": {
+		"first": 0.35,
+		"second": 0.4,
+		"third": 0.25,
+		"notes": "Adjust by source. Do not force management, diagnosis, or mechanism when the source only supports recall."
+	},
+	"reviewPass": {
+		"acceptMinimumScore": 10,
+		"reviseMinimumScore": 7,
+		"rejectAtOrBelowScore": 6,
+		"requiredChecks": [
+			"schemaCompatibility",
+			"sourceSupport",
+			"answerContract",
+			"distractorQuality",
+			"rationaleTeachingValue",
+			"contextScrub",
+			"safety"
+		]
+	},
+	"reproducibility": {
+		"exampleSelection": "curated_manifest",
+		"runtimeTemplateSelection": "explicit_order_and_agent_reasoning",
+		"regexPolicy": "example_fixing_only",
+		"requiredManifestFields": [
+			"systemVersion",
+			"inputSnapshot",
+			"inputHash",
+			"configHash",
+			"selectionSeed",
+			"selectedTemplateIds",
+			"generatedAt"
+		],
+		"deterministicSortKeys": ["templateId", "className", "topicTitle", "stemHash"]
+	}
+}

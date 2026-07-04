@@ -31,6 +31,7 @@ import type * as questionMedia from "../questionMedia.js";
 import type * as questionStudio from "../questionStudio.js";
 import type * as questionStudio_helpers from "../questionStudio/helpers.js";
 import type * as questionStudio_shared from "../questionStudio/shared.js";
+import type * as questionStudio_templateTaxonomy from "../questionStudio/templateTaxonomy.js";
 import type * as r2Documents from "../r2Documents.js";
 import type * as ragKnowledge from "../ragKnowledge.js";
 import type * as ragKnowledgeInternal from "../ragKnowledgeInternal.js";
@@ -70,6 +71,7 @@ declare const fullApi: ApiFromModules<{
   questionStudio: typeof questionStudio;
   "questionStudio/helpers": typeof questionStudio_helpers;
   "questionStudio/shared": typeof questionStudio_shared;
+  "questionStudio/templateTaxonomy": typeof questionStudio_templateTaxonomy;
   r2Documents: typeof r2Documents;
   ragKnowledge: typeof ragKnowledge;
   ragKnowledgeInternal: typeof ragKnowledgeInternal;
