@@ -63,11 +63,34 @@ export type CandidateQuestion = {
 	sourceCitations?: SourceCitation[];
 	duplicateRisk: DuplicateRisk;
 	similarQuestionIds: Id<'question'>[];
+	cognitiveTemplate?: string;
 	metadata: {
 		model: string;
 		agentThreadId?: string;
 		sourceDocumentId: Id<'contentLib'>;
 	};
+};
+
+export type QuestionBlueprint = {
+	slotId: string;
+	topicId: string;
+	reasoningOrder: ReasoningOrder;
+	cognitiveTemplate: string;
+	targetObjective: string;
+	distractorStrategy: string;
+};
+
+export type LoopPass = 'plan' | 'draft' | 'gate' | 'done';
+
+export type LoopProgress = {
+	enabled?: boolean;
+	pass?: LoopPass;
+	blueprintCount?: number;
+	blueprintSource?: 'llm' | 'fallback';
+	gatePassedCount?: number;
+	gateRejectedCount?: number;
+	selectedCount?: number;
+	dedupedCount?: number;
 };
 
 export type GenerationPlan = {
@@ -79,6 +102,8 @@ export type GenerationPlan = {
 		topicCount: number;
 		topicTitles: string[];
 		sourcePages: number[];
+		cognitiveTemplate?: string;
+		targetObjective?: string;
 	}>;
 	topicAllocations: Array<{
 		taskId: string;
@@ -104,6 +129,7 @@ export type LiveWorkerTask = {
 	counts: Record<ReasoningOrder, number>;
 	plannedCount: number;
 	reasoningOrder: ReasoningOrder;
+	blueprint?: QuestionBlueprint;
 };
 
 export type CandidateReview = {
@@ -274,11 +300,34 @@ export const candidateValidator = v.object({
 	),
 	duplicateRisk: v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
 	similarQuestionIds: v.array(v.id('question')),
+	cognitiveTemplate: v.optional(v.string()),
 	metadata: v.object({
 		model: v.string(),
 		agentThreadId: v.optional(v.string()),
 		sourceDocumentId: v.id('contentLib')
 	})
+});
+
+export const blueprintValidator = v.object({
+	slotId: v.string(),
+	topicId: v.string(),
+	reasoningOrder: reasoningOrderValidator,
+	cognitiveTemplate: v.string(),
+	targetObjective: v.string(),
+	distractorStrategy: v.string()
+});
+
+export const loopProgressValidator = v.object({
+	enabled: v.optional(v.boolean()),
+	pass: v.optional(
+		v.union(v.literal('plan'), v.literal('draft'), v.literal('gate'), v.literal('done'))
+	),
+	blueprintCount: v.optional(v.number()),
+	blueprintSource: v.optional(v.union(v.literal('llm'), v.literal('fallback'))),
+	gatePassedCount: v.optional(v.number()),
+	gateRejectedCount: v.optional(v.number()),
+	selectedCount: v.optional(v.number()),
+	dedupedCount: v.optional(v.number())
 });
 
 export const generationPlanValidator = v.object({
@@ -290,7 +339,9 @@ export const generationPlanValidator = v.object({
 			reasoningOrder: reasoningOrderValidator,
 			topicCount: v.number(),
 			topicTitles: v.array(v.string()),
-			sourcePages: v.array(v.number())
+			sourcePages: v.array(v.number()),
+			cognitiveTemplate: v.optional(v.string()),
+			targetObjective: v.optional(v.string())
 		})
 	),
 	topicAllocations: v.array(
@@ -343,7 +394,8 @@ export const liveWorkerTaskValidator = v.object({
 		third: v.number()
 	}),
 	plannedCount: v.number(),
-	reasoningOrder: reasoningOrderValidator
+	reasoningOrder: reasoningOrderValidator,
+	blueprint: v.optional(blueprintValidator)
 });
 
 export const topicMapSchema = z.object({

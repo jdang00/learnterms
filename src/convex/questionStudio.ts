@@ -12,7 +12,7 @@ import {
 import { NoObjectGeneratedError, type ToolSet } from 'ai';
 import { components, internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
-import type { MutationCtx, QueryCtx } from './_generated/server';
+import type { ActionCtx, MutationCtx, QueryCtx } from './_generated/server';
 import { z } from 'zod/v4';
 import { applyQuestionCreationDeltaAndEvaluateBadges } from './badgeEngine';
 import {
@@ -36,6 +36,7 @@ import {
 	candidateValidator,
 	generationPlanValidator,
 	liveWorkerTaskValidator,
+	loopProgressValidator,
 	openRouter,
 	questionStudioModelValidator,
 	questionStudioProviderOptions,
@@ -53,6 +54,7 @@ import type {
 	GenerationJobSnapshot,
 	LiveWorkerTask,
 	MapDocumentTopicMapResult,
+	QuestionBlueprint,
 	QuestionStudioModel,
 	QueuedGenerationResult,
 	SourceCitation,
@@ -80,6 +82,7 @@ import {
 	hydrateGenerationJob,
 	insertGenerationJobEvent,
 	loadMarkdownPages,
+	mechanicalCandidateGate,
 	normalizeCandidateDraftPayload,
 	normalizeText,
 	pagesForTask,
@@ -96,6 +99,16 @@ import {
 	taskTopics,
 	validateCounts
 } from './questionStudio/helpers';
+import {
+	AGENT_LOOP_BLUEPRINT_MAX_OUTPUT_TOKENS,
+	AGENT_LOOP_MAX_QUESTIONS,
+	AGENT_LOOP_MODELS,
+	DEFAULT_ORDER_MIX,
+	ENABLED_COGNITIVE_TEMPLATES,
+	blueprintSchema,
+	cognitiveTemplateCard,
+	defaultTemplateForOrder
+} from './questionStudio/agentLoopConfig';
 
 const questionStudioRateLimiter = new RateLimiter(components.rateLimiter, {
 	questionStudioGenerationStart: { kind: 'fixed window', rate: 6, period: 10 * MINUTE },
@@ -119,7 +132,7 @@ function normalizeQuestionStudioModel(model?: string): QuestionStudioModel {
 	return trimmed || QUESTION_STUDIO_MODEL;
 }
 
-function createQuestionStudioAgent(tools?: ToolSet, model = QUESTION_STUDIO_MODEL) {
+function createQuestionStudioAgent(tools?: ToolSet, model = QUESTION_STUDIO_MODEL, maxSteps = 4) {
 	return new Agent(components.agent, {
 		name: 'Question Studio Curator',
 		languageModel: openRouter().chat(model),
@@ -131,7 +144,7 @@ function createQuestionStudioAgent(tools?: ToolSet, model = QUESTION_STUDIO_MODE
 			'Multiple choice questions must have one correct answer, plausible distractors, and a concise rationale.'
 		].join('\n'),
 		tools,
-		stopWhen: stepCountIs(4),
+		stopWhen: stepCountIs(maxSteps),
 		usageHandler: async (ctx, { usage, userId }) => {
 			if (!userId || !usage?.totalTokens) return;
 			await questionStudioRateLimiter.limit(ctx, 'questionStudioTokenUsagePerUser', {
@@ -681,7 +694,8 @@ export const createGenerationJob = mutation({
 		documentId: v.id('contentLib'),
 		moduleId: v.id('module'),
 		requestedCount: v.number(),
-		model: v.optional(questionStudioModelValidator)
+		model: v.optional(questionStudioModelValidator),
+		agentLoop: v.optional(v.boolean())
 	},
 	handler: async (ctx, args) => {
 		const { user, classDoc } = await assertSaveAccess(ctx, {
@@ -708,6 +722,7 @@ export const createGenerationJob = mutation({
 			statusText: 'Queued candidate generation.',
 			model,
 			requestedCount: Math.floor(args.requestedCount),
+			...(args.agentLoop ? { loop: { enabled: true, pass: 'plan' as const } } : {}),
 			blockedDuplicateCount: 0,
 			candidateCount: 0,
 			reviewCount: 0,
@@ -801,6 +816,7 @@ export const updateGenerationJob = internalMutation({
 		eventDetail: v.optional(v.string()),
 		threadId: v.optional(v.string()),
 		plan: v.optional(generationPlanValidator),
+		loop: v.optional(loopProgressValidator),
 		reviews: v.optional(v.array(candidateReviewValidator)),
 		candidates: v.optional(v.array(candidateValidator)),
 		blockedDuplicateCount: v.optional(v.number()),
@@ -825,6 +841,7 @@ export const updateGenerationJob = internalMutation({
 			(args.statusText && !args.eventLabel) ||
 			args.threadId ||
 			args.plan ||
+			args.loop ||
 			args.reviews ||
 			args.candidates ||
 			args.blockedDuplicateCount !== undefined ||
@@ -877,6 +894,20 @@ export const updateGenerationJob = internalMutation({
 			...(args.statusText ? { statusText: args.statusText } : {}),
 			...(args.threadId ? { threadId: args.threadId } : {}),
 			...(args.plan ? { plan: args.plan } : {}),
+			...(args.loop
+				? {
+						loop: {
+							enabled: args.loop.enabled ?? job.loop?.enabled ?? true,
+							pass: args.loop.pass ?? job.loop?.pass ?? ('plan' as const),
+							blueprintCount: args.loop.blueprintCount ?? job.loop?.blueprintCount,
+							blueprintSource: args.loop.blueprintSource ?? job.loop?.blueprintSource,
+							gatePassedCount: args.loop.gatePassedCount ?? job.loop?.gatePassedCount,
+							gateRejectedCount: args.loop.gateRejectedCount ?? job.loop?.gateRejectedCount,
+							selectedCount: args.loop.selectedCount ?? job.loop?.selectedCount,
+							dedupedCount: args.loop.dedupedCount ?? job.loop?.dedupedCount
+						}
+					}
+				: {}),
 			...(args.blockedDuplicateCount !== undefined
 				? { blockedDuplicateCount: args.blockedDuplicateCount }
 				: {}),
@@ -956,7 +987,8 @@ export const generateCandidateWorker = internalAction({
 		model: questionStudioModelValidator,
 		focusNotes: v.optional(v.string()),
 		startPage: v.optional(v.number()),
-		endPage: v.optional(v.number())
+		endPage: v.optional(v.number()),
+		agentLoop: v.optional(v.boolean())
 	},
 	handler: async (ctx, args) => {
 		const report = async (update: Record<string, unknown>) => {
@@ -1090,7 +1122,14 @@ export const generateCandidateWorker = internalAction({
 				eventLabel: 'Worker started',
 				eventDetail: `${task.plannedCount} ${task.reasoningOrder}-order candidate${task.plannedCount === 1 ? '' : 's'} across ${allocations.length} topic${allocations.length === 1 ? '' : 's'} from pages ${pageNumbers.join(', ')}.`
 			});
-			const retrievalQuery = defaultWorkerRetrievalQuery(task);
+			const retrievalQuery = task.blueprint
+				? [
+						`${task.reasoningOrder}-order ${task.blueprint.cognitiveTemplate} question`,
+						task.blueprint.targetObjective,
+						task.blueprint.distractorStrategy,
+						task.topicAllocations.map((allocation) => allocation.topic.title).join('; ')
+					].join('\n')
+				: defaultWorkerRetrievalQuery(task);
 			await report({
 				statusText: `Searching source for ${label}.`,
 				eventLabel: 'Source search',
@@ -1171,9 +1210,22 @@ export const generateCandidateWorker = internalAction({
 				},
 				prompt: [
 					'Generate a small batch of NBEO board-style multiple-choice optometry question candidates from this one work order.',
+					...(task.blueprint
+						? [
+								[
+									'Blueprint contract for this slot. The question must test exactly this:',
+									`Cognitive template: ${task.blueprint.cognitiveTemplate}`,
+									cognitiveTemplateCard(task.blueprint.cognitiveTemplate),
+									`Target objective: ${task.blueprint.targetObjective}`,
+									`Distractor strategy: ${task.blueprint.distractorStrategy}`,
+									'Before drafting, call searchSourceChunks with the target objective to pull the exact supporting evidence. If the retrieved chunks cut off mid-explanation, call getSourcePages for the surrounding pages. Do not draft from memory.'
+								].join('\n')
+							]
+						: [
+								'Use searchSourceChunks for targeted evidence when the source brief is thin, getSourcePages for nearby page context, and getTopicCoverageMap to avoid over-covered topics.'
+							]),
 					'Return the final structured object only. Do not include analysis, markdown, or prose outside the object.',
 					'Use only the source brief, retrieved context from this thread, selected topic metadata, and source-intelligence tool results.',
-					'Use searchSourceChunks for targeted evidence when the source brief is thin, getSourcePages for nearby page context, and getTopicCoverageMap to avoid over-covered topics.',
 					focusInstruction,
 					reasoningOrderPrompt(),
 					questionWritingSkillPrompt(),
@@ -1217,6 +1269,7 @@ export const generateCandidateWorker = internalAction({
 				);
 				if (!coerced) continue;
 				if (candidateHasProvenanceLanguage(coerced)) continue;
+				if (task.blueprint) coerced.cognitiveTemplate = task.blueprint.cognitiveTemplate;
 				const duplicate = scoreDuplicateRisk(coerced, context.existingQuestions, accepted);
 				coerced.duplicateRisk =
 					duplicate.risk === 'high' ? 'high' : (raw.duplicateRisk ?? duplicate.risk);
@@ -1313,42 +1366,20 @@ export const reviewGenerationJob = internalAction({
 			await report({
 				statusText: 'Running local candidate checks.',
 				eventLabel: 'Reviewing',
-				eventDetail: `${candidates.length} candidates are ready for local source, answer, and provenance checks.`
+				eventDetail: `${candidates.length} candidates are ready for local source, answer, and provenance checks.`,
+				...(job.loop ? { loop: { pass: 'gate' as const } } : {})
 			});
 			const reviews: CandidateReview[] = candidates.map((candidate, index) => {
-				const reasons: string[] = [];
-				let verdict: CandidateReview['verdict'] = 'accept';
-				let sourceSupport: CandidateReview['sourceSupport'] = 'strong';
-				let answerQuality: CandidateReview['answerQuality'] = 'clear';
-				if (candidateHasProvenanceLanguage(candidate)) {
-					verdict = 'reject';
-					answerQuality = 'ambiguous';
-					reasons.push('Student-facing text includes source/provenance language.');
-				}
-				if (!candidate.sourceCitations?.length || candidate.sourcePageNumbers.length === 0) {
-					verdict = 'reject';
-					sourceSupport = 'weak';
-					reasons.push('Missing page-level source citations.');
-				}
-				if (
-					candidate.correctAnswers.length !== 1 ||
-					!candidate.options.some(
-						(option) => normalizeText(option) === normalizeText(candidate.correctAnswers[0] ?? '')
-					)
-				) {
-					verdict = 'reject';
-					answerQuality = 'ambiguous';
-					reasons.push('Correct answer does not match exactly one option.');
-				}
-				if (reasons.length === 0) {
-					reasons.push('Passed local schema, citation, answer, duplicate, and provenance checks.');
-				}
+				const gate = mechanicalCandidateGate(candidate);
+				const reasons = gate.pass
+					? ['Passed local schema, citation, answer, duplicate, and provenance checks.']
+					: gate.reasons;
 				return {
 					candidateIndex: index,
-					verdict,
+					verdict: gate.pass ? 'accept' : 'reject',
 					reasons: reasons.map((reason) => cleanPlainText(reason, MAX_REVIEW_REASON_CHARS)),
-					sourceSupport,
-					answerQuality
+					sourceSupport: gate.sourceSupport,
+					answerQuality: gate.answerQuality
 				};
 			});
 			const reviewByIndex = new Map(reviews.map((review) => [review.candidateIndex, review]));
@@ -1373,6 +1404,16 @@ export const reviewGenerationJob = internalAction({
 						? 'Draft workers and local review finished.'
 						: 'Draft workers finished with partial usable candidates.',
 				candidates: finalCandidates,
+				...(job.loop
+					? {
+							loop: {
+								pass: 'done' as const,
+								gatePassedCount: finalCandidates.length,
+								gateRejectedCount: reviews.length - finalCandidates.length,
+								selectedCount: finalCandidates.length
+							}
+						}
+					: {}),
 				completed: true
 			});
 		} catch (error) {
@@ -1550,6 +1591,120 @@ export const mapDocumentTopicMap = action({
 	}
 });
 
+// Blueprint pass for the agent loop: one planner call assigns each draft slot a cognitive
+// template, target objective, and distractor strategy. Falls back to a deterministic
+// rotation from the reasoning-order template map when the planner model fails.
+async function assignBlueprints(
+	ctx: ActionCtx,
+	input: {
+		tasks: LiveWorkerTask[];
+		topics: TopicMapItem[];
+		counts: Record<'first' | 'second' | 'third', number>;
+		focusNotes: string;
+		model: QuestionStudioModel;
+		userId: string;
+		documentTitle: string;
+		tools?: ToolSet;
+	}
+): Promise<'llm' | 'fallback'> {
+	const fallbackBlueprint = (task: LiveWorkerTask, index: number): QuestionBlueprint => {
+		const topic = task.topicAllocations[0]?.topic;
+		return {
+			slotId: task.taskId,
+			topicId: topic?.topicId ?? input.topics[0]?.topicId ?? 'topic-1',
+			reasoningOrder: task.reasoningOrder,
+			cognitiveTemplate: defaultTemplateForOrder(task.reasoningOrder, index),
+			targetObjective:
+				topic?.learningObjectives[0] ?? topic?.title ?? 'Core concept from the assigned topic',
+			distractorStrategy: 'Near-miss options from adjacent concepts in the same topic.'
+		};
+	};
+
+	let slots: z.infer<typeof blueprintSchema>['slots'] = [];
+	try {
+		const blueprintModel = AGENT_LOOP_MODELS.blueprint ?? input.model;
+		const agent = createQuestionStudioAgent(input.tools, blueprintModel);
+		const { threadId } = await agent.createThread(ctx, {
+			userId: input.userId,
+			title: `Blueprint: ${input.documentTitle}`
+		});
+		const templateMenu = ENABLED_COGNITIVE_TEMPLATES.map(
+			(id) => `- ${id}: ${cognitiveTemplateCard(id).split('\n')[0]}`
+		).join('\n');
+		const slotSkeleton = input.tasks.map((task) => {
+			const topic = task.topicAllocations[0]?.topic;
+			return {
+				slotId: task.taskId,
+				reasoningOrder: task.reasoningOrder,
+				topicId: topic?.topicId ?? '',
+				topicTitle: topic?.title ?? '',
+				topicSummary: cleanPlainText(topic?.summary ?? '', 300),
+				learningObjectives: (topic?.learningObjectives ?? []).slice(0, 4),
+				keyTerms: (topic?.keyTerms ?? []).slice(0, 8)
+			};
+		});
+		const result = (await agent.generateObject(
+			ctx,
+			{ threadId, userId: input.userId },
+			{
+				schema: blueprintSchema,
+				schemaName: 'QuestionBlueprints',
+				schemaDescription:
+					'Per-slot generation blueprints assigning cognitive templates to a question batch.',
+				providerOptions: questionStudioProviderOptions(blueprintModel),
+				callSettings: {
+					maxOutputTokens: AGENT_LOOP_BLUEPRINT_MAX_OUTPUT_TOKENS,
+					temperature: 0.2,
+					maxRetries: 0
+				},
+				prompt: [
+					'Plan one question blueprint per slot for an optometry question batch.',
+					'For each slot keep slotId, topicId, and reasoningOrder exactly as given. Assign cognitiveTemplate (from the enabled list, appropriate for the reasoning order), targetObjective (one specific source-supported learning objective), and distractorStrategy (one sentence naming the confusion the wrong options should represent).',
+					...(input.tools
+						? [
+								'First call getTopicCoverageMap and steer objectives toward under-covered topics; avoid duplicating what existing questions already test.',
+								'If you are unsure an objective is actually taught in the source, call searchSourceChunks with the objective before assigning it. Every targetObjective must be answerable from the source alone.'
+							]
+						: []),
+					'Vary templates across slots so the batch covers different thinking tasks. Do not assign the same template to every slot of an order. Give each slot on the same topic a different targetObjective.',
+					'Distractor strategies must name a specific confusion (a neighbor concept, a reversed mechanism, an off-by-one-zone value), never generic wording like "plausible wrong answers".',
+					reasoningOrderPrompt(),
+					`Enabled cognitive templates:\n${templateMenu}`,
+					`Requested question mix: ${input.counts.first} first-order, ${input.counts.second} second-order, ${input.counts.third} third-order (guideline mix: ${Math.round(DEFAULT_ORDER_MIX.first * 100)}/${Math.round(DEFAULT_ORDER_MIX.second * 100)}/${Math.round(DEFAULT_ORDER_MIX.third * 100)}).`,
+					input.focusNotes ? `Focus notes from the curator:\n${input.focusNotes}` : '',
+					`Slots:\n${JSON.stringify(slotSkeleton, null, 2)}`
+				]
+					.filter(Boolean)
+					.join('\n\n')
+			} as unknown as Parameters<QuestionStudioAgent['generateObject']>[2],
+			{ storageOptions: { saveMessages: 'promptAndOutput' } }
+		)) as { object: z.infer<typeof blueprintSchema> };
+		slots = result.object.slots;
+	} catch {
+		slots = [];
+	}
+
+	const slotById = new Map(slots.map((slot) => [slot.slotId, slot]));
+	let matchedCount = 0;
+	input.tasks.forEach((task, index) => {
+		const matched = slotById.get(task.taskId);
+		if (matched && matched.reasoningOrder === task.reasoningOrder) {
+			matchedCount += 1;
+			task.blueprint = {
+				slotId: matched.slotId,
+				topicId: matched.topicId,
+				reasoningOrder: task.reasoningOrder,
+				cognitiveTemplate: matched.cognitiveTemplate,
+				targetObjective: cleanPlainText(matched.targetObjective, 200),
+				distractorStrategy: cleanPlainText(matched.distractorStrategy, 200)
+			};
+		} else {
+			task.blueprint = fallbackBlueprint(task, index);
+		}
+	});
+	return matchedCount > 0 ? 'llm' : 'fallback';
+}
+
 export const generateCandidates = action({
 	args: {
 		documentId: v.id('contentLib'),
@@ -1564,7 +1719,8 @@ export const generateCandidates = action({
 		}),
 		focusNotes: v.optional(v.string()),
 		jobId: v.optional(v.id('questionStudioJobs')),
-		model: v.optional(questionStudioModelValidator)
+		model: v.optional(questionStudioModelValidator),
+		agentLoop: v.optional(v.boolean())
 	},
 	handler: async (ctx, args): Promise<QueuedGenerationResult> => {
 		const report = async (update: Record<string, unknown>) => {
@@ -1647,21 +1803,71 @@ export const generateCandidates = action({
 				eventDetail: `${topics.length} topics and ${selectedPages.length} pages are in scope.`
 			});
 
+			const loopMode = Boolean(args.agentLoop) && total <= AGENT_LOOP_MAX_QUESTIONS;
 			const bufferedCounts = addRecoveryWorkerBuffer(counts, total);
 			const { plan, tasks } = buildLiveGenerationWork(topics, bufferedCounts);
-			const recoveryWorkerCount = tasks.reduce((sum, task) => sum + task.plannedCount, 0) - total;
-			if (recoveryWorkerCount > 0) {
+			const extraWorkerCount = tasks.reduce((sum, task) => sum + task.plannedCount, 0) - total;
+			if (extraWorkerCount > 0) {
 				plan.coverageNotes.push(
-					`Added ${recoveryWorkerCount} parallel recovery worker${recoveryWorkerCount === 1 ? '' : 's'} so local validation can still return ${total} usable questions.`
+					`Added ${extraWorkerCount} parallel recovery worker${extraWorkerCount === 1 ? '' : 's'} so local validation can still return ${total} usable questions.`
 				);
 			}
 
-			await report({
-				statusText: 'Coverage plan ready; starting smart draft workers.',
-				eventLabel: 'Plan ready',
-				eventDetail: `${tasks.length} draft worker${tasks.length === 1 ? '' : 's'} queued. Each worker has at most ${MAX_QUESTIONS_PER_WORKER} questions.`,
-				plan
-			});
+			if (loopMode) {
+				await report({
+					statusText: 'Planning question blueprints.',
+					eventLabel: 'Planning blueprints',
+					eventDetail: `Assigning cognitive templates to ${tasks.length} question slots.`,
+					loop: { enabled: true, pass: 'plan' }
+				});
+				const plannerNoteFile = cleanPlainText(
+					String(context.document.metadata?.originalFileName ?? context.document.title),
+					260
+				);
+				const plannerTools = createSourceIntelligenceTools({
+					ctx,
+					documentId: args.documentId,
+					documentTitle: context.document.title,
+					noteFile: plannerNoteFile,
+					selectedPages,
+					topics,
+					existingQuestions: context.existingQuestions
+				});
+				const blueprintSource = await assignBlueprints(ctx, {
+					tasks,
+					topics,
+					counts,
+					focusNotes,
+					model,
+					userId: identity.subject,
+					documentTitle: context.document.title,
+					tools: plannerTools
+				});
+				tasks.forEach((task, index) => {
+					plan.workerBatches[index].cognitiveTemplate = task.blueprint?.cognitiveTemplate;
+					plan.workerBatches[index].targetObjective = task.blueprint?.targetObjective;
+				});
+				plan.coverageNotes.push(
+					`Blueprint pass assigned cognitive templates to ${tasks.length} slots (${blueprintSource}).`
+				);
+				await report({
+					statusText: 'Blueprints ready; starting draft workers.',
+					eventLabel: blueprintSource === 'llm' ? 'Blueprints ready' : 'Blueprint fallback',
+					eventDetail:
+						blueprintSource === 'llm'
+							? `${tasks.length} blueprints assigned by the planner model.`
+							: `Planner model unavailable; assigned ${tasks.length} blueprints deterministically from the reasoning-order template map.`,
+					plan,
+					loop: { pass: 'draft', blueprintCount: tasks.length, blueprintSource }
+				});
+			} else {
+				await report({
+					statusText: 'Coverage plan ready; starting smart draft workers.',
+					eventLabel: 'Plan ready',
+					eventDetail: `${tasks.length} draft worker${tasks.length === 1 ? '' : 's'} queued. Each worker has at most ${MAX_QUESTIONS_PER_WORKER} questions.`,
+					plan
+				});
+			}
 
 			for (const [workerIndex, task] of tasks.entries()) {
 				await ctx.scheduler.runAfter(
@@ -1678,7 +1884,8 @@ export const generateCandidates = action({
 						model,
 						focusNotes,
 						startPage: args.startPage,
-						endPage: args.endPage
+						endPage: args.endPage,
+						agentLoop: loopMode || undefined
 					}
 				);
 			}

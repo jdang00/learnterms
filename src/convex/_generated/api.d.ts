@@ -29,6 +29,7 @@ import type * as publicQueries from "../publicQueries.js";
 import type * as question from "../question.js";
 import type * as questionMedia from "../questionMedia.js";
 import type * as questionStudio from "../questionStudio.js";
+import type * as questionStudio_agentLoopConfig from "../questionStudio/agentLoopConfig.js";
 import type * as questionStudio_helpers from "../questionStudio/helpers.js";
 import type * as questionStudio_shared from "../questionStudio/shared.js";
 import type * as questionStudio_templateTaxonomy from "../questionStudio/templateTaxonomy.js";
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   question: typeof question;
   questionMedia: typeof questionMedia;
   questionStudio: typeof questionStudio;
+  "questionStudio/agentLoopConfig": typeof questionStudio_agentLoopConfig;
   "questionStudio/helpers": typeof questionStudio_helpers;
   "questionStudio/shared": typeof questionStudio_shared;
   "questionStudio/templateTaxonomy": typeof questionStudio_templateTaxonomy;

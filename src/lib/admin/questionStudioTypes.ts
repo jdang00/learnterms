@@ -38,6 +38,16 @@ export interface QuestionStudioPhase {
 	state: PhaseState;
 }
 
+export const AGENT_LOOP_MAX_QUESTIONS = 15;
+
+export type LoopPassKey = 'plan' | 'draft' | 'gate';
+
+export interface LoopPassCard {
+	key: LoopPassKey;
+	label: string;
+	description: string;
+}
+
 export interface TopicMapItem {
 	topicId: string;
 	title: string;
@@ -68,6 +78,7 @@ export interface CandidateQuestion {
 	}>;
 	duplicateRisk: DuplicateRisk;
 	similarQuestionIds: Id<'question'>[];
+	cognitiveTemplate?: string;
 	metadata: {
 		model: string;
 		agentThreadId?: string;

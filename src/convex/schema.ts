@@ -28,6 +28,7 @@ const questionStudioCandidate = v.object({
 	sourceCitations: v.optional(v.array(questionStudioSourceCitation)),
 	duplicateRisk: v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
 	similarQuestionIds: v.array(v.id('question')),
+	cognitiveTemplate: v.optional(v.string()),
 	metadata: v.object({
 		model: v.string(),
 		agentThreadId: v.optional(v.string()),
@@ -62,7 +63,9 @@ const questionStudioGenerationPlan = v.object({
 			reasoningOrder: questionStudioReasoningOrder,
 			topicCount: v.number(),
 			topicTitles: v.array(v.string()),
-			sourcePages: v.array(v.number())
+			sourcePages: v.array(v.number()),
+			cognitiveTemplate: v.optional(v.string()),
+			targetObjective: v.optional(v.string())
 		})
 	),
 	topicAllocations: v.array(
@@ -78,6 +81,17 @@ const questionStudioGenerationPlan = v.object({
 	),
 	coverageNotes: v.array(v.string()),
 	riskNotes: v.array(v.string())
+});
+
+const questionStudioLoopProgress = v.object({
+	enabled: v.boolean(),
+	pass: v.union(v.literal('plan'), v.literal('draft'), v.literal('gate'), v.literal('done')),
+	blueprintCount: v.optional(v.number()),
+	blueprintSource: v.optional(v.union(v.literal('llm'), v.literal('fallback'))),
+	gatePassedCount: v.optional(v.number()),
+	gateRejectedCount: v.optional(v.number()),
+	selectedCount: v.optional(v.number()),
+	dedupedCount: v.optional(v.number())
 });
 
 export default defineSchema({
@@ -789,6 +803,7 @@ export default defineSchema({
 		threadId: v.optional(v.string()),
 		requestedCount: v.number(),
 		plan: v.optional(questionStudioGenerationPlan),
+		loop: v.optional(questionStudioLoopProgress),
 		blockedDuplicateCount: v.optional(v.number()),
 		candidateCount: v.optional(v.number()),
 		reviewCount: v.optional(v.number()),

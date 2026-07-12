@@ -21,6 +21,7 @@ import {
 } from './shared';
 import type {
 	CandidateQuestion,
+	CandidateReview,
 	DocumentRagFilters,
 	DocumentRagMetadata,
 	DuplicateRisk,
@@ -818,6 +819,35 @@ function candidateHasProvenanceLanguage(candidate: CandidateQuestion) {
 	].some(hasProvenanceLanguage);
 }
 
+function mechanicalCandidateGate(candidate: CandidateQuestion): {
+	pass: boolean;
+	reasons: string[];
+	sourceSupport: CandidateReview['sourceSupport'];
+	answerQuality: CandidateReview['answerQuality'];
+} {
+	const reasons: string[] = [];
+	let sourceSupport: CandidateReview['sourceSupport'] = 'strong';
+	let answerQuality: CandidateReview['answerQuality'] = 'clear';
+	if (candidateHasProvenanceLanguage(candidate)) {
+		answerQuality = 'ambiguous';
+		reasons.push('Student-facing text includes source/provenance language.');
+	}
+	if (!candidate.sourceCitations?.length || candidate.sourcePageNumbers.length === 0) {
+		sourceSupport = 'weak';
+		reasons.push('Missing page-level source citations.');
+	}
+	if (
+		candidate.correctAnswers.length !== 1 ||
+		!candidate.options.some(
+			(option) => normalizeText(option) === normalizeText(candidate.correctAnswers[0] ?? '')
+		)
+	) {
+		answerQuality = 'ambiguous';
+		reasons.push('Correct answer does not match exactly one option.');
+	}
+	return { pass: reasons.length === 0, reasons, sourceSupport, answerQuality };
+}
+
 function stemLooksLikePatientCase(stem: string) {
 	const normalized = stem.toLowerCase();
 	return [
@@ -1016,6 +1046,7 @@ export {
 	hydrateGenerationJob,
 	insertGenerationJobEvent,
 	loadMarkdownPages,
+	mechanicalCandidateGate,
 	normalizeJobEvent,
 	normalizeCandidateDraftPayload,
 	normalizeText,

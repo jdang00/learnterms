@@ -202,9 +202,15 @@
 		}
 
 		if (draftingDone) {
+			const loopPass = job.loop?.pass;
+			const loopReviewTitle = loopPass === 'gate' ? 'Checking mechanics' : 'Reviewing for quality';
 			out.push({
 				id: 'review',
-				title: ready ? 'Checked every question' : 'Reviewing for quality',
+				title: ready
+					? 'Checked every question'
+					: job.loop
+						? loopReviewTitle
+						: 'Reviewing for quality',
 				marker: ready ? 'check' : 'active',
 				shimmer: !ready && running,
 				children:
