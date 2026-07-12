@@ -9,13 +9,10 @@ import { r2 } from '../r2Documents';
 import {
 	EMBEDDING_DIMENSION,
 	EMBEDDING_MODEL,
-	MAX_EXTRA_RECOVERY_WORKERS,
 	MAX_GENERATED_QUESTIONS,
 	MAX_JOB_EVENT_DETAIL_CHARS,
 	MAX_QUESTIONS_PER_WORKER,
 	MAX_WORKER_RAG_CHARS,
-	MAX_WORKER_SOURCE_CHARS,
-	RECOVERY_WORKER_RATIO,
 	candidateSchema,
 	openRouter
 } from './shared';
@@ -164,9 +161,9 @@ function createSourceIntelligenceTools(args: {
 		}),
 		getSourcePages: createTool({
 			description:
-				'Return extracted source text for specific allowed page numbers from the selected document. Use this for nearby context after a search result or citation.',
+				'Return compact extracted text for up to three allowed pages. Use only when a search chunk needs nearby context.',
 			inputSchema: z.object({
-				pageNumbers: z.array(z.number().int().positive()).min(1).max(5)
+				pageNumbers: z.array(z.number().int().positive()).min(1).max(3)
 			}),
 			execute: async (_toolCtx, { pageNumbers }) => {
 				const pages = uniqueSortedNumbers(pageNumbers)
@@ -175,7 +172,7 @@ function createSourceIntelligenceTools(args: {
 				return {
 					documentTitle: args.documentTitle,
 					pageNumbers: pages.map((page) => page.pageNumber),
-					text: pagesToPromptText(pages, MAX_WORKER_SOURCE_CHARS)
+					text: pagesToPromptText(pages, MAX_WORKER_RAG_CHARS)
 				};
 			}
 		}),
@@ -332,27 +329,6 @@ function validateCounts(counts: { first: number; second: number; third: number }
 		throw new Error(`Create between 1 and ${MAX_GENERATED_QUESTIONS} questions`);
 	}
 	return { counts: normalized, total };
-}
-
-function addRecoveryWorkerBuffer(
-	counts: Record<ReasoningOrder, number>,
-	requestedTotal: number
-): Record<ReasoningOrder, number> {
-	const extraBudget = Math.min(
-		MAX_EXTRA_RECOVERY_WORKERS,
-		Math.max(0, MAX_GENERATED_QUESTIONS - requestedTotal),
-		Math.ceil(requestedTotal * RECOVERY_WORKER_RATIO)
-	);
-	if (extraBudget <= 0) return counts;
-	const buffered = { ...counts };
-	const orders = (['first', 'second', 'third'] as const)
-		.filter((order) => counts[order] > 0)
-		.sort((a, b) => counts[b] - counts[a]);
-	if (orders.length === 0) return buffered;
-	for (let index = 0; index < extraBudget; index++) {
-		buffered[orders[index % orders.length]] += 1;
-	}
-	return buffered;
 }
 
 function existingQuestionStemsToPrompt(questions: ExistingQuestionSummary[]) {
@@ -542,16 +518,14 @@ function buildLiveGenerationWork(
 		const pool = pickTopicPool(order);
 		let cursor = 0;
 		while (remaining > 0) {
-			const plannedCount = Math.min(MAX_QUESTIONS_PER_WORKER, remaining);
-			const allocationByTopicId = new Map<string, LiveWorkerTopicAllocation>();
-			for (let index = 0; index < plannedCount; index++) {
-				const topic = pool[(cursor + index) % pool.length];
-				const existing = allocationByTopicId.get(topic.topicId);
-				if (existing) existing.plannedCount += 1;
-				else allocationByTopicId.set(topic.topicId, { topic, plannedCount: 1 });
-			}
+			const topic = pool[cursor % pool.length];
+			const topicsLeftInCycle = Math.min(pool.length, remaining);
+			const plannedCount = Math.min(
+				MAX_QUESTIONS_PER_WORKER,
+				Math.ceil(remaining / topicsLeftInCycle)
+			);
 			orderCounts[order] += 1;
-			const topicAllocations = [...allocationByTopicId.values()];
+			const topicAllocations: LiveWorkerTopicAllocation[] = [{ topic, plannedCount }];
 			tasks.push({
 				taskId: `${order}:batch:${orderCounts[order]}`,
 				topicAllocations,
@@ -563,7 +537,7 @@ function buildLiveGenerationWork(
 				plannedCount,
 				reasoningOrder: order
 			});
-			cursor += plannedCount;
+			cursor += 1;
 			remaining -= plannedCount;
 		}
 	}
@@ -1026,7 +1000,6 @@ function candidateToQuestionInsert(
 }
 
 export {
-	addRecoveryWorkerBuffer,
 	buildFocusInstruction,
 	buildLiveGenerationWork,
 	candidateHasProvenanceLanguage,

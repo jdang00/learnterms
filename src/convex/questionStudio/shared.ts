@@ -21,11 +21,9 @@ export const MAX_WORKER_SOURCE_CHARS = 18_000;
 export const MAX_WORKER_RAG_CHARS = 5_000;
 export const MAX_WORKER_RESEARCH_CHARS = 2_400;
 export const MAX_REVIEW_REASON_CHARS = 320;
-export const MAX_QUESTIONS_PER_WORKER = 1;
+export const MAX_QUESTIONS_PER_WORKER = 5;
 export const MAX_JOB_EVENT_DETAIL_CHARS = 420;
-export const WORKER_DRAFT_MAX_OUTPUT_TOKENS = 1_100;
-export const MAX_EXTRA_RECOVERY_WORKERS = 6;
-export const RECOVERY_WORKER_RATIO = 0.6;
+export const WORKER_DRAFT_MAX_OUTPUT_TOKENS = 5_000;
 
 export type ReasoningOrder = 'first' | 'second' | 'third';
 export type DuplicateRisk = 'low' | 'medium' | 'high';
@@ -129,7 +127,7 @@ export type LiveWorkerTask = {
 	counts: Record<ReasoningOrder, number>;
 	plannedCount: number;
 	reasoningOrder: ReasoningOrder;
-	blueprint?: QuestionBlueprint;
+	blueprints?: QuestionBlueprint[];
 };
 
 export type CandidateReview = {
@@ -395,7 +393,7 @@ export const liveWorkerTaskValidator = v.object({
 	}),
 	plannedCount: v.number(),
 	reasoningOrder: reasoningOrderValidator,
-	blueprint: v.optional(blueprintValidator)
+	blueprints: v.optional(v.array(blueprintValidator))
 });
 
 export const topicMapSchema = z.object({

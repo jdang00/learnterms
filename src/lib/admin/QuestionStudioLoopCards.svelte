@@ -29,7 +29,7 @@
 			key: 'draft',
 			label: 'Draft',
 			description:
-				'Parallel workers each write one question from its blueprint, grounded in retrieved source.',
+				'Each worker writes up to five related questions in one turn, with an optional same-thread continuation.',
 			icon: PencilLine
 		},
 		{
