@@ -20,7 +20,6 @@
 		TopicMapItem
 	} from '$lib/admin/questionStudioTypes';
 	import {
-		AGENT_LOOP_MAX_QUESTIONS,
 		DEFAULT_QUESTION_STUDIO_MODEL,
 		QUESTION_STUDIO_MODEL_OPTIONS
 	} from '$lib/admin/questionStudioTypes';
@@ -58,7 +57,6 @@
 	let detailTopic = $state<TopicMapItem | null>(null);
 
 	let generationMode = $state<GenerationMode | null>(null);
-	let useAgentLoop = $state(true);
 	let guidanceNotes = $state('');
 	let selectedModel = $state<QuestionStudioModel>(DEFAULT_QUESTION_STUDIO_MODEL);
 
@@ -466,14 +464,12 @@
 		isGenerating = true;
 		workflowError = '';
 		resetGenerated();
-		const agentLoop = useAgentLoop && totalRequested <= AGENT_LOOP_MAX_QUESTIONS;
 		try {
 			const jobId = await client.mutation(api.questionStudio.createGenerationJob, {
 				documentId: selectedDocumentId,
 				moduleId: selectedModuleId,
 				requestedCount: totalRequested,
-				model,
-				agentLoop
+				model
 			});
 			activeJobId = jobId;
 			workflowMessage = 'Queued candidate generation.';
@@ -485,8 +481,7 @@
 					counts,
 					model,
 					focusNotes: generationMode === 'guided' ? guidanceNotes.trim() : undefined,
-					jobId,
-					agentLoop
+					jobId
 				})
 				.catch((error) => {
 					workflowError = error instanceof Error ? error.message : 'Failed to generate questions';
@@ -621,25 +616,6 @@
 						{/if}
 
 						{#if generationMode && topics.length > 0}
-							<div
-								class="flex items-center gap-2.5 rounded-2xl border border-base-300 bg-base-100 px-3.5 py-2.5"
-							>
-								<input
-									id="agent-loop-toggle"
-									type="checkbox"
-									class="toggle toggle-primary toggle-sm"
-									bind:checked={useAgentLoop}
-									disabled={totalRequested > AGENT_LOOP_MAX_QUESTIONS}
-								/>
-								<label for="agent-loop-toggle" class="min-w-0 cursor-pointer">
-									<span class="block text-xs font-semibold"> Blueprint-guided generation </span>
-									<span class="block text-[11px] text-base-content/55">
-										{totalRequested > AGENT_LOOP_MAX_QUESTIONS
-											? `Available for runs of ${AGENT_LOOP_MAX_QUESTIONS} questions or fewer.`
-											: 'Plans a cognitive template for each slot before source-grounded drafting.'}
-									</span>
-								</label>
-							</div>
 							<QuestionStudioDraftingStep
 								bind:generationMode
 								bind:guidanceNotes

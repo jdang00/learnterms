@@ -1,20 +1,7 @@
-import { z } from 'zod/v4';
-import { QUESTION_STUDIO_FLASH_MODEL, type ReasoningOrder } from './shared';
+import type { ReasoningOrder } from './shared';
 
 // Agent loop tuning surface. Ported from dev/agent-question-system/.
 // Everything the loop can be tuned by lives in this file.
-
-export const AGENT_LOOP_MAX_QUESTIONS = 15;
-export const AGENT_LOOP_BLUEPRINT_MAX_OUTPUT_TOKENS = 2_400;
-
-// Per-pass model overrides; undefined falls back to the job model.
-export const AGENT_LOOP_MODELS: {
-	blueprint: string | undefined;
-	draft: string | undefined;
-} = {
-	blueprint: QUESTION_STUDIO_FLASH_MODEL,
-	draft: undefined
-};
 
 export type CognitiveTemplateId =
 	| 'recall.definition'
@@ -29,21 +16,6 @@ export type CognitiveTemplateId =
 	| 'safety.contraindication'
 	| 'sequence.timeline'
 	| 'negative.exception';
-
-// negative.exception is disabled by default: negative stems are high-risk for ambiguity.
-export const ENABLED_COGNITIVE_TEMPLATES = [
-	'recall.definition',
-	'recall.threshold',
-	'recognition.feature',
-	'recognition.feature_set',
-	'discrimination.compare',
-	'mechanism.causal',
-	'diagnosis.case',
-	'interpretation.test',
-	'management.next_step',
-	'safety.contraindication',
-	'sequence.timeline'
-] as const satisfies readonly CognitiveTemplateId[];
 
 export const COGNITIVE_TEMPLATE_CARDS: Record<CognitiveTemplateId, string> = {
 	'recall.definition': [
@@ -150,8 +122,6 @@ export const REASONING_ORDER_TEMPLATE_MAP: Record<ReasoningOrder, CognitiveTempl
 	]
 };
 
-export const DEFAULT_ORDER_MIX = { first: 0.35, second: 0.4, third: 0.25 } as const;
-
 export function defaultTemplateForOrder(
 	order: ReasoningOrder,
 	slotIndex: number
@@ -166,24 +136,3 @@ export function cognitiveTemplateCard(id: string): string {
 	}
 	return COGNITIVE_TEMPLATE_CARDS['recognition.feature'];
 }
-
-const enabledTemplateIds = ENABLED_COGNITIVE_TEMPLATES as unknown as [
-	CognitiveTemplateId,
-	...CognitiveTemplateId[]
-];
-
-export const blueprintSchema = z.object({
-	slots: z
-		.array(
-			z.object({
-				slotId: z.string().min(1).max(60),
-				topicId: z.string().min(1).max(80),
-				reasoningOrder: z.enum(['first', 'second', 'third']),
-				cognitiveTemplate: z.enum(enabledTemplateIds),
-				targetObjective: z.string().min(3).max(200),
-				distractorStrategy: z.string().min(3).max(200)
-			})
-		)
-		.min(1)
-		.max(24)
-});

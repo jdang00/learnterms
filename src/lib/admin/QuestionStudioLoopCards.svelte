@@ -22,14 +22,15 @@
 		{
 			key: 'plan',
 			label: 'Plan',
-			description: 'An LLM assigns each slot a topic, reasoning order, and cognitive template.',
+			description:
+				'The server assigns each slot a topic, reasoning order, objective, and template.',
 			icon: ClipboardList
 		},
 		{
 			key: 'draft',
 			label: 'Draft',
 			description:
-				'Each worker writes up to five related questions in one turn, with an optional same-thread continuation.',
+				'Each worker writes up to three related questions in one turn, with an optional same-thread continuation.',
 			icon: PencilLine
 		},
 		{
@@ -82,14 +83,11 @@
 				<Workflow size={16} />
 			</span>
 			<div class="min-w-0">
-				<h2 class="text-sm font-semibold">Blueprint-guided generation</h2>
+				<h2 class="text-sm font-semibold">Tool-guided generation</h2>
 				<p class="text-xs text-base-content/55">
 					Plan → draft → deterministic checks, then you pick what to keep.
 				</p>
 			</div>
-			{#if job.loop?.blueprintSource === 'fallback'}
-				<span class="badge badge-warning badge-sm ml-auto shrink-0">planner fallback</span>
-			{/if}
 		</div>
 		<div class="grid gap-2 sm:grid-cols-3">
 			{#each passCards as card (card.key)}

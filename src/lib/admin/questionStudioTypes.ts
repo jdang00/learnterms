@@ -38,8 +38,6 @@ export interface QuestionStudioPhase {
 	state: PhaseState;
 }
 
-export const AGENT_LOOP_MAX_QUESTIONS = 15;
-
 export type LoopPassKey = 'plan' | 'draft' | 'gate';
 
 export interface LoopPassCard {

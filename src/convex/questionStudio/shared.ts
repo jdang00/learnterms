@@ -21,9 +21,9 @@ export const MAX_WORKER_SOURCE_CHARS = 18_000;
 export const MAX_WORKER_RAG_CHARS = 5_000;
 export const MAX_WORKER_RESEARCH_CHARS = 2_400;
 export const MAX_REVIEW_REASON_CHARS = 320;
-export const MAX_QUESTIONS_PER_WORKER = 5;
+export const MAX_QUESTIONS_PER_WORKER = 3;
 export const MAX_JOB_EVENT_DETAIL_CHARS = 420;
-export const WORKER_DRAFT_MAX_OUTPUT_TOKENS = 5_000;
+export const WORKER_DRAFT_MAX_OUTPUT_TOKENS = 3_200;
 
 export type ReasoningOrder = 'first' | 'second' | 'third';
 export type DuplicateRisk = 'low' | 'medium' | 'high';
@@ -448,4 +448,30 @@ export const candidateSchema = z.object({
 		)
 		.min(1)
 		.max(MAX_GENERATED_QUESTIONS)
+});
+
+export const workerCandidateSchema = z.object({
+	questions: z
+		.array(
+			z.object({
+				stem: z.string().min(12).max(900),
+				options: z.array(z.string().min(1).max(260)).min(3).max(5),
+				correctAnswers: z.array(z.string().min(1).max(260)).length(1),
+				rationale: z.string().min(20).max(1600),
+				sourceCitations: z
+					.array(
+						z.object({
+							citationId: z.string().min(1).max(80),
+							pageNumber: z.number().int().positive(),
+							noteFile: z.string().min(1).max(260),
+							chunkTitle: z.string().min(1).max(180),
+							chunkIndex: z.number().int().min(0)
+						})
+					)
+					.min(1)
+					.max(4)
+			})
+		)
+		.min(1)
+		.max(MAX_QUESTIONS_PER_WORKER)
 });
