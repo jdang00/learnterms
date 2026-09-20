@@ -7,7 +7,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"dev:convex": "bun convex dev",
-		"build": "vite build",
+		"build": "svelte-kit sync && vite build",
 		"preview": "vite preview",
 		"test": "bun test ./tests/*.test.ts && bunx vitest run",
 		"eval:parse": "bun scripts/ai-eval/parse.ts",
@@ -22,7 +22,7 @@
 	"devDependencies": {
 		"@edge-runtime/vm": "^5.0.0",
 		"@eslint/compat": "^1.4.1",
-		"@sveltejs/adapter-auto": "^6.1.1",
+		"@sveltejs/adapter-vercel": "5.10.3",
 		"@sveltejs/kit": "^2.68.0",
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@tailwindcss/typography": "^0.5.20",
