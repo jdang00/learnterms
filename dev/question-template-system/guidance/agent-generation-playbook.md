@@ -18,7 +18,7 @@ Do not choose the format first. Choose the thinking task first.
 
 For any selected template, read its page in `template-anatomies/` before generating. Those pages show the anatomy, compact production examples, and part-by-part quality notes.
 
-Template definitions live in `src/convex/questionStudio/templateTaxonomy.ts`. Treat the markdown pages as generated reading material; update the structured taxonomy first when changing template purpose, anatomy, considerations, or reasoning-order fit.
+Historical reference: the structured taxonomy was retired. These examples are retained as research material, not live generation instructions.
 
 ## Step 2: Map To Reasoning Order
 
@@ -26,11 +26,11 @@ The live Question Studio pipeline already understands `reasoningOrder` through `
 
 Do not add `cognitiveTemplate`, `formatTemplate`, or `distractorStrategy` to generated output unless the Convex schema and candidate validators are explicitly extended later. Today, these are authoring notes for agents, not stored fields.
 
-| Pipeline order | Coarse intent | Natural cognitive templates |
-| --- | --- | --- |
-| `first` | Direct recall or recognition of one source-supported fact, term, association, threshold, or definition. | `recall.definition`, simple `recall.threshold`, `recognition.feature`, simple `format.fill_blank`, simple `format.true_false` |
-| `second` | One-step application, mechanism, interpretation, calculation, consequence, or applied threshold use. | `mechanism.causal`, `interpretation.test`, applied `recall.threshold`, `discrimination.compare`, `recognition.feature_set`, `sequence.timeline` |
-| `third` | Multi-step integration, comparison, diagnosis, management, or case/data reasoning requiring at least two source-supported facts. | `diagnosis.case`, `management.next_step`, complex `safety.contraindication`, complex `discrimination.compare`, multi-step `interpretation.test` |
+| Pipeline order | Coarse intent                                                                                                                    | Natural cognitive templates                                                                                                                     |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `first`        | Direct recall or recognition of one source-supported fact, term, association, threshold, or definition.                          | `recall.definition`, simple `recall.threshold`, `recognition.feature`, simple `format.fill_blank`, simple `format.true_false`                   |
+| `second`       | One-step application, mechanism, interpretation, calculation, consequence, or applied threshold use.                             | `mechanism.causal`, `interpretation.test`, applied `recall.threshold`, `discrimination.compare`, `recognition.feature_set`, `sequence.timeline` |
+| `third`        | Multi-step integration, comparison, diagnosis, management, or case/data reasoning requiring at least two source-supported facts. | `diagnosis.case`, `management.next_step`, complex `safety.contraindication`, complex `discrimination.compare`, multi-step `interpretation.test` |
 
 Use the requested order first. Then choose the finest cognitive template that fits inside that order.
 

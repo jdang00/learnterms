@@ -1,6 +1,6 @@
 # Template Prompt Cards
 
-Compact cards generated from `src/convex/questionStudio/templateTaxonomy.ts`. These are sized for future prompt injection; the full anatomy pages remain the human review reference.
+Historical reference: the structured taxonomy was retired. These examples are retained as research material, not live generation instructions.
 
 ## recall.definition
 
@@ -289,4 +289,3 @@ Distractors/options: Correct answer interprets the media.
 Rationale: Rationale names the visible cue.
 Watch for: Do not convert visual skills into generic prose. | Generated media questions should require the media to answer. | Use solution-only media intentionally, not by accident.
 ```
-
