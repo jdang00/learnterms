@@ -150,3 +150,31 @@ export const getUrl = query({
 		return await r2.getUrl(args.key, { expiresIn: 60 * 15 });
 	}
 });
+
+export const getDocumentUrl = query({
+	args: {
+		documentId: v.id('contentLib')
+	},
+	handler: async (ctx, args) => {
+		const user = await getCurrentUser(ctx);
+		const document = await ctx.db.get(args.documentId);
+		if (
+			!document ||
+			document.deletedAt ||
+			document.metadata?.storageProvider !== 'r2' ||
+			(user.role !== 'dev' && user.cohortId !== document.cohortId)
+		) {
+			throw new Error('Document not found or access denied');
+		}
+
+		const key =
+			document.metadata.mimeType === 'application/pdf'
+				? document.metadata.r2Key
+				: document.metadata.convertedPdfR2Key;
+		if (!key) {
+			throw new Error('No PDF source is available for this document');
+		}
+
+		return await r2.getUrl(key, { expiresIn: 60 * 15 });
+	}
+});

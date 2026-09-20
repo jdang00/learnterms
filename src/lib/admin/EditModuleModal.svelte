@@ -1,5 +1,15 @@
 <script lang="ts">
-	import { X, BookOpenText, AlignLeft, Hash, Laugh } from 'lucide-svelte';
+	import ModuleEmojiSuggestion from './ModuleEmojiSuggestion.svelte';
+	import {
+		X,
+		BookOpenText,
+		AlignLeft,
+		Hash,
+		Laugh,
+		CheckCircle,
+		Archive,
+		FileText
+	} from 'lucide-svelte';
 	import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
@@ -23,6 +33,11 @@
 	let isSubmitting: boolean = $state(false);
 	let validationErrors: Record<string, string> = $state({});
 	let submitError: string = $state('');
+	const statusOptions = [
+		{ value: 'published', label: 'Published', icon: CheckCircle, colorClass: 'btn-success' },
+		{ value: 'draft', label: 'Draft', icon: FileText, colorClass: 'btn-info' },
+		{ value: 'archived', label: 'Archived', icon: Archive, colorClass: 'btn-error' }
+	];
 	let selectedTagIds: Id<'tags'>[] = $state([]);
 
 	// useQuery at top level with function args
@@ -230,30 +245,40 @@
 						</div>
 					</div>
 
-					<label
+					<span
 						class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
-						for="module-status"
 					>
 						<Hash size={18} class="text-primary/80" />
 						<span>Status</span>
-					</label>
+					</span>
 					<div class="md:contents">
-						<label
-							for="module-status"
+						<span
 							class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
 						>
 							<Hash size={18} class="text-primary/80" />
 							<span>Status</span>
-						</label>
-						<select
-							id="module-status"
-							class="select select-bordered rounded-full w-full"
-							bind:value={moduleStatus}
+						</span>
+						<div
+							class="flex w-fit flex-wrap justify-self-start gap-1 rounded-full border border-base-300 bg-base-100 p-1 shadow-xs"
+							role="group"
+							aria-label="Module status"
 						>
-							<option value="draft">Draft</option>
-							<option value="published">Published</option>
-							<option value="archived">Archived</option>
-						</select>
+							{#each statusOptions as option (option.value)}
+								<button
+									type="button"
+									aria-pressed={moduleStatus === option.value}
+									class="btn btn-sm rounded-full border-0 px-3 font-semibold {moduleStatus ===
+									option.value
+										? option.colorClass
+										: 'btn-ghost text-base-content'}"
+									onclick={() => (moduleStatus = option.value)}
+									title={option.label}
+								>
+									<option.icon size={16} />
+									<span>{option.label}</span>
+								</button>
+							{/each}
+						</div>
 					</div>
 
 					<label
@@ -361,6 +386,17 @@
 								bind:value={moduleEmoji}
 								oninput={() => validateOnInput('moduleEmoji', moduleEmoji)}
 								maxlength="8"
+							/>
+							<ModuleEmojiSuggestion
+								title={moduleTitle}
+								currentEmoji={moduleEmoji}
+								classId={classId as Id<'class'>}
+								active={isEditModalOpen}
+								disabled={isSubmitting}
+								onselect={(emoji) => {
+									moduleEmoji = emoji;
+									validateOnInput('moduleEmoji', emoji);
+								}}
 							/>
 							{#if validationErrors.moduleEmoji}
 								<div class="label">

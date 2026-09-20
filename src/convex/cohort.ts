@@ -80,12 +80,6 @@ const DEFAULT_COHORT_QUICK_LINKS: QuickLink[] = [
 		description: 'Open the LearnTerms clinic portal',
 		href: 'https://clinic.learnterms.com/',
 		icon: '🏥'
-	},
-	{
-		title: 'Eyegnosis',
-		description: 'Play the optometric puzzle game',
-		href: 'https://clinic.learnterms.com/eyegnosis',
-		icon: '🧩'
 	}
 ];
 
@@ -117,7 +111,8 @@ function normalizeQuickLinks(links: QuickLink[]) {
 			throw new Error('Quick link descriptions must be 120 characters or less');
 		}
 		if (!href) throw new Error('Each quick link needs a destination');
-		if (href.length > 240) throw new Error('Quick link destinations must be 240 characters or less');
+		if (href.length > 240)
+			throw new Error('Quick link destinations must be 240 characters or less');
 		const isInternalPath = href.startsWith('/') && !href.startsWith('//');
 		if (!isInternalPath && !href.startsWith('https://') && !href.startsWith('http://')) {
 			throw new Error('Quick link destinations must be an internal path or an http(s) URL');
@@ -130,7 +125,9 @@ function normalizeQuickLinks(links: QuickLink[]) {
 }
 
 function getCohortQuickLinks(cohort: Doc<'cohort'> | null) {
-	return cohort?.quickLinks ? cloneQuickLinks(cohort.quickLinks) : cloneQuickLinks(DEFAULT_COHORT_QUICK_LINKS);
+	return cohort?.quickLinks
+		? cloneQuickLinks(cohort.quickLinks)
+		: cloneQuickLinks(DEFAULT_COHORT_QUICK_LINKS);
 }
 
 function assertCanManageCohort(user: Doc<'users'> | null, cohortId: Id<'cohort'>) {

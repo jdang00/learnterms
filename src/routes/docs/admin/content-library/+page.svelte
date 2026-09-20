@@ -82,13 +82,13 @@
 <h2>Document management</h2>
 <h3>Edit details</h3>
 <ol>
-	<li>In the table, open the <em>⋮</em> menu on a document.</li>
-	<li>Choose <strong>Edit</strong> to update Title or Description.</li>
+	<li>Select a file to open its detail drawer.</li>
+	<li>Choose <strong>Rename</strong>, enter the new name, and confirm.</li>
 </ol>
 
 <p>
-	Rules: Title must be unique in your cohort (2–100 chars). Description is optional (10–500 chars if
-	provided).
+	Rules: The name must be unique in your cohort and contain 2–100 characters. Renaming changes the
+	display name in LearnTerms; it does not alter the original uploaded file.
 </p>
 
 <h3>Delete a document</h3>

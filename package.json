@@ -9,13 +9,18 @@
 		"dev:convex": "bun convex dev",
 		"build": "vite build",
 		"preview": "vite preview",
+		"test": "bun test ./tests/*.test.ts && bunx vitest run",
+		"eval:parse": "bun scripts/ai-eval/parse.ts",
+		"eval:questions": "bun scripts/ai-eval/run.ts",
 		"posthog:ai": "bun scripts/posthog-ai-observability.ts",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint ."
+		"lint": "prettier --check . && eslint .",
+		"eval:report": "bun scripts/ai-eval/report.ts"
 	},
 	"devDependencies": {
+		"@edge-runtime/vm": "^5.0.0",
 		"@eslint/compat": "^1.4.1",
 		"@sveltejs/adapter-auto": "^6.1.1",
 		"@sveltejs/kit": "^2.68.0",
@@ -30,6 +35,7 @@
 		"@types/sanitize-html": "^2.16.1",
 		"@types/showdown": "^2.0.6",
 		"autoprefixer": "^10.5.2",
+		"convex-test": "0.0.54",
 		"daisyui": "^5.6.2",
 		"eslint": "^9.39.4",
 		"eslint-config-prettier": "^10.1.8",
@@ -44,6 +50,8 @@
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.62.0",
 		"vite": "^7.3.6",
+		"vite-plugin-static-copy": "^4.1.1",
+		"vitest": "^5.0.1",
 		"zod": "^4.4.3"
 	},
 	"dependencies": {
@@ -55,6 +63,7 @@
 		"@convex-dev/r2": "^0.10.2",
 		"@convex-dev/rag": "^0.7.5",
 		"@convex-dev/rate-limiter": "^0.3.2",
+		"@convex-dev/workflow": "^0.4.8",
 		"@marp-team/marp-core": "^4.3.0",
 		"@polar-sh/sdk": "^0.48.1",
 		"@tailwindcss/postcss": "^4.3.1",
@@ -82,6 +91,7 @@
 		"lucide-svelte": "^0.525.0",
 		"marked": "^16.4.2",
 		"pdf-lib": "^1.17.1",
+		"pdfjs-dist": "^6.3.289",
 		"posthog-js": "^1.393.5",
 		"react": "^19.2.7",
 		"resend": "^6.14.0",

@@ -92,3 +92,50 @@ export const insertR2Document = mutation({
 		});
 	}
 });
+
+export const renameDocument = mutation({
+	args: {
+		documentId: v.id('contentLib'),
+		title: v.string()
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) throw new Error('Not authenticated');
+
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
+			.first();
+		if (!user) throw new Error('User not found');
+		if (user.role !== 'dev' && user.role !== 'admin' && user.role !== 'curator') {
+			throw new Error('Unauthorized');
+		}
+
+		const document = await ctx.db.get(args.documentId);
+		if (!document || document.deletedAt) throw new Error('Document not found');
+		if (user.role !== 'dev' && user.cohortId !== document.cohortId) {
+			throw new Error('Unauthorized for this cohort');
+		}
+
+		const title = args.title.trim();
+		if (title.length < 2) throw new Error('Document title must be at least 2 characters');
+		if (title.length > 100) throw new Error('Document title cannot exceed 100 characters');
+
+		for await (const cohortDocument of ctx.db
+			.query('contentLib')
+			.withIndex('by_cohortId_and_title', (q) =>
+				q.eq('cohortId', document.cohortId).eq('title', title)
+			)) {
+			if (cohortDocument._id !== document._id && !cohortDocument.deletedAt) {
+				throw new Error('A document with this title already exists in your cohort');
+			}
+		}
+
+		await ctx.db.patch('contentLib', document._id, {
+			title,
+			updatedAt: Date.now()
+		});
+
+		return { documentId: document._id, title };
+	}
+});

@@ -61,7 +61,7 @@
 		pageNumbers: number[];
 		estimatedQuestionCapacity: number;
 		existingQuestionCount: number;
-		reasoningOrders: { first: number; second: number; third: number };
+		questionTypes: { learn: number; clinical: number; criticalThinking: number };
 		exampleStems: string[];
 	};
 
@@ -137,7 +137,8 @@
 			id: 'searchSourceChunks',
 			label: 'searchSourceChunks',
 			short: 'Search',
-			description: 'Hybrid retrieval across the document namespace — the agent’s evidence gatherer.',
+			description:
+				'Hybrid retrieval across the document namespace — the agent’s evidence gatherer.',
 			icon: Search
 		},
 		{
@@ -651,7 +652,10 @@
 						</div>
 
 						{#if toolError}
-							<div class="alert alert-error mt-3 rounded-xl py-2 text-sm" in:fade={{ duration: 150 }}>
+							<div
+								class="alert alert-error mt-3 rounded-xl py-2 text-sm"
+								in:fade={{ duration: 150 }}
+							>
 								<TriangleAlert size={15} />
 								<span>{toolError}</span>
 							</div>
@@ -687,8 +691,14 @@
 										class="flex items-center gap-2 rounded-full bg-base-100 px-3 py-1 font-mono text-xs font-semibold shadow-xs"
 									>
 										{#if run.tool === 'searchSourceChunks'}<Search size={13} class="text-primary" />
-										{:else if run.tool === 'getSourcePages'}<FileText size={13} class="text-primary" />
-										{:else if run.tool === 'getTopicCoverageMap'}<Map size={13} class="text-primary" />
+										{:else if run.tool === 'getSourcePages'}<FileText
+												size={13}
+												class="text-primary"
+											/>
+										{:else if run.tool === 'getTopicCoverageMap'}<Map
+												size={13}
+												class="text-primary"
+											/>
 										{:else}<Database size={13} class="text-primary" />{/if}
 										{run.tool}
 									</span>
@@ -707,10 +717,14 @@
 												<span class="text-base-content/45">Searched for</span>
 												<span class="font-semibold">“{run.result.input.query}”</span>
 											</p>
-											<span class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/55">
+											<span
+												class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/55"
+											>
 												limit {run.result.input.limit}
 											</span>
-											<span class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary">
+											<span
+												class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary"
+											>
 												{output.resultCount} chunk groups · {output.citations?.length ?? 0} citations
 											</span>
 										</div>
@@ -723,13 +737,17 @@
 														onclick={() => openPages([citation.pageNumber])}
 														title="Open page {citation.pageNumber} with getSourcePages"
 													>
-														<span class="rounded-md bg-base-200 px-1.5 py-0.5 font-mono text-[10px] font-bold text-base-content/55">
+														<span
+															class="rounded-md bg-base-200 px-1.5 py-0.5 font-mono text-[10px] font-bold text-base-content/55"
+														>
 															{citation.citationId}
 														</span>
 														<span class="min-w-0 flex-1 truncate text-xs text-base-content/75">
 															{citation.chunkTitle}
 														</span>
-														<span class="shrink-0 font-mono text-[10px] font-semibold text-base-content/45 transition group-hover:text-primary">
+														<span
+															class="shrink-0 font-mono text-[10px] font-semibold text-base-content/45 transition group-hover:text-primary"
+														>
 															p.{citation.pageNumber}
 														</span>
 														<ChevronRight
@@ -748,7 +766,9 @@
 										{#if output.text}
 											<div class="mt-4 space-y-1.5">
 												<div class="flex items-center gap-2 text-[11px] text-base-content/45">
-													<span class="font-semibold uppercase tracking-wide">Retrieved evidence</span>
+													<span class="font-semibold uppercase tracking-wide"
+														>Retrieved evidence</span
+													>
 													<span class="font-mono">{formatChars(output.text.length)} chars</span>
 												</div>
 												<div
@@ -766,7 +786,9 @@
 												<ListTree size={15} class="text-primary" />
 												{output.topics?.length ?? 0} mapped topics
 											</span>
-											<span class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/55">
+											<span
+												class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/55"
+											>
 												{output.existingQuestionCount ?? 0} existing questions in module
 											</span>
 										</div>
@@ -775,8 +797,12 @@
 											<div class="mt-3 space-y-2">
 												{#each output.topics as topic (topic.topicId)}
 													{@const capacity = Math.max(1, topic.estimatedQuestionCapacity)}
-													{@const fill = Math.min(100, (topic.existingQuestionCount / capacity) * 100)}
-													{@const saturated = topic.existingQuestionCount >= topic.estimatedQuestionCapacity}
+													{@const fill = Math.min(
+														100,
+														(topic.existingQuestionCount / capacity) * 100
+													)}
+													{@const saturated =
+														topic.existingQuestionCount >= topic.estimatedQuestionCapacity}
 													<div class="rounded-xl border border-base-300 bg-base-100 p-3">
 														<div class="flex items-start gap-3">
 															<div class="min-w-0 flex-1">
@@ -793,7 +819,9 @@
 																		pp {topic.pageNumbers.join(', ')}
 																	</button>
 																	<span class="font-mono text-[10px] text-base-content/40">
-																		1st {topic.reasoningOrders.first} · 2nd {topic.reasoningOrders.second} · 3rd {topic.reasoningOrders.third}
+																		Learn {topic.questionTypes.learn} · Clinical {topic
+																			.questionTypes.clinical} · Critical thinking {topic
+																			.questionTypes.criticalThinking}
 																	</span>
 																</div>
 															</div>
@@ -840,7 +868,8 @@
 																		? 'rotate-90'
 																		: ''}"
 																/>
-																{topic.exampleStems.length} example stem{topic.exampleStems.length === 1
+																{topic.exampleStems.length} example stem{topic.exampleStems
+																	.length === 1
 																	? ''
 																	: 's'}
 															</button>
@@ -850,7 +879,9 @@
 																	transition:slide={{ duration: 150 }}
 																>
 																	{#each topic.exampleStems as stem, stemIndex (stemIndex)}
-																		<p class="line-clamp-2 text-[11px] italic leading-relaxed text-base-content/50">
+																		<p
+																			class="line-clamp-2 text-[11px] italic leading-relaxed text-base-content/50"
+																		>
 																			“{stem}”
 																		</p>
 																	{/each}
@@ -871,7 +902,9 @@
 									<div class="rounded-2xl border border-base-300 bg-base-100 p-4">
 										<div class="mb-3 flex flex-wrap items-center gap-1.5">
 											{#each output.pageNumbers ?? [] as pageNumber (pageNumber)}
-												<span class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary">
+												<span
+													class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary"
+												>
 													p.{pageNumber}
 												</span>
 											{/each}
@@ -889,12 +922,16 @@
 				<aside
 					class="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-xs xl:col-span-4"
 				>
-					<div class="flex shrink-0 items-center justify-between gap-3 border-b border-base-300 px-4 py-3">
+					<div
+						class="flex shrink-0 items-center justify-between gap-3 border-b border-base-300 px-4 py-3"
+					>
 						<div class="flex items-center gap-2">
 							<Layers size={14} class="text-base-content/45" />
 							<p class="text-sm font-semibold">Run log</p>
 							{#if toolRuns.length}
-								<span class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/50">
+								<span
+									class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/50"
+								>
 									{toolRuns.length}
 								</span>
 							{/if}
@@ -917,7 +954,9 @@
 						{#if isRunningTool}
 							<div class="flex items-center gap-2.5 rounded-lg px-3 py-2.5">
 								<span class="relative mt-0.5 flex h-2 w-2 shrink-0">
-									<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60"></span>
+									<span
+										class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60"
+									></span>
 									<span class="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
 								</span>
 								<ShimmerText
@@ -929,8 +968,12 @@
 						{/if}
 
 						{#if toolRuns.length === 0 && !isRunningTool}
-							<div class="flex h-full min-h-[16rem] flex-col items-center justify-center gap-3 p-6 text-center">
-								<span class="flex h-10 w-10 items-center justify-center rounded-full bg-base-200 text-base-content/35">
+							<div
+								class="flex h-full min-h-[16rem] flex-col items-center justify-center gap-3 p-6 text-center"
+							>
+								<span
+									class="flex h-10 w-10 items-center justify-center rounded-full bg-base-200 text-base-content/35"
+								>
 									<Layers size={17} />
 								</span>
 								<p class="max-w-[15rem] text-xs leading-relaxed text-base-content/45">
@@ -988,14 +1031,16 @@
 								<div
 									class="flex h-full min-h-[22rem] flex-col items-center justify-center gap-3 p-8 text-center"
 								>
-									<span class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+									<span
+										class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary"
+									>
 										<MessageSquare size={19} />
 									</span>
 									<div>
 										<h2 class="text-sm font-semibold">Probe the retrieval pipeline</h2>
 										<p class="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-base-content/50">
-											Ask against the selected document. Each answer exposes its retrieval
-											telemetry in the inspector — scores, chunk groups, and token spend.
+											Ask against the selected document. Each answer exposes its retrieval telemetry
+											in the inspector — scores, chunk groups, and token spend.
 										</p>
 									</div>
 								</div>
@@ -1003,34 +1048,48 @@
 								{#each messages as message, index (index)}
 									{#if message.role === 'user'}
 										<div class="flex justify-end">
-											<div class="max-w-[78%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-content">
+											<div
+												class="max-w-[78%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-content"
+											>
 												<p class="whitespace-pre-wrap">{message.text}</p>
 											</div>
 										</div>
 									{:else}
 										{@const isInspected = inspectedMessage === message}
 										<div class="flex gap-3">
-											<span class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+											<span
+												class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+											>
 												<Bot size={15} />
 											</span>
 											<div class="min-w-0 max-w-[82%]">
-												<div class="rounded-2xl rounded-tl-md border border-base-300 bg-base-100 px-4 py-3 shadow-xs">
+												<div
+													class="rounded-2xl rounded-tl-md border border-base-300 bg-base-100 px-4 py-3 shadow-xs"
+												>
 													<p class="whitespace-pre-wrap text-sm leading-relaxed">{message.text}</p>
 												</div>
 												<div class="mt-1.5 flex flex-wrap items-center gap-1.5 px-1">
 													{#if message.diagnostics}
-														<span class="rounded-full bg-base-100 px-2 py-0.5 font-mono text-[10px] text-base-content/50 shadow-xs">
+														<span
+															class="rounded-full bg-base-100 px-2 py-0.5 font-mono text-[10px] text-base-content/50 shadow-xs"
+														>
 															{shortModel(message.diagnostics.model)}
 														</span>
-														<span class="rounded-full bg-base-100 px-2 py-0.5 font-mono text-[10px] text-base-content/50 shadow-xs">
+														<span
+															class="rounded-full bg-base-100 px-2 py-0.5 font-mono text-[10px] text-base-content/50 shadow-xs"
+														>
 															{message.diagnostics.retrievedGroupCount} groups
 														</span>
-														<span class="rounded-full bg-base-100 px-2 py-0.5 font-mono text-[10px] text-base-content/50 shadow-xs">
+														<span
+															class="rounded-full bg-base-100 px-2 py-0.5 font-mono text-[10px] text-base-content/50 shadow-xs"
+														>
 															{formatChars(message.diagnostics.contextTextLength)} ctx
 														</span>
 													{/if}
 													{#if message.usage?.totalTokens}
-														<span class="rounded-full bg-base-100 px-2 py-0.5 font-mono text-[10px] text-base-content/50 shadow-xs">
+														<span
+															class="rounded-full bg-base-100 px-2 py-0.5 font-mono text-[10px] text-base-content/50 shadow-xs"
+														>
 															{message.usage.totalTokens.toLocaleString()} tok
 														</span>
 													{/if}
@@ -1049,7 +1108,9 @@
 								{/each}
 								{#if isAsking}
 									<div class="flex items-center gap-3">
-										<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+										<span
+											class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+										>
 											<Sparkles size={15} />
 										</span>
 										<ShimmerText
@@ -1077,7 +1138,9 @@
 							ask();
 						}}
 					>
-						<div class="flex items-end gap-2 rounded-2xl border border-base-300 bg-base-100 p-2 focus-within:border-primary/40">
+						<div
+							class="flex items-end gap-2 rounded-2xl border border-base-300 bg-base-100 p-2 focus-within:border-primary/40"
+						>
 							<textarea
 								class="max-h-32 min-h-10 flex-1 resize-none border-0 bg-transparent px-2 py-1.5 text-sm leading-relaxed outline-none placeholder:text-base-content/35"
 								placeholder="Ask about {selectedDocument?.title ?? 'the selected document'}…"
@@ -1112,7 +1175,9 @@
 
 					{#if !inspectedMessage}
 						<div class="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-							<span class="flex h-10 w-10 items-center justify-center rounded-full bg-base-200 text-base-content/35">
+							<span
+								class="flex h-10 w-10 items-center justify-center rounded-full bg-base-200 text-base-content/35"
+							>
 								<BookOpen size={17} />
 							</span>
 							<p class="max-w-[15rem] text-xs leading-relaxed text-base-content/45">
@@ -1150,17 +1215,23 @@
 							{#if inspected.usage}
 								<div class="flex flex-wrap items-center gap-1.5">
 									{#if inspected.usage.inputTokens}
-										<span class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/55">
+										<span
+											class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/55"
+										>
 											in {inspected.usage.inputTokens.toLocaleString()}
 										</span>
 									{/if}
 									{#if inspected.usage.outputTokens}
-										<span class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/55">
+										<span
+											class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/55"
+										>
 											out {inspected.usage.outputTokens.toLocaleString()}
 										</span>
 									{/if}
 									{#if inspected.usage.totalTokens}
-										<span class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary">
+										<span
+											class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary"
+										>
 											{inspected.usage.totalTokens.toLocaleString()} total tok
 										</span>
 									{/if}
@@ -1182,7 +1253,9 @@
 														#{groupIndex + 1}
 													</span>
 													{#if typeof pageNumber === 'number'}
-														<span class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/55">
+														<span
+															class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-[10px] text-base-content/55"
+														>
 															p.{pageNumber}
 														</span>
 													{/if}
@@ -1197,15 +1270,22 @@
 												<span class="mt-1.5 block h-1 overflow-hidden rounded-full bg-base-200">
 													<span
 														class="block h-full rounded-full bg-primary/70"
-														style="width: {Math.min(100, Math.max(4, Math.round(group.score * 100)))}%"
+														style="width: {Math.min(
+															100,
+															Math.max(4, Math.round(group.score * 100))
+														)}%"
 													></span>
 												</span>
-												<span class="mt-2 line-clamp-2 block text-[11px] leading-relaxed text-base-content/55 group-open:hidden">
+												<span
+													class="mt-2 line-clamp-2 block text-[11px] leading-relaxed text-base-content/55 group-open:hidden"
+												>
 													{preview}
 												</span>
 											</summary>
 											<div class="border-t border-base-200 p-3">
-												<p class="max-h-56 overflow-y-auto whitespace-pre-wrap text-[12px] leading-relaxed text-base-content/70">
+												<p
+													class="max-h-56 overflow-y-auto whitespace-pre-wrap text-[12px] leading-relaxed text-base-content/70"
+												>
 													{preview}
 												</p>
 											</div>
@@ -1215,12 +1295,15 @@
 							{/if}
 
 							<details class="group">
-								<summary class="flex w-fit cursor-pointer items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-semibold text-base-content/40 transition hover:bg-base-200 hover:text-base-content/70">
+								<summary
+									class="flex w-fit cursor-pointer items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-semibold text-base-content/40 transition hover:bg-base-200 hover:text-base-content/70"
+								>
 									<Braces size={12} />
 									Raw response
 									<ChevronRight size={12} class="transition-transform group-open:rotate-90" />
 								</summary>
-								<pre class="mt-2 max-h-80 overflow-auto rounded-xl bg-base-300/50 p-3 font-mono text-[11px] leading-relaxed">{prettyJson(
+								<pre
+									class="mt-2 max-h-80 overflow-auto rounded-xl bg-base-300/50 p-3 font-mono text-[11px] leading-relaxed">{prettyJson(
 										{
 											diagnostics: inspected.diagnostics,
 											usage: inspected.usage,

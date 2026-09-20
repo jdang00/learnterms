@@ -1,4 +1,5 @@
 <script lang="ts">
+	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import { page } from '$app/state';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../../../../convex/_generated/api';
@@ -1017,6 +1018,7 @@
 										<div class="tiptap-content text-sm text-base-content/80">
 											{@html sanitizeHtml(getRationale(selectedItem.question))}
 										</div>
+										<QuestionSources source={selectedItem.question.source} />
 									</div>
 								</div>
 							{:else}

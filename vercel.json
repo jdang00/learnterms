@@ -70,5 +70,7 @@
 			],
 			"destination": "/api/:path*"
 		}
-	]
+	],
+	"installCommand": "bun install --frozen-lockfile",
+	"buildCommand": "bunx convex deploy --cmd 'bun run build' --cmd-url-env-var-name PUBLIC_CONVEX_URL"
 }

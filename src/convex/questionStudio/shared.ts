@@ -2,11 +2,14 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { v } from 'convex/values';
 import { z } from 'zod/v4';
 import type { Doc, Id } from '../_generated/dataModel';
+import type { QuestionCounts, QuestionType } from './questionTypes';
 
-export const QUESTION_STUDIO_FLASH_MODEL = 'deepseek/deepseek-v4-flash';
-export const QUESTION_STUDIO_MODEL = QUESTION_STUDIO_FLASH_MODEL;
-export const QUESTION_STUDIO_PROVIDER_OPTIONS = {
+export const DEFAULT_TEXT_MODEL = 'openai/gpt-5.6-luna';
+export const QUESTION_STUDIO_MAPPING_MODEL = DEFAULT_TEXT_MODEL;
+export const QUESTION_STUDIO_MODEL = DEFAULT_TEXT_MODEL;
+export const QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS = {
 	openai: {
+		forceReasoning: true,
 		reasoningEffort: 'low'
 	}
 } as const;
@@ -16,24 +19,20 @@ export const EMBEDDING_DIMENSION = 3072;
 export const MAX_GENERATED_QUESTIONS = 30;
 export const MAX_QUESTIONS_PER_MODULE = 150;
 export const MAX_SOURCE_CHARS = 80_000;
-export const MAX_TOPIC_SOURCE_CHARS = 60_000;
-export const MAX_WORKER_SOURCE_CHARS = 18_000;
 export const MAX_WORKER_RAG_CHARS = 5_000;
-export const MAX_WORKER_RESEARCH_CHARS = 2_400;
 export const MAX_REVIEW_REASON_CHARS = 320;
 export const MAX_QUESTIONS_PER_WORKER = 3;
 export const MAX_JOB_EVENT_DETAIL_CHARS = 420;
-export const WORKER_DRAFT_MAX_OUTPUT_TOKENS = 3_200;
 
 export type ReasoningOrder = 'first' | 'second' | 'third';
 export type DuplicateRisk = 'low' | 'medium' | 'high';
-export type QuestionStudioModel = string;
 
 export type SourceCitation = {
 	citationId: string;
 	pageNumber: number;
 	noteFile: string;
 	chunkTitle: string;
+	quote?: string;
 	chunkIndex: number;
 };
 
@@ -44,7 +43,7 @@ export type TopicMapItem = {
 	pageNumbers: number[];
 	learningObjectives: string[];
 	keyTerms: string[];
-	suggestedOrders: ReasoningOrder[];
+	suggestedTypes?: QuestionType[];
 	estimatedQuestionCapacity: number;
 };
 
@@ -54,7 +53,8 @@ export type CandidateQuestion = {
 	options: string[];
 	correctAnswers: string[];
 	rationale: string;
-	reasoningOrder: ReasoningOrder;
+	questionType?: QuestionType;
+	reasoningOrder?: ReasoningOrder;
 	topicId: string;
 	topicTitle: string;
 	sourcePageNumbers: number[];
@@ -65,6 +65,10 @@ export type CandidateQuestion = {
 	metadata: {
 		model: string;
 		agentThreadId?: string;
+		jobId?: Id<'questionStudioJobs'>;
+		harnessVersion?: string;
+		curatorEditedAt?: number;
+		curatorRevision?: number;
 		sourceDocumentId: Id<'contentLib'>;
 	};
 };
@@ -72,23 +76,10 @@ export type CandidateQuestion = {
 export type QuestionBlueprint = {
 	slotId: string;
 	topicId: string;
-	reasoningOrder: ReasoningOrder;
+	questionType: QuestionType;
 	cognitiveTemplate: string;
 	targetObjective: string;
 	distractorStrategy: string;
-};
-
-export type LoopPass = 'plan' | 'draft' | 'gate' | 'done';
-
-export type LoopProgress = {
-	enabled?: boolean;
-	pass?: LoopPass;
-	blueprintCount?: number;
-	blueprintSource?: 'llm' | 'fallback';
-	gatePassedCount?: number;
-	gateRejectedCount?: number;
-	selectedCount?: number;
-	dedupedCount?: number;
 };
 
 export type GenerationPlan = {
@@ -96,7 +87,8 @@ export type GenerationPlan = {
 		taskId: string;
 		label: string;
 		plannedCount: number;
-		reasoningOrder: ReasoningOrder;
+		questionType?: QuestionType;
+		reasoningOrder?: ReasoningOrder;
 		topicCount: number;
 		topicTitles: string[];
 		sourcePages: number[];
@@ -108,7 +100,8 @@ export type GenerationPlan = {
 		topicId: string;
 		topicTitle: string;
 		plannedCount: number;
-		reasoningOrder: ReasoningOrder;
+		questionType?: QuestionType;
+		reasoningOrder?: ReasoningOrder;
 		sourcePages: number[];
 		notes: string;
 	}>;
@@ -124,10 +117,11 @@ export type LiveWorkerTopicAllocation = {
 export type LiveWorkerTask = {
 	taskId: string;
 	topicAllocations: LiveWorkerTopicAllocation[];
-	counts: Record<ReasoningOrder, number>;
+	counts: QuestionCounts;
 	plannedCount: number;
-	reasoningOrder: ReasoningOrder;
+	questionType: QuestionType;
 	blueprints?: QuestionBlueprint[];
+	reservedConcepts?: string[];
 };
 
 export type CandidateReview = {
@@ -149,6 +143,7 @@ export type JobEvent = {
 export type GenerationJobSnapshot = Doc<'questionStudioJobs'> & {
 	moduleTitle?: string;
 	moduleClassId?: Id<'class'>;
+	workerNotes?: string[];
 	candidates: CandidateQuestion[];
 };
 
@@ -165,6 +160,7 @@ export type ExistingQuestionSummary = {
 	sourceCitations?: SourceCitation[];
 	topicTitle?: string;
 	reasoningOrder?: ReasoningOrder;
+	questionType?: QuestionType;
 };
 
 export type GenerationContext = {
@@ -180,36 +176,10 @@ export type DocumentMappingContext = {
 	document: Doc<'contentLib'>;
 };
 
-export type MapDocumentTopicMapResult = {
-	threadId: string;
-	model: string;
-	documentId: Id<'contentLib'>;
-	pageRange: { startPage: number; endPage: number };
-	topics: TopicMapItem[];
-	topicMapId?: Id<'questionStudioTopicMaps'>;
-	cached: boolean;
-	updatedAt?: number;
-	usage: unknown;
-};
-
 export type QueuedGenerationResult = {
 	requestedCount: number;
 	workerCount: number;
 	queued: boolean;
-};
-
-export type GenerateObjectOptions = {
-	prompt: string;
-	schema: unknown;
-	schemaName?: string;
-	schemaDescription?: string;
-	providerOptions?: unknown;
-	callSettings?: {
-		maxOutputTokens?: number;
-		temperature?: number;
-		maxRetries?: number;
-	};
-	experimental_repairText?: (options: { text: string; error: unknown }) => Promise<string | null>;
 };
 
 export type StoredMarkdownPage = {
@@ -255,24 +225,16 @@ export function assertOpenRouterKey() {
 	}
 }
 
-export function assertOperatorToken(token?: string) {
-	if (!process.env.RAG_MIGRATION_TOKEN || token !== process.env.RAG_MIGRATION_TOKEN) {
-		throw new Error('Unauthorized');
-	}
-}
-
-export function questionStudioProviderOptions(model: QuestionStudioModel) {
-	return model === QUESTION_STUDIO_FLASH_MODEL ? QUESTION_STUDIO_PROVIDER_OPTIONS : undefined;
-}
-
-export function shouldUseStructuredOutput(model: QuestionStudioModel) {
-	return model === QUESTION_STUDIO_FLASH_MODEL;
-}
-
 export const reasoningOrderValidator = v.union(
 	v.literal('first'),
 	v.literal('second'),
 	v.literal('third')
+);
+
+export const questionTypeValidator = v.union(
+	v.literal('learn'),
+	v.literal('clinical'),
+	v.literal('criticalThinking')
 );
 
 export const candidateValidator = v.object({
@@ -281,7 +243,8 @@ export const candidateValidator = v.object({
 	options: v.array(v.string()),
 	correctAnswers: v.array(v.string()),
 	rationale: v.string(),
-	reasoningOrder: reasoningOrderValidator,
+	questionType: v.optional(questionTypeValidator),
+	reasoningOrder: v.optional(reasoningOrderValidator),
 	topicId: v.string(),
 	topicTitle: v.string(),
 	sourcePageNumbers: v.array(v.number()),
@@ -292,6 +255,7 @@ export const candidateValidator = v.object({
 				pageNumber: v.number(),
 				noteFile: v.string(),
 				chunkTitle: v.string(),
+				quote: v.optional(v.string()),
 				chunkIndex: v.number()
 			})
 		)
@@ -302,6 +266,10 @@ export const candidateValidator = v.object({
 	metadata: v.object({
 		model: v.string(),
 		agentThreadId: v.optional(v.string()),
+		jobId: v.optional(v.id('questionStudioJobs')),
+		harnessVersion: v.optional(v.string()),
+		curatorEditedAt: v.optional(v.number()),
+		curatorRevision: v.optional(v.number()),
 		sourceDocumentId: v.id('contentLib')
 	})
 });
@@ -309,7 +277,7 @@ export const candidateValidator = v.object({
 export const blueprintValidator = v.object({
 	slotId: v.string(),
 	topicId: v.string(),
-	reasoningOrder: reasoningOrderValidator,
+	questionType: questionTypeValidator,
 	cognitiveTemplate: v.string(),
 	targetObjective: v.string(),
 	distractorStrategy: v.string()
@@ -334,7 +302,8 @@ export const generationPlanValidator = v.object({
 			taskId: v.string(),
 			label: v.string(),
 			plannedCount: v.number(),
-			reasoningOrder: reasoningOrderValidator,
+			questionType: v.optional(questionTypeValidator),
+			reasoningOrder: v.optional(reasoningOrderValidator),
 			topicCount: v.number(),
 			topicTitles: v.array(v.string()),
 			sourcePages: v.array(v.number()),
@@ -348,7 +317,8 @@ export const generationPlanValidator = v.object({
 			topicId: v.string(),
 			topicTitle: v.string(),
 			plannedCount: v.number(),
-			reasoningOrder: reasoningOrderValidator,
+			questionType: v.optional(questionTypeValidator),
+			reasoningOrder: v.optional(reasoningOrderValidator),
 			sourcePages: v.array(v.number()),
 			notes: v.string()
 		})
@@ -374,7 +344,7 @@ export const topicInputValidator = v.object({
 	pageNumbers: v.array(v.number()),
 	learningObjectives: v.array(v.string()),
 	keyTerms: v.array(v.string()),
-	suggestedOrders: v.array(reasoningOrderValidator),
+	suggestedTypes: v.optional(v.array(questionTypeValidator)),
 	estimatedQuestionCapacity: v.number()
 });
 
@@ -387,13 +357,14 @@ export const liveWorkerTaskValidator = v.object({
 		})
 	),
 	counts: v.object({
-		first: v.number(),
-		second: v.number(),
-		third: v.number()
+		learn: v.number(),
+		clinical: v.number(),
+		criticalThinking: v.number()
 	}),
 	plannedCount: v.number(),
-	reasoningOrder: reasoningOrderValidator,
-	blueprints: v.optional(v.array(blueprintValidator))
+	questionType: questionTypeValidator,
+	blueprints: v.optional(v.array(blueprintValidator)),
+	reservedConcepts: v.optional(v.array(v.string()))
 });
 
 export const topicMapSchema = z.object({
@@ -406,8 +377,8 @@ export const topicMapSchema = z.object({
 				pageNumbers: z.array(z.number().int().positive()).min(1),
 				learningObjectives: z.array(z.string().min(3).max(180)).min(1).max(6),
 				keyTerms: z.array(z.string().min(1).max(80)).max(12),
-				suggestedOrders: z
-					.array(z.enum(['first', 'second', 'third']))
+				suggestedTypes: z
+					.array(z.enum(['learn', 'clinical', 'criticalThinking']))
 					.min(1)
 					.max(3),
 				estimatedQuestionCapacity: z.number().int().min(1).max(10)
@@ -415,63 +386,4 @@ export const topicMapSchema = z.object({
 		)
 		.min(1)
 		.max(24)
-});
-
-export const candidateSchema = z.object({
-	questions: z
-		.array(
-			z.object({
-				type: z.literal('multiple_choice'),
-				stem: z.string().min(12).max(900),
-				options: z.array(z.string().min(1).max(260)).min(3).max(5),
-				correctAnswers: z.array(z.string().min(1).max(260)).length(1),
-				rationale: z.string().min(20).max(1600),
-				reasoningOrder: z.enum(['first', 'second', 'third']),
-				topicId: z.string().min(1).max(80),
-				topicTitle: z.string().min(2).max(120),
-				sourcePageNumbers: z.array(z.number().int().positive()).optional(),
-				sourceCitations: z
-					.array(
-						z.object({
-							citationId: z.string().min(1).max(80),
-							pageNumber: z.number().int().positive(),
-							noteFile: z.string().min(1).max(260),
-							chunkTitle: z.string().min(1).max(180),
-							chunkIndex: z.number().int().min(0)
-						})
-					)
-					.max(4)
-					.optional(),
-				duplicateRisk: z.enum(['low', 'medium', 'high']).optional(),
-				similarQuestionIds: z.array(z.string()).optional()
-			})
-		)
-		.min(1)
-		.max(MAX_GENERATED_QUESTIONS)
-});
-
-export const workerCandidateSchema = z.object({
-	questions: z
-		.array(
-			z.object({
-				stem: z.string().min(12).max(900),
-				options: z.array(z.string().min(1).max(260)).min(3).max(5),
-				correctAnswers: z.array(z.string().min(1).max(260)).length(1),
-				rationale: z.string().min(20).max(1600),
-				sourceCitations: z
-					.array(
-						z.object({
-							citationId: z.string().min(1).max(80),
-							pageNumber: z.number().int().positive(),
-							noteFile: z.string().min(1).max(260),
-							chunkTitle: z.string().min(1).max(180),
-							chunkIndex: z.number().int().min(0)
-						})
-					)
-					.min(1)
-					.max(4)
-			})
-		)
-		.min(1)
-		.max(MAX_QUESTIONS_PER_WORKER)
 });

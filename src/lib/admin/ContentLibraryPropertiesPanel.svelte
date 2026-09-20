@@ -12,8 +12,11 @@
 		Sparkles,
 		TriangleAlert
 	} from 'lucide-svelte';
+	import { useConvexClient } from 'convex-svelte';
+	import { api } from '../../convex/_generated/api';
 	import type { Doc } from '../../convex/_generated/dataModel';
 	import { fileKind, formatDate, formatSize } from './contentLibrary';
+	import { documentPipeline } from './documentPipeline';
 
 	let {
 		document,
@@ -27,6 +30,20 @@
 		onCopy: (key: string, value: string) => void;
 	} = $props();
 
+	const client = useConvexClient();
+	let resuming = $state(false);
+	let resumeError = $state('');
+	async function resume() {
+		resuming = true;
+		resumeError = '';
+		try {
+			await client.action(api.ragKnowledge.indexR2Document, { documentId: document._id });
+		} catch (e) {
+			resumeError = e instanceof Error ? e.message : 'Could not resume processing';
+		} finally {
+			resuming = false;
+		}
+	}
 	type Step = {
 		key: string;
 		label: string;
@@ -46,9 +63,8 @@
 	}
 
 	const kind = $derived(fileKind(document));
+	const progress = $derived(documentPipeline(document.metadata));
 	const pipeline = $derived.by<Step[]>(() => {
-		const status = document.metadata?.ingestionStatus ?? 'not_started';
-		const hasExtract = Boolean(document.metadata?.extractionModel || document.metadata?.pageCount);
 		const steps: Step[] = [
 			{
 				key: 'stored',
@@ -91,23 +107,9 @@
 				error: 'map this document into topics'
 			}
 		];
-		if (status === 'mapped') {
-			steps[1].state = 'done';
-			steps[2].state = 'done';
-			steps[3].state = 'done';
-		} else if (status === 'indexed') {
-			steps[1].state = 'done';
-			steps[2].state = 'done';
-			steps[3].state = 'active';
-		} else if (status === 'indexing') {
-			steps[1].state = hasExtract ? 'done' : 'active';
-			steps[2].state = 'active';
-		} else if (status === 'failed') {
-			steps[1].state = hasExtract ? 'done' : 'error';
-			steps[2].state = 'error';
-		} else {
-			steps[1].state = hasExtract ? 'done' : 'idle';
-		}
+		steps.forEach((step, index) => {
+			step.state = progress.states[index];
+		});
 		return steps;
 	});
 </script>
@@ -164,10 +166,22 @@
 				{/if}
 			{/each}
 		</div>
-		{#if document.metadata?.ingestionStatus === 'failed' && document.metadata?.indexError}
+		{#if progress.visible && !progress.complete && !progress.failed}
+			<p role="status" class="mt-4 rounded-xl bg-info/10 p-3 text-sm text-base-content/70">
+				<span class="font-medium">{progress.label}</span>
+				<span class="text-base-content/50"> · Stage {progress.current + 1} of 4</span>
+			</p>
+		{/if}
+		{#if document.metadata?.indexError}
 			<div class="mt-4 flex gap-2 rounded-xl bg-error/10 p-3 text-xs text-error">
 				<TriangleAlert size={14} class="mt-0.5 shrink-0" />
-				<span class="break-words font-mono leading-relaxed">{document.metadata.indexError}</span>
+				<div>
+					<span class="break-words leading-relaxed">{document.metadata.indexError}</span><button
+						class="btn btn-xs mt-2"
+						disabled={resuming}
+						onclick={resume}>{resuming ? 'Resuming…' : 'Resume processing'}</button
+					>{#if resumeError}<p>{resumeError}</p>{/if}
+				</div>
 			</div>
 		{/if}
 	</div>

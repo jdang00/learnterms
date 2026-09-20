@@ -40,31 +40,36 @@
 
 {#if selectedDocumentId}
 	<div
-		class="group flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 py-1 pl-1.5 pr-1"
+		class="flex items-center gap-0.5 rounded-full border border-primary/30 bg-primary/5 py-1 pl-1 pr-1"
 	>
-		<span class="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
-			<FileText size={14} />
-		</span>
-		<div class="flex min-w-0 flex-col leading-tight">
-			<span class="max-w-[180px] truncate text-xs font-medium">{attachedTitle}</span>
-			{#if attachedPages}
-				<span class="text-[10px] text-base-content/50">{attachedPages} pages attached</span>
-			{/if}
+		<div class="tooltip tooltip-top" data-tip="Change document">
+			<button
+				type="button"
+				class="group flex items-center gap-2 rounded-full py-0.5 pl-0.5 pr-2 transition hover:bg-primary/10"
+				onclick={() => (open = true)}
+			>
+				<span
+					class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary"
+				>
+					<FileText size={14} />
+				</span>
+				<span class="flex min-w-0 flex-col text-left leading-tight">
+					<span class="max-w-[200px] truncate text-xs font-medium">{attachedTitle}</span>
+					{#if attachedPages}
+						<span class="text-[10px] text-base-content/50">{attachedPages} pages</span>
+					{/if}
+				</span>
+				<Replace
+					size={11}
+					class="shrink-0 text-base-content/30 transition group-hover:text-primary"
+				/>
+			</button>
 		</div>
 		<button
 			type="button"
-			class="btn btn-ghost btn-xs btn-circle"
-			title="Change source"
-			aria-label="Change source"
-			onclick={() => (open = true)}
-		>
-			<Replace size={13} />
-		</button>
-		<button
-			type="button"
-			class="btn btn-ghost btn-xs btn-circle text-base-content/50 hover:text-error"
-			title="Detach source"
-			aria-label="Detach source"
+			class="btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-error"
+			title="Remove this source"
+			aria-label="Remove this source"
 			onclick={detach}
 		>
 			<X size={13} />
@@ -92,7 +97,9 @@
 					<Paperclip size={16} />
 				</span>
 				<div>
-					<h3 class="text-sm font-semibold">Attach a source</h3>
+					<h3 class="text-sm font-semibold">
+						{selectedDocumentId ? 'Change source document' : 'Attach a source'}
+					</h3>
 					<p class="text-xs text-base-content/50">
 						Pick an indexed or mapped document for the agent to read
 					</p>

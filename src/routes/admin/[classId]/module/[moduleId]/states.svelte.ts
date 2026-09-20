@@ -11,6 +11,7 @@ export type MediaItem = { _id: string; url: string; altText: string; caption?: s
 export type SortMode = 'order' | 'created_desc';
 export type EditorMode = 'view' | 'add' | 'edit';
 export type DefaultQuestionStatus = 'published' | 'draft';
+export type BulkQuestionStatus = 'published' | 'draft' | 'archived';
 
 export class QuestionCurationState {
 	// Dependencies
@@ -387,36 +388,71 @@ export class QuestionCurationState {
 		}
 	}
 
-	async publishSelectedQuestions() {
+	async setSelectedQuestionsStatus(status: BulkQuestionStatus) {
 		if (this.selectedQuestions.size === 0 || !this.client) return;
+		const statusCopy: Record<
+			BulkQuestionStatus,
+			{ action: string; current: string; failure: string }
+		> = {
+			published: {
+				action: 'Published',
+				current: 'published',
+				failure: 'publish selected questions'
+			},
+			draft: {
+				action: 'Saved as draft',
+				current: 'drafts',
+				failure: 'save selected questions as drafts'
+			},
+			archived: {
+				action: 'Archived',
+				current: 'archived',
+				failure: 'archive selected questions'
+			}
+		};
+		const copy = statusCopy[status];
+
 		try {
-			const result = await this.client.mutation(api.question.bulkPublishQuestions, {
+			const result = await this.client.mutation(api.question.bulkUpdateQuestionStatus, {
 				questionIds: Array.from(this.selectedQuestions) as Id<'question'>[],
-				moduleId: this.moduleId as Id<'module'>
+				moduleId: this.moduleId as Id<'module'>,
+				status
 			});
 
-			if (result.publishedCount > 0) {
+			if (result.updatedCount > 0) {
 				toastStore.success(
-					`Published ${result.publishedCount} question${result.publishedCount !== 1 ? 's' : ''}`
+					`${copy.action} ${result.updatedCount} question${result.updatedCount !== 1 ? 's' : ''}`
 				);
 			} else if (result.skippedCount > 0) {
-				toastStore.success('Selected questions are already published');
+				toastStore.success(`Selected questions are already ${copy.current}`);
 			}
 
 			if (!result.success && result.errors.length > 0) {
 				toastStore.error(
-					`Published with ${result.errors.length} error${result.errors.length === 1 ? '' : 's'}`
+					`Updated with ${result.errors.length} error${result.errors.length === 1 ? '' : 's'}`
 				);
 			}
 
 			this.questionList = this.questionList.map((question) =>
-				this.selectedQuestions.has(question._id) ? { ...question, status: 'published' } : question
+				this.selectedQuestions.has(question._id) ? { ...question, status } : question
 			);
 			this.selectedQuestions = new SvelteSet<string>();
 		} catch (error) {
-			console.error('Failed to publish selected questions', error);
-			toastStore.error('Failed to publish selected questions');
+			console.error(`Failed to ${copy.failure}`, error);
+			toastStore.error(`Failed to ${copy.failure}`);
 		}
+	}
+
+	publishSelectedQuestions() {
+		return this.setSelectedQuestionsStatus('published');
+	}
+
+	draftSelectedQuestions() {
+		return this.setSelectedQuestionsStatus('draft');
+	}
+
+	archiveSelectedQuestions() {
+		return this.setSelectedQuestionsStatus('archived');
 	}
 
 	// Move operations

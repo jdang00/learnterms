@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { questionTypeLabel } from './questionStudioTypes';
 	import type { TopicMapItem } from './questionStudioTypes';
 
 	interface Props {
@@ -21,6 +22,11 @@
 				</div>
 			</div>
 			<p class="text-sm leading-relaxed text-base-content/70">{detailTopic.summary}</p>
+			<p class="mt-3 text-xs text-base-content/60">
+				{detailTopic.suggestedTypes
+					? `Suggested types: ${detailTopic.suggestedTypes.map(questionTypeLabel).join(', ')}`
+					: 'Question type suitability is checked during drafting and review.'}
+			</p>
 			{#if detailTopic.keyTerms.length > 0}
 				<div class="mt-4">
 					<p class="mb-1.5 text-xs font-medium text-base-content/50">Key terms</p>

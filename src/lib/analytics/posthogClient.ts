@@ -18,6 +18,7 @@ export async function getPostHog(): Promise<PostHog | null> {
 					capture_pageleave: true,
 					persistence: 'localStorage+cookie'
 				});
+				posthog.register({ product: 'LearnTerms', environment: 'production' });
 				return posthog;
 			})
 			.catch((error) => {

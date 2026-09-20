@@ -152,14 +152,6 @@
 					>
 						{classItem.code}
 					</span>
-					{#if classItem.semester?.name}
-						<span
-							class="text-[0.65rem] font-medium rounded-full px-2 py-0.5"
-							style="background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.9);"
-						>
-							{classItem.semester.name}
-						</span>
-					{/if}
 				</div>
 
 				<!-- Class name -->

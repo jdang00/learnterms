@@ -70,7 +70,7 @@
 	<ErrorDisplay error={questions.error} showReload={true} class="mb-4" />
 {:else if currentlySelected}
 	<div
-		class="flex flex-col md:flex-col lg:flex-row bg-base-100 h-full overflow-hidden p-2 md:p-3 lg:p-4 gap-3 sm:gap-4 lg:gap-8 transition-all duration-500 ease-in-out"
+		class="flex flex-col md:flex-col lg:flex-row bg-base-100 h-full overflow-hidden p-2 md:p-3 lg:p-4 lg:ps-2 gap-3 sm:gap-4 lg:gap-8 transition-all duration-500 ease-in-out"
 		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 	>
 		<span id="quiz-top" aria-hidden="true"></span>

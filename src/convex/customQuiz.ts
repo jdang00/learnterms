@@ -907,6 +907,13 @@ export const createCustomQuizAttempt = mutation({
 					options: question.options || [],
 					correctAnswers: question.correctAnswers || [],
 					rationale: getRationale(question),
+					source: question.metadata.generation?.sourceDocumentId
+						? {
+								sourceDocumentId: question.metadata.generation.sourceDocumentId,
+								sourcePageNumbers: question.metadata.generation.sourcePageNumbers,
+								sourceCitations: question.metadata.generation.sourceCitations
+							}
+						: undefined,
 					questionUpdatedAt: question.updatedAt
 				},
 				response: {
@@ -1323,7 +1330,8 @@ export const getAttemptResults = query({
 						type: item.questionSnapshot.type,
 						stem: item.questionSnapshot.stem,
 						options: orderedOptions,
-						rationale: getRationale(item.questionSnapshot)
+						rationale: getRationale(item.questionSnapshot),
+						source: item.questionSnapshot.source
 					},
 					response: item.response,
 					score: item.score,

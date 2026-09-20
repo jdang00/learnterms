@@ -59,6 +59,8 @@
 				setTimeout(() => {
 					captureQuestionAnswered({
 						questionId: currentlySelected._id,
+						generationJobId: currentlySelected.metadata?.generation?.jobId,
+						harnessVersion: currentlySelected.metadata?.generation?.harnessVersion,
 						moduleId: currentlySelected.moduleId,
 						classId: classId,
 						questionType: currentlySelected.type,
@@ -98,6 +100,8 @@
 		if (currentlySelected) {
 			captureQuestionAnswered({
 				questionId: currentlySelected._id,
+				generationJobId: currentlySelected.metadata?.generation?.jobId,
+				harnessVersion: currentlySelected.metadata?.generation?.harnessVersion,
 				moduleId: currentlySelected.moduleId,
 				classId: classId,
 				questionType: currentlySelected.type,

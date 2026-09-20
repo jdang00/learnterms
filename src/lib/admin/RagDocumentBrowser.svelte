@@ -65,7 +65,7 @@
 		<div class="mb-3">
 			<h2 class="text-sm font-semibold">Sources</h2>
 			<p class="mt-0.5 text-xs text-base-content/50">
-				Choose an indexed or mapped document for the topic map.
+				Choose an indexed or mapped document to use as your source.
 			</p>
 		</div>
 

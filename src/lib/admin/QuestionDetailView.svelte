@@ -1,4 +1,5 @@
 <script lang="ts">
+	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import { Pencil, Trash2, Copy, CopyPlus, ArrowRightLeft, Paperclip, Check } from 'lucide-svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
@@ -425,6 +426,7 @@
 				>
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					<div class="text-sm text-base-content/80 tiptap-content">{@html questionRationale}</div>
+					<QuestionSources source={question.metadata.generation} />
 				</div>
 			</div>
 		{/if}

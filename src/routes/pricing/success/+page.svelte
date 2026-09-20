@@ -90,12 +90,12 @@
 				</h3>
 				<ul class="space-y-3 text-sm">
 					<li class="flex items-start gap-3">
-						<span class="text-success font-bold">300</span>
-						<span>AI question generations per day</span>
+						<span class="text-success font-bold">AI</span>
+						<span>Question Studio curator beta; usage limits apply</span>
 					</li>
 					<li class="flex items-start gap-3">
-						<span class="text-success font-bold">∞</span>
-						<span>Unlimited PDF document ingestions</span>
+						<Sparkles size={16} class="text-success mt-0.5" />
+						<span>PDF indexing: up to 150 pages and 30 MB per file</span>
 					</li>
 					<li class="flex items-start gap-3">
 						<Sparkles size={16} class="text-success mt-0.5" />
@@ -107,7 +107,7 @@
 					</li>
 					<li class="flex items-start gap-3">
 						<Sparkles size={16} class="text-success mt-0.5" />
-						<span>Priority processing for all tasks</span>
+						<span>Source evidence review before publishing</span>
 					</li>
 				</ul>
 			</div>

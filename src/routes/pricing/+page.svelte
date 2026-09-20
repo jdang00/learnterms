@@ -166,7 +166,7 @@
 					<ul class="text-sm text-left space-y-2">
 						<li class="flex items-center gap-2">
 							<Sparkles size={16} class="text-primary" />
-							300 AI generations/day
+							Source-grounded Question Studio (beta)
 						</li>
 						<li class="flex items-center gap-2">
 							<Sparkles size={16} class="text-primary" />
@@ -265,18 +265,18 @@
 						<div
 							class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center shrink-0"
 						>
-							<span class="font-bold text-success">300</span>
+							<span class="font-bold text-success">AI</span>
 						</div>
 						<div>
 							<p class="font-medium">AI Generations</p>
-							<p class="text-sm text-base-content/60">Per day limit</p>
+							<p class="text-sm text-base-content/60">Curator beta; usage limits apply</p>
 						</div>
 					</div>
 					<div class="flex items-start gap-3">
 						<div
 							class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center shrink-0"
 						>
-							<span class="font-bold text-success">∞</span>
+							<Check size={20} class="text-success" />
 						</div>
 						<div>
 							<p class="font-medium">RAG Indexing</p>
@@ -301,8 +301,8 @@
 							<Check size={20} class="text-success" />
 						</div>
 						<div>
-							<p class="font-medium">Priority Processing</p>
-							<p class="text-sm text-base-content/60">Faster AI & uploads</p>
+							<p class="font-medium">Source Review</p>
+							<p class="text-sm text-base-content/60">Inspect evidence before publishing</p>
 						</div>
 					</div>
 				</div>
@@ -391,8 +391,8 @@
 					</ul>
 
 					<div class="mt-4 p-3 bg-base-200 rounded-lg text-sm">
-						<p class="font-medium mb-1">Daily Limits</p>
-						<p class="text-base-content/60">15 AI generations</p>
+						<p class="font-medium mb-1">Question Studio beta</p>
+						<p class="text-base-content/60">Up to 30 candidates per run; review required</p>
 					</div>
 
 					<div class="mt-4 text-sm text-base-content/50 flex items-center gap-1">
@@ -413,7 +413,7 @@
 				<div class="card-body">
 					<h2 class="card-title text-xl">Curator Pro</h2>
 					<p class="text-base-content/70 text-sm">
-						Scale your content creation with expanded limits.
+						Create and organize your cohort’s study material.
 					</p>
 
 					<div class="mt-6">
@@ -439,7 +439,7 @@
 						</li>
 						<li class="flex items-start gap-2">
 							<Check size={18} class="text-success shrink-0 mt-0.5" />
-							<span><strong>300</strong> AI generations/day</span>
+							<span>Source-grounded Question Studio (beta)</span>
 						</li>
 						<li class="flex items-start gap-2">
 							<Check size={18} class="text-success shrink-0 mt-0.5" />
@@ -502,8 +502,9 @@
 					>
 					<div class="collapse-content text-sm text-base-content/70">
 						<p>
-							On the free plan, you'll see a message when you've used your daily AI generations.
-							Limits reset every 24 hours.
+							Question Studio currently has shared beta usage limits for curators. A run can request
+							up to 30 candidates, and PDFs can contain up to 150 pages (30 MB). If a rate limit is
+							reached, wait before retrying. A paid plan does not guarantee a daily AI allowance.
 						</p>
 					</div>
 				</details>

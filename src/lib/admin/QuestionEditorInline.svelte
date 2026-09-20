@@ -1,4 +1,5 @@
 <script lang="ts">
+	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import {
 		X,
 		Bold,
@@ -37,7 +38,6 @@
 	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
 	import { getEditorExtensions } from '../config/tiptap';
 	import { useClerkContext } from 'svelte-clerk';
-	import type { Focus } from '$lib/config/generation';
 	import { Loader2 } from 'lucide-svelte';
 	import { getRationale, getRationalePlainText } from '$lib/utils/rationale';
 
@@ -242,10 +242,20 @@
 			value: 'published',
 			label: 'Published',
 			icon: CheckCircle,
-			colorClass: 'btn-success btn-soft'
+			colorClass: 'btn-success'
 		},
-		{ value: 'draft', label: 'Draft', icon: FileText, colorClass: 'btn-info btn-soft' },
-		{ value: 'archived', label: 'Archived', icon: Archive, colorClass: 'btn-error btn-soft' }
+		{
+			value: 'draft',
+			label: 'Draft',
+			icon: FileText,
+			colorClass: 'btn-info'
+		},
+		{
+			value: 'archived',
+			label: 'Archived',
+			icon: Archive,
+			colorClass: 'btn-error'
+		}
 	];
 
 	$effect(() => {
@@ -384,9 +394,6 @@
 	);
 	const rationaleDocsUrl =
 		'https://docs.learnterms.com/docs/contributors/why-rationales-are-required';
-
-	// Get user's domain focus from metadata or default to 'general'
-	let userFocus: Focus = $state('general'); // TODO: fetch from user settings/metadata when available
 
 	let queuedMedia: Array<{
 		url: string;
@@ -731,81 +738,8 @@
 		return false;
 	}
 
-	async function generateAIOptions() {
-		if (!canGenerateAI()) return;
-
-		isGeneratingAI = true;
-		try {
-			if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
-				const answer = fitbAnswers
-					.map((row) => row.value.trim())
-					.filter((t) => t.length > 0)
-					.join('; ');
-
-				const result = await client.action(api.question.generateRationale, {
-					stem: questionStem,
-					answer,
-					focus: userFocus,
-					existingRationale: questionRationale.trim() || undefined
-				});
-
-				if (result.rationale) {
-					questionRationale = result.rationale;
-					if ($rationaleEditor) {
-						$rationaleEditor.commands.setContent(result.rationale);
-					}
-				}
-
-				onChange();
-				toastStore.success('Rationale generated');
-			} else {
-				const correctTexts = correctAnswers
-					.map((idx) => options[parseInt(idx)]?.text || '')
-					.filter((t) => t.trim().length > 0);
-				const existingTexts = options.map((o) => o.text).filter((t) => t.trim().length > 0);
-
-				// Count empty option slots — that's how many distractors the user wants
-				const emptyCount = options.filter((o) => o.text.trim().length === 0).length;
-				const numDistractors = Math.max(1, emptyCount);
-
-				const result = await client.action(api.question.generateDistractorsAndRationale, {
-					stem: questionStem,
-					correctAnswers: correctTexts,
-					existingOptions: existingTexts,
-					focus: userFocus,
-					numDistractors,
-					existingRationale: questionRationale.trim() || undefined
-				});
-
-				// Fill empty slots with generated distractors
-				let distractorIdx = 0;
-				options = options.map((o) => {
-					if (o.text.trim().length === 0 && distractorIdx < result.distractors.length) {
-						return { text: result.distractors[distractorIdx++] };
-					}
-					return o;
-				});
-
-				if (result.rationale) {
-					questionRationale = result.rationale;
-					if ($rationaleEditor) {
-						$rationaleEditor.commands.setContent(result.rationale);
-					}
-				}
-
-				onChange();
-				toastStore.success('Options generated');
-			}
-		} catch (err: unknown) {
-			console.error('AI generation error:', err);
-			if (err instanceof Error && err.message.includes('Daily generation limit')) {
-				toastStore.error(err.message);
-			} else {
-				toastStore.error('Failed to generate. Try again.');
-			}
-		} finally {
-			isGeneratingAI = false;
-		}
+	function generateAIOptions() {
+		window.open('/admin/question-studio', '_blank', 'noopener,noreferrer');
 	}
 
 	function removeOption(index: number) {
@@ -1102,15 +1036,20 @@
 
 		<!-- Status Selector -->
 		<div class="flex flex-col gap-2">
-			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1"
+			<span class="text-[10px] font-bold text-base-content/70 uppercase tracking-wider ml-1"
 				>Status</span
 			>
-			<div class="flex shadow-xs bg-base-100 rounded-full border border-base-300 p-1 gap-0.5">
+			<div
+				class="flex flex-wrap gap-1 rounded-2xl border border-base-300 bg-base-100 p-1 shadow-xs"
+			>
 				{#each statusOptions as option (option.value)}
 					<button
-						class="btn btn-xs sm:btn-sm rounded-full border-0 {questionStatus === option.value
-							? option.colorClass + ' btn-active font-medium'
-							: 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
+						type="button"
+						aria-pressed={questionStatus === option.value}
+						class="btn btn-sm rounded-full border-0 px-3 font-semibold {questionStatus ===
+						option.value
+							? option.colorClass
+							: 'btn-ghost text-base-content'}"
 						onclick={() => {
 							questionStatus = option.value;
 							onChange();
@@ -1118,7 +1057,7 @@
 						title={option.label}
 					>
 						<option.icon size={16} />
-						<span class="hidden md:inline">{option.label}</span>
+						<span>{option.label}</span>
 					</button>
 				{/each}
 			</div>
@@ -1178,15 +1117,14 @@
 							<button
 								class="btn btn-xs btn-ghost gap-1"
 								onclick={generateAIOptions}
-								disabled={!canGenerateAI()}
-								title={canGenerateAI() ? 'Generate rationale with AI' : 'Add stem and answer first'}
+								title="Create source-grounded questions in Question Studio"
 							>
 								{#if isGeneratingAI}
 									<Loader2 size={12} class="animate-spin" />
 								{:else}
 									<Sparkles size={12} />
 								{/if}
-								<span class="hidden sm:inline">AI</span>
+								<span class="hidden sm:inline">Question Studio</span>
 							</button>
 						</div>
 						<div
@@ -1390,7 +1328,6 @@
 									<button
 										class="btn btn-xs btn-ghost gap-1"
 										onclick={generateAIOptions}
-										disabled={!canGenerateAI()}
 										title={canGenerateAI()
 											? 'Generate distractor options with AI'
 											: 'Add stem and correct answer first'}
@@ -1400,7 +1337,7 @@
 										{:else}
 											<Sparkles size={12} />
 										{/if}
-										<span class="hidden sm:inline">AI</span>
+										<span class="hidden sm:inline">Question Studio</span>
 									</button>
 									<button class="btn btn-xs btn-ghost gap-1" onclick={shuffleOptions}>
 										<Shuffle size={12} /> <span class="hidden sm:inline">Shuffle</span>
@@ -1505,6 +1442,7 @@
 							</div>
 						{/if}
 					</div>
+					<QuestionSources source={editingQuestion?.metadata?.generation} editing />
 				</div>
 
 				<div>

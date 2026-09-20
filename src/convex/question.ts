@@ -1,14 +1,74 @@
+import {
+	answerPosition,
+	assertStandaloneRationale,
+	shuffleCorrectAnswer
+} from './questionStudio/presentation';
 import { mutation, action, internalMutation } from './_generated/server';
 import { authCuratorMutation } from './authQueries';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
-import { components } from './_generated/api';
+import { components, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { applyQuestionCreationDeltaAndEvaluateBadges } from './badgeEngine';
 import { getRationale } from '../lib/utils/rationale';
 
+async function assertQuestionModuleAccess(ctx: MutationCtx, moduleId: Id<'module'>) {
+	const identity = await ctx.auth.getUserIdentity();
+	if (!identity) throw new Error('Unauthorized');
+	const user = await ctx.db
+		.query('users')
+		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
+		.first();
+	const module = await ctx.db.get(moduleId);
+	const classDoc = module ? await ctx.db.get(module.classId) : null;
+	if (
+		!user ||
+		!module ||
+		module.deletedAt ||
+		!classDoc ||
+		classDoc.deletedAt ||
+		(user.role !== 'dev' && user.cohortId !== classDoc.cohortId)
+	)
+		throw new Error('Module access denied');
+}
+
 const MAX_QUESTIONS_PER_MODULE = 150;
+
+async function prepareAiPublication(
+	ctx: MutationCtx,
+	question: {
+		_id: Id<'question'>;
+		moduleId: Id<'module'>;
+		order: number;
+		type: string;
+		aiGenerated: boolean;
+		status: string;
+		options: { id: string; text: string }[];
+		correctAnswers: string[];
+	},
+	rationale: string,
+	nextStatus: string
+) {
+	if (!question.aiGenerated || nextStatus !== 'published') return question.options;
+	assertStandaloneRationale(rationale);
+	if (
+		question.status === 'published' ||
+		question.type !== 'multiple_choice' ||
+		question.correctAnswers.length !== 1
+	)
+		return question.options;
+	const neighbors = (
+		await ctx.db
+			.query('question')
+			.withIndex('by_moduleId_order', (q) => q.eq('moduleId', question.moduleId))
+			.take(MAX_QUESTIONS_PER_MODULE + 1)
+	).filter((q) => !q.deletedAt && q.status === 'published' && q._id !== question._id);
+	const before = neighbors.filter((q) => q.order < question.order).map(answerPosition);
+	const after = neighbors.filter((q) => q.order >= question.order).map(answerPosition);
+	return shuffleCorrectAnswer(question.options, answerPosition(question), before, after);
+}
+
 const LIMIT_FREE = 15;
 const LIMIT_PRO = 300;
 
@@ -503,6 +563,7 @@ export const insertQuestion = authCuratorMutation({
 		)
 	},
 	handler: async (ctx, args) => {
+		await assertQuestionModuleAccess(ctx, args.moduleId);
 		await checkModuleCapacity(ctx, args.moduleId, 1);
 		const rationale = normalizeIncomingRationale(args);
 		if (!rationale) {
@@ -608,63 +669,111 @@ export const bulkDeleteQuestions = authCuratorMutation({
 	}
 });
 
+type BulkQuestionStatus = 'draft' | 'published' | 'archived';
+
+async function updateQuestionStatuses(
+	ctx: MutationCtx,
+	args: {
+		questionIds: Id<'question'>[];
+		moduleId: Id<'module'>;
+		status: BulkQuestionStatus;
+	},
+	distinctId: string
+) {
+	await assertQuestionModuleAccess(ctx, args.moduleId);
+	let updatedCount = 0;
+	let skippedCount = 0;
+	const errors: string[] = [];
+
+	for (const questionId of args.questionIds) {
+		try {
+			const question = await ctx.db.get(questionId);
+			if (!question) {
+				errors.push(`Question ${questionId} not found`);
+				continue;
+			}
+
+			if (question.moduleId !== args.moduleId) {
+				errors.push(`Question ${questionId} access denied`);
+				continue;
+			}
+
+			if (question.status === args.status) {
+				skippedCount++;
+				continue;
+			}
+
+			const options = await prepareAiPublication(
+				ctx,
+				question,
+				getRationale(question),
+				args.status
+			);
+			const searchText = computeSearchText({
+				stem: question.stem,
+				rationale: question.rationale,
+				explanation: question.explanation,
+				type: question.type,
+				status: args.status,
+				aiGenerated: question.aiGenerated,
+				options,
+				correctAnswers: question.correctAnswers || [],
+				metadata: question.metadata
+			});
+
+			await ctx.db.patch(questionId, {
+				status: args.status,
+				options,
+				updatedAt: Date.now(),
+				searchText
+			});
+
+			if (args.status === 'published' && question.metadata.generation?.jobId)
+				await ctx.scheduler.runAfter(0, internal.aiTelemetry.capture, {
+					event: 'question_generation_published',
+					distinctId,
+					properties: {
+						job_id: question.metadata.generation.jobId,
+						question_id: questionId,
+						harness_version: question.metadata.generation.harnessVersion
+					}
+				});
+			updatedCount++;
+		} catch (error) {
+			errors.push(`Failed to update question ${questionId}: ${error}`);
+		}
+	}
+
+	return {
+		updatedCount,
+		skippedCount,
+		errors,
+		success: errors.length === 0
+	};
+}
+
+export const bulkUpdateQuestionStatus = authCuratorMutation({
+	args: {
+		questionIds: v.array(v.id('question')),
+		moduleId: v.id('module'),
+		status: v.union(v.literal('draft'), v.literal('published'), v.literal('archived'))
+	},
+	handler: async (ctx, args) => await updateQuestionStatuses(ctx, args, ctx.identity.subject)
+});
+
+// Keep the original endpoint available while older clients transition to the generalized status action.
 export const bulkPublishQuestions = authCuratorMutation({
 	args: {
 		questionIds: v.array(v.id('question')),
 		moduleId: v.id('module')
 	},
 	handler: async (ctx, args) => {
-		let publishedCount = 0;
-		let skippedCount = 0;
-		const errors = [];
-
-		for (const questionId of args.questionIds) {
-			try {
-				const questionToPublish = await ctx.db.get(questionId);
-				if (!questionToPublish) {
-					errors.push(`Question ${questionId} not found`);
-					continue;
-				}
-
-				if (questionToPublish.moduleId !== args.moduleId) {
-					errors.push(`Question ${questionId} access denied`);
-					continue;
-				}
-
-				if (questionToPublish.status === 'published') {
-					skippedCount++;
-					continue;
-				}
-
-				const searchText = computeSearchText({
-					stem: questionToPublish.stem,
-					rationale: questionToPublish.rationale,
-					explanation: questionToPublish.explanation,
-					type: questionToPublish.type,
-					status: 'published',
-					aiGenerated: questionToPublish.aiGenerated,
-					options: questionToPublish.options || [],
-					correctAnswers: questionToPublish.correctAnswers || [],
-					metadata: questionToPublish.metadata
-				});
-
-				await ctx.db.patch(questionId, {
-					status: 'published',
-					updatedAt: Date.now(),
-					searchText
-				});
-				publishedCount++;
-			} catch (error) {
-				errors.push(`Failed to publish question ${questionId}: ${error}`);
-			}
-		}
-
-		return {
-			publishedCount,
-			skippedCount,
-			errors,
-			success: errors.length === 0
-		};
+		const result = await updateQuestionStatuses(
+			ctx,
+			{ ...args, status: 'published' },
+			ctx.identity.subject
+		);
+		return { ...result, publishedCount: result.updatedCount };
 	}
 });
 
@@ -681,6 +790,7 @@ export const updateQuestion = authCuratorMutation({
 		status: v.string()
 	},
 	handler: async (ctx, args) => {
+		await assertQuestionModuleAccess(ctx, args.moduleId);
 		const questionToUpdate = await ctx.db.get(args.questionId);
 		if (!questionToUpdate || questionToUpdate.moduleId !== args.moduleId) {
 			throw new Error('Question not found or access denied');
@@ -724,13 +834,24 @@ export const updateQuestion = authCuratorMutation({
 			);
 		}
 
+		const publishOptions = await prepareAiPublication(
+			ctx,
+			{
+				...questionToUpdate,
+				type: convertQuestionType(args.type),
+				options: optionsWithIds,
+				correctAnswers: correctAnswerIds
+			},
+			rationale,
+			args.status.toLowerCase()
+		);
 		const searchText = computeSearchText({
 			stem: args.stem,
 			rationale,
 			type: args.type,
 			status: args.status,
 			aiGenerated: questionToUpdate.aiGenerated,
-			options: optionsWithIds,
+			options: publishOptions,
 			correctAnswers: correctAnswerIds,
 			metadata: questionToUpdate.metadata
 		});
@@ -738,7 +859,7 @@ export const updateQuestion = authCuratorMutation({
 		await ctx.db.patch(args.questionId, {
 			type: convertQuestionType(args.type),
 			stem: args.stem,
-			options: optionsWithIds,
+			options: publishOptions,
 			correctAnswers: correctAnswerIds,
 			rationale,
 			status: args.status.toLowerCase(),
@@ -746,6 +867,19 @@ export const updateQuestion = authCuratorMutation({
 			searchText
 		});
 
+		if (questionToUpdate.metadata.generation?.jobId)
+			await ctx.scheduler.runAfter(0, internal.aiTelemetry.capture, {
+				event:
+					args.status.toLowerCase() === 'published' && questionToUpdate.status !== 'published'
+						? 'question_generation_published'
+						: 'question_generation_edited',
+				distinctId: ctx.identity.subject,
+				properties: {
+					job_id: questionToUpdate.metadata.generation.jobId,
+					question_id: args.questionId,
+					harness_version: questionToUpdate.metadata.generation.harnessVersion
+				}
+			});
 		return { updated: true };
 	}
 });
@@ -774,6 +908,7 @@ export const createQuestion = authCuratorMutation({
 		updatedAt: v.number()
 	},
 	handler: async (ctx, args) => {
+		await assertQuestionModuleAccess(ctx, args.moduleId);
 		await checkModuleCapacity(ctx, args.moduleId, 1);
 		const rationale = normalizeIncomingRationale(args);
 		if (!rationale) {
@@ -920,6 +1055,7 @@ export const updateQuestionOrder = authCuratorMutation({
 		moduleId: v.id('module')
 	},
 	handler: async (ctx, args) => {
+		await assertQuestionModuleAccess(ctx, args.moduleId);
 		const allQuestions = await ctx.db
 			.query('question')
 			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))

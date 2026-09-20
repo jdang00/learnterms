@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { ExternalLink, Maximize2, Minimize2, Presentation, Trash2, X } from 'lucide-svelte';
+	import {
+		ExternalLink,
+		Maximize2,
+		Minimize2,
+		Pencil,
+		Presentation,
+		Trash2,
+		X
+	} from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import AddDocumentModal from '../../../lib/admin/AddDocumentModal.svelte';
 	import ContentLibraryExplorer from '../../../lib/admin/ContentLibraryExplorer.svelte';
@@ -10,8 +18,10 @@
 	import ContentLibraryToolbar from '../../../lib/admin/ContentLibraryToolbar.svelte';
 	import DeleteConfirmationModal from '../../../lib/admin/DeleteConfirmationModal.svelte';
 	import FullscreenTableDialog from '../../../lib/admin/FullscreenTableDialog.svelte';
+	import RenameDocumentModal from '../../../lib/admin/RenameDocumentModal.svelte';
 	import {
 		fileKind,
+		formatPages,
 		formatSize,
 		type DrawerTab,
 		type SortKey,
@@ -56,6 +66,11 @@
 	let isDeleteModalOpen = $state(false);
 	let deletingDocument: Doc<'contentLib'> | null = $state(null);
 	let isDeleting = $state(false);
+	let isRenameModalOpen = $state(false);
+	let renamingDocument: Doc<'contentLib'> | null = $state(null);
+	let renameTitle = $state('');
+	let isRenaming = $state(false);
+	let renameError = $state('');
 	let error = $state('');
 	let searchTerm = $state('');
 	let selectedDocumentId = $state('');
@@ -189,6 +204,21 @@
 	function closeDeleteModal() {
 		isDeleteModalOpen = false;
 		deletingDocument = null;
+	}
+
+	function openRenameModal(document: Doc<'contentLib'>) {
+		renamingDocument = document;
+		renameTitle = document.title;
+		renameError = '';
+		isRenameModalOpen = true;
+	}
+
+	function closeRenameModal() {
+		if (isRenaming) return;
+		isRenameModalOpen = false;
+		renamingDocument = null;
+		renameTitle = '';
+		renameError = '';
 	}
 
 	function closeDrawer() {
@@ -340,6 +370,39 @@
 		}
 	}
 
+	async function handleRename() {
+		if (!renamingDocument) return;
+		const title = renameTitle.trim();
+		if (title.length < 2) {
+			renameError = 'File name must be at least 2 characters.';
+			return;
+		}
+		if (title.length > 100) {
+			renameError = 'File name cannot exceed 100 characters.';
+			return;
+		}
+		if (title === renamingDocument.title) {
+			closeRenameModal();
+			return;
+		}
+
+		isRenaming = true;
+		renameError = '';
+		try {
+			await client.mutation(api.contentLib.renameDocument, {
+				documentId: renamingDocument._id,
+				title
+			});
+			isRenameModalOpen = false;
+			renamingDocument = null;
+			renameTitle = '';
+		} catch (e) {
+			renameError = e instanceof Error ? e.message : 'Failed to rename file';
+		} finally {
+			isRenaming = false;
+		}
+	}
+
 	async function selectDocument(document: Doc<'contentLib'>, tab: DrawerTab = 'preview') {
 		selectedDocumentId = document._id;
 		drawerTab = tab;
@@ -377,6 +440,10 @@
 <svelte:window
 	onkeydown={(e) => {
 		if (e.key !== 'Escape') return;
+		if (isRenameModalOpen) {
+			closeRenameModal();
+			return;
+		}
 		if (fullscreenTableHtml) {
 			fullscreenTableHtml = '';
 			fullscreenTableLabel = '';
@@ -420,12 +487,14 @@
 			{selectedDocumentId}
 			onAdd={openAddModal}
 			onSelect={selectDocument}
+			onRename={openRenameModal}
 		/>
 	</div>
 </div>
 
 {#if isDrawerOpen && selectedDocument}
 	{@const kind = fileKind(selectedDocument)}
+	{@const pages = formatPages(selectedDocument.metadata?.pageCount)}
 	<aside
 		class="fixed inset-y-0 right-0 z-50 flex flex-col border-l border-base-300 bg-base-100 {isPanelFullscreen
 			? 'w-full'
@@ -443,6 +512,10 @@
 					<span class="font-medium">{kind.label}</span>
 					<span class="text-base-content/30">·</span>
 					<span>{formatSize(selectedDocument.metadata?.sizeBytes)}</span>
+					{#if pages}
+						<span class="text-base-content/30">·</span>
+						<span>{pages}</span>
+					{/if}
 				</div>
 			</div>
 			<div class="flex shrink-0 items-center gap-1">
@@ -496,6 +569,13 @@
 				</button>
 			</div>
 			<div class="flex-1"></div>
+			<button
+				class="btn btn-ghost btn-sm gap-2 rounded-full"
+				onclick={() => openRenameModal(selectedDocument!)}
+			>
+				<Pencil size={14} />
+				<span class="hidden sm:inline">Rename</span>
+			</button>
 			{#if viewUrl}
 				<button
 					type="button"
@@ -646,6 +726,15 @@
 	onConfirm={handleDelete}
 	itemName={deletingDocument?.title}
 	itemType="document"
+/>
+
+<RenameDocumentModal
+	isOpen={isRenameModalOpen}
+	bind:title={renameTitle}
+	isSaving={isRenaming}
+	error={renameError}
+	onCancel={closeRenameModal}
+	onConfirm={handleRename}
 />
 
 <style>

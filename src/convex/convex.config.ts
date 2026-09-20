@@ -5,7 +5,9 @@ import rateLimiter from '@convex-dev/rate-limiter/convex.config';
 import rag from '@convex-dev/rag/convex.config.js';
 import r2 from '@convex-dev/r2/convex.config.js';
 
+import workflow from '@convex-dev/workflow/convex.config.js';
 const app = defineApp();
+app.use(workflow);
 app.use(agent);
 app.use(polar);
 app.use(rateLimiter);

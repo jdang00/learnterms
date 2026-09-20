@@ -4,6 +4,8 @@ import { getPostHog } from './posthogClient';
 type SubmissionSource = 'button' | 'keyboard' | 'mobile';
 
 type QuestionAnsweredPayload = {
+	generationJobId?: string;
+	harnessVersion?: string;
 	questionId: string;
 	moduleId: string;
 	classId: string;
@@ -67,6 +69,8 @@ export function captureQuestionAnswered(payload: QuestionAnsweredPayload): boole
 
 		posthog.capture('question_answered', {
 			questionId: payload.questionId,
+			job_id: payload.generationJobId,
+			harness_version: payload.harnessVersion,
 			moduleId: payload.moduleId,
 			classId: payload.classId,
 			questionType: payload.questionType,

@@ -1,28 +1,21 @@
 <script lang="ts">
 	import { AlertTriangle } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
+	import QuestionStudioActivityDrawer from '$lib/admin/QuestionStudioActivityDrawer.svelte';
 	import QuestionStudioCandidateModal from '$lib/admin/QuestionStudioCandidateModal.svelte';
-	import QuestionStudioDestinationStep from '$lib/admin/QuestionStudioDestinationStep.svelte';
-	import QuestionStudioDraftingStep from '$lib/admin/QuestionStudioDraftingStep.svelte';
 	import QuestionStudioHeader from '$lib/admin/QuestionStudioHeader.svelte';
-	import QuestionStudioInspectorPanel from '$lib/admin/QuestionStudioInspectorPanel.svelte';
-	import QuestionStudioLoopCards from '$lib/admin/QuestionStudioLoopCards.svelte';
-	import QuestionStudioModePicker from '$lib/admin/QuestionStudioModePicker.svelte';
-	import QuestionStudioPhaseRail from '$lib/admin/QuestionStudioPhaseRail.svelte';
-	import QuestionStudioSourceStep from '$lib/admin/QuestionStudioSourceStep.svelte';
+	import QuestionStudioRunBar from '$lib/admin/QuestionStudioRunBar.svelte';
+	import QuestionStudioRunStage from '$lib/admin/QuestionStudioRunStage.svelte';
+	import QuestionStudioSetupCard from '$lib/admin/QuestionStudioSetupCard.svelte';
 	import QuestionStudioTopicDetailModal from '$lib/admin/QuestionStudioTopicDetailModal.svelte';
+	import { buildRunRows } from '$lib/admin/questionStudioRun';
+	import type { CandidateReview } from '$lib/admin/questionStudioRun';
 	import type {
 		CandidateQuestion,
-		GenerationMode,
-		QuestionStudioModel,
-		QuestionStudioPhase,
-		ReasoningOrder,
+		QuestionType,
 		TopicMapItem
 	} from '$lib/admin/questionStudioTypes';
-	import {
-		DEFAULT_QUESTION_STUDIO_MODEL,
-		QUESTION_STUDIO_MODEL_OPTIONS
-	} from '$lib/admin/questionStudioTypes';
+	import { questionTypes } from '$lib/admin/questionStudioTypes';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api';
 	import { useQuery, useConvexClient } from 'convex-svelte';
@@ -35,6 +28,14 @@
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
 	const SELECTION_STORAGE_KEY = 'question-studio-selection';
+	const MAX_QUESTIONS = 30;
+	type SourceMode = 'topics' | 'pages';
+	let sourceMode = $state<SourceMode>('topics');
+	let preferredSourceMode = $state<SourceMode>('topics');
+	let preferenceUserId = $state<string | null>(null);
+	let selectedPageNumbers = $state<number[]>([]);
+	let sourceIndexedAt = $state<number | undefined>();
+	let restoredScopeJobId = $state('');
 
 	type SavedStudioSelection = {
 		semesterName: string;
@@ -53,26 +54,29 @@
 	let moduleSearch = $state('');
 	let classOpen = $state(false);
 	let moduleOpen = $state(false);
-	let topicMapHidden = $state(false);
 	let detailTopic = $state<TopicMapItem | null>(null);
-
-	let generationMode = $state<GenerationMode | null>(null);
 	let guidanceNotes = $state('');
-	let selectedModel = $state<QuestionStudioModel>(DEFAULT_QUESTION_STUDIO_MODEL);
 
 	let topics = $state<TopicMapItem[]>([]);
 	let selectedTopicIds = $state<Set<string>>(new Set());
 	let candidates = $state<CandidateQuestion[]>([]);
 	let selectedCandidateIndexes = $state<Set<number>>(new Set());
 	let selectedCandidateIndex = $state<number | null>(null);
-	let counts = $state<Record<ReasoningOrder, number>>({ first: 3, second: 4, third: 3 });
+	let counts = $state<Record<QuestionType, number>>({
+		learn: 10,
+		clinical: 0,
+		criticalThinking: 0
+	});
 	let isGenerating = $state(false);
 	let isSaving = $state(false);
 	let workflowError = $state('');
-	let workflowMessage = $state('');
-	let blockedDuplicateCount = $state(0);
+	let savedDraftsLink = $state<{ classId: string; moduleId: string; query: string } | null>(null);
+	let isEditingCandidate = $state(false);
+	let activityOpen = $state(false);
 	let lastThreadId = $state('');
 	let loadedTopicMapId: Id<'questionStudioTopicMaps'> | null = $state(null);
+	let loadedTopicMapUpdatedAt = $state(0);
+	let restoredMixJobId = $state('');
 	let activeJobId: Id<'questionStudioJobs'> | null = $state(null);
 	let loadedGenerationJobId: Id<'questionStudioJobs'> | null = $state(null);
 	let loadedGenerationJobUpdatedAt = $state(0);
@@ -80,6 +84,32 @@
 	let restoredSelection = $state(false);
 	let resumingJobId: Id<'questionStudioJobs'> | null = $state(null);
 	let allowServerResume = $state(true);
+
+	// Only explicit mode changes update the preference. Restoring a saved run must
+	// preserve its own source mode without replacing the user's new-run default.
+	$effect(() => {
+		const userId = clerkUser?.id ?? null;
+		if (userId === preferenceUserId) return;
+		preferenceUserId = userId;
+		preferredSourceMode = 'topics';
+		try {
+			const saved = userId && localStorage.getItem(`question-studio-source-mode:${userId}`);
+			if (saved === 'pages' || saved === 'topics') preferredSourceMode = saved;
+		} catch {
+			// Storage can be unavailable in private or restricted browser sessions.
+		}
+		if (!activeJobId) sourceMode = preferredSourceMode;
+	});
+
+	function selectSourceMode(mode: SourceMode) {
+		sourceMode = mode;
+		preferredSourceMode = mode;
+		try {
+			if (clerkUser?.id) localStorage.setItem(`question-studio-source-mode:${clerkUser.id}`, mode);
+		} catch {
+			// Keep the current selection usable even if persistence is unavailable.
+		}
+	}
 
 	const convexUser = useQuery(api.users.getUserById, () =>
 		clerkUser ? { id: clerkUser.id } : 'skip'
@@ -96,7 +126,7 @@
 	);
 
 	const savedTopicMap = useQuery(api.questionStudio.getLatestSavedTopicMap, () =>
-		selectedDocumentId && selectedModuleId
+		sourceMode === 'topics' && selectedDocumentId && selectedModuleId
 			? {
 					documentId: selectedDocumentId,
 					moduleId: selectedModuleId
@@ -112,12 +142,24 @@
 		activeJobId ? { jobId: activeJobId } : 'skip'
 	);
 
+	// Verdicts only exist once the reviewer has run; they drive the per-question quality panel.
+	const jobReviews = useQuery(api.questionStudio.getGenerationJobReviews, () =>
+		activeJobId && (activeJob.data?.reviewCount ?? 0) > 0 ? { jobId: activeJobId } : 'skip'
+	);
+
+	const reviews = $derived((jobReviews.data ?? []) as CandidateReview[]);
+	const savedIndexes = $derived(new Set(activeJob.data?.savedCandidateIndexes ?? []));
 	const selectedTopics = $derived(topics.filter((topic) => selectedTopicIds.has(topic.topicId)));
-	const totalRequested = $derived(counts.first + counts.second + counts.third);
+	const totalRequested = $derived(counts.learn + counts.clinical + counts.criticalThinking);
 	const hasStudioContext = $derived(Boolean(selectedDocumentId && selectedModuleId));
 	const isTopicMapLoading = $derived(Boolean(hasStudioContext && savedTopicMap.isLoading));
 	const canGenerate = $derived(
-		hasStudioContext && selectedTopics.length > 0 && totalRequested > 0 && totalRequested <= 30
+		hasStudioContext &&
+			(sourceMode === 'pages'
+				? selectedPageNumbers.length > 0 && sourceIndexedAt !== undefined
+				: selectedTopics.length > 0) &&
+			totalRequested > 0 &&
+			totalRequested <= MAX_QUESTIONS
 	);
 	const canStartNewRun = $derived(
 		Boolean(
@@ -130,53 +172,24 @@
 		)
 	);
 
-	const agentStatus = $derived.by<{ text: string; working: boolean }>(() => {
-		if (isTopicMapLoading) return { text: 'Reading source notes', working: true };
-		if (activeJob.data?.status === 'running')
-			return { text: activeJob.data.statusText || 'Generating candidates', working: true };
-		if (isSaving) return { text: 'Saving selected drafts', working: true };
-		if (workflowMessage) return { text: workflowMessage, working: false };
-		if (topics.length > 0) return { text: 'Choose topics and generate', working: false };
-		if (hasStudioContext) return { text: 'Reading source notes', working: true };
-		return { text: 'Attach an indexed source to begin', working: false };
-	});
-
-	const phases = $derived.by<QuestionStudioPhase[]>(() => {
-		const job = activeJob.data;
-		const running = job?.status === 'running';
-		const planDone = Boolean(job?.plan);
-		const draftDone = (job?.candidates?.length ?? 0) > 0 || candidates.length > 0;
-		const reviewDone =
-			(job?.reviewCount ?? 0) > 0 || job?.status === 'ready' || candidates.length > 0;
-		return [
-			{
-				key: 'source',
-				label: 'Source',
-				state: topics.length > 0 ? 'done' : hasStudioContext ? 'active' : 'pending'
-			},
-			{
-				key: 'topics',
-				label: 'Topics',
-				state: running && !planDone ? 'active' : planDone ? 'done' : 'pending'
-			},
-			{
-				key: 'draft',
-				label: 'Questions',
-				state: running && planDone && !draftDone ? 'active' : draftDone ? 'done' : 'pending'
-			},
-			{
-				key: 'review',
-				label: 'Review',
-				state:
-					(running && draftDone && (job?.reviewCount ?? 0) === 0) ||
-					(running && job?.loop?.pass === 'gate')
-						? 'active'
-						: reviewDone
-							? 'done'
-							: 'pending'
-			}
-		];
-	});
+	const inRunMode = $derived(isGenerating || Boolean(activeJob.data));
+	const isReady = $derived(activeJob.data?.status === 'ready');
+	// Show the first draft the moment it lands so the reading pane fills while the run continues.
+	const displayCandidateIndex = $derived(
+		selectedCandidateIndex ?? (candidates.length > 0 ? 0 : null)
+	);
+	const unsavedCount = $derived(
+		candidates.map((_, index) => index).filter((index) => !savedIndexes.has(index)).length
+	);
+	const runRows = $derived(
+		buildRunRows({ job: activeJob.data, candidates, reviews, savedIndexes })
+	);
+	const sourceTitle = $derived(
+		selectedSourceSummary
+			.split('\n')
+			.find((line) => line.startsWith('Document: '))
+			?.slice('Document: '.length) ?? ''
+	);
 
 	$effect(() => {
 		if (semesters.data && !currentSemester) {
@@ -232,9 +245,10 @@
 				return;
 			}
 			allowServerResume = false;
+			selectedPageNumbers = [];
+			sourceIndexedAt = undefined;
 			resetPlan();
 			workflowError = '';
-			workflowMessage = '';
 			lastThreadId = '';
 			loadedTopicMapId = null;
 			activeJobId = null;
@@ -244,14 +258,15 @@
 	});
 
 	$effect(() => {
+		if (sourceMode !== 'topics') return;
 		const map = savedTopicMap.data;
-		if (!map || map._id === loadedTopicMapId) return;
+		if (!map || (map._id === loadedTopicMapId && map.updatedAt === loadedTopicMapUpdatedAt)) return;
 		topics = map.topics as TopicMapItem[];
 		selectedTopicIds = new Set(map.topics.map((topic) => topic.topicId));
 		if (!activeJobId) resetGenerated();
 		lastThreadId = map.agentThreadId ?? '';
 		loadedTopicMapId = map._id;
-		workflowMessage = `Loaded ${map.topics.length} saved topics.`;
+		loadedTopicMapUpdatedAt = map.updatedAt;
 		workflowError = '';
 	});
 
@@ -266,6 +281,16 @@
 	$effect(() => {
 		const job = activeJob.data;
 		if (!job) return;
+		if (restoredScopeJobId !== String(job._id)) {
+			sourceMode = job.sourceMode ?? 'topics';
+			selectedPageNumbers = job.selectedPageNumbers ?? [];
+			sourceIndexedAt = job.sourceIndexedAt;
+			restoredScopeJobId = String(job._id);
+		}
+		if (job.requestedCounts && restoredMixJobId !== String(job._id)) {
+			counts = { ...job.requestedCounts };
+			restoredMixJobId = String(job._id);
+		}
 		if (selectedDocumentId !== job.documentId || selectedModuleId !== job.moduleId) {
 			resumingJobId = job._id;
 			selectedDocumentId = job.documentId;
@@ -281,29 +306,29 @@
 				currentSemester = classItem.semester?.name ?? currentSemester;
 			}
 		}
-		if (!generationMode) generationMode = 'manual';
-		if (typeof job.model === 'string' && job.model.trim()) {
-			selectedModel = job.model as QuestionStudioModel;
-		}
 		lastThreadId = job.threadId ?? lastThreadId;
-		workflowMessage = job.statusText;
 		if (job.status === 'queued' || job.status === 'running') {
 			isGenerating = true;
 		}
 		if (job.candidates && job.updatedAt !== loadedGenerationJobUpdatedAt) {
 			const previousCount = candidates.length;
 			const previousSelected = selectedCandidateIndexes;
+			const alreadySaved = new Set(job.savedCandidateIndexes ?? []);
 			const incoming = job.candidates as CandidateQuestion[];
 			candidates = incoming;
+			// New drafts arrive pre-selected; saved ones drop out of the selection for good.
 			selectedCandidateIndexes = new Set(
 				incoming
-					.map((_, index) => (index >= previousCount || previousSelected.has(index) ? index : -1))
+					.map((_, index) =>
+						!alreadySaved.has(index) && (index >= previousCount || previousSelected.has(index))
+							? index
+							: -1
+					)
 					.filter((index) => index >= 0)
 			);
 			if (selectedCandidateIndex !== null && selectedCandidateIndex >= incoming.length) {
 				selectedCandidateIndex = null;
 			}
-			blockedDuplicateCount = job.blockedDuplicateCount ?? 0;
 			loadedGenerationJobUpdatedAt = job.updatedAt;
 		}
 		if (job.status === 'ready' && job._id !== loadedGenerationJobId) {
@@ -340,25 +365,18 @@
 		candidates = [];
 		selectedCandidateIndexes = new Set();
 		selectedCandidateIndex = null;
-		blockedDuplicateCount = 0;
 		activeJobId = null;
 		loadedGenerationJobId = null;
 		loadedGenerationJobUpdatedAt = 0;
+		savedDraftsLink = null;
 	}
 
 	function resetPlan() {
 		topics = [];
 		selectedTopicIds = new Set();
 		loadedTopicMapId = null;
-		generationMode = null;
 		guidanceNotes = '';
 		resetGenerated();
-	}
-
-	function selectMode(mode: GenerationMode) {
-		allowServerResume = false;
-		generationMode = mode;
-		if (mode === 'auto') setAllTopics(true);
 	}
 
 	function saveStudioSelection() {
@@ -422,14 +440,46 @@
 		resetGenerated();
 	}
 
-	function changeCount(order: ReasoningOrder, delta: number) {
-		const next = Math.max(0, counts[order] + delta);
-		const proposed = { ...counts, [order]: next };
-		if (proposed.first + proposed.second + proposed.third > 30) return;
-		counts = proposed;
+	function setCount(type: QuestionType, value: number) {
+		const others = totalRequested - counts[type];
+		const next = Math.max(0, Math.min(Math.floor(value), MAX_QUESTIONS - others));
+		counts = { ...counts, [type]: next };
+	}
+
+	// The headline number grows or shrinks the largest bucket, so the mix keeps its shape
+	// without the curator having to open it.
+	function distribute(current: Record<QuestionType, number>, target: number) {
+		const next = { ...current };
+		let total = next.learn + next.clinical + next.criticalThinking;
+		while (total < target) {
+			const type = questionTypes.reduce(
+				(best, candidate) => (next[candidate] > next[best] ? candidate : best),
+				'learn' as QuestionType
+			);
+			next[type] += 1;
+			total += 1;
+		}
+		while (total > target) {
+			const nonEmpty = questionTypes.filter((candidate) => next[candidate] > 0);
+			if (nonEmpty.length === 0) break;
+			const type = nonEmpty.reduce(
+				(best, candidate) => (next[candidate] > next[best] ? candidate : best),
+				nonEmpty[0]
+			);
+			next[type] -= 1;
+			total -= 1;
+		}
+		return next;
+	}
+
+	function setTotal(value: number) {
+		const target = Math.max(1, Math.min(Math.floor(value), MAX_QUESTIONS));
+		if (target === totalRequested) return;
+		counts = distribute(counts, target);
 	}
 
 	function toggleCandidate(index: number) {
+		if (isEditingCandidate || isSaving || savedIndexes.has(index)) return;
 		selectedCandidateIndexes = new Set(
 			selectedCandidateIndexes.has(index)
 				? [...selectedCandidateIndexes].filter((i) => i !== index)
@@ -438,28 +488,31 @@
 	}
 
 	function selectAllCandidates(selected: boolean) {
-		selectedCandidateIndexes = selected ? new Set(candidates.map((_, index) => index)) : new Set();
+		selectedCandidateIndexes = selected
+			? new Set(candidates.map((_, index) => index).filter((index) => !savedIndexes.has(index)))
+			: new Set();
 	}
 
 	function selectCandidate(index: number) {
+		if (isEditingCandidate || isSaving) return;
 		selectedCandidateIndex = index;
 	}
 
 	function navigateCandidate(direction: 'prev' | 'next') {
+		if (isEditingCandidate || isSaving) return;
 		if (candidates.length === 0) return;
-		if (selectedCandidateIndex === null) {
+		const current = selectedCandidateIndex ?? displayCandidateIndex;
+		if (current === null) {
 			selectedCandidateIndex = 0;
 			return;
 		}
-		const next = direction === 'next' ? selectedCandidateIndex + 1 : selectedCandidateIndex - 1;
+		const next = direction === 'next' ? current + 1 : current - 1;
 		if (next < 0 || next >= candidates.length) return;
 		selectedCandidateIndex = next;
 	}
 
 	async function generateCandidates() {
 		if (!selectedDocumentId || !selectedModuleId || !canGenerate) return;
-		const model = selectedModel.trim() || DEFAULT_QUESTION_STUDIO_MODEL;
-		selectedModel = model;
 		allowServerResume = true;
 		isGenerating = true;
 		workflowError = '';
@@ -469,18 +522,19 @@
 				documentId: selectedDocumentId,
 				moduleId: selectedModuleId,
 				requestedCount: totalRequested,
-				model
+				sourceMode,
+				selectedPageNumbers: sourceMode === 'pages' ? selectedPageNumbers : undefined,
+				sourceIndexedAt: sourceMode === 'pages' ? sourceIndexedAt : undefined,
+				counts
 			});
 			activeJobId = jobId;
-			workflowMessage = 'Queued candidate generation.';
 			void client
 				.action(api.questionStudio.generateCandidates, {
 					documentId: selectedDocumentId,
 					moduleId: selectedModuleId,
-					topics: selectedTopics,
+					topics: sourceMode === 'pages' ? [] : selectedTopics,
 					counts,
-					model,
-					focusNotes: generationMode === 'guided' ? guidanceNotes.trim() : undefined,
+					focusNotes: guidanceNotes.trim() || undefined,
 					jobId
 				})
 				.catch((error) => {
@@ -494,35 +548,48 @@
 	}
 
 	async function startNewRun() {
+		if (isEditingCandidate || isSaving) return;
 		allowServerResume = false;
 		isGenerating = false;
 		workflowError = '';
+		activityOpen = false;
 		try {
 			await client.mutation(api.questionStudio.clearCurrentGenerationJob, {});
 			resetGenerated();
-			workflowMessage = 'Ready for a new run.';
+			sourceMode = preferredSourceMode;
 		} catch (error) {
 			workflowError = error instanceof Error ? error.message : 'Failed to clear current run';
 		}
 	}
 
 	async function saveSelected() {
+		if (isEditingCandidate || isSaving || !activeJobId || !isReady) return;
 		if (!selectedDocumentId || !selectedModuleId || selectedCandidateIndexes.size === 0) return;
+		const indexes = [...selectedCandidateIndexes].filter((index) => !savedIndexes.has(index));
+		if (indexes.length === 0) return;
 		isSaving = true;
+		const savedJobId = activeJobId;
+		const savedModuleId = selectedModuleId;
+		const savedClassId = activeJob.data?.moduleClassId ?? selectedClass?._id;
 		workflowError = '';
-		workflowMessage = '';
 		try {
-			const picked = candidates.filter((_, index) => selectedCandidateIndexes.has(index));
 			const result = await client.mutation(api.questionStudio.saveSelectedCandidates, {
 				moduleId: selectedModuleId,
 				documentId: selectedDocumentId,
-				candidates: picked,
+				jobId: activeJobId,
+				candidateIndexes: indexes,
 				status: 'draft'
 			});
-			candidates = [];
-			selectedCandidateIndexes = new Set();
-			selectedCandidateIndex = null;
-			workflowMessage = `Saved ${result.insertedCount} draft questions to ${selectedModuleTitle}.`;
+			if (savedClassId && result.insertedIds.length)
+				savedDraftsLink = {
+					classId: String(savedClassId),
+					moduleId: String(savedModuleId),
+					query: `generationJob=${savedJobId}&review=${result.insertedIds[0]}`
+				};
+			// The run stays on screen; saved drafts simply stop being selectable.
+			selectedCandidateIndexes = new Set(
+				[...selectedCandidateIndexes].filter((index) => !indexes.includes(index))
+			);
 		} catch (error) {
 			workflowError = error instanceof Error ? error.message : 'Failed to save questions';
 		} finally {
@@ -531,8 +598,20 @@
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
+		if (
+			isEditingCandidate ||
+			isSaving ||
+			(event.target instanceof HTMLElement &&
+				(event.target.isContentEditable || event.target.closest('button, select, a')))
+		)
+			return;
 		if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
 			return;
+		if (event.key === 'Escape' && activityOpen) {
+			event.preventDefault();
+			activityOpen = false;
+			return;
+		}
 		if (candidates.length === 0) return;
 		if (event.key === 'ArrowUp') {
 			event.preventDefault();
@@ -540,6 +619,13 @@
 		} else if (event.key === 'ArrowDown') {
 			event.preventDefault();
 			navigateCandidate('next');
+		} else if (event.key === ' ') {
+			if (displayCandidateIndex !== null) {
+				event.preventDefault();
+				toggleCandidate(displayCandidateIndex);
+			}
+		} else if (event.key === 'Escape') {
+			selectedCandidateIndex = null;
 		}
 	}
 
@@ -556,120 +642,152 @@
 	});
 </script>
 
-<div class="qs-shell relative isolate flex h-screen flex-col overflow-hidden bg-base-100">
-	<div class="mx-auto flex w-full max-w-[1800px] flex-1 flex-col p-4 sm:p-6 min-h-0">
-		<QuestionStudioHeader />
+<div
+	class="qs-shell relative isolate flex h-[calc(100vh-4rem)] flex-col overflow-hidden bg-base-100"
+>
+	{#if inRunMode}
+		<QuestionStudioRunBar
+			job={activeJob.data}
+			candidateCount={candidates.length}
+			className={selectedClass?.name ?? ''}
+			moduleTitle={selectedModuleTitle}
+			{sourceTitle}
+			{counts}
+			topicsSelected={selectedTopics.length}
+			topicsTotal={topics.length}
+			bind:activityOpen
+			canStartNewRun={canStartNewRun && !isEditingCandidate && !isSaving}
+			{unsavedCount}
+			onStartNewRun={startNewRun}
+		/>
 
-		<div class="flex min-h-0 flex-1 flex-col gap-4 xl:grid xl:grid-cols-12">
+		<div class="qs-canvas relative min-h-0 flex-1 overflow-hidden bg-base-200">
+			<div class="qs-grid pointer-events-none absolute inset-0"></div>
+			<div class="relative flex h-full min-h-0 flex-col gap-3 p-3 sm:p-4">
+				{#if workflowError}
+					<div class="alert alert-error shrink-0 rounded-2xl text-sm" in:fade={{ duration: 200 }}>
+						<AlertTriangle size={16} />
+						<span>{workflowError}</span>
+						<button
+							class="btn btn-ghost btn-xs ml-auto rounded-full"
+							onclick={() => (workflowError = '')}
+						>
+							Dismiss
+						</button>
+					</div>
+				{/if}
+
+				<QuestionStudioRunStage
+					job={activeJob.data}
+					rows={runRows}
+					{candidates}
+					{reviews}
+					{selectedCandidateIndexes}
+					{savedIndexes}
+					displayIndex={displayCandidateIndex}
+					canEdit={isReady && !isSaving}
+					editing={isEditingCandidate}
+					{isSaving}
+					{isReady}
+					moduleTitle={selectedModuleTitle}
+					{savedDraftsLink}
+					onEditingChange={(value) => (isEditingCandidate = value)}
+					onSelectCandidate={selectCandidate}
+					onToggleCandidate={toggleCandidate}
+					onSelectAllCandidates={selectAllCandidates}
+					onSaveSelected={saveSelected}
+					onStartNewRun={startNewRun}
+					onNavigateCandidate={navigateCandidate}
+				/>
+			</div>
+		</div>
+	{:else}
+		<div class="mx-auto flex w-full max-w-[1800px] min-h-0 flex-1 flex-col p-4 sm:p-6">
+			<QuestionStudioHeader />
+
 			<section
-				class="flex min-h-0 flex-1 flex-col rounded-2xl border border-base-300 bg-base-100 shadow-xs xl:col-span-8 xl:flex-none"
+				class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-xs"
 			>
-				<QuestionStudioPhaseRail {phases} />
-
-				<div class="qs-canvas relative min-h-0 flex-1 overflow-y-auto rounded-b-2xl bg-base-200">
+				<div class="qs-canvas relative min-h-0 flex-1 overflow-y-auto rounded-2xl bg-base-200">
 					<div class="qs-grid pointer-events-none absolute inset-0"></div>
-					<div class="relative mx-auto w-full max-w-4xl space-y-3 p-4 sm:p-6">
+					<div class="relative mx-auto w-full max-w-3xl space-y-3 p-4 sm:p-8">
 						{#if workflowError}
 							<div class="alert alert-error rounded-2xl text-sm" in:fade={{ duration: 200 }}>
 								<AlertTriangle size={16} />
 								<span>{workflowError}</span>
+								<button
+									class="btn btn-ghost btn-xs ml-auto rounded-full"
+									onclick={() => (workflowError = '')}
+								>
+									Dismiss
+								</button>
 							</div>
 						{/if}
 
-						{#if activeJob.data?.loop?.enabled}
-							<QuestionStudioLoopCards job={activeJob.data} />
-						{/if}
-
-						<QuestionStudioDestinationStep
+						<QuestionStudioSetupCard
+							cohortId={convexUser.data?.cohortId as Id<'cohort'> | null | undefined}
+							cohortLoading={convexUser.isLoading}
+							bind:selectedDocumentId
+							bind:selectedSourceSummary
 							{currentSemester}
 							semesters={semesters.data}
 							{selectedClass}
 							{selectedModuleId}
 							{selectedModuleTitle}
-							{filteredClasses}
 							{searchedClasses}
-							modules={modules.data as Doc<'module'>[] | undefined}
 							{searchedModules}
 							bind:classOpen
 							bind:moduleOpen
 							bind:classSearch
 							bind:moduleSearch
+							{sourceMode}
+							onSelectSourceMode={selectSourceMode}
+							bind:selectedPageNumbers
+							bind:sourceIndexedAt
+							{topics}
+							{selectedTopicIds}
+							bind:detailTopic
+							{counts}
+							{totalRequested}
+							bind:guidanceNotes
+							{hasStudioContext}
+							{isTopicMapLoading}
+							{canGenerate}
+							{isGenerating}
+							maxQuestions={MAX_QUESTIONS}
 							onSelectSemester={selectSemester}
 							onSelectClass={selectClass}
 							onSelectModule={selectModule}
+							onToggleTopic={toggleTopic}
+							onSetAllTopics={setAllTopics}
+							onSetCount={setCount}
+							onSetTotal={setTotal}
+							onGenerate={generateCandidates}
 						/>
-
-						{#if selectedModuleId}
-							<QuestionStudioSourceStep
-								cohortId={convexUser.data?.cohortId as Id<'cohort'> | null | undefined}
-								cohortLoading={convexUser.isLoading}
-								bind:selectedDocumentId
-								bind:selectedSourceSummary
-								{hasStudioContext}
-								topicsLength={topics.length}
-								{isTopicMapLoading}
-							/>
-						{/if}
-
-						{#if selectedDocumentId && topics.length > 0 && !generationMode}
-							<QuestionStudioModePicker onSelectMode={selectMode} />
-						{/if}
-
-						{#if generationMode && topics.length > 0}
-							<QuestionStudioDraftingStep
-								bind:generationMode
-								bind:guidanceNotes
-								bind:topicMapHidden
-								bind:detailTopic
-								{topics}
-								{selectedTopicIds}
-								{counts}
-								bind:selectedModel
-								modelOptions={QUESTION_STUDIO_MODEL_OPTIONS}
-								{totalRequested}
-								{canGenerate}
-								{canStartNewRun}
-								{isGenerating}
-								{isSaving}
-								agentStatusText={agentStatus.text}
-								showGeneratingState={isGenerating || activeJob.data?.status === 'running'}
-								{candidates}
-								{selectedCandidateIndexes}
-								{selectedCandidateIndex}
-								{blockedDuplicateCount}
-								onToggleTopic={toggleTopic}
-								onSetAllTopics={setAllTopics}
-								onChangeCount={changeCount}
-								onGenerateCandidates={generateCandidates}
-								onStartNewRun={startNewRun}
-								onSelectCandidate={selectCandidate}
-								onToggleCandidate={toggleCandidate}
-								onSelectAllCandidates={selectAllCandidates}
-								onSaveSelected={saveSelected}
-							/>
-						{/if}
 					</div>
 				</div>
 			</section>
-
-			<QuestionStudioInspectorPanel
-				activeJob={activeJob.data}
-				{hasStudioContext}
-				topicsLength={topics.length}
-				{canStartNewRun}
-				onStartNewRun={startNewRun}
-			/>
 		</div>
-	</div>
+	{/if}
 </div>
 
-<QuestionStudioCandidateModal
-	{candidates}
-	{selectedCandidateIndexes}
-	bind:selectedCandidateIndex
-	onToggleCandidate={toggleCandidate}
-	onNavigateCandidate={navigateCandidate}
-/>
+<QuestionStudioActivityDrawer bind:open={activityOpen} job={activeJob.data} {reviews} />
+
+<div class="lg:hidden">
+	<QuestionStudioCandidateModal
+		job={activeJob.data}
+		{reviews}
+		{savedIndexes}
+		canEdit={isReady && !isSaving}
+		editing={isEditingCandidate}
+		onEditingChange={(value) => (isEditingCandidate = value)}
+		{candidates}
+		{selectedCandidateIndexes}
+		bind:selectedCandidateIndex
+		onToggleCandidate={toggleCandidate}
+		onNavigateCandidate={navigateCandidate}
+	/>
+</div>
 
 <QuestionStudioTopicDetailModal bind:detailTopic />
 

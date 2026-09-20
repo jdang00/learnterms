@@ -324,6 +324,8 @@
 						setTimeout(() => {
 							captureQuestionAnswered({
 								questionId: currentlySelected._id,
+								generationJobId: currentlySelected.metadata?.generation?.jobId,
+								harnessVersion: currentlySelected.metadata?.generation?.harnessVersion,
 								moduleId: currentlySelected.moduleId,
 								classId: data.classId,
 								questionType: currentlySelected.type,
@@ -342,6 +344,8 @@
 									correctAnswers.every((answer: string) => selectedAnswers.includes(answer));
 						captureQuestionAnswered({
 							questionId: currentlySelected._id,
+							generationJobId: currentlySelected.metadata?.generation?.jobId,
+							harnessVersion: currentlySelected.metadata?.generation?.harnessVersion,
 							moduleId: currentlySelected.moduleId,
 							classId: data.classId,
 							questionType: currentlySelected.type,
@@ -361,6 +365,8 @@
 						qs.checkAnswer(correctAnswers, selectedAnswers);
 						captureQuestionAnswered({
 							questionId: currentlySelected._id,
+							generationJobId: currentlySelected.metadata?.generation?.jobId,
+							harnessVersion: currentlySelected.metadata?.generation?.harnessVersion,
 							moduleId: currentlySelected.moduleId,
 							classId: data.classId,
 							questionType: currentlySelected.type,

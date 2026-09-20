@@ -1,6 +1,13 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
+const questionStudioQuestionType = v.union(
+	v.literal('learn'),
+	v.literal('clinical'),
+	v.literal('criticalThinking')
+);
+
+// Legacy fields remain optional so stored drafts and jobs stay readable.
 const questionStudioReasoningOrder = v.union(
 	v.literal('first'),
 	v.literal('second'),
@@ -12,6 +19,7 @@ const questionStudioSourceCitation = v.object({
 	pageNumber: v.number(),
 	noteFile: v.string(),
 	chunkTitle: v.string(),
+	quote: v.optional(v.string()),
 	chunkIndex: v.number()
 });
 
@@ -21,7 +29,8 @@ const questionStudioCandidate = v.object({
 	options: v.array(v.string()),
 	correctAnswers: v.array(v.string()),
 	rationale: v.string(),
-	reasoningOrder: questionStudioReasoningOrder,
+	questionType: v.optional(questionStudioQuestionType),
+	reasoningOrder: v.optional(questionStudioReasoningOrder),
 	topicId: v.string(),
 	topicTitle: v.string(),
 	sourcePageNumbers: v.array(v.number()),
@@ -32,6 +41,10 @@ const questionStudioCandidate = v.object({
 	metadata: v.object({
 		model: v.string(),
 		agentThreadId: v.optional(v.string()),
+		jobId: v.optional(v.id('questionStudioJobs')),
+		harnessVersion: v.optional(v.string()),
+		curatorEditedAt: v.optional(v.number()),
+		curatorRevision: v.optional(v.number()),
 		sourceDocumentId: v.id('contentLib')
 	})
 });
@@ -60,7 +73,8 @@ const questionStudioGenerationPlan = v.object({
 			taskId: v.string(),
 			label: v.string(),
 			plannedCount: v.number(),
-			reasoningOrder: questionStudioReasoningOrder,
+			questionType: v.optional(questionStudioQuestionType),
+			reasoningOrder: v.optional(questionStudioReasoningOrder),
 			topicCount: v.number(),
 			topicTitles: v.array(v.string()),
 			sourcePages: v.array(v.number()),
@@ -74,7 +88,8 @@ const questionStudioGenerationPlan = v.object({
 			topicId: v.string(),
 			topicTitle: v.string(),
 			plannedCount: v.number(),
-			reasoningOrder: questionStudioReasoningOrder,
+			questionType: v.optional(questionStudioQuestionType),
+			reasoningOrder: v.optional(questionStudioReasoningOrder),
 			sourcePages: v.array(v.number()),
 			notes: v.string()
 		})
@@ -266,6 +281,10 @@ export default defineSchema({
 					model: v.string(),
 					focus: v.string(),
 					customPromptUsed: v.boolean(),
+					jobId: v.optional(v.id('questionStudioJobs')),
+					harnessVersion: v.optional(v.string()),
+					curatorEditedAt: v.optional(v.number()),
+					curatorRevision: v.optional(v.number()),
 					sourceDocumentId: v.optional(v.id('contentLib')),
 					sourcePageNumbers: v.optional(v.array(v.number())),
 					sourceCitations: v.optional(
@@ -275,11 +294,13 @@ export default defineSchema({
 								pageNumber: v.number(),
 								noteFile: v.string(),
 								chunkTitle: v.string(),
+								quote: v.optional(v.string()),
 								chunkIndex: v.number()
 							})
 						)
 					),
 					topicTitle: v.optional(v.string()),
+					questionType: v.optional(questionStudioQuestionType),
 					reasoningOrder: v.optional(
 						v.union(v.literal('first'), v.literal('second'), v.literal('third'))
 					),
@@ -567,6 +588,13 @@ export default defineSchema({
 			rationale: v.optional(v.string()),
 			// DEPRECATED: retained temporarily for legacy attempt snapshots
 			explanation: v.optional(v.string()),
+			source: v.optional(
+				v.object({
+					sourceDocumentId: v.optional(v.id('contentLib')),
+					sourcePageNumbers: v.optional(v.array(v.number())),
+					sourceCitations: v.optional(v.array(questionStudioSourceCitation))
+				})
+			),
 			questionUpdatedAt: v.number()
 		}),
 		response: v.object({
@@ -703,6 +731,30 @@ export default defineSchema({
 		.index('by_slug', ['slug'])
 		.index('by_status', ['status'])
 		.index('by_rulesetId', ['rulesetId']),
+	documentIngestionJobs: defineTable({
+		documentId: v.id('contentLib'),
+		actor: v.string(),
+		workflowId: v.optional(v.string()),
+		status: v.union(
+			v.literal('queued'),
+			v.literal('processing'),
+			v.literal('indexing'),
+			v.literal('complete'),
+			v.literal('failed')
+		),
+		createdAt: v.number(),
+		checkUrl: v.optional(v.string()),
+		expectedPages: v.optional(v.number()),
+		reservedCents: v.optional(v.number()),
+		costCents: v.optional(v.number()),
+		period: v.optional(v.string()),
+		artifactKey: v.optional(v.string()),
+		error: v.optional(v.string())
+	}).index('by_documentId', ['documentId']),
+	parsingBudgets: defineTable({ period: v.string(), reservedCents: v.number() }).index(
+		'by_period',
+		['period']
+	),
 	contentLib: defineTable({
 		title: v.string(),
 		description: v.optional(v.string()),
@@ -731,6 +783,8 @@ export default defineSchema({
 						v.literal('failed')
 					)
 				),
+				ingestionJobId: v.optional(v.id('documentIngestionJobs')),
+				ingestionStage: v.optional(v.string()),
 				ragNamespace: v.optional(v.string()),
 				ragEntryId: v.optional(v.string()),
 				extractionArtifactKeys: v.optional(v.array(v.string())),
@@ -738,6 +792,14 @@ export default defineSchema({
 				extractionModel: v.optional(v.string()),
 				indexedAt: v.optional(v.number()),
 				mappedAt: v.optional(v.number()),
+				topicMapping: v.optional(
+					v.object({
+						sourceIndexedAt: v.number(),
+						status: v.union(v.literal('running'), v.literal('complete'), v.literal('failed')),
+						startedAt: v.number(),
+						error: v.optional(v.string())
+					})
+				),
 				indexError: v.optional(v.string()),
 				pageCount: v.optional(v.number()),
 				topics: v.optional(
@@ -752,8 +814,11 @@ export default defineSchema({
 			})
 		),
 		deletedAt: v.optional(v.number())
-	}).index('by_cohortId', ['cohortId']),
+	})
+		.index('by_cohortId', ['cohortId'])
+		.index('by_cohortId_and_title', ['cohortId', 'title']),
 	questionStudioTopicMaps: defineTable({
+		mappingVersion: v.optional(v.string()),
 		documentId: v.id('contentLib'),
 		cohortId: v.id('cohort'),
 		createdFromModuleId: v.optional(v.id('module')),
@@ -768,9 +833,8 @@ export default defineSchema({
 				pageNumbers: v.array(v.number()),
 				learningObjectives: v.array(v.string()),
 				keyTerms: v.array(v.string()),
-				suggestedOrders: v.array(
-					v.union(v.literal('first'), v.literal('second'), v.literal('third'))
-				),
+				suggestedTypes: v.optional(v.array(questionStudioQuestionType)),
+				suggestedOrders: v.optional(v.array(questionStudioReasoningOrder)),
 				estimatedQuestionCapacity: v.number()
 			})
 		),
@@ -787,6 +851,17 @@ export default defineSchema({
 		.index('by_documentId_pageRange', ['documentId', 'startPage', 'endPage'])
 		.index('by_cohortId', ['cohortId']),
 	questionStudioJobs: defineTable({
+		sourceMode: v.optional(v.union(v.literal('topics'), v.literal('pages'))),
+		selectedPageNumbers: v.optional(v.array(v.number())),
+		requestedCounts: v.optional(
+			v.object({ learn: v.number(), clinical: v.number(), criticalThinking: v.number() })
+		),
+		sourceIndexedAt: v.optional(v.number()),
+		dismissedAt: v.optional(v.number()),
+		completedWorkers: v.optional(v.array(v.number())),
+		claimedWorkers: v.optional(v.array(v.number())),
+		savedCandidateIndexes: v.optional(v.array(v.number())),
+		thinking: v.optional(v.union(v.literal('low'), v.literal('medium'), v.literal('high'))),
 		documentId: v.id('contentLib'),
 		moduleId: v.id('module'),
 		cohortId: v.id('cohort'),
@@ -829,6 +904,7 @@ export default defineSchema({
 		cohortId: v.id('cohort'),
 		index: v.number(),
 		candidate: questionStudioCandidate,
+		originalCandidate: v.optional(questionStudioCandidate),
 		createdAt: v.number()
 	})
 		.index('by_jobId', ['jobId'])

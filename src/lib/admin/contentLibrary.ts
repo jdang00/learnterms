@@ -10,6 +10,7 @@ export type FileKind = {
 	icon: typeof FileText;
 	accent: string;
 	tint: string;
+	hue: string;
 };
 
 export const sortOptions: Array<{ key: SortKey; label: string }> = [
@@ -19,6 +20,11 @@ export const sortOptions: Array<{ key: SortKey; label: string }> = [
 	{ key: 'size', label: 'Largest first' },
 	{ key: 'type', label: 'File type' }
 ];
+
+export function formatPages(count?: number) {
+	if (!count || count < 1) return null;
+	return `${count} ${count === 1 ? 'page' : 'pages'}`;
+}
 
 export function formatSize(bytes?: number) {
 	if (!bytes) return '-';
@@ -60,18 +66,37 @@ export function fileKind(doc: Doc<'contentLib'>): FileKind {
 	const mime = doc.metadata?.mimeType ?? '';
 	const name = (doc.metadata?.originalFileName ?? doc.title ?? '').toLowerCase();
 	if (mime === 'application/pdf' || name.endsWith('.pdf')) {
-		return { label: 'PDF', icon: FileText, accent: 'text-error', tint: 'bg-error/10' };
+		return {
+			label: 'PDF',
+			icon: FileText,
+			accent: 'text-error',
+			tint: 'bg-error/10',
+			hue: 'var(--color-error)'
+		};
 	}
 	if (mime.includes('presentation') || name.endsWith('.ppt') || name.endsWith('.pptx')) {
 		return {
 			label: 'Slides',
 			icon: Presentation,
 			accent: 'text-warning',
-			tint: 'bg-warning/10'
+			tint: 'bg-warning/10',
+			hue: 'var(--color-warning)'
 		};
 	}
 	if (mime.startsWith('image/')) {
-		return { label: 'Image', icon: ImageIcon, accent: 'text-secondary', tint: 'bg-secondary/10' };
+		return {
+			label: 'Image',
+			icon: ImageIcon,
+			accent: 'text-secondary',
+			tint: 'bg-secondary/10',
+			hue: 'var(--color-secondary)'
+		};
 	}
-	return { label: 'Document', icon: FileText, accent: 'text-primary', tint: 'bg-primary/10' };
+	return {
+		label: 'Document',
+		icon: FileText,
+		accent: 'text-primary',
+		tint: 'bg-primary/10',
+		hue: 'var(--color-primary)'
+	};
 }

@@ -1,5 +1,6 @@
 import { internalMutation, internalQuery } from './_generated/server';
 import { v } from 'convex/values';
+import { internal } from './_generated/api';
 
 export const getUserForRagAccess = internalQuery({
 	args: { clerkUserId: v.string() },
@@ -60,27 +61,45 @@ export const updateDocumentIngestion = internalMutation({
 		extractionModel: v.optional(v.string()),
 		indexedAt: v.optional(v.number()),
 		indexError: v.optional(v.string()),
-		pageCount: v.optional(v.number())
+		pageCount: v.optional(v.number()),
+		triggeredByClerkUserId: v.optional(v.string()),
+		ingestionJobId: v.optional(v.id('documentIngestionJobs'))
 	},
 	handler: async (ctx, args) => {
 		const document = await ctx.db.get(args.documentId);
-		if (!document) throw new Error('Document not found');
+		if (!document || document.deletedAt) throw new Error('Document not found');
+		if (args.ingestionJobId && document.metadata?.ingestionJobId !== args.ingestionJobId)
+			throw new Error('Document processing superseded');
 
-		await ctx.db.patch(args.documentId, {
+		if (
+			args.status === 'indexing' &&
+			document.metadata?.ingestionStatus === 'indexing' &&
+			Date.now() - (document.updatedAt ?? 0) < 10 * 60_000
+		)
+			throw new Error('Document indexing is already running');
+		const { documentId, status, triggeredByClerkUserId, ...updates } = args;
+		await ctx.db.patch(documentId, {
 			metadata: {
 				...(document.metadata ?? {}),
-				ingestionStatus: args.status,
-				ragNamespace: args.ragNamespace,
-				ragEntryId: args.ragEntryId,
-				extractionArtifactKeys: args.extractionArtifactKeys,
-				extractionProvider: args.extractionProvider,
-				extractionModel: args.extractionModel,
-				indexedAt: args.indexedAt,
+				...Object.fromEntries(Object.entries(updates).filter(([, value]) => value !== undefined)),
+				ingestionStatus: status,
 				indexError: args.indexError,
-				pageCount: args.pageCount
+				...(status === 'indexed' ? { mappedAt: undefined, topics: undefined } : {})
 			},
 			updatedAt: Date.now()
 		});
+		// Persist indexing completion and schedule its one mapping job atomically.
+		if (
+			status === 'indexed' &&
+			args.indexedAt !== undefined &&
+			args.indexedAt !== document.metadata?.indexedAt
+		) {
+			await ctx.scheduler.runAfter(0, internal.questionStudio.autoMapIndexedDocument, {
+				documentId,
+				sourceIndexedAt: args.indexedAt,
+				triggeredByClerkUserId
+			});
+		}
 	}
 });
 
@@ -115,6 +134,8 @@ export const clearDocumentIngestion = internalMutation({
 
 		const restMetadata = { ...(document.metadata ?? {}) };
 		delete restMetadata.ingestionStatus;
+		delete restMetadata.ingestionJobId;
+		delete restMetadata.ingestionStage;
 		delete restMetadata.ragNamespace;
 		delete restMetadata.ragEntryId;
 		delete restMetadata.extractionArtifactKeys;
@@ -122,6 +143,7 @@ export const clearDocumentIngestion = internalMutation({
 		delete restMetadata.extractionModel;
 		delete restMetadata.indexedAt;
 		delete restMetadata.mappedAt;
+		delete restMetadata.topicMapping;
 		delete restMetadata.indexError;
 		delete restMetadata.pageCount;
 		delete restMetadata.topics;

@@ -15,7 +15,7 @@
 	let isDragging = $state(false);
 	let dragDepth = 0;
 
-	const maxBytes = 50 * 1024 * 1024;
+	const maxBytes = 30 * 1024 * 1024;
 	const allowedTypes = ['application/pdf'];
 
 	function toBaseTitle(name: string): string {
@@ -43,7 +43,7 @@
 		}
 		if (file.size > maxBytes) {
 			selectedFile = null;
-			submitError = 'File must be 50MB or smaller.';
+			submitError = 'File must be 30MB or smaller.';
 			return;
 		}
 
@@ -146,7 +146,7 @@
 				}
 			});
 
-			void client.action(api.ragKnowledge.indexR2Document, {
+			await client.action(api.ragKnowledge.indexR2Document, {
 				documentId
 			});
 
@@ -179,7 +179,8 @@
 		<div class="mb-6">
 			<h3 class="text-xl font-bold tracking-tight">Upload Document</h3>
 			<p class="mt-1 text-sm text-base-content/60">
-				Upload a PDF to make it available for AI indexing.
+				Upload a PDF (up to 150 pages and 30 MB). Processing can take a few minutes, especially for
+				long or image-heavy documents. Once queued, it continues even if you leave this page.
 			</p>
 		</div>
 
@@ -231,7 +232,7 @@
 				{/if}
 			</span>
 			<span class="mt-1 text-xs text-base-content/60">
-				{selectedFile ? formatSize(selectedFile.size) : 'Maximum file size: 50MB'}
+				{selectedFile ? formatSize(selectedFile.size) : 'Maximum file size: 30MB'}
 			</span>
 			<span class="mt-3 badge badge-ghost badge-sm">PDF only</span>
 			<input class="hidden" type="file" accept=".pdf,application/pdf" onchange={handleFileChange} />

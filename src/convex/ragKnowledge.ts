@@ -1,12 +1,24 @@
 'use node';
 
-import { action } from './_generated/server';
+import { createOpenAI } from '@ai-sdk/openai';
+import { RAG, type EntryId } from '@convex-dev/rag';
+import { v } from 'convex/values';
 import { components, internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
 import type { ActionCtx } from './_generated/server';
-import { v } from 'convex/values';
-import { RAG, type EntryId } from '@convex-dev/rag';
-import { createOpenAI } from '@ai-sdk/openai';
+import { action, internalAction } from './_generated/server';
+import { DATALAB_MODEL } from './datalab';
+import type { OcrDocument } from './documentParsing';
+import {
+	cleanSourceMarkdown,
+	MAX_PDF_BYTES,
+	MAX_PDF_PAGES,
+	parseOcrPages,
+	PARSER_VERSION,
+	parseStoredPages as parseStoredMarkdownPages
+} from './documentParsing';
+import { assertDocumentPermission } from './questionStudio/access';
+import { DEFAULT_TEXT_MODEL } from './questionStudio/shared';
 import { r2 } from './r2Documents';
 
 type DocumentRagFilters = {
@@ -32,9 +44,9 @@ type DocumentRagMetadata = {
 
 const EMBEDDING_MODEL = 'openai/text-embedding-3-large';
 const EMBEDDING_DIMENSION = 3072;
-const RAG_TESTER_CHAT_MODEL = 'openai/gpt-oss-120b:free';
-const MISTRAL_OCR_MODEL = 'mistral-ocr-latest';
-const MAX_INDEX_PAGES = 80;
+const RAG_TESTER_CHAT_MODEL = DEFAULT_TEXT_MODEL;
+const OCR_MODEL = DATALAB_MODEL;
+const MAX_INDEX_PAGES = MAX_PDF_PAGES;
 
 function openRouter() {
 	return createOpenAI({
@@ -53,9 +65,9 @@ function assertOpenRouterKey() {
 	}
 }
 
-function assertMistralKey() {
-	if (!process.env.MISTRAL_API_KEY) {
-		throw new Error('MISTRAL_API_KEY is not configured');
+function assertDatalabKey() {
+	if (!process.env.DATALAB_API_KEY) {
+		throw new Error('DATALAB_API_KEY is not configured');
 	}
 }
 
@@ -90,9 +102,7 @@ async function assertCohortAccess(ctx: ActionCtx, cohortId: Id<'cohort'>) {
 	});
 	if (!user) throw new Error('User not found');
 
-	if (user.role !== 'dev' && user.role !== 'admin' && user.cohortId !== cohortId) {
-		throw new Error('Unauthorized for this cohort');
-	}
+	assertDocumentPermission(user, cohortId, true);
 
 	return user;
 }
@@ -101,7 +111,7 @@ async function assertDocumentAccess(ctx: ActionCtx, document: Doc<'contentLib'>)
 	await assertCohortAccess(ctx, document.cohortId);
 }
 
-type MistralOcrPage = {
+type LegacyOcrPage = {
 	index?: number;
 	markdown?: string;
 	images?: Array<Record<string, unknown>>;
@@ -113,8 +123,8 @@ type MistralOcrPage = {
 	confidence_scores?: Record<string, unknown> | null;
 };
 
-type MistralOcrResponse = {
-	pages?: MistralOcrPage[];
+type LegacyOcrResponse = {
+	pages?: LegacyOcrPage[];
 	model?: string;
 	usage_info?: Record<string, unknown>;
 };
@@ -126,7 +136,7 @@ type DeckPreviewPage = {
 	tableCount: number;
 };
 
-function normalizeMistralPageNumber(page: MistralOcrPage, fallbackIndex: number) {
+function normalizePageNumber(page: LegacyOcrPage, fallbackIndex: number) {
 	if (typeof page.index === 'number') return page.index + 1;
 	return fallbackIndex + 1;
 }
@@ -148,7 +158,7 @@ function splitPageMarkdown(markdown: string, maxChars = 2800) {
 	const blocks = markdown
 		.split(/\n{2,}/)
 		.map((block) => block.trim())
-		.filter((block) => block.length >= 20);
+		.filter((block) => block.length > 0);
 
 	const chunks: string[] = [];
 	let current = '';
@@ -170,89 +180,6 @@ function splitPageMarkdown(markdown: string, maxChars = 2800) {
 	return markdown.trim().length >= 20 ? [markdown.trim()] : [];
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function tableToMarkdown(table: unknown) {
-	if (typeof table === 'string') return table.trim();
-	if (!isRecord(table)) return '';
-
-	const label = ['caption', 'title', 'name', 'label']
-		.map((key) => table[key])
-		.find((value) => typeof value === 'string' && /^Table\s+\d+[A-Za-z]?\b/i.test(value.trim()));
-	const prefix = typeof label === 'string' ? `${label.trim()}\n\n` : '';
-
-	for (const key of ['markdown', 'content', 'text']) {
-		const value = table[key];
-		if (typeof value === 'string' && value.trim()) return `${prefix}${value.trim()}`.trim();
-	}
-
-	const rows = table.rows;
-	if (Array.isArray(rows) && rows.every((row) => Array.isArray(row))) {
-		const normalizedRows = rows.map((row) => row.map((cell) => String(cell ?? '').trim()));
-		const columnCount = Math.max(...normalizedRows.map((row) => row.length), 0);
-		if (columnCount > 0) {
-			const paddedRows = normalizedRows.map((row) => [
-				...row,
-				...Array.from({ length: columnCount - row.length }, () => '')
-			]);
-			const header = paddedRows[0];
-			const body = paddedRows.slice(1);
-			return `${prefix}${[
-				`| ${header.join(' | ')} |`,
-				`| ${header.map(() => '---').join(' | ')} |`,
-				...body.map((row) => `| ${row.join(' | ')} |`)
-			].join('\n')}`.trim();
-		}
-	}
-
-	return ['```json', JSON.stringify(table, null, 2), '```'].join('\n');
-}
-
-function pageMarkdownWithTables(page: MistralOcrPage) {
-	const markdown = (page.markdown ?? '').trim();
-	const tableMarkdown = (page.tables ?? [])
-		.map((table) => tableToMarkdown(table))
-		.filter(Boolean)
-		.filter((table) => !markdown.includes(table));
-
-	if (tableMarkdown.length === 0) return markdown;
-
-	return [markdown, ...tableMarkdown].filter(Boolean).join('\n\n');
-}
-
-async function mistralOcrDocument(documentUrl: string): Promise<MistralOcrResponse> {
-	assertMistralKey();
-
-	const response = await fetch('https://api.mistral.ai/v1/ocr', {
-		method: 'POST',
-		headers: {
-			Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
-			model: MISTRAL_OCR_MODEL,
-			document: {
-				type: 'document_url',
-				document_url: documentUrl
-			},
-			table_format: 'markdown',
-			include_image_base64: false,
-			confidence_scores_granularity: 'page'
-		})
-	});
-
-	const data = await response.json();
-	if (!response.ok) {
-		throw new Error(
-			data?.message ?? data?.error?.message ?? `Mistral OCR failed with ${response.status}`
-		);
-	}
-
-	return data as MistralOcrResponse;
-}
-
 function documentIndexArtifactKey(args: {
 	cohortId: Id<'cohort'>;
 	documentId: Id<'contentLib'>;
@@ -272,57 +199,64 @@ function documentIndexArtifactKey(args: {
 		String(args.cohortId),
 		'content-library-index',
 		String(args.documentId),
-		`${args.kind}-${safeName || 'document'}${args.extension}`
+		`${args.kind}-${safeName || 'document'}-${crypto.randomUUID()}${args.extension}`
 	].join('/');
 }
 
 export const indexR2Document = action({
-	args: {
-		documentId: v.id('contentLib')
-	},
-	handler: async (ctx, args) => {
-		assertMistralKey();
-
-		const document = (await ctx.runQuery(internal.ragKnowledgeInternal.getDocumentForRagIngestion, {
-			documentId: args.documentId
-		})) as Doc<'contentLib'> | null;
-
+	args: { documentId: v.id('contentLib') },
+	returns: v.object({ status: v.literal('indexing'), jobId: v.id('documentIngestionJobs') }),
+	handler: async (
+		ctx,
+		args
+	): Promise<{ status: 'indexing'; jobId: Id<'documentIngestionJobs'> }> => {
+		const document = await ctx.runQuery(
+			internal.ragKnowledgeInternal.getDocumentForRagIngestion,
+			args
+		);
 		if (!document) throw new Error('Document not found');
 		await assertDocumentAccess(ctx, document);
+		assertDatalabKey();
+		assertOpenRouterKey();
+		if (
+			document.metadata?.storageProvider !== 'r2' ||
+			!document.metadata.r2Key ||
+			document.metadata.mimeType !== 'application/pdf'
+		)
+			throw new Error('Only R2-backed PDFs can be processed');
+		if ((document.metadata.sizeBytes ?? 0) > MAX_PDF_BYTES)
+			throw new Error('PDF exceeds the 30 MB limit');
+		const actor = await ctx.auth.getUserIdentity();
+		const jobId: Id<'documentIngestionJobs'> = await ctx.runMutation(
+			internal.documentIngestion.begin,
+			{ documentId: document._id, actor: actor!.subject }
+		);
+		return { status: 'indexing', jobId };
+	}
+});
 
-		const r2Key = document.metadata?.r2Key;
-		const mimeType = document.metadata?.mimeType;
-		if (!r2Key || document.metadata?.storageProvider !== 'r2') {
-			throw new Error('Only R2-backed documents can be indexed');
-		}
-		if (mimeType !== 'application/pdf') {
-			throw new Error('Only PDF documents can be indexed.');
-		}
+export const finishDocumentIndex = internalAction({
+	args: { jobId: v.id('documentIngestionJobs') },
+	returns: v.null(),
+	handler: async (ctx, args): Promise<null> => {
+		const job = await ctx.runQuery(internal.documentIngestion.getJob, args);
+		const document = await ctx.runQuery(internal.ragKnowledgeInternal.getDocumentForRagIngestion, {
+			documentId: job.documentId
+		});
+		if (!document || document.metadata?.ingestionJobId !== args.jobId || !job.artifactKey)
+			throw new Error('Document processing superseded or removed');
+		const startedAt = job.createdAt,
+			actor = { subject: job.actor };
+		const r2Key = document.metadata.r2Key!,
+			mimeType = document.metadata.mimeType;
 
 		const namespace = documentNamespace(String(document._id));
-		const previousArtifactKeys = document.metadata?.extractionArtifactKeys ?? [];
-		if (document.metadata?.ragEntryId) {
-			await documentRag.delete(ctx, { entryId: document.metadata.ragEntryId as EntryId });
-		}
-		for (const artifactKey of previousArtifactKeys) {
-			await r2.deleteObject(ctx, artifactKey);
-		}
-
-		await ctx.runMutation(internal.ragKnowledgeInternal.updateDocumentIngestion, {
-			documentId: document._id,
-			status: 'indexing',
-			ragNamespace: namespace,
-			ragEntryId: undefined,
-			extractionArtifactKeys: undefined,
-			extractionProvider: 'mistral',
-			extractionModel: MISTRAL_OCR_MODEL,
-			indexError: undefined
-		});
 
 		try {
-			const signedUrl = await r2.getUrl(r2Key, { expiresIn: 60 * 15 });
-			const ocr = await mistralOcrDocument(signedUrl);
-			const pages = ocr.pages ?? [];
+			const ocr = JSON.parse(await loadR2TextArtifact(job.artifactKey)) as OcrDocument;
+			const validatedPages = parseOcrPages(ocr, job.expectedPages);
+
+			const pages = [...(ocr.pages ?? [])].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 			const pageCount = pages.length;
 			if (pageCount === 0) throw new Error('PDF has no pages');
 			if (pageCount > MAX_INDEX_PAGES) {
@@ -337,8 +271,8 @@ export const indexR2Document = action({
 
 			for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
 				const page = pages[pageIndex];
-				const pageNumber = normalizeMistralPageNumber(page, pageIndex);
-				const markdown = pageMarkdownWithTables(page);
+				const pageNumber = normalizePageNumber(page, pageIndex);
+				const markdown = validatedPages[pageIndex].text;
 				if (!markdown) continue;
 
 				markdownPages.push(`<!-- page:${pageNumber} -->\n\n${markdown}`);
@@ -360,7 +294,6 @@ export const indexR2Document = action({
 							`Page: ${pageNumber}`,
 							`Page section: ${chunkTitle}`,
 							tableCount > 0 ? `Tables on page: ${tableCount}` : '',
-							imageCount > 0 ? `Images/figures on page: ${imageCount}` : '',
 							chunkMarkdown
 						]
 							.filter(Boolean)
@@ -375,8 +308,12 @@ export const indexR2Document = action({
 							chunkType: 'page_markdown',
 							title: chunkTitle,
 							imageCount,
+							extractionWarningsJson: JSON.stringify(validatedPages[pageIndex].warnings),
 							tableCount,
-							confidenceJson: page.confidence_scores ? JSON.stringify(page.confidence_scores) : ''
+							confidenceJson: page.confidence_scores ? JSON.stringify(page.confidence_scores) : '',
+							blocksJson: page.blocks
+								? JSON.stringify(page.blocks.map(({ id, type, bbox }) => ({ id, type, bbox })))
+								: ''
 						}
 					});
 				}
@@ -386,23 +323,13 @@ export const indexR2Document = action({
 				throw new Error('No indexable text was extracted from this PDF.');
 			}
 
-			const ocrJsonKey = documentIndexArtifactKey({
-				cohortId: document.cohortId,
-				documentId: document._id,
-				fileName: originalFileName,
-				kind: 'mistral-ocr',
-				extension: '.json'
-			});
+			const ocrJsonKey = job.artifactKey;
 			const markdownKey = documentIndexArtifactKey({
 				cohortId: document.cohortId,
 				documentId: document._id,
 				fileName: originalFileName,
-				kind: 'mistral-markdown',
+				kind: 'datalab-markdown',
 				extension: '.md'
-			});
-			await r2.store(ctx, Buffer.from(JSON.stringify(ocr, null, 2)), {
-				key: ocrJsonKey,
-				type: 'application/json'
 			});
 			await r2.store(ctx, Buffer.from(markdownPages.join('\n\n---\n\n')), {
 				key: markdownKey,
@@ -414,8 +341,8 @@ export const indexR2Document = action({
 				JSON.stringify({
 					documentId: document._id,
 					r2Key,
-					updatedAt: document.updatedAt,
-					model: ocr.model ?? MISTRAL_OCR_MODEL,
+					parserVersion: PARSER_VERSION,
+					model: ocr.model ?? OCR_MODEL,
 					chunks: chunks.map((chunk) => chunk.pageContent)
 				})
 			);
@@ -441,8 +368,8 @@ export const indexR2Document = action({
 					originalFileName,
 					mimeType,
 					pageCount,
-					model: ocr.model ?? MISTRAL_OCR_MODEL,
-					extractionProvider: 'mistral',
+					model: ocr.model ?? OCR_MODEL,
+					extractionProvider: 'datalab',
 					extractionArtifactKeys
 				})
 			});
@@ -453,58 +380,52 @@ export const indexR2Document = action({
 				ragNamespace: namespace,
 				ragEntryId: result.entryId,
 				extractionArtifactKeys,
-				extractionProvider: 'mistral',
-				extractionModel: ocr.model ?? MISTRAL_OCR_MODEL,
+				extractionProvider: 'datalab',
+				extractionModel: ocr.model ?? OCR_MODEL,
 				indexedAt: Date.now(),
 				indexError: undefined,
-				pageCount
+				pageCount,
+				triggeredByClerkUserId: actor!.subject,
+				ingestionJobId: args.jobId
 			});
 
-			try {
-				const identity = await ctx.auth.getUserIdentity();
-				await ctx.scheduler.runAfter(0, internal.questionStudio.autoMapIndexedDocument, {
-					documentId: document._id,
-					triggeredByClerkUserId: identity?.subject
-				});
-			} catch (mappingError) {
-				console.warn('Question Studio topic map scheduling failed', mappingError);
-			}
+			await ctx.runAction(internal.aiTelemetry.capture, {
+				event: 'document_parsing_completed',
+				distinctId: actor!.subject,
+				properties: {
+					document_id: document._id,
+					page_count: pageCount,
+					warning_page_count: validatedPages.filter((p) => p.warnings.length).length,
+					latency_ms: Date.now() - startedAt,
+					parser_version: PARSER_VERSION,
+					provider: 'datalab',
+					cost_cents: job.costCents ?? null
+				}
+			});
 
-			return {
-				status: 'indexed',
-				namespace,
-				entryId: result.entryId,
-				pageCount,
-				chunkCount: chunks.length,
-				created: result.created,
-				extractionArtifactKeys
-			};
+			await ctx.runMutation(internal.documentIngestion.progress, {
+				jobId: args.jobId,
+				status: 'complete'
+			});
+			return null;
 		} catch (error) {
 			const message = error instanceof Error ? error.message : 'Indexing failed';
+			await ctx.runAction(internal.aiTelemetry.capture, {
+				event: 'document_parsing_failed',
+				distinctId: actor!.subject,
+				properties: { document_id: document._id, latency_ms: Date.now() - startedAt }
+			});
 			await ctx.runMutation(internal.ragKnowledgeInternal.updateDocumentIngestion, {
 				documentId: document._id,
-				status: 'failed',
+				status: document.metadata?.ragEntryId ? 'indexed' : 'failed',
 				ragNamespace: namespace,
-				indexError: message
+				indexError: message,
+				ingestionJobId: args.jobId
 			});
 			throw error;
 		}
 	}
 });
-
-function parseStoredMarkdownPages(markdown: string) {
-	return markdown
-		.split(/\n\n---\n\n/g)
-		.map((section) => {
-			const match = section.match(/^<!--\s*page:(\d+)\s*-->\s*/);
-			if (!match) return null;
-			const pageNumber = Number(match[1]);
-			const text = section.slice(match[0].length).trim();
-			if (!Number.isFinite(pageNumber) || !text) return null;
-			return { pageNumber, text };
-		})
-		.filter((page): page is { pageNumber: number; text: string } => Boolean(page));
-}
 
 async function loadR2TextArtifact(key: string) {
 	const signedUrl = await r2.getUrl(key, { expiresIn: 60 * 5 });
@@ -519,9 +440,9 @@ async function loadOcrDeckPreviewPages(jsonKey?: string): Promise<DeckPreviewPag
 	if (!jsonKey) return [];
 	try {
 		const text = await loadR2TextArtifact(jsonKey);
-		const ocr = JSON.parse(text) as MistralOcrResponse;
+		const ocr = JSON.parse(text) as LegacyOcrResponse;
 		return (ocr.pages ?? []).map((page, index) => {
-			const pageNumber = normalizeMistralPageNumber(page, index);
+			const pageNumber = normalizePageNumber(page, index);
 			const markdown = (page.markdown ?? '').trim();
 			return {
 				pageNumber,
@@ -573,7 +494,7 @@ export const previewR2DocumentPageRange = action({
 			throw new Error(`Could not load extracted markdown preview (${response.status})`);
 		}
 
-		const markdown = await response.text();
+		const markdown = cleanSourceMarkdown(await response.text());
 		const pages = parseStoredMarkdownPages(markdown)
 			.filter((page) => page.pageNumber >= startPage && page.pageNumber <= endPage)
 			.map((page) => ({
@@ -629,7 +550,7 @@ export const getR2DocumentMarkdownPreview = action({
 			throw new Error(`Could not load extracted markdown (${response.status})`);
 		}
 
-		const markdown = await response.text();
+		const markdown = cleanSourceMarkdown(await response.text());
 		const maxChars = 180_000;
 		return {
 			documentId: args.documentId,
@@ -683,7 +604,7 @@ export const getR2DocumentDeckPreview = action({
 
 		return {
 			documentId: args.documentId,
-			text: markdown.slice(0, maxChars),
+			text: cleanSourceMarkdown(markdown).slice(0, maxChars),
 			truncated: markdown.length > maxChars,
 			pageCount: document.metadata?.pageCount,
 			pages: pages.map((page) => ({

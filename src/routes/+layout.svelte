@@ -136,9 +136,15 @@
 		const inGradeCalculator = path.startsWith('/tools/grade-calculator');
 		const inAdminModule = path.startsWith('/admin/') && path.includes('/module/');
 		const inAdminLibrary = path.startsWith('/admin/library');
+		const inQuestionStudio = path.startsWith('/admin/question-studio');
 		const inStudySpace = path.startsWith('/study-space');
 		return (
-			inClassStudyOrTest || inGradeCalculator || inAdminModule || inAdminLibrary || inStudySpace
+			inClassStudyOrTest ||
+			inGradeCalculator ||
+			inAdminModule ||
+			inAdminLibrary ||
+			inQuestionStudio ||
+			inStudySpace
 		);
 	});
 </script>
