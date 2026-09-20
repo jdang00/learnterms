@@ -3,6 +3,7 @@
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { BookOpen, CheckCircle, Flag, TrendingUp } from 'lucide-svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	let { userId, cohortId }: { userId: Id<'users'>; cohortId: Id<'cohort'> } = $props();
 
@@ -10,8 +11,8 @@
 	const userStats = useQuery(api.progress.getUserModuleStats, () => ({ userId, cohortId }));
 
 	// Track expanded semesters and classes
-	let expandedSemesters = $state<Set<string>>(new Set());
-	let expandedClasses = $state<Set<string>>(new Set());
+	const expandedSemesters = new SvelteSet<string>();
+	const expandedClasses = new SvelteSet<string>();
 
 	// Type for class data
 	type ClassData = NonNullable<NonNullable<typeof userStats.data>['classes']>[number];
@@ -19,36 +20,36 @@
 	// Group classes by semester
 	const classesBySemester = $derived(() => {
 		const data = userStats.data;
-		if (!data || 'error' in data || !data.classes) return new Map<string, ClassData[]>();
-		const grouped = new Map<string, ClassData[]>();
+		if (!data || 'error' in data || !data.classes) {
+			return [] as { semesterName: string; classes: ClassData[] }[];
+		}
+		const grouped: { semesterName: string; classes: ClassData[] }[] = [];
 		for (const cls of data.classes) {
 			const semKey = cls.semesterName;
-			if (!grouped.has(semKey)) {
-				grouped.set(semKey, []);
+			let group = grouped.find((entry) => entry.semesterName === semKey);
+			if (!group) {
+				group = { semesterName: semKey, classes: [] };
+				grouped.push(group);
 			}
-			grouped.get(semKey)!.push(cls);
+			group.classes.push(cls);
 		}
 		return grouped;
 	});
 
 	function toggleSemester(semester: string) {
-		const newSet = new Set(expandedSemesters);
-		if (newSet.has(semester)) {
-			newSet.delete(semester);
+		if (expandedSemesters.has(semester)) {
+			expandedSemesters.delete(semester);
 		} else {
-			newSet.add(semester);
+			expandedSemesters.add(semester);
 		}
-		expandedSemesters = newSet;
 	}
 
 	function toggleClass(classId: string) {
-		const newSet = new Set(expandedClasses);
-		if (newSet.has(classId)) {
-			newSet.delete(classId);
+		if (expandedClasses.has(classId)) {
+			expandedClasses.delete(classId);
 		} else {
-			newSet.add(classId);
+			expandedClasses.add(classId);
 		}
-		expandedClasses = newSet;
 	}
 
 	function getProgressColor(progress: number): string {
@@ -116,14 +117,14 @@
 			Progress by Class
 		</h4>
 
-		{#if classesBySemester().size === 0}
+		{#if classesBySemester().length === 0}
 			<div class="text-center py-8 text-base-content/60">
 				<BookOpen size={32} class="mx-auto mb-2 opacity-50" />
 				<p>No classes found</p>
 			</div>
 		{:else}
 			<div class="space-y-2">
-				{#each [...classesBySemester().entries()] as [semesterName, classes] (semesterName)}
+				{#each classesBySemester() as { semesterName, classes } (semesterName)}
 					<!-- Semester Header -->
 					<div class="collapse collapse-arrow bg-base-200 rounded-2xl">
 						<input

@@ -17,7 +17,7 @@
 		</p>
 
 		<div class="grid gap-6 md:grid-cols-2">
-			{#each docsNav.find(section => section.title === 'Admin')?.items || [] as item (item.path)}
+			{#each docsNav.find((section) => section.title === 'Admin')?.items || [] as item (item.path)}
 				<div class="card bg-base-100 shadow-lg">
 					<div class="card-body">
 						<h2 class="card-title text-primary">

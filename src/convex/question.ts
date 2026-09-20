@@ -1,16 +1,80 @@
+import {
+	answerPosition,
+	assertStandaloneRationale,
+	shuffleCorrectAnswer
+} from './questionStudio/presentation';
 import { mutation, action, internalMutation } from './_generated/server';
 import { authCuratorMutation } from './authQueries';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
-import { internal, components } from './_generated/api';
+import { components, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { applyQuestionCreationDeltaAndEvaluateBadges } from './badgeEngine';
 import { getRationale } from '../lib/utils/rationale';
 
+async function assertQuestionModuleAccess(ctx: MutationCtx, moduleId: Id<'module'>) {
+	const identity = await ctx.auth.getUserIdentity();
+	if (!identity) throw new Error('Unauthorized');
+	const user = await ctx.db
+		.query('users')
+		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
+		.first();
+	const module = await ctx.db.get(moduleId);
+	const classDoc = module ? await ctx.db.get(module.classId) : null;
+	if (
+		!user ||
+		!module ||
+		module.deletedAt ||
+		!classDoc ||
+		classDoc.deletedAt ||
+		(user.role !== 'dev' && user.cohortId !== classDoc.cohortId)
+	)
+		throw new Error('Module access denied');
+}
+
 const MAX_QUESTIONS_PER_MODULE = 150;
+
+async function prepareAiPublication(
+	ctx: MutationCtx,
+	question: {
+		_id: Id<'question'>;
+		moduleId: Id<'module'>;
+		order: number;
+		type: string;
+		aiGenerated: boolean;
+		status: string;
+		options: { id: string; text: string }[];
+		correctAnswers: string[];
+	},
+	rationale: string,
+	nextStatus: string
+) {
+	if (!question.aiGenerated || nextStatus !== 'published') return question.options;
+	assertStandaloneRationale(rationale);
+	if (
+		question.status === 'published' ||
+		question.type !== 'multiple_choice' ||
+		question.correctAnswers.length !== 1
+	)
+		return question.options;
+	const neighbors = (
+		await ctx.db
+			.query('question')
+			.withIndex('by_moduleId_order', (q) => q.eq('moduleId', question.moduleId))
+			.take(MAX_QUESTIONS_PER_MODULE + 1)
+	).filter((q) => !q.deletedAt && q.status === 'published' && q._id !== question._id);
+	const before = neighbors.filter((q) => q.order < question.order).map(answerPosition);
+	const after = neighbors.filter((q) => q.order >= question.order).map(answerPosition);
+	return shuffleCorrectAnswer(question.options, answerPosition(question), before, after);
+}
+
 const LIMIT_FREE = 15;
 const LIMIT_PRO = 300;
+
+function throwLegacyGenerationRemoved(): never {
+	throw new Error('Legacy AI question generation has been removed. Use the RAG workflow.');
+}
 
 export const checkAndIncrementUsage = internalMutation({
 	args: { count: v.number(), clerkUserId: v.string() },
@@ -499,6 +563,7 @@ export const insertQuestion = authCuratorMutation({
 		)
 	},
 	handler: async (ctx, args) => {
+		await assertQuestionModuleAccess(ctx, args.moduleId);
 		await checkModuleCapacity(ctx, args.moduleId, 1);
 		const rationale = normalizeIncomingRationale(args);
 		if (!rationale) {
@@ -604,6 +669,114 @@ export const bulkDeleteQuestions = authCuratorMutation({
 	}
 });
 
+type BulkQuestionStatus = 'draft' | 'published' | 'archived';
+
+async function updateQuestionStatuses(
+	ctx: MutationCtx,
+	args: {
+		questionIds: Id<'question'>[];
+		moduleId: Id<'module'>;
+		status: BulkQuestionStatus;
+	},
+	distinctId: string
+) {
+	await assertQuestionModuleAccess(ctx, args.moduleId);
+	let updatedCount = 0;
+	let skippedCount = 0;
+	const errors: string[] = [];
+
+	for (const questionId of args.questionIds) {
+		try {
+			const question = await ctx.db.get(questionId);
+			if (!question) {
+				errors.push(`Question ${questionId} not found`);
+				continue;
+			}
+
+			if (question.moduleId !== args.moduleId) {
+				errors.push(`Question ${questionId} access denied`);
+				continue;
+			}
+
+			if (question.status === args.status) {
+				skippedCount++;
+				continue;
+			}
+
+			const options = await prepareAiPublication(
+				ctx,
+				question,
+				getRationale(question),
+				args.status
+			);
+			const searchText = computeSearchText({
+				stem: question.stem,
+				rationale: question.rationale,
+				explanation: question.explanation,
+				type: question.type,
+				status: args.status,
+				aiGenerated: question.aiGenerated,
+				options,
+				correctAnswers: question.correctAnswers || [],
+				metadata: question.metadata
+			});
+
+			await ctx.db.patch(questionId, {
+				status: args.status,
+				options,
+				updatedAt: Date.now(),
+				searchText
+			});
+
+			if (args.status === 'published' && question.metadata.generation?.jobId)
+				await ctx.scheduler.runAfter(0, internal.aiTelemetry.capture, {
+					event: 'question_generation_published',
+					distinctId,
+					properties: {
+						job_id: question.metadata.generation.jobId,
+						question_id: questionId,
+						harness_version: question.metadata.generation.harnessVersion
+					}
+				});
+			updatedCount++;
+		} catch (error) {
+			errors.push(`Failed to update question ${questionId}: ${error}`);
+		}
+	}
+
+	return {
+		updatedCount,
+		skippedCount,
+		errors,
+		success: errors.length === 0
+	};
+}
+
+export const bulkUpdateQuestionStatus = authCuratorMutation({
+	args: {
+		questionIds: v.array(v.id('question')),
+		moduleId: v.id('module'),
+		status: v.union(v.literal('draft'), v.literal('published'), v.literal('archived'))
+	},
+	handler: async (ctx, args) => await updateQuestionStatuses(ctx, args, ctx.identity.subject)
+});
+
+// Keep the original endpoint available while older clients transition to the generalized status action.
+export const bulkPublishQuestions = authCuratorMutation({
+	args: {
+		questionIds: v.array(v.id('question')),
+		moduleId: v.id('module')
+	},
+	handler: async (ctx, args) => {
+		const result = await updateQuestionStatuses(
+			ctx,
+			{ ...args, status: 'published' },
+			ctx.identity.subject
+		);
+		return { ...result, publishedCount: result.updatedCount };
+	}
+});
+
 export const updateQuestion = authCuratorMutation({
 	args: {
 		questionId: v.id('question'),
@@ -617,6 +790,7 @@ export const updateQuestion = authCuratorMutation({
 		status: v.string()
 	},
 	handler: async (ctx, args) => {
+		await assertQuestionModuleAccess(ctx, args.moduleId);
 		const questionToUpdate = await ctx.db.get(args.questionId);
 		if (!questionToUpdate || questionToUpdate.moduleId !== args.moduleId) {
 			throw new Error('Question not found or access denied');
@@ -660,13 +834,24 @@ export const updateQuestion = authCuratorMutation({
 			);
 		}
 
+		const publishOptions = await prepareAiPublication(
+			ctx,
+			{
+				...questionToUpdate,
+				type: convertQuestionType(args.type),
+				options: optionsWithIds,
+				correctAnswers: correctAnswerIds
+			},
+			rationale,
+			args.status.toLowerCase()
+		);
 		const searchText = computeSearchText({
 			stem: args.stem,
 			rationale,
 			type: args.type,
 			status: args.status,
 			aiGenerated: questionToUpdate.aiGenerated,
-			options: optionsWithIds,
+			options: publishOptions,
 			correctAnswers: correctAnswerIds,
 			metadata: questionToUpdate.metadata
 		});
@@ -674,7 +859,7 @@ export const updateQuestion = authCuratorMutation({
 		await ctx.db.patch(args.questionId, {
 			type: convertQuestionType(args.type),
 			stem: args.stem,
-			options: optionsWithIds,
+			options: publishOptions,
 			correctAnswers: correctAnswerIds,
 			rationale,
 			status: args.status.toLowerCase(),
@@ -682,6 +867,19 @@ export const updateQuestion = authCuratorMutation({
 			searchText
 		});
 
+		if (questionToUpdate.metadata.generation?.jobId)
+			await ctx.scheduler.runAfter(0, internal.aiTelemetry.capture, {
+				event:
+					args.status.toLowerCase() === 'published' && questionToUpdate.status !== 'published'
+						? 'question_generation_published'
+						: 'question_generation_edited',
+				distinctId: ctx.identity.subject,
+				properties: {
+					job_id: questionToUpdate.metadata.generation.jobId,
+					question_id: args.questionId,
+					harness_version: questionToUpdate.metadata.generation.harnessVersion
+				}
+			});
 		return { updated: true };
 	}
 });
@@ -710,6 +908,7 @@ export const createQuestion = authCuratorMutation({
 		updatedAt: v.number()
 	},
 	handler: async (ctx, args) => {
+		await assertQuestionModuleAccess(ctx, args.moduleId);
 		await checkModuleCapacity(ctx, args.moduleId, 1);
 		const rationale = normalizeIncomingRationale(args);
 		if (!rationale) {
@@ -856,6 +1055,7 @@ export const updateQuestionOrder = authCuratorMutation({
 		moduleId: v.id('module')
 	},
 	handler: async (ctx, args) => {
+		await assertQuestionModuleAccess(ctx, args.moduleId);
 		const allQuestions = await ctx.db
 			.query('question')
 			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
@@ -1277,156 +1477,11 @@ export const generateQuestions = action({
 		focus: v.string(),
 		customPrompt: v.optional(v.string())
 	},
-	handler: async (ctx, { material, model, numQuestions, focus, customPrompt }) => {
-		const identity = await ctx.auth.getUserIdentity();
-		if (!identity) throw new Error('Unauthenticated');
-
-		await ctx.runMutation(internal.question.checkAndIncrementUsage, {
-			count: numQuestions,
-			clerkUserId: identity.subject
-		});
-
-		if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.trim().length === 0) {
-			throw new Error('GEMINI_API_KEY is not configured');
-		}
-
-		const { GoogleGenAI, Type, ThinkingLevel } = await import('@google/genai');
-		const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-		const focusLabel = (focus || 'optometry').toLowerCase();
-		const audience =
-			focusLabel === 'optometry'
-				? 'optometry students'
-				: focusLabel === 'pharmacy'
-					? 'pharmacy students'
-					: 'health sciences students';
-		const domainHint =
-			focusLabel === 'optometry'
-				? '- Prefer ocular relevance when present.'
-				: focusLabel === 'pharmacy'
-					? '- Prefer pharmacotherapy relevance for patient care when present. If the material has structure or mechanism of action content, create questions about its details and/or mechanism of action.'
-					: '';
-		const extra = (customPrompt || '').trim();
-		const prompt = `Role: You are an AI assistant specializing in medical education creating high-quality assessment questions.
-
-Goal: Based ONLY on the provided material, generate high-quality multiple-choice questions for ${audience}.
-
-Instructions:
-- Create exactly ${numQuestions} diverse multiple-choice questions.
-- Mix levels: recall, understanding, application, critical thinking.
-- Include at least 3-4 questions with multiple correct answers.
-- When generating questions with multiple correct answers, never indicate to select all that apply. Do not use ("Select 3, Select all that apply, etc").
-${domainHint}
-- Do NOT include any references to the material or meta-instructions.
-- Stems and rationales must be self-contained and must not mention or quote the source material.
-- Do not use phrases like: "the material", "the text", "the passage", "the document", "the slides", "the notes", "according to", "as stated", "as mentioned" in either the question, the options or the rationales.
-- Rationales must justify the correct answer and why distractors are incorrect without referencing the source.
-- Options must be plain strings with NO leading letters, numbers, or punctuation (no prefixes like "A.", "1)", or "-").
-${extra ? `\nAdditional guidance:\n${extra}\n` : ''}
-
-Material:
-${material}`;
-
-		const result = await ai.models.generateContent({
-			model,
-			contents: [{ role: 'user', parts: [{ text: prompt }] }],
-			config: {
-				temperature: 0.7,
-				maxOutputTokens: 8192,
-				thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
-				responseMimeType: 'application/json',
-				responseSchema: {
-					type: Type.ARRAY,
-					items: {
-						type: Type.OBJECT,
-						properties: {
-							stem: { type: Type.STRING },
-							options: { type: Type.ARRAY, minItems: 3, maxItems: 6, items: { type: Type.STRING } },
-							correctAnswerIndexes: { type: Type.ARRAY, minItems: 1, items: { type: Type.NUMBER } },
-							rationale: { type: Type.STRING }
-						},
-						required: ['stem', 'options', 'correctAnswerIndexes', 'rationale'],
-						propertyOrdering: ['stem', 'options', 'correctAnswerIndexes', 'rationale']
-					}
-				}
-				// Using default HIGH thinking level for better question quality
-			}
-		});
-
-		// Extract response text from SDK (modern SDK provides simple .text accessor)
-		const responseText = result.text;
-		if (!responseText || typeof responseText !== 'string' || responseText.trim().length === 0) {
-			throw new Error('AI response text is empty or invalid');
-		}
-
-		let parsed: Array<{
-			stem: string;
-			options: string[];
-			correctAnswerIndexes: number[];
-			rationale?: string;
-			explanation?: string;
-		}>;
-		try {
-			parsed = JSON.parse(responseText.trim());
-			if (!Array.isArray(parsed)) {
-				throw new Error('Response is not an array');
-			}
-		} catch (parseError) {
-			throw new Error(
-				`Failed to parse AI response as JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`
-			);
-		}
-
-		const normalizeOptionText = (opt: string) =>
-			opt.replace(/^\s*(?:[A-Z]|\d+)\s*(?:[.)\]:-])\s+/, '').trim();
-
-		const now = Date.now();
-
-		// Validate each question has required fields
-		for (let i = 0; i < parsed.length; i++) {
-			const q = parsed[i];
-			if (!q.stem || typeof q.stem !== 'string') {
-				throw new Error(`Question ${i + 1} missing or invalid stem`);
-			}
-			if (!Array.isArray(q.options) || q.options.length < 2) {
-				throw new Error(`Question ${i + 1} missing or insufficient options`);
-			}
-			if (!Array.isArray(q.correctAnswerIndexes) || q.correctAnswerIndexes.length === 0) {
-				throw new Error(`Question ${i + 1} missing correct answer indexes`);
-			}
-			if (!getRationale(q)) {
-				throw new Error(`Question ${i + 1} missing or invalid rationale`);
-			}
-		}
-
-		const normalized = parsed.map((q, i) => {
-			const options = q.options.map((o) => ({ text: normalizeOptionText(o) }));
-			const validIndexes = (q.correctAnswerIndexes || [])
-				.filter((n) => Number.isInteger(n))
-				.filter((n) => n >= 0 && n < options.length)
-				.map((n) => String(n));
-			return {
-				type: 'multiple_choice',
-				stem: q.stem.trim(),
-				options,
-				correctAnswers: validIndexes,
-				rationale: getRationale(q),
-				aiGenerated: true,
-				status: 'published',
-				order: i,
-				metadata: { generation: { model, focus: focusLabel, customPromptUsed: Boolean(extra) } },
-				updatedAt: now
-			};
-		});
-
-		return { questions: normalized, count: normalized.length };
+	handler: async (): Promise<{ questions: []; count: 0 }> => {
+		throwLegacyGenerationRemoved();
 	}
 });
 
-/**
- * Generate plausible distractor options and rationale from a stem and correct answer(s).
- * This helps educators who write their own questions but need assistance with distractors.
- */
 export const generateDistractorsAndRationale = action({
 	args: {
 		stem: v.string(),
@@ -1437,125 +1492,11 @@ export const generateDistractorsAndRationale = action({
 		existingRationale: v.optional(v.string()),
 		model: v.optional(v.string())
 	},
-	handler: async (
-		ctx,
-		{
-			stem,
-			correctAnswers,
-			existingOptions = [],
-			focus,
-			numDistractors = 3,
-			existingRationale = '',
-			model = 'gemini-3-flash-preview'
-		}
-	) => {
-		const identity = await ctx.auth.getUserIdentity();
-		if (!identity) throw new Error('Unauthenticated');
-
-		// Check usage limits (count as 1 question generation)
-		await ctx.runMutation(internal.question.checkAndIncrementUsage, {
-			count: 1,
-			clerkUserId: identity.subject
-		});
-
-		if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.trim().length === 0) {
-			throw new Error('GEMINI_API_KEY is not configured');
-		}
-
-		const { GoogleGenAI, Type, ThinkingLevel } = await import('@google/genai');
-		const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-		const focusLabel = (focus || 'general').toLowerCase();
-		const domainHint =
-			focusLabel === 'optometry'
-				? ' (optometry context)'
-				: focusLabel === 'pharmacy'
-					? ' (pharmacy context)'
-					: '';
-
-		const existingDistractors = existingOptions.filter(
-			(o) => o.trim().length > 0 && !correctAnswers.includes(o)
-		);
-		const existingSection =
-			existingDistractors.length > 0
-				? `\nExisting wrong options (match style, do not repeat): ${existingDistractors.join('; ')}`
-				: '';
-
-		const contextHint = existingRationale.trim() ? `\nNotes: ${existingRationale.trim()}` : '';
-
-		const prompt = `${numDistractors} wrong options + rationale.${domainHint}
-
-Q: ${stem}
-A: ${correctAnswers.join('; ')}${existingSection}${contextHint}
-
-Wrong options: plausible, unique, no prefixes. Match style and length of existing options and answer.
-Rationale: 2-3 sentences explaining the underlying concept. Use notes if provided. Do not reference options or say "this question".`;
-
-		const result = await ai.models.generateContent({
-			model,
-			contents: [{ role: 'user', parts: [{ text: prompt }] }],
-			config: {
-				temperature: 0.7,
-				maxOutputTokens: 512,
-				thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
-				responseMimeType: 'application/json',
-				responseSchema: {
-					type: Type.OBJECT,
-					properties: {
-						distractors: {
-							type: Type.ARRAY,
-							items: { type: Type.STRING },
-							minItems: numDistractors,
-							maxItems: numDistractors
-						},
-						rationale: { type: Type.STRING }
-					},
-					required: ['distractors', 'rationale']
-				}
-			}
-		});
-
-		const responseText = result.text;
-		if (!responseText || typeof responseText !== 'string' || responseText.trim().length === 0) {
-			throw new Error('AI response text is empty or invalid');
-		}
-
-		let parsed: {
-			distractors: string[];
-			rationale?: string;
-			explanation?: string;
-		};
-		try {
-			parsed = JSON.parse(responseText.trim());
-			if (!Array.isArray(parsed.distractors) || !getRationale(parsed)) {
-				throw new Error('Invalid response structure');
-			}
-		} catch (err) {
-			console.error('Failed to parse AI response:', err);
-			throw new Error('Failed to parse AI-generated distractors and rationale');
-		}
-
-		// Validate, clean up, and deduplicate against existing options
-		const existingLower = new Set([
-			...existingOptions.map((o) => o.trim().toLowerCase()),
-			...correctAnswers.map((a) => a.trim().toLowerCase())
-		]);
-		const cleanedDistractors = parsed.distractors
-			.filter((d) => d && d.trim().length > 0)
-			.map((d) => d.trim())
-			.filter((d) => !existingLower.has(d.toLowerCase()))
-			.slice(0, numDistractors);
-
-		return {
-			distractors: cleanedDistractors,
-			rationale: getRationale(parsed)
-		};
+	handler: async (): Promise<{ distractors: string[]; rationale: string }> => {
+		throwLegacyGenerationRemoved();
 	}
 });
 
-/**
- * Generate a rationale only (for FITB questions).
- */
 export const generateRationale = action({
 	args: {
 		stem: v.string(),
@@ -1564,76 +1505,7 @@ export const generateRationale = action({
 		existingRationale: v.optional(v.string()),
 		model: v.optional(v.string())
 	},
-	handler: async (
-		ctx,
-		{ stem, answer, focus, existingRationale = '', model = 'gemini-3-flash-preview' }
-	) => {
-		const identity = await ctx.auth.getUserIdentity();
-		if (!identity) throw new Error('Unauthenticated');
-
-		await ctx.runMutation(internal.question.checkAndIncrementUsage, {
-			count: 1,
-			clerkUserId: identity.subject
-		});
-
-		if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.trim().length === 0) {
-			throw new Error('GEMINI_API_KEY is not configured');
-		}
-
-		const { GoogleGenAI, Type, ThinkingLevel } = await import('@google/genai');
-		const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-		const focusLabel = (focus || 'general').toLowerCase();
-		const domainHint =
-			focusLabel === 'optometry'
-				? ' (optometry context)'
-				: focusLabel === 'pharmacy'
-					? ' (pharmacy context)'
-					: '';
-
-		const contextHint = existingRationale.trim() ? `\nNotes: ${existingRationale.trim()}` : '';
-
-		const prompt = `2-3 sentence rationale of the concept.${domainHint} Use notes if provided. Do not say "this question".
-
-Q: ${stem}
-A: ${answer}${contextHint}`;
-
-		const result = await ai.models.generateContent({
-			model,
-			contents: [{ role: 'user', parts: [{ text: prompt }] }],
-			config: {
-				temperature: 0.7,
-				maxOutputTokens: 256,
-				thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
-				responseMimeType: 'application/json',
-				responseSchema: {
-					type: Type.OBJECT,
-					properties: {
-						rationale: { type: Type.STRING }
-					},
-					required: ['rationale']
-				}
-			}
-		});
-
-		const responseText = result.text;
-		if (!responseText || typeof responseText !== 'string' || responseText.trim().length === 0) {
-			throw new Error('AI response text is empty or invalid');
-		}
-
-		let parsed: { rationale?: string; explanation?: string };
-		try {
-			parsed = JSON.parse(responseText.trim());
-			if (!getRationale(parsed)) {
-				throw new Error('Invalid response structure');
-			}
-		} catch (err) {
-			console.error('Failed to parse AI response:', err);
-			throw new Error('Failed to parse AI-generated rationale');
-		}
-
-		return {
-			rationale: getRationale(parsed)
-		};
+	handler: async (): Promise<{ rationale: string }> => {
+		throwLegacyGenerationRemoved();
 	}
 });

@@ -6,7 +6,7 @@ const http = httpRouter();
 // Register Polar webhook routes at /polar/events
 // The Polar component automatically stores subscriptions - no need to update plan field
 // We check subscription status directly via getCurrentSubscription
-polar.registerRoutes(http as any, {
+polar.registerRoutes(http, {
 	// Optional logging for debugging
 	onSubscriptionCreated: async (_ctx, event) => {
 		console.log('Subscription created:', {

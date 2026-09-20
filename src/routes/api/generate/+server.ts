@@ -49,7 +49,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			client.setAuth(token);
 		}
 		const payload = { material, model, numQuestions: nInt, focus, customPrompt };
-		const { questions, count } = await client.action(api.question.generateQuestions, payload as never);
+		const { questions, count } = await client.action(
+			api.question.generateQuestions,
+			payload as never
+		);
 
 		return json({ success: true, questions, count });
 	} catch (error) {

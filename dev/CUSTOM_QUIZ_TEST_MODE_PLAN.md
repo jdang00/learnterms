@@ -818,4 +818,3 @@ Key implementation rules to preserve correctness:
 - separate attempt flags from study flags
 
 This plan supports your v1 requirements and leaves room for topic filtering and richer test creation later without redesigning the core attempt model.
-

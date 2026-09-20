@@ -10,6 +10,7 @@ This document captures the immediate September bug fixes with two views for each
 ## 1) Filter behavior: “Show Incomplete” and “Show Flagged”
 
 ### Technical
+
 - Correctness and solution styling are now derived from the currently filtered question rather than the unfiltered list. We updated `QuizState.isCorrect` to reference `getCurrentFilteredQuestion() || getCurrentQuestion()` so filtered views preserve correct/incorrect visuals.
 - Filtering remains display-only; we never mutate question data. Filters are computed by `QuizState.getFilteredQuestions()` using `liveFlaggedQuestions` and `liveInteractedQuestions`.
 - We retained stable navigation when toggling filters by recovering the best matching index after a filter change.
@@ -17,6 +18,7 @@ This document captures the immediate September bug fixes with two views for each
 - Key files: `src/routes/classes/[classId]/modules/[moduleId]/states.svelte.ts`, `src/lib/components/MainQuiz.svelte`, `src/routes/classes/[classId]/modules/[moduleId]/+page.svelte`.
 
 ### General
+
 - Filtering by “Incomplete” or “Flagged” no longer removes correct answer markings or breaks solution visuals.
 - Questions don’t jump unexpectedly while you flag during an “Incomplete” review; things stay stable and predictable.
 - Navigation, progress, and solution indicators work the same in filtered and unfiltered views.
@@ -26,6 +28,7 @@ This document captures the immediate September bug fixes with two views for each
 ## 2) Answer reconciliation when backend changes
 
 ### Technical
+
 - Added `sanitizeStateForCurrentQuestion()` in `QuizState` to prune any stale `selectedAnswers`/`eliminatedAnswers` that no longer exist after backend updates to options/correct answers.
 - Call sites:
   - Before saving progress (ensures only valid option ids are persisted)
@@ -35,6 +38,7 @@ This document captures the immediate September bug fixes with two views for each
 - Key files: `states.svelte.ts` (new sanitizer), module `+page.svelte` (call sites).
 
 ### General
+
 - When content is updated on the backend, the quiz automatically adapts—no more “ghost” choices or mismatched answers.
 - Your saved selections remain valid, and you won’t see confusing UI after authors tweak questions.
 
@@ -43,6 +47,7 @@ This document captures the immediate September bug fixes with two views for each
 ## 3) Persist user preferences across modules (Auto-next, Shuffle options)
 
 ### Technical
+
 - Persisted preferences to `localStorage`:
   - `lt:autoNextEnabled` (default true)
   - `lt:optionsShuffleEnabled` (default false)
@@ -52,6 +57,7 @@ This document captures the immediate September bug fixes with two views for each
 - Key files: `states.svelte.ts`, module `+page.svelte`, `SettingsModal.svelte` (existing UI).
 
 ### General
+
 - Your preference for auto-advancing and shuffled options now sticks across modules and sessions—set it once, it stays that way.
 - Defaults remain the same: auto-next on, shuffle off.
 
@@ -60,6 +66,7 @@ This document captures the immediate September bug fixes with two views for each
 ## 4) Keyboard shortcuts for fast option selection
 
 ### Technical
+
 - Added number key handling in the existing keydown switch within the module `+page.svelte`:
   - Keys `1–0` map to options `A–J` according to the current ordered options (respects shuffle).
   - Disabled in Fill-in-the-Blank and when the solution is revealed.
@@ -67,6 +74,7 @@ This document captures the immediate September bug fixes with two views for each
 - Updated the shortcuts hint in `SettingsModal.svelte` to reflect the new selection shortcut.
 
 ### General
+
 - You can now press number keys `1–0` to select options quickly (A–J). It works with shuffled answers and doesn’t interfere with fill-in-the-blank.
 - Keyboard-first studying feels faster and more fluid.
 
@@ -75,11 +83,13 @@ This document captures the immediate September bug fixes with two views for each
 ## 5) Remove unused class progress refresh subscription
 
 ### Technical
+
 - Searched for all usages of `getProgressForClass`. Found a single reactive subscription on `src/routes/classes/+page.svelte` that wasn’t used for display.
 - Removed the live `useQuery(api.userProgress.getProgressForClass, ...)` subscription and its unused type import to avoid unnecessary bandwidth and refresh churn.
 - Left the backend function intact for future features (e.g., dedicated Class Progress module).
 
 ### General
+
 - The classes dashboard no longer fetches background progress that isn’t shown, improving responsiveness and reducing network usage.
 - This cleans things up now while keeping the door open for a richer class progress view later.
 
@@ -88,6 +98,7 @@ This document captures the immediate September bug fixes with two views for each
 ## 6) Attachment visibility: blur until solution reveal
 
 ### Technical
+
 - Added `showOnSolution?: boolean` to Convex `questionMedia` docs to control per-attachment visibility.
 - Updated Convex:
   - `questionMedia.create` accepts optional `showOnSolution` and defaults to `true`.
@@ -100,6 +111,7 @@ This document captures the immediate September bug fixes with two views for each
 - Key files: `src/convex/schema.ts`, `src/convex/questionMedia.ts`, `src/lib/admin/AddQuestionModal.svelte`, `src/lib/admin/EditQuestionModal.svelte`, `src/lib/components/QuizSideBar.svelte`.
 
 ### General
+
 - Attachments are now blurred by default and automatically unblur when you reveal the solution.
 - Authors can opt specific attachments out of this behavior with a simple toggle.
 
@@ -108,6 +120,7 @@ This document captures the immediate September bug fixes with two views for each
 ## 7) Quick controls in non-fullscreen quiz header
 
 ### Technical
+
 - Added a compact control bar above the "Back to Module" link in `ModuleInfo.svelte` when not in fullscreen:
   - Begin quiz anchor linking to `#quiz-top` near the quiz container
   - Reset progress button that opens the existing reset modal via `qs.isResetModalOpen = true`
@@ -116,9 +129,11 @@ This document captures the immediate September bug fixes with two views for each
 - Styling follows DaisyUI (soft buttons, toggles, bordered container) to match existing patterns.
 
 ### General
+
 - You now have quick access to Begin, Reset, Auto-next, and Shuffle right above the module header in non-fullscreen view.
 - Keeps the layout tidy and consistent with the rest of the app.
 
 ## Notes
+
 - All changes preserve existing defaults and UI patterns (DaisyUI, Svelte 5 runes), focus on minimal surface area, and favor the database as the source of truth.
 - Lints are clean in changed files; reactivity loops were avoided by moving sanitization to safe points.

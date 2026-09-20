@@ -128,8 +128,8 @@
 					you learn better.
 				</li>
 				<li>
-					<strong>Learner-first design:</strong> Every feature answers one question: “Does this help
-					me learn faster?”
+					<strong>Learner-first design:</strong> Every feature answers one question: “Does this help me
+					learn faster?”
 				</li>
 				<li>
 					<strong>Evidence over hype:</strong> AI is a tool, not a sales pitch. I test features myself;
@@ -140,8 +140,8 @@
 					to study, not figure out a UI.
 				</li>
 				<li>
-					<strong>Fast and adaptive:</strong> I push updates constantly. Small tweaks add up to huge
-					improvements over time.
+					<strong>Fast and adaptive:</strong> I push updates constantly. Small tweaks add up to huge improvements
+					over time.
 				</li>
 			</ul>
 		</section>

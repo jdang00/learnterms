@@ -13,10 +13,12 @@ The **AI Question Assistant** is a new feature that bridges the gap between full
 ### Problem Statement
 
 Current question creation offers two paths:
+
 1. **Fully Manual**: Educator writes everything (stem, all options, explanation)
 2. **Fully AI-Generated**: AI creates complete questions from source material
 
 **Gap**: Educators often have excellent question ideas and know the correct answer, but struggle with:
+
 - Creating plausible but incorrect distractor options
 - Writing comprehensive explanations that address common misconceptions
 - Balancing difficulty levels across options
@@ -24,6 +26,7 @@ Current question creation offers two paths:
 ### Solution
 
 The AI Question Assistant provides **targeted AI assistance** for the hardest parts of question authoring:
+
 - ✅ Educator maintains control over the core question and correct answer
 - ✅ AI generates domain-specific distractors based on common misconceptions
 - ✅ AI writes explanations that justify correct answers and explain why distractors are wrong
@@ -68,11 +71,13 @@ The AI Question Assistant provides **targeted AI assistance** for the hardest pa
 ### Smart Merging Behavior
 
 **Options Handling:**
+
 - Filters out empty existing options
 - Appends AI-generated distractors to the end
 - Preserves all existing options (non-destructive)
 
 **Explanation Handling:**
+
 - If no explanation exists: Sets AI explanation automatically
 - If explanation exists: Prompts user with confirmation dialog
   - "You already have an explanation. Do you want to replace it with the AI-generated one?"
@@ -97,7 +102,10 @@ export const generateDistractorsAndExplanation = action({
 		focus: v.string(),
 		numDistractors: v.optional(v.number())
 	},
-	handler: async (ctx, { stem, correctAnswers, existingOptions = [], focus, numDistractors = 3 }) => {
+	handler: async (
+		ctx,
+		{ stem, correctAnswers, existingOptions = [], focus, numDistractors = 3 }
+	) => {
 		// ... implementation
 	}
 });
@@ -111,13 +119,14 @@ export const generateDistractorsAndExplanation = action({
    - Authentication required via Clerk
 
 2. **Domain-Specific Prompts**:
+
    ```typescript
    const domainHint =
-       focusLabel === 'optometry'
-           ? '- Distractors should reflect common misconceptions in optometry.'
-           : focusLabel === 'pharmacy'
-               ? '- Distractors should reflect common pharmacotherapy misconceptions or similar-sounding drugs/mechanisms.'
-               : '';
+   	focusLabel === 'optometry'
+   		? '- Distractors should reflect common misconceptions in optometry.'
+   		: focusLabel === 'pharmacy'
+   			? '- Distractors should reflect common pharmacotherapy misconceptions or similar-sounding drugs/mechanisms.'
+   			: '';
    ```
 
 3. **Structured Output**:
@@ -136,24 +145,27 @@ export const generateDistractorsAndExplanation = action({
 **File:** `/src/lib/admin/QuestionAIAssistant.svelte`
 
 **Props:**
+
 ```typescript
 type Props = {
-    stem: string;
-    correctAnswers: string[];
-    existingOptions: string[];
-    focus?: Focus;
-    onAccept: (distractors: string[], explanation: string) => void;
-    onCancel: () => void;
+	stem: string;
+	correctAnswers: string[];
+	existingOptions: string[];
+	focus?: Focus;
+	onAccept: (distractors: string[], explanation: string) => void;
+	onCancel: () => void;
 };
 ```
 
 **States:**
+
 - `isGenerating`: Loading state during API call
 - `error`: Error message display
 - `generated`: Holds AI response (distractors + explanation)
 - `showPreview`: Toggles between initial and preview views
 
 **Design System:**
+
 - Gradient background (purple-to-blue) to distinguish from main editor
 - Icon: Sparkles (consistent AI indicator)
 - Color coding: Green borders for successful generation
@@ -164,31 +176,34 @@ type Props = {
 **File:** `/src/lib/admin/QuestionEditorInline.svelte`
 
 **New State:**
+
 ```typescript
 let showAIAssistant: boolean = $state(false);
 let userFocus: Focus = $state('general'); // TODO: fetch from user settings
 ```
 
 **Helper Functions:**
+
 ```typescript
 function canShowAIAssistant(): boolean {
-    return (
-        questionType === QUESTION_TYPES.MULTIPLE_CHOICE &&
-        questionStem.trim().length > 0 &&
-        correctAnswers.length > 0
-    );
+	return (
+		questionType === QUESTION_TYPES.MULTIPLE_CHOICE &&
+		questionStem.trim().length > 0 &&
+		correctAnswers.length > 0
+	);
 }
 
 function handleAIAccept(distractors: string[], explanation: string) {
-    // Merge logic with smart explanation handling
+	// Merge logic with smart explanation handling
 }
 
 function handleAICancel() {
-    showAIAssistant = false;
+	showAIAssistant = false;
 }
 ```
 
 **UI Location:**
+
 - Appears above the Options section (only for Multiple Choice)
 - Shows before the existing "Options" header
 - Integrates seamlessly with existing layout
@@ -202,6 +217,7 @@ function handleAICancel() {
 The prompt is carefully crafted to generate high-quality distractors:
 
 **Key Instructions:**
+
 1. ✅ Create exactly N plausible but incorrect options
 2. ✅ Make distractors challenging (tempting to students with partial knowledge)
 3. ✅ Match length/complexity of correct answers
@@ -211,6 +227,7 @@ The prompt is carefully crafted to generate high-quality distractors:
 7. ❌ No leading letters, numbers, or punctuation
 
 **Explanation Instructions:**
+
 1. Explain why correct answer(s) are correct with supporting reasoning
 2. Explain why each distractor is incorrect and what misconception it represents
 3. Provide educational context for learning from mistakes
@@ -220,10 +237,10 @@ The prompt is carefully crafted to generate high-quality distractors:
 ### Example Prompt Structure
 
 ```
-Role: You are an AI assistant specializing in medical education, helping educators 
+Role: You are an AI assistant specializing in medical education, helping educators
 create high-quality distractor options and explanations for assessment questions.
 
-Goal: Generate 3 plausible but incorrect distractor options and a comprehensive 
+Goal: Generate 3 plausible but incorrect distractor options and a comprehensive
 explanation for this question.
 
 Question Stem:
@@ -237,13 +254,13 @@ Existing options already created:
 
 Instructions for Distractors:
 - Create exactly 3 incorrect options that are plausible but definitively wrong
-- Make distractors challenging - they should be tempting to students who have 
+- Make distractors challenging - they should be tempting to students who have
   partial knowledge
 - Distractors should be similar in length and complexity to the correct answer(s)
 - Use common misconceptions, near-miss answers, or related but incorrect concepts
 - Distractors should reflect common misconceptions in optometry.
 - Do NOT make distractors obviously wrong or silly
-- Each distractor must be a plain string with NO leading letters, numbers, or 
+- Each distractor must be a plain string with NO leading letters, numbers, or
   punctuation (no prefixes like "A.", "1)", or "-")
 
 Instructions for Explanation:
@@ -251,7 +268,7 @@ Instructions for Explanation:
   1. Explains why the correct answer(s) are correct with supporting reasoning
   2. Explains why each distractor is incorrect and what misconception it represents
   3. Provides educational context to help students learn from their mistakes
-- The explanation should be self-contained (don't reference "the material" or 
+- The explanation should be self-contained (don't reference "the material" or
   external sources)
 - Use clear, educational language appropriate for optometry students
 - Length: 3-6 sentences (concise but thorough)
@@ -270,6 +287,7 @@ Instructions for Explanation:
 ### Why count as 1 credit?
 
 The AI Assistant uses similar computational resources to generating a single question:
+
 - Gemini API call with structured output
 - Context analysis (stem + correct answers)
 - Creative generation (3 distractors + explanation)
@@ -278,10 +296,11 @@ The AI Assistant uses similar computational resources to generating a single que
 ### Usage Tracking
 
 Same infrastructure as question generation:
+
 ```typescript
 await ctx.runMutation(internal.question.checkAndIncrementUsage, {
-    count: 1,
-    clerkUserId: identity.subject
+	count: 1,
+	clerkUserId: identity.subject
 });
 ```
 
@@ -292,10 +311,12 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 ### Scenario 1: Clinical Pharmacology Question
 
 **Educator Input:**
+
 - **Stem**: "A patient presents with hypertension and diabetes. Which antihypertensive class should be avoided?"
 - **Correct Answer**: "Non-selective beta blockers"
 
 **AI Generates:**
+
 - **Distractors**:
   1. ACE inhibitors
   2. Calcium channel blockers
@@ -307,10 +328,12 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 ### Scenario 2: Optometry Anatomy Question
 
 **Educator Input:**
+
 - **Stem**: "Which structure is responsible for producing aqueous humor?"
 - **Correct Answer**: "Ciliary body epithelium"
 
 **AI Generates:**
+
 - **Distractors**:
   1. Trabecular meshwork
   2. Canal of Schlemm
@@ -322,12 +345,14 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 ### Scenario 3: Multiple Correct Answers
 
 **Educator Input:**
+
 - **Stem**: "Which of the following are first-line treatments for acute bacterial conjunctivitis?"
-- **Correct Answers**: 
+- **Correct Answers**:
   1. Moxifloxacin ophthalmic solution
   2. Azithromycin ophthalmic solution
 
 **AI Generates:**
+
 - **Distractors**:
   1. Oral doxycycline
   2. Prednisolone acetate ophthalmic
@@ -342,30 +367,31 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 
 ### vs. Fully Manual Creation
 
-| Aspect | Manual | AI Assistant |
-|--------|--------|-------------|
-| **Time to create** | 5-10 min | 2-3 min |
-| **Distractor quality** | Varies by educator | Consistently plausible |
-| **Explanation depth** | Often brief | Comprehensive by default |
+| Aspect                     | Manual                 | AI Assistant                |
+| -------------------------- | ---------------------- | --------------------------- |
+| **Time to create**         | 5-10 min               | 2-3 min                     |
+| **Distractor quality**     | Varies by educator     | Consistently plausible      |
+| **Explanation depth**      | Often brief            | Comprehensive by default    |
 | **Misconception coverage** | May miss common errors | Built-in from training data |
-| **Cognitive load** | High (6 components) | Medium (2 components) |
+| **Cognitive load**         | High (6 components)    | Medium (2 components)       |
 
 ### vs. Fully AI-Generated
 
-| Aspect | Fully AI | AI Assistant |
-|--------|----------|-------------|
-| **Question stem quality** | Generic, may miss nuance | Educator-crafted, precise |
-| **Alignment with learning objectives** | Approximate | Exact |
-| **Clinical relevance** | Variable | High (educator ensures) |
-| **Correct answer accuracy** | 95% (needs review) | 100% (educator provides) |
-| **Educator control** | Low | High |
-| **Student trust** | Lower | Higher |
+| Aspect                                 | Fully AI                 | AI Assistant              |
+| -------------------------------------- | ------------------------ | ------------------------- |
+| **Question stem quality**              | Generic, may miss nuance | Educator-crafted, precise |
+| **Alignment with learning objectives** | Approximate              | Exact                     |
+| **Clinical relevance**                 | Variable                 | High (educator ensures)   |
+| **Correct answer accuracy**            | 95% (needs review)       | 100% (educator provides)  |
+| **Educator control**                   | Low                      | High                      |
+| **Student trust**                      | Lower                    | Higher                    |
 
 ---
 
 ## Future Enhancements
 
 ### Phase 1 (Current Prototype)
+
 - ✅ Basic distractor generation (3 options)
 - ✅ Explanation generation
 - ✅ Domain awareness (optometry/pharmacy/general)
@@ -373,6 +399,7 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 - ✅ Non-destructive merging
 
 ### Phase 2 (Near-term)
+
 - [ ] **Difficulty level control**: "Generate easy/medium/hard distractors"
 - [ ] **Quantity selection**: Choose 2-5 distractors
 - [ ] **Focus targeting**: "Focus on pharmacokinetics" or "Focus on diagnosis"
@@ -381,6 +408,7 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 - [ ] **Explanation templates**: "Brief", "Detailed", "Case-based"
 
 ### Phase 3 (Medium-term)
+
 - [ ] **Learning from edits**: Track which AI distractors get edited/rejected
 - [ ] **Adaptive generation**: Improve prompts based on acceptance rates
 - [ ] **Batch mode**: Generate for multiple questions in sequence
@@ -388,6 +416,7 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 - [ ] **Peer review mode**: Flag AI-generated components for colleague review
 
 ### Phase 4 (Long-term)
+
 - [ ] **Student performance integration**: Generate distractors based on common errors in past quizzes
 - [ ] **Multilingual support**: Generate in different languages
 - [ ] **Voice input**: Dictate question and correct answer
@@ -398,18 +427,21 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 ## Technical Debt & TODOs
 
 ### Immediate
+
 - [ ] **User focus detection**: Currently hardcoded to 'general', need to fetch from user settings/profile
 - [ ] **Error handling improvements**: More specific error messages for different failure modes
 - [ ] **Loading state polish**: Add progress indicators or fun facts during generation
 - [ ] **Keyboard shortcuts**: Add hotkeys for accept/cancel/regenerate
 
 ### Short-term
+
 - [ ] **Analytics tracking**: Log usage patterns (acceptance rate, regeneration frequency)
 - [ ] **A/B testing**: Test different prompt variations for quality
 - [ ] **Unit tests**: Test distractor validation and merging logic
 - [ ] **E2E tests**: Simulate full workflow with mocked AI responses
 
 ### Medium-term
+
 - [ ] **Rate limiting UI**: Show usage remaining before hitting limit
 - [ ] **Prompt versioning**: Track prompt changes and A/B test improvements
 - [ ] **Quality scoring**: Let educators rate AI suggestions to improve over time
@@ -449,6 +481,7 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 ## Implementation Checklist
 
 ### Backend
+
 - [x] Create `generateDistractorsAndExplanation` Convex action
 - [x] Integrate with usage limits system
 - [x] Add domain-specific prompts (optometry/pharmacy)
@@ -456,6 +489,7 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 - [x] Handle error cases (API failures, limits, invalid inputs)
 
 ### Frontend
+
 - [x] Create `QuestionAIAssistant.svelte` component
 - [x] Add trigger button in `QuestionEditorInline.svelte`
 - [x] Implement preview/accept/cancel workflow
@@ -464,11 +498,13 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 - [x] Add user focus state (hardcoded to 'general' for now)
 
 ### Documentation
+
 - [x] Feature specification (this document)
 - [x] User guide section (see User Experience above)
 - [x] API documentation (see Technical Architecture above)
 
 ### Testing (TODO)
+
 - [ ] Unit tests for merging logic
 - [ ] Integration tests for Convex action
 - [ ] E2E tests for full workflow
@@ -476,6 +512,7 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 - [ ] User testing: 3-5 educators try the feature
 
 ### Deployment (TODO)
+
 - [ ] Deploy backend changes to production
 - [ ] Feature flag: Enable for beta testers first
 - [ ] Monitor error rates and API usage
@@ -491,6 +528,7 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 **Impact**: Medium  
 **Likelihood**: Low  
 **Mitigation**:
+
 - Preview step forces review before acceptance
 - Educators are domain experts who will catch errors
 - Track reported issues and refine prompts
@@ -501,6 +539,7 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 **Impact**: High  
 **Likelihood**: Low  
 **Mitigation**:
+
 - Feature is opt-in, not default
 - Preview encourages critical review
 - Documentation emphasizes educator control
@@ -511,6 +550,7 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 **Impact**: Medium  
 **Likelihood**: Medium  
 **Mitigation**:
+
 - Clear communication of limits upfront
 - Helpful error messages with upgrade path
 - Generous pro limits (300/day sufficient for serious use)
@@ -521,6 +561,7 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 **Impact**: High  
 **Likelihood**: Low  
 **Mitigation**:
+
 - Graceful error handling with retry logic
 - Fallback: Save draft and try again later
 - Status page: Show API health
@@ -531,21 +572,25 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 ## Comparison to Industry
 
 ### Quizlet
+
 - **AI Features**: Q-Chat (study assistant), Magic Notes (generate flashcards)
 - **Gap**: No targeted distractor generation for existing questions
 - **LearnTerms Advantage**: Hybrid control (educator stem + AI distractors)
 
 ### Kahoot
+
 - **AI Features**: Question generation from text/slides
 - **Gap**: All-or-nothing AI generation
 - **LearnTerms Advantage**: Surgical AI assistance for specific components
 
 ### Canvas/Blackboard
+
 - **AI Features**: Limited to content suggestions, not question creation
 - **Gap**: No AI-assisted authoring tools
 - **LearnTerms Advantage**: Domain-specific medical education AI
 
 ### ExamSoft
+
 - **AI Features**: None (traditional test platform)
 - **Gap**: Manual creation only
 - **LearnTerms Advantage**: Modern AI tooling
@@ -562,14 +607,16 @@ The AI Question Assistant represents a **thoughtful evolution** in question auth
 ✅ **Efficiency Gains**: Reduces tedious work (distractor brainstorming)  
 ✅ **Quality Maintenance**: AI provides domain-specific, plausible options  
 ✅ **Flexibility**: Non-destructive, review-first workflow  
-✅ **Scalability**: Same infrastructure as existing AI features  
+✅ **Scalability**: Same infrastructure as existing AI features
 
 This feature **bridges the gap** between fully manual and fully automated question creation, giving educators the best of both worlds:
+
 - **Human expertise** for question stems and correct answers
 - **AI efficiency** for distractors and explanations
 - **Collaborative refinement** for final quality
 
 Next steps:
+
 1. User testing with 5-10 educators
 2. Gather feedback and iterate on prompts
 3. Add user focus setting integration

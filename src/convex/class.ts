@@ -1,14 +1,13 @@
 import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
+import type { QueryCtx } from './_generated/server';
 
 const cardThemeValidator = v.object({
 	base: v.string(),
 	light: v.string(),
 	dark: v.string(),
-	patternVariant: v.optional(
-		v.union(v.literal('stripes'), v.literal('blobs'), v.literal('bands'))
-	),
+	patternVariant: v.optional(v.union(v.literal('stripes'), v.literal('blobs'), v.literal('bands'))),
 	patternAngle: v.optional(v.number())
 });
 
@@ -367,12 +366,12 @@ function computeClassSearchScore(
 }
 
 async function assertCohortSearchAccess(
-	ctx: { db: any; identity: { subject: string } },
+	ctx: Pick<QueryCtx, 'db'> & { identity: { subject: string } },
 	cohortId: Id<'cohort'>
 ) {
 	const viewer = await ctx.db
 		.query('users')
-		.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', ctx.identity.subject))
+		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
 		.first();
 	if (!viewer) throw new Error('Unauthorized');
 	if (viewer.role !== 'dev' && viewer.cohortId !== cohortId) {

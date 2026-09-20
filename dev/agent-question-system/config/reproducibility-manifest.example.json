@@ -1,0 +1,21 @@
+{
+	"systemVersion": "2026-07-04.agent-optimized.v1",
+	"artifact": "agent-question-system-curated-examples",
+	"inputSnapshot": "prod-question-snapshot-YYYY-MM-DD.json",
+	"inputHash": "sha256:replace-with-snapshot-hash",
+	"configFile": "dev/agent-question-system/config/agent-question-system.json",
+	"configHash": "sha256:replace-with-config-hash",
+	"selectionSeed": "agent-question-system-v1",
+	"sortKeys": ["templateId", "className", "topicTitle", "stemHash"],
+	"selectedTemplateIds": [
+		"recall.definition",
+		"recall.threshold",
+		"recognition.feature",
+		"discrimination.compare",
+		"mechanism.causal",
+		"diagnosis.case",
+		"management.next_step"
+	],
+	"regexUse": "example_fixing_only",
+	"generatedAt": "2026-07-04T00:00:00.000Z"
+}

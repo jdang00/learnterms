@@ -8,7 +8,7 @@ This is not a “critique of the vision.” It’s a **reality check + progress 
 
 ## Executive Summary
 
-Your manifesto is strong because it’s **rooted in lived pain**, it has **non-negotiable values**, and it frames the product as a *student-led learning system*, not generic edtech. That tone is rare and it matters.
+Your manifesto is strong because it’s **rooted in lived pain**, it has **non-negotiable values**, and it frames the product as a _student-led learning system_, not generic edtech. That tone is rare and it matters.
 
 The biggest update is simple: the manifesto’s “v2 architecture” section is now clearly historical. The codebase in this repo is already operating as a **v3 implementation**:
 
@@ -162,7 +162,7 @@ There is a real document processing pipeline:
 - Store extracted chunks as structured objects in Convex (`chunkContent`) tied to a document (`contentLib`).
 - Browse chunks and select excerpts for generation.
 
-Important nuance: the chunking endpoint is explicitly designed for **extraction without paraphrasing** (“NO PARAPHRASING”). That’s a meaningful design choice and should be reflected in future narrative: it’s not “RAG magic,” it’s *controlled transformation*.
+Important nuance: the chunking endpoint is explicitly designed for **extraction without paraphrasing** (“NO PARAPHRASING”). That’s a meaningful design choice and should be reflected in future narrative: it’s not “RAG magic,” it’s _controlled transformation_.
 
 ### Model reality (what’s changed since the manifesto)
 
@@ -303,6 +303,4 @@ If you want the manifesto to remain a “source of truth,” it needs a lightwei
 
 The most important result of this audit is not “the manifesto is outdated.” It’s that the manifesto’s direction proved correct: the repo now embodies the v3 move (Convex), the student-led content engine (Question Studio), and the exam-like study experience (practice UI with real test ergonomics).
 
-What you need next is mostly *clarity and tightening*, not reinvention: update the story so it matches reality, finish the exam simulation layer deliberately, and keep the data/query discipline clean so scaling stays smooth as cohorts multiply.
-
-
+What you need next is mostly _clarity and tightening_, not reinvention: update the story so it matches reality, finish the exam simulation layer deliberately, and keep the data/query discipline clean so scaling stays smooth as cohorts multiply.

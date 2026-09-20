@@ -1,6 +1,114 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
+const questionStudioQuestionType = v.union(
+	v.literal('learn'),
+	v.literal('clinical'),
+	v.literal('criticalThinking')
+);
+
+// Legacy fields remain optional so stored drafts and jobs stay readable.
+const questionStudioReasoningOrder = v.union(
+	v.literal('first'),
+	v.literal('second'),
+	v.literal('third')
+);
+
+const questionStudioSourceCitation = v.object({
+	citationId: v.string(),
+	pageNumber: v.number(),
+	noteFile: v.string(),
+	chunkTitle: v.string(),
+	quote: v.optional(v.string()),
+	chunkIndex: v.number()
+});
+
+const questionStudioCandidate = v.object({
+	type: v.literal('multiple_choice'),
+	stem: v.string(),
+	options: v.array(v.string()),
+	correctAnswers: v.array(v.string()),
+	rationale: v.string(),
+	questionType: v.optional(questionStudioQuestionType),
+	reasoningOrder: v.optional(questionStudioReasoningOrder),
+	topicId: v.string(),
+	topicTitle: v.string(),
+	sourcePageNumbers: v.array(v.number()),
+	sourceCitations: v.optional(v.array(questionStudioSourceCitation)),
+	duplicateRisk: v.union(v.literal('low'), v.literal('medium'), v.literal('high')),
+	similarQuestionIds: v.array(v.id('question')),
+	cognitiveTemplate: v.optional(v.string()),
+	metadata: v.object({
+		model: v.string(),
+		agentThreadId: v.optional(v.string()),
+		jobId: v.optional(v.id('questionStudioJobs')),
+		harnessVersion: v.optional(v.string()),
+		curatorEditedAt: v.optional(v.number()),
+		curatorRevision: v.optional(v.number()),
+		sourceDocumentId: v.id('contentLib')
+	})
+});
+
+const questionStudioCandidateReview = v.object({
+	candidateIndex: v.number(),
+	verdict: v.union(v.literal('accept'), v.literal('revise'), v.literal('reject')),
+	reasons: v.array(v.string()),
+	sourceSupport: v.union(v.literal('strong'), v.literal('partial'), v.literal('weak')),
+	answerQuality: v.union(v.literal('clear'), v.literal('ambiguous')),
+	revisedStem: v.optional(v.string()),
+	revisedRationale: v.optional(v.string())
+});
+
+const quickLink = v.object({
+	title: v.string(),
+	description: v.string(),
+	href: v.string(),
+	icon: v.string(),
+	hidden: v.optional(v.boolean())
+});
+
+const questionStudioGenerationPlan = v.object({
+	workerBatches: v.array(
+		v.object({
+			taskId: v.string(),
+			label: v.string(),
+			plannedCount: v.number(),
+			questionType: v.optional(questionStudioQuestionType),
+			reasoningOrder: v.optional(questionStudioReasoningOrder),
+			topicCount: v.number(),
+			topicTitles: v.array(v.string()),
+			sourcePages: v.array(v.number()),
+			cognitiveTemplate: v.optional(v.string()),
+			targetObjective: v.optional(v.string())
+		})
+	),
+	topicAllocations: v.array(
+		v.object({
+			taskId: v.string(),
+			topicId: v.string(),
+			topicTitle: v.string(),
+			plannedCount: v.number(),
+			questionType: v.optional(questionStudioQuestionType),
+			reasoningOrder: v.optional(questionStudioReasoningOrder),
+			sourcePages: v.array(v.number()),
+			notes: v.string()
+		})
+	),
+	coverageNotes: v.array(v.string()),
+	riskNotes: v.array(v.string())
+});
+
+const questionStudioLoopProgress = v.object({
+	enabled: v.boolean(),
+	pass: v.union(v.literal('plan'), v.literal('draft'), v.literal('gate'), v.literal('done')),
+	blueprintCount: v.optional(v.number()),
+	blueprintSource: v.optional(v.union(v.literal('llm'), v.literal('fallback'))),
+	gatePassedCount: v.optional(v.number()),
+	gateRejectedCount: v.optional(v.number()),
+	selectedCount: v.optional(v.number()),
+	dedupedCount: v.optional(v.number())
+});
+
 export default defineSchema({
 	users: defineTable({
 		updatedAt: v.number(),
@@ -38,7 +146,7 @@ export default defineSchema({
 				lastResetAt: v.number()
 			})
 		),
-		// Track PDF upload usage for rate limiting
+		// DEPRECATED: retained for existing user records from the old upload workflow.
 		pdfUploadUsage: v.optional(
 			v.object({
 				count: v.number(),
@@ -67,6 +175,7 @@ export default defineSchema({
 		endYear: v.string(),
 		classCode: v.optional(v.string()),
 		pic_url: v.optional(v.string()),
+		quickLinks: v.optional(v.array(quickLink)),
 		// Denormalized stats for fast dashboard queries
 		stats: v.optional(
 			v.object({
@@ -171,7 +280,35 @@ export default defineSchema({
 				v.object({
 					model: v.string(),
 					focus: v.string(),
-					customPromptUsed: v.boolean()
+					customPromptUsed: v.boolean(),
+					jobId: v.optional(v.id('questionStudioJobs')),
+					harnessVersion: v.optional(v.string()),
+					curatorEditedAt: v.optional(v.number()),
+					curatorRevision: v.optional(v.number()),
+					sourceDocumentId: v.optional(v.id('contentLib')),
+					sourcePageNumbers: v.optional(v.array(v.number())),
+					sourceCitations: v.optional(
+						v.array(
+							v.object({
+								citationId: v.string(),
+								pageNumber: v.number(),
+								noteFile: v.string(),
+								chunkTitle: v.string(),
+								quote: v.optional(v.string()),
+								chunkIndex: v.number()
+							})
+						)
+					),
+					topicTitle: v.optional(v.string()),
+					questionType: v.optional(questionStudioQuestionType),
+					reasoningOrder: v.optional(
+						v.union(v.literal('first'), v.literal('second'), v.literal('third'))
+					),
+					duplicateRisk: v.optional(
+						v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+					),
+					similarQuestionIds: v.optional(v.array(v.id('question'))),
+					agentThreadId: v.optional(v.string())
 				})
 			)
 		}),
@@ -217,6 +354,8 @@ export default defineSchema({
 		order: v.number(),
 		showOnSolution: v.optional(v.boolean()),
 		metadata: v.object({
+			storageKey: v.optional(v.string()),
+			// DEPRECATED: retained for existing media records from the old upload workflow.
 			uploadthingKey: v.optional(v.string()),
 			sizeBytes: v.optional(v.number()),
 			originalFileName: v.optional(v.string())
@@ -449,6 +588,13 @@ export default defineSchema({
 			rationale: v.optional(v.string()),
 			// DEPRECATED: retained temporarily for legacy attempt snapshots
 			explanation: v.optional(v.string()),
+			source: v.optional(
+				v.object({
+					sourceDocumentId: v.optional(v.id('contentLib')),
+					sourcePageNumbers: v.optional(v.array(v.number())),
+					sourceCitations: v.optional(v.array(questionStudioSourceCitation))
+				})
+			),
 			questionUpdatedAt: v.number()
 		}),
 		response: v.object({
@@ -585,6 +731,30 @@ export default defineSchema({
 		.index('by_slug', ['slug'])
 		.index('by_status', ['status'])
 		.index('by_rulesetId', ['rulesetId']),
+	documentIngestionJobs: defineTable({
+		documentId: v.id('contentLib'),
+		actor: v.string(),
+		workflowId: v.optional(v.string()),
+		status: v.union(
+			v.literal('queued'),
+			v.literal('processing'),
+			v.literal('indexing'),
+			v.literal('complete'),
+			v.literal('failed')
+		),
+		createdAt: v.number(),
+		checkUrl: v.optional(v.string()),
+		expectedPages: v.optional(v.number()),
+		reservedCents: v.optional(v.number()),
+		costCents: v.optional(v.number()),
+		period: v.optional(v.string()),
+		artifactKey: v.optional(v.string()),
+		error: v.optional(v.string())
+	}).index('by_documentId', ['documentId']),
+	parsingBudgets: defineTable({ period: v.string(), reservedCents: v.number() }).index(
+		'by_period',
+		['period']
+	),
 	contentLib: defineTable({
 		title: v.string(),
 		description: v.optional(v.string()),
@@ -594,12 +764,160 @@ export default defineSchema({
 			v.object({
 				originalFileName: v.optional(v.string()),
 				sizeBytes: v.optional(v.number()),
+				// DEPRECATED: retained for existing content library records from the old upload workflow.
 				uploadthingKey: v.optional(v.string()),
-				uploadthingUrl: v.optional(v.string())
+				uploadthingUrl: v.optional(v.string()),
+				storageProvider: v.optional(v.string()),
+				r2Key: v.optional(v.string()),
+				mimeType: v.optional(v.string()),
+				convertedPdfR2Key: v.optional(v.string()),
+				convertedPdfFileName: v.optional(v.string()),
+				convertedPdfSizeBytes: v.optional(v.number()),
+				convertedPdfMimeType: v.optional(v.string()),
+				ingestionStatus: v.optional(
+					v.union(
+						v.literal('not_started'),
+						v.literal('indexing'),
+						v.literal('indexed'),
+						v.literal('mapped'),
+						v.literal('failed')
+					)
+				),
+				ingestionJobId: v.optional(v.id('documentIngestionJobs')),
+				ingestionStage: v.optional(v.string()),
+				ragNamespace: v.optional(v.string()),
+				ragEntryId: v.optional(v.string()),
+				extractionArtifactKeys: v.optional(v.array(v.string())),
+				extractionProvider: v.optional(v.string()),
+				extractionModel: v.optional(v.string()),
+				indexedAt: v.optional(v.number()),
+				mappedAt: v.optional(v.number()),
+				topicMapping: v.optional(
+					v.object({
+						sourceIndexedAt: v.number(),
+						status: v.union(v.literal('running'), v.literal('complete'), v.literal('failed')),
+						startedAt: v.number(),
+						error: v.optional(v.string())
+					})
+				),
+				indexError: v.optional(v.string()),
+				pageCount: v.optional(v.number()),
+				topics: v.optional(
+					v.array(
+						v.object({
+							title: v.string(),
+							pageNumbers: v.array(v.number()),
+							chunkCount: v.number()
+						})
+					)
+				)
 			})
 		),
 		deletedAt: v.optional(v.number())
-	}).index('by_cohortId', ['cohortId']),
+	})
+		.index('by_cohortId', ['cohortId'])
+		.index('by_cohortId_and_title', ['cohortId', 'title']),
+	questionStudioTopicMaps: defineTable({
+		mappingVersion: v.optional(v.string()),
+		documentId: v.id('contentLib'),
+		cohortId: v.id('cohort'),
+		createdFromModuleId: v.optional(v.id('module')),
+		startPage: v.number(),
+		endPage: v.number(),
+		pageCount: v.number(),
+		topics: v.array(
+			v.object({
+				topicId: v.string(),
+				title: v.string(),
+				summary: v.string(),
+				pageNumbers: v.array(v.number()),
+				learningObjectives: v.array(v.string()),
+				keyTerms: v.array(v.string()),
+				suggestedTypes: v.optional(v.array(questionStudioQuestionType)),
+				suggestedOrders: v.optional(v.array(questionStudioReasoningOrder)),
+				estimatedQuestionCapacity: v.number()
+			})
+		),
+		model: v.string(),
+		agentThreadId: v.optional(v.string()),
+		sourceDocumentUpdatedAt: v.number(),
+		sourceIndexedAt: v.optional(v.number()),
+		createdByUserId: v.optional(v.id('users')),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+		deletedAt: v.optional(v.number())
+	})
+		.index('by_documentId', ['documentId'])
+		.index('by_documentId_pageRange', ['documentId', 'startPage', 'endPage'])
+		.index('by_cohortId', ['cohortId']),
+	questionStudioJobs: defineTable({
+		sourceMode: v.optional(v.union(v.literal('topics'), v.literal('pages'))),
+		selectedPageNumbers: v.optional(v.array(v.number())),
+		requestedCounts: v.optional(
+			v.object({ learn: v.number(), clinical: v.number(), criticalThinking: v.number() })
+		),
+		sourceIndexedAt: v.optional(v.number()),
+		dismissedAt: v.optional(v.number()),
+		completedWorkers: v.optional(v.array(v.number())),
+		claimedWorkers: v.optional(v.array(v.number())),
+		savedCandidateIndexes: v.optional(v.array(v.number())),
+		thinking: v.optional(v.union(v.literal('low'), v.literal('medium'), v.literal('high'))),
+		documentId: v.id('contentLib'),
+		moduleId: v.id('module'),
+		cohortId: v.id('cohort'),
+		createdByUserId: v.id('users'),
+		kind: v.union(v.literal('candidate_generation')),
+		status: v.union(
+			v.literal('queued'),
+			v.literal('running'),
+			v.literal('ready'),
+			v.literal('failed')
+		),
+		statusText: v.string(),
+		model: v.string(),
+		threadId: v.optional(v.string()),
+		requestedCount: v.number(),
+		plan: v.optional(questionStudioGenerationPlan),
+		loop: v.optional(questionStudioLoopProgress),
+		blockedDuplicateCount: v.optional(v.number()),
+		candidateCount: v.optional(v.number()),
+		reviewCount: v.optional(v.number()),
+		eventCount: v.optional(v.number()),
+		completedWorkerCount: v.optional(v.number()),
+		failedWorkerCount: v.optional(v.number()),
+		error: v.optional(v.string()),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+		completedAt: v.optional(v.number())
+	})
+		.index('by_createdByUserId', ['createdByUserId'])
+		.index('by_documentId_moduleId', ['documentId', 'moduleId']),
+	questionStudioJobEvents: defineTable({
+		jobId: v.id('questionStudioJobs'),
+		cohortId: v.id('cohort'),
+		at: v.number(),
+		label: v.string(),
+		detail: v.optional(v.string())
+	}).index('by_jobId', ['jobId']),
+	questionStudioJobCandidates: defineTable({
+		jobId: v.id('questionStudioJobs'),
+		cohortId: v.id('cohort'),
+		index: v.number(),
+		candidate: questionStudioCandidate,
+		originalCandidate: v.optional(questionStudioCandidate),
+		createdAt: v.number()
+	})
+		.index('by_jobId', ['jobId'])
+		.index('by_jobId_index', ['jobId', 'index']),
+	questionStudioJobReviews: defineTable({
+		jobId: v.id('questionStudioJobs'),
+		cohortId: v.id('cohort'),
+		candidateIndex: v.number(),
+		review: questionStudioCandidateReview,
+		createdAt: v.number()
+	})
+		.index('by_jobId', ['jobId'])
+		.index('by_jobId_candidateIndex', ['jobId', 'candidateIndex']),
 	chunkContent: defineTable({
 		title: v.string(),
 		summary: v.string(),
@@ -611,6 +929,7 @@ export default defineSchema({
 		metadata: v.optional(v.object({})),
 		deletedAt: v.optional(v.number())
 	}).index('by_documentId', ['documentId']),
+	// DEPRECATED: retained so existing old workflow job documents do not break schema validation.
 	pdfProcessingJobs: defineTable({
 		documentId: v.id('contentLib'),
 		pdfUrl: v.string(),

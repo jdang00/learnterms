@@ -25,6 +25,7 @@
 The Admin Progress page is a planned feature (currently grayed out in the admin dashboard) designed to give administrators comprehensive visibility into class performance, student engagement, and question effectiveness. This document proposes a robust, phased implementation that balances real-time insights with Convex data efficiency through strategic use of aggregation tables and cron jobs.
 
 **Core Value Proposition:**
+
 - Track student performance and mastery at class, module, and individual levels
 - Identify struggling students and difficult questions early
 - Measure question quality and engagement patterns
@@ -38,15 +39,15 @@ The Admin Progress page is a planned feature (currently grayed out in the admin 
 
 The `userProgress` table currently captures:
 
-| Field | Description | Analytics Potential |
-|-------|-------------|---------------------|
-| `selectedOptions` | User's answer choices | Answer pattern analysis |
-| `eliminatedOptions` | Options marked for elimination | Study strategy insights |
-| `isFlagged` | Questions marked for review | Difficulty indicators |
-| `isMastered` | User-marked mastery status | Completion tracking |
-| `attempts` | Number of attempts (stored but not incremented) | Not currently functional |
-| `lastAttemptAt` | Timestamp of last interaction | Recency tracking |
-| `updatedAt` | Last modification time | Activity patterns |
+| Field               | Description                                     | Analytics Potential      |
+| ------------------- | ----------------------------------------------- | ------------------------ |
+| `selectedOptions`   | User's answer choices                           | Answer pattern analysis  |
+| `eliminatedOptions` | Options marked for elimination                  | Study strategy insights  |
+| `isFlagged`         | Questions marked for review                     | Difficulty indicators    |
+| `isMastered`        | User-marked mastery status                      | Completion tracking      |
+| `attempts`          | Number of attempts (stored but not incremented) | Not currently functional |
+| `lastAttemptAt`     | Timestamp of last interaction                   | Recency tracking         |
+| `updatedAt`         | Last modification time                          | Activity patterns        |
 
 ### What's Missing
 
@@ -60,6 +61,7 @@ The `userProgress` table currently captures:
 ### Existing Backend Support
 
 The `getProgressForClass()` query already computes:
+
 - `totalQuestions` per module
 - `interactedQuestions` count
 - `flaggedQuestions` count
@@ -106,15 +108,15 @@ However, this is computed per-request and scoped to a single user.
 
 ### Key Trackable Touchpoints
 
-| Touchpoint | Data Generated | Current State |
-|------------|----------------|---------------|
-| Module opened | Session start | NOT tracked |
-| Question viewed | View count | NOT tracked |
-| Option selected | `selectedOptions` | Tracked |
-| Option eliminated | `eliminatedOptions` | Tracked |
-| Question flagged | `isFlagged` | Tracked |
-| Question marked mastered | `isMastered` | Tracked |
-| Module exited | Session end | NOT tracked |
+| Touchpoint               | Data Generated      | Current State |
+| ------------------------ | ------------------- | ------------- |
+| Module opened            | Session start       | NOT tracked   |
+| Question viewed          | View count          | NOT tracked   |
+| Option selected          | `selectedOptions`   | Tracked       |
+| Option eliminated        | `eliminatedOptions` | Tracked       |
+| Question flagged         | `isFlagged`         | Tracked       |
+| Question marked mastered | `isMastered`        | Tracked       |
+| Module exited            | Session end         | NOT tracked   |
 
 ---
 
@@ -137,6 +139,7 @@ However, this is computed per-request and scoped to a single user.
 **Purpose:** Quick glance at all classes' health
 
 **Displays:**
+
 - Class cards with engagement rings (similar to Apple Watch)
 - Quick stats: Active students, completion %, avg mastery
 - Alerts for classes needing attention
@@ -146,6 +149,7 @@ However, this is computed per-request and scoped to a single user.
 **Purpose:** Deep dive into a single class
 
 **Sections:**
+
 - **Header Stats**: Total students, questions, modules
 - **Engagement Timeline**: Activity over past 7/30 days
 - **Module Performance Grid**: Heatmap of completion by module
@@ -157,6 +161,7 @@ However, this is computed per-request and scoped to a single user.
 **Purpose:** Individual student tracking
 
 **Features:**
+
 - Sortable/filterable student list
 - Per-student metrics: completion %, mastery %, last active
 - Drill-down to see individual question progress
@@ -167,6 +172,7 @@ However, this is computed per-request and scoped to a single user.
 **Purpose:** Question quality and difficulty analysis
 
 **Features:**
+
 - Questions ranked by difficulty (flag rate, elimination patterns)
 - Discrimination index (do high-performers get it right?)
 - Most-flagged questions
@@ -182,87 +188,87 @@ However, this is computed per-request and scoped to a single user.
 
 ```typescript
 progressSnapshot: defineTable({
-  type: v.union(v.literal('class'), v.literal('module'), v.literal('user')),
-  referenceId: v.string(),  // classId, moduleId, or clerkUserId
-  classId: v.id('class'),
-  date: v.string(),         // YYYY-MM-DD format
+	type: v.union(v.literal('class'), v.literal('module'), v.literal('user')),
+	referenceId: v.string(), // classId, moduleId, or clerkUserId
+	classId: v.id('class'),
+	date: v.string(), // YYYY-MM-DD format
 
-  // Aggregate metrics
-  totalStudents: v.number(),
-  activeStudents: v.number(),      // Students with activity that day
-  totalQuestions: v.number(),
-  questionsAttempted: v.number(),
-  questionsCorrect: v.number(),
-  questionsFlagged: v.number(),
-  questionsMastered: v.number(),
+	// Aggregate metrics
+	totalStudents: v.number(),
+	activeStudents: v.number(), // Students with activity that day
+	totalQuestions: v.number(),
+	questionsAttempted: v.number(),
+	questionsCorrect: v.number(),
+	questionsFlagged: v.number(),
+	questionsMastered: v.number(),
 
-  // Computed percentages
-  completionRate: v.number(),
-  masteryRate: v.number(),
-  accuracyRate: v.number(),
+	// Computed percentages
+	completionRate: v.number(),
+	masteryRate: v.number(),
+	accuracyRate: v.number(),
 
-  metadata: v.object({})
+	metadata: v.object({})
 })
-.index('by_type_date', ['type', 'date'])
-.index('by_class_date', ['classId', 'date'])
-.index('by_reference_date', ['referenceId', 'date'])
+	.index('by_type_date', ['type', 'date'])
+	.index('by_class_date', ['classId', 'date'])
+	.index('by_reference_date', ['referenceId', 'date']);
 ```
 
 #### 2. `questionStats` - Question-Level Analytics
 
 ```typescript
 questionStats: defineTable({
-  questionId: v.id('question'),
-  moduleId: v.id('module'),
-  classId: v.id('class'),
+	questionId: v.id('question'),
+	moduleId: v.id('module'),
+	classId: v.id('class'),
 
-  // Attempt metrics
-  totalAttempts: v.number(),
-  uniqueStudents: v.number(),
+	// Attempt metrics
+	totalAttempts: v.number(),
+	uniqueStudents: v.number(),
 
-  // Answer distribution
-  optionDistribution: v.object({}),  // { optionId: count }
+	// Answer distribution
+	optionDistribution: v.object({}), // { optionId: count }
 
-  // Difficulty indicators
-  correctRate: v.number(),           // % correct on first attempt
-  flagRate: v.number(),              // % of students who flagged
-  eliminationRate: v.number(),       // % who used elimination
-  avgAttemptsToCorrect: v.number(),
+	// Difficulty indicators
+	correctRate: v.number(), // % correct on first attempt
+	flagRate: v.number(), // % of students who flagged
+	eliminationRate: v.number(), // % who used elimination
+	avgAttemptsToCorrect: v.number(),
 
-  // Quality metrics
-  discriminationIndex: v.number(),   // -1 to 1, higher = better
+	// Quality metrics
+	discriminationIndex: v.number(), // -1 to 1, higher = better
 
-  lastUpdated: v.number()
+	lastUpdated: v.number()
 })
-.index('by_module', ['moduleId'])
-.index('by_class', ['classId'])
-.index('by_flagRate', ['classId', 'flagRate'])
+	.index('by_module', ['moduleId'])
+	.index('by_class', ['classId'])
+	.index('by_flagRate', ['classId', 'flagRate']);
 ```
 
 #### 3. `activityLog` - Session Tracking (Optional Phase 3+)
 
 ```typescript
 activityLog: defineTable({
-  userId: v.id('users'),
-  classId: v.id('class'),
-  moduleId: v.optional(v.id('module')),
-  questionId: v.optional(v.id('question')),
+	userId: v.id('users'),
+	classId: v.id('class'),
+	moduleId: v.optional(v.id('module')),
+	questionId: v.optional(v.id('question')),
 
-  action: v.union(
-    v.literal('session_start'),
-    v.literal('session_end'),
-    v.literal('question_view'),
-    v.literal('answer_submit'),
-    v.literal('flag_toggle'),
-    v.literal('mastery_toggle')
-  ),
+	action: v.union(
+		v.literal('session_start'),
+		v.literal('session_end'),
+		v.literal('question_view'),
+		v.literal('answer_submit'),
+		v.literal('flag_toggle'),
+		v.literal('mastery_toggle')
+	),
 
-  timestamp: v.number(),
-  durationMs: v.optional(v.number()),  // For timed events
-  metadata: v.object({})
+	timestamp: v.number(),
+	durationMs: v.optional(v.number()), // For timed events
+	metadata: v.object({})
 })
-.index('by_user_timestamp', ['userId', 'timestamp'])
-.index('by_class_timestamp', ['classId', 'timestamp'])
+	.index('by_user_timestamp', ['userId', 'timestamp'])
+	.index('by_class_timestamp', ['classId', 'timestamp']);
 ```
 
 ### Cron Job Architecture
@@ -278,17 +284,13 @@ const crons = cronJobs();
 
 // Run daily at 2 AM UTC
 crons.daily(
-  'aggregate-daily-progress',
-  { hourUTC: 2, minuteUTC: 0 },
-  internal.analytics.aggregateDailyProgress
+	'aggregate-daily-progress',
+	{ hourUTC: 2, minuteUTC: 0 },
+	internal.analytics.aggregateDailyProgress
 );
 
 // Run hourly for near-real-time stats
-crons.hourly(
-  'update-question-stats',
-  { minuteUTC: 15 },
-  internal.analytics.updateQuestionStats
-);
+crons.hourly('update-question-stats', { minuteUTC: 15 }, internal.analytics.updateQuestionStats);
 
 export default crons;
 ```
@@ -302,11 +304,13 @@ export default crons;
 **Goal:** Basic class-level progress visibility
 
 **Backend Changes:**
+
 - Add `isCorrect` computed field logic (compare selectedOptions with correctAnswers)
 - Create `getClassProgressSummary` query (aggregates existing userProgress)
 - Create `getModuleProgressSummary` query
 
 **Frontend:**
+
 - New route: `/admin/progress`
 - Class selection dropdown
 - Basic stats cards:
@@ -319,6 +323,7 @@ export default crons;
 **Data Impact:** Low - Uses existing tables, on-demand queries
 
 **Key Stats Displayed:**
+
 - Total students in class
 - Average completion percentage
 - Average mastery percentage
@@ -331,11 +336,13 @@ export default crons;
 **Goal:** Per-student progress visibility
 
 **Backend Changes:**
+
 - Create `getStudentRoster` query
 - Create `getStudentProgress` query for individual deep-dives
 - Add correctness calculation to progress queries
 
 **Frontend:**
+
 - New route: `/admin/progress/[classId]/students`
 - Student roster table with:
   - Name, email, last active
@@ -350,6 +357,7 @@ export default crons;
 **Data Impact:** Medium - More queries per page load, consider pagination
 
 **Key Stats Displayed:**
+
 - Student-level completion and mastery
 - Time since last activity
 - Flagged question counts per student
@@ -362,11 +370,13 @@ export default crons;
 **Goal:** Track actual right/wrong answers, not just interaction
 
 **Backend Changes:**
+
 - Modify `saveUserProgress` to compute and store `isCorrect`
 - Backfill existing records with correctness data
 - Create `calculateAccuracy` helper function
 
 **Schema Change to `userProgress`:**
+
 ```typescript
 // Add to userProgress table
 isCorrect: v.optional(v.boolean()),    // Was first answer correct?
@@ -374,11 +384,13 @@ correctOnAttempt: v.optional(v.number()) // Which attempt was correct?
 ```
 
 **Frontend Updates:**
+
 - Show accuracy % alongside completion %
 - Color-code progress: green (correct), yellow (incorrect but interacted), gray (not attempted)
 - Add "Needs Review" section for commonly missed questions
 
 **Key Stats Displayed:**
+
 - First-attempt accuracy rate
 - Average attempts to correct answer
 - "Struggled" questions list
@@ -390,12 +402,14 @@ correctOnAttempt: v.optional(v.number()) // Which attempt was correct?
 **Goal:** Offload stats to aggregation tables, enable historical trends
 
 **Backend Changes:**
+
 - Create `progressSnapshot` table
 - Create `questionStats` table
 - Implement daily cron job for aggregation
 - Create `getProgressTrend` query (7/30/90 day views)
 
 **Frontend:**
+
 - Add time-range selector (7d, 30d, 90d, All time)
 - Engagement trend line charts
 - Weekly/monthly comparison cards
@@ -404,6 +418,7 @@ correctOnAttempt: v.optional(v.number()) // Which attempt was correct?
 **Data Impact:** Reduced per-request load, increased storage
 
 **Key Stats Displayed:**
+
 - Week-over-week engagement change
 - Trend arrows on all metrics
 - Historical high/low indicators
@@ -416,11 +431,13 @@ correctOnAttempt: v.optional(v.number()) // Which attempt was correct?
 **Goal:** Measure question quality and difficulty
 
 **Backend Changes:**
+
 - Implement discrimination index calculation
 - Create hourly cron for question stats updates
 - Build answer distribution tracking
 
 **Frontend:**
+
 - New route: `/admin/progress/[classId]/questions`
 - Question difficulty rankings
 - Answer distribution pie/bar charts per question
@@ -428,12 +445,14 @@ correctOnAttempt: v.optional(v.number()) // Which attempt was correct?
 - Question comparison views
 
 **Metrics Calculated:**
+
 - **Difficulty Index**: % of students who got it wrong
 - **Discrimination Index**: Correlation between question score and overall performance
 - **Flag Rate**: % of students who flagged
 - **Elimination Usage**: How many used process of elimination
 
 **Key Stats Displayed:**
+
 - Top 10 hardest questions
 - Top 10 most-flagged questions
 - Questions with uneven answer distribution (possible issues)
@@ -446,12 +465,14 @@ correctOnAttempt: v.optional(v.number()) // Which attempt was correct?
 **Goal:** Live activity tracking and session-based analytics
 
 **Backend Changes:**
+
 - Create `activityLog` table
 - Implement session start/end detection
 - Add time-on-task tracking
 - Real-time subscriptions for admin dashboard
 
 **Frontend:**
+
 - "Currently Active" indicator on class cards
 - Live student count per class
 - Average session duration stats
@@ -461,6 +482,7 @@ correctOnAttempt: v.optional(v.number()) // Which attempt was correct?
 **Data Impact:** High write volume - need careful indexing and retention policies
 
 **Key Stats Displayed:**
+
 - Live active student count
 - Average session duration
 - Time spent per module
@@ -473,6 +495,7 @@ correctOnAttempt: v.optional(v.number()) // Which attempt was correct?
 **Goal:** AI-powered insights and exportable reports
 
 **Features:**
+
 - Automated weekly email reports to admins
 - AI-generated insights ("Module 3 has 40% lower engagement than average")
 - Predictive alerts ("5 students may be falling behind")
@@ -480,6 +503,7 @@ correctOnAttempt: v.optional(v.number()) // Which attempt was correct?
 - Full data export for external analysis
 
 **Technical Requirements:**
+
 - Background job for report generation
 - Email integration (SendGrid, Resend, etc.)
 - PDF generation for reports
@@ -491,44 +515,44 @@ correctOnAttempt: v.optional(v.number()) // Which attempt was correct?
 
 ### Class-Level Metrics
 
-| Metric | Description | Calculation | Priority |
-|--------|-------------|-------------|----------|
-| **Enrollment Count** | Total students in class | Count users with classId | Phase 1 |
-| **Active Students** | Students with recent activity | Count with lastAttemptAt > 7 days ago | Phase 1 |
-| **Completion Rate** | % of questions attempted | interacted / total * 100 | Phase 1 |
-| **Mastery Rate** | % of questions mastered | mastered / total * 100 | Phase 1 |
-| **Accuracy Rate** | % correct on first attempt | correct / attempted * 100 | Phase 3 |
-| **Engagement Score** | Composite health metric | Weighted average of above | Phase 4 |
-| **Trend Direction** | Week-over-week change | Compare snapshots | Phase 4 |
+| Metric               | Description                   | Calculation                           | Priority |
+| -------------------- | ----------------------------- | ------------------------------------- | -------- |
+| **Enrollment Count** | Total students in class       | Count users with classId              | Phase 1  |
+| **Active Students**  | Students with recent activity | Count with lastAttemptAt > 7 days ago | Phase 1  |
+| **Completion Rate**  | % of questions attempted      | interacted / total \* 100             | Phase 1  |
+| **Mastery Rate**     | % of questions mastered       | mastered / total \* 100               | Phase 1  |
+| **Accuracy Rate**    | % correct on first attempt    | correct / attempted \* 100            | Phase 3  |
+| **Engagement Score** | Composite health metric       | Weighted average of above             | Phase 4  |
+| **Trend Direction**  | Week-over-week change         | Compare snapshots                     | Phase 4  |
 
 ### Module-Level Metrics
 
-| Metric | Description | Purpose | Priority |
-|--------|-------------|---------|----------|
-| **Completion Heatmap** | Visual completion by module | Identify neglected modules | Phase 1 |
-| **Difficulty Ranking** | Avg accuracy per module | Find hard content | Phase 3 |
-| **Flag Density** | Flags per question | Find confusing content | Phase 2 |
-| **Drop-off Rate** | % who don't finish module | UX issues | Phase 6 |
+| Metric                 | Description                 | Purpose                    | Priority |
+| ---------------------- | --------------------------- | -------------------------- | -------- |
+| **Completion Heatmap** | Visual completion by module | Identify neglected modules | Phase 1  |
+| **Difficulty Ranking** | Avg accuracy per module     | Find hard content          | Phase 3  |
+| **Flag Density**       | Flags per question          | Find confusing content     | Phase 2  |
+| **Drop-off Rate**      | % who don't finish module   | UX issues                  | Phase 6  |
 
 ### Student-Level Metrics
 
-| Metric | Description | Purpose | Priority |
-|--------|-------------|---------|----------|
-| **Overall Progress** | % complete across class | Track individuals | Phase 2 |
-| **Mastery Score** | % mastered | Learning depth | Phase 2 |
-| **Last Active** | Days since last interaction | Identify inactive | Phase 2 |
-| **Accuracy Trend** | Is student improving? | Early intervention | Phase 4 |
-| **Time Investment** | Total time in app | Engagement level | Phase 6 |
+| Metric               | Description                 | Purpose            | Priority |
+| -------------------- | --------------------------- | ------------------ | -------- |
+| **Overall Progress** | % complete across class     | Track individuals  | Phase 2  |
+| **Mastery Score**    | % mastered                  | Learning depth     | Phase 2  |
+| **Last Active**      | Days since last interaction | Identify inactive  | Phase 2  |
+| **Accuracy Trend**   | Is student improving?       | Early intervention | Phase 4  |
+| **Time Investment**  | Total time in app           | Engagement level   | Phase 6  |
 
 ### Question-Level Metrics
 
-| Metric | Description | Purpose | Priority |
-|--------|-------------|---------|----------|
-| **Difficulty Index** | % incorrect | Question calibration | Phase 5 |
-| **Discrimination Index** | -1 to 1 score | Question quality | Phase 5 |
-| **Flag Rate** | % who flagged | Confusion indicator | Phase 5 |
-| **Answer Distribution** | % per option | Detect bad distractors | Phase 5 |
-| **Avg Attempts** | Mean attempts to correct | Learning curve | Phase 5 |
+| Metric                   | Description              | Purpose                | Priority |
+| ------------------------ | ------------------------ | ---------------------- | -------- |
+| **Difficulty Index**     | % incorrect              | Question calibration   | Phase 5  |
+| **Discrimination Index** | -1 to 1 score            | Question quality       | Phase 5  |
+| **Flag Rate**            | % who flagged            | Confusion indicator    | Phase 5  |
+| **Answer Distribution**  | % per option             | Detect bad distractors | Phase 5  |
+| **Avg Attempts**         | Mean attempts to correct | Learning curve         | Phase 5  |
 
 ---
 
@@ -543,15 +567,17 @@ Avoid N+1 queries by using batch operations:
 ```typescript
 // BAD: N+1 queries
 for (const module of modules) {
-  const questions = await ctx.db.query('question')
-    .withIndex('by_moduleId', q => q.eq('moduleId', module._id))
-    .collect();
+	const questions = await ctx.db
+		.query('question')
+		.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
+		.collect();
 }
 
 // GOOD: Batch query
-const allQuestions = await ctx.db.query('question')
-  .withIndex('by_classId', q => q.eq('classId', classId))
-  .collect();
+const allQuestions = await ctx.db
+	.query('question')
+	.withIndex('by_classId', (q) => q.eq('classId', classId))
+	.collect();
 const questionsByModule = groupBy(allQuestions, 'moduleId');
 ```
 
@@ -561,27 +587,26 @@ For classes with 1000+ students:
 
 ```typescript
 export const getStudentRoster = query({
-  args: {
-    classId: v.id('class'),
-    cursor: v.optional(v.string()),
-    limit: v.optional(v.number())
-  },
-  handler: async (ctx, { classId, cursor, limit = 50 }) => {
-    let query = ctx.db.query('users')
-      .withIndex('by_cohortId');
+	args: {
+		classId: v.id('class'),
+		cursor: v.optional(v.string()),
+		limit: v.optional(v.number())
+	},
+	handler: async (ctx, { classId, cursor, limit = 50 }) => {
+		let query = ctx.db.query('users').withIndex('by_cohortId');
 
-    if (cursor) {
-      query = query.filter(q => q.gt(q.field('_id'), cursor));
-    }
+		if (cursor) {
+			query = query.filter((q) => q.gt(q.field('_id'), cursor));
+		}
 
-    const users = await query.take(limit + 1);
-    const hasMore = users.length > limit;
+		const users = await query.take(limit + 1);
+		const hasMore = users.length > limit;
 
-    return {
-      users: users.slice(0, limit),
-      nextCursor: hasMore ? users[limit - 1]._id : null
-    };
-  }
+		return {
+			users: users.slice(0, limit),
+			nextCursor: hasMore ? users[limit - 1]._id : null
+		};
+	}
 });
 ```
 
@@ -592,26 +617,26 @@ export const getStudentRoster = query({
 import { internalMutation } from './_generated/server';
 
 export const aggregateDailyProgress = internalMutation({
-  handler: async (ctx) => {
-    const today = new Date().toISOString().split('T')[0];
+	handler: async (ctx) => {
+		const today = new Date().toISOString().split('T')[0];
 
-    // Get all classes
-    const classes = await ctx.db.query('class').collect();
+		// Get all classes
+		const classes = await ctx.db.query('class').collect();
 
-    for (const cls of classes) {
-      // Aggregate and store
-      const stats = await computeClassStats(ctx, cls._id);
+		for (const cls of classes) {
+			// Aggregate and store
+			const stats = await computeClassStats(ctx, cls._id);
 
-      await ctx.db.insert('progressSnapshot', {
-        type: 'class',
-        referenceId: cls._id,
-        classId: cls._id,
-        date: today,
-        ...stats,
-        metadata: {}
-      });
-    }
-  }
+			await ctx.db.insert('progressSnapshot', {
+				type: 'class',
+				referenceId: cls._id,
+				classId: cls._id,
+				date: today,
+				...stats,
+				metadata: {}
+			});
+		}
+	}
 });
 ```
 
@@ -622,29 +647,30 @@ For `activityLog` (high-volume):
 ```typescript
 // Cron job to clean old logs
 export const cleanOldActivityLogs = internalMutation({
-  handler: async (ctx) => {
-    const cutoff = Date.now() - (90 * 24 * 60 * 60 * 1000); // 90 days
+	handler: async (ctx) => {
+		const cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000; // 90 days
 
-    const oldLogs = await ctx.db.query('activityLog')
-      .withIndex('by_timestamp')
-      .filter(q => q.lt(q.field('timestamp'), cutoff))
-      .take(1000); // Batch delete
+		const oldLogs = await ctx.db
+			.query('activityLog')
+			.withIndex('by_timestamp')
+			.filter((q) => q.lt(q.field('timestamp'), cutoff))
+			.take(1000); // Batch delete
 
-    for (const log of oldLogs) {
-      await ctx.db.delete(log._id);
-    }
-  }
+		for (const log of oldLogs) {
+			await ctx.db.delete(log._id);
+		}
+	}
 });
 ```
 
 ### Performance Budget
 
-| Page | Target Load Time | Max Queries | Strategy |
-|------|------------------|-------------|----------|
-| Class Overview | < 500ms | 3 | Aggregation table |
-| Student Roster | < 800ms | 2 + pagination | Cursor-based |
-| Question Analytics | < 1s | 2 | Pre-computed stats |
-| Real-time Dashboard | N/A | Subscription | WebSocket |
+| Page                | Target Load Time | Max Queries    | Strategy           |
+| ------------------- | ---------------- | -------------- | ------------------ |
+| Class Overview      | < 500ms          | 3              | Aggregation table  |
+| Student Roster      | < 800ms          | 2 + pagination | Cursor-based       |
+| Question Analytics  | < 1s             | 2              | Pre-computed stats |
+| Real-time Dashboard | N/A              | Subscription   | WebSocket          |
 
 ---
 
@@ -661,6 +687,7 @@ export const cleanOldActivityLogs = internalMutation({
 ### Component Reuse
 
 Leverage existing patterns from the codebase:
+
 - Modal dialogs for student/question details
 - DaisyUI stats cards for metrics
 - Existing table patterns from Question Studio
@@ -687,23 +714,25 @@ Gray (#9ca3af)   - No data / inactive
 
 ## Summary: Recommended Roadmap
 
-| Phase | Effort | Impact | Dependencies |
-|-------|--------|--------|--------------|
-| 1. Foundation | Easy | High | None |
-| 2. Student Tracking | Medium | High | Phase 1 |
-| 3. Correctness | Medium | High | Phase 2 |
-| 4. Aggregation | Medium-Hard | Medium | Phases 1-3 |
-| 5. Question Analytics | Hard | Medium | Phase 4 |
-| 6. Real-Time | Hard | Medium | Phase 4 |
-| 7. Advanced Reports | Very Hard | Low-Medium | Phases 1-6 |
+| Phase                 | Effort      | Impact     | Dependencies |
+| --------------------- | ----------- | ---------- | ------------ |
+| 1. Foundation         | Easy        | High       | None         |
+| 2. Student Tracking   | Medium      | High       | Phase 1      |
+| 3. Correctness        | Medium      | High       | Phase 2      |
+| 4. Aggregation        | Medium-Hard | Medium     | Phases 1-3   |
+| 5. Question Analytics | Hard        | Medium     | Phase 4      |
+| 6. Real-Time          | Hard        | Medium     | Phase 4      |
+| 7. Advanced Reports   | Very Hard   | Low-Medium | Phases 1-6   |
 
 **Recommended MVP (Phases 1-2):**
+
 - Class selection and overview stats
 - Module completion breakdown
 - Student roster with basic metrics
 - ~3-4 weeks of development
 
 **Full Feature Set (Phases 1-5):**
+
 - Complete analytics suite
 - Historical trends
 - Question difficulty analysis
@@ -714,19 +743,22 @@ Gray (#9ca3af)   - No data / inactive
 ## Appendix: File Locations
 
 **Key Backend Files:**
+
 - `/src/convex/userProgress.ts` - Current progress tracking
 - `/src/convex/schema.ts` - Database schema
 - `/src/convex/question.ts` - Question data access
 
 **Key Frontend Files:**
+
 - `/src/routes/admin/+page.svelte` - Admin dashboard (line 233: progress placeholder)
 - `/src/lib/admin/` - Admin component library
 - `/src/routes/classes/[classId]/modules/[moduleId]/states.svelte.ts` - Quiz state management
 
 **Related Documentation:**
+
 - `/dev/CONVEX_OPTIMIZATION_REVIEW.md` - Index optimization patterns
 - `/dev/CONVEX_API_DOCUMENTATION.md` - API patterns
 
 ---
 
-*This document was generated as a feature proposal. Implementation details may evolve based on user feedback and technical constraints.*
+_This document was generated as a feature proposal. Implementation details may evolve based on user feedback and technical constraints._

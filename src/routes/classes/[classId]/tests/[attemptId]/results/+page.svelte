@@ -1,4 +1,5 @@
 <script lang="ts">
+	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import { page } from '$app/state';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../../../../convex/_generated/api';
@@ -34,7 +35,6 @@
 	type ResultsQueryData = NonNullable<typeof resultsQuery.data>;
 	type ReviewItem = ResultsQueryData['reviewItems'][number];
 	type ReviewFilter = 'all' | 'flagged' | 'unanswered' | 'incorrect';
-	type ReviewEntry = { item: ReviewItem; originalIndex: number };
 
 	let tab = $state<'summary' | 'review'>('summary');
 	let reviewFilter = $state<ReviewFilter>('all');
@@ -1018,6 +1018,7 @@
 										<div class="tiptap-content text-sm text-base-content/80">
 											{@html sanitizeHtml(getRationale(selectedItem.question))}
 										</div>
+										<QuestionSources source={selectedItem.question.source} />
 									</div>
 								</div>
 							{:else}

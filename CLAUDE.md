@@ -1,6 +1,7 @@
 # LearnTerms - Claude Code Notes
 
 ## Package Manager
+
 Use **bun** exclusively. Never use npm or yarn.
 
 ```bash
@@ -12,16 +13,19 @@ bunx <command>        # Execute packages (replaces npx)
 ```
 
 ## Coding Preferences
+
 - Keep code comments minimal. Add comments only when the logic is non-obvious.
 - Use **bun** for all package management, script execution, and CLI workflows.
 
 ## Key Commands
+
 - `bun run dev` - Start SvelteKit dev server
 - `bun run dev:convex` - Start Convex dev server
 - `bun run build` - Production build
 - `bun run check` - TypeScript/Svelte checks
 
 ## Convex CLI
+
 Always use `bunx` instead of `npx` for Convex commands:
 
 ```bash
@@ -42,6 +46,7 @@ bunx convex run migrations:updateQuestionAuthorForClass '{"classId": "jn725vf213
 ```
 
 ### Migrations
+
 Run migrations from `src/convex/migrations.ts`:
 
 ```bash
@@ -51,9 +56,24 @@ bunx convex run migrations:backfillFlagCounts '{"batchSize": 50}'
 ```
 
 ## Tech Stack
+
 - SvelteKit 2 with Svelte 5 (runes)
 - Convex for backend/database
 - TailwindCSS 4 + DaisyUI 5
 - Clerk for authentication
-- UploadThing for file uploads
-- Google Gemini API for AI processing
+- R2 for document storage
+- OpenRouter/OpenAI-backed RAG for AI processing
+
+<!-- convex-ai-start -->
+
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read
+`src/convex/_generated/ai/guidelines.md` first** for important guidelines on
+how to correctly use Convex APIs and patterns. The file contains rules that
+override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running
+`npx convex ai-files install`.
+
+<!-- convex-ai-end -->

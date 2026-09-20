@@ -1,4 +1,5 @@
 <script lang="ts">
+	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import {
 		X,
 		Bold,
@@ -31,25 +32,19 @@
 	import { api } from '../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
 	import { QUESTION_TYPES } from '$lib/types';
-	import { createUploader, createUploadThing } from '$lib/utils/uploadthing';
-	import { UploadDropzone } from '@uploadthing/svelte';
-	import type { ClientUploadedFileData } from 'uploadthing/types';
 	import { onMount } from 'svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import type { Readable } from 'svelte/store';
 	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
 	import { getEditorExtensions } from '../config/tiptap';
 	import { useClerkContext } from 'svelte-clerk';
-	import type { Focus } from '$lib/config/generation';
 	import { Loader2 } from 'lucide-svelte';
 	import { getRationale, getRationalePlainText } from '$lib/utils/rationale';
 
 	type QuestionItem = Doc<'question'>;
 	type QuestionMediaItem = FunctionReturnType<typeof api.questionMedia.getByQuestionId>[number];
-	type DeleteQuestionMediaResult = FunctionReturnType<typeof api.questionMedia.softDelete>;
 	type UpdateQuestionMediaArgs = FunctionArgs<typeof api.questionMedia.update>;
 	type CreateQuestionMediaArgs = FunctionArgs<typeof api.questionMedia.create>;
-	type UploadedQuestionMediaFile = ClientUploadedFileData<unknown>;
 
 	let {
 		moduleId,
@@ -247,10 +242,20 @@
 			value: 'published',
 			label: 'Published',
 			icon: CheckCircle,
-			colorClass: 'btn-success btn-soft'
+			colorClass: 'btn-success'
 		},
-		{ value: 'draft', label: 'Draft', icon: FileText, colorClass: 'btn-info btn-soft' },
-		{ value: 'archived', label: 'Archived', icon: Archive, colorClass: 'btn-error btn-soft' }
+		{
+			value: 'draft',
+			label: 'Draft',
+			icon: FileText,
+			colorClass: 'btn-info'
+		},
+		{
+			value: 'archived',
+			label: 'Archived',
+			icon: Archive,
+			colorClass: 'btn-error'
+		}
 	];
 
 	$effect(() => {
@@ -387,10 +392,8 @@
 	const canSubmit = $derived(
 		questionStem.trim().length > 0 && getRationalePlainText(questionRationale).length > 0
 	);
-	const rationaleDocsUrl = 'https://docs.learnterms.com/docs/contributors/why-rationales-are-required';
-
-	// Get user's domain focus from metadata or default to 'general'
-	let userFocus: Focus = $state('general'); // TODO: fetch from user settings/metadata when available
+	const rationaleDocsUrl =
+		'https://docs.learnterms.com/docs/contributors/why-rationales-are-required';
 
 	let queuedMedia: Array<{
 		url: string;
@@ -430,22 +433,9 @@
 	// Remove existing media from database
 	async function removeExistingMedia(id: string) {
 		try {
-			const res = await client.mutation(api.questionMedia.softDelete, {
+			await client.mutation(api.questionMedia.softDelete, {
 				mediaId: id as Id<'questionMedia'>
 			});
-			// Try to delete from uploadthing
-			const key: DeleteQuestionMediaResult['fileKey'] = res?.fileKey;
-			if (typeof key === 'string' && key.length > 0) {
-				try {
-					await fetch('/api/uploads/delete', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ fileKey: key })
-					});
-				} catch (uploadDeleteError) {
-					console.error('Failed to delete uploaded media file:', uploadDeleteError);
-				}
-			}
 			await refreshMedia();
 			onChange();
 		} catch (e) {
@@ -537,32 +527,6 @@
 		return fallback;
 	}
 
-	function addMediaItem(mediaItem: (typeof queuedMedia)[0]) {
-		queuedMedia = [...queuedMedia, mediaItem];
-		onChange();
-	}
-
-	function getUploadedQuestionMediaFile(
-		res: UploadedQuestionMediaFile[] | undefined
-	): UploadedQuestionMediaFile | null {
-		return Array.isArray(res) ? (res[0] ?? null) : null;
-	}
-
-	function toQueuedMediaItem(file: UploadedQuestionMediaFile): (typeof queuedMedia)[0] | null {
-		const url = file.ufsUrl ?? file.url;
-		if (!url) return null;
-
-		return {
-			url,
-			key: file.key,
-			name: file.name,
-			caption: '',
-			sizeBytes: file.size || undefined,
-			mimeType: file.type || undefined,
-			showOnSolution: false
-		};
-	}
-
 	function handleUploadFailure(message: string, error?: unknown) {
 		if (error) {
 			console.error(message, error);
@@ -571,51 +535,6 @@
 		}
 		toastStore.error(message);
 	}
-
-	function handleUploadedMediaResult(res: UploadedQuestionMediaFile[] | undefined) {
-		const file = getUploadedQuestionMediaFile(res);
-		if (!file) {
-			handleUploadFailure('Upload failed: missing uploaded file');
-			return;
-		}
-
-		const mediaItem = toQueuedMediaItem(file);
-		if (!mediaItem) {
-			handleUploadFailure('Upload failed: missing URL');
-			return;
-		}
-
-		addMediaItem(mediaItem);
-	}
-
-	const mediaUploader = createUploader('questionMediaUploader', {
-		onClientUploadComplete: (res) => {
-			try {
-				handleUploadedMediaResult(res);
-			} catch (e) {
-				handleUploadFailure(e instanceof Error ? e.message : 'Upload failed', e);
-			}
-		},
-		onUploadError: (error: Error) => {
-			handleUploadFailure(error.message || 'Upload failed', error);
-		}
-	});
-
-	// Paste upload support
-	const { startUpload } = createUploadThing('questionMediaUploader', {
-		onClientUploadComplete: (res) => {
-			try {
-				handleUploadedMediaResult(res);
-			} catch (e) {
-				handleUploadFailure(e instanceof Error ? e.message : 'Upload failed', e);
-			}
-		},
-		onUploadError: (error: Error) => {
-			handleUploadFailure(error.message || 'Upload failed', error);
-		}
-	});
-
-	let isPasteUploading = $state(false);
 
 	async function handlePaste(e: ClipboardEvent) {
 		const items = e.clipboardData?.items;
@@ -632,31 +551,10 @@
 		if (files.length === 0) return;
 
 		e.preventDefault();
-		isPasteUploading = true;
-
-		try {
-			await startUpload(files);
-		} catch (err) {
-			handleUploadFailure(err instanceof Error ? err.message : 'Paste upload failed', err);
-		} finally {
-			isPasteUploading = false;
-		}
+		handleUploadFailure('Question media uploads are temporarily disabled during the R2 migration.');
 	}
 
 	async function removeQueuedMedia(index: number) {
-		const media = queuedMedia[index];
-		// Delete from UploadThing if we have a key
-		if (media?.key) {
-			try {
-				await fetch('/api/uploads/delete', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ fileKey: media.key })
-				});
-			} catch (e) {
-				console.error('Failed to delete from UploadThing:', e);
-			}
-		}
 		queuedMedia = queuedMedia.filter((_, i) => i !== index);
 		onChange();
 	}
@@ -840,81 +738,8 @@
 		return false;
 	}
 
-	async function generateAIOptions() {
-		if (!canGenerateAI()) return;
-
-		isGeneratingAI = true;
-		try {
-			if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK) {
-				const answer = fitbAnswers
-					.map((row) => row.value.trim())
-					.filter((t) => t.length > 0)
-					.join('; ');
-
-				const result = await client.action(api.question.generateRationale, {
-					stem: questionStem,
-					answer,
-					focus: userFocus,
-					existingRationale: questionRationale.trim() || undefined
-				});
-
-				if (result.rationale) {
-					questionRationale = result.rationale;
-					if ($rationaleEditor) {
-						$rationaleEditor.commands.setContent(result.rationale);
-					}
-				}
-
-				onChange();
-				toastStore.success('Rationale generated');
-			} else {
-				const correctTexts = correctAnswers
-					.map((idx) => options[parseInt(idx)]?.text || '')
-					.filter((t) => t.trim().length > 0);
-				const existingTexts = options.map((o) => o.text).filter((t) => t.trim().length > 0);
-
-				// Count empty option slots — that's how many distractors the user wants
-				const emptyCount = options.filter((o) => o.text.trim().length === 0).length;
-				const numDistractors = Math.max(1, emptyCount);
-
-				const result = await client.action(api.question.generateDistractorsAndRationale, {
-					stem: questionStem,
-					correctAnswers: correctTexts,
-					existingOptions: existingTexts,
-					focus: userFocus,
-					numDistractors,
-					existingRationale: questionRationale.trim() || undefined
-				});
-
-				// Fill empty slots with generated distractors
-				let distractorIdx = 0;
-				options = options.map((o) => {
-					if (o.text.trim().length === 0 && distractorIdx < result.distractors.length) {
-						return { text: result.distractors[distractorIdx++] };
-					}
-					return o;
-				});
-
-				if (result.rationale) {
-					questionRationale = result.rationale;
-					if ($rationaleEditor) {
-						$rationaleEditor.commands.setContent(result.rationale);
-					}
-				}
-
-				onChange();
-				toastStore.success('Options generated');
-			}
-		} catch (err: unknown) {
-			console.error('AI generation error:', err);
-			if (err instanceof Error && err.message.includes('Daily generation limit')) {
-				toastStore.error(err.message);
-			} else {
-				toastStore.error('Failed to generate. Try again.');
-			}
-		} finally {
-			isGeneratingAI = false;
-		}
+	function generateAIOptions() {
+		window.open('/admin/question-studio', '_blank', 'noopener,noreferrer');
 	}
 
 	function removeOption(index: number) {
@@ -1117,7 +942,7 @@
 						order: startOrder + i,
 						showOnSolution: m.showOnSolution ?? false,
 						metadata: {
-							uploadthingKey: m.key || '',
+							storageKey: m.key || '',
 							sizeBytes: m.sizeBytes || 0,
 							originalFileName: m.name || ''
 						}
@@ -1170,12 +995,7 @@
 			<div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
 				<span>{saveError}</span>
 				{#if isRationaleError}
-					<a
-						class="link font-semibold"
-						href={rationaleDocsUrl}
-						target="_blank"
-						rel="noreferrer"
-					>
+					<a class="link font-semibold" href={rationaleDocsUrl} target="_blank" rel="noreferrer">
 						Why rationales are required
 					</a>
 				{/if}
@@ -1216,15 +1036,20 @@
 
 		<!-- Status Selector -->
 		<div class="flex flex-col gap-2">
-			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1"
+			<span class="text-[10px] font-bold text-base-content/70 uppercase tracking-wider ml-1"
 				>Status</span
 			>
-			<div class="flex shadow-xs bg-base-100 rounded-full border border-base-300 p-1 gap-0.5">
+			<div
+				class="flex flex-wrap gap-1 rounded-2xl border border-base-300 bg-base-100 p-1 shadow-xs"
+			>
 				{#each statusOptions as option (option.value)}
 					<button
-						class="btn btn-xs sm:btn-sm rounded-full border-0 {questionStatus === option.value
-							? option.colorClass + ' btn-active font-medium'
-							: 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
+						type="button"
+						aria-pressed={questionStatus === option.value}
+						class="btn btn-sm rounded-full border-0 px-3 font-semibold {questionStatus ===
+						option.value
+							? option.colorClass
+							: 'btn-ghost text-base-content'}"
 						onclick={() => {
 							questionStatus = option.value;
 							onChange();
@@ -1232,7 +1057,7 @@
 						title={option.label}
 					>
 						<option.icon size={16} />
-						<span class="hidden md:inline">{option.label}</span>
+						<span>{option.label}</span>
 					</button>
 				{/each}
 			</div>
@@ -1292,15 +1117,14 @@
 							<button
 								class="btn btn-xs btn-ghost gap-1"
 								onclick={generateAIOptions}
-								disabled={!canGenerateAI()}
-								title={canGenerateAI() ? 'Generate rationale with AI' : 'Add stem and answer first'}
+								title="Create source-grounded questions in Question Studio"
 							>
 								{#if isGeneratingAI}
 									<Loader2 size={12} class="animate-spin" />
 								{:else}
 									<Sparkles size={12} />
 								{/if}
-								<span class="hidden sm:inline">AI</span>
+								<span class="hidden sm:inline">Question Studio</span>
 							</button>
 						</div>
 						<div
@@ -1504,7 +1328,6 @@
 									<button
 										class="btn btn-xs btn-ghost gap-1"
 										onclick={generateAIOptions}
-										disabled={!canGenerateAI()}
 										title={canGenerateAI()
 											? 'Generate distractor options with AI'
 											: 'Add stem and correct answer first'}
@@ -1514,7 +1337,7 @@
 										{:else}
 											<Sparkles size={12} />
 										{/if}
-										<span class="hidden sm:inline">AI</span>
+										<span class="hidden sm:inline">Question Studio</span>
 									</button>
 									<button class="btn btn-xs btn-ghost gap-1" onclick={shuffleOptions}>
 										<Shuffle size={12} /> <span class="hidden sm:inline">Shuffle</span>
@@ -1598,9 +1421,7 @@
 					</div>
 					<p class="text-[10px] text-base-content/40 mb-2">
 						Required for every saved question.
-						<a class="link" href={rationaleDocsUrl} target="_blank" rel="noreferrer">
-							Why?
-						</a>
+						<a class="link" href={rationaleDocsUrl} target="_blank" rel="noreferrer"> Why? </a>
 					</p>
 					<div class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 group">
 						{#if rationaleEditor}
@@ -1621,6 +1442,7 @@
 							</div>
 						{/if}
 					</div>
+					<QuestionSources source={editingQuestion?.metadata?.generation} editing />
 				</div>
 
 				<div>
@@ -1732,48 +1554,18 @@
 							</div>
 						{/if}
 
-						<div class="relative">
-							{#if isPasteUploading}
-								<div
-									class="border-2 border-dashed border-primary rounded-2xl p-6 flex flex-col items-center justify-center h-32 bg-base-100/50"
-								>
-									<span class="loading loading-spinner text-primary mb-2"></span>
-									<span class="text-xs text-primary font-medium">Processing pasted image...</span>
-								</div>
-							{:else}
-								<div
-									class="group relative h-36 w-full border-2 border-dashed border-base-300 rounded-xl hover:border-primary transition-colors bg-base-100/50 flex flex-col items-center justify-center text-center overflow-hidden"
-								>
-									<!-- The Dropzone covers everything but is invisible -->
-									<div class="absolute inset-0 z-10 opacity-0 cursor-pointer">
-										<UploadDropzone
-											uploader={mediaUploader}
-											aria-label="Upload image"
-											appearance={{
-												container: 'h-full w-full',
-												label: 'hidden',
-												allowedContent: 'hidden',
-												button: 'hidden'
-											}}
-										/>
-									</div>
-
-									<!-- Visible Content -->
-									<div
-										class="flex flex-col items-center gap-2 p-4 text-base-content/60 group-hover:text-primary transition-colors"
-									>
-										<div
-											class="p-3 bg-base-200 rounded-full group-hover:bg-primary/10 transition-colors"
-										>
-											<ImageIcon size={24} />
-										</div>
-										<div class="flex flex-col gap-0.5">
-											<span class="text-sm font-semibold">Upload Image</span>
-											<span class="text-xs opacity-70">Drag & drop or paste (Ctrl+V)</span>
-										</div>
-									</div>
-								</div>
-							{/if}
+						<div
+							class="h-36 w-full border-2 border-dashed border-base-300 rounded-xl bg-base-100/50 flex flex-col items-center justify-center text-center"
+						>
+							<div class="p-3 bg-base-200 rounded-full text-base-content/50">
+								<ImageIcon size={24} />
+							</div>
+							<div class="mt-2 flex flex-col gap-0.5 px-4">
+								<span class="text-sm font-semibold">Media uploads paused</span>
+								<span class="text-xs text-base-content/60">
+									Question image uploads will return on the R2 media path.
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>

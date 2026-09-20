@@ -24,9 +24,7 @@ export const getTagsForClass = authQuery({
 			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
 			.collect();
 
-		return tags
-			.filter((tag) => !tag.deletedAt)
-			.sort((a, b) => a.name.localeCompare(b.name));
+		return tags.filter((tag) => !tag.deletedAt).sort((a, b) => a.name.localeCompare(b.name));
 	}
 });
 

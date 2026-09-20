@@ -6,7 +6,13 @@ import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import type { Id } from '../../../../../convex/_generated/dataModel';
 import { rateLimit } from '$lib/server/rateLimit';
 
-export const load: PageServerLoad = async ({ params, locals, url, getClientAddress, setHeaders }) => {
+export const load: PageServerLoad = async ({
+	params,
+	locals,
+	url,
+	getClientAddress,
+	setHeaders
+}) => {
 	if (!PUBLIC_CONVEX_URL) {
 		throw new Error('PUBLIC_CONVEX_URL is not configured');
 	}
@@ -69,7 +75,7 @@ export const load: PageServerLoad = async ({ params, locals, url, getClientAddre
 		}
 	}
 
-	const token = await auth.getToken({ template: "convex" });
+	const token = await auth.getToken({ template: 'convex' });
 
 	if (!token) {
 		return redirect(307, '/sign-in');

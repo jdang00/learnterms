@@ -13,7 +13,8 @@
 	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
 	import { Flag, BookmarkCheck, ArrowDownNarrowWide, Pencil } from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
-	import { slide, fade, scale } from 'svelte/transition';
+	import { getErrorText } from '$lib/utils/errorHandling';
+	import { slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import { useClerkContext } from 'svelte-clerk/client';
 	import { resolve } from '$app/paths';
@@ -41,9 +42,9 @@
 			userDataQuery.data?.role === 'curator'
 	);
 
-	function isAuthError(error: any): boolean {
+	function isAuthError(error: unknown): boolean {
 		if (!error) return false;
-		const message = error.message || error.toString();
+		const message = getErrorText(error);
 		const patterns = [
 			'unauthorized',
 			'authentication',
@@ -69,7 +70,7 @@
 	<ErrorDisplay error={questions.error} showReload={true} class="mb-4" />
 {:else if currentlySelected}
 	<div
-		class="flex flex-col md:flex-col lg:flex-row bg-base-100 h-full overflow-hidden p-2 md:p-3 lg:p-4 gap-3 sm:gap-4 lg:gap-8 transition-all duration-500 ease-in-out"
+		class="flex flex-col md:flex-col lg:flex-row bg-base-100 h-full overflow-hidden p-2 md:p-3 lg:p-4 lg:ps-2 gap-3 sm:gap-4 lg:gap-8 transition-all duration-500 ease-in-out"
 		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 	>
 		<span id="quiz-top" aria-hidden="true"></span>

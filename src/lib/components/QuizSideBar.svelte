@@ -1,9 +1,11 @@
 <script lang="ts">
+	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import { PanelRight, Eye, Info, ChevronLeft, Settings } from 'lucide-svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
 	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
@@ -12,9 +14,10 @@
 	let isSolutionModalOpen = $state(false);
 	let isSettingsModalOpen = $state(false);
 	const sanitizedRationale = $derived(sanitizeHtml(getRationale(currentlySelected)));
-	const moduleSelectionHref = $derived(
-		`${resolve('/classes')}?classId=${encodeURIComponent(String(classId))}`
-	);
+
+	async function goToModuleSelection() {
+		await goto(resolve('/classes'), { state: { classId } });
+	}
 
 	async function handleReset() {
 		if (userId && moduleId && client) {
@@ -32,7 +35,7 @@
 	 rounded-4xl
 	 p-3 px-4
 	 transition-all duration-200 ease-out
-	 bg-base-100/80 backdrop-blur-md shadow-lg
+	 bg-base-100/80 backdrop-blur-md
 	 shrink-0 h-full
 	 {hideSidebar ? 'w-[72px]' : 'w-[min(22rem,30vw)] xl:w-[min(24rem,28vw)]'}
 
@@ -52,13 +55,17 @@
 	{#if !hideSidebar}
 		<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<a class="btn btn-ghost font-bold rounded-full" href={moduleSelectionHref}>
-					<ChevronLeft size={16} /> MODULE {module.data.order + 1}
-				</a>
+				<button
+					type="button"
+					class="btn btn-ghost text-secondary font-bold rounded-full"
+					onclick={goToModuleSelection}
+				>
+					<ChevronLeft size={16} /> Back
+				</button>
 			</h4>
-			<h2 class="font-semibold text-2xl mt-2 flex items-start gap-3 min-w-0">
+			<h2 class="mt-2 flex min-w-0 items-start gap-3 text-xl font-semibold leading-tight">
 				<span class="text-2xl shrink-0">{module.data?.emoji || '📘'}</span>
-				<span class="break-words hyphens-auto overflow-hidden">{module.data.title}</span>
+				<span class="min-w-0 break-normal text-balance">{module.data.title}</span>
 			</h2>
 			<p class="text-base-content/70 mt-2 break-words hyphens-auto">{module.data.description}</p>
 
@@ -80,7 +87,7 @@
 			/>
 
 			{#if hasRationale(currentlySelected)}
-				<div class="card bg-base-100 shadow-xl mt-6 rounded-2xl">
+				<div class="card mt-6 rounded-2xl border border-base-300 bg-base-100">
 					<div class="card-body">
 						<div class="flex flex-row flex-wrap justify-between border-b pb-2">
 							<h2 class="card-title">Rationale</h2>
@@ -92,9 +99,12 @@
 							</div>
 						</div>
 						<div
-							class={`mt-2 break-words hyphens-auto transition-all duration-300 tiptap-content ${qs.showSolution ? 'blur-none' : 'blur-xs'}`}
+							class={`mt-2 break-words hyphens-auto transition-[filter] duration-300 ${qs.showSolution ? 'blur-none' : 'blur-xs select-none'}`}
+							inert={!qs.showSolution}
+							aria-hidden={!qs.showSolution}
 						>
-							{@html sanitizedRationale}
+							<div class="tiptap-content">{@html sanitizedRationale}</div>
+							<QuestionSources source={currentlySelected?.metadata?.generation} />
 						</div>
 					</div>
 				</div>
@@ -113,15 +123,16 @@
 	{:else}
 		<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
 			<div class="flex flex-col items-center space-y-4">
-				<a
+				<button
+					type="button"
 					class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
-					href={moduleSelectionHref}
+					onclick={goToModuleSelection}
 				>
 					<span class="group-hover:hidden">{module.data.order + 1}</span>
 					<span class="hidden group-hover:inline-flex items-center justify-center"
 						><ChevronLeft size={24} /></span
 					>
-				</a>
+				</button>
 
 				<button
 					class="btn btn-circle btn-lg btn-soft btn-primary"
@@ -190,6 +201,7 @@
 		<h3 class="text-lg font-bold">Rationale</h3>
 		{#if hasRationale(currentlySelected)}
 			<div class="py-4 tiptap-content">{@html sanitizedRationale}</div>
+			<QuestionSources source={currentlySelected?.metadata?.generation} />
 		{/if}
 	</div>
 </dialog>

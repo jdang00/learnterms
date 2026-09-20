@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
+import type { QueryCtx } from './_generated/server';
 import { authQuery } from './authQueries';
 
 type StudentLite = {
@@ -13,7 +14,11 @@ function hasInteraction(record: Doc<'userProgress'>): boolean {
 	return record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0;
 }
 
-async function getModuleContext(ctx: { db: any }, cohortId: Id<'cohort'>, moduleId: Id<'module'>) {
+async function getModuleContext(
+	ctx: Pick<QueryCtx, 'db'>,
+	cohortId: Id<'cohort'>,
+	moduleId: Id<'module'>
+) {
 	const module = await ctx.db.get(moduleId);
 	if (!module || module.deletedAt) {
 		throw new Error('Module not found');
@@ -28,8 +33,8 @@ async function getModuleContext(ctx: { db: any }, cohortId: Id<'cohort'>, module
 
 	const cohortStudents = await ctx.db
 		.query('users')
-		.withIndex('by_cohortId', (q: any) => q.eq('cohortId', cohortId))
-		.filter((q: any) => q.eq(q.field('deletedAt'), undefined))
+		.withIndex('by_cohortId', (q) => q.eq('cohortId', cohortId))
+		.filter((q) => q.eq(q.field('deletedAt'), undefined))
 		.collect();
 
 	const studentMap = new Map<Id<'users'>, StudentLite>(
@@ -49,7 +54,7 @@ async function getModuleContext(ctx: { db: any }, cohortId: Id<'cohort'>, module
 
 	const questions = await ctx.db
 		.query('question')
-		.withIndex('by_moduleId', (q: any) => q.eq('moduleId', module._id))
+		.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
 		.collect();
 
 	const moduleQuestions = questions
@@ -203,7 +208,7 @@ export const getModuleOverviewAnalytics = authQuery({
 		for (const question of moduleQuestions) {
 			const progressRecords = await ctx.db
 				.query('userProgress')
-				.withIndex('by_question_user', (q: any) => q.eq('questionId', question._id))
+				.withIndex('by_question_user', (q) => q.eq('questionId', question._id))
 				.collect();
 
 			let questionInteractions = 0;
@@ -399,7 +404,7 @@ export const getModuleQuestionAnalyticsPage = authQuery({
 		for (const question of pageQuestions) {
 			const progressRecords = await ctx.db
 				.query('userProgress')
-				.withIndex('by_question_user', (q: any) => q.eq('questionId', question._id))
+				.withIndex('by_question_user', (q) => q.eq('questionId', question._id))
 				.collect();
 
 			let interactionCount = 0;

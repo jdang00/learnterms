@@ -1,4 +1,5 @@
 <script lang="ts">
+	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	let { qs = $bindable(), currentlySelected, classId, moduleId } = $props();
 	let isSettingsModalOpen = $state(false);
 	import {
@@ -43,7 +44,7 @@
 	let selectedAttachment = $state<Doc<'questionMedia'> | null>(null);
 
 	// useQuery at top level with skip pattern
-	const mediaQuery = useQuery((api as any).questionMedia.getByQuestionId, () =>
+	const mediaQuery = useQuery(api.questionMedia.getByQuestionId, () =>
 		currentlySelected?._id ? { questionId: currentlySelected._id as Id<'question'> } : 'skip'
 	);
 
@@ -86,6 +87,8 @@
 				setTimeout(() => {
 					captureQuestionAnswered({
 						questionId: currentlySelected._id,
+						generationJobId: currentlySelected.metadata?.generation?.jobId,
+						harnessVersion: currentlySelected.metadata?.generation?.harnessVersion,
 						moduleId: currentlySelected.moduleId,
 						classId: classId,
 						questionType: currentlySelected.type,
@@ -104,6 +107,8 @@
 							correctAnswers.every((answer: string) => selectedAnswers.includes(answer));
 				captureQuestionAnswered({
 					questionId: currentlySelected._id,
+					generationJobId: currentlySelected.metadata?.generation?.jobId,
+					harnessVersion: currentlySelected.metadata?.generation?.harnessVersion,
 					moduleId: currentlySelected.moduleId,
 					classId: classId,
 					questionType: currentlySelected.type,
@@ -121,6 +126,8 @@
 				qs.checkAnswer(correctAnswers, selectedAnswers);
 				captureQuestionAnswered({
 					questionId: currentlySelected._id,
+					generationJobId: currentlySelected.metadata?.generation?.jobId,
+					harnessVersion: currentlySelected.metadata?.generation?.harnessVersion,
 					moduleId: currentlySelected.moduleId,
 					classId: classId,
 					questionType: currentlySelected.type,
@@ -289,6 +296,7 @@
 			<h3 class="text-lg font-bold">Rationale</h3>
 			{#if canShowRationale}
 				<div class="py-4 tiptap-content">{@html sanitizedRationale}</div>
+				<QuestionSources source={currentlySelected?.metadata?.generation} />
 			{/if}
 		</div>
 	</dialog>

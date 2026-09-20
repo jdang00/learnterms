@@ -10,7 +10,7 @@
 		classes: {
 			data: ClassWithSemester[];
 			isLoading: boolean;
-			error: any;
+			error: unknown;
 		};
 		onSelectClass: (classItem: ClassWithSemester) => void;
 		title?: string;
@@ -22,12 +22,12 @@
 	type SemesterOption = { _id: string; name: string };
 	const semesters = $derived.by(() => {
 		const source = classes.data ?? [];
-		const seen = new Set<string>();
+		const seen: string[] = [];
 		const list: SemesterOption[] = [];
 		for (const classItem of source) {
 			const semester = classItem.semester;
-			if (!semester || seen.has(semester._id)) continue;
-			seen.add(semester._id);
+			if (!semester || seen.includes(semester._id)) continue;
+			seen.push(semester._id);
 			list.push({ _id: semester._id, name: semester.name });
 		}
 		return list;
@@ -63,23 +63,29 @@
 		{:else if semesters.length === 0}
 			<div class="text-base-content/60 text-sm">No semesters</div>
 		{:else}
-			<button class="btn btn-sm rounded-full gap-1.5 border-base-300 hover:border-primary/30 transition-colors duration-200" popovertarget="popover-1" style="anchor-name:--anchor-1">
+			<button
+				class="btn btn-sm rounded-full gap-1.5 border-base-300 hover:border-primary/30 transition-colors duration-200"
+				popovertarget="popover-1"
+				style="anchor-name:--anchor-1"
+			>
 				{currentSemester}
 				<ChevronDown size={14} class="text-base-content/50" />
 			</button>
-				<ul
-					class="dropdown menu w-52 rounded-xl bg-base-100 shadow-lg border border-base-300"
-					popover
-					id="popover-1"
-					style="position-anchor:--anchor-1; position-area:block-end;"
-				>
+			<ul
+				class="dropdown menu w-52 rounded-xl bg-base-100 shadow-lg border border-base-300"
+				popover
+				id="popover-1"
+				style="position-anchor:--anchor-1; position-area:block-end;"
+			>
 				{#each semesters as semester (semester._id)}
 					<li>
 						<button
 							onclick={() => (currentSemester = semester.name)}
 							class="rounded-lg hover:bg-base-200 transition-colors duration-150"
 							class:font-semibold={currentSemester === semester.name}
-							style={currentSemester === semester.name ? "background: color-mix(in oklab, var(--color-primary) 8%, transparent)" : ""}
+							style={currentSemester === semester.name
+								? 'background: color-mix(in oklab, var(--color-primary) 8%, transparent)'
+								: ''}
 						>
 							{semester.name}
 							{#if currentSemester === semester.name}
@@ -170,10 +176,10 @@
 </div>
 
 <style>
-		@keyframes -global-cardReveal {
-			from {
-				opacity: 0;
-				transform: translateY(12px);
+	@keyframes -global-cardReveal {
+		from {
+			opacity: 0;
+			transform: translateY(12px);
 		}
 		to {
 			opacity: 1;

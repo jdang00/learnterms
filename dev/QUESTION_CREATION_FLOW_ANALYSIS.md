@@ -28,6 +28,7 @@ LearnTerms features a sophisticated **dual-path question creation system** that 
 **Location:** `/src/lib/admin/QuestionEditorInline.svelte` (1,260 lines)
 
 **Features:**
+
 - **Rich Text Editing:** TipTap editor for question stems and explanations
 - **Question Types:** Multiple Choice, True/False, Fill in the Blank, Matching
 - **Media Support:** Image uploads via UploadThing with drag-and-drop
@@ -40,28 +41,29 @@ LearnTerms features a sophisticated **dual-path question creation system** that 
 ```typescript
 // Dual TipTap editors for stem and explanation
 onMount(() => {
-    editor = createEditor({
-        extensions: getEditorExtensions(),
-        content: editingQuestion?.stem || '',
-        editorProps: {
-            attributes: {
-                class: 'prose prose-sm max-w-none focus:outline-none min-h-[3rem] p-3 tiptap-content'
-            }
-        }
-    });
+	editor = createEditor({
+		extensions: getEditorExtensions(),
+		content: editingQuestion?.stem || '',
+		editorProps: {
+			attributes: {
+				class: 'prose prose-sm max-w-none focus:outline-none min-h-[3rem] p-3 tiptap-content'
+			}
+		}
+	});
 
-    explanationEditor = createEditor({
-        extensions: getEditorExtensions(),
-        content: editingQuestion?.explanation || '',
-        editorProps: {
-            attributes: {
-                class: 'prose prose-sm max-w-none focus:outline-none min-h-[3rem] p-3 tiptap-content text-sm'
-            }
-        }
-    });
+	explanationEditor = createEditor({
+		extensions: getEditorExtensions(),
+		content: editingQuestion?.explanation || '',
+		editorProps: {
+			attributes: {
+				class:
+					'prose prose-sm max-w-none focus:outline-none min-h-[3rem] p-3 tiptap-content text-sm'
+			}
+		}
+	});
 
-    window.addEventListener('keydown', handleKeyboardSave);
-    return () => window.removeEventListener('keydown', handleKeyboardSave);
+	window.addEventListener('keydown', handleKeyboardSave);
+	return () => window.removeEventListener('keydown', handleKeyboardSave);
 });
 ```
 
@@ -70,6 +72,7 @@ onMount(() => {
 **File:** `/src/convex/question.ts`
 
 #### `insertQuestion` (lines 178-252)
+
 - Creates a single question
 - Validates module capacity (max 150 questions)
 - Generates option IDs, handles matching pairs
@@ -77,6 +80,7 @@ onMount(() => {
 - Updates module question count
 
 #### `updateQuestion` (lines 312-387)
+
 - Updates existing question fields
 - Recomputes search text and option IDs
 - Maintains referential integrity
@@ -90,6 +94,7 @@ onMount(() => {
 **Location:** `/src/lib/admin/QuestionGeneration.svelte` (413 lines)
 
 **Features:**
+
 - Material preview with word/character counts
 - Model selection (optometry/pharmacy focus)
 - Custom prompt support for instructor guidance
@@ -100,41 +105,41 @@ onMount(() => {
 
 ```typescript
 async function generate() {
-    if (!canGenerate || !material.trim()) return;
-    isGenerating = true;
-    usageError = '';
-    limitReached = false;
-    try {
-        const res = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                material,
-                productModelId,
-                numQuestions: parseInt(numQuestions),
-                customPrompt
-            })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-            const errMsg = data?.error || 'unknown error';
-            console.error(`Generate error: ${errMsg}`);
-            if (errMsg.includes('Daily generation limit')) {
-                limitReached = true;
-                limitType = errMsg.includes('Upgrade to Pro') ? 'free' : 'pro';
-            } else {
-                usageError = errMsg;
-            }
-            return;
-        }
-        generated = (data.questions as GeneratedQuestionInput[]).map((q, i) => ({ ...q, order: i }));
-        selected = new Set(generated.map((_, i) => i));
-    } catch (err) {
-        console.error('Generate error:', err);
-        usageError = 'Failed to generate questions';
-    } finally {
-        isGenerating = false;
-    }
+	if (!canGenerate || !material.trim()) return;
+	isGenerating = true;
+	usageError = '';
+	limitReached = false;
+	try {
+		const res = await fetch('/api/generate', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				material,
+				productModelId,
+				numQuestions: parseInt(numQuestions),
+				customPrompt
+			})
+		});
+		const data = await res.json();
+		if (!res.ok) {
+			const errMsg = data?.error || 'unknown error';
+			console.error(`Generate error: ${errMsg}`);
+			if (errMsg.includes('Daily generation limit')) {
+				limitReached = true;
+				limitType = errMsg.includes('Upgrade to Pro') ? 'free' : 'pro';
+			} else {
+				usageError = errMsg;
+			}
+			return;
+		}
+		generated = (data.questions as GeneratedQuestionInput[]).map((q, i) => ({ ...q, order: i }));
+		selected = new Set(generated.map((_, i) => i));
+	} catch (err) {
+		console.error('Generate error:', err);
+		usageError = 'Failed to generate questions';
+	} finally {
+		isGenerating = false;
+	}
 }
 ```
 
@@ -149,17 +154,17 @@ async function generate() {
 ```typescript
 const focusLabel = (focus || 'optometry').toLowerCase();
 const audience =
-    focusLabel === 'optometry'
-        ? 'optometry students'
-        : focusLabel === 'pharmacy'
-            ? 'pharmacy students'
-            : 'health sciences students';
+	focusLabel === 'optometry'
+		? 'optometry students'
+		: focusLabel === 'pharmacy'
+			? 'pharmacy students'
+			: 'health sciences students';
 const domainHint =
-    focusLabel === 'optometry'
-        ? '- Prefer ocular relevance when present.'
-        : focusLabel === 'pharmacy'
-            ? '- Prefer pharmacotherapy relevance for patient care when present. If the material has structure or mechanism of action content, create questions about its details and/or mechanism of action.'
-            : '';
+	focusLabel === 'optometry'
+		? '- Prefer ocular relevance when present.'
+		: focusLabel === 'pharmacy'
+			? '- Prefer pharmacotherapy relevance for patient care when present. If the material has structure or mechanism of action content, create questions about its details and/or mechanism of action.'
+			: '';
 ```
 
 **2. Sophisticated Prompt Engineering**
@@ -190,28 +195,28 @@ ${material}`;
 
 ```typescript
 const result = await ai.models.generateContent({
-    model,
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    config: {
-        temperature: 0.7,
-        maxOutputTokens: 8192,
-        responseMimeType: 'application/json',
-        responseSchema: {
-            type: Type.ARRAY,
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    stem: { type: Type.STRING },
-                    options: { type: Type.ARRAY, minItems: 3, maxItems: 6, items: { type: Type.STRING } },
-                    correctAnswerIndexes: { type: Type.ARRAY, minItems: 1, items: { type: Type.NUMBER } },
-                    explanation: { type: Type.STRING }
-                },
-                required: ['stem', 'options', 'correctAnswerIndexes', 'explanation'],
-                propertyOrdering: ['stem', 'options', 'correctAnswerIndexes', 'explanation']
-            }
-        }
-        // Using default HIGH thinking level for better question quality
-    }
+	model,
+	contents: [{ role: 'user', parts: [{ text: prompt }] }],
+	config: {
+		temperature: 0.7,
+		maxOutputTokens: 8192,
+		responseMimeType: 'application/json',
+		responseSchema: {
+			type: Type.ARRAY,
+			items: {
+				type: Type.OBJECT,
+				properties: {
+					stem: { type: Type.STRING },
+					options: { type: Type.ARRAY, minItems: 3, maxItems: 6, items: { type: Type.STRING } },
+					correctAnswerIndexes: { type: Type.ARRAY, minItems: 1, items: { type: Type.NUMBER } },
+					explanation: { type: Type.STRING }
+				},
+				required: ['stem', 'options', 'correctAnswerIndexes', 'explanation'],
+				propertyOrdering: ['stem', 'options', 'correctAnswerIndexes', 'explanation']
+			}
+		}
+		// Using default HIGH thinking level for better question quality
+	}
 });
 ```
 
@@ -222,12 +227,13 @@ const identity = await ctx.auth.getUserIdentity();
 if (!identity) throw new Error('Unauthenticated');
 
 await ctx.runMutation(internal.question.checkAndIncrementUsage, {
-    count: numQuestions,
-    clerkUserId: identity.subject
+	count: numQuestions,
+	clerkUserId: identity.subject
 });
 ```
 
 **Limits:**
+
 - **Free tier:** 15 questions/day
 - **Pro tier:** 300 questions/day
 - Checked before API calls to prevent wasted requests
@@ -250,11 +256,11 @@ const TEMPERATURE = 1.0;
 const MAX_TOKENS_PDF = 12288;
 
 type Chunk = {
-    title: string;
-    summary: string;
-    content: string;
-    keywords: string[];
-    chunk_type: 'paragraph' | 'slide_group' | 'diagram' | 'table' | 'list';
+	title: string;
+	summary: string;
+	content: string;
+	keywords: string[];
+	chunk_type: 'paragraph' | 'slide_group' | 'diagram' | 'table' | 'list';
 };
 ```
 
@@ -262,7 +268,7 @@ type Chunk = {
 
 ```typescript
 function pdfPrompt() {
-    return `Role: You are an expert document extraction assistant.
+	return `Role: You are an expert document extraction assistant.
 
 Goal: Extract the ACTUAL TEXT from this PDF and create 1 chunk per page (up to 100 chunks for 100 pages).
 
@@ -294,7 +300,7 @@ IMPORTANT: Only create chunks that meet ALL validation requirements. Skip pages 
 
 ```typescript
 function tableGuidelines() {
-    return `For tables or table-like content:
+	return `For tables or table-like content:
 - Use GitHub-flavored Markdown tables with a concise header row
 - Split long tables across multiple chunks by rows (target 5–15 rows per chunk) while keeping the same columns
 - Optionally group rows by a logical theme and create one chunk per group
@@ -307,6 +313,7 @@ function tableGuidelines() {
 ## Complete User Flows
 
 ### Flow A: Manual Question Creation
+
 1. User opens `QuestionEditorInline` component
 2. Selects question type (MC, T/F, FITB, Matching)
 3. Enters stem (rich text), options, correct answers, explanation
@@ -317,6 +324,7 @@ function tableGuidelines() {
 8. Media attachments created via `api.questionMedia.create`
 
 ### Flow B: AI Question Generation
+
 1. User selects content from `DocumentBrowser`
 2. Configures generation settings (count, model, custom prompt)
 3. Frontend calls `/api/generate` POST endpoint
@@ -329,6 +337,7 @@ function tableGuidelines() {
 10. Questions saved to database with `aiGenerated: true` flag
 
 ### Flow C: Document Processing
+
 1. User uploads PDF or provides text/URL
 2. Frontend calls `/api/processdoc-stream` (Server-Sent Events)
 3. Server uses Gemini to extract chunks from PDF/text
@@ -342,31 +351,35 @@ function tableGuidelines() {
 ## Key Technical Files
 
 ### UI Components
-| File | Lines | Purpose |
-|------|-------|---------|
-| `/src/lib/admin/QuestionEditorInline.svelte` | 1,260 | Manual question editor with rich text |
-| `/src/lib/admin/QuestionGeneration.svelte` | 413 | AI generation UI with selection |
-| `/src/lib/admin/DocumentBrowser.svelte` | 123 | Content browser for chunk selection |
-| `/src/routes/admin/question-studio/+page.svelte` | 325 | Main studio combining browser + generation |
+
+| File                                             | Lines | Purpose                                    |
+| ------------------------------------------------ | ----- | ------------------------------------------ |
+| `/src/lib/admin/QuestionEditorInline.svelte`     | 1,260 | Manual question editor with rich text      |
+| `/src/lib/admin/QuestionGeneration.svelte`       | 413   | AI generation UI with selection            |
+| `/src/lib/admin/DocumentBrowser.svelte`          | 123   | Content browser for chunk selection        |
+| `/src/routes/admin/question-studio/+page.svelte` | 325   | Main studio combining browser + generation |
 
 ### Backend Functions
-| File | Functions | Purpose |
-|------|-----------|---------|
-| `/src/convex/question.ts` | `insertQuestion`, `updateQuestion`, `bulkInsertQuestions`, `generateQuestions` | Question CRUD + AI generation |
-| `/src/convex/questionMedia.ts` | `create` | Media attachment handling |
+
+| File                           | Functions                                                                      | Purpose                       |
+| ------------------------------ | ------------------------------------------------------------------------------ | ----------------------------- |
+| `/src/convex/question.ts`      | `insertQuestion`, `updateQuestion`, `bulkInsertQuestions`, `generateQuestions` | Question CRUD + AI generation |
+| `/src/convex/questionMedia.ts` | `create`                                                                       | Media attachment handling     |
 
 ### API Endpoints
-| Endpoint | Type | Purpose |
-|----------|------|---------|
-| `/api/generate` | POST | Question generation API |
-| `/api/processdoc` | POST | Synchronous document processing |
-| `/api/processdoc-stream` | POST (SSE) | Streaming document processing |
+
+| Endpoint                 | Type       | Purpose                         |
+| ------------------------ | ---------- | ------------------------------- |
+| `/api/generate`          | POST       | Question generation API         |
+| `/api/processdoc`        | POST       | Synchronous document processing |
+| `/api/processdoc-stream` | POST (SSE) | Streaming document processing   |
 
 ### Upload Integration
-| File | Purpose |
-|------|---------|
+
+| File                             | Purpose                                  |
+| -------------------------------- | ---------------------------------------- |
 | `/src/lib/server/uploadthing.ts` | UploadThing router config (images, PDFs) |
-| `/src/lib/utils/uploadthing.ts` | Svelte helpers for UploadThing |
+| `/src/lib/utils/uploadthing.ts`  | Svelte helpers for UploadThing           |
 
 ---
 
@@ -374,22 +387,23 @@ function tableGuidelines() {
 
 ### Feature Comparison Matrix
 
-| Feature | LearnTerms | Quizlet | Kahoot | Canvas |
-|---------|-----------|---------|--------|--------|
-| **AI Question Generation** | ✅ Domain-specific (medical) | ❌ None | ❌ None | ⚠️ Generic |
-| **Document Processing** | ✅ Verbatim extraction + chunking | ❌ None | ❌ None | ❌ None |
-| **Rich Text Editor** | ✅ TipTap with full formatting | ⚠️ Basic | ⚠️ Basic | ✅ Yes |
-| **Multiple Correct Answers** | ✅ Native support | ❌ No | ❌ No | ✅ Yes |
-| **Media Attachments** | ✅ Images with metadata | ⚠️ Images only | ⚠️ Images only | ✅ Yes |
-| **Quality Validation** | ✅ Schema + content validation | ❌ None | ❌ None | ❌ None |
-| **Custom AI Prompts** | ✅ Educator can guide AI | ❌ N/A | ❌ N/A | ❌ N/A |
-| **Bulk Import** | ✅ AI-generated batches | ⚠️ CSV only | ⚠️ Excel | ⚠️ QTI |
-| **Question Types** | ✅ MC, T/F, FITB, Matching | ⚠️ Basic flashcards | ⚠️ MC only | ✅ Full suite |
-| **Real-time Collaboration** | ✅ Convex sync | ❌ No | ⚠️ Limited | ⚠️ Limited |
-| **Usage Controls** | ✅ Tiered daily limits | ❌ None | ❌ None | ❌ None |
-| **Domain Specialization** | ✅ Medical education focus | ❌ Generic | ❌ Generic | ❌ Generic |
+| Feature                      | LearnTerms                        | Quizlet             | Kahoot         | Canvas        |
+| ---------------------------- | --------------------------------- | ------------------- | -------------- | ------------- |
+| **AI Question Generation**   | ✅ Domain-specific (medical)      | ❌ None             | ❌ None        | ⚠️ Generic    |
+| **Document Processing**      | ✅ Verbatim extraction + chunking | ❌ None             | ❌ None        | ❌ None       |
+| **Rich Text Editor**         | ✅ TipTap with full formatting    | ⚠️ Basic            | ⚠️ Basic       | ✅ Yes        |
+| **Multiple Correct Answers** | ✅ Native support                 | ❌ No               | ❌ No          | ✅ Yes        |
+| **Media Attachments**        | ✅ Images with metadata           | ⚠️ Images only      | ⚠️ Images only | ✅ Yes        |
+| **Quality Validation**       | ✅ Schema + content validation    | ❌ None             | ❌ None        | ❌ None       |
+| **Custom AI Prompts**        | ✅ Educator can guide AI          | ❌ N/A              | ❌ N/A         | ❌ N/A        |
+| **Bulk Import**              | ✅ AI-generated batches           | ⚠️ CSV only         | ⚠️ Excel       | ⚠️ QTI        |
+| **Question Types**           | ✅ MC, T/F, FITB, Matching        | ⚠️ Basic flashcards | ⚠️ MC only     | ✅ Full suite |
+| **Real-time Collaboration**  | ✅ Convex sync                    | ❌ No               | ⚠️ Limited     | ⚠️ Limited    |
+| **Usage Controls**           | ✅ Tiered daily limits            | ❌ None             | ❌ None        | ❌ None       |
+| **Domain Specialization**    | ✅ Medical education focus        | ❌ Generic          | ❌ Generic     | ❌ Generic    |
 
 **Legend:**
+
 - ✅ Full support
 - ⚠️ Partial/basic support
 - ❌ Not available
@@ -399,7 +413,9 @@ function tableGuidelines() {
 ## Unique Competitive Advantages
 
 ### 1. Domain-Specific Intelligence
+
 **LearnTerms** is purpose-built for medical education:
+
 - Specialized prompts for optometry vs pharmacy students
 - Domain-specific question quality guidelines (e.g., pharmacotherapy relevance)
 - Emphasis on clinical application and critical thinking
@@ -409,7 +425,9 @@ function tableGuidelines() {
 **Impact:** Questions align with NBEO/NAPLEX exam formats and medical pedagogy standards.
 
 ### 2. Quality-First AI Design
+
 The AI generation prompt is remarkably sophisticated:
+
 - **Bloom's Taxonomy integration:** Questions span recall → application → critical thinking
 - **Self-contained questions:** No references to "the material" or source documents (critical for reusability)
 - **Clean option formatting:** No prefixes like "A.", ensuring flexibility in presentation
@@ -419,7 +437,9 @@ The AI generation prompt is remarkably sophisticated:
 **Impact:** AI-generated questions require minimal editing, saving educators 70-80% of creation time.
 
 ### 3. Hybrid Workflow (Educator Agency)
+
 The system doesn't force users into one path:
+
 - Educators can manually craft nuanced questions with rich formatting
 - AI can rapidly generate draft questions from lecture materials
 - **Selection UI** lets educators curate AI-generated questions before adding them
@@ -428,7 +448,9 @@ The system doesn't force users into one path:
 **Impact:** Educators maintain pedagogical control while benefiting from AI efficiency.
 
 ### 4. Document Intelligence
+
 The PDF processing is unusually thoughtful:
+
 - **Verbatim extraction:** Preserves exact terminology (critical for medical content where "hypertension" vs "high blood pressure" matters)
 - **Smart chunking:** One chunk per slide/page, with intelligent table handling
 - **Validation gates:** Only creates chunks with sufficient content (≥10 chars)
@@ -438,10 +460,11 @@ The PDF processing is unusually thoughtful:
 **Impact:** Lecture slides and textbook chapters become question-ready content in minutes.
 
 ### 5. Usage Controls & Fair Limits
+
 ```typescript
 await ctx.runMutation(internal.question.checkAndIncrementUsage, {
-    count: numQuestions,
-    clerkUserId: identity.subject
+	count: numQuestions,
+	clerkUserId: identity.subject
 });
 ```
 
@@ -454,6 +477,7 @@ await ctx.runMutation(internal.question.checkAndIncrementUsage, {
 **Impact:** Sustainable business model without blocking legitimate use.
 
 ### 6. Rich Media Support
+
 ```typescript
 import { createUploader, createUploadThing } from '$lib/utils/uploadthing';
 import { UploadDropzone } from '@uploadthing/svelte';
@@ -473,35 +497,39 @@ import { UploadDropzone } from '@uploadthing/svelte';
 
 ### Modern Stack Benefits
 
-| Technology | Purpose | Benefit |
-|------------|---------|---------|
-| **Svelte 5** | UI framework with runes | Reactive, performant, less boilerplate |
-| **SvelteKit** | Full-stack framework | File-based routing, SSR, API endpoints |
-| **Convex** | Backend/database | Real-time sync, transactional, serverless |
-| **TailwindCSS 4** | Styling | Rapid UI development with consistency |
-| **DaisyUI 5** | Component library | Accessible, themed components |
-| **Clerk** | Authentication | Secure, easy SSO integration |
-| **UploadThing** | File uploads | Reliable CDN hosting for media |
-| **Google Gemini** | AI model | Structured output, medical knowledge |
+| Technology        | Purpose                 | Benefit                                   |
+| ----------------- | ----------------------- | ----------------------------------------- |
+| **Svelte 5**      | UI framework with runes | Reactive, performant, less boilerplate    |
+| **SvelteKit**     | Full-stack framework    | File-based routing, SSR, API endpoints    |
+| **Convex**        | Backend/database        | Real-time sync, transactional, serverless |
+| **TailwindCSS 4** | Styling                 | Rapid UI development with consistency     |
+| **DaisyUI 5**     | Component library       | Accessible, themed components             |
+| **Clerk**         | Authentication          | Secure, easy SSO integration              |
+| **UploadThing**   | File uploads            | Reliable CDN hosting for media            |
+| **Google Gemini** | AI model                | Structured output, medical knowledge      |
 
 ### Architecture Decisions
 
 **1. Convex for Real-time**
+
 - Questions appear instantly for all collaborators
 - No polling, no manual refresh
 - Transactional mutations prevent race conditions
 
 **2. TipTap for Rich Text**
+
 - Prosemirror-based (battle-tested)
 - Extensible (can add medical notation plugins)
 - Accessible keyboard navigation
 
 **3. Server-Sent Events for Document Processing**
+
 - Real-time progress without websocket complexity
 - Graceful fallback if connection drops
 - Low server overhead
 
 **4. Structured JSON Output from AI**
+
 - Type-safe validation (TypeScript + Convex validators)
 - Prevents malformed questions from reaching database
 - Schema evolution without breaking changes
@@ -511,6 +539,7 @@ import { UploadDropzone } from '@uploadthing/svelte';
 ## Future Enhancement Opportunities
 
 ### Short-term (Current Capabilities)
+
 1. **Question Analytics**
    - Track which AI-generated questions get edited most
    - Use feedback to improve prompts
@@ -524,6 +553,7 @@ import { UploadDropzone } from '@uploadthing/svelte';
    - Bulk assign to different modules
 
 ### Medium-term (Minor Extensions)
+
 1. **Image OCR in PDFs**
    - Extract text from diagrams and charts
    - Currently skips image-heavy slides
@@ -537,6 +567,7 @@ import { UploadDropzone } from '@uploadthing/svelte';
    - Comment threads on draft questions
 
 ### Long-term (Major Features)
+
 1. **Adaptive Question Difficulty**
    - Use student performance data to tune generation
    - Request more challenging distractors for high-performers
@@ -554,23 +585,27 @@ import { UploadDropzone } from '@uploadthing/svelte';
 ## Key Insights for Stakeholders
 
 ### For Educators
+
 - **Time Savings:** AI generation reduces question authoring time by 70-80%
 - **Quality Assurance:** Structured validation and human review ensure high standards
 - **Flexibility:** Manual editing available for nuanced questions
 - **Control:** Custom prompts let you guide AI toward your pedagogical goals
 
 ### For Students
+
 - **Question Quality:** Domain-specific AI understands medical terminology and context
 - **Rich Media:** Images and formatting enhance comprehension
 - **Authentic Assessment:** Multiple correct answers mirror real exam formats
 
 ### For Product Team
+
 - **Differentiation:** Domain specialization creates defensible moat vs generic quiz platforms
 - **Scalability:** Document processing enables rapid content library growth
 - **Data Flywheel:** Usage patterns can improve AI prompts over time
 - **Monetization:** Usage tiers align value with pricing
 
 ### For Engineers
+
 - **Modern Stack:** Svelte 5 + Convex enables rapid feature development
 - **Type Safety:** End-to-end TypeScript prevents runtime errors
 - **Observability:** Convex dashboard shows query performance and errors
@@ -590,6 +625,7 @@ LearnTerms' question creation flow represents a **thoughtful evolution** of educ
 The system isn't just faster than manual question writing—it's **qualitatively different** because it maintains a content pipeline from source documents → structured chunks → AI-generated questions → curated assessments.
 
 This approach is **defensible** because replicating it requires:
+
 - Domain expertise (medical education pedagogy)
 - Prompt engineering skill (quality AI output)
 - Technical infrastructure (real-time sync, file processing)

@@ -5,12 +5,12 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	const auth = locals.auth();
 	let token: string | null = null;
 	try {
-		token = await auth.getToken({ template: "convex" });
+		token = await auth.getToken({ template: 'convex' });
 	} catch {
 		// Clerk token fetch can fail for unauthenticated users or during outages
 	}
 	return {
 		token,
-		...buildClerkProps(auth),
+		...buildClerkProps(auth)
 	};
 };

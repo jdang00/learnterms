@@ -4,13 +4,14 @@ import type { ConvexClient } from 'convex/browser';
 import { goto } from '$app/navigation';
 import { toastStore } from '$lib/stores/toast.svelte';
 import type { StatusFilter } from '$lib/types';
-import { SvelteSet } from 'svelte/reactivity';
+import { SvelteMap, SvelteSet, SvelteURL } from 'svelte/reactivity';
 
 export type QuestionItem = Doc<'question'>;
 export type MediaItem = { _id: string; url: string; altText: string; caption?: string };
 export type SortMode = 'order' | 'created_desc';
 export type EditorMode = 'view' | 'add' | 'edit';
 export type DefaultQuestionStatus = 'published' | 'draft';
+export type BulkQuestionStatus = 'published' | 'draft' | 'archived';
 
 export class QuestionCurationState {
 	// Dependencies
@@ -23,7 +24,7 @@ export class QuestionCurationState {
 	sortMode: SortMode = $state('order');
 	statusFilter: StatusFilter = $state('all');
 	private searchTimeout: ReturnType<typeof setTimeout> | null = null;
-	private recentlyAddedTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+	private recentlyAddedTimeouts = new SvelteMap<string, ReturnType<typeof setTimeout>>();
 
 	// Auto-select after create
 	pendingSelectId: string | null = $state(null);
@@ -281,7 +282,7 @@ export class QuestionCurationState {
 
 	async closeEditQuestionModal() {
 		try {
-			const url = new URL(window.location.href);
+			const url = new SvelteURL(window.location.href);
 			if (url.searchParams.has('edit')) {
 				url.searchParams.delete('edit');
 				// eslint-disable-next-line svelte/no-navigation-without-resolve -- pathname comes from the current URL after removing only the edit query param.
@@ -290,7 +291,9 @@ export class QuestionCurationState {
 					noScroll: true
 				});
 			}
-		} catch {}
+		} catch {
+			// Ignore URL cleanup failures; the editor state is reset below.
+		}
 		this.isEditQuestionModalOpen = false;
 		this.editingQuestion = null;
 		this.editorMode = 'view';
@@ -383,6 +386,73 @@ export class QuestionCurationState {
 		} finally {
 			this.isBulkDeleteModalOpen = false;
 		}
+	}
+
+	async setSelectedQuestionsStatus(status: BulkQuestionStatus) {
+		if (this.selectedQuestions.size === 0 || !this.client) return;
+		const statusCopy: Record<
+			BulkQuestionStatus,
+			{ action: string; current: string; failure: string }
+		> = {
+			published: {
+				action: 'Published',
+				current: 'published',
+				failure: 'publish selected questions'
+			},
+			draft: {
+				action: 'Saved as draft',
+				current: 'drafts',
+				failure: 'save selected questions as drafts'
+			},
+			archived: {
+				action: 'Archived',
+				current: 'archived',
+				failure: 'archive selected questions'
+			}
+		};
+		const copy = statusCopy[status];
+
+		try {
+			const result = await this.client.mutation(api.question.bulkUpdateQuestionStatus, {
+				questionIds: Array.from(this.selectedQuestions) as Id<'question'>[],
+				moduleId: this.moduleId as Id<'module'>,
+				status
+			});
+
+			if (result.updatedCount > 0) {
+				toastStore.success(
+					`${copy.action} ${result.updatedCount} question${result.updatedCount !== 1 ? 's' : ''}`
+				);
+			} else if (result.skippedCount > 0) {
+				toastStore.success(`Selected questions are already ${copy.current}`);
+			}
+
+			if (!result.success && result.errors.length > 0) {
+				toastStore.error(
+					`Updated with ${result.errors.length} error${result.errors.length === 1 ? '' : 's'}`
+				);
+			}
+
+			this.questionList = this.questionList.map((question) =>
+				this.selectedQuestions.has(question._id) ? { ...question, status } : question
+			);
+			this.selectedQuestions = new SvelteSet<string>();
+		} catch (error) {
+			console.error(`Failed to ${copy.failure}`, error);
+			toastStore.error(`Failed to ${copy.failure}`);
+		}
+	}
+
+	publishSelectedQuestions() {
+		return this.setSelectedQuestionsStatus('published');
+	}
+
+	draftSelectedQuestions() {
+		return this.setSelectedQuestionsStatus('draft');
+	}
+
+	archiveSelectedQuestions() {
+		return this.setSelectedQuestionsStatus('archived');
 	}
 
 	// Move operations

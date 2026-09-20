@@ -556,7 +556,7 @@
 							class="group w-full text-left rounded-2xl border-2 border-base-300 p-4 transition-all duration-200 hover:border-primary/40 hover:bg-primary/5 hover:-translate-y-0.5 hover:shadow-md"
 							onclick={async () => {
 								await dismissFeatureSpotlight();
-								await goto(featureHref(item));
+								await goto(resolve(featureHref(item)));
 							}}
 						>
 							<div class="flex items-center gap-4">
@@ -610,7 +610,7 @@
 										? featureAnnouncement.ctaHref
 										: '/classes';
 								await dismissFeatureSpotlight();
-								await goto(href);
+								window.location.assign(href);
 							}}
 						>
 							{featureAnnouncement.ctaLabel}

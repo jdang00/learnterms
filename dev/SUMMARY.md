@@ -9,14 +9,16 @@ It’s designed for the high-performance student workflow: **fast, surgical, and
 ---
 
 ## ⚡ The "Live" Advantage
-*Powered by Convex & Svelte 5*
 
-- **Instant Progress Sync**: Your progress saves the millisecond you interact. Close the tab, switch devices, or lose Wi-Fi? You pick up *exactly* where you left off.
+_Powered by Convex & Svelte 5_
+
+- **Instant Progress Sync**: Your progress saves the millisecond you interact. Close the tab, switch devices, or lose Wi-Fi? You pick up _exactly_ where you left off.
 - **Live Content Updates**: If a professor or curator fixes a typo while you're studying, the question updates on your screen instantly—no refresh required.
 - **Cross-Device State**: Start a session on your laptop, finish it on your phone. Your flags, eliminated options, and selected answers are identical everywhere.
 
 ## 🎯 Surgical Study Controls
-*Don't waste time on what you already know.*
+
+_Don't waste time on what you already know._
 
 Stop retaking the same 50-question quiz just to practice the 3 you got wrong. LearnTerms provides granular filters inside every module:
 
@@ -26,18 +28,20 @@ Stop retaking the same 50-question quiz just to practice the 3 you got wrong. Le
 - **Focus Mode**: One-tap fullscreen removes all UI clutter so you can lock in.
 
 ## 🧠 Syllabus-Aware Intelligence
-*Powered by Gemini Pro*
+
+_Powered by Gemini Pro_
 
 Generic AI flashcards are often irrelevant. LearnTerms generates content directly from **your course materials**.
 
 - **Source-Based Generation**: Questions are created from your specific lecture notes and PDFs, ensuring they match your exam content.
 - **Varied Question Formats**:
-    - **Multiple Choice**: Standard exam format.
-    - **Fill-in-the-Blank**: Tests true recall (typing the answer) vs. passive recognition.
-    - **Matching**: efficient testing of definitions and relationships.
+  - **Multiple Choice**: Standard exam format.
+  - **Fill-in-the-Blank**: Tests true recall (typing the answer) vs. passive recognition.
+  - **Matching**: efficient testing of definitions and relationships.
 - **Detailed Explanations**: Every question includes a "Why?" breakdown to reinforce the concept.
 
 ## 📊 Academic Tools
+
 - **Grade Calculator**: A built-in tool to track your standing across courses. Input your syllabus components (exams, assignments) to see exactly what you need to score to get your target grade.
 
 ---

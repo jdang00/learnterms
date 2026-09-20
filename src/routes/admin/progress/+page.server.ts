@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 	try {
 		const user = await clerkClient.users.getUser(userId);
-		const userData = await client.query(api.users.getUserById, { id: user.id }) as ExtendedUser;
+		const userData = (await client.query(api.users.getUserById, { id: user.id })) as ExtendedUser;
 		return { userData };
 	} catch (error) {
 		console.error('Failed to load progress page data:', error);

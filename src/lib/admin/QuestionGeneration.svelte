@@ -16,6 +16,8 @@
 	} from '$lib/config/generation';
 	import { resolve } from '$app/paths';
 	import ModuleLimitModal from './ModuleLimitModal.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
+	import { getErrorText } from '$lib/utils/errorHandling';
 
 	export interface Props {
 		material?: string;
@@ -23,6 +25,7 @@
 		charCount?: number;
 		canGenerate?: boolean;
 		destinationSummary?: string;
+		disabledReason?: string;
 		onAddSelected?: (payload: { questions: GeneratedQuestionInput[] }) => Promise<void> | void;
 	}
 
@@ -32,6 +35,7 @@
 		charCount = 0,
 		canGenerate = false,
 		destinationSummary = '',
+		disabledReason = '',
 		onAddSelected
 	}: Props = $props();
 
@@ -55,32 +59,36 @@
 		aiGenerated: boolean;
 		status: string;
 		order: number;
-		metadata: {};
+		metadata: Record<string, never>;
 		updatedAt: number;
 	};
 
 	let generated = $state<GeneratedQuestionInput[]>([]);
-	let selected = $state<Set<number>>(new Set());
+	const selected = new SvelteSet<number>();
 
 	function toggleSelectAll(selectAll: boolean) {
-		selected = selectAll ? new Set(generated.map((_, i) => i)) : new Set();
+		selected.clear();
+		if (selectAll) {
+			for (const index of generated.map((_, i) => i)) {
+				selected.add(index);
+			}
+		}
 	}
 
 	function toggleOne(i: number) {
-		const s = new Set(selected);
-		if (s.has(i)) s.delete(i);
-		else s.add(i);
-		selected = s;
+		if (selected.has(i)) selected.delete(i);
+		else selected.add(i);
 	}
 
 	function removeOne(i: number) {
 		generated = generated.filter((_, idx) => idx !== i).map((q, idx) => ({ ...q, order: idx }));
-		const remapped = new Set<number>();
+		const remapped = new SvelteSet<number>();
 		selected.forEach((idx) => {
 			if (idx === i) return;
 			remapped.add(idx > i ? idx - 1 : idx);
 		});
-		selected = remapped;
+		selected.clear();
+		for (const idx of remapped) selected.add(idx);
 	}
 
 	async function generate() {
@@ -112,7 +120,7 @@
 				return;
 			}
 			generated = (data.questions as GeneratedQuestionInput[]).map((q, i) => ({ ...q, order: i }));
-			selected = new Set();
+			selected.clear();
 		} finally {
 			isGenerating = false;
 		}
@@ -125,13 +133,10 @@
 			const picked = generated.filter((_, i) => selected.has(i));
 			await onAddSelected({ questions: picked });
 			generated = [];
-			selected = new Set();
-		} catch (error: any) {
+			selected.clear();
+		} catch (error: unknown) {
 			console.error('Failed to add questions:', error);
-			if (
-				error.message?.includes('Module limit reached') ||
-				error.toString().includes('Module limit reached')
-			) {
+			if (getErrorText(error).includes('Module limit reached')) {
 				isLimitModalOpen = true;
 			}
 		} finally {
@@ -173,7 +178,7 @@
 						disabled={isGenerating || isAdding}
 						onclick={() => {
 							generated = [];
-							selected = new Set();
+							selected.clear();
 						}}
 					>
 						Discard
@@ -346,9 +351,11 @@
 				<div class="flex items-center justify-between">
 					<span class="text-xs font-medium text-base-content/70">Content Preview</span>
 					{#if !canGenerate}
-						<span class="text-xs text-warning">Select a destination first</span>
+						<span class="text-xs text-warning">
+							{disabledReason || 'Select a destination first'}
+						</span>
 					{:else if charCount === 0}
-						<span class="text-xs text-base-content/50">Select content from documents</span>
+						<span class="text-xs text-base-content/50">Select a source</span>
 					{:else if qualityStatus === 'over'}
 						<span class="text-xs text-error">Content may be truncated</span>
 					{:else if qualityStatus === 'low'}

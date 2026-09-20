@@ -9,7 +9,6 @@
 		ClipboardCheck,
 		Database,
 		FileCog,
-		Flag,
 		FolderOpen,
 		GalleryVerticalEnd,
 		GitBranch,
@@ -447,15 +446,14 @@
 										{highlight.description}
 									</p>
 									{#if highlight.href}
-										<a
-											href={highlight.href}
-											target="_blank"
-											rel="noopener noreferrer"
+										<button
+											type="button"
 											class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80"
+											onclick={() => window.open(highlight.href, '_blank', 'noreferrer')}
 										>
 											View source commits
 											<ArrowRight size={12} />
-										</a>
+										</button>
 									{/if}
 								</div>
 							{/each}

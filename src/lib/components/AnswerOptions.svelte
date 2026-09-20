@@ -13,18 +13,6 @@
 	}
 </script>
 
-<style>
-	@keyframes flash-success {
-		0% { border-color: var(--color-base-300); }
-		15% { border-color: var(--color-success); }
-		85% { border-color: var(--color-success); }
-		100% { border-color: var(--color-base-300); }
-	}
-	.flash-green {
-		animation: flash-success 1.2s ease-in-out forwards;
-	}
-</style>
-
 <div
 	class="flex flex-col justify-start {compact
 		? 'space-y-3'
@@ -34,7 +22,15 @@
 		<label
 			class="label cursor-pointer rounded-full flex items-center border-base-300 bg-base-200 transition-colors
             {compact ? 'border p-1.5 md:p-2' : 'border-2 p-2 md:p-3'}
-            {qs.showSolution ? (qs.isCorrect(option.id) ? (qs.solutionAutoRevealed ? 'flash-green' : 'border-success') : (qs.solutionAutoRevealed ? '' : 'border-error')) : ''}"
+            {qs.showSolution
+				? qs.isCorrect(option.id)
+					? qs.solutionAutoRevealed
+						? 'flash-green'
+						: 'border-success'
+					: qs.solutionAutoRevealed
+						? ''
+						: 'border-error'
+				: ''}"
 		>
 			<input
 				type="checkbox"
@@ -54,7 +50,8 @@
 					: 'ml-3 md:ml-4 my-3 text-sm md:text-base'}"
 			>
 				<span class="font-semibold mr-2 select-none">{String.fromCharCode(65 + i)}.</span>
-				<span class="{qs.isOptionEliminated(option.id) ? 'line-through opacity-50' : ''} tiptap-content"
+				<span
+					class="{qs.isOptionEliminated(option.id) ? 'line-through opacity-50' : ''} tiptap-content"
 					>{@html option.text}</span
 				>
 			</span>
@@ -78,3 +75,23 @@
 		</label>
 	{/each}
 </div>
+
+<style>
+	@keyframes flash-success {
+		0% {
+			border-color: var(--color-base-300);
+		}
+		15% {
+			border-color: var(--color-success);
+		}
+		85% {
+			border-color: var(--color-success);
+		}
+		100% {
+			border-color: var(--color-base-300);
+		}
+	}
+	.flash-green {
+		animation: flash-success 1.2s ease-in-out forwards;
+	}
+</style>

@@ -1,11 +1,28 @@
 <script lang="ts">
-	let { isEditModalOpen, closeEditModal, editingModule, classId } = $props();
-
-	import { X, BookOpenText, AlignLeft, Hash, Laugh } from 'lucide-svelte';
+	import ModuleEmojiSuggestion from './ModuleEmojiSuggestion.svelte';
+	import {
+		X,
+		BookOpenText,
+		AlignLeft,
+		Hash,
+		Laugh,
+		CheckCircle,
+		Archive,
+		FileText
+	} from 'lucide-svelte';
 	import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
-	import type { Id } from '../../convex/_generated/dataModel';
+	import type { Doc, Id } from '../../convex/_generated/dataModel';
+
+	type Props = {
+		isEditModalOpen: boolean;
+		closeEditModal: () => void;
+		editingModule: Doc<'module'> | null;
+		classId: Id<'class'>;
+	};
+
+	let { isEditModalOpen, closeEditModal, editingModule, classId }: Props = $props();
 
 	const client = useConvexClient();
 
@@ -16,17 +33,21 @@
 	let isSubmitting: boolean = $state(false);
 	let validationErrors: Record<string, string> = $state({});
 	let submitError: string = $state('');
-	let selectedTagIds: string[] = $state([]);
+	const statusOptions = [
+		{ value: 'published', label: 'Published', icon: CheckCircle, colorClass: 'btn-success' },
+		{ value: 'draft', label: 'Draft', icon: FileText, colorClass: 'btn-info' },
+		{ value: 'archived', label: 'Archived', icon: Archive, colorClass: 'btn-error' }
+	];
+	let selectedTagIds: Id<'tags'>[] = $state([]);
 
 	// useQuery at top level with function args
 	const tags = useQuery(api.tags.getTagsForClass, () => ({
-		classId: classId as Id<'class'>
+		classId
 	}));
 
 	// useQuery at top level with skip pattern
-	const moduleTagsQuery = useQuery(
-		api.tags.getTagsForModule,
-		() => editingModule?._id ? { moduleId: editingModule._id as Id<'module'> } : 'skip'
+	const moduleTagsQuery = useQuery(api.tags.getTagsForModule, () =>
+		editingModule?._id ? { moduleId: editingModule._id } : 'skip'
 	);
 
 	let lastModuleId = $state<string | null>(null);
@@ -36,7 +57,7 @@
 			moduleTitle = editingModule.title;
 			moduleDescription = editingModule.description || '';
 			moduleStatus = editingModule.status;
-			moduleEmoji = (editingModule as any).emoji || '';
+			moduleEmoji = editingModule.emoji || '';
 		}
 	});
 	$effect(() => {
@@ -94,7 +115,7 @@
 	const liveSelectedTagCount = $derived.by(() => {
 		if (!tags.data) return 0;
 		const liveTagIds = new Set(tags.data.map((tag) => tag._id));
-		return selectedTagIds.filter((id) => liveTagIds.has(id as any)).length;
+		return selectedTagIds.filter((id) => liveTagIds.has(id)).length;
 	});
 
 	async function handleSubmit() {
@@ -112,15 +133,15 @@
 		try {
 			await client.mutation(api.module.updateModule, {
 				moduleId: editingModule._id,
-				classId: classId as Id<'class'>,
+				classId,
 				title: moduleTitle.trim(),
 				emoji: sanitizeEmoji(moduleEmoji) || undefined,
 				description: moduleDescription.trim(),
 				status: moduleStatus
 			});
 			await client.mutation(api.tags.setModuleTags, {
-				moduleId: editingModule._id as Id<'module'>,
-				tagIds: selectedTagIds as Id<'tags'>[]
+				moduleId: editingModule._id,
+				tagIds: selectedTagIds
 			});
 
 			validationErrors = {};
@@ -224,30 +245,40 @@
 						</div>
 					</div>
 
-					<label
+					<span
 						class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
-						for="module-status"
 					>
 						<Hash size={18} class="text-primary/80" />
 						<span>Status</span>
-					</label>
+					</span>
 					<div class="md:contents">
-						<label
-							for="module-status"
+						<span
 							class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
 						>
 							<Hash size={18} class="text-primary/80" />
 							<span>Status</span>
-						</label>
-						<select
-							id="module-status"
-							class="select select-bordered rounded-full w-full"
-							bind:value={moduleStatus}
+						</span>
+						<div
+							class="flex w-fit flex-wrap justify-self-start gap-1 rounded-full border border-base-300 bg-base-100 p-1 shadow-xs"
+							role="group"
+							aria-label="Module status"
 						>
-							<option value="draft">Draft</option>
-							<option value="published">Published</option>
-							<option value="archived">Archived</option>
-						</select>
+							{#each statusOptions as option (option.value)}
+								<button
+									type="button"
+									aria-pressed={moduleStatus === option.value}
+									class="btn btn-sm rounded-full border-0 px-3 font-semibold {moduleStatus ===
+									option.value
+										? option.colorClass
+										: 'btn-ghost text-base-content'}"
+									onclick={() => (moduleStatus = option.value)}
+									title={option.label}
+								>
+									<option.icon size={16} />
+									<span>{option.label}</span>
+								</button>
+							{/each}
+						</div>
 					</div>
 
 					<label
@@ -282,7 +313,11 @@
 									<div class="flex flex-wrap gap-2">
 										{#each tags.data as tag (tag._id)}
 											<label
-												class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-base-200/50 {selectedTagIds.includes(tag._id) ? 'border-primary' : 'border-base-300'}"
+												class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-base-200/50 {selectedTagIds.includes(
+													tag._id
+												)
+													? 'border-primary'
+													: 'border-base-300'}"
 											>
 												<input
 													type="checkbox"
@@ -300,7 +335,8 @@
 										{/each}
 									</div>
 									<div class="text-xs text-base-content/60">
-										{liveSelectedTagCount} {liveSelectedTagCount === 1 ? 'tag' : 'tags'} selected
+										{liveSelectedTagCount}
+										{liveSelectedTagCount === 1 ? 'tag' : 'tags'} selected
 										{#if liveSelectedTagCount >= 10}
 											<span class="text-warning ml-1">(max 10)</span>
 										{:else}
@@ -351,6 +387,17 @@
 								oninput={() => validateOnInput('moduleEmoji', moduleEmoji)}
 								maxlength="8"
 							/>
+							<ModuleEmojiSuggestion
+								title={moduleTitle}
+								currentEmoji={moduleEmoji}
+								classId={classId as Id<'class'>}
+								active={isEditModalOpen}
+								disabled={isSubmitting}
+								onselect={(emoji) => {
+									moduleEmoji = emoji;
+									validateOnInput('moduleEmoji', emoji);
+								}}
+							/>
 							{#if validationErrors.moduleEmoji}
 								<div class="label">
 									<span class="label-text-alt text-error text-xs"
@@ -365,8 +412,10 @@
 
 			<div class="modal-action mt-8">
 				<form method="dialog" class="flex gap-3">
-					<button class="btn btn-ghost rounded-full" onclick={closeEditModal} disabled={isSubmitting}
-						>Cancel</button
+					<button
+						class="btn btn-ghost rounded-full"
+						onclick={closeEditModal}
+						disabled={isSubmitting}>Cancel</button
 					>
 					<button
 						class="btn btn-primary gap-2 rounded-full"

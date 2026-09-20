@@ -1,6 +1,5 @@
-import { internalMutation, mutation, query } from './_generated/server';
+import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
-import type { Id } from './_generated/dataModel';
 import { authAdminMutation } from './authQueries';
 import { getRationale } from '../lib/utils/rationale';
 
@@ -831,8 +830,8 @@ export const clearPlanField = mutation({
 		for (const user of users) {
 			processed++;
 			// Check if user has a plan field set
-			if ((user as any).plan !== undefined) {
-				await ctx.db.patch(user._id, { plan: undefined } as any);
+			if (user.plan !== undefined) {
+				await ctx.db.patch(user._id, { plan: undefined });
 				cleared++;
 			}
 		}

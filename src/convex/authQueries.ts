@@ -1,13 +1,14 @@
 import { query, mutation } from './_generated/server';
 import { customQuery, customMutation } from 'convex-helpers/server/customFunctions';
 import { v } from 'convex/values';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 
-async function getUserRole(ctx: { db: any; auth: any }) {
+async function getUserRole(ctx: QueryCtx | MutationCtx) {
 	const identity = await ctx.auth.getUserIdentity();
 	if (!identity) return { identity: null, role: undefined };
 	const user = await ctx.db
 		.query('users')
-		.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', identity.subject))
+		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
 		.first();
 	return { identity, role: user?.role as string | undefined };
 }
@@ -78,7 +79,7 @@ export const joinCohort = mutation({
 
 		const user = await ctx.db
 			.query('users')
-			.filter((q: any) => q.eq(q.field('clerkUserId'), args.clerkUserId))
+			.filter((q) => q.eq(q.field('clerkUserId'), args.clerkUserId))
 			.first();
 
 		if (!user) {
@@ -104,7 +105,7 @@ export const switchCohort = mutation({
 
 		const user = await ctx.db
 			.query('users')
-			.withIndex('by_clerkUserId', (q: any) => q.eq('clerkUserId', identity.subject))
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
 			.first();
 
 		if (!user) {

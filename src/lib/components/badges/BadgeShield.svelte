@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { ComponentType } from 'svelte';
+
 	type Gradient = {
 		from: string;
 		mid: string;
@@ -10,7 +12,7 @@
 		size?: number;
 		gradient: Gradient;
 		iconColor: string;
-		icon?: any;
+		icon?: ComponentType;
 		iconScale?: number;
 		class?: string;
 	}

@@ -31,9 +31,7 @@ export const getUserInfo = query({
 export const polar = new Polar(components.polar, {
 	// Get user info for subscription management
 	getUserInfo: async (ctx) => {
-		const user: { _id: Id<'users'>; email?: string } = await ctx.runQuery(
-			api.polar.getUserInfo
-		);
+		const user: { _id: Id<'users'>; email?: string } = await ctx.runQuery(api.polar.getUserInfo);
 		return {
 			userId: user._id,
 			email: user.email || ''
@@ -81,9 +79,7 @@ const getCurrentUserInternal = async (ctx: QueryCtx) => {
 	});
 
 	// Only check subscription status - plan field is deprecated
-	const isPro =
-		subscription?.status === 'active' ||
-		subscription?.status === 'trialing';
+	const isPro = subscription?.status === 'active' || subscription?.status === 'trialing';
 
 	return {
 		...user,
@@ -112,9 +108,7 @@ export const getUserWithSubscriptionById = query({
 			userId: user._id
 		});
 
-		const isPro =
-			subscription?.status === 'active' ||
-			subscription?.status === 'trialing';
+		const isPro = subscription?.status === 'active' || subscription?.status === 'trialing';
 
 		return {
 			...user,
@@ -139,9 +133,7 @@ export const getUserWithSubscriptionByClerkId = query({
 			userId: user._id
 		});
 
-		const isPro =
-			subscription?.status === 'active' ||
-			subscription?.status === 'trialing';
+		const isPro = subscription?.status === 'active' || subscription?.status === 'trialing';
 
 		return {
 			...user,

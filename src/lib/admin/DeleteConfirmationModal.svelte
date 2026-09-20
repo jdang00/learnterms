@@ -32,8 +32,8 @@
 			{#if itemType === 'module' && questionCount && questionCount > 0}
 				<br /><br />
 				<span class="text-warning font-medium">
-					⚠️ This module contains {questionCount} question{questionCount === 1 ? '' : 's'} that will
-					also be deleted.
+					⚠️ This module contains {questionCount} question{questionCount === 1 ? '' : 's'} that will also
+					be deleted.
 				</span>
 			{:else if itemType === 'class' && ((moduleCount && moduleCount > 0) || (questionCount && questionCount > 0))}
 				<br /><br />

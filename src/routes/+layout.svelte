@@ -29,12 +29,8 @@
 	const convexClient = useConvexClient();
 
 	// Keep both a mutable token for first use and a backup for fallback
-	let initialToken = $state<string | null>(null);
+	let initialToken = $derived(data?.token ?? null);
 	const ssrTokenBackup = $derived(data?.token ?? null);
-
-	$effect(() => {
-		initialToken = data?.token ?? null;
-	});
 
 	// Helper to wait for Clerk session with timeout
 	async function waitForClerkSession(timeoutMs: number = 5000): Promise<boolean> {
@@ -139,8 +135,17 @@
 			path.startsWith('/classes') && (path.includes('/modules/') || path.includes('/tests/'));
 		const inGradeCalculator = path.startsWith('/tools/grade-calculator');
 		const inAdminModule = path.startsWith('/admin/') && path.includes('/module/');
+		const inAdminLibrary = path.startsWith('/admin/library');
+		const inQuestionStudio = path.startsWith('/admin/question-studio');
 		const inStudySpace = path.startsWith('/study-space');
-		return inClassStudyOrTest || inGradeCalculator || inAdminModule || inStudySpace;
+		return (
+			inClassStudyOrTest ||
+			inGradeCalculator ||
+			inAdminModule ||
+			inAdminLibrary ||
+			inQuestionStudio ||
+			inStudySpace
+		);
 	});
 </script>
 

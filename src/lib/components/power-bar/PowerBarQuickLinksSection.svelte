@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import { base } from '$app/paths';
 	import { ExternalLink } from 'lucide-svelte';
-	import type { InternalQuickLinkPath, QuickLinkItem } from './types';
+	import type { QuickLinkItem } from './types';
 
 	interface Props {
 		quickLinks?: QuickLinkItem[];
@@ -10,11 +10,8 @@
 	}
 
 	let { quickLinks = [], searchQuery = '', onNavigate }: Props = $props();
-	const isExternalLink = (
-		href: QuickLinkItem['href']
-	): href is Exclude<QuickLinkItem['href'], InternalQuickLinkPath> => href.startsWith('http');
-	const getHref = (href: QuickLinkItem['href']) => (isExternalLink(href) ? href : resolve(href));
-
+	const isExternalLink = (href: QuickLinkItem['href']) => href.startsWith('http');
+	const resolveInternalHref = (href: string) => `${base}${href}`;
 	const filteredQuickLinks = $derived.by(() => {
 		const query = searchQuery.trim().toLowerCase();
 		if (!query) return quickLinks;
@@ -35,23 +32,42 @@
 		{/if}
 	{:else}
 		{#each filteredQuickLinks as link (link.href)}
-			<a
-				href={getHref(link.href)}
-				target={isExternalLink(link.href) ? '_blank' : undefined}
-				rel={isExternalLink(link.href) ? 'noreferrer' : undefined}
-				class="group flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-left transition-colors duration-100 hover:bg-base-200/60"
-				onclick={() => onNavigate?.()}
-				data-power-item="true"
-			>
-				<span class="flex h-7 w-7 items-center justify-center rounded-lg bg-base-200 text-sm">
-					{link.icon}
-				</span>
-				<span class="min-w-0 flex-1">
-					<span class="block truncate text-[13px] font-semibold leading-snug">{link.title}</span>
-					<span class="block truncate text-[11px] text-base-content/50">{link.description}</span>
-				</span>
-				<ExternalLink size={13} class="shrink-0 text-base-content/30" />
-			</a>
+			{#if isExternalLink(link.href)}
+				<button
+					type="button"
+					class="group flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-left transition-colors duration-100 hover:bg-base-200/60"
+					onclick={() => {
+						window.open(link.href, '_blank', 'noreferrer');
+						onNavigate?.();
+					}}
+					data-power-item="true"
+				>
+					<span class="flex h-7 w-7 items-center justify-center rounded-lg bg-base-200 text-sm">
+						{link.icon}
+					</span>
+					<span class="min-w-0 flex-1">
+						<span class="block truncate text-[13px] font-semibold leading-snug">{link.title}</span>
+						<span class="block truncate text-[11px] text-base-content/50">{link.description}</span>
+					</span>
+					<ExternalLink size={13} class="shrink-0 text-base-content/30" />
+				</button>
+			{:else}
+				<a
+					href={resolveInternalHref(link.href)}
+					class="group flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-left transition-colors duration-100 hover:bg-base-200/60"
+					onclick={() => onNavigate?.()}
+					data-power-item="true"
+				>
+					<span class="flex h-7 w-7 items-center justify-center rounded-lg bg-base-200 text-sm">
+						{link.icon}
+					</span>
+					<span class="min-w-0 flex-1">
+						<span class="block truncate text-[13px] font-semibold leading-snug">{link.title}</span>
+						<span class="block truncate text-[11px] text-base-content/50">{link.description}</span>
+					</span>
+					<ExternalLink size={13} class="shrink-0 text-base-content/30" />
+				</a>
+			{/if}
 		{/each}
 	{/if}
 </section>

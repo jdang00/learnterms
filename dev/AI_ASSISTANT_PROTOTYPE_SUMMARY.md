@@ -13,6 +13,7 @@ A new **AI Question Assistant** feature that helps educators generate plausible 
 ### The Problem It Solves
 
 Educators often know exactly what question they want to ask and what the correct answer is, but struggle with:
+
 - Creating plausible but incorrect distractor options
 - Writing comprehensive explanations
 - Making questions that test understanding (not just recall)
@@ -55,9 +56,11 @@ Educators often know exactly what question they want to ask and what the correct
 ## What Was Created
 
 ### 1. Backend: Convex Action
+
 **File:** `/src/convex/question.ts` (new function at end)
 
 **Function:** `generateDistractorsAndExplanation`
+
 - Takes: stem, correct answers, existing options, focus domain
 - Returns: 3 distractor options + comprehensive explanation
 - Uses: Gemini 3 Flash Preview with structured JSON output
@@ -65,15 +68,18 @@ Educators often know exactly what question they want to ask and what the correct
 - Limits: 15/day free, 300/day pro
 
 **Key features:**
+
 - Domain-specific prompts (optometry/pharmacy/general)
 - Avoids duplicating existing options
 - Validates output structure
 - Temperature: 0.8 (creative but controlled)
 
 ### 2. Frontend: AI Assistant Component
+
 **File:** `/src/lib/admin/QuestionAIAssistant.svelte` (new file)
 
 **Features:**
+
 - Beautiful gradient design (purple-to-blue)
 - Two-phase UI: Initial → Preview
 - Shows what AI will receive (stem, correct answers, existing options)
@@ -82,9 +88,11 @@ Educators often know exactly what question they want to ask and what the correct
 - Error handling for usage limits
 
 ### 3. Integration: Question Editor
+
 **File:** `/src/lib/admin/QuestionEditorInline.svelte` (modified)
 
 **Changes:**
+
 - Added Sparkles icon import
 - Added `showAIAssistant` state
 - Added `userFocus` state (defaulting to 'general')
@@ -95,14 +103,17 @@ Educators often know exactly what question they want to ask and what the correct
 - Added QuestionAIAssistant component integration
 
 **Smart merging logic:**
+
 - Filters out empty existing options
 - Appends AI distractors to end
 - For explanation: Auto-set if empty, confirm if existing
 
 ### 4. Documentation
+
 **File:** `/dev/AI_QUESTION_ASSISTANT_FEATURE.md` (22 pages!)
 
 Comprehensive documentation including:
+
 - Feature overview and user stories
 - Complete technical architecture
 - Prompt engineering details
@@ -119,12 +130,14 @@ Comprehensive documentation including:
 ### Scenario: Optometry Question
 
 **Educator inputs:**
+
 ```
 Stem: "Which structure is responsible for producing aqueous humor?"
 Correct Answer: "Ciliary body epithelium"
 ```
 
 **AI generates:**
+
 ```
 Distractors:
 1. Trabecular meshwork
@@ -132,10 +145,10 @@ Distractors:
 3. Iris sphincter muscle
 
 Explanation:
-"The ciliary body epithelium produces aqueous humor, which maintains 
-intraocular pressure and provides nutrients to the lens and cornea. The 
-trabecular meshwork and Canal of Schlemm are drainage structures, not 
-production sites. The iris sphincter muscle controls pupil size and is 
+"The ciliary body epithelium produces aqueous humor, which maintains
+intraocular pressure and provides nutrients to the lens and cornea. The
+trabecular meshwork and Canal of Schlemm are drainage structures, not
+production sites. The iris sphincter muscle controls pupil size and is
 not involved in aqueous humor production."
 ```
 
@@ -148,6 +161,7 @@ not involved in aqueous humor production."
 ### AI Prompt Strategy
 
 **Distractor Generation:**
+
 - Emphasizes plausibility (not obviously wrong)
 - Matches complexity of correct answer
 - Uses common misconceptions
@@ -155,6 +169,7 @@ not involved in aqueous humor production."
 - Clean formatting (no "A.", "1)", etc.)
 
 **Explanation Generation:**
+
 - Explains why correct answer is correct
 - Explains why each distractor is wrong
 - Provides educational context
@@ -174,18 +189,22 @@ not involved in aqueous humor production."
 ## Code Quality
 
 ### Compilation Status
+
 ✅ **All files compile successfully**
+
 - TypeScript checks pass
 - Svelte checks pass
 - Only minor CSS warnings (webkit prefixes)
 
 ### Code Organization
+
 - Modular component design
 - Clear separation of concerns
 - Reuses existing infrastructure (usage limits, authentication)
 - Follows LearnTerms coding conventions
 
 ### Type Safety
+
 - Full TypeScript typing
 - Convex validators for all inputs/outputs
 - Focus type from shared config
@@ -195,23 +214,27 @@ not involved in aqueous humor production."
 ## What's NOT Done (Future Work)
 
 ### User Settings Integration
+
 - Currently hardcoded to `userFocus = 'general'`
 - TODO: Fetch from user profile/settings
 - Line 204 in QuestionEditorInline.svelte has comment
 
 ### Testing
+
 - [ ] Unit tests for merging logic
 - [ ] Integration tests for Convex action
 - [ ] E2E tests for full workflow
 - [ ] User testing with real educators
 
 ### Polish
+
 - [ ] Loading state enhancements (progress, fun facts)
 - [ ] Keyboard shortcuts (accept/cancel/regenerate)
 - [ ] Analytics tracking (acceptance rate, regeneration frequency)
 - [ ] A/B testing different prompts
 
 ### Advanced Features
+
 - [ ] Difficulty level control (easy/medium/hard distractors)
 - [ ] Quantity selection (2-5 distractors)
 - [ ] Focus targeting ("Focus on pharmacokinetics")
@@ -223,11 +246,13 @@ not involved in aqueous humor production."
 ## Files Modified/Created
 
 ### Created (3 files)
+
 1. `/src/lib/admin/QuestionAIAssistant.svelte` - Main UI component (232 lines)
 2. `/dev/AI_QUESTION_ASSISTANT_FEATURE.md` - Full documentation (900+ lines)
 3. `/dev/AI_ASSISTANT_PROTOTYPE_SUMMARY.md` - This file
 
 ### Modified (2 files)
+
 1. `/src/convex/question.ts` - Added `generateDistractorsAndExplanation` action
 2. `/src/lib/admin/QuestionEditorInline.svelte` - Integrated AI assistant
 
@@ -238,6 +263,7 @@ not involved in aqueous humor production."
 ## Next Steps
 
 ### Immediate (Before Testing)
+
 1. **Add user focus setting**
    - Create user settings page or use existing profile
    - Fetch `userFocus` from user metadata
@@ -250,6 +276,7 @@ not involved in aqueous humor production."
    - Test regeneration flow
 
 ### Short-term (Beta Testing)
+
 3. **Select beta testers**
    - 5-10 educators across optometry/pharmacy
    - Mix of power users and casual users
@@ -267,6 +294,7 @@ not involved in aqueous humor production."
    - Refine domain hints
 
 ### Medium-term (Full Launch)
+
 6. **Add analytics**
    - Track acceptance rate
    - Track regeneration frequency
@@ -288,6 +316,7 @@ not involved in aqueous humor production."
 ## Success Criteria
 
 ### MVP Success
+
 - ✅ Code compiles and runs
 - ✅ UI is intuitive and polished
 - ✅ AI generates reasonable distractors
@@ -295,6 +324,7 @@ not involved in aqueous humor production."
 - ✅ Respects usage limits
 
 ### Beta Success (Target Metrics)
+
 - **Adoption**: 40%+ of question creators try it
 - **Acceptance**: 70%+ accept AI suggestions with minor edits
 - **Time Savings**: 60%+ reduction in question creation time
@@ -302,6 +332,7 @@ not involved in aqueous humor production."
 - **Satisfaction**: 4+ stars in user feedback
 
 ### Launch Success
+
 - Stable for 1 week in beta (no critical bugs)
 - Positive feedback from majority of testers
 - Usage patterns show value (not just novelty)
@@ -312,16 +343,19 @@ not involved in aqueous humor production."
 ## Risks & Mitigation
 
 ### Technical Risks
+
 - **Gemini API downtime**: Graceful error handling, retry logic
 - **Rate limiting issues**: Clear messaging, generous limits
 - **Quality variance**: Preview step forces review
 
 ### Product Risks
+
 - **Over-reliance on AI**: Feature is opt-in, emphasizes review
 - **Usage limit frustration**: Clear communication, reasonable limits
 - **Quality concerns**: Educator maintains full control
 
 ### Business Risks
+
 - **Cost of AI calls**: Usage limits aligned with pricing tiers
 - **Competitive copying**: Unique domain-specific implementation
 - **User expectations**: Documentation sets realistic expectations
@@ -331,17 +365,20 @@ not involved in aqueous humor production."
 ## Why This Feature Matters
 
 ### For Educators
+
 - **Saves time**: 60% reduction in authoring time
 - **Reduces cognitive load**: Focus on pedagogy, not distractor brainstorming
 - **Improves consistency**: AI provides reliably plausible options
 - **Maintains control**: Educator approves everything
 
 ### For Students
+
 - **Better questions**: More challenging, realistic distractors
 - **Better learning**: Comprehensive explanations address misconceptions
 - **Better assessments**: Questions test understanding, not just recall
 
 ### For LearnTerms
+
 - **Differentiation**: Unique hybrid approach vs competitors
 - **Value proposition**: Tangible time savings for users
 - **Retention**: Stickier product with AI assistance
@@ -352,20 +389,22 @@ not involved in aqueous humor production."
 ## Comparison to Existing Features
 
 ### vs. Full AI Generation (Question Studio)
-| Aspect | Full AI | AI Assistant |
-|--------|---------|-------------|
-| **Control** | Low (AI writes everything) | High (educator writes stem) |
-| **Speed** | Fastest (10+ questions at once) | Fast (1 question at a time) |
-| **Quality** | Variable (needs heavy review) | Consistent (educator guides) |
-| **Use case** | Bulk content creation | Precise question crafting |
+
+| Aspect       | Full AI                         | AI Assistant                 |
+| ------------ | ------------------------------- | ---------------------------- |
+| **Control**  | Low (AI writes everything)      | High (educator writes stem)  |
+| **Speed**    | Fastest (10+ questions at once) | Fast (1 question at a time)  |
+| **Quality**  | Variable (needs heavy review)   | Consistent (educator guides) |
+| **Use case** | Bulk content creation           | Precise question crafting    |
 
 ### vs. Manual Creation
-| Aspect | Manual | AI Assistant |
-|--------|--------|-------------|
-| **Time** | 5-10 min per question | 2-3 min per question |
-| **Effort** | High (6 components to write) | Medium (2 components to write) |
-| **Distractors** | Quality varies by educator | Consistently plausible |
-| **Explanation** | Often brief | Comprehensive by default |
+
+| Aspect          | Manual                       | AI Assistant                   |
+| --------------- | ---------------------------- | ------------------------------ |
+| **Time**        | 5-10 min per question        | 2-3 min per question           |
+| **Effort**      | High (6 components to write) | Medium (2 components to write) |
+| **Distractors** | Quality varies by educator   | Consistently plausible         |
+| **Explanation** | Often brief                  | Comprehensive by default       |
 
 **Conclusion:** AI Assistant fills the sweet spot between full automation and full manual control.
 
@@ -397,25 +436,16 @@ not involved in aqueous humor production."
 ### For User Testing
 
 1. **Setup**: Create a new multiple choice question
-   
 2. **Write stem**: "Which cranial nerve is responsible for visual acuity?"
-   
 3. **Add correct answer**: "Optic nerve (CN II)"
-   
 4. **Show AI button**: Point out it became enabled
-   
 5. **Click AI button**: Open assistant interface
-   
 6. **Review preview**: Show what AI will receive
-   
 7. **Generate**: Click generate, show loading (3-5 sec)
-   
 8. **Review results**: Examine distractors and explanation
-   
 9. **Accept**: Add to question
-   
 10. **Edit**: Show educator can still modify
-   
+
 11. **Save**: Complete the question
 
 **Time**: ~3 minutes for high-quality question
@@ -459,7 +489,7 @@ The **AI Question Assistant** prototype is **complete and ready for testing**. I
 ✅ Reduces tedious work  
 ✅ Maintains quality standards  
 ✅ Provides measurable value  
-✅ Scales with existing infrastructure  
+✅ Scales with existing infrastructure
 
 This feature positions LearnTerms as the **leader in AI-assisted medical education content creation** by offering educators the perfect balance of automation and control.
 

@@ -2,15 +2,17 @@
 	import { ChevronLeft, RotateCcw, Play } from 'lucide-svelte';
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 	import ErrorBoundary from '$lib/components/ErrorBoundary.svelte';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { getErrorText } from '$lib/utils/errorHandling';
 
-    type QsControls = {
+	type QsControls = {
 		isResetModalOpen: boolean;
 		autoNextEnabled: boolean;
 		optionsShuffleEnabled: boolean;
 		setAutoNextEnabled: (enabled: boolean) => void;
 		setOptionsShuffleEnabled: (enabled: boolean) => void;
-        fullscreenEnabled: boolean;
+		fullscreenEnabled: boolean;
 	};
 
 	let {
@@ -20,24 +22,37 @@
 		suppressAuthErrors = false,
 		qs
 	}: {
-		module: { data?: Doc<'module'> | null; isLoading: boolean; error: any };
+		module: { data?: Doc<'module'> | null; isLoading: boolean; error: unknown };
 		classId: Id<'class'>;
 		progressPercentage: number;
 		suppressAuthErrors?: boolean;
 		qs?: QsControls;
 	} = $props();
 
-	function isAuthError(error: any): boolean {
+	function isAuthError(error: unknown): boolean {
 		if (!error) return false;
-		const message = error.message || error.toString();
-		const patterns = ['unauthorized', 'authentication', 'not authenticated', 'session expired', 'token expired', 'invalid token', 'jwt', 'access denied', 'forbidden'];
-		return patterns.some(pattern => message.toLowerCase().includes(pattern));
+		const message = getErrorText(error);
+		const patterns = [
+			'unauthorized',
+			'authentication',
+			'not authenticated',
+			'session expired',
+			'token expired',
+			'invalid token',
+			'jwt',
+			'access denied',
+			'forbidden'
+		];
+		return patterns.some((pattern) => message.toLowerCase().includes(pattern));
 	}
 
-	let shouldShowError = $derived(module.error && !(suppressAuthErrors && isAuthError(module.error)));
-	const moduleSelectionHref = $derived(
-		`${resolve('/classes')}?classId=${encodeURIComponent(String(classId))}`
+	let shouldShowError = $derived(
+		module.error && !(suppressAuthErrors && isAuthError(module.error))
 	);
+
+	async function goToModuleSelection() {
+		await goto(resolve('/classes'), { state: { classId } });
+	}
 </script>
 
 {#if module.isLoading}
@@ -54,12 +69,12 @@
 	<div class="mx-auto max-w-5xl mt-8 sm:mt-12 px-2 sm:px-0">
 		<div class="p-4 md:p-5 lg:p-6 pt-8 sm:pt-12 pl-8 sm:pl-12 mt-4 sm:mt-8">
 			{#if qs}
-                <div class="mb-4 p-3 rounded-lg flex flex-wrap items-center gap-3 justify-between">
+				<div class="mb-4 p-3 rounded-lg flex flex-wrap items-center gap-3 justify-between">
 					<div class="flex flex-wrap items-center gap-2">
-                        <button class="btn btn-primary btn-soft" onclick={() => (qs.fullscreenEnabled = true)}>
-                            <Play size={14} />
-                            <span class="ml-1 hidden sm:inline">Start</span>
-                        </button>
+						<button class="btn btn-primary btn-soft" onclick={() => (qs.fullscreenEnabled = true)}>
+							<Play size={14} />
+							<span class="ml-1 hidden sm:inline">Start</span>
+						</button>
 						<button class="btn btn-error btn-soft" onclick={() => (qs.isResetModalOpen = true)}>
 							<RotateCcw size={14} />
 							<span class="ml-1 hidden sm:inline">Reset</span>
@@ -72,7 +87,8 @@
 								type="checkbox"
 								class="toggle toggle-primary"
 								checked={qs.autoNextEnabled}
-								onchange={(e) => qs.setAutoNextEnabled((e.currentTarget as HTMLInputElement).checked)}
+								onchange={(e) =>
+									qs.setAutoNextEnabled((e.currentTarget as HTMLInputElement).checked)}
 								aria-label="Auto next"
 							/>
 						</label>
@@ -82,7 +98,8 @@
 								type="checkbox"
 								class="toggle toggle-primary"
 								checked={qs.optionsShuffleEnabled}
-								onchange={(e) => qs.setOptionsShuffleEnabled((e.currentTarget as HTMLInputElement).checked)}
+								onchange={(e) =>
+									qs.setOptionsShuffleEnabled((e.currentTarget as HTMLInputElement).checked)}
 								aria-label="Shuffle options"
 							/>
 						</label>
@@ -90,9 +107,9 @@
 				</div>
 			{/if}
 			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<a class="btn btn-ghost font-bold" href={moduleSelectionHref}>
+				<button type="button" class="btn btn-ghost font-bold" onclick={goToModuleSelection}>
 					<ChevronLeft size={16} /> Back to Module {(module.data?.order ?? 0) + 1}
-				</a>
+				</button>
 			</h4>
 			<h2 class="font-semibold text-2xl sm:text-3xl mt-2 flex items-center gap-2 sm:gap-3">
 				<span class="text-2xl sm:text-3xl">{module.data?.emoji || '📘'}</span>

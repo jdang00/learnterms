@@ -1,7 +1,17 @@
 <script lang="ts">
+	import ModuleEmojiSuggestion from './ModuleEmojiSuggestion.svelte';
 	let { isAddModalOpen, closeAddModal, classId } = $props();
 
-	import { X, BookOpenText, AlignLeft, Hash, Laugh } from 'lucide-svelte';
+	import {
+		X,
+		BookOpenText,
+		AlignLeft,
+		Hash,
+		Laugh,
+		CheckCircle,
+		Archive,
+		FileText
+	} from 'lucide-svelte';
 	import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api.js';
@@ -16,6 +26,11 @@
 	let isSubmitting: boolean = $state(false);
 	let validationErrors: Record<string, string> = $state({});
 	let submitError: string = $state('');
+	const statusOptions = [
+		{ value: 'published', label: 'Published', icon: CheckCircle, colorClass: 'btn-success' },
+		{ value: 'draft', label: 'Draft', icon: FileText, colorClass: 'btn-info' },
+		{ value: 'archived', label: 'Archived', icon: Archive, colorClass: 'btn-error' }
+	];
 
 	// Get current modules to calculate next order number - use function args
 	const modules = useQuery(api.module.getAdminModule, () => ({
@@ -29,7 +44,7 @@
 		const trimmed = value.trim();
 
 		switch (field) {
-			case 'moduleTitle':
+			case 'moduleTitle': {
 				if (!trimmed) return 'Module title is required';
 				if (trimmed.length < 2) return 'Module title must be at least 2 characters';
 				if (trimmed.length > 100) return 'Module title cannot exceed 100 characters';
@@ -40,6 +55,7 @@
 					return 'A module with this title already exists';
 				}
 				break;
+			}
 
 			case 'moduleDescription':
 				if (!trimmed) return 'Description is required';
@@ -208,6 +224,17 @@
 							oninput={() => validateOnInput('moduleEmoji', moduleEmoji)}
 							maxlength="8"
 						/>
+						<ModuleEmojiSuggestion
+							title={moduleTitle}
+							currentEmoji={moduleEmoji}
+							classId={classId as Id<'class'>}
+							active={isAddModalOpen}
+							disabled={isSubmitting}
+							onselect={(emoji) => {
+								moduleEmoji = emoji;
+								validateOnInput('moduleEmoji', emoji);
+							}}
+						/>
 						{#if validationErrors.moduleEmoji}
 							<div class="label">
 								<span class="label-text-alt text-error text-xs">{validationErrors.moduleEmoji}</span
@@ -261,30 +288,40 @@
 					</div>
 				</div>
 
-				<label
+				<span
 					class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
-					for="module-status"
 				>
 					<Hash size={18} class="text-primary/80" />
 					<span>Status</span>
-				</label>
+				</span>
 				<div class="md:contents">
-					<label
-						for="module-status"
+					<span
 						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
 					>
 						<Hash size={18} class="text-primary/80" />
 						<span>Status</span>
-					</label>
-					<select
-						id="module-status"
-						class="select select-bordered rounded-full w-full"
-						bind:value={moduleStatus}
+					</span>
+					<div
+						class="flex w-fit flex-wrap justify-self-start gap-1 rounded-full border border-base-300 bg-base-100 p-1 shadow-xs"
+						role="group"
+						aria-label="Module status"
 					>
-						<option value="draft">Draft</option>
-						<option value="published">Published</option>
-						<option value="archived">Archived</option>
-					</select>
+						{#each statusOptions as option (option.value)}
+							<button
+								type="button"
+								aria-pressed={moduleStatus === option.value}
+								class="btn btn-sm rounded-full border-0 px-3 font-semibold {moduleStatus ===
+								option.value
+									? option.colorClass
+									: 'btn-ghost text-base-content'}"
+								onclick={() => (moduleStatus = option.value)}
+								title={option.label}
+							>
+								<option.icon size={16} />
+								<span>{option.label}</span>
+							</button>
+						{/each}
+					</div>
 				</div>
 
 				<label
@@ -317,24 +354,28 @@
 						{:else}
 							<div class="space-y-2">
 								<div class="flex flex-wrap gap-2">
-								{#each tags.data as tag (tag._id)}
-									<label
-										class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-base-200/50 {selectedTagIds.includes(tag._id) ? 'border-primary' : 'border-base-300'}"
-									>
-										<input
-											type="checkbox"
-											class="checkbox checkbox-xs checkbox-primary"
-											value={tag._id}
-											bind:group={selectedTagIds}
-											disabled={selectedTagIds.length >= 10 && !selectedTagIds.includes(tag._id)}
-										/>
-										<span
-											class="h-2 w-2 rounded-full"
-											style={`background-color: ${tag.color || '#94a3b8'}`}
-										></span>
-										<span>{tag.name}</span>
-									</label>
-								{/each}
+									{#each tags.data as tag (tag._id)}
+										<label
+											class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-base-200/50 {selectedTagIds.includes(
+												tag._id
+											)
+												? 'border-primary'
+												: 'border-base-300'}"
+										>
+											<input
+												type="checkbox"
+												class="checkbox checkbox-xs checkbox-primary"
+												value={tag._id}
+												bind:group={selectedTagIds}
+												disabled={selectedTagIds.length >= 10 && !selectedTagIds.includes(tag._id)}
+											/>
+											<span
+												class="h-2 w-2 rounded-full"
+												style={`background-color: ${tag.color || '#94a3b8'}`}
+											></span>
+											<span>{tag.name}</span>
+										</label>
+									{/each}
 								</div>
 								<div class="text-xs text-base-content/60">
 									{selectedTagIds.length} of 10 tags selected
@@ -383,7 +424,8 @@
 
 		<div class="modal-action mt-8">
 			<form method="dialog" class="flex gap-3">
-				<button class="btn btn-ghost rounded-full" onclick={closeAddModal} disabled={isSubmitting}>Cancel</button
+				<button class="btn btn-ghost rounded-full" onclick={closeAddModal} disabled={isSubmitting}
+					>Cancel</button
 				>
 				<button
 					class="btn btn-primary gap-2 rounded-full"

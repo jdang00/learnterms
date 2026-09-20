@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import 'uploadthing/tw/v4';
 @plugin "@tailwindcss/typography";
 
 @plugin "daisyui" {
@@ -9,8 +8,6 @@
 		dracula,
 		nord;
 }
-
-@source "../node_modules/@uploadthing/svelte/dist";
 
 /* Tailwind v4 custom utilities for About page aurora background */
 @keyframes auroraShift {

@@ -41,11 +41,42 @@
 	type QuestionMediaItem = FunctionReturnType<typeof api.questionMedia.getByQuestionId>[number];
 
 	// Queries
-	const questions = useQuery(api.question.searchQuestionsByModuleAdmin, () => ({
+	const moduleQuestions = useQuery(api.question.searchQuestionsByModuleAdmin, () => ({
 		id: moduleId as Id<'module'>,
 		query: curationState.search,
 		sort: curationState.sortMode
 	}));
+
+	const generationJob = $derived(page.url.searchParams.get('generationJob'));
+	const questions = $derived({
+		...moduleQuestions,
+		data: generationJob
+			? moduleQuestions.data?.filter(
+					(question) => question.metadata.generation?.jobId === generationJob
+				)
+			: moduleQuestions.data
+	});
+	let openedReview = $state('');
+	let preparedGenerationJob = $state('');
+	$effect(() => {
+		const scope = generationJob ?? '';
+		if (preparedGenerationJob === scope) return;
+		preparedGenerationJob = scope;
+		openedReview = '';
+		curationState.selectedQuestions.clear();
+		if (scope) curationState.clearSearch();
+	});
+	$effect(() => {
+		const review = page.url.searchParams.get('review');
+		if (!generationJob || questions.isLoading || !questions.data || openedReview === generationJob)
+			return;
+		openedReview = generationJob;
+		curationState.statusFilter = 'draft';
+		curationState.selectedQuestionId =
+			questions.data.find((question) => question._id === review)?._id ??
+			questions.data[0]?._id ??
+			null;
+	});
 
 	const moduleInfo = useQuery(api.module.getModuleById, () => ({ id: moduleId as Id<'module'> }));
 
@@ -84,15 +115,15 @@
 	});
 
 	const questionHasAttachments = $derived.by(() => {
-		const map = new Map<string, boolean>();
+		const questionIds: string[] = [];
 		if (allMediaQuery.data && Array.isArray(allMediaQuery.data)) {
 			for (const item of allMediaQuery.data) {
-				if (item?.questionId && item?.hasMedia) {
-					map.set(item.questionId, true);
+				if (item?.questionId && item?.hasMedia && !questionIds.includes(item.questionId)) {
+					questionIds.push(item.questionId);
 				}
 			}
 		}
-		return map;
+		return questionIds;
 	});
 
 	const selectedQuestion = $derived(curationState.getSelectedQuestion(questions.data));
@@ -196,6 +227,26 @@
 			{/if}
 		</div>
 
+		{#if generationJob}
+			<div
+				class="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4"
+			>
+				<div class="min-w-0 flex-1">
+					<h2 class="text-sm font-semibold">Drafts from Question Studio</h2>
+					<p class="mt-1 text-xs text-base-content/65">
+						Review the answers and sources, then publish the questions you’re ready to share. Saving
+						a draft does not publish it.
+					</p>
+				</div>
+				<a
+					class="btn btn-ghost btn-sm rounded-full"
+					href={resolve('/admin/[classId]/module/[moduleId]', {
+						classId: page.params.classId!,
+						moduleId
+					})}>Show all module questions</a
+				>
+			</div>
+		{/if}
 		<!-- Controls for mobile/tablet (below xl) -->
 		<div class="xl:hidden p-3 bg-base-100 rounded-2xl border border-base-300 mb-4">
 			<QuestionListControls
@@ -220,6 +271,9 @@
 				onReorderToggle={() => curationState.toggleReorderMode()}
 				onSelectAll={() => curationState.selectAllQuestions()}
 				onDeselectAll={() => curationState.deselectAllQuestions()}
+				onPublishSelected={() => curationState.publishSelectedQuestions()}
+				onDraftSelected={() => curationState.draftSelectedQuestions()}
+				onArchiveSelected={() => curationState.archiveSelectedQuestions()}
 				onMoveSelected={() => curationState.openMoveModalForSelected()}
 				onDeleteSelected={() => curationState.openBulkDeleteModal()}
 			/>
@@ -320,7 +374,7 @@
 									{index}
 									isSelected={curationState.selectedQuestions.has(questionItem._id)}
 									isHighlighted={curationState.selectedQuestionId === questionItem._id}
-									hasAttachment={questionHasAttachments.has(questionItem._id)}
+									hasAttachment={questionHasAttachments.includes(questionItem._id)}
 									isRecentlyAdded={curationState.recentlyAddedIds.has(questionItem._id)}
 									variant="mobile"
 									reorderMode={true}
@@ -338,7 +392,7 @@
 								{index}
 								isSelected={curationState.selectedQuestions.has(questionItem._id)}
 								isHighlighted={curationState.selectedQuestionId === questionItem._id}
-								hasAttachment={questionHasAttachments.has(questionItem._id)}
+								hasAttachment={questionHasAttachments.includes(questionItem._id)}
 								isRecentlyAdded={curationState.recentlyAddedIds.has(questionItem._id)}
 								variant="mobile"
 								onSelect={() => curationState.handleQuestionSelect(questionItem._id)}
@@ -379,6 +433,9 @@
 							onReorderToggle={() => curationState.toggleReorderMode()}
 							onSelectAll={() => curationState.selectAllQuestions()}
 							onDeselectAll={() => curationState.deselectAllQuestions()}
+							onPublishSelected={() => curationState.publishSelectedQuestions()}
+							onDraftSelected={() => curationState.draftSelectedQuestions()}
+							onArchiveSelected={() => curationState.archiveSelectedQuestions()}
 							onMoveSelected={() => curationState.openMoveModalForSelected()}
 							onDeleteSelected={() => curationState.openBulkDeleteModal()}
 						/>
@@ -463,7 +520,7 @@
 										{index}
 										isSelected={curationState.selectedQuestions.has(questionItem._id)}
 										isHighlighted={curationState.selectedQuestionId === questionItem._id}
-										hasAttachment={questionHasAttachments.has(questionItem._id)}
+										hasAttachment={questionHasAttachments.includes(questionItem._id)}
 										isRecentlyAdded={curationState.recentlyAddedIds.has(questionItem._id)}
 										variant="desktop"
 										onSelect={() => curationState.handleQuestionSelect(questionItem._id)}
@@ -572,10 +629,11 @@
 							<div class="h-full flex flex-col items-center justify-center p-8 text-center">
 								<div class="text-4xl mb-4">📋</div>
 								<h3 class="text-lg font-semibold mb-2">
-									{curationState.selectedQuestions.size} questions selected
+									{curationState.selectedQuestions.size}
+									{curationState.selectedQuestions.size === 1 ? 'question' : 'questions'} selected
 								</h3>
 								<p class="text-sm text-base-content/60 mb-4">
-									Use the toolbar to move or delete selected questions
+									Use the toolbar to change status, move, or delete selected questions
 								</p>
 								<div class="flex gap-2">
 									<button
@@ -693,7 +751,7 @@
 	isDeleteModalOpen={curationState.isBulkDeleteModalOpen}
 	onCancel={() => curationState.closeBulkDeleteModal()}
 	onConfirm={() => curationState.confirmBulkDelete()}
-	itemName={`${curationState.selectedQuestions.size} selected questions`}
+	itemName={`${curationState.selectedQuestions.size} selected ${curationState.selectedQuestions.size === 1 ? 'question' : 'questions'}`}
 	itemType="question"
 />
 <MoveQuestionsModal

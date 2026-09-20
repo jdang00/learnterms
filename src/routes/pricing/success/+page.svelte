@@ -41,7 +41,9 @@
 
 		<!-- Icon -->
 		<div class="mb-8">
-			<div class="w-24 h-24 bg-gradient-to-br from-primary/20 to-success/20 rounded-full flex items-center justify-center mx-auto relative">
+			<div
+				class="w-24 h-24 bg-gradient-to-br from-primary/20 to-success/20 rounded-full flex items-center justify-center mx-auto relative"
+			>
 				{#if isSyncing}
 					<Loader2 size={48} class="text-primary animate-spin" />
 				{:else}
@@ -49,8 +51,12 @@
 				{/if}
 				<div class="absolute -top-1 -right-1">
 					<span class="flex h-6 w-6">
-						<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-						<span class="relative inline-flex rounded-full h-6 w-6 bg-success items-center justify-center">
+						<span
+							class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"
+						></span>
+						<span
+							class="relative inline-flex rounded-full h-6 w-6 bg-success items-center justify-center"
+						>
 							<Sparkles size={14} class="text-success-content" />
 						</span>
 					</span>
@@ -84,12 +90,12 @@
 				</h3>
 				<ul class="space-y-3 text-sm">
 					<li class="flex items-start gap-3">
-						<span class="text-success font-bold">300</span>
-						<span>AI question generations per day</span>
+						<span class="text-success font-bold">AI</span>
+						<span>Question Studio curator beta; usage limits apply</span>
 					</li>
 					<li class="flex items-start gap-3">
-						<span class="text-success font-bold">∞</span>
-						<span>Unlimited PDF document ingestions</span>
+						<Sparkles size={16} class="text-success mt-0.5" />
+						<span>PDF indexing: up to 150 pages and 30 MB per file</span>
 					</li>
 					<li class="flex items-start gap-3">
 						<Sparkles size={16} class="text-success mt-0.5" />
@@ -101,7 +107,7 @@
 					</li>
 					<li class="flex items-start gap-3">
 						<Sparkles size={16} class="text-success mt-0.5" />
-						<span>Priority processing for all tasks</span>
+						<span>Source evidence review before publishing</span>
 					</li>
 				</ul>
 			</div>
@@ -112,9 +118,7 @@
 					Open Question Studio
 					<ArrowRight size={18} />
 				</a>
-				<a href={resolve('/admin')} class="btn btn-outline">
-					Go to Dashboard
-				</a>
+				<a href={resolve('/admin')} class="btn btn-outline"> Go to Dashboard </a>
 			</div>
 		{/if}
 	</div>
