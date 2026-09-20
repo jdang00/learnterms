@@ -7,6 +7,14 @@ export const getR2DocumentsByCohort = authQuery({
 		cohortId: v.id('cohort')
 	},
 	handler: async (ctx, args) => {
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
+			.first();
+		if (!user || (user.role !== 'dev' && user.cohortId !== args.cohortId)) {
+			throw new Error('Unauthorized for this cohort');
+		}
+
 		return await ctx.db
 			.query('contentLib')
 			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
