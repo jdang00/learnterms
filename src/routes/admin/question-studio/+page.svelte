@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { AlertTriangle } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
-	import QuestionStudioActivityDrawer from '$lib/admin/QuestionStudioActivityDrawer.svelte';
 	import QuestionStudioCandidateModal from '$lib/admin/QuestionStudioCandidateModal.svelte';
 	import QuestionStudioHeader from '$lib/admin/QuestionStudioHeader.svelte';
 	import QuestionStudioRunBar from '$lib/admin/QuestionStudioRunBar.svelte';
 	import QuestionStudioRunStage from '$lib/admin/QuestionStudioRunStage.svelte';
 	import QuestionStudioSetupCard from '$lib/admin/QuestionStudioSetupCard.svelte';
 	import QuestionStudioTopicDetailModal from '$lib/admin/QuestionStudioTopicDetailModal.svelte';
-	import { buildRunRows } from '$lib/admin/questionStudioRun';
+	import { buildRunRows, runTelemetry } from '$lib/admin/questionStudioRun';
 	import type { CandidateReview } from '$lib/admin/questionStudioRun';
 	import type {
 		CandidateQuestion,
@@ -30,8 +29,9 @@
 	const SELECTION_STORAGE_KEY = 'question-studio-selection';
 	const MAX_QUESTIONS = 30;
 	type SourceMode = 'topics' | 'pages';
-	let sourceMode = $state<SourceMode>('topics');
-	let preferredSourceMode = $state<SourceMode>('topics');
+	// Pages is the default for curators who haven't picked a mode yet.
+	let sourceMode = $state<SourceMode>('pages');
+	let preferredSourceMode = $state<SourceMode>('pages');
 	let preferenceUserId = $state<string | null>(null);
 	let selectedPageNumbers = $state<number[]>([]);
 	let sourceIndexedAt = $state<number | undefined>();
@@ -41,7 +41,22 @@
 		semesterName: string;
 		classId: string;
 		moduleId: string;
+		counts?: Record<QuestionType, number>;
 	};
+
+	/** Last run's mix, so a curator who always asks for the same shape doesn't re-enter it. */
+	function readSavedCounts(saved: unknown): Record<QuestionType, number> | null {
+		if (!saved || typeof saved !== 'object') return null;
+		const raw = saved as Record<string, unknown>;
+		const next = { learn: 0, clinical: 0, criticalThinking: 0 } as Record<QuestionType, number>;
+		for (const type of questionTypes) {
+			const value = Math.floor(Number(raw[type]));
+			if (!Number.isFinite(value) || value < 0) return null;
+			next[type] = value;
+		}
+		const total = next.learn + next.clinical + next.criticalThinking;
+		return total > 0 && total <= MAX_QUESTIONS ? next : null;
+	}
 
 	let selectedSourceSummary = $state('');
 	let selectedDocumentId: Id<'contentLib'> | null = $state(null);
@@ -72,7 +87,6 @@
 	let workflowError = $state('');
 	let savedDraftsLink = $state<{ classId: string; moduleId: string; query: string } | null>(null);
 	let isEditingCandidate = $state(false);
-	let activityOpen = $state(false);
 	let lastThreadId = $state('');
 	let loadedTopicMapId: Id<'questionStudioTopicMaps'> | null = $state(null);
 	let loadedTopicMapUpdatedAt = $state(0);
@@ -91,7 +105,7 @@
 		const userId = clerkUser?.id ?? null;
 		if (userId === preferenceUserId) return;
 		preferenceUserId = userId;
-		preferredSourceMode = 'topics';
+		preferredSourceMode = 'pages';
 		try {
 			const saved = userId && localStorage.getItem(`question-studio-source-mode:${userId}`);
 			if (saved === 'pages' || saved === 'topics') preferredSourceMode = saved;
@@ -126,7 +140,7 @@
 	);
 
 	const savedTopicMap = useQuery(api.questionStudio.getLatestSavedTopicMap, () =>
-		sourceMode === 'topics' && selectedDocumentId && selectedModuleId
+		selectedDocumentId && selectedModuleId
 			? {
 					documentId: selectedDocumentId,
 					moduleId: selectedModuleId
@@ -147,7 +161,34 @@
 		activeJobId && (activeJob.data?.reviewCount ?? 0) > 0 ? { jobId: activeJobId } : 'skip'
 	);
 
+	// The event log is fetched apart from the job snapshot so worker writes don't re-send it.
+	const jobActivity = useQuery(api.questionStudio.getGenerationJobActivity, () =>
+		activeJobId ? { jobId: activeJobId } : 'skip'
+	);
+
+	// Elapsed time and stall detection need a clock that moves on its own.
+	let now = $state(Date.now());
+	$effect(() => {
+		if (
+			!isGenerating &&
+			activeJob.data?.status !== 'running' &&
+			activeJob.data?.status !== 'queued'
+		)
+			return;
+		const timer = setInterval(() => (now = Date.now()), 1000);
+		return () => clearInterval(timer);
+	});
+
 	const reviews = $derived((jobReviews.data ?? []) as CandidateReview[]);
+	const telemetry = $derived(
+		runTelemetry({
+			job: activeJob.data,
+			candidates,
+			reviews,
+			activity: jobActivity.data,
+			now
+		})
+	);
 	const savedIndexes = $derived(new Set(activeJob.data?.savedCandidateIndexes ?? []));
 	const selectedTopics = $derived(topics.filter((topic) => selectedTopicIds.has(topic.topicId)));
 	const totalRequested = $derived(counts.learn + counts.clinical + counts.criticalThinking);
@@ -257,8 +298,9 @@
 		}
 	});
 
+	// Topics hydrate in both modes, so switching to Topics is instant and the chip can
+	// always say how many the document has.
 	$effect(() => {
-		if (sourceMode !== 'topics') return;
 		const map = savedTopicMap.data;
 		if (!map || (map._id === loadedTopicMapId && map.updatedAt === loadedTopicMapUpdatedAt)) return;
 		topics = map.topics as TopicMapItem[];
@@ -387,7 +429,8 @@
 				JSON.stringify({
 					semesterName: currentSemester,
 					classId: selectedClass ? String(selectedClass._id) : '',
-					moduleId: selectedModuleId ? String(selectedModuleId) : ''
+					moduleId: selectedModuleId ? String(selectedModuleId) : '',
+					counts
 				})
 			);
 		} catch {
@@ -444,6 +487,7 @@
 		const others = totalRequested - counts[type];
 		const next = Math.max(0, Math.min(Math.floor(value), MAX_QUESTIONS - others));
 		counts = { ...counts, [type]: next };
+		saveStudioSelection();
 	}
 
 	// The headline number grows or shrinks the largest bucket, so the mix keeps its shape
@@ -476,6 +520,7 @@
 		const target = Math.max(1, Math.min(Math.floor(value), MAX_QUESTIONS));
 		if (target === totalRequested) return;
 		counts = distribute(counts, target);
+		saveStudioSelection();
 	}
 
 	function toggleCandidate(index: number) {
@@ -552,7 +597,6 @@
 		allowServerResume = false;
 		isGenerating = false;
 		workflowError = '';
-		activityOpen = false;
 		try {
 			await client.mutation(api.questionStudio.clearCurrentGenerationJob, {});
 			resetGenerated();
@@ -607,11 +651,6 @@
 			return;
 		if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
 			return;
-		if (event.key === 'Escape' && activityOpen) {
-			event.preventDefault();
-			activityOpen = false;
-			return;
-		}
 		if (candidates.length === 0) return;
 		if (event.key === 'ArrowUp') {
 			event.preventDefault();
@@ -632,8 +671,11 @@
 	onMount(() => {
 		try {
 			const raw = localStorage.getItem(SELECTION_STORAGE_KEY);
-			if (raw) savedSelection = JSON.parse(raw) as SavedStudioSelection;
-			else restoredSelection = true;
+			if (raw) {
+				savedSelection = JSON.parse(raw) as SavedStudioSelection;
+				const savedCounts = readSavedCounts(savedSelection.counts);
+				if (savedCounts) counts = savedCounts;
+			} else restoredSelection = true;
 		} catch {
 			restoredSelection = true;
 		}
@@ -655,7 +697,6 @@
 			{counts}
 			topicsSelected={selectedTopics.length}
 			topicsTotal={topics.length}
-			bind:activityOpen
 			canStartNewRun={canStartNewRun && !isEditingCandidate && !isSaving}
 			{unsavedCount}
 			onStartNewRun={startNewRun}
@@ -689,6 +730,8 @@
 					editing={isEditingCandidate}
 					{isSaving}
 					{isReady}
+					{telemetry}
+					activity={jobActivity.data}
 					moduleTitle={selectedModuleTitle}
 					{savedDraftsLink}
 					onEditingChange={(value) => (isEditingCandidate = value)}
@@ -710,7 +753,7 @@
 			>
 				<div class="qs-canvas relative min-h-0 flex-1 overflow-y-auto rounded-2xl bg-base-200">
 					<div class="qs-grid pointer-events-none absolute inset-0"></div>
-					<div class="relative mx-auto w-full max-w-3xl space-y-3 p-4 sm:p-8">
+					<div class="relative mx-auto w-full max-w-5xl space-y-3 p-4 sm:p-10">
 						{#if workflowError}
 							<div class="alert alert-error rounded-2xl text-sm" in:fade={{ duration: 200 }}>
 								<AlertTriangle size={16} />
@@ -770,8 +813,6 @@
 		</div>
 	{/if}
 </div>
-
-<QuestionStudioActivityDrawer bind:open={activityOpen} job={activeJob.data} {reviews} />
 
 <div class="lg:hidden">
 	<QuestionStudioCandidateModal

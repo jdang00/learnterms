@@ -37,6 +37,7 @@
         "convex": "^1.42.0",
         "convex-helpers": "^0.1.120",
         "convex-svelte": "0.0.12",
+        "file-type": "^21",
         "katex": "^0.17.0",
         "lucide-svelte": "^0.525.0",
         "marked": "^16.4.2",

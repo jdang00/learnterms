@@ -2,9 +2,10 @@ import { v } from 'convex/values';
 import { internal } from '../_generated/api';
 import { internalMutation } from '../_generated/server';
 import { scoreDuplicateRisk } from './duplicates';
-import { insertGenerationJobEvent } from './jobRows';
+import { closeWorkerState, insertGenerationJobEvent } from './jobRows';
 import { HARNESS_VERSION } from './quality';
 import type { CandidateQuestion } from './shared';
+import { cleanPlainText } from './text';
 import {
 	MAX_QUESTIONS_PER_WORKER,
 	candidateReviewValidator,
@@ -144,6 +145,70 @@ export const updateGenerationJob = internalMutation({
 	}
 });
 
+/**
+ * One accounted model call. Accumulated on the job so the run view can report tokens,
+ * spend and latency while the run is still going.
+ */
+export const recordGenerationUsage = internalMutation({
+	args: {
+		jobId: v.id('questionStudioJobs'),
+		stage: v.string(),
+		failed: v.optional(v.boolean()),
+		inputTokens: v.optional(v.number()),
+		outputTokens: v.optional(v.number()),
+		reasoningTokens: v.optional(v.number()),
+		costUsd: v.optional(v.number()),
+		latencyMs: v.optional(v.number())
+	},
+	returns: v.null(),
+	handler: async (ctx, args) => {
+		const job = await ctx.db.get(args.jobId);
+		if (!job || job.dismissedAt) return null;
+		const call = {
+			calls: 1,
+			failedCalls: args.failed ? 1 : 0,
+			inputTokens: args.inputTokens ?? 0,
+			outputTokens: args.outputTokens ?? 0,
+			reasoningTokens: args.reasoningTokens ?? 0,
+			costUsd: args.costUsd ?? 0,
+			costKnownCalls: typeof args.costUsd === 'number' ? 1 : 0,
+			latencyMsTotal: args.latencyMs ?? 0
+		};
+		const previous = job.usage;
+		const stage = cleanPlainText(args.stage || 'other', 40);
+		const byStage = [...(previous?.byStage ?? [])];
+		const stageIndex = byStage.findIndex((entry) => entry.stage === stage);
+		const previousStage = stageIndex >= 0 ? byStage[stageIndex] : null;
+		const mergedStage = {
+			stage,
+			calls: (previousStage?.calls ?? 0) + call.calls,
+			failedCalls: (previousStage?.failedCalls ?? 0) + call.failedCalls,
+			inputTokens: (previousStage?.inputTokens ?? 0) + call.inputTokens,
+			outputTokens: (previousStage?.outputTokens ?? 0) + call.outputTokens,
+			reasoningTokens: (previousStage?.reasoningTokens ?? 0) + call.reasoningTokens,
+			costUsd: (previousStage?.costUsd ?? 0) + call.costUsd,
+			costKnownCalls: (previousStage?.costKnownCalls ?? 0) + call.costKnownCalls,
+			latencyMsTotal: (previousStage?.latencyMsTotal ?? 0) + call.latencyMsTotal
+		};
+		if (stageIndex >= 0) byStage[stageIndex] = mergedStage;
+		else byStage.push(mergedStage);
+		await ctx.db.patch(job._id, {
+			usage: {
+				calls: (previous?.calls ?? 0) + call.calls,
+				failedCalls: (previous?.failedCalls ?? 0) + call.failedCalls,
+				inputTokens: (previous?.inputTokens ?? 0) + call.inputTokens,
+				outputTokens: (previous?.outputTokens ?? 0) + call.outputTokens,
+				reasoningTokens: (previous?.reasoningTokens ?? 0) + call.reasoningTokens,
+				costUsd: (previous?.costUsd ?? 0) + call.costUsd,
+				costKnownCalls: (previous?.costKnownCalls ?? 0) + call.costKnownCalls,
+				latencyMsTotal: (previous?.latencyMsTotal ?? 0) + call.latencyMsTotal,
+				byStage
+			}
+		});
+		return null;
+	}
+});
+
 export const appendGenerationWorkerResult = internalMutation({
 	args: {
 		jobId: v.id('questionStudioJobs'),
@@ -166,9 +231,6 @@ export const appendGenerationWorkerResult = internalMutation({
 		) {
 			return { candidateCount: job?.candidateCount ?? 0 };
 		}
-		await ctx.db.patch(job._id, {
-			completedWorkers: [...(job.completedWorkers ?? []), args.workerIndex]
-		});
 		const now = Date.now();
 		const acceptedIncoming: CandidateQuestion[] = [];
 		for (const candidate of args.candidates as CandidateQuestion[]) {
@@ -189,6 +251,14 @@ export const appendGenerationWorkerResult = internalMutation({
 				createdAt: now
 			});
 		}
+		await ctx.db.patch(job._id, {
+			completedWorkers: [...(job.completedWorkers ?? []), args.workerIndex],
+			workerStates: closeWorkerState(job.workerStates, args.workerIndex, {
+				finishedAt: now,
+				failed: args.eventLabel === 'Worker failed',
+				draftedCount: insertedCandidates.length
+			})
+		});
 		await insertGenerationJobEvent(ctx, job, {
 			at: now,
 			label: args.eventLabel,

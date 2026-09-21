@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, Info, ListChecks, Network, X } from 'lucide-svelte';
+	import { Check, Info, X } from 'lucide-svelte';
 	import QuestionStudioContextMeter from './QuestionStudioContextMeter.svelte';
 	import QuestionStudioCountStepper from './QuestionStudioCountStepper.svelte';
 	import type { SourcePreviewBatch } from './sourceContext';
@@ -15,8 +15,6 @@
 		selectedTopicIds: Set<string>;
 		sourcePreview: SourcePreviewBatch | null;
 		contextPageNumbers: number[];
-		sourceLoading: boolean;
-		sourcePreviewError: string;
 		sourceMode: SourceMode;
 		counts: Record<QuestionType, number>;
 		totalRequested: number;
@@ -35,8 +33,6 @@
 		selectedTopicIds,
 		sourcePreview,
 		contextPageNumbers,
-		sourceLoading,
-		sourcePreviewError,
 		sourceMode,
 		counts,
 		totalRequested,
@@ -62,16 +58,9 @@
 <dialog class="modal" class:modal-open={topicsOpen}>
 	<div class="modal-box flex h-[75vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl p-0">
 		<div class="flex shrink-0 items-center gap-2 border-b border-base-300 px-4 py-3">
-			<span
-				class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-			>
-				<Network size={15} />
-			</span>
 			<div class="min-w-0 flex-1">
-				<h3 class="text-sm font-semibold leading-tight">Topics from your notes</h3>
-				<p class="text-xs text-base-content/50">
-					{selectedTopics.length} of {topics.length} selected — the agent writes only from these.
-				</p>
+				<h3 class="text-sm font-semibold leading-tight">Topics</h3>
+				<p class="text-xs text-base-content/50">The agent writes only from the topics you keep.</p>
 			</div>
 			<button
 				type="button"
@@ -156,8 +145,7 @@
 		<QuestionStudioContextMeter
 			pageStats={sourcePreview?.pageCharacterCounts}
 			selectedPageNumbers={contextPageNumbers}
-			loading={sourceLoading}
-			error={sourcePreviewError}
+			loading={!sourcePreview}
 			compact
 		/>
 		<div class="flex shrink-0 items-center gap-2 border-t border-base-300 px-4 py-3">
@@ -183,11 +171,6 @@
 <dialog class="modal" class:modal-open={mixOpen}>
 	<div class="modal-box w-full max-w-lg overflow-hidden rounded-2xl p-0">
 		<div class="flex shrink-0 items-center gap-2 border-b border-base-300 px-4 py-3">
-			<span
-				class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-			>
-				<ListChecks size={15} />
-			</span>
 			<div class="min-w-0 flex-1">
 				<h3 class="text-sm font-semibold leading-tight">Question mix</h3>
 				<p class="text-xs text-base-content/50">

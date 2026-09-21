@@ -12,6 +12,7 @@ import type { Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { applyQuestionCreationDeltaAndEvaluateBadges } from './badgeEngine';
 import { getRationale } from '../lib/utils/rationale';
+import { attachQuestionImages, imageAttachment } from './questionMediaSaving';
 
 async function assertQuestionModuleAccess(ctx: MutationCtx, moduleId: Id<'module'>) {
 	const identity = await ctx.auth.getUserIdentity();
@@ -534,7 +535,9 @@ export const getFirstQuestionInModule = authQuery({
 });
 
 export const insertQuestion = authCuratorMutation({
+	returns: v.id('question'),
 	args: {
+		images: v.optional(v.array(imageAttachment)),
 		moduleId: v.id('module'),
 		type: v.string(),
 		stem: v.string(),
@@ -596,8 +599,9 @@ export const insertQuestion = authCuratorMutation({
 			metadata: args.metadata
 		});
 
+		const { images, ...questionFields } = args;
 		const id = await ctx.db.insert('question', {
-			...args,
+			...questionFields,
 			rationale,
 			type: convertQuestionType(args.type),
 			status: args.status.toLowerCase(),
@@ -605,6 +609,7 @@ export const insertQuestion = authCuratorMutation({
 			correctAnswers: correctAnswerIds,
 			searchText
 		});
+		await attachQuestionImages(ctx, id, images ?? []);
 		await adjustModuleQuestionCount(ctx, args.moduleId, 1);
 		await applyQuestionCreationBadgesForActor(ctx, args.moduleId, 1);
 		return id;
@@ -778,7 +783,9 @@ export const bulkPublishQuestions = authCuratorMutation({
 });
 
 export const updateQuestion = authCuratorMutation({
+	returns: v.object({ updated: v.boolean() }),
 	args: {
+		images: v.optional(v.array(imageAttachment)),
 		questionId: v.id('question'),
 		moduleId: v.id('module'),
 		type: v.string(),
@@ -867,6 +874,7 @@ export const updateQuestion = authCuratorMutation({
 			searchText
 		});
 
+		await attachQuestionImages(ctx, args.questionId, args.images ?? []);
 		if (questionToUpdate.metadata.generation?.jobId)
 			await ctx.scheduler.runAfter(0, internal.aiTelemetry.capture, {
 				event:

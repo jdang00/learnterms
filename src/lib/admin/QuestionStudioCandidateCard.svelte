@@ -3,11 +3,11 @@
 	import { questionTypeLabel } from './questionStudioTypes';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import type { CandidateQuestion } from './questionStudioTypes';
+	import { candidateConcern } from './questionStudioRun';
 	import type { CandidateReview } from './questionStudioRun';
 
 	interface Props {
 		candidate: CandidateQuestion;
-		index: number;
 		isActive: boolean;
 		isIncluded: boolean;
 		isSaved?: boolean;
@@ -18,7 +18,6 @@
 
 	let {
 		candidate,
-		index,
 		isActive,
 		isIncluded,
 		isSaved = false,
@@ -27,22 +26,16 @@
 		onToggleInclude
 	}: Props = $props();
 
-	// One dot for "should a human look harder at this one" — weak evidence and near-duplicates
-	// both mean the same thing to a curator.
-	const flagged = $derived(
-		candidate.duplicateRisk !== 'low' ||
-			review?.sourceSupport === 'weak' ||
-			review?.answerQuality === 'ambiguous'
+	const concern = $derived(candidateConcern(candidate, review));
+	const pages = $derived(candidate.sourceCitations?.map((citation) => citation.pageNumber) ?? []);
+	const pageLabel = $derived(
+		pages.length ? `p. ${[...new Set(pages)].slice(0, 2).join(', ')}` : ''
 	);
-	const dotTone = $derived(
-		candidate.duplicateRisk === 'high' || review?.sourceSupport === 'weak'
-			? 'bg-error'
-			: flagged
-				? 'bg-warning'
-				: 'bg-success'
+	const verdictShort = $derived(
+		review?.verdict === 'accept' ? 'kept' : review?.verdict === 'revise' ? 'revised' : 'cut'
 	);
-	const dotTitle = $derived(
-		flagged ? 'Needs a closer look before saving' : 'Passed the agent checks'
+	const verdictTitle = $derived(
+		review ? `Source support: ${review.sourceSupport}, answer: ${review.answerQuality}` : ''
 	);
 </script>
 
@@ -78,21 +71,28 @@
 			/>
 		{/if}
 		<div class="min-w-0 flex-1">
-			<div class="mb-1 flex flex-wrap items-center gap-2">
-				<span class="text-xs font-medium text-base-content/50">#{index + 1}</span>
-				<span
-					class="rounded-sm bg-base-200 px-1.5 py-0.5 text-[10px] font-medium uppercase text-base-content/60"
-				>
-					MC
-				</span>
-				<span
-					class="rounded-sm border border-base-300 px-1.5 py-0.5 text-[10px] font-medium capitalize text-base-content/55"
-				>
-					{questionTypeLabel(candidate.questionType)}
-				</span>
-				<span class="h-2 w-2 shrink-0 rounded-full {dotTone}" title={dotTitle}></span>
-				{#if isSaved}
-					<span class="text-[10px] font-semibold uppercase tracking-wide text-success">Saved</span>
+			<div class="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-base-content/45">
+				<span>{questionTypeLabel(candidate.questionType)}</span>
+				{#if candidate.topicTitle}
+					<span class="min-w-0 max-w-[12rem] truncate text-base-content/60">
+						{candidate.topicTitle}
+					</span>
+				{/if}
+				{#if pageLabel}
+					<span class="tabular-nums text-base-content/35">{pageLabel}</span>
+				{/if}
+				{#if review}
+					<span class="uppercase tracking-wide text-base-content/35" title={verdictTitle}>
+						{verdictShort}
+					</span>
+				{/if}
+				{#if concern && !isSaved}
+					<span
+						title={concern}
+						class="rounded-full bg-warning px-2 py-px font-medium text-warning-content"
+					>
+						Check this
+					</span>
 				{/if}
 			</div>
 			<p class="line-clamp-2 text-sm leading-snug text-base-content tiptap-content-inline">

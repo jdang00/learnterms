@@ -38,7 +38,11 @@
       "Bash(bun outdated:*)",
       "Bash(find:*)",
       "Bash(bun update:*)",
-      "Bash(bunx convex *)"
+      "Bash(bunx convex *)",
+      "Bash(node *)",
+      "Bash(bunx eslint *)",
+      "Skill(claude-in-chrome)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173 --max-time 3)"
     ]
   }
 }

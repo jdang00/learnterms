@@ -1,28 +1,21 @@
 <script lang="ts">
 	import QuestionStudioDestinationPicker from './QuestionStudioDestinationPicker.svelte';
 	import QuestionStudioSetupDialogs from './QuestionStudioSetupDialogs.svelte';
-	import {
-		Check,
-		ChevronDown,
-		ChevronRight,
-		ListChecks,
-		MessageSquareText,
-		Network,
-		Sparkles
-	} from 'lucide-svelte';
-	import { fly, slide } from 'svelte/transition';
+	import { ChevronDown, Grid2X2, ListChecks, Network, Sparkles } from 'lucide-svelte';
+	import { fly } from 'svelte/transition';
 	import QuestionStudioPagePicker from './QuestionStudioPagePicker.svelte';
 	import QuestionStudioContextMeter from './QuestionStudioContextMeter.svelte';
 	import type { SourcePreviewBatch } from './sourceContext';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { SourceMode } from '../../convex/questionStudio/pageSelection';
-	import QuestionStudioCountStepper from './QuestionStudioCountStepper.svelte';
 	import QuestionStudioSourceAttachment from './QuestionStudioSourceAttachment.svelte';
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 	import type { ClassWithSemester } from '$lib/types';
 	import type { QuestionType, TopicMapItem } from './questionStudioTypes';
 	import { questionTypes, questionTypeDefinitions } from './questionStudioTypes';
+	import { formatPageSelection } from './pagePickerSelection';
+	import { tokenClass } from './questionStudioToken';
 
 	interface Props {
 		cohortId?: Id<'cohort'> | null;
@@ -109,7 +102,6 @@
 	const client = useConvexClient();
 	let sourcePreview = $state<SourcePreviewBatch | null>(null);
 	let sourcePreviewError = $state('');
-	let sourceLoading = $state(false);
 	let sourceReload = $state(0);
 	const contextPageNumbers = $derived(
 		sourceMode === 'pages'
@@ -127,7 +119,6 @@
 		void sourceReload;
 		sourcePreview = null;
 		sourcePreviewError = '';
-		sourceLoading = Boolean(documentId);
 		if (!documentId) return;
 		let cancelled = false;
 		void client
@@ -136,10 +127,7 @@
 				if (!cancelled) sourcePreview = result;
 			})
 			.catch(() => {
-				if (!cancelled) sourcePreviewError = 'Could not measure the source. Try loading it again.';
-			})
-			.finally(() => {
-				if (!cancelled) sourceLoading = false;
+				if (!cancelled) sourcePreviewError = 'Could not read this document.';
 			});
 		return () => {
 			cancelled = true;
@@ -147,6 +135,8 @@
 	});
 
 	let topicsOpen = $state(false);
+	let mixOpen = $state(false);
+	let pagesOpen = $state(false);
 	let topicSearch = $state('');
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -154,102 +144,163 @@
 		if (topicsOpen) topicsOpen = false;
 		else if (mixOpen) mixOpen = false;
 	}
-	let mixOpen = $state(false);
-	let notesOpen = $state(false);
+
+	function choosePages() {
+		if (sourceMode !== 'pages') onSelectSourceMode('pages');
+		pagesOpen = true;
+	}
+
+	function setTotalFromInput(input: HTMLInputElement) {
+		const parsed = Math.floor(Number(input.value));
+		const next = Math.max(1, Math.min(Number.isFinite(parsed) ? parsed : 1, maxQuestions));
+		onSetTotal(next);
+		input.value = String(next);
+	}
 
 	const selectedTopics = $derived(topics.filter((topic) => selectedTopicIds.has(topic.topicId)));
 	const allTopicsSelected = $derived(topics.length > 0 && selectedTopics.length === topics.length);
-	const readyToTune = $derived(
-		hasStudioContext && (sourceMode === 'pages' ? sourceIndexedAt !== undefined : topics.length > 0)
-	);
 	const mixSummary = $derived(
 		questionTypes
 			.filter((type) => counts[type] > 0)
-			.map((type) => `${counts[type]} ${questionTypeDefinitions[type].label}`)
-			.join(' · ') || 'No questions yet'
+			.map((type) => `${counts[type]} ${questionTypeDefinitions[type].label.toLowerCase()}`)
+			.join(', ')
 	);
+	const hint = $derived.by(() => {
+		if (!selectedDocumentId) return 'Choose a document for the agent to write from.';
+		if (!selectedModuleId) return 'Choose the module these drafts should be saved to.';
+		if (sourceMode === 'topics' && !isTopicMapLoading && topics.length === 0)
+			return "This document hasn't been mapped into topics yet, so choose the pages to use.";
+		if (sourceMode === 'pages' && selectedPageNumbers.length === 0)
+			return 'Choose at least one page.';
+		if (sourceMode === 'topics' && selectedTopics.length === 0) return 'Choose at least one topic.';
+		return 'Every draft is checked against your document. Nothing is published until you say so.';
+	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
 <div class="card border border-base-300 bg-base-100 shadow-sm" in:fly={{ y: 16, duration: 280 }}>
-	<div class="card-body gap-0 p-5 sm:p-7">
-		<div class="flex items-center gap-3">
-			<span
-				class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"
-			>
-				<Sparkles size={19} />
-			</span>
-			<div class="min-w-0">
-				<h1 class="text-base font-semibold leading-tight">New question run</h1>
-				<p class="text-xs text-base-content/55">
-					Point the agent at a source, say where drafts should land, and how many you want.
-				</p>
-			</div>
-		</div>
-
-		<div class="mt-5 flex flex-wrap items-center justify-between gap-2">
-			<span class="text-xs font-medium text-base-content/55">Choose context by</span>
+	<div class="card-body gap-0 px-7 py-8 sm:px-14 sm:py-10">
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<h2 class="flex items-center gap-2 text-sm font-medium text-base-content/55">
+				<Sparkles size={15} class="text-primary" />
+				New question run
+			</h2>
 			<div
-				class="join rounded-full border border-base-300 bg-base-200 p-1"
+				class="flex rounded-full border border-base-300 bg-base-200 p-1"
 				role="group"
-				aria-label="Choose context by"
+				aria-label="Write from"
 			>
-				{#each ['topics', 'pages'] as mode (mode)}
+				{#each ['pages', 'topics'] as const as mode (mode)}
 					<button
 						type="button"
 						class="btn btn-sm rounded-full border-0 {sourceMode === mode
 							? 'bg-base-100 text-primary shadow-sm'
 							: 'btn-ghost text-base-content/60'}"
 						aria-pressed={sourceMode === mode}
-						onclick={() => onSelectSourceMode(mode as SourceMode)}
-						>{mode === 'topics' ? 'Topics' : 'Pages'}</button
+						onclick={() => onSelectSourceMode(mode)}
 					>
+						{mode === 'pages' ? 'Pages' : 'Topics'}
+					</button>
 				{/each}
 			</div>
 		</div>
 
-		<section class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
-			<span class="w-20 shrink-0 text-xs font-medium uppercase tracking-wide text-base-content/40">
-				Source
-			</span>
+		<div class="setup-sentence mt-8 text-lg text-base-content/80 sm:text-xl">
+			Write
+			<input
+				type="number"
+				inputmode="numeric"
+				min="1"
+				max={maxQuestions}
+				aria-label="Number of questions"
+				class="input count-token mx-1.5 w-20 rounded-full text-center text-base font-medium"
+				value={totalRequested}
+				disabled={isGenerating}
+				onchange={(event) => setTotalFromInput(event.currentTarget)}
+			/>
+			question{totalRequested === 1 ? '' : 's'} from
 			<QuestionStudioSourceAttachment
 				{cohortId}
 				{cohortLoading}
 				bind:selectedDocumentId
 				bind:selectedSourceSummary
 			/>
-			{#if selectedDocumentId && hasStudioContext && sourceMode === 'topics'}
-				{#if topics.length > 0}
-					<span class="flex items-center gap-1.5 text-xs text-success">
-						<Check size={13} />
-						{topics.length} topics mapped
+			covering
+			{#if !hasStudioContext}
+				<button type="button" class={tokenClass(false)} disabled>
+					{#if sourceMode === 'pages'}
+						<Grid2X2 size={16} class="shrink-0" />
+					{:else}
+						<Network size={16} class="shrink-0" />
+					{/if}
+					its {sourceMode === 'pages' ? 'pages' : 'topics'}
+				</button>
+			{:else if sourceMode === 'pages'}
+				<button
+					type="button"
+					class={tokenClass(selectedPageNumbers.length > 0)}
+					disabled={!sourcePreview}
+					onclick={choosePages}
+				>
+					<Grid2X2 size={16} class="shrink-0 text-base-content/60" />
+					<span class="max-w-[14rem] truncate">
+						{#if !sourcePreview}
+							pages…
+						{:else if selectedPageNumbers.length}
+							page{selectedPageNumbers.length === 1 ? '' : 's'}
+							{formatPageSelection(selectedPageNumbers)}
+						{:else}
+							pages you choose
+						{/if}
 					</span>
-				{:else}
-					<span class="flex items-center gap-1.5 text-xs text-base-content/50">
-						{#if isTopicMapLoading}<span class="loading loading-spinner loading-xs"></span>{/if}
-						{isTopicMapLoading ? 'Loading topics…' : 'No topic map available'}
-					</span>
-				{/if}
+					<ChevronDown size={15} class="shrink-0 opacity-60" />
+				</button>
+			{:else if isTopicMapLoading}
+				<button type="button" class={tokenClass(false)} disabled>
+					<Network size={16} class="shrink-0" />
+					its topics…
+				</button>
+			{:else if topics.length === 0}
+				<button type="button" class={tokenClass(false)} onclick={choosePages}>
+					<Grid2X2 size={16} class="shrink-0" />
+					pages you choose
+					<ChevronDown size={15} class="shrink-0 opacity-60" />
+				</button>
+			{:else}
+				<button
+					type="button"
+					class={tokenClass(selectedTopics.length > 0)}
+					onclick={() => {
+						topicSearch = '';
+						topicsOpen = true;
+					}}
+				>
+					<Network size={16} class="shrink-0 text-base-content/60" />
+					{allTopicsSelected
+						? `all ${topics.length} topics`
+						: `${selectedTopics.length} of ${topics.length} topics`}
+					<ChevronDown size={15} class="shrink-0 opacity-60" />
+				</button>
 			{/if}
-		</section>
-
-		<QuestionStudioDestinationPicker
-			{currentSemester}
-			{semesters}
-			{selectedClass}
-			{selectedModuleId}
-			{selectedModuleTitle}
-			{searchedClasses}
-			{searchedModules}
-			bind:classOpen
-			bind:moduleOpen
-			bind:classSearch
-			bind:moduleSearch
-			{onSelectSemester}
-			{onSelectClass}
-			{onSelectModule}
-		/>
+			and save them to
+			<QuestionStudioDestinationPicker
+				{currentSemester}
+				{semesters}
+				{selectedClass}
+				{selectedModuleId}
+				{selectedModuleTitle}
+				{searchedClasses}
+				{searchedModules}
+				bind:classOpen
+				bind:moduleOpen
+				bind:classSearch
+				bind:moduleSearch
+				{onSelectSemester}
+				{onSelectClass}
+				{onSelectModule}
+			/>.
+		</div>
 
 		{#if sourceMode === 'pages' && selectedDocumentId && sourcePreview}
 			{#key selectedDocumentId}
@@ -259,6 +310,7 @@
 					onSourceReloaded={(result) => (sourcePreview = result)}
 					bind:selectedPageNumbers
 					bind:sourceIndexedAt
+					bind:open={pagesOpen}
 				/>
 			{/key}
 		{/if}
@@ -267,145 +319,48 @@
 			<QuestionStudioContextMeter
 				pageStats={sourcePreview?.pageCharacterCounts}
 				selectedPageNumbers={contextPageNumbers}
-				loading={sourceLoading}
+				loading={!sourcePreview && !sourcePreviewError}
 				error={sourcePreviewError}
 			/>
-			{#if sourcePreviewError}<button
-					type="button"
-					class="btn btn-ghost btn-xs mt-1"
-					onclick={() => sourceReload++}>Reload source</button
-				>{/if}
 		{/if}
 
-		<section class="mt-6 border-t border-base-300 pt-6" class:opacity-40={!readyToTune}>
-			<div class="flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<p class="text-xs font-medium uppercase tracking-wide text-base-content/40">
-						Questions to generate
-					</p>
-					<div class="mt-1.5 flex items-center gap-3">
-						<QuestionStudioCountStepper
-							value={totalRequested}
-							min={1}
-							max={maxQuestions}
-							size="lg"
-							ariaLabel="questions"
-							disabled={!readyToTune || isGenerating}
-							onChange={onSetTotal}
-						/>
-						<span class="text-sm text-base-content/45">
-							question{totalRequested === 1 ? '' : 's'}
-						</span>
-					</div>
-				</div>
+		<textarea
+			class="textarea mt-9 w-full resize-none rounded-2xl border-base-300 bg-base-200/40 p-4 text-base leading-relaxed focus:bg-base-100"
+			rows="3"
+			aria-label="Focus notes for the agent"
+			placeholder="Anything to focus on? For example, key definitions and common points of confusion. (Optional)"
+			bind:value={guidanceNotes}
+		></textarea>
 
-				<button
-					class="btn btn-primary w-full gap-2 rounded-full px-6 sm:w-auto"
-					disabled={!canGenerate || isGenerating}
-					onclick={onGenerate}
-				>
-					<Sparkles size={15} />
-					Generate {totalRequested} question{totalRequested === 1 ? '' : 's'}
-				</button>
-			</div>
-
-			<div class="mt-5 grid gap-2 {sourceMode === 'topics' ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}">
-				{#if sourceMode === 'topics'}
-					<button
-						type="button"
-						class="flex w-full flex-col gap-1 rounded-2xl border border-base-300 bg-base-100 px-4 py-3 text-left transition hover:border-primary/50 hover:bg-base-200/40 disabled:opacity-60"
-						disabled={!readyToTune}
-						onclick={() => {
-							topicSearch = '';
-							topicsOpen = true;
-						}}
-					>
-						<span
-							class="flex w-full items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-base-content/40"
-						>
-							<Network size={12} />
-							Topics
-							<ChevronRight size={13} class="ml-auto text-base-content/30" />
-						</span>
-						<span class="truncate text-sm font-medium">
-							{allTopicsSelected
-								? `All ${topics.length} topics`
-								: `${selectedTopics.length} of ${topics.length} topics`}
-						</span>
-					</button>
-				{/if}
-
-				<button
-					type="button"
-					class="flex w-full flex-col gap-1 rounded-2xl border border-base-300 bg-base-100 px-4 py-3 text-left transition hover:border-primary/50 hover:bg-base-200/40 disabled:opacity-60"
-					disabled={!readyToTune}
-					onclick={() => (mixOpen = true)}
-				>
-					<span
-						class="flex w-full items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-base-content/40"
-					>
-						<ListChecks size={12} />
-						Question mix
-						<ChevronRight size={13} class="ml-auto text-base-content/30" />
-					</span>
-					<span class="truncate text-sm font-medium">{mixSummary}</span>
-				</button>
-
-				<button
-					type="button"
-					class="flex w-full flex-col gap-1 rounded-2xl border bg-base-100 px-4 py-3 text-left transition hover:border-primary/50 hover:bg-base-200/40 disabled:opacity-60 {notesOpen ||
-					guidanceNotes.trim()
-						? 'border-primary/50'
-						: 'border-base-300'}"
-					disabled={!readyToTune}
-					onclick={() => (notesOpen = !notesOpen)}
-				>
-					<span
-						class="flex w-full items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-base-content/40"
-					>
-						<MessageSquareText size={12} />
-						Focus notes
-						<ChevronDown size={13} class="ml-auto text-base-content/30" />
-					</span>
-					<span
-						class="truncate text-sm font-medium {guidanceNotes.trim()
-							? ''
-							: 'text-base-content/40'}"
-					>
-						{guidanceNotes.trim() || 'None — the agent decides'}
-					</span>
-				</button>
-			</div>
-
-			{#if notesOpen}
-				<div transition:slide={{ duration: 180 }}>
-					<textarea
-						class="textarea textarea-bordered mt-2 w-full rounded-xl text-sm"
-						rows="2"
-						placeholder="e.g. Focus on key definitions and common points of confusion."
-						bind:value={guidanceNotes}
-					></textarea>
-				</div>
+		<p class="mt-5 text-sm leading-relaxed text-base-content/50">
+			{#if sourcePreviewError}
+				<span class="text-error">{sourcePreviewError}</span>
+				<button type="button" class="underline" onclick={() => sourceReload++}>Try again</button>
+			{:else}
+				{hint}
 			{/if}
+		</p>
 
-			<p class="mt-4 text-xs leading-relaxed text-base-content/45">
-				{#if !selectedDocumentId}
-					Attach a source document to get started.
-				{:else if !selectedModuleId}
-					Choose the class and module these questions should be saved into.
-				{:else if sourceMode === 'pages' && selectedPageNumbers.length === 0}
-					Add at least one page to your context.
-				{:else if sourceMode === 'topics' && topics.length === 0}
-					No topics are ready yet. Choose Pages to select your own context, or prepare this source
-					in the Content Library.
-				{:else if sourceMode === 'topics' && selectedTopics.length === 0}
-					Select at least one topic for the agent to write from.
-				{:else}
-					Every draft is checked against your source before it reaches you. Unsupported slots come
-					back empty with a reason rather than invented. Nothing is published until you say so.
-				{/if}
-			</p>
-		</section>
+		<div class="mt-7 flex flex-wrap items-center gap-3 border-t border-base-300 pt-7">
+			<button
+				type="button"
+				class="btn gap-2 rounded-full px-4 font-medium"
+				disabled={isGenerating}
+				onclick={() => (mixOpen = true)}
+			>
+				<ListChecks size={16} class="text-base-content/60" />
+				{mixSummary}
+				<ChevronDown size={15} class="opacity-60" />
+			</button>
+			<button
+				class="btn btn-primary ml-auto gap-2 rounded-full px-7"
+				disabled={!canGenerate || isGenerating}
+				onclick={onGenerate}
+			>
+				<Sparkles size={16} />
+				Generate {totalRequested} question{totalRequested === 1 ? '' : 's'}
+			</button>
+		</div>
 	</div>
 </div>
 
@@ -418,8 +373,6 @@
 	{selectedTopicIds}
 	{sourcePreview}
 	{contextPageNumbers}
-	{sourceLoading}
-	{sourcePreviewError}
 	{sourceMode}
 	{counts}
 	{totalRequested}
@@ -429,3 +382,20 @@
 	{onSetAllTopics}
 	{onSetCount}
 />
+
+<style>
+	.setup-sentence {
+		line-height: 3;
+		word-spacing: 0.06em;
+		text-wrap: pretty;
+	}
+	.count-token {
+		appearance: textfield;
+		-moz-appearance: textfield;
+	}
+	.count-token::-webkit-inner-spin-button,
+	.count-token::-webkit-outer-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+</style>

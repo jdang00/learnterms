@@ -40,11 +40,17 @@
 	import { useClerkContext } from 'svelte-clerk';
 	import { Loader2 } from 'lucide-svelte';
 	import { getRationale, getRationalePlainText } from '$lib/utils/rationale';
+	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
+	import { uploadQuestionImage } from '$lib/utils/uploadQuestionImage';
+	import {
+		MAX_QUESTION_IMAGES,
+		QUESTION_IMAGE_ACCEPT,
+		validateQuestionImage
+	} from '$lib/utils/questionMediaUpload';
 
 	type QuestionItem = Doc<'question'>;
 	type QuestionMediaItem = FunctionReturnType<typeof api.questionMedia.getByQuestionId>[number];
 	type UpdateQuestionMediaArgs = FunctionArgs<typeof api.questionMedia.update>;
-	type CreateQuestionMediaArgs = FunctionArgs<typeof api.questionMedia.create>;
 
 	let {
 		moduleId,
@@ -396,16 +402,32 @@
 		'https://docs.learnterms.com/docs/contributors/why-rationales-are-required';
 
 	let queuedMedia: Array<{
+		uploadId: Id<'questionMediaUploads'>;
 		url: string;
-		key?: string;
 		name?: string;
 		caption?: string;
-		sizeBytes?: number;
-		mimeType?: string;
 		showOnSolution?: boolean;
 	}> = $state([]);
 
-	// Existing media from database (for edit mode)
+	let isUploading = $state(false);
+	let uploadProgress = $state(0);
+	let uploadLabel = $state('');
+	let uploadError = $state('');
+	let isDraggingImage = $state(false);
+	const uploadController = new AbortController();
+	onMount(() => () => {
+		uploadController.abort();
+		for (const media of queuedMedia) {
+			URL.revokeObjectURL(media.url);
+			void client
+				.mutation(api.questionMediaUploads.discard, { uploadId: media.uploadId })
+				.catch(() => {});
+		}
+	});
+
+	const existingMediaQuery = useQuestionMedia(() =>
+		mode === 'edit' ? editingQuestion?._id : null
+	);
 	let existingMedia: QuestionMediaItem[] = $state([]);
 
 	// Fetch existing media when in edit mode
@@ -423,11 +445,7 @@
 
 	// Load existing media when editing
 	$effect(() => {
-		if (mode === 'edit' && editingQuestion) {
-			void refreshMedia();
-		} else {
-			existingMedia = [];
-		}
+		existingMedia = [...(existingMediaQuery.data ?? [])];
 	});
 
 	// Remove existing media from database
@@ -484,14 +502,6 @@
 		await handleExistingMediaChange(id, altText, caption, showOnSolution);
 	}
 
-	function mediaTypeFromMime(mime: string | undefined): string {
-		const t = mime || '';
-		if (t.startsWith('image/')) return 'image';
-		if (t.startsWith('video/')) return 'video';
-		if (t.startsWith('audio/')) return 'audio';
-		return 'file';
-	}
-
 	function getErrorMessage(error: unknown): string {
 		const fallback = 'Failed to save question. Check the question fields and try again.';
 		const rationaleRequiredMessage =
@@ -528,12 +538,66 @@
 	}
 
 	function handleUploadFailure(message: string, error?: unknown) {
+		uploadError = message;
 		if (error) {
 			console.error(message, error);
 		} else {
 			console.error(message);
 		}
 		toastStore.error(message);
+	}
+
+	async function uploadImages(files: File[]) {
+		if (isUploading || isSubmitting || files.length === 0) return;
+		uploadError = '';
+		if (existingMedia.length + queuedMedia.length + files.length > MAX_QUESTION_IMAGES) {
+			handleUploadFailure(`A question can have up to ${MAX_QUESTION_IMAGES} images.`);
+			return;
+		}
+		try {
+			for (const file of files) validateQuestionImage(file.type, file.size);
+		} catch (error) {
+			handleUploadFailure(error instanceof Error ? error.message : 'Unsupported image.');
+			return;
+		}
+		isUploading = true;
+		try {
+			for (const file of files) {
+				uploadLabel = file.name;
+				uploadProgress = 0;
+				const uploadId = await uploadQuestionImage(
+					client,
+					moduleId as Id<'module'>,
+					file,
+					uploadController.signal,
+					(percent) => {
+						uploadProgress = percent;
+					}
+				);
+				queuedMedia = [
+					...queuedMedia,
+					{
+						uploadId,
+						url: URL.createObjectURL(file),
+						name: file.name,
+						caption: '',
+						showOnSolution: false
+					}
+				];
+				onChange();
+			}
+		} catch (error) {
+			if (!uploadController.signal.aborted)
+				handleUploadFailure(error instanceof Error ? error.message : 'Image upload failed.');
+		} finally {
+			isUploading = false;
+		}
+	}
+
+	function handleImageDrop(event: DragEvent) {
+		event.preventDefault();
+		isDraggingImage = false;
+		void uploadImages(Array.from(event.dataTransfer?.files ?? []));
 	}
 
 	async function handlePaste(e: ClipboardEvent) {
@@ -551,10 +615,16 @@
 		if (files.length === 0) return;
 
 		e.preventDefault();
-		handleUploadFailure('Question media uploads are temporarily disabled during the R2 migration.');
+		await uploadImages(files);
 	}
 
 	async function removeQueuedMedia(index: number) {
+		const media = queuedMedia[index];
+		if (!media || isSubmitting) return;
+		await client
+			.mutation(api.questionMediaUploads.discard, { uploadId: media.uploadId })
+			.catch(() => {});
+		URL.revokeObjectURL(media.url);
 		queuedMedia = queuedMedia.filter((_, i) => i !== index);
 		onChange();
 	}
@@ -798,6 +868,7 @@
 	}
 
 	async function handleSubmit() {
+		if (isUploading || isSubmitting) return;
 		saveError = null;
 		isRationaleError = false;
 
@@ -886,9 +957,16 @@
 				id: opt.id,
 				text: opt.text
 			}));
+			const images = queuedMedia.map((media) => ({
+				uploadId: media.uploadId,
+				altText: media.name ?? '',
+				caption: media.caption,
+				showOnSolution: media.showOnSolution
+			}));
 
 			if (mode === 'edit' && editingQuestion) {
 				await client.mutation(api.question.updateQuestion, {
+					images,
 					questionId: editingQuestion._id as Id<'question'>,
 					moduleId: moduleId as Id<'module'>,
 					type: questionType,
@@ -913,6 +991,7 @@
 						: undefined;
 
 				questionId = await client.mutation(api.question.insertQuestion, {
+					images,
 					moduleId: moduleId as Id<'module'>,
 					type: questionType,
 					stem: questionStem,
@@ -928,28 +1007,8 @@
 				});
 			}
 
-			if (questionId && queuedMedia.length > 0) {
-				const startOrder = existingMedia.length;
-				for (let i = 0; i < queuedMedia.length; i++) {
-					const m = queuedMedia[i];
-					const payload: CreateQuestionMediaArgs = {
-						questionId: questionId,
-						url: m.url,
-						mediaType: mediaTypeFromMime(m.mimeType),
-						mimeType: m.mimeType || 'application/octet-stream',
-						altText: m.name || '',
-						caption: m.caption || '',
-						order: startOrder + i,
-						showOnSolution: m.showOnSolution ?? false,
-						metadata: {
-							storageKey: m.key || '',
-							sizeBytes: m.sizeBytes || 0,
-							originalFileName: m.name || ''
-						}
-					};
-					await client.mutation(api.questionMedia.create, payload);
-				}
-			}
+			for (const media of queuedMedia) URL.revokeObjectURL(media.url);
+			queuedMedia = [];
 
 			toastStore.success(mode === 'edit' ? 'Question saved' : 'Question created');
 			onSave(mode === 'add' ? questionId : undefined);
@@ -972,13 +1031,15 @@
 	>
 		<h3 class="text-base font-semibold">{mode === 'edit' ? 'Edit Question' : 'New Question'}</h3>
 		<div class="flex items-center gap-2">
-			<button class="btn btn-sm btn-ghost rounded-full" onclick={onCancel} disabled={isSubmitting}
-				>Cancel</button
+			<button
+				class="btn btn-sm btn-ghost rounded-full"
+				onclick={onCancel}
+				disabled={isSubmitting || isUploading}>Cancel</button
 			>
 			<button
 				class="btn btn-sm btn-primary rounded-full gap-2"
 				onclick={handleSubmit}
-				disabled={isSubmitting || !canSubmit}
+				disabled={isSubmitting || isUploading || !canSubmit}
 			>
 				{#if isSubmitting}
 					<span class="loading loading-spinner loading-xs"></span>
@@ -1554,19 +1615,53 @@
 							</div>
 						{/if}
 
-						<div
-							class="h-36 w-full border-2 border-dashed border-base-300 rounded-xl bg-base-100/50 flex flex-col items-center justify-center text-center"
+						<label
+							class="relative min-h-36 w-full border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center p-4 {isDraggingImage
+								? 'border-primary bg-primary/10'
+								: 'border-base-300 bg-base-100/50'} {isUploading || isSubmitting
+								? 'opacity-60'
+								: 'cursor-pointer hover:border-primary'}"
+							ondragover={(event) => {
+								event.preventDefault();
+								isDraggingImage = true;
+							}}
+							ondragleave={() => {
+								isDraggingImage = false;
+							}}
+							ondrop={handleImageDrop}
 						>
-							<div class="p-3 bg-base-200 rounded-full text-base-content/50">
-								<ImageIcon size={24} />
-							</div>
-							<div class="mt-2 flex flex-col gap-0.5 px-4">
-								<span class="text-sm font-semibold">Media uploads paused</span>
-								<span class="text-xs text-base-content/60">
-									Question image uploads will return on the R2 media path.
-								</span>
-							</div>
-						</div>
+							<ImageIcon size={24} class="text-base-content/50" />
+							<span class="mt-2 text-sm font-semibold"
+								>{isUploading
+									? uploadProgress === 100
+										? 'Checking image…'
+										: `Uploading ${uploadProgress}%`
+									: 'Add images'}</span
+							>
+							<span class="mt-1 text-xs text-base-content/60"
+								>{isUploading ? uploadLabel : 'Browse, drag & drop, or paste an image'}</span
+							>
+							<span class="mt-1 text-xs text-base-content/50"
+								>PNG, JPEG, WebP, GIF · 8 MB each · up to {MAX_QUESTION_IMAGES} images</span
+							>
+							<input
+								type="file"
+								class="absolute inset-0 opacity-0 cursor-pointer"
+								aria-label="Upload question images"
+								accept={QUESTION_IMAGE_ACCEPT}
+								multiple
+								disabled={isUploading || isSubmitting}
+								onchange={(event) => {
+									void uploadImages(Array.from(event.currentTarget.files ?? []));
+									event.currentTarget.value = '';
+								}}
+							/>
+						</label>
+						{#if uploadError}<p class="text-sm text-error" role="alert">{uploadError}</p>{/if}
+						<p class="text-xs text-base-content/50">
+							Images appear in the quiz attachments viewer. Select “Show on rationale” for images
+							that should be revealed with the explanation. Save the question to keep new images.
+						</p>
 					</div>
 				</div>
 			</div>

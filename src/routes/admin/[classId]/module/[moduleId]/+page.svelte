@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
 	import type { PageData } from './$types';
 	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
 	import { useQuery, useConvexClient } from 'convex-svelte';
@@ -80,10 +81,8 @@
 
 	const moduleInfo = useQuery(api.module.getModuleById, () => ({ id: moduleId as Id<'module'> }));
 
-	const mediaQuery = useQuery(api.questionMedia.getByQuestionId, () =>
-		curationState.selectedQuestionId
-			? { questionId: curationState.selectedQuestionId as Id<'question'> }
-			: 'skip'
+	const mediaQuery = useQuestionMedia(
+		() => curationState.selectedQuestionId as Id<'question'> | null
 	);
 
 	const allMediaQuery = useQuery(api.questionMedia.getByQuestionIds, () =>
@@ -786,7 +785,9 @@
 
 <AttachmentViewerModal
 	isOpen={curationState.isAttachmentModalOpen}
-	attachment={curationState.selectedAttachment}
+	attachment={mediaQuery.data?.find(
+		(media) => media._id === curationState.selectedAttachment?._id
+	) ?? null}
 	onClose={() => curationState.closeAttachmentViewer()}
 />
 <ModuleLimitModal

@@ -1,122 +1,75 @@
 import { v } from 'convex/values';
-import { authQuery, authCuratorMutation } from './authQueries';
-import type { Id } from './_generated/dataModel';
+import { query, mutation } from './_generated/server';
+import schema from './schema';
+import { requireMediaQuestion, requireMediaUser } from './questionMediaAccess';
+import { validateMediaText } from './questionMediaSaving';
+import { r2 } from './r2Documents';
 
-export const getByQuestionId = authQuery({
-	args: {
-		questionId: v.id('question')
-	},
-	handler: async ({ db }, args) => {
-		const media = await db
+export const getByQuestionId = query({
+	args: { questionId: v.id('question'), urlRefresh: v.optional(v.number()) },
+	returns: v.array(
+		v.object({
+			...schema.tables.questionMedia.validator.fields,
+			_id: v.id('questionMedia'),
+			_creationTime: v.number()
+		})
+	),
+	handler: async (ctx, { questionId }) => {
+		const { cohortId } = await requireMediaQuestion(ctx, questionId);
+		const media = await ctx.db
 			.query('questionMedia')
-			.withIndex('by_questionId', (q) => q.eq('questionId', args.questionId))
-			.filter((q) => q.eq(q.field('deletedAt'), undefined))
-			.collect();
-		return media.sort((a, b) => a.order - b.order);
-	}
-});
-
-export const getByQuestionIds = authQuery({
-	args: {
-		questionIds: v.array(v.id('question'))
-	},
-	handler: async ({ db }, args) => {
-		// Efficient batched query - Convex parallelizes these automatically
-		// Returns only minimal data (questionId + boolean flag)
-		const results = await Promise.all(
-			args.questionIds.map(async (questionId) => {
-				const hasMedia = await db
-					.query('questionMedia')
-					.withIndex('by_questionId', (q) => q.eq('questionId', questionId))
-					.filter((q) => q.eq(q.field('deletedAt'), undefined))
-					.first();
-
-				return hasMedia ? { questionId, hasMedia: true } : null;
-			})
+			.withIndex('by_questionId_deletedAt', (q) =>
+				q.eq('questionId', questionId).eq('deletedAt', undefined)
+			)
+			.take(1000);
+		return await Promise.all(
+			media
+				.sort((a, b) => a.order - b.order)
+				.map(async (item) => {
+					if (item.metadata.storageProvider !== 'r2') return item;
+					if (!item.metadata.r2Key || item.metadata.cohortId !== cohortId)
+						throw new Error('Image storage scope mismatch');
+					return { ...item, url: await r2.getUrl(item.metadata.r2Key, { expiresIn: 60 * 60 }) };
+				})
 		);
-
-		// Return only questions that have media (filter out nulls)
-		return results.filter((r): r is { questionId: Id<'question'>; hasMedia: true } => r !== null);
 	}
 });
 
-export const create = authCuratorMutation({
-	args: {
-		questionId: v.id('question'),
-		url: v.string(),
-		mediaType: v.string(),
-		mimeType: v.string(),
-		altText: v.string(),
-		caption: v.optional(v.string()),
-		order: v.optional(v.number()),
-		showOnSolution: v.optional(v.boolean()),
-		metadata: v.optional(
-			v.object({
-				storageKey: v.optional(v.string()),
-				sizeBytes: v.optional(v.number()),
-				originalFileName: v.optional(v.string())
-			})
-		)
-	},
-	handler: async ({ db }, args) => {
-		const question = await db.get(args.questionId);
-		if (!question || question.deletedAt) {
-			throw new Error('Question not found');
-		}
-
-		// Enforce images only and 8MB limit
-		const isImage = args.mimeType.startsWith('image/');
-		if (!isImage) {
-			throw new Error('Only image uploads are allowed');
-		}
-		const sizeBytes = args.metadata?.sizeBytes;
-		if (typeof sizeBytes === 'number' && sizeBytes > 8 * 1024 * 1024) {
-			throw new Error('Image exceeds 8MB limit');
-		}
-
-		let order = args.order;
-		if (order === undefined) {
-			const existing = await db
+export const getByQuestionIds = query({
+	args: { questionIds: v.array(v.id('question')) },
+	returns: v.array(v.object({ questionId: v.id('question'), hasMedia: v.boolean() })),
+	handler: async (ctx, { questionIds }) => {
+		await requireMediaUser(ctx);
+		if (questionIds.length > 150) throw new Error('Too many questions');
+		const results = [];
+		for (const questionId of new Set(questionIds)) {
+			await requireMediaQuestion(ctx, questionId);
+			const media = await ctx.db
 				.query('questionMedia')
-				.withIndex('by_questionId', (q) => q.eq('questionId', args.questionId))
-				.filter((q) => q.eq(q.field('deletedAt'), undefined))
-				.collect();
-			order = existing.length;
+				.withIndex('by_questionId_deletedAt', (q) =>
+					q.eq('questionId', questionId).eq('deletedAt', undefined)
+				)
+				.first();
+			if (media) results.push({ questionId, hasMedia: true });
 		}
-
-		const id = await db.insert('questionMedia', {
-			url: args.url,
-			type: 'external',
-			questionId: args.questionId,
-			updatedAt: Date.now(),
-			mediaType: args.mediaType,
-			mimeType: args.mimeType,
-			altText: args.altText,
-			caption: args.caption,
-			order,
-			showOnSolution: args.showOnSolution ?? false,
-			metadata: args.metadata ?? {}
-		});
-		return id;
+		return results;
 	}
 });
 
-export const softDelete = authCuratorMutation({
-	args: {
-		mediaId: v.id('questionMedia')
-	},
-	handler: async ({ db }, args) => {
-		const media = await db.get(args.mediaId);
-		if (!media || media.deletedAt) {
-			throw new Error('Media not found');
-		}
-		await db.patch(args.mediaId, { deletedAt: Date.now(), updatedAt: Date.now() });
-		const fileKey = (media.metadata as { storageKey?: string } | undefined)?.storageKey;
-		return { success: true, fileKey };
+export const softDelete = mutation({
+	args: { mediaId: v.id('questionMedia') },
+	returns: v.object({ success: v.boolean() }),
+	handler: async (ctx, { mediaId }) => {
+		const media = await ctx.db.get(mediaId);
+		if (!media || media.deletedAt) throw new Error('Media not found');
+		await requireMediaQuestion(ctx, media.questionId, true);
+		await ctx.db.patch(mediaId, { deletedAt: Date.now(), updatedAt: Date.now() });
+		// Preserve stored objects for recovery, including all legacy UploadThing files.
+		return { success: true };
 	}
 });
 
-export const update = authCuratorMutation({
+export const update = mutation({
 	args: {
 		mediaId: v.id('questionMedia'),
 		altText: v.optional(v.string()),
@@ -124,12 +77,15 @@ export const update = authCuratorMutation({
 		order: v.optional(v.number()),
 		showOnSolution: v.optional(v.boolean())
 	},
-	handler: async ({ db }, args) => {
-		const media = await db.get(args.mediaId);
-		if (!media || media.deletedAt) {
-			throw new Error('Media not found');
-		}
-		await db.patch(args.mediaId, {
+	returns: v.object({ updated: v.boolean() }),
+	handler: async (ctx, args) => {
+		const media = await ctx.db.get(args.mediaId);
+		if (!media || media.deletedAt) throw new Error('Media not found');
+		await requireMediaQuestion(ctx, media.questionId, true);
+		validateMediaText(args.altText, args.caption);
+		if (args.order !== undefined && (!Number.isSafeInteger(args.order) || args.order < 0))
+			throw new Error('Invalid image order');
+		await ctx.db.patch(args.mediaId, {
 			altText: args.altText ?? media.altText,
 			caption: args.caption ?? media.caption,
 			order: args.order ?? media.order,

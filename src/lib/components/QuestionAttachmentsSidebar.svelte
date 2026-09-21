@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Paperclip } from 'lucide-svelte';
-	import { useQuery } from 'convex-svelte';
-	import { api } from '../../convex/_generated/api.js';
+	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 
 	type Attachment = Doc<'questionMedia'>;
@@ -33,9 +32,7 @@
 	let lastMouseY = $state(0);
 	let imageContainer = $state<HTMLElement | null>(null);
 
-	const mediaQuery = useQuery(api.questionMedia.getByQuestionId, () =>
-		questionId ? { questionId } : 'skip'
-	);
+	const mediaQuery = useQuestionMedia(() => questionId);
 
 	const allMedia = $derived(((mediaQuery.data ?? []) as Attachment[]).filter((m) => !m.deletedAt));
 	const visibleMedia = $derived.by(() => {
@@ -132,11 +129,23 @@
 
 	$effect(() => {
 		if (!selectedAttachment) return;
-		if (!visibleMedia.find((m) => m._id === selectedAttachment?._id)) {
+		const current = visibleMedia.find((m) => m._id === selectedAttachment?._id);
+		if (!current && !mediaQuery.isLoading) {
 			closeAttachmentDialog();
+		} else if (
+			current &&
+			(current.url !== selectedAttachment.url || current.updatedAt !== selectedAttachment.updatedAt)
+		) {
+			selectedAttachment = current;
 		}
 	});
 </script>
+
+{#if mediaQuery.error}
+	<p class="text-sm text-error p-3" role="alert">
+		Question images could not be loaded. Refresh the page to try again.
+	</p>
+{/if}
 
 {#if !collapsed}
 	{#if visibleMedia.length > 0 || (showHiddenNote && hiddenCount > 0)}

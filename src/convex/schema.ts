@@ -109,6 +109,39 @@ const questionStudioLoopProgress = v.object({
 	dedupedCount: v.optional(v.number())
 });
 
+const questionStudioStageUsage = v.object({
+	stage: v.string(),
+	calls: v.number(),
+	failedCalls: v.number(),
+	inputTokens: v.number(),
+	outputTokens: v.number(),
+	reasoningTokens: v.number(),
+	costUsd: v.number(),
+	costKnownCalls: v.number(),
+	latencyMsTotal: v.number()
+});
+
+// Spend and latency accrued by the run's model calls, so the UI can report them live.
+const questionStudioJobUsage = v.object({
+	calls: v.number(),
+	failedCalls: v.number(),
+	inputTokens: v.number(),
+	outputTokens: v.number(),
+	reasoningTokens: v.number(),
+	costUsd: v.number(),
+	costKnownCalls: v.number(),
+	latencyMsTotal: v.number(),
+	byStage: v.array(questionStudioStageUsage)
+});
+
+const questionStudioWorkerState = v.object({
+	index: v.number(),
+	startedAt: v.number(),
+	finishedAt: v.optional(v.number()),
+	failed: v.optional(v.boolean()),
+	draftedCount: v.optional(v.number())
+});
+
 export default defineSchema({
 	users: defineTable({
 		updatedAt: v.number(),
@@ -342,6 +375,7 @@ export default defineSchema({
 			filterFields: ['moduleId']
 		}),
 	questionMedia: defineTable({
+		// Legacy URLs are retained. R2 URLs are resolved from their key on read.
 		url: v.string(),
 		type: v.string(),
 		questionId: v.id('question'),
@@ -354,13 +388,37 @@ export default defineSchema({
 		order: v.number(),
 		showOnSolution: v.optional(v.boolean()),
 		metadata: v.object({
+			storageProvider: v.optional(v.literal('r2')),
+			r2Key: v.optional(v.string()),
+			cohortId: v.optional(v.id('cohort')),
 			storageKey: v.optional(v.string()),
 			// DEPRECATED: retained for existing media records from the old upload workflow.
 			uploadthingKey: v.optional(v.string()),
 			sizeBytes: v.optional(v.number()),
 			originalFileName: v.optional(v.string())
 		})
-	}).index('by_questionId', ['questionId']),
+	})
+		.index('by_questionId', ['questionId'])
+		.index('by_questionId_deletedAt', ['questionId', 'deletedAt']),
+	questionMediaUploads: defineTable({
+		moduleId: v.id('module'),
+		cohortId: v.id('cohort'),
+		uploadedBy: v.id('users'),
+		stagingKey: v.string(),
+		r2Key: v.string(),
+		originalFileName: v.string(),
+		mimeType: v.string(),
+		sizeBytes: v.number(),
+		status: v.union(
+			v.literal('uploading'),
+			v.literal('verifying'),
+			v.literal('ready'),
+			v.literal('attached'),
+			v.literal('abandoned')
+		),
+		questionId: v.optional(v.id('question')),
+		expiresAt: v.number()
+	}).index('by_uploadedBy_status', ['uploadedBy', 'status']),
 	badgeDefinitions: defineTable({
 		key: v.string(),
 		name: v.string(),
@@ -859,6 +917,8 @@ export default defineSchema({
 		sourceIndexedAt: v.optional(v.number()),
 		dismissedAt: v.optional(v.number()),
 		completedWorkers: v.optional(v.array(v.number())),
+		workerStates: v.optional(v.array(questionStudioWorkerState)),
+		usage: v.optional(questionStudioJobUsage),
 		claimedWorkers: v.optional(v.array(v.number())),
 		savedCandidateIndexes: v.optional(v.array(v.number())),
 		thinking: v.optional(v.union(v.literal('low'), v.literal('medium'), v.literal('high'))),
@@ -891,6 +951,7 @@ export default defineSchema({
 		completedAt: v.optional(v.number())
 	})
 		.index('by_createdByUserId', ['createdByUserId'])
+		.index('by_cohortId', ['cohortId'])
 		.index('by_documentId_moduleId', ['documentId', 'moduleId']),
 	questionStudioJobEvents: defineTable({
 		jobId: v.id('questionStudioJobs'),

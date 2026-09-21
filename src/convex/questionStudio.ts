@@ -17,13 +17,19 @@ export {
 	getCurrentGenerationJob,
 	clearCurrentGenerationJob,
 	getGenerationJob,
+	getGenerationJobActivity,
 	getGenerationJobReviews,
+	listCohortGenerationJobs,
 	getGenerationJobInternal,
 	claimGenerationJob,
 	claimWorker,
 	expireGenerationJob
 } from './questionStudio/jobs';
-export { updateGenerationJob, appendGenerationWorkerResult } from './questionStudio/jobUpdates';
+export {
+	updateGenerationJob,
+	appendGenerationWorkerResult,
+	recordGenerationUsage
+} from './questionStudio/jobUpdates';
 export { findLikelyDuplicateQuestions, generateCandidateWorker } from './questionStudio/workers';
 export { reviewGenerationJob } from './questionStudio/review';
 export { generateCandidates } from './questionStudio/generation';

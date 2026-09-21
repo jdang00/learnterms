@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { ArrowLeft, Check, Info, ListTree, RotateCcw, TriangleAlert } from 'lucide-svelte';
+	import { ArrowLeft, Check, RotateCcw, TriangleAlert } from 'lucide-svelte';
 	import { resolve } from '$app/paths';
 	import ShimmerText from '$lib/components/ShimmerText.svelte';
+	import { formatPageSelection } from './pagePickerSelection';
 	import { plannedSlots, runHeadline, runPhase } from './questionStudioRun';
 	import type { AgentJob } from './questionStudioRun';
 	import type { QuestionType } from './questionStudioTypes';
@@ -16,7 +17,6 @@
 		counts: Record<QuestionType, number>;
 		topicsSelected: number;
 		topicsTotal: number;
-		activityOpen?: boolean;
 		canStartNewRun: boolean;
 		unsavedCount?: number;
 		onStartNewRun: () => void;
@@ -31,32 +31,42 @@
 		counts,
 		topicsSelected,
 		topicsTotal,
-		activityOpen = $bindable(false),
 		canStartNewRun,
 		unsavedCount = 0,
 		onStartNewRun
 	}: Props = $props();
 
-	let detailsOpen = $state(false);
 	let confirmingNewRun = $state(false);
-
-	function closeDetails() {
-		detailsOpen = false;
-		confirmingNewRun = false;
-	}
 
 	const phase = $derived(runPhase(job));
 	const working = $derived(phase === 'planning' || phase === 'writing' || phase === 'checking');
 	const planned = $derived(plannedSlots(job).length || job?.requestedCount || 0);
 	const headline = $derived(runHeadline(job, candidateCount));
 	const progress = $derived(planned > 0 ? Math.min(1, candidateCount / planned) : 0);
+	const scope = $derived(
+		job?.sourceMode === 'pages'
+			? `pages ${formatPageSelection(job.selectedPageNumbers ?? [])}`
+			: topicsTotal > 0
+				? topicsSelected === topicsTotal
+					? `all ${topicsTotal} topics`
+					: `${topicsSelected} of ${topicsTotal} topics`
+				: ''
+	);
+
 	const mix = $derived(
 		questionTypes
 			.filter((type) => counts[type] > 0)
-			.map((type) => `${counts[type]} ${questionTypeDefinitions[type].label}`)
-			.join(' · ')
+			.map((type) => `${counts[type]} ${questionTypeDefinitions[type].label.toLowerCase()}`)
+			.join(', ')
 	);
+
+	function requestNewRun() {
+		if (unsavedCount > 0) confirmingNewRun = true;
+		else onStartNewRun();
+	}
 </script>
+
+<svelte:window onkeydown={(event) => event.key === 'Escape' && (confirmingNewRun = false)} />
 
 <div class="shrink-0 border-b border-base-300 bg-base-100">
 	<div class="flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 sm:px-4">
@@ -64,73 +74,17 @@
 			<ArrowLeft size={16} />
 		</a>
 
-		<!-- Breadcrumb + setup details -->
-		<div class="relative flex min-w-0 items-center gap-1.5">
-			<span class="min-w-0 truncate text-sm font-medium">
+		<div class="min-w-0 leading-tight">
+			<p class="truncate text-sm font-medium">
 				{className}<span class="mx-1.5 text-base-content/25">/</span>{moduleTitle}
-			</span>
-			<button
-				type="button"
-				class="btn btn-ghost btn-xs btn-circle shrink-0 text-base-content/40"
-				aria-label="Run setup"
-				onclick={() => (detailsOpen ? closeDetails() : (detailsOpen = true))}
-			>
-				<Info size={13} />
-			</button>
-			{#if detailsOpen}
-				<div class="fixed inset-0 z-30" onclick={closeDetails} role="none"></div>
-				<div
-					class="absolute left-0 top-full z-40 mt-1.5 w-72 rounded-2xl border border-base-300 bg-base-100 p-4 shadow-lg"
-				>
-					<dl class="space-y-2 text-xs">
-						<div class="flex items-baseline justify-between gap-3">
-							<dt class="shrink-0 text-base-content/45">Source</dt>
-							<dd class="truncate text-right font-medium">{sourceTitle || '—'}</dd>
-						</div>
-						<div class="flex items-baseline justify-between gap-3">
-							<dt class="shrink-0 text-base-content/45">
-								{job?.sourceMode === 'pages' ? 'Pages' : 'Topics'}
-							</dt>
-							<dd class="text-right font-medium">
-								{job?.sourceMode === 'pages'
-									? job.selectedPageNumbers?.join(', ')
-									: `${topicsSelected} of ${topicsTotal}`}
-							</dd>
-						</div>
-						<div class="flex items-baseline justify-between gap-3">
-							<dt class="shrink-0 text-base-content/45">Mix</dt>
-							<dd class="text-right font-medium">{mix || '—'}</dd>
-						</div>
-					</dl>
-					{#if canStartNewRun && confirmingNewRun}
-						<p class="mt-4 text-xs leading-relaxed text-base-content/60">
-							{unsavedCount} draft{unsavedCount === 1 ? '' : 's'} in this run
-							{unsavedCount === 1 ? 'has' : 'have'} not been saved. Starting over discards
-							{unsavedCount === 1 ? 'it' : 'them'}.
-						</p>
-						<div class="mt-2 flex gap-1.5">
-							<button
-								class="btn btn-ghost btn-sm flex-1 rounded-full"
-								onclick={() => (confirmingNewRun = false)}
-							>
-								Cancel
-							</button>
-							<button
-								class="btn btn-error btn-sm flex-1 rounded-full"
-								onclick={() => {
-									closeDetails();
-									onStartNewRun();
-								}}
-							>
-								Discard
-							</button>
-						</div>
-					{/if}
-				</div>
+			</p>
+			{#if sourceTitle}
+				<p class="truncate text-xs text-base-content/50">
+					From {sourceTitle}{scope ? `, ${scope}` : ''}{mix ? `, ${mix}` : ''}
+				</p>
 			{/if}
 		</div>
 
-		<!-- Status -->
 		<div class="ml-auto flex min-w-0 items-center gap-2.5">
 			{#if phase === 'ready'}
 				<span
@@ -151,29 +105,47 @@
 				<ShimmerText text={headline} tone="primary" class="truncate text-sm font-medium" />
 			{/if}
 
-			<button
-				class="btn btn-ghost btn-sm gap-1.5 rounded-full text-base-content/60"
-				onclick={() => (activityOpen = !activityOpen)}
-			>
-				<ListTree size={14} />
-				<span class="hidden sm:inline">Activity</span>
-			</button>
-
 			{#if canStartNewRun}
-				<button
-					class="btn btn-sm gap-1.5 rounded-full"
-					onclick={() => {
-						if (unsavedCount > 0) {
-							detailsOpen = true;
-							confirmingNewRun = true;
-							return;
-						}
-						onStartNewRun();
-					}}
-				>
-					<RotateCcw size={13} />
-					<span class="hidden sm:inline">New run</span>
-				</button>
+				<div class="relative">
+					<button class="btn btn-sm gap-1.5 rounded-full" onclick={requestNewRun}>
+						<RotateCcw size={13} />
+						<span class="hidden sm:inline">New run</span>
+					</button>
+					{#if confirmingNewRun}
+						<div
+							class="fixed inset-0 z-30"
+							onclick={() => (confirmingNewRun = false)}
+							role="none"
+						></div>
+						<div
+							class="absolute right-0 top-full z-40 mt-1.5 w-72 rounded-2xl border border-base-300 bg-base-100 p-4 shadow-lg"
+							role="alertdialog"
+							aria-label="Discard unsaved drafts"
+						>
+							<p class="text-sm leading-relaxed">
+								{unsavedCount} draft{unsavedCount === 1 ? " hasn't" : "s haven't"} been saved. Starting
+								a new run discards {unsavedCount === 1 ? 'it' : 'them'}.
+							</p>
+							<div class="mt-3 flex gap-1.5">
+								<button
+									class="btn btn-ghost btn-sm flex-1 rounded-full"
+									onclick={() => (confirmingNewRun = false)}
+								>
+									Keep reviewing
+								</button>
+								<button
+									class="btn btn-error btn-sm flex-1 rounded-full"
+									onclick={() => {
+										confirmingNewRun = false;
+										onStartNewRun();
+									}}
+								>
+									Discard
+								</button>
+							</div>
+						</div>
+					{/if}
+				</div>
 			{/if}
 		</div>
 	</div>

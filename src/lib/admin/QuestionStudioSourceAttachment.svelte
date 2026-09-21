@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { FileText, Paperclip, X, Replace } from 'lucide-svelte';
+	import { ChevronDown, FileText, Paperclip, X } from 'lucide-svelte';
+	import { tokenClass } from './questionStudioToken';
 	import RagDocumentBrowser from './RagDocumentBrowser.svelte';
 	import type { Id } from '../../convex/_generated/dataModel';
 
@@ -19,73 +20,38 @@
 
 	let open = $state(false);
 
-	const summaryLines = $derived(selectedSourceSummary.split('\n'));
-	const attachedTitle = $derived(
-		summaryLines.find((line) => line.startsWith('Document: '))?.slice('Document: '.length) ??
-			'Source'
-	);
-	const attachedPages = $derived(
-		summaryLines.find((line) => line.startsWith('Pages: '))?.slice('Pages: '.length) ?? ''
-	);
-
 	function detach() {
 		selectedDocumentId = null;
 		selectedSourceSummary = '';
+		open = false;
 	}
+
+	const summaryLines = $derived(selectedSourceSummary.split('\n'));
+	const attachedTitle = $derived(
+		summaryLines.find((line) => line.startsWith('Document: '))?.slice('Document: '.length) ??
+			'selected document'
+	);
 
 	$effect(() => {
 		if (selectedDocumentId) open = false;
 	});
 </script>
 
-{#if selectedDocumentId}
-	<div
-		class="flex items-center gap-0.5 rounded-full border border-primary/30 bg-primary/5 py-1 pl-1 pr-1"
-	>
-		<div class="tooltip tooltip-top" data-tip="Change document">
-			<button
-				type="button"
-				class="group flex items-center gap-2 rounded-full py-0.5 pl-0.5 pr-2 transition hover:bg-primary/10"
-				onclick={() => (open = true)}
-			>
-				<span
-					class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary"
-				>
-					<FileText size={14} />
-				</span>
-				<span class="flex min-w-0 flex-col text-left leading-tight">
-					<span class="max-w-[200px] truncate text-xs font-medium">{attachedTitle}</span>
-					{#if attachedPages}
-						<span class="text-[10px] text-base-content/50">{attachedPages} pages</span>
-					{/if}
-				</span>
-				<Replace
-					size={11}
-					class="shrink-0 text-base-content/30 transition group-hover:text-primary"
-				/>
-			</button>
-		</div>
-		<button
-			type="button"
-			class="btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-error"
-			title="Remove this source"
-			aria-label="Remove this source"
-			onclick={detach}
-		>
-			<X size={13} />
-		</button>
-	</div>
-{:else}
-	<button
-		type="button"
-		class="btn btn-sm gap-2 rounded-full border-dashed border-base-300 bg-base-100 font-medium text-base-content/70 hover:border-primary/50 hover:text-primary"
-		disabled={!cohortId || cohortLoading}
-		onclick={() => (open = true)}
-	>
-		<Paperclip size={14} />
-		Attach source
-	</button>
-{/if}
+<button
+	type="button"
+	class={tokenClass(Boolean(selectedDocumentId))}
+	disabled={!cohortId || cohortLoading}
+	title={selectedDocumentId ? 'Change document' : undefined}
+	onclick={() => (open = true)}
+>
+	{#if selectedDocumentId}
+		<FileText size={16} class="shrink-0 text-base-content/60" />
+	{:else}
+		<Paperclip size={16} class="shrink-0" />
+	{/if}
+	<span class="truncate">{selectedDocumentId ? attachedTitle : 'a document'}</span>
+	<ChevronDown size={15} class="shrink-0 opacity-60" />
+</button>
 
 <dialog class="modal" class:modal-open={open}>
 	<div class="modal-box flex h-[72vh] max-w-2xl flex-col overflow-hidden rounded-2xl p-0">
@@ -98,21 +64,28 @@
 				</span>
 				<div>
 					<h3 class="text-sm font-semibold">
-						{selectedDocumentId ? 'Change source document' : 'Attach a source'}
+						{selectedDocumentId ? 'Change document' : 'Choose a document'}
 					</h3>
 					<p class="text-xs text-base-content/50">
-						Pick an indexed or mapped document for the agent to read
+						The agent writes only from what's in this document.
 					</p>
 				</div>
 			</div>
-			<button
-				type="button"
-				class="btn btn-ghost btn-sm btn-circle"
-				aria-label="Close"
-				onclick={() => (open = false)}
-			>
-				<X size={16} />
-			</button>
+			<div class="flex items-center gap-1">
+				{#if selectedDocumentId}
+					<button type="button" class="btn btn-ghost btn-sm rounded-full" onclick={detach}>
+						Remove document
+					</button>
+				{/if}
+				<button
+					type="button"
+					class="btn btn-ghost btn-sm btn-circle"
+					aria-label="Close"
+					onclick={() => (open = false)}
+				>
+					<X size={16} />
+				</button>
+			</div>
 		</div>
 		<div class="min-h-0 flex-1 overflow-hidden">
 			{#if cohortLoading}

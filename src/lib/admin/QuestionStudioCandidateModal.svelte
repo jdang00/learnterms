@@ -1,6 +1,6 @@
 <script lang="ts">
 	import QuestionStudioCandidateInspector from './QuestionStudioCandidateInspector.svelte';
-	import { objectiveForCandidate } from './questionStudioRun';
+	import { acceptedReviews, objectiveForCandidate } from './questionStudioRun';
 	import type { AgentJob, CandidateReview } from './questionStudioRun';
 	import type { CandidateQuestion } from './questionStudioTypes';
 
@@ -32,7 +32,7 @@
 		onNavigateCandidate
 	}: Props = $props();
 
-	const keptReviews = $derived(reviews.filter((review) => review.verdict !== 'reject'));
+	const keptReviews = $derived(acceptedReviews(reviews));
 </script>
 
 {#if selectedCandidateIndex !== null && candidates[selectedCandidateIndex]}

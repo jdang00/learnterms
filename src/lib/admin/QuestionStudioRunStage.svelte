@@ -6,8 +6,22 @@
 	import QuestionStudioCandidateCard from './QuestionStudioCandidateCard.svelte';
 	import QuestionStudioCandidateInspector from './QuestionStudioCandidateInspector.svelte';
 	import QuestionStudioSlotRow from './QuestionStudioSlotRow.svelte';
-	import { objectiveForCandidate } from './questionStudioRun';
-	import type { AgentJob, CandidateReview, RunRow } from './questionStudioRun';
+	import QuestionStudioCoveragePanel from './QuestionStudioCoveragePanel.svelte';
+	import QuestionStudioActivityTicker from './QuestionStudioActivityTicker.svelte';
+	import QuestionStudioTelemetryStrip from './QuestionStudioTelemetryStrip.svelte';
+	import {
+		acceptedReviews,
+		coverageRows,
+		objectiveForCandidate,
+		topRejectReason
+	} from './questionStudioRun';
+	import type {
+		AgentJob,
+		CandidateReview,
+		JobActivity,
+		RunRow,
+		RunTelemetry
+	} from './questionStudioRun';
 	import type { CandidateQuestion } from './questionStudioTypes';
 
 	interface Props {
@@ -22,6 +36,8 @@
 		editing?: boolean;
 		isSaving: boolean;
 		isReady: boolean;
+		telemetry?: RunTelemetry | null;
+		activity?: JobActivity | null;
 		moduleTitle: string;
 		savedDraftsLink: { classId: string; moduleId: string; query: string } | null;
 		onEditingChange?: (editing: boolean) => void;
@@ -45,6 +61,8 @@
 		editing = false,
 		isSaving,
 		isReady,
+		telemetry = null,
+		activity = null,
 		moduleTitle,
 		savedDraftsLink,
 		onEditingChange,
@@ -56,11 +74,17 @@
 		onNavigateCandidate
 	}: Props = $props();
 
-	const keptReviews = $derived(reviews.filter((review) => review.verdict !== 'reject'));
+	const keptReviews = $derived(acceptedReviews(reviews));
 	const selectableCount = $derived(candidates.length - savedIndexes.size);
 	const selectedCount = $derived(
 		[...selectedCandidateIndexes].filter((index) => !savedIndexes.has(index)).length
 	);
+	const cutRows = $derived(rows.filter((row) => row.kind === 'cut'));
+	const running = $derived(job?.status === 'queued' || job?.status === 'running');
+	const coverage = $derived(coverageRows({ job, candidates, reviews }));
+	const topReject = $derived(topRejectReason(reviews));
+	let activityExpanded = $state(false);
+	let coverageOpen = $state(false);
 	const activeCandidate = $derived(displayIndex !== null ? candidates[displayIndex] : undefined);
 	// Nothing left to commit — the run is done, so the way forward is a fresh one.
 	const runFinished = $derived(
@@ -69,67 +93,87 @@
 </script>
 
 <div class="flex h-full min-h-0 flex-col gap-3">
-	<div class="grid min-h-0 flex-1 gap-3 lg:grid-cols-12">
-		<!-- Question list -->
-		<aside
-			class="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-xs lg:col-span-5 xl:col-span-4"
-		>
-			<div class="flex shrink-0 items-center gap-2 border-b border-base-300 px-3 py-2">
-				<h2 class="text-sm font-semibold">Questions</h2>
-				<span class="text-xs text-base-content/45">
-					{selectedCount} of {selectableCount} selected
-				</span>
-				<div class="ml-auto flex items-center gap-0.5">
-					<button
-						class="btn btn-ghost btn-xs rounded-full"
-						disabled={editing || isSaving || selectableCount === 0}
-						onclick={() => onSelectAllCandidates(true)}
-					>
-						All
-					</button>
-					<button
-						class="btn btn-ghost btn-xs rounded-full"
-						disabled={editing || isSaving || selectedCount === 0}
-						onclick={() => onSelectAllCandidates(false)}
-					>
-						None
-					</button>
-				</div>
-			</div>
+	{#if telemetry}
+		<QuestionStudioTelemetryStrip {telemetry} {running} />
+	{/if}
 
-			<div class="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-2" inert={editing || isSaving}>
-				{#each rows as row, rowIndex (row.key)}
-					{#if row.kind === 'candidate'}
-						<div in:fade={{ duration: 180 }}>
-							<QuestionStudioCandidateCard
-								candidate={row.candidate}
-								index={row.index}
-								isActive={displayIndex === row.index}
-								isIncluded={selectedCandidateIndexes.has(row.index)}
-								isSaved={row.saved}
-								review={row.review}
-								onSelect={() => onSelectCandidate(row.index)}
-								onToggleInclude={() => onToggleCandidate(row.index)}
-							/>
-						</div>
-					{:else if row.kind === 'pending'}
-						<QuestionStudioSlotRow
-							slot={row.slot}
-							index={rowIndex}
-							variant="pending"
-							writing={row.writing}
-						/>
-					{:else}
-						<QuestionStudioSlotRow
-							slot={row.slot}
-							index={rowIndex}
-							variant="cut"
-							reason={row.reason}
-						/>
+	<div class="grid min-h-0 flex-1 gap-3 lg:grid-cols-12">
+		<!-- Question list, coverage and activity -->
+		<div class="flex min-h-0 flex-col gap-3 lg:col-span-5 xl:col-span-4">
+			<aside
+				class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-xs"
+			>
+				<div class="flex shrink-0 items-center gap-2 border-b border-base-300 px-3 py-2">
+					<h2 class="text-sm font-semibold">Questions</h2>
+					<span class="text-xs text-base-content/45">
+						{selectedCount} of {selectableCount} selected
+					</span>
+					<div class="ml-auto flex items-center gap-0.5">
+						<button
+							class="btn btn-ghost btn-xs rounded-full"
+							disabled={editing || isSaving || selectableCount === 0}
+							onclick={() => onSelectAllCandidates(true)}
+						>
+							All
+						</button>
+						<button
+							class="btn btn-ghost btn-xs rounded-full"
+							disabled={editing || isSaving || selectedCount === 0}
+							onclick={() => onSelectAllCandidates(false)}
+						>
+							None
+						</button>
+					</div>
+				</div>
+
+				<div class="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-2" inert={editing || isSaving}>
+					{#each rows as row (row.key)}
+						{#if row.kind === 'candidate'}
+							<div in:fade={{ duration: 180 }}>
+								<QuestionStudioCandidateCard
+									candidate={row.candidate}
+									isActive={displayIndex === row.index}
+									isIncluded={selectedCandidateIndexes.has(row.index)}
+									isSaved={row.saved}
+									review={row.review}
+									onSelect={() => onSelectCandidate(row.index)}
+									onToggleInclude={() => onToggleCandidate(row.index)}
+								/>
+							</div>
+						{:else if row.kind === 'pending'}
+							<QuestionStudioSlotRow slot={row.slot} writing={row.writing} />
+						{/if}
+					{/each}
+					{#if cutRows.length > 0}
+						<details class="rounded-2xl px-3 py-2 text-xs text-base-content/50">
+							<summary class="cursor-pointer select-none hover:text-base-content/75">
+								{cutRows.length}
+								{cutRows.length === 1 ? "wasn't" : "weren't"} kept. See why
+							</summary>
+							<ul class="mt-2 space-y-2 leading-relaxed">
+								{#each cutRows as row (row.key)}
+									{#if row.kind === 'cut'}
+										<li>
+											{#if row.slot.topicTitle}
+												<span class="font-medium text-base-content/70">{row.slot.topicTitle}:</span>
+											{/if}
+											{row.reason}
+										</li>
+									{/if}
+								{/each}
+							</ul>
+						</details>
 					{/if}
-				{/each}
-			</div>
-		</aside>
+				</div>
+			</aside>
+
+			<QuestionStudioCoveragePanel rows={coverage} {job} {topReject} bind:open={coverageOpen} />
+			<QuestionStudioActivityTicker
+				events={activity?.events ?? []}
+				{running}
+				bind:expanded={activityExpanded}
+			/>
+		</div>
 
 		<!-- Inspector -->
 		<section
@@ -174,16 +218,17 @@
 		{:else}
 			<p class="text-xs text-base-content/55">
 				{#if savedIndexes.size > 0}
-					<span class="font-medium text-success">{savedIndexes.size} saved</span>
-					to {moduleTitle} — publish {savedIndexes.size === 1 ? 'it' : 'them'} from the module when ready.
+					<span class="font-medium text-success">Saved {savedIndexes.size}</span>
+					to {moduleTitle}. Publish {savedIndexes.size === 1 ? 'it' : 'them'} from the module when you're
+					ready.
 				{:else}
 					Drafts stay private until you publish them from the module.
 				{/if}
 			</p>
 			<p class="hidden items-center gap-1 text-xs text-base-content/35 sm:flex">
 				<kbd class="kbd kbd-xs">↑</kbd>
-				<kbd class="kbd kbd-xs">↓</kbd> browse ·
-				<kbd class="kbd kbd-xs">space</kbd> select
+				<kbd class="kbd kbd-xs">↓</kbd> browse
+				<kbd class="kbd kbd-xs ml-2">space</kbd> select
 			</p>
 			<div class="ml-auto flex items-center gap-2">
 				{#if savedDraftsLink}
@@ -212,7 +257,9 @@
 						{#if isSaving}
 							<ShimmerText text="Saving…" class="font-medium" />
 						{:else}
-							Save {selectedCount} draft{selectedCount === 1 ? '' : 's'}
+							<span class="max-w-[18rem] truncate">
+								Save {selectedCount} draft{selectedCount === 1 ? '' : 's'} to {moduleTitle}
+							</span>
 						{/if}
 					</button>
 				{/if}

@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { Check, ChevronLeft, ChevronRight, Pencil, Plus, X } from 'lucide-svelte';
+	import { Check, ChevronLeft, ChevronRight, Pencil, Plus, TriangleAlert, X } from 'lucide-svelte';
 	import QuestionStudioCandidateEditor from './QuestionStudioCandidateEditor.svelte';
-	import QuestionStudioEvidenceBar from './QuestionStudioEvidenceBar.svelte';
+	import QuestionStudioWhyThis from './QuestionStudioWhyThis.svelte';
+	import { candidateConcern } from './questionStudioRun';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import type { CandidateQuestion } from './questionStudioTypes';
 	import type { CandidateReview } from './questionStudioRun';
@@ -41,6 +42,7 @@
 	}: Props = $props();
 
 	const isMobile = $derived(variant === 'mobile');
+	const concern = $derived(candidateConcern(candidate, review));
 	let editing = $state(false);
 
 	function setEditing(value: boolean) {
@@ -138,7 +140,16 @@
 		<div class="min-h-0 flex-1 overflow-y-auto {isMobile ? 'p-4' : 'p-6 pb-12'}">
 			{#if candidate.metadata.curatorEditedAt}
 				<p class="mb-6 rounded-2xl bg-base-200 px-4 py-3 text-sm text-base-content/70">
-					Edited by a curator — the checks below describe the original draft.
+					You edited this draft. The notes below describe the original.
+				</p>
+			{/if}
+
+			{#if concern && !isSaved}
+				<p
+					class="mb-6 flex items-start gap-2 rounded-2xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm leading-relaxed"
+				>
+					<TriangleAlert size={15} class="mt-0.5 shrink-0 text-warning" />
+					<span>{concern}</span>
 				</p>
 			{/if}
 
@@ -156,13 +167,7 @@
 
 			<!-- Options -->
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
-				<div
-					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile
-						? 'mb-2'
-						: 'mb-3'}"
-				>
-					Options
-				</div>
+				<h3 class="text-sm font-semibold {isMobile ? 'mb-2' : 'mb-3'}">Options</h3>
 				<div class={isMobile ? 'space-y-2' : 'space-y-3'}>
 					{#each candidate.options as option, optIndex (optIndex)}
 						{@const correct = candidate.correctAnswers.includes(option)}
@@ -207,13 +212,7 @@
 
 			<!-- Rationale -->
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
-				<div
-					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile
-						? 'mb-2'
-						: 'mb-3'}"
-				>
-					Rationale
-				</div>
+				<h3 class="text-sm font-semibold {isMobile ? 'mb-2' : 'mb-3'}">Rationale</h3>
 				<div class="rounded-2xl border border-base-300 bg-base-200/30 {isMobile ? 'p-3' : 'p-4'}">
 					<div
 						class="prose prose-sm max-w-none tiptap-content text-sm leading-relaxed text-base-content/80"
@@ -223,9 +222,8 @@
 					</div>
 				</div>
 			</div>
-		</div>
 
-		<!-- Evidence and agent checks live outside the scroll area so their tooltips are never clipped -->
-		<QuestionStudioEvidenceBar {candidate} {index} {review} {objective} />
+			<QuestionStudioWhyThis {candidate} {index} {review} {objective} compact={isMobile} />
+		</div>
 	{/if}
 </div>

@@ -1,13 +1,28 @@
 import { v } from 'convex/values';
+import type { Doc } from '../_generated/dataModel';
 import { internal } from '../_generated/api';
 import { internalMutation, internalQuery, mutation, query } from '../_generated/server';
 import { assertJobBinding } from './access';
 import { assertSaveAccess, getActor } from './authorization';
-import { hydrateGenerationJob } from './jobRows';
+import { hydrateGenerationJob, openWorkerState } from './jobRows';
 import { normalizeSelectedPages } from './pageSelection';
 import { validateCounts } from './planning';
 import { HARNESS_VERSION } from './quality';
+import { questionStudioRateLimiter } from './runtime';
 import { MAX_GENERATED_QUESTIONS, QUESTION_STUDIO_MODEL } from './shared';
+
+function medianOf(values: number[]): number | null {
+	if (values.length === 0) return null;
+	const sorted = [...values].sort((a, b) => a - b);
+	const middle = Math.floor(sorted.length / 2);
+	return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
+}
+
+function costPerSaved(jobs: Doc<'questionStudioJobs'>[]): number | null {
+	const saved = jobs.reduce((total, job) => total + (job.savedCandidateIndexes?.length ?? 0), 0);
+	const spend = jobs.reduce((total, job) => total + (job.usage?.costUsd ?? 0), 0);
+	return saved > 0 && spend > 0 ? spend / saved : null;
+}
 
 export const createGenerationJob = mutation({
 	args: {
@@ -166,6 +181,112 @@ export const getGenerationJobReviews = query({
 	}
 });
 
+// Fetched separately from the job snapshot: the event log grows all run long, and the
+// live job subscription should not re-send it on every worker write.
+export const getGenerationJobActivity = query({
+	args: { jobId: v.id('questionStudioJobs'), limit: v.optional(v.number()) },
+	handler: async (ctx, { jobId, limit }) => {
+		const { user } = await getActor(ctx);
+		const job = await ctx.db.get(jobId);
+		if (!job) return { events: [], tokenBudget: null };
+		if (user.role !== 'dev' && user.cohortId !== job.cohortId) {
+			throw new Error('Unauthorized for this cohort');
+		}
+		const take = Math.max(1, Math.min(Math.floor(limit ?? 60), 200));
+		const rows = await ctx.db
+			.query('questionStudioJobEvents')
+			.withIndex('by_jobId', (q) => q.eq('jobId', jobId))
+			.order('desc')
+			.take(take);
+		const clerkUserId = user.clerkUserId;
+		const [perUser, global] = await Promise.all([
+			questionStudioRateLimiter.getValue(ctx, 'questionStudioTokenUsagePerUser', {
+				key: clerkUserId
+			}),
+			questionStudioRateLimiter.getValue(ctx, 'questionStudioGlobalTokenUsage', {})
+		]);
+		return {
+			events: rows
+				.map((row) => ({ at: row.at, label: row.label, detail: row.detail }))
+				.sort((a, b) => a.at - b.at),
+			tokenBudget: {
+				remaining: Math.max(0, Math.floor(perUser.value)),
+				capacity: Math.floor(perUser.config.capacity ?? perUser.config.rate),
+				globalRemaining: Math.max(0, Math.floor(global.value)),
+				globalCapacity: Math.floor(global.config.capacity ?? global.config.rate)
+			}
+		};
+	}
+});
+
+/**
+ * Cohort-wide generation history for the Class Progress dashboard: one row per run plus
+ * the totals a curator lead watches (throughput, what was kept, and what it cost).
+ */
+export const listCohortGenerationJobs = query({
+	args: { cohortId: v.id('cohort'), limit: v.optional(v.number()) },
+	handler: async (ctx, { cohortId, limit }) => {
+		const { user } = await getActor(ctx);
+		if (user.role !== 'dev' && user.cohortId !== cohortId) {
+			throw new Error('Unauthorized for this cohort');
+		}
+		const take = Math.max(1, Math.min(Math.floor(limit ?? 12), 50));
+		// Summaries read a wider window than the table shows, so the totals mean something.
+		const recent = await ctx.db
+			.query('questionStudioJobs')
+			.withIndex('by_cohortId', (q) => q.eq('cohortId', cohortId))
+			.order('desc')
+			.take(100);
+		const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+		const thisWeek = recent.filter((job) => job.createdAt >= weekAgo);
+		const finished = recent.filter((job) => job.completedAt);
+		const summary = {
+			runsThisWeek: thisWeek.length,
+			savedThisWeek: thisWeek.reduce(
+				(total, job) => total + (job.savedCandidateIndexes?.length ?? 0),
+				0
+			),
+			spendThisWeek: thisWeek.reduce((total, job) => total + (job.usage?.costUsd ?? 0), 0),
+			tokensThisWeek: thisWeek.reduce(
+				(total, job) => total + (job.usage?.inputTokens ?? 0) + (job.usage?.outputTokens ?? 0),
+				0
+			),
+			failedThisWeek: thisWeek.filter((job) => job.status === 'failed').length,
+			medianDurationMs: medianOf(
+				finished.map((job) => (job.completedAt ?? job.createdAt) - job.createdAt)
+			),
+			costPerSavedQuestion: costPerSaved(thisWeek)
+		};
+		const rows = await Promise.all(
+			recent.slice(0, take).map(async (job) => {
+				const [module, document, curator] = await Promise.all([
+					ctx.db.get(job.moduleId),
+					ctx.db.get(job.documentId),
+					ctx.db.get(job.createdByUserId)
+				]);
+				return {
+					jobId: job._id,
+					status: job.status,
+					createdAt: job.createdAt,
+					completedAt: job.completedAt,
+					requestedCount: job.requestedCount,
+					deliveredCount: job.candidateCount ?? 0,
+					savedCount: job.savedCandidateIndexes?.length ?? 0,
+					costUsd: job.usage?.costUsd ?? 0,
+					costKnownCalls: job.usage?.costKnownCalls ?? 0,
+					totalTokens: (job.usage?.inputTokens ?? 0) + (job.usage?.outputTokens ?? 0),
+					curatorName: curator?.name,
+					moduleId: job.moduleId,
+					moduleTitle: module?.title,
+					moduleClassId: module?.classId,
+					documentTitle: document?.title
+				};
+			})
+		);
+		return { summary, runs: rows };
+	}
+});
+
 export const getGenerationJobInternal = internalQuery({
 	args: { jobId: v.id('questionStudioJobs') },
 	handler: async (ctx, { jobId }) => {
@@ -223,7 +344,8 @@ export const claimWorker = internalMutation({
 		)
 			return null;
 		await ctx.db.patch(job._id, {
-			claimedWorkers: [...(job.claimedWorkers ?? []), args.workerIndex]
+			claimedWorkers: [...(job.claimedWorkers ?? []), args.workerIndex],
+			workerStates: openWorkerState(job.workerStates, args.workerIndex, Date.now())
 		});
 		return {
 			sourceIndexedAt: job.sourceIndexedAt,

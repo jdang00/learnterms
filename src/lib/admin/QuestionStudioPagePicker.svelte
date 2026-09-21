@@ -1,7 +1,7 @@
 <script lang="ts">
 	import QuestionStudioPagePreview from './QuestionStudioPagePreview.svelte';
 	import QuestionStudioPageThumbnails from './QuestionStudioPageThumbnails.svelte';
-	import { Check, Grid2X2, RotateCcw, X } from 'lucide-svelte';
+	import { Check, RotateCcw, X } from 'lucide-svelte';
 	import { useConvexClient } from 'convex-svelte';
 	import { base } from '$app/paths';
 	import { untrack } from 'svelte';
@@ -18,13 +18,15 @@
 		initialSource,
 		onSourceReloaded,
 		selectedPageNumbers = $bindable<number[]>([]),
-		sourceIndexedAt = $bindable<number | undefined>()
+		sourceIndexedAt = $bindable<number | undefined>(),
+		open = $bindable(false)
 	}: {
 		documentId: Id<'contentLib'>;
 		initialSource: SourcePreviewBatch;
 		onSourceReloaded: (result: SourcePreviewBatch) => void;
 		selectedPageNumbers?: number[];
 		sourceIndexedAt?: number;
+		open?: boolean;
 	} = $props();
 	const client = useConvexClient();
 	let pageText = $state<Record<number, string>>({});
@@ -35,7 +37,6 @@
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity
 	let pending = new Map<number, Promise<void>>();
 	let dialog = $state<HTMLDialogElement>();
-	let open = $state(false);
 	let loadPdf = $state(false);
 	let pdf = $state.raw<PDFDocumentProxy | null>(null);
 	let pdfError = $state('');
@@ -72,8 +73,11 @@
 	});
 	$effect(() => {
 		if (!dialog) return;
-		if (open && !dialog.open) dialog.showModal();
-		else if (!open && dialog.open) dialog.close();
+		if (open && !dialog.open) {
+			loadPdf = true;
+			mobilePreview = false;
+			dialog.showModal();
+		} else if (!open && dialog.open) dialog.close();
 	});
 	$effect(() => {
 		const id = documentId;
@@ -185,45 +189,14 @@
 	}
 </script>
 
-<section
-	class="mt-5 rounded-2xl border border-base-300 bg-base-200/40 p-4"
-	aria-label="Select source pages"
->
-	<div class="flex items-center gap-3">
-		<div class="rounded-xl bg-base-100 p-3 text-primary"><Grid2X2 size={21} /></div>
-		<div class="min-w-0 flex-1">
-			<h2 class="text-sm font-semibold">Choose your pages</h2>
-			<p class="mt-0.5 text-xs text-base-content/55">
-				Browse thumbnails, preview a page, and add it to context.
-			</p>
-		</div>
-		<button
-			type="button"
-			class="btn btn-primary btn-sm rounded-full"
-			disabled={!pageNumbers.length}
-			onclick={() => {
-				open = true;
-				loadPdf = true;
-				mobilePreview = false;
-			}}>{selectedPageNumbers.length ? 'Edit selection' : 'Choose pages'}</button
-		>
-	</div>
-	<div class="mt-3 flex gap-2 border-t border-base-300 pt-3 text-xs" aria-live="polite">
-		<span class="shrink-0 font-semibold"
-			>{selectedPageNumbers.length} of {pageNumbers.length || '…'} pages selected</span
-		>
-		<span class="truncate text-base-content/55" title={selectionSummary}
-			>{selectionSummary ||
-				(pageNumbers.length ? 'No pages in context yet' : 'Loading pages…')}</span
-		>
-	</div>
-	{#if error && !open}<p class="mt-2 text-xs text-error" role="alert">
-			{error}
-			<button class="underline" onclick={() => load(documentId, 0, requestVersion)}
-				>Reload pages</button
-			>
-		</p>{/if}
-</section>
+{#if error && !open}
+	<p class="mt-3 text-xs text-error" role="alert">
+		{error}
+		<button class="underline" onclick={() => load(documentId, 0, requestVersion)}>
+			Reload pages
+		</button>
+	</p>
+{/if}
 
 <dialog
 	bind:this={dialog}
@@ -239,7 +212,7 @@
 						Choose your pages
 					</h2>
 					<p class="mt-0.5 text-xs text-base-content/55">
-						{pageNumbers.length} pages · Tap a thumbnail to preview, a circle to select.
+						Tap a thumbnail to preview it, or its circle to select it.
 					</p>
 				</div>
 				<button
@@ -335,8 +308,8 @@
 			<QuestionStudioContextMeter
 				pageStats={initialSource.pageCharacterCounts}
 				{selectedPageNumbers}
-				{error}
 				compact
+				track
 			/>
 			<footer class="flex items-center gap-3 border-t border-base-300 px-5 py-4">
 				<div class="min-w-0 flex-1" aria-live="polite">

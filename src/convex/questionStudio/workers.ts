@@ -145,6 +145,11 @@ export const generateCandidateWorker = internalAction({
 					try {
 						response = await callQualityModel(request, process.env.OPENROUTER_API_KEY!);
 					} catch (error) {
+						await ctx.runMutation(internal.questionStudio.recordGenerationUsage, {
+							jobId: args.jobId,
+							stage: request.stage,
+							failed: true
+						});
 						await captureTelemetry(ctx, {
 							event: '$ai_generation',
 							distinctId: args.clerkUserId,
@@ -164,6 +169,15 @@ export const generateCandidateWorker = internalAction({
 						});
 						throw error;
 					}
+					await ctx.runMutation(internal.questionStudio.recordGenerationUsage, {
+						jobId: args.jobId,
+						stage: request.stage,
+						inputTokens: response.inputTokens,
+						outputTokens: response.outputTokens,
+						reasoningTokens: response.reasoningTokens,
+						costUsd: response.costUsd,
+						latencyMs: response.latencyMs
+					});
 					await captureTelemetry(ctx, {
 						event: '$ai_generation',
 						distinctId: args.clerkUserId,

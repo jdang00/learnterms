@@ -27,6 +27,7 @@
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { resolve } from '$app/paths';
+	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
 
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
@@ -44,15 +45,29 @@
 	let selectedAttachment = $state<Doc<'questionMedia'> | null>(null);
 
 	// useQuery at top level with skip pattern
-	const mediaQuery = useQuery(api.questionMedia.getByQuestionId, () =>
-		currentlySelected?._id ? { questionId: currentlySelected._id as Id<'question'> } : 'skip'
-	);
+	const mediaQuery = useQuestionMedia(() => currentlySelected?._id as Id<'question'> | undefined);
 
 	// Derive media from the query result
 	const media = $derived({
-		data: mediaQuery.data ?? [],
+		data: (mediaQuery.data ?? []).filter(
+			(attachment) => qs.showSolution || !attachment.showOnSolution
+		),
 		isLoading: mediaQuery.isLoading,
 		error: mediaQuery.error
+	});
+
+	$effect(() => {
+		if (!selectedAttachment) return;
+		const current = media.data.find((item) => item._id === selectedAttachment?._id);
+		if (!current && !media.isLoading) {
+			selectedAttachment = null;
+			isAttachmentViewerOpen = false;
+		} else if (
+			current &&
+			(current.url !== selectedAttachment.url || current.updatedAt !== selectedAttachment.updatedAt)
+		) {
+			selectedAttachment = current;
+		}
 	});
 
 	const canShowRationale = $derived.by(() => hasRationale(currentlySelected));

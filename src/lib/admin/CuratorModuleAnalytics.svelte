@@ -1,15 +1,17 @@
 <script lang="ts">
+	import PickerSemesterFilter from '$lib/components/PickerSemesterFilter.svelte';
+	import SearchablePicker from '$lib/components/SearchablePicker.svelte';
 	import { useQuery } from 'convex-svelte';
+	import { resolve } from '$app/paths';
+	import AdminStatStrip from './AdminStatStrip.svelte';
+	import type { StatItem } from './adminStatStrip';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import {
 		Activity,
 		BookOpen,
-		CalendarDays,
-		ChevronDown,
 		ChevronLeft,
 		ChevronRight,
-		Clock3,
 		Flag,
 		Layers,
 		Users
@@ -51,7 +53,6 @@
 	let selectedModuleId = $state(saved.moduleId);
 	let questionOffset = $state(0);
 
-	let semesterOpen = $state(false);
 	let classOpen = $state(false);
 	let moduleOpen = $state(false);
 	let classSearch = $state('');
@@ -118,10 +119,6 @@
 			saveSelection();
 		}
 	});
-
-	const selectedSemesterName = $derived(
-		(semesters.data ?? []).find((s) => s._id === selectedSemesterId)?.name ?? 'Semester'
-	);
 
 	const selectedClassName = $derived(
 		(selectorOptions.data?.classes ?? []).find((c) => c._id === selectedClassId)?.name ?? 'Class'
@@ -207,7 +204,9 @@
 		selectedModuleId = '';
 		questionOffset = 0;
 		questionPageCache = null;
-		semesterOpen = false;
+		classSearch = '';
+		moduleSearch = '';
+		moduleOpen = false;
 		saveSelection();
 	}
 
@@ -230,6 +229,47 @@
 		moduleOpen = false;
 		saveSelection();
 	}
+
+	const moduleStats = $derived.by<StatItem[]>(() => {
+		const totals = moduleOverview.data?.totals;
+		if (!totals) return [];
+		const touchRate = totals.possibleInteractions
+			? Math.round((totals.totalInteractions / totals.possibleInteractions) * 100)
+			: 0;
+		return [
+			{
+				label: 'Participants',
+				value: `${totals.participants}/${totals.studentsInCohort}`,
+				fill: totals.participationRate / 100,
+				note: `${totals.participationRate}% of the cohort`,
+				tone: totals.participationRate < 40 ? 'warning' : undefined
+			},
+			{
+				label: 'Questions',
+				value: String(totals.totalQuestions),
+				note: `${totals.questionsWithNoInteractions} nobody tried`,
+				tone: totals.questionsWithNoInteractions > 0 ? 'warning' : undefined
+			},
+			{
+				label: 'Attempts',
+				value: String(totals.totalInteractions),
+				fill: touchRate / 100,
+				note: `${touchRate}% of possible`
+			},
+			{
+				label: 'Mastered',
+				value: String(totals.totalMastered),
+				note: 'Question and student pairs'
+			},
+			{
+				label: 'Flags',
+				value: String(totals.totalFlags),
+				tone: totals.totalFlags > 0 ? 'warning' : undefined,
+				note:
+					totals.totalFlags > 0 ? `across ${totals.questionsWithFlags} questions` : 'None reported'
+			}
+		];
+	});
 
 	function stripHtml(html: string): string {
 		return html.replace(/<[^>]*>/g, '').trim();
@@ -272,171 +312,48 @@
 	}
 </script>
 
-<div class="space-y-4">
+<div class="space-y-3">
 	<!-- Module Selector -->
-	<div class="p-3 bg-base-100 rounded-2xl border border-base-300">
+	<div class="p-2 bg-base-100 rounded-2xl border border-base-300">
 		<div class="flex flex-wrap items-center gap-2">
-			<div class="relative">
-				<button
-					type="button"
-					class="btn btn-sm btn-ghost rounded-full gap-2"
-					onclick={() => {
-						semesterOpen = !semesterOpen;
-						classOpen = false;
-						moduleOpen = false;
-					}}
-				>
-					<CalendarDays size={14} class="text-base-content/60" />
-					<span class="text-sm">{selectedSemesterName}</span>
-					<ChevronDown size={12} />
-				</button>
-				{#if semesterOpen}
-					<div class="fixed inset-0 z-10" onclick={() => (semesterOpen = false)} role="none"></div>
-					<div
-						class="absolute top-full left-0 mt-1 z-20 w-56 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-1"
-					>
-						<ul class="max-h-60 overflow-y-auto">
-							<li>
-								<button
-									type="button"
-									class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200"
-									class:bg-primary={!selectedSemesterId}
-									class:text-primary-content={!selectedSemesterId}
-									onclick={() => onSemesterSelect('')}
-								>
-									All semesters
-								</button>
-							</li>
-							{#each semesters.data ?? [] as semester (semester._id)}
-								<li>
-									<button
-										type="button"
-										class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200"
-										class:bg-primary={selectedSemesterId === semester._id}
-										class:text-primary-content={selectedSemesterId === semester._id}
-										onclick={() => onSemesterSelect(semester._id)}
-									>
-										{semester.name}
-									</button>
-								</li>
-							{/each}
-						</ul>
-					</div>
-				{/if}
-			</div>
-
-			<span class="text-base-content/30">/</span>
-
-			<div class="relative">
-				<button
-					type="button"
-					class="btn btn-sm btn-ghost rounded-full gap-2"
-					class:btn-disabled={!selectorOptions.data || selectorOptions.data.classes.length === 0}
-					onclick={() => {
-						if (!selectorOptions.data || selectorOptions.data.classes.length === 0) return;
-						classOpen = !classOpen;
-						moduleOpen = false;
-						semesterOpen = false;
-						classSearch = '';
-					}}
-				>
-					<BookOpen size={14} class="text-base-content/60" />
-					<span class="text-sm truncate max-w-[180px]">{selectedClassName}</span>
-					<ChevronDown size={12} />
-				</button>
-				{#if classOpen}
-					<div class="fixed inset-0 z-10" onclick={() => (classOpen = false)} role="none"></div>
-					<div
-						class="absolute top-full left-0 mt-1 z-20 w-72 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-2"
-					>
-						<input
-							type="text"
-							placeholder="Search classes..."
-							class="input input-sm input-bordered rounded-full w-full mb-1"
-							bind:value={classSearch}
-						/>
-						<ul class="max-h-56 overflow-y-auto">
-							{#each searchedClasses as classItem (classItem._id)}
-								<li>
-									<button
-										type="button"
-										class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200 flex items-center gap-2"
-										class:bg-primary={selectedClassId === classItem._id}
-										class:text-primary-content={selectedClassId === classItem._id}
-										onclick={() => onClassSelect(classItem._id)}
-									>
-										<span class="truncate">{classItem.name}</span>
-										<span class="badge badge-ghost badge-xs">{classItem.code}</span>
-									</button>
-								</li>
-							{/each}
-							{#if searchedClasses.length === 0}
-								<li class="text-xs text-base-content/50 px-3 py-2">No matches</li>
-							{/if}
-						</ul>
-					</div>
-				{/if}
-			</div>
-
-			<span class="text-base-content/30">/</span>
-
-			<div class="relative">
-				<button
-					type="button"
-					class="btn btn-sm btn-ghost rounded-full gap-2"
-					class:btn-disabled={!selectedClassId ||
-						!selectorOptions.data ||
-						selectorOptions.data.modules.length === 0}
-					onclick={() => {
-						if (
-							!selectedClassId ||
-							!selectorOptions.data ||
-							selectorOptions.data.modules.length === 0
-						) {
-							return;
-						}
-						moduleOpen = !moduleOpen;
-						classOpen = false;
-						semesterOpen = false;
-						moduleSearch = '';
-					}}
-				>
-					<Layers size={14} class="text-base-content/60" />
-					<span class="text-sm truncate max-w-[180px]">{selectedModuleName}</span>
-					<ChevronDown size={12} />
-				</button>
-				{#if moduleOpen}
-					<div class="fixed inset-0 z-10" onclick={() => (moduleOpen = false)} role="none"></div>
-					<div
-						class="absolute top-full left-0 mt-1 z-20 w-72 bg-base-100 rounded-2xl shadow-lg border border-base-300 p-2"
-					>
-						<input
-							type="text"
-							placeholder="Search modules..."
-							class="input input-sm input-bordered rounded-full w-full mb-1"
-							bind:value={moduleSearch}
-						/>
-						<ul class="max-h-56 overflow-y-auto">
-							{#each searchedModules as module (module._id)}
-								<li>
-									<button
-										type="button"
-										class="w-full text-left text-sm px-3 py-1.5 rounded-sm hover:bg-base-200"
-										class:bg-primary={selectedModuleId === module._id}
-										class:text-primary-content={selectedModuleId === module._id}
-										onclick={() => onModuleSelect(module._id)}
-									>
-										{module.emoji ? `${module.emoji} ` : ''}{module.title}
-									</button>
-								</li>
-							{/each}
-							{#if searchedModules.length === 0}
-								<li class="text-xs text-base-content/50 px-3 py-2">No matches</li>
-							{/if}
-						</ul>
-					</div>
-				{/if}
-			</div>
+			<SearchablePicker
+				label={selectedClassName}
+				placeholder="Search classes…"
+				value={selectedClassId}
+				disabled={!semesters.data && !selectorOptions.data}
+				options={searchedClasses.map((c) => ({ value: c._id, label: c.name, detail: c.code }))}
+				bind:open={classOpen}
+				bind:search={classSearch}
+				onSelect={onClassSelect}
+			>
+				{#snippet icon()}<BookOpen size={14} class="shrink-0" />{/snippet}
+				{#snippet header()}
+					<PickerSemesterFilter
+						value={selectedSemesterId}
+						onSelect={onSemesterSelect}
+						options={[
+							{ value: '', label: 'All semesters' },
+							...(semesters.data ?? []).map((s) => ({ value: s._id, label: s.name }))
+						]}
+					/>
+				{/snippet}
+			</SearchablePicker>
+			<span class="hidden text-base-content/60 sm:inline" aria-hidden="true">/</span>
+			<SearchablePicker
+				label={selectedModuleName}
+				placeholder="Search modules…"
+				value={selectedModuleId}
+				disabled={!selectedClassId || !selectorOptions.data}
+				options={searchedModules.map((m) => ({
+					value: m._id,
+					label: `${m.emoji ? m.emoji + ' ' : ''}${m.title}`
+				}))}
+				bind:open={moduleOpen}
+				bind:search={moduleSearch}
+				onSelect={onModuleSelect}
+			>
+				{#snippet icon()}<Layers size={14} class="shrink-0" />{/snippet}
+			</SearchablePicker>
 
 			<div class="flex-1"></div>
 
@@ -451,7 +368,7 @@
 					{moduleOverview.data.module.questionCount} questions
 				</div>
 			{:else}
-				<div class="badge badge-ghost badge-sm">Pick module</div>
+				<div class="badge badge-ghost badge-sm">Choose a module</div>
 			{/if}
 		</div>
 	</div>
@@ -468,7 +385,7 @@
 			class="bg-base-100 rounded-2xl border border-base-300 p-8 text-center text-base-content/50"
 		>
 			<BookOpen size={28} class="mx-auto mb-2 opacity-40" />
-			<p class="text-sm">Select a class and module to view analytics.</p>
+			<p class="text-sm">Choose a class and module to see how students are doing.</p>
 		</div>
 	{:else if moduleOverview.isLoading && !moduleOverview.data}
 		<div class="bg-base-100 rounded-2xl border border-base-300 p-10 flex justify-center">
@@ -479,10 +396,11 @@
 			Failed to load module analytics: {moduleOverview.error.message}
 		</div>
 	{:else if moduleOverview.data}
-		<!-- Module Header + Inline Stats -->
+		<AdminStatStrip items={moduleStats} ariaLabel="Module summary" />
+
 		<div class="bg-base-100 rounded-2xl border border-base-300">
 			<div
-				class="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-base-300"
+				class="px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-base-300"
 			>
 				<div class="min-w-0">
 					<h3 class="font-semibold text-sm">
@@ -491,31 +409,21 @@
 							: ''}{moduleOverview.data.module.title}
 					</h3>
 					<p class="text-xs text-base-content/50">
-						{moduleOverview.data.module.className} &middot; {moduleOverview.data.module
-							.semesterName}
+						{moduleOverview.data.module.className}
+						<span class="mx-1 text-base-content/25">/</span>
+						{moduleOverview.data.module.semesterName}
 					</p>
 				</div>
-				<div class="flex flex-wrap items-center gap-3 text-xs">
-					<span class="flex items-center gap-1 text-base-content/70">
-						<Users size={12} />
-						{moduleOverview.data.totals.participants}/{moduleOverview.data.totals.studentsInCohort}
-						<span class="text-base-content/50"
-							>({moduleOverview.data.totals.participationRate}%)</span
-						>
-					</span>
-					<span class="flex items-center gap-1 text-base-content/70">
-						<Activity size={12} />
-						{moduleOverview.data.totals.totalInteractions} touches
-					</span>
-					<span class="flex items-center gap-1 text-warning">
-						<Flag size={12} />
-						{moduleOverview.data.totals.totalFlags} flags
-					</span>
-					<span class="flex items-center gap-1 text-base-content/50">
-						<Clock3 size={12} />
-						{moduleOverview.data.totals.questionsWithNoInteractions} untouched
-					</span>
-				</div>
+				<a
+					class="btn btn-ghost btn-xs rounded-full self-start sm:self-auto"
+					href={resolve('/admin/[classId]/module/[moduleId]', {
+						classId: String(moduleOverview.data.module.classId),
+						moduleId: String(moduleOverview.data.module._id)
+					})}
+				>
+					Open module
+					<ChevronRight size={13} />
+				</a>
 			</div>
 
 			<!-- Questions Table -->
@@ -621,10 +529,10 @@
 		</div>
 
 		<!-- Insights Grid -->
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
 			<!-- Participants -->
 			<div class="bg-base-100 rounded-2xl border border-base-300 flex flex-col max-h-[26rem]">
-				<div class="px-4 py-3 border-b border-base-300 shrink-0">
+				<div class="px-4 py-2.5 border-b border-base-300 shrink-0">
 					<div class="flex items-center justify-between">
 						<h4 class="text-sm font-semibold flex items-center gap-2">
 							<Users size={14} class="text-primary" />
@@ -636,14 +544,14 @@
 						</span>
 					</div>
 				</div>
-				<div class="p-4 flex-1 overflow-y-auto">
+				<div class="p-3 flex-1 overflow-y-auto">
 					{#if moduleOverview.data.participants.length === 0}
 						<div class="flex flex-col items-center justify-center py-8 text-base-content/40">
 							<Users size={24} class="mb-2" />
 							<p class="text-xs">No activity yet</p>
 						</div>
 					{:else}
-						<div class="space-y-3">
+						<div class="space-y-2">
 							{#each visibleParticipants as participant (participant._id)}
 								<div class="flex items-center gap-3">
 									<div class="avatar shrink-0">
@@ -702,13 +610,13 @@
 				</div>
 			</div>
 
-			<!-- Flagged Hotspots -->
+			<!-- Most flagged -->
 			<div class="bg-base-100 rounded-2xl border border-base-300 flex flex-col max-h-[26rem]">
-				<div class="px-4 py-3 border-b border-base-300 shrink-0">
+				<div class="px-4 py-2.5 border-b border-base-300 shrink-0">
 					<div class="flex items-center justify-between">
 						<h4 class="text-sm font-semibold flex items-center gap-2">
 							<Flag size={14} class="text-warning" />
-							Flagged Hotspots
+							Most flagged
 						</h4>
 						{#if moduleOverview.data.totals.totalFlags > 0}
 							<span class="badge badge-warning badge-xs"
@@ -717,7 +625,7 @@
 						{/if}
 					</div>
 				</div>
-				<div class="p-4 flex-1 overflow-y-auto">
+				<div class="p-3 flex-1 overflow-y-auto">
 					{#if visibleHotspots.length === 0}
 						<div class="flex flex-col items-center justify-center py-8 text-base-content/40">
 							<Flag size={24} class="mb-2" />
@@ -767,15 +675,15 @@
 				</div>
 			</div>
 
-			<!-- Recent Activity -->
+			<!-- Recent activity -->
 			<div class="bg-base-100 rounded-2xl border border-base-300 flex flex-col max-h-[26rem]">
-				<div class="px-4 py-3 border-b border-base-300 shrink-0">
+				<div class="px-4 py-2.5 border-b border-base-300 shrink-0">
 					<h4 class="text-sm font-semibold flex items-center gap-2">
 						<Activity size={14} class="text-info" />
-						Recent Activity
+						Recent activity
 					</h4>
 				</div>
-				<div class="p-4 flex-1 overflow-y-auto">
+				<div class="p-3 flex-1 overflow-y-auto">
 					{#if visibleRecent.length === 0}
 						<div class="flex flex-col items-center justify-center py-8 text-base-content/40">
 							<Activity size={24} class="mb-2" />

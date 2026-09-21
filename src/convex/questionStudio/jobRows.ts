@@ -24,6 +24,42 @@ export async function insertGenerationJobEvent(
 	});
 }
 
+export type WorkerState = {
+	index: number;
+	startedAt: number;
+	finishedAt?: number;
+	failed?: boolean;
+	draftedCount?: number;
+};
+
+/** Per-worker timing, so the run view can show which workers are still out. */
+export function openWorkerState(
+	states: WorkerState[] | undefined,
+	index: number,
+	at: number
+): WorkerState[] {
+	const next = (states ?? []).filter((state) => state.index !== index);
+	next.push({ index, startedAt: at });
+	return next.sort((a, b) => a.index - b.index);
+}
+
+export function closeWorkerState(
+	states: WorkerState[] | undefined,
+	index: number,
+	patch: { finishedAt: number; failed?: boolean; draftedCount?: number }
+): WorkerState[] {
+	const existing = (states ?? []).find((state) => state.index === index);
+	const next = (states ?? []).filter((state) => state.index !== index);
+	next.push({
+		index,
+		startedAt: existing?.startedAt ?? patch.finishedAt,
+		finishedAt: patch.finishedAt,
+		...(patch.failed ? { failed: true } : {}),
+		...(patch.draftedCount !== undefined ? { draftedCount: patch.draftedCount } : {})
+	});
+	return next.sort((a, b) => a.index - b.index);
+}
+
 export async function hydrateGenerationJob(
 	ctx: QueryCtx | MutationCtx,
 	job: Doc<'questionStudioJobs'>
