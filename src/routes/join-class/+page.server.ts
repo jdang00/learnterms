@@ -1,5 +1,4 @@
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
 import { clerkClient } from 'svelte-clerk/server';
 import { ConvexHttpClient } from 'convex/browser';
 import { PUBLIC_CONVEX_URL } from '$env/static/public';
@@ -14,6 +13,12 @@ function displayName(user: Awaited<ReturnType<typeof clerkClient.users.getUser>>
 	);
 }
 
+const seo = {
+	title: 'Join Your Class — LearnTerms',
+	description: 'Enter your class code to access your class’s study resources.',
+	image: 'https://learnterms.com/og/join-class?v=2'
+};
+
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!PUBLIC_CONVEX_URL) {
 		throw new Error('PUBLIC_CONVEX_URL is not configured');
@@ -21,7 +26,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const { userId } = locals.auth();
 	if (!userId) {
-		throw redirect(307, '/sign-in');
+		return { seo };
 	}
 
 	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
@@ -59,12 +64,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			});
 		}
 
-		return {
-			seo: {
-				title: 'Join Your Class — LearnTerms',
-				description: 'Enter your class code to join your LearnTerms cohort.'
-			}
-		};
+		return { seo };
 	} catch (error) {
 		console.error('Failed to prepare join class page:', error);
 		throw error;

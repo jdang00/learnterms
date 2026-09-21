@@ -38,6 +38,13 @@
 		updateRole?: (userId: Id<'users'>, role: 'dev' | 'admin' | 'curator' | null) => Promise<void>;
 	} = $props();
 
+	let dialog: HTMLDialogElement;
+	$effect(() => {
+		if (!dialog) return;
+		if (isOpen && !dialog.open) dialog.showModal();
+		else if (!isOpen && dialog.open) dialog.close();
+	});
+
 	// Check if viewing own profile
 	const isOwnProfile = $derived(student?.clerkUserId === currentUserClerkId);
 
@@ -83,7 +90,12 @@
 	});
 </script>
 
-<dialog class="modal max-w-full p-4" class:modal-open={isOpen}>
+<dialog
+	bind:this={dialog}
+	class="modal max-w-full p-4"
+	aria-label="Student progress"
+	oncancel={onClose}
+>
 	<div class="modal-box max-w-4xl max-h-[90vh] rounded-2xl flex flex-col">
 		<!-- Header -->
 		<div class="flex items-start justify-between mb-4">
@@ -147,7 +159,11 @@
 					{/if}
 				</div>
 			</div>
-			<button class="btn btn-sm btn-circle btn-ghost" onclick={onClose}>
+			<button
+				class="btn btn-sm btn-circle btn-ghost"
+				aria-label="Close student details"
+				onclick={onClose}
+			>
 				<X size={16} />
 			</button>
 		</div>

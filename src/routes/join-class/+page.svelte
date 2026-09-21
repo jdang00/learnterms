@@ -121,41 +121,48 @@
 					in:fly={{ y: 20, duration: 500, delay: 300 }}
 				>
 					<div class="card-body p-8">
-						<form onsubmit={handleJoinClass} class="space-y-6">
-							<div class="form-control">
-								<input
-									id="class-code"
-									type="text"
-									placeholder="Enter your class code..."
-									class="input input-bordered input-lg w-full text-center text-xl font-mono tracking-wider"
-									bind:value={classCode}
-									disabled={isSubmitting}
-								/>
-							</div>
-
-							{#if error}
-								<div class="alert alert-error" in:fly={{ y: -10, duration: 300 }}>
-									<span>{error}</span>
+						{#if !user}
+							<p class="text-center mb-4">Sign in to enter your class code and join your cohort.</p>
+							<a href="/sign-in?redirect_url=%2Fjoin-class" class="btn btn-primary btn-lg w-full"
+								>Sign in to join your class <ArrowRight size={20} /></a
+							>
+						{:else}
+							<form onsubmit={handleJoinClass} class="space-y-6">
+								<div class="form-control">
+									<input
+										id="class-code"
+										type="text"
+										placeholder="Enter your class code..."
+										class="input input-bordered input-lg w-full text-center text-xl font-mono tracking-wider"
+										bind:value={classCode}
+										disabled={isSubmitting}
+									/>
 								</div>
-							{/if}
 
-							<div class="form-control mt-8">
-								<button
-									type="submit"
-									class="btn btn-primary btn-lg w-full gap-3 text-lg"
-									disabled={isSubmitting || !classCode.trim()}
-								>
-									{#if isSubmitting}
-										<span class="loading loading-spinner loading-md"></span>
-										<span>Checking Code...</span>
-									{:else}
-										<Sparkles size={20} />
-										<span>Join Class</span>
-										<ArrowRight size={20} />
-									{/if}
-								</button>
-							</div>
-						</form>
+								{#if error}
+									<div class="alert alert-error" in:fly={{ y: -10, duration: 300 }}>
+										<span>{error}</span>
+									</div>
+								{/if}
+
+								<div class="form-control mt-8">
+									<button
+										type="submit"
+										class="btn btn-primary btn-lg w-full gap-3 text-lg"
+										disabled={isSubmitting || !classCode.trim()}
+									>
+										{#if isSubmitting}
+											<span class="loading loading-spinner loading-md"></span>
+											<span>Checking Code...</span>
+										{:else}
+											<Sparkles size={20} />
+											<span>Join Class</span>
+											<ArrowRight size={20} />
+										{/if}
+									</button>
+								</div>
+							</form>
+						{/if}
 					</div>
 				</div>
 			{:else}

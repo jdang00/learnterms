@@ -3,605 +3,631 @@
 	import type { Id } from '../../../convex/_generated/dataModel';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
-	import {
-		ArrowLeft,
-		Award,
-		ChevronRight,
-		Flag,
-		PenTool,
-		Search,
-		Shield,
-		Sparkles,
-		Users,
-		Zap
-	} from 'lucide-svelte';
-	import AdminStatStrip from '$lib/admin/AdminStatStrip.svelte';
-	import type { StatItem } from '$lib/admin/adminStatStrip';
-	import StudentDetailModal from '$lib/admin/StudentDetailModal.svelte';
-	import CuratorModuleAnalytics from '$lib/admin/CuratorModuleAnalytics.svelte';
-	import CuratorGenerationRuns from '$lib/admin/CuratorGenerationRuns.svelte';
-	import { formatUsd } from '$lib/admin/questionStudioRun';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { pushState } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import {
+		Activity,
+		ArrowLeft,
+		ArrowUpRight,
+		BookOpen,
+		ChevronRight,
+		CircleHelp,
+		Compass,
+		LayoutDashboard,
+		Search,
+		Sparkles,
+		Target,
+		Users
+	} from 'lucide-svelte';
+	import StudentDetailModal from '$lib/admin/StudentDetailModal.svelte';
+	import CuratorGenerationRuns from '$lib/admin/CuratorGenerationRuns.svelte';
+	import StudentAvatar from '$lib/admin/progress/StudentAvatar.svelte';
+	import Explorer from '$lib/admin/progress/Explorer.svelte';
+	import { percent, relativeTime } from '$lib/admin/progress/utils';
 
 	let { data }: { data: PageData } = $props();
-	const userData = $derived(data.userData);
+	const user = $derived(data.userData);
+	const cohortId = $derived(user?.cohortId as Id<'cohort'> | undefined);
 	const client = useConvexClient();
-	const isDev = $derived(userData?.role === 'dev');
-	const isAdmin = $derived(userData?.role === 'dev' || userData?.role === 'admin');
-	const cohortId = $derived(userData?.cohortId as Id<'cohort'> | undefined);
-
-	type Tab = 'overview' | 'modules' | 'studio' | 'students';
-	const tabs: Array<{ id: Tab; label: string }> = [
-		{ id: 'overview', label: 'Overview' },
-		{ id: 'modules', label: 'Modules' },
-		{ id: 'studio', label: 'Question Studio' },
-		{ id: 'students', label: 'Students' }
-	];
-	let activeTab = $state<Tab>('overview');
-
-	let isStudentModalOpen = $state(false);
+	const views = [
+		{ id: 'overview', label: 'Overview', icon: LayoutDashboard },
+		{
+			id: 'curriculum',
+			label: 'Classes',
+			icon: BookOpen
+		},
+		{ id: 'students', label: 'Students', icon: Users },
+		{ id: 'studio', label: 'Studio', icon: Sparkles }
+	] as const;
+	const params = $derived(
+		new URLSearchParams(
+			(page.state as { progressSearch?: string }).progressSearch ?? page.url.search
+		)
+	);
+	const view = $derived(views.find((v) => v.id === params.get('view'))?.id ?? 'overview');
+	const filter = $derived(params.get('filter') ?? 'all');
+	let search = $state('');
+	let sort = $state('recent');
+	let now = $state(Date.now());
+	let connected = $state(false);
+	let everConnected = $state(false);
 	let selectedStudentId = $state<Id<'users'> | null>(null);
-	let searchQuery = $state('');
-	let studentSort = $state<'progress' | 'name' | 'recent'>('progress');
 
+	onMount(() => {
+		const updateConnection = (state: ReturnType<typeof client.connectionState>) => {
+			connected = state.isWebSocketConnected;
+			everConnected = state.hasEverConnected;
+		};
+		updateConnection(client.connectionState());
+		const unsubscribe = client.subscribeToConnectionState(updateConnection);
+		const timer = setInterval(() => (now = Date.now()), 60000);
+		return () => {
+			unsubscribe();
+			clearInterval(timer);
+		};
+	});
+	function navigate(values: Record<string, string | null>) {
+		const url = new URL(page.url);
+		url.search = params.toString();
+		for (const [key, value] of Object.entries(values)) {
+			if (value) url.searchParams.set(key, value);
+			else url.searchParams.delete(key);
+		}
+		pushState(url, { ...page.state, progressSearch: url.search });
+	}
+	function showStudents(nextFilter = 'all') {
+		search = '';
+		navigate({ view: 'students', filter: nextFilter === 'all' ? null : nextFilter });
+	}
+	function showModule(classId: string, moduleId: string) {
+		navigate({ view: 'curriculum', class: classId, module: moduleId, semester: null });
+	}
+
+	const studentsQuery = useQuery(api.progress.getStudentsWithProgress, () =>
+		cohortId ? { cohortId, includeSubscription: false } : 'skip'
+	);
+	// This query is a ranked sample, not an aggregate over the whole curriculum.
+	const moduleQuery = useQuery(api.progress.getModuleCompletionStats, () =>
+		cohortId && view === 'overview' ? { cohortId, limit: 6 } : 'skip'
+	);
+	const students = $derived(
+		(studentsQuery.data ?? []).map((student) => ({
+			...student,
+			progress: percent(student.questionsInteracted, student.totalQuestions)
+		}))
+	);
+	const measuredStudents = $derived(students.filter((student) => student.statsAvailable === true));
+	const notStarted = $derived(
+		measuredStudents.filter((student) => student.questionsInteracted === 0).length
+	);
+	const started = $derived(measuredStudents.filter((s) => s.questionsInteracted > 0).length);
+	const active = $derived(
+		measuredStudents.filter((s) => (s.lastActivityAt ?? 0) >= now - 7 * 86400000).length
+	);
+	const quiet = $derived(
+		measuredStudents.filter(
+			(s) => s.questionsInteracted > 0 && (s.lastActivityAt ?? 0) < now - 30 * 86400000
+		).length
+	);
+	const median = $derived.by(() => {
+		const values = measuredStudents.map((s) => s.progress).sort((a, b) => a - b);
+		const mid = Math.floor(values.length / 2);
+		return values.length
+			? Math.round(values.length % 2 ? values[mid] : (values[mid - 1] + values[mid]) / 2)
+			: 0;
+	});
+	const bands = $derived([
+		{
+			id: 'none',
+			label: 'Not started',
+			detail: 'No questions tried',
+			color: 'bg-base-300',
+			text: 'text-base-content',
+			count: notStarted
+		},
+		{
+			id: 'early',
+			label: 'Under 25%',
+			detail: 'Started · <25% tried',
+			color: 'bg-info',
+			text: 'text-info',
+			count: measuredStudents.filter((s) => s.questionsInteracted > 0 && s.progress < 25).length
+		},
+		{
+			id: 'building',
+			label: '25–74%',
+			detail: 'Question bank tried',
+			color: 'bg-primary',
+			text: 'text-primary',
+			count: measuredStudents.filter(
+				(s) => s.questionsInteracted > 0 && s.progress >= 25 && s.progress < 75
+			).length
+		},
+		{
+			id: 'strong',
+			label: '75–100%',
+			detail: 'Question bank tried',
+			color: 'bg-success',
+			text: 'text-success',
+			count: measuredStudents.filter((s) => s.questionsInteracted > 0 && s.progress >= 75).length
+		}
+	]);
+	const filters = $derived([
+		{ id: 'all', label: 'All students', count: students.length },
+		{ id: 'active', label: 'Active this week', count: active },
+		{ id: 'quiet', label: 'Quiet for 30+ days', count: quiet },
+		{ id: 'none', label: 'Not started', count: notStarted },
+		...bands
+			.filter((b) => b.id === filter && b.id !== 'none')
+			.map((b) => ({ id: b.id, label: `${b.label} coverage`, count: b.count }))
+	]);
+	const filteredStudents = $derived(
+		students
+			.filter((s) => {
+				const matches = `${s.name} ${s.email ?? ''} ${s.username ?? ''}`
+					.toLowerCase()
+					.includes(search.toLowerCase());
+				if (!matches) return false;
+				if (filter !== 'all' && !s.statsAvailable) return false;
+				if (filter === 'active') return (s.lastActivityAt ?? 0) >= now - 7 * 86400000;
+				if (filter === 'quiet')
+					return s.questionsInteracted > 0 && (s.lastActivityAt ?? 0) < now - 30 * 86400000;
+				if (filter === 'none') return s.questionsInteracted === 0;
+				if (filter === 'early') return s.questionsInteracted > 0 && s.progress < 25;
+				if (filter === 'building')
+					return s.questionsInteracted > 0 && s.progress >= 25 && s.progress < 75;
+				if (filter === 'strong') return s.questionsInteracted > 0 && s.progress >= 75;
+				return true;
+			})
+			.sort((a, b) =>
+				sort === 'name'
+					? a.name.localeCompare(b.name)
+					: sort === 'coverage'
+						? b.progress - a.progress || a.name.localeCompare(b.name)
+						: (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0) || a.name.localeCompare(b.name)
+			)
+	);
+	const recentStudents = $derived(
+		[...measuredStudents]
+			.filter((s) => s.lastActivityAt)
+			.sort((a, b) => (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0))
+			.slice(0, 5)
+	);
+	const selectedStudent = $derived(students.find((s) => s._id === selectedStudentId) ?? null);
 	async function updateRole(userId: Id<'users'>, role: 'dev' | 'admin' | 'curator' | null) {
 		await client.mutation(api.users.updateUserRole, { userId, role });
 	}
-
-	const cohortStats = useQuery(api.progress.getCohortProgressStats, () =>
-		cohortId ? { cohortId } : 'skip'
-	);
-
-	const studentsWithProgress = useQuery(api.progress.getStudentsWithProgress, () =>
-		cohortId ? { cohortId, includeSubscription: false } : 'skip'
-	);
-
-	const moduleStats = useQuery(api.progress.getModuleCompletionStats, () =>
-		cohortId ? { cohortId, limit: 50 } : 'skip'
-	);
-
-	const generationHistory = useQuery(api.questionStudio.listCohortGenerationJobs, () =>
-		cohortId ? { cohortId, limit: 1 } : 'skip'
-	);
-
-	const students = $derived(studentsWithProgress.data ?? []);
-	const modules = $derived(moduleStats.data?.modules ?? []);
-
-	const activeLearners = $derived(
-		students.filter((student) => student.questionsInteracted > 0).length
-	);
-	const activeLearnerRate = $derived(
-		students.length ? Math.round((activeLearners / students.length) * 100) : 0
-	);
-	const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-	const activeThisWeek = $derived(
-		students.filter((student) => (student.lastActivityAt ?? 0) >= weekAgo).length
-	);
-	const medianMastery = $derived.by(() => {
-		const values = students.map((student) => student.progress).sort((a, b) => a - b);
-		if (values.length === 0) return 0;
-		const middle = Math.floor(values.length / 2);
-		return values.length % 2 === 0
-			? Math.round((values[middle - 1] + values[middle]) / 2)
-			: values[middle];
-	});
-	const untouchedModules = $derived(modules.filter((module) => module.activeStudents === 0).length);
-	const flaggedTotal = $derived(
-		modules.reduce((total, module) => total + module.questionsFlagged, 0)
-	);
-
-	const overviewStats = $derived.by<StatItem[]>(() => [
-		{
-			label: 'Students',
-			value: String(cohortStats.data?.totalStudents ?? students.length),
-			note: `${activeThisWeek} active this week`
-		},
-		{
-			label: 'Engaged',
-			value: `${activeLearnerRate}%`,
-			fill: activeLearnerRate / 100,
-			note: `${activeLearners} have started`,
-			tone: activeLearnerRate < 50 ? 'warning' : undefined
-		},
-		{
-			label: 'Median mastery',
-			value: `${medianMastery}%`,
-			fill: medianMastery / 100,
-			note: 'Per student, cohort-wide'
-		},
-		{
-			label: 'Questions',
-			value: String(cohortStats.data?.totalQuestions ?? 0),
-			note: `${cohortStats.data?.totalModules ?? 0} modules`
-		},
-		{
-			label: 'Flags open',
-			value: String(flaggedTotal),
-			tone: flaggedTotal > 0 ? 'warning' : undefined,
-			note: flaggedTotal > 0 ? 'Reported by students' : 'Nothing reported'
-		},
-		{
-			label: 'Untouched',
-			value: String(untouchedModules),
-			note: 'Modules nobody opened',
-			tone: untouchedModules > 0 ? 'warning' : undefined
-		},
-		{
-			label: 'Studio spend',
-			value: formatUsd(generationHistory.data?.summary.spendThisWeek ?? 0),
-			note: `${generationHistory.data?.summary.runsThisWeek ?? 0} runs this week`
-		}
-	]);
-
-	const studentStats = $derived.by<StatItem[]>(() => [
-		{ label: 'In cohort', value: String(students.length) },
-		{
-			label: 'Active this week',
-			value: String(activeThisWeek),
-			fill: students.length ? activeThisWeek / students.length : 0
-		},
-		{ label: 'Never started', value: String(students.length - activeLearners) },
-		{ label: 'Median mastery', value: `${medianMastery}%`, fill: medianMastery / 100 }
-	]);
-
-	// Modules a curator should look at first: nobody has opened them, they carry flags,
-	// or engagement is far behind the rest of the cohort.
-	const needsAttention = $derived(
-		modules
-			.map((module) => ({
-				...module,
-				reason:
-					module.totalQuestions === 0
-						? 'No questions yet'
-						: module.activeStudents === 0
-							? 'Nobody has opened it'
-							: module.questionsFlagged > 0
-								? `${module.questionsFlagged} flagged question${module.questionsFlagged === 1 ? '' : 's'}`
-								: module.completion < 25
-									? 'Low engagement'
-									: ''
-			}))
-			.filter((module) => module.reason)
-			.sort((a, b) => a.completion - b.completion || b.questionsFlagged - a.questionsFlagged)
-			.slice(0, 8)
-	);
-
-	const topModules = $derived(
-		[...modules]
-			.filter((module) => module.totalQuestions > 0)
-			.sort((a, b) => b.completion - a.completion)
-			.slice(0, 8)
-	);
-
-	const filteredStudents = $derived(
-		students.filter((student) => {
-			const query = searchQuery.toLowerCase();
-			if (!query) return true;
-			return (
-				student.name.toLowerCase().includes(query) ||
-				student.email?.toLowerCase().includes(query) ||
-				student.username?.toLowerCase().includes(query)
-			);
-		})
-	);
-
-	const sortedStudents = $derived(
-		[...filteredStudents].sort((a, b) => {
-			if (studentSort === 'name') return a.name.localeCompare(b.name);
-			if (studentSort === 'recent') return (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0);
-			return b.progress - a.progress;
-		})
-	);
-
-	const selectedStudent = $derived(
-		selectedStudentId
-			? (students.find((student) => student._id === selectedStudentId) ?? null)
-			: null
-	);
-
-	function openStudentModal(studentId: Id<'users'>) {
-		selectedStudentId = studentId;
-		isStudentModalOpen = true;
-	}
-
-	function formatRelativeTime(timestamp: number | null | undefined): string {
-		if (!timestamp) return 'Never';
-		const diff = Date.now() - timestamp;
-		const minutes = Math.floor(diff / 60000);
-		const hours = Math.floor(diff / 3600000);
-		const days = Math.floor(diff / 86400000);
-		if (minutes < 1) return 'Just now';
-		if (minutes < 60) return `${minutes}m ago`;
-		if (hours < 24) return `${hours}h ago`;
-		if (days < 7) return `${days}d ago`;
-		if (days < 30) return `${Math.floor(days / 7)}w ago`;
-		return new Date(timestamp).toLocaleDateString();
-	}
-
-	function initials(name: string): string {
-		return name
-			.split(' ')
-			.map((part) => part[0] ?? '')
-			.join('')
-			.slice(0, 2)
-			.toUpperCase();
+	function openStudent(id: Id<'users'>) {
+		selectedStudentId = id;
 	}
 </script>
 
-<div class="mx-auto max-w-[1800px] p-4 sm:p-6">
-	<header class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-3">
-		<a class="btn btn-ghost btn-sm gap-2 rounded-full" href={resolve('/admin')}>
-			<ArrowLeft size={16} />
-			<span class="hidden sm:inline">Back</span>
-		</a>
-		<div class="h-6 w-px bg-base-300"></div>
-		<div class="min-w-0">
-			<h1 class="text-lg font-semibold leading-tight">Class Progress</h1>
-			<p class="truncate text-xs text-base-content/60">
-				{userData?.schoolName}
-				<span class="mx-1 text-base-content/25">/</span>
-				{userData?.cohortName}
-			</p>
-		</div>
+<svelte:head
+	><title>Class Progress · LearnTerms</title><meta
+		name="description"
+		content="Explore live cohort participation, student coverage, and question-level insights."
+	/></svelte:head
+>
 
-		<div
-			class="ml-auto flex rounded-full border border-base-300 bg-base-200 p-1"
-			role="tablist"
-			aria-label="Class progress views"
-		>
-			{#each tabs as tab (tab.id)}
-				<button
-					role="tab"
-					aria-selected={activeTab === tab.id}
-					class="btn btn-sm rounded-full border-0 {activeTab === tab.id
-						? 'bg-base-100 text-primary shadow-sm'
-						: 'btn-ghost text-base-content/60'}"
-					onclick={() => (activeTab = tab.id)}
+<div class="progress-workspace mx-auto max-w-[1800px] p-4 text-base-content sm:p-6">
+	<div class="min-w-0">
+		<header class="mb-6 flex flex-col items-start gap-5">
+			<div class="flex min-w-0 items-center gap-3">
+				<a class="btn btn-ghost btn-circle" href={resolve('/admin')} aria-label="Back to admin"
+					><ArrowLeft size={20} /></a
 				>
-					{tab.label}
-				</button>
-			{/each}
-		</div>
-	</header>
-
-	{#if !cohortId}
-		<div class="alert alert-warning rounded-2xl">No cohort assigned to your account.</div>
-	{:else if activeTab === 'overview'}
-		<div class="space-y-3">
-			<AdminStatStrip
-				items={overviewStats}
-				loading={cohortStats.isLoading || studentsWithProgress.isLoading}
-				ariaLabel="Cohort summary"
-			/>
-
-			<div class="grid gap-3 xl:grid-cols-2">
-				<section class="rounded-2xl border border-base-300 bg-base-100 shadow-xs">
-					<header class="flex items-center gap-2 border-b border-base-300 px-4 py-2.5">
-						<h2 class="text-sm font-semibold">Needs attention</h2>
-						<span class="text-xs text-base-content/45">
-							{needsAttention.length} of {modules.length} modules
-						</span>
-						<button
-							class="btn btn-ghost btn-xs ml-auto rounded-full"
-							onclick={() => (activeTab = 'modules')}
-						>
-							Module analytics
-							<ChevronRight size={13} />
-						</button>
-					</header>
-					{#if moduleStats.isLoading}
-						<div class="space-y-2 p-4">
-							{#each Array.from({ length: 5 }, (_, i) => i) as i (i)}
-								<div class="skeleton h-8 w-full rounded-lg"></div>
-							{/each}
-						</div>
-					{:else if needsAttention.length === 0}
-						<p class="p-6 text-center text-sm text-base-content/50">
-							Every module has questions and activity. Nothing needs a look right now.
-						</p>
-					{:else}
-						<ul class="divide-y divide-base-300">
-							{#each needsAttention as module (module.moduleId)}
-								<li class="flex items-center gap-3 px-4 py-2 text-xs">
-									<span class="min-w-0 flex-1">
-										<span class="block truncate font-medium">{module.moduleTitle}</span>
-										<span class="block truncate text-base-content/45">{module.className}</span>
-									</span>
-									<span class="shrink-0 text-warning">{module.reason}</span>
-									<span class="w-20 shrink-0">
-										<span class="flex h-1.5 w-full rounded-full bg-base-300" aria-hidden="true">
-											<span
-												class="h-full rounded-full bg-primary"
-												style="width: {module.completion}%"
-											></span>
-										</span>
-									</span>
-									<span class="w-8 shrink-0 text-right tabular-nums text-base-content/55">
-										{module.completion}%
-									</span>
-									<a
-										class="shrink-0 text-base-content/35 hover:text-primary"
-										aria-label="Open {module.moduleTitle}"
-										href={resolve('/admin/[classId]/module/[moduleId]', {
-											classId: String(module.classId),
-											moduleId: String(module.moduleId)
-										})}
-									>
-										<ChevronRight size={14} />
-									</a>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				</section>
-
-				<section class="rounded-2xl border border-base-300 bg-base-100 shadow-xs">
-					<header class="flex items-center gap-2 border-b border-base-300 px-4 py-2.5">
-						<h2 class="text-sm font-semibold">Most engaged modules</h2>
-						<span class="text-xs text-base-content/45">By completion</span>
-					</header>
-					{#if moduleStats.isLoading}
-						<div class="space-y-2 p-4">
-							{#each Array.from({ length: 5 }, (_, i) => i) as i (i)}
-								<div class="skeleton h-8 w-full rounded-lg"></div>
-							{/each}
-						</div>
-					{:else if topModules.length === 0}
-						<p class="p-6 text-center text-sm text-base-content/50">
-							No modules with questions yet.
-						</p>
-					{:else}
-						<ul class="divide-y divide-base-300">
-							{#each topModules as module (module.moduleId)}
-								<li class="flex items-center gap-3 px-4 py-2 text-xs">
-									<span class="min-w-0 flex-1">
-										<span class="block truncate font-medium">{module.moduleTitle}</span>
-										<span class="block truncate text-base-content/45">
-											{module.activeStudents} of {module.totalStudents} students,
-											{module.totalQuestions} questions
-										</span>
-									</span>
-									{#if module.questionsFlagged > 0}
-										<span class="flex shrink-0 items-center gap-1 text-warning">
-											<Flag size={11} />
-											{module.questionsFlagged}
-										</span>
-									{/if}
-									<span class="w-20 shrink-0">
-										<span class="flex h-1.5 w-full rounded-full bg-base-300" aria-hidden="true">
-											<span
-												class="h-full rounded-full bg-success"
-												style="width: {module.completion}%"
-											></span>
-										</span>
-									</span>
-									<span class="w-8 shrink-0 text-right tabular-nums text-base-content/55">
-										{module.completion}%
-									</span>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				</section>
+				<div class="min-w-0">
+					<h1 class="text-2xl font-bold tracking-tight">Class progress</h1>
+					<p class="mt-1 text-sm text-base-content/60">{user?.cohortName} · {user?.schoolName}</p>
+				</div>
 			</div>
+			<nav
+				class="flex max-w-full gap-1 overflow-x-auto rounded-full border border-base-300 bg-base-200 p-1"
+				aria-label="Progress views"
+			>
+				{#each views as item}<button
+						class="btn btn-sm shrink-0 rounded-full border-0 px-4 {view === item.id
+							? 'bg-base-100 text-primary shadow-sm'
+							: 'btn-ghost text-base-content/65'}"
+						aria-pressed={view === item.id}
+						onclick={() => navigate({ view: item.id === 'overview' ? null : item.id })}
+						><item.icon size={16} class="hidden sm:block" />{item.label}</button
+					>{/each}
+			</nav>
+		</header>
+		{#if !cohortId}<div class="alert alert-warning">No cohort is assigned to your account.</div>
+		{:else}
+			{#if !connected && everConnected}<div class="alert alert-warning mb-5" role="status">
+					Connection interrupted. Displayed data may be out of date; updates resume automatically
+					when reconnected.
+				</div>{/if}
 
-			<div class="grid gap-3 sm:grid-cols-2">
-				<button
-					class="group flex items-center gap-3 rounded-2xl border border-base-300 bg-base-100 p-4 text-left shadow-xs transition hover:border-primary/40"
-					onclick={() => (activeTab = 'studio')}
-				>
-					<span class="rounded-xl bg-primary/10 p-2 text-primary"><Sparkles size={18} /></span>
-					<span class="min-w-0">
-						<span class="block text-sm font-medium">Question Studio</span>
-						<span class="block text-xs text-base-content/50">
-							{generationHistory.data?.summary.runsThisWeek ?? 0} runs and
-							{generationHistory.data?.summary.savedThisWeek ?? 0} questions kept this week
-						</span>
-					</span>
-					<ChevronRight size={16} class="ml-auto text-base-content/30 group-hover:text-primary" />
-				</button>
-				<a
-					class="group flex items-center gap-3 rounded-2xl border border-base-300 bg-base-100 p-4 text-left shadow-xs transition hover:border-primary/40"
-					href={resolve('/admin/badges')}
-				>
-					<span class="rounded-xl bg-accent/10 p-2 text-accent"><Award size={18} /></span>
-					<span class="min-w-0">
-						<span class="block text-sm font-medium">Badge catalog</span>
-						<span class="block text-xs text-base-content/50">
-							Manage and review badge definitions
-						</span>
-					</span>
-					<ChevronRight size={16} class="ml-auto text-base-content/30 group-hover:text-primary" />
-				</a>
-			</div>
-		</div>
-	{:else if activeTab === 'modules'}
-		<CuratorModuleAnalytics {cohortId} />
-	{:else if activeTab === 'studio'}
-		<CuratorGenerationRuns {cohortId} />
-	{:else}
-		<div class="space-y-3">
-			<AdminStatStrip
-				items={studentStats}
-				loading={studentsWithProgress.isLoading}
-				ariaLabel="Student summary"
-			/>
-
-			<section class="rounded-2xl border border-base-300 bg-base-100 shadow-xs">
-				<header class="flex flex-wrap items-center gap-2 border-b border-base-300 px-4 py-2.5">
-					<h2 class="flex items-center gap-2 text-sm font-semibold">
-						<Users size={16} />
-						Students
-					</h2>
-					<span class="text-xs text-base-content/45">
-						{sortedStudents.length}
-						{sortedStudents.length === 1 ? 'person' : 'people'}
-					</span>
-					<div class="ml-auto flex items-center gap-2">
-						<div class="flex rounded-full border border-base-300 bg-base-200 p-0.5">
-							{#each [{ id: 'progress', label: 'Mastery' }, { id: 'recent', label: 'Recent' }, { id: 'name', label: 'Name' }] as const as option (option.id)}
-								<button
-									class="btn btn-xs rounded-full border-0 {studentSort === option.id
-										? 'bg-base-100 text-primary shadow-sm'
-										: 'btn-ghost text-base-content/55'}"
-									aria-pressed={studentSort === option.id}
-									onclick={() => (studentSort = option.id)}
+			{#if view === 'overview'}
+				{#if studentsQuery.error}<div class="alert alert-error mb-5" role="alert">
+						Cohort insights could not load. {studentsQuery.error?.message}
+					</div>{/if}
+				<div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
+					{#each [{ label: 'Students in cohort', value: students.length, suffix: '', note: 'Cohort members', icon: Users, filter: 'all', tone: 'text-base-content' }, { label: 'Active this week', value: measuredStudents.length ? active : '—', suffix: '', note: measuredStudents.length ? `${percent(active, measuredStudents.length)}% of tracked students` : 'Last 7 days', icon: Activity, filter: 'active', tone: 'text-primary' }, { label: 'Median coverage', value: measuredStudents.length ? median : '—', suffix: measuredStudents.length ? '%' : '', note: 'Share of questions tried', icon: Target, filter: 'all', tone: 'text-success' }, { label: 'Not started', value: measuredStudents.length ? notStarted : '—', suffix: '', note: 'No questions tried yet', icon: Compass, filter: 'none', tone: 'text-base-content' }] as metric}<button
+							class="group rounded-2xl border border-base-300 bg-base-100 p-4 text-left transition hover:border-primary sm:p-5"
+							disabled={!studentsQuery.data}
+							onclick={() => showStudents(metric.filter)}
+							><span class="flex items-center justify-between gap-2 text-sm text-base-content/65"
+								>{metric.label}<metric.icon size={18} class="hidden shrink-0 sm:block" /></span
+							>{#if !studentsQuery.data}<span class="skeleton my-4 block h-12 w-20"
+								></span>{:else}<span
+									class="my-3 block text-5xl font-semibold tracking-tighter tabular-nums {metric.tone}"
+									>{metric.value}<span class="text-3xl">{metric.suffix}</span></span
+								>{/if}<span
+								class="flex items-center justify-between gap-2 text-xs text-base-content/55"
+								>{metric.note}<ArrowUpRight size={14} class="shrink-0 text-primary" /></span
+							></button
+						>{/each}
+				</div>
+				<div class="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,1fr)]">
+					<div class="space-y-5">
+						<section class="rounded-2xl border border-base-300 bg-base-100 p-5 sm:p-6">
+							<div class="flex items-start justify-between gap-3">
+								<div>
+									<h2 class="text-xl font-semibold">Coverage distribution</h2>
+								</div>
+								<span class="badge badge-ghost"
+									>{studentsQuery.data ? `${measuredStudents.length} with stats` : 'Loading'}</span
 								>
-									{option.label}
-								</button>
-							{/each}
-						</div>
-						<label class="input input-sm w-full max-w-56 rounded-full">
-							<Search size={14} class="text-base-content/40" />
-							<input
-								type="search"
-								class="grow"
-								placeholder="Search students"
-								bind:value={searchQuery}
-							/>
-						</label>
+							</div>
+							<p class="mt-2 text-sm text-base-content/60">
+								Students by share of the question bank tried.
+							</p>
+							{#if studentsQuery.isLoading}<div
+									class="skeleton mt-6 h-32"
+								></div>{:else if !measuredStudents.length}<p
+									class="py-12 text-center text-base-content/60"
+								>
+									No coverage summary yet.
+								</p>{:else}<div
+									class="mt-6 flex h-12 gap-1 overflow-hidden rounded-xl"
+									aria-label="Coverage distribution"
+								>
+									{#each bands.filter((b) => b.count > 0) as band}<button
+											class="min-w-3 transition hover:opacity-75 {band.color}"
+											style="flex: {band.count} 1 0%"
+											aria-label="{band.label}: {band.count} students"
+											title="{band.label}: {band.count} students"
+											onclick={() => showStudents(band.id)}
+										></button>{/each}
+								</div>
+								<div class="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+									{#each bands as band}<button
+											class="rounded-xl p-2 text-left hover:bg-base-200"
+											onclick={() => showStudents(band.id)}
+											><span class="flex items-center gap-2 text-xs text-base-content/65"
+												><span class="h-2 w-2 rounded-full {band.color}"></span>{band.label}</span
+											><strong class="mt-2 block text-3xl font-semibold tabular-nums"
+												>{band.count}<span class="ml-2 text-xs font-normal text-base-content/45"
+													>{percent(band.count, measuredStudents.length)}%</span
+												></strong
+											><span class="mt-1 block text-[11px] leading-relaxed text-base-content/55"
+												>{band.detail}</span
+											></button
+										>{/each}
+								</div>{/if}
+							<details class="mt-5 border-t border-base-300 pt-4">
+								<summary
+									class="flex cursor-pointer list-none items-center gap-2 text-xs text-base-content/60"
+									><CircleHelp size={14} />How to read these numbers<ChevronRight
+										size={14}
+										class="ml-auto"
+									/></summary
+								>
+								<p class="mt-3 text-sm leading-relaxed text-base-content/60">
+									Coverage is the share of questions tried, not an exam score. Participation means a
+									student has tried a question; coverage counts student–question pairs tried. A low
+									percentage may simply reflect new or optional content. Activity windows use the
+									student’s last recorded activity.
+								</p>
+							</details>
+						</section>
+						<section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
+							<header class="flex flex-wrap items-end justify-between gap-3 p-5 sm:p-6">
+								<div>
+									<h2 class="text-xl font-semibold">Least explored modules</h2>
+									<p class="mt-2 text-sm text-base-content/60">
+										{moduleQuery.data
+											? `Lowest coverage · ${moduleQuery.data.modules.length} of ${moduleQuery.data.totalModules} modules`
+											: 'Loading module coverage…'}
+									</p>
+								</div>
+								<button
+									class="btn rounded-full btn-ghost btn-sm"
+									onclick={() => navigate({ view: 'curriculum' })}
+									>Explore all <ArrowUpRight size={15} /></button
+								>
+							</header>
+							{#if moduleQuery.error}<div class="alert alert-error m-5" role="alert">
+									Module insights could not load.
+								</div>{:else if moduleQuery.isLoading}<div class="space-y-3 p-5">
+									{#each [1, 2, 3] as row}<div class="skeleton h-16"></div>{/each}
+								</div>{:else}{#each moduleQuery.data?.modules ?? [] as module (module.moduleId)}<button
+										class="group flex w-full items-center gap-3 border-t border-base-300 px-5 py-4 text-left hover:bg-base-200/60 sm:px-6"
+										onclick={() => showModule(module.classId, module.moduleId)}
+										><span
+											class="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-base-200 text-xl sm:flex"
+											>{module.moduleEmoji ?? '📚'}</span
+										><span class="min-w-0 flex-1"
+											><strong class="block truncate text-sm">{module.moduleTitle}</strong><span
+												class="mt-1 block truncate text-xs text-base-content/55"
+												>{module.className} · {module.totalQuestions} questions</span
+											><span class="mt-1 block text-xs text-base-content/60"
+												>{module.activeStudents}/{module.totalStudents} students{module.questionsFlagged
+													? ` · ${module.questionsFlagged} flags`
+													: ''}</span
+											></span
+										><span class="w-20 shrink-0"
+											><span class="mb-1 block text-right text-sm font-semibold tabular-nums"
+												>{module.completion}%</span
+											><progress
+												class="progress progress-primary h-1.5 w-full"
+												value={module.completion}
+												max="100"
+												aria-label="Question coverage"
+											></progress><span class="block text-right text-[10px] text-base-content/50"
+												>coverage</span
+											></span
+										><ChevronRight
+											size={18}
+											class="shrink-0 text-base-content/35 group-hover:text-primary"
+										/></button
+									>{:else}<p class="p-8 text-center text-base-content/60">
+										No modules available yet.
+									</p>{/each}{/if}
+						</section>
 					</div>
-				</header>
+					<div class="space-y-5">
+						<section class="rounded-2xl bg-primary p-5 text-primary-content sm:p-6">
+							<h2 class="text-xl font-semibold">Participation</h2>
 
-				{#if studentsWithProgress.isLoading}
-					<div class="space-y-2 p-4">
-						{#each Array.from({ length: 8 }, (_, i) => i) as i (i)}
-							<div class="skeleton h-10 w-full rounded-lg"></div>
-						{/each}
+							<div class="mt-5 space-y-2">
+								<button
+									class="flex w-full items-center gap-3 rounded-xl border border-primary-content/20 p-4 text-left hover:bg-primary-content/10"
+									disabled={!studentsQuery.data}
+									onclick={() => showStudents('none')}
+									><span class="text-3xl font-semibold tabular-nums"
+										>{measuredStudents.length ? notStarted : '—'}</span
+									><span class="flex-1 text-sm">Not started</span><ArrowUpRight size={18} /></button
+								><button
+									class="flex w-full items-center gap-3 rounded-xl border border-primary-content/20 p-4 text-left hover:bg-primary-content/10"
+									disabled={!studentsQuery.data}
+									onclick={() => showStudents('quiet')}
+									><span class="text-3xl font-semibold tabular-nums"
+										>{measuredStudents.length ? quiet : '—'}</span
+									><span class="flex-1 text-sm"
+										>Inactive for 30+ days<span class="block text-xs opacity-65"
+											>Previously started studying</span
+										></span
+									><ArrowUpRight size={18} /></button
+								>
+							</div>
+						</section>
+						<section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
+							<header class="flex items-center justify-between p-5">
+								<div>
+									<h2 class="text-xl font-semibold">Recent activity</h2>
+								</div>
+								<Activity size={19} class="text-success" />
+							</header>
+							{#if studentsQuery.isLoading}<div
+									class="skeleton m-5 h-28"
+								></div>{:else}{#each recentStudents as student (student._id)}<button
+										class="flex w-full items-center gap-3 border-t border-base-300 px-5 py-4 text-left hover:bg-base-200/60"
+										onclick={() => openStudent(student._id)}
+										><StudentAvatar name={student.name} imageUrl={student.imageUrl} /><span
+											class="min-w-0 flex-1"
+											><strong class="block truncate text-sm">{student.name}</strong><span
+												class="mt-0.5 block text-xs text-base-content/55"
+												>{student.statsAvailable
+													? relativeTime(student.lastActivityAt, now)
+													: 'Unknown'}</span
+											></span
+										><span class="text-sm font-medium tabular-nums">{student.progress}%</span
+										><ChevronRight size={15} class="text-base-content/40" /></button
+									>{:else}<p class="p-5 pt-0 text-sm text-base-content/60">
+										Recent learners appear here when activity is recorded.
+									</p>{/each}{/if}<button
+								class="btn rounded-full btn-ghost w-full rounded-none border-t border-base-300 text-sm"
+								onclick={() => showStudents()}>View all students <ChevronRight size={16} /></button
+							>
+						</section>
+						<div class="flex items-start gap-3 px-1 text-sm text-base-content/55">
+							<BookOpen size={18} class="mt-0.5 shrink-0" />
+							<p>
+								{moduleQuery.data
+									? `${moduleQuery.data.totalModules} modules to explore.`
+									: 'Loading curriculum…'}<span class="mt-1 block text-xs">{user?.schoolName}</span>
+							</p>
+						</div>
 					</div>
-				{:else if studentsWithProgress.error}
-					<div class="alert alert-error m-4 rounded-2xl">
-						Failed to load students: {studentsWithProgress.error.message}
+				</div>
+			{:else if view === 'curriculum'}
+				<Explorer
+					{cohortId}
+					classId={params.get('class') ?? ''}
+					moduleId={params.get('module') ?? ''}
+					semesterId={params.get('semester') ?? ''}
+					{now}
+					onNavigate={navigate}
+					onStudent={openStudent}
+				/>
+			{:else if view === 'studio'}
+				<CuratorGenerationRuns {cohortId} />
+			{:else}
+				<section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
+					<div class="border-b border-base-300 p-5">
+						<div class="flex flex-wrap items-center justify-between gap-3">
+							<div>
+								<h2 class="text-xl font-semibold">Students</h2>
+								<p class="mt-1 text-sm text-base-content/60">
+									{studentsQuery.data
+										? `${filteredStudents.length} of ${students.length} students`
+										: 'Loading students…'}
+								</p>
+							</div>
+							<div class="flex w-full flex-wrap gap-2 sm:w-auto">
+								<label class="input rounded-full min-w-0 flex-1 sm:w-60"
+									><Search size={17} class="text-base-content/50" /><input
+										type="search"
+										placeholder="Name, email, or username…"
+										aria-label="Search students"
+										bind:value={search}
+									/></label
+								><select
+									class="select rounded-full w-40"
+									aria-label="Sort students"
+									bind:value={sort}
+									><option value="recent">Recently active</option><option value="coverage"
+										>Highest coverage</option
+									><option value="name">Name A–Z</option></select
+								>
+							</div>
+						</div>
+						<div class="mt-5 flex flex-wrap gap-2" aria-label="Student filters">
+							{#each filters as option}<button
+									class="btn rounded-full btn-sm {filter === option.id
+										? 'btn-primary'
+										: 'btn-ghost bg-base-200'}"
+									aria-pressed={filter === option.id}
+									onclick={() => navigate({ filter: option.id === 'all' ? null : option.id })}
+									>{option.label}<span class="opacity-60">{option.count}</span></button
+								>{/each}
+						</div>
 					</div>
-				{:else if sortedStudents.length === 0}
-					<div class="py-12 text-center text-sm text-base-content/50">
-						{#if searchQuery}
-							Nobody matches “{searchQuery}”.
-						{:else}
-							No students in this cohort yet.
-						{/if}
-					</div>
-				{:else}
-					<div class="overflow-x-auto">
-						<table class="table table-sm">
-							<thead>
-								<tr class="text-xs text-base-content/50">
-									<th>Student</th>
-									<th>Access</th>
-									<th class="w-56">Mastery</th>
-									<th class="text-right">Tried</th>
-									<th>Last active</th>
-									<th>Joined</th>
-									<th></th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each sortedStudents as student (student._id)}
-									<tr
-										class="cursor-pointer hover:bg-base-200/40"
-										onclick={() => openStudentModal(student._id)}
-									>
-										<td>
-											<div class="flex items-center gap-2.5">
-												{#if student.imageUrl}
-													<div class="avatar">
-														<div class="h-8 w-8 rounded-full">
-															<img src={student.imageUrl} alt="" />
-														</div>
+					{#if studentsQuery.error}<div class="alert alert-error m-5" role="alert">
+							Students could not load. {studentsQuery.error.message}
+						</div>{:else if studentsQuery.isLoading}<div class="space-y-3 p-5">
+							{#each [1, 2, 3, 4] as row}<div class="skeleton h-20"></div>{/each}
+						</div>{:else if !filteredStudents.length}<div class="p-12 text-center">
+							<Search size={30} class="mx-auto mb-4 text-base-content/40" />
+							<h3 class="text-xl font-semibold">
+								{students.length ? 'No students in this view' : 'Your cohort is empty'}
+							</h3>
+							<p class="mt-2 text-sm text-base-content/60">
+								{students.length
+									? 'Try another group or clear your search.'
+									: 'Students will appear here when they join.'}
+							</p>
+							{#if students.length}<button
+									class="btn rounded-full btn-outline mt-5"
+									onclick={() => showStudents()}>Show all students</button
+								>{/if}
+						</div>{:else}<div class="overflow-x-auto">
+							<table class="table">
+								<thead
+									><tr class="text-xs text-base-content/55"
+										><th class="pl-5">Student</th><th>Coverage</th><th class="text-right"
+											>Questions tried</th
+										><th>Last active</th><th class="hidden xl:table-cell">Joined</th><th
+											><span class="sr-only">Details</span></th
+										></tr
+									></thead
+								><tbody
+									>{#each filteredStudents as student (student._id)}<tr class="hover:bg-base-200/50"
+											><td class="py-4 pl-5"
+												><button
+													class="flex items-center gap-3 text-left"
+													onclick={() => openStudent(student._id)}
+													><span class="avatar avatar-placeholder"
+														><span
+															class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-primary/10 font-semibold text-primary"
+															>{#if student.imageUrl}<img
+																	src={student.imageUrl}
+																	alt=""
+																	class="h-full w-full object-cover"
+																/>{:else}{student.name.slice(0, 1)}{/if}</span
+														></span
+													><span
+														><span class="block font-semibold hover:text-primary"
+															>{student.name}</span
+														><span class="mt-1 block max-w-56 truncate text-xs text-base-content/55"
+															>{student.email ?? student.username ?? 'Student'}</span
+														>{#if student.role}<span
+																class="badge badge-ghost badge-xs mt-1 capitalize"
+																>{student.role}</span
+															>{/if}</span
+													></button
+												></td
+											><td
+												><div class="min-w-32">
+													<div class="mb-1 flex items-baseline gap-2">
+														<strong class="text-lg tabular-nums"
+															>{student.statsAvailable ? `${student.progress}%` : '—'}</strong
+														><span class="text-xs text-base-content/50"
+															>{student.statsAvailable
+																? `${student.questionsInteracted}/${student.totalQuestions}`
+																: ''}</span
+														>
 													</div>
-												{:else}
-													<div class="avatar avatar-placeholder">
-														<div class="h-8 w-8 rounded-full bg-neutral text-neutral-content">
-															<span class="text-xs">{initials(student.name)}</span>
-														</div>
-													</div>
-												{/if}
-												<div class="min-w-0">
-													<div class="truncate text-sm font-medium">{student.name}</div>
-													{#if student.email}
-														<div class="truncate text-xs text-base-content/45">
-															{student.email}
-														</div>
-													{/if}
-												</div>
-											</div>
-										</td>
-										<td>
-											<div class="flex items-center gap-1.5">
-												{#if student.role === 'dev'}
-													<span class="badge badge-warning badge-xs gap-1">
-														<Shield size={10} /> dev
-													</span>
-												{:else if student.role === 'admin'}
-													<span class="badge badge-primary badge-xs gap-1">
-														<Shield size={10} /> admin
-													</span>
-												{:else if student.role === 'curator'}
-													<span class="badge badge-info badge-xs gap-1">
-														<PenTool size={10} /> curator
-													</span>
-												{:else}
-													<span class="text-xs text-base-content/40">Student</span>
-												{/if}
-												{#if student.isPro}
-													<span class="badge badge-secondary badge-xs gap-1">
-														<Zap size={10} fill="currentColor" /> pro
-													</span>
-												{/if}
-											</div>
-										</td>
-										<td>
-											<div class="flex items-center gap-2">
-												<span class="flex h-1.5 w-24 rounded-full bg-base-300" aria-hidden="true">
-													<span
-														class="h-full rounded-full {student.progress >= 60
-															? 'bg-success'
-															: 'bg-primary'}"
-														style="width: {student.progress}%"
-													></span>
-												</span>
-												<span class="w-8 text-right text-xs tabular-nums text-base-content/60">
-													{student.progress}%
-												</span>
-												<span class="text-xs tabular-nums text-base-content/35">
-													{student.questionsMastered}/{student.totalQuestions}
-												</span>
-											</div>
-										</td>
-										<td class="text-right text-xs tabular-nums text-base-content/60">
-											{student.questionsInteracted}
-										</td>
-										<td class="text-xs text-base-content/60">
-											{formatRelativeTime(student.lastActivityAt)}
-										</td>
-										<td class="text-xs text-base-content/45">
-											{student.createdAt ? new Date(student.createdAt).toLocaleDateString() : '—'}
-										</td>
-										<td><ChevronRight size={14} class="text-base-content/30" /></td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{/if}
-			</section>
-		</div>
-	{/if}
+													{#if student.statsAvailable}<progress
+															class="progress h-1.5 w-32 {student.progress >= 75
+																? 'progress-success'
+																: 'progress-primary'}"
+															value={student.progress}
+															max="100"
+															aria-label="{student.name} coverage"
+														></progress>{/if}
+												</div></td
+											><td class="text-right font-medium tabular-nums"
+												>{student.statsAvailable ? student.questionsInteracted : '—'}</td
+											><td class="whitespace-nowrap text-sm text-base-content/65"
+												>{student.statsAvailable
+													? relativeTime(student.lastActivityAt, now)
+													: 'Unknown'}</td
+											><td class="hidden text-sm text-base-content/55 xl:table-cell"
+												>{student.createdAt
+													? new Date(student.createdAt).toLocaleDateString()
+													: '—'}</td
+											><td
+												><button
+													class="btn rounded-full btn-ghost btn-square"
+													aria-label="View progress for {student.name}"
+													onclick={() => openStudent(student._id)}
+													><ChevronRight size={18} /></button
+												></td
+											></tr
+										>{/each}</tbody
+								>
+							</table>
+						</div>{/if}
+				</section>
+			{/if}
+		{/if}
+	</div>
 </div>
 
-{#if cohortId}
+{#if cohortId && selectedStudent}
 	<StudentDetailModal
-		isOpen={isStudentModalOpen}
-		onClose={() => {
-			isStudentModalOpen = false;
-			selectedStudentId = null;
-		}}
+		isOpen={true}
+		onClose={() => (selectedStudentId = null)}
 		student={selectedStudent}
 		{cohortId}
-		currentUserRole={userData?.role}
-		currentUserClerkId={userData?.clerkUserId}
-		{isDev}
-		{isAdmin}
+		currentUserRole={user?.role}
+		currentUserClerkId={user?.clerkUserId}
+		isDev={user?.role === 'dev'}
+		isAdmin={user?.role === 'admin' || user?.role === 'dev'}
 		{updateRole}
 	/>
 {/if}
+
+<style>
+	.progress-workspace :global(button:focus-visible),
+	.progress-workspace :global(summary:focus-visible),
+	.progress-workspace :global(a:focus-visible) {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 3px;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.progress-workspace :global(*) {
+			transition: none !important;
+			animation: none !important;
+		}
+	}
+</style>

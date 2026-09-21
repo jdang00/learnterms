@@ -2,7 +2,7 @@
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
-	import { BookOpen, CheckCircle, Flag, TrendingUp } from 'lucide-svelte';
+	import { BookOpen, Flag, TrendingUp } from 'lucide-svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
 	let { userId, cohortId }: { userId: Id<'users'>; cohortId: Id<'cohort'> } = $props();
@@ -76,28 +76,19 @@
 			<div class="stat-figure text-primary">
 				<TrendingUp size={20} />
 			</div>
-			<div class="stat-title text-xs">Progress</div>
+			<div class="stat-title text-xs">Coverage</div>
 			<div class="stat-value text-lg text-primary">{overall.progress}%</div>
 		</div>
 		<div class="stat py-3">
 			<div class="stat-figure text-secondary">
 				<BookOpen size={20} />
 			</div>
-			<div class="stat-title text-xs">Interacted</div>
+			<div class="stat-title text-xs">Questions tried</div>
 			<div class="stat-value text-lg text-secondary">
 				{overall.questionsInteracted}
 				<span class="text-sm font-normal text-base-content/60">
 					/ {overall.totalQuestions}
 				</span>
-			</div>
-		</div>
-		<div class="stat py-3">
-			<div class="stat-figure text-success">
-				<CheckCircle size={20} />
-			</div>
-			<div class="stat-title text-xs">Mastered</div>
-			<div class="stat-value text-lg text-success">
-				{overall.questionsMastered}
 			</div>
 		</div>
 		<div class="stat py-3">
@@ -113,9 +104,7 @@
 
 	<!-- Semester/Class/Module breakdown -->
 	<div class="flex-1 overflow-y-auto">
-		<h4 class="font-semibold mb-3 text-sm text-base-content/70 uppercase tracking-wide">
-			Progress by Class
-		</h4>
+		<h4 class="font-semibold mb-3 text-sm text-base-content/70">Progress by Class</h4>
 
 		{#if classesBySemester().length === 0}
 			<div class="text-center py-8 text-base-content/60">
@@ -129,6 +118,7 @@
 					<div class="collapse collapse-arrow bg-base-200 rounded-2xl">
 						<input
 							type="checkbox"
+							aria-label={`Expand ${semesterName}`}
 							checked={expandedSemesters.has(semesterName)}
 							onchange={() => toggleSemester(semesterName)}
 						/>
@@ -147,6 +137,7 @@
 									>
 										<input
 											type="checkbox"
+											aria-label={`Expand ${cls.className}`}
 											checked={expandedClasses.has(cls.classId)}
 											onchange={() => toggleClass(cls.classId)}
 										/>
@@ -174,8 +165,7 @@
 														<tr class="text-xs">
 															<th>Module</th>
 															<th class="text-center">Progress</th>
-															<th class="text-center">Interacted</th>
-															<th class="text-center">Mastered</th>
+															<th class="text-center">Tried</th>
 															<th class="text-center">Flagged</th>
 														</tr>
 													</thead>
@@ -203,15 +193,7 @@
 																<td class="text-center text-xs">
 																	{mod.questionsInteracted}/{mod.totalQuestions}
 																</td>
-																<td class="text-center">
-																	{#if mod.questionsMastered > 0}
-																		<span class="badge badge-success badge-xs">
-																			{mod.questionsMastered}
-																		</span>
-																	{:else}
-																		<span class="text-base-content/30">-</span>
-																	{/if}
-																</td>
+
 																<td class="text-center">
 																	{#if mod.questionsFlagged > 0}
 																		<span class="badge badge-warning badge-xs">

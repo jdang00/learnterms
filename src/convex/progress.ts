@@ -53,13 +53,35 @@ export const getStudentCountByCohort = authQuery({
 /**
  * Get students with their progress stats for a specific cohort.
  * Uses precomputed progressStats from user records for fast reads.
- * Falls back to computing if stats haven't been backfilled yet.
+ * Missing cached statistics are explicitly marked unavailable, never treated as evidence of no activity.
  */
 export const getStudentsWithProgress = authQuery({
 	args: {
 		cohortId: v.id('cohort'),
 		includeSubscription: v.optional(v.boolean())
 	},
+	returns: v.array(
+		v.object({
+			_id: v.id('users'),
+			name: v.string(),
+			clerkUserId: v.string(),
+			firstName: v.optional(v.string()),
+			lastName: v.optional(v.string()),
+			email: v.optional(v.string()),
+			username: v.optional(v.string()),
+			imageUrl: v.optional(v.string()),
+			lastSignInAt: v.optional(v.number()),
+			createdAt: v.optional(v.number()),
+			role: v.optional(v.union(v.literal('dev'), v.literal('admin'), v.literal('curator'))),
+			isPro: v.boolean(),
+			progress: v.number(),
+			questionsInteracted: v.number(),
+			questionsMastered: v.number(),
+			totalQuestions: v.number(),
+			lastActivityAt: v.union(v.number(), v.null()),
+			statsAvailable: v.boolean()
+		})
+	),
 	handler: async (ctx, args) => {
 		const includeSubscription = args.includeSubscription ?? false;
 		// Get all students in the cohort using index
@@ -110,6 +132,7 @@ export const getStudentsWithProgress = authQuery({
 						role: student.role,
 						isPro,
 						progress: progressPercentage,
+						statsAvailable: true,
 						questionsInteracted: student.progressStats.questionsInteracted,
 						questionsMastered: student.progressStats.questionsMastered,
 						totalQuestions,
@@ -117,7 +140,7 @@ export const getStudentsWithProgress = authQuery({
 					};
 				}
 
-				// Fallback for users without precomputed stats
+				// Keep legacy numeric fields compatible, while allowing analytics to exclude unknowns.
 				return {
 					_id: student._id,
 					name: student.name,
@@ -132,6 +155,7 @@ export const getStudentsWithProgress = authQuery({
 					role: student.role,
 					isPro,
 					progress: 0,
+					statsAvailable: false,
 					questionsInteracted: 0,
 					questionsMastered: 0,
 					totalQuestions: totalQuestionsInCohort,
