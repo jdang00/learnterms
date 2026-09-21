@@ -1,0 +1,70 @@
+{
+  "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+  "status": "failed",
+  "requested": 15,
+  "accepted": 0,
+  "wallMs": 30009,
+  "firstCandidateMs": null,
+  "setupMs": 2342,
+  "workerSpanMs": 27343,
+  "finalizationMs": 324,
+  "aggregateWorkerMs": 80144,
+  "aggregateWorkerModelMs": 75724,
+  "aggregateNonModelWorkerMs": 4420,
+  "acceptedByType": {},
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 3,
+        "costEstimatedCalls": 0,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 3,
+        "inputTokens": 0,
+        "latencyMsTotal": 75724,
+        "outputTokens": 0,
+        "reasoningTokens": 0,
+        "stage": "draft"
+      }
+    ],
+    "cacheWriteTokens": 0,
+    "cachedInputTokens": 0,
+    "calls": 3,
+    "costEstimatedCalls": 0,
+    "costKnownCalls": 0,
+    "costUsd": 0,
+    "failedCalls": 3,
+    "inputTokens": 0,
+    "latencyMsTotal": 75724,
+    "outputTokens": 0,
+    "reasoningTokens": 0
+  },
+  "workerNotes": [
+    "Learn: 0/5 passed local evidence and answer-structure checks. 0 corrected during review. 5 withheld. Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted",
+    "Learn: 0/5 passed local evidence and answer-structure checks. 0 corrected during review. 5 withheld. Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted",
+    "Learn: 0/5 passed local evidence and answer-structure checks. 0 corrected during review. 5 withheld. Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted"
+  ],
+  "repairs": [],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 2536,
+      "durationMs": 27149,
+      "accepted": 0
+    },
+    {
+      "index": 1,
+      "startMs": 2851,
+      "durationMs": 26044,
+      "accepted": 0
+    },
+    {
+      "index": 2,
+      "startMs": 2342,
+      "durationMs": 26951,
+      "accepted": 0
+    }
+  ]
+}

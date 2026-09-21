@@ -1,0 +1,572 @@
+{
+  "_creationTime": 1789962111148.3635,
+  "_id": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+  "blockedDuplicateCount": 0,
+  "candidateCount": 6,
+  "candidates": [
+    {
+      "correctAnswers": [
+        "Highly reflective, glistening, yellow-copper"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v16",
+        "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Highly reflective, glistening, yellow-copper",
+        "Large, round or ovoid, chalk-like",
+        "Dull, elongated, and highly mobile",
+        "Diffuse, translucent, and feathery"
+      ],
+      "questionType": "learn",
+      "rationale": "Cholesterol, or Hollenhorst, emboli are identified by a highly reflective, glistening, yellow-copper appearance. This distinguishes them from calcific emboli, which are large, round or ovoid, and chalk-like. Fibrin-platelet emboli have a dull, elongated appearance and are highly mobile. Recognizing these visual patterns helps organize the major retinal arterial embolus types and prevents a shiny yellow-copper lesion from being confused with calcific material.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 10, excerpt 1",
+          "citationId": "p10c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 10,
+          "quote": "Highly reflective, glistening, yellow-copper"
+        }
+      ],
+      "sourcePageNumbers": [
+        10
+      ],
+      "stem": "Which appearance is characteristic of a cholesterol (Hollenhorst) retinal embolus?",
+      "topicId": "learn-pages-3",
+      "topicTitle": "Pages 10, 11, 12",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Valvular cardiac disease"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v16",
+        "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Valvular cardiac disease",
+        "Carotid atheromatous plaque",
+        "Retinal arterial vasospasm",
+        "Orbital compressive disease"
+      ],
+      "questionType": "learn",
+      "rationale": "Calcific retinal emboli arise from valvular cardiac disease. They are described as large, round or ovoid lesions with a chalk-like appearance and tend to produce more severe obstruction. Carotid atheromatous disease is an important association for cholesterol emboli, while fibrin-platelet emboli are also linked predominantly to atheromatous plaque. Thus, the cardiac-valvular association is the key distinction for the calcific category.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 11, excerpt 1",
+          "citationId": "p11c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 11,
+          "quote": "From valvular cardiac disease"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 11, excerpt 1",
+          "citationId": "p11c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 11,
+          "quote": "Tend to cause more severe obstructions"
+        }
+      ],
+      "sourcePageNumbers": [
+        11
+      ],
+      "stem": "Calcific retinal emboli are most strongly associated with which source?",
+      "topicId": "learn-pages-3",
+      "topicTitle": "Pages 10, 11, 12",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Platelet aggregates from a usually carotid plaque; dull, elongated, and highly mobile"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v16",
+        "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Platelet aggregates from a usually carotid plaque; dull, elongated, and highly mobile",
+        "Cholesterol material from carotid disease; glistening, yellow-copper, and lodged at bifurcations",
+        "Calcific material from valvular disease; large, round or ovoid, and chalk-like",
+        "Fatty material from systemic circulation; pale, diffuse, and firmly adherent"
+      ],
+      "questionType": "learn",
+      "rationale": "Fibrin-platelet emboli consist predominantly of platelet aggregates from an atheromatous plaque, usually in the carotid, and are described as dull, elongated, and highly mobile. Cholesterol emboli instead have a glistening yellow-copper appearance and tend to lodge at bifurcations. Calcific emboli are associated with valvular cardiac disease and appear chalk-like. The combination of composition, shape, and mobility provides the most useful distinction for fibrin-platelet emboli.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 11, excerpt 1",
+          "citationId": "p11c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 11,
+          "quote": "Composed predominantly of platelet aggregates from atheromatous plaque (usually located in the carotid)"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 11, excerpt 1",
+          "citationId": "p11c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 11,
+          "quote": "Dull and elongated"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 11, excerpt 1",
+          "citationId": "p11c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 11,
+          "quote": "Highly mobile"
+        }
+      ],
+      "sourcePageNumbers": [
+        11
+      ],
+      "stem": "Which description best identifies a fibrin-platelet retinal embolus?",
+      "topicId": "learn-pages-3",
+      "topicTitle": "Pages 10, 11, 12",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Giant cell arteritis"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v16",
+        "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Giant cell arteritis",
+        "Internal carotid artery dissection",
+        "Ocular ischemic syndrome",
+        "Intermittent angle-closure glaucoma"
+      ],
+      "questionType": "learn",
+      "rationale": "Giant cell arteritis is specifically flagged as an emergency among causes of painful transient monocular vision loss. This urgency reflects the need to recognize an inflammatory vascular cause rather than treating the episode as a benign visual disturbance. Carotid dissection, ocular ischemic syndrome, and angle-closure glaucoma are also important painful considerations, but the distinguishing point tested here is the explicit emergency designation. Painful transient vision loss therefore warrants attention to causes beyond embolic, painless amaurosis fugax.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 5, excerpt 1",
+          "citationId": "p5c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 5,
+          "quote": "Giant cell arteritis → ts an emergency"
+        }
+      ],
+      "sourcePageNumbers": [
+        5
+      ],
+      "stem": "Which cause is explicitly identified as an emergency in the differential diagnosis of painful transient monocular vision loss?",
+      "topicId": "learn-pages-1",
+      "topicTitle": "Pages 3, 4, 5",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Retinal migraine"
+      ],
+      "duplicateRisk": "medium",
+      "metadata": {
+        "harnessVersion": "question-types-v16",
+        "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Retinal migraine",
+        "Giant cell arteritis",
+        "Internal carotid artery dissection",
+        "Intermittent angle-closure glaucoma"
+      ],
+      "questionType": "learn",
+      "rationale": "Retinal migraine is identified as a diagnosis of exclusion, meaning other important causes of transient monocular vision loss should be considered before assigning that label. Giant cell arteritis, carotid dissection, and angle-closure glaucoma are alternative diagnostic considerations in painful presentations, not the diagnosis specifically characterized this way. The practical distinction is that a migraine explanation should not prematurely replace evaluation for potentially urgent vascular or ocular disease.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 5, excerpt 1",
+          "citationId": "p5c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 5,
+          "quote": "Retinal migraine is a diagnosis of exclusion"
+        }
+      ],
+      "sourcePageNumbers": [
+        5
+      ],
+      "stem": "Which diagnosis is explicitly described as a diagnosis of exclusion in painful transient monocular vision loss?",
+      "topicId": "learn-pages-1",
+      "topicTitle": "Pages 3, 4, 5",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Retinal vasospasm"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v16",
+        "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Retinal vasospasm",
+        "Orbital mass",
+        "Systemic embolism",
+        "Systemic vasculitis"
+      ],
+      "questionType": "learn",
+      "rationale": "Retinal vasospasm is listed under posterior-segment ocular causes of transient monocular vision loss. An orbital mass belongs to the nonvascular orbital category, while embolism and vasculitis are systemic vascular causes. Distinguishing the anatomic site and systemic category helps organize the differential: a transient visual episode may arise from the eye itself, the orbit, or vascular disease elsewhere in the body.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 3, excerpt 1",
+          "citationId": "p3c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 3,
+          "quote": "Posterior segment\n    - Disc abnormalities, retinal vasospasm"
+        }
+      ],
+      "sourcePageNumbers": [
+        3
+      ],
+      "stem": "Which finding is classified as a posterior-segment ocular cause of transient monocular vision loss?",
+      "topicId": "learn-pages-1",
+      "topicTitle": "Pages 3, 4, 5",
+      "type": "multiple_choice"
+    }
+  ],
+  "claimedWorkers": [
+    0,
+    4,
+    1,
+    3,
+    2
+  ],
+  "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+  "completedAt": 1789962139888,
+  "completedWorkerCount": 2,
+  "completedWorkers": [
+    0,
+    3,
+    1,
+    2,
+    4
+  ],
+  "createdAt": 1789962111148,
+  "createdByUserId": "j571jkhm2fkf4eqe52csnhwnbn7xvkfn",
+  "documentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm",
+  "eventCount": 15,
+  "failedWorkerCount": 3,
+  "kind": "candidate_generation",
+  "loop": {
+    "blueprintCount": 15,
+    "blueprintSource": "fallback",
+    "enabled": true,
+    "gatePassedCount": 6,
+    "gateRejectedCount": 0,
+    "pass": "done",
+    "selectedCount": 6
+  },
+  "model": "gpt-5.6-luna",
+  "moduleClassId": "jn76grzjj9enzcnd371z8nj38h7mx5tw",
+  "moduleId": "js70qm41mmx7wh5f7j0p03zynd894hrq",
+  "moduleTitle": "Testing Module",
+  "plan": {
+    "coverageNotes": [
+      "Packed 15 requested questions into 5 workers with up to 3 questions each.",
+      "Assigned 15 deterministic slot contracts across 5 workers."
+    ],
+    "riskNotes": [],
+    "topicAllocations": [
+      {
+        "notes": "Assigned to Learn: Pages 10, 11, 12.",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          10,
+          11,
+          12
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "learn-pages-3",
+        "topicTitle": "Pages 10, 11, 12"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 13, 14, 15, 16.",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          13,
+          14,
+          15,
+          16
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "learn-pages-4",
+        "topicTitle": "Pages 13, 14, 15, 16"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 17, 18, 19, 20.",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          17,
+          18,
+          19,
+          20
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "learn-pages-5",
+        "topicTitle": "Pages 17, 18, 19, 20"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 3, 4, 5.",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "learn-pages-1",
+        "topicTitle": "Pages 3, 4, 5"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 6, 7, 8, 9.",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          6,
+          7,
+          8,
+          9
+        ],
+        "taskId": "learn:batch:5",
+        "topicId": "learn-pages-2",
+        "topicTitle": "Pages 6, 7, 8, 9"
+      }
+    ],
+    "workerBatches": [
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 10, 11, 12",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          10,
+          11,
+          12
+        ],
+        "targetObjective": "Choose distinct fact 1 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:1",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 10, 11, 12"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 13, 14, 15, 16",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          13,
+          14,
+          15,
+          16
+        ],
+        "targetObjective": "Choose distinct fact 1 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:2",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 13, 14, 15, 16"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 17, 18, 19, 20",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          17,
+          18,
+          19,
+          20
+        ],
+        "targetObjective": "Choose distinct fact 1 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:3",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 17, 18, 19, 20"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 3, 4, 5",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5
+        ],
+        "targetObjective": "Choose distinct fact 1 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:4",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 3, 4, 5"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 6, 7, 8, 9",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          6,
+          7,
+          8,
+          9
+        ],
+        "targetObjective": "Choose distinct fact 1 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:5",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 6, 7, 8, 9"
+        ]
+      }
+    ]
+  },
+  "requestedCount": 15,
+  "requestedCounts": {
+    "clinical": 0,
+    "criticalThinking": 0,
+    "learn": 15
+  },
+  "reviewCount": 6,
+  "selectedPageNumbers": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "sourceIndexedAt": 1789926394236,
+  "sourceMode": "pages",
+  "status": "ready",
+  "statusText": "Partial ready: 6/15 candidates to review.",
+  "updatedAt": 1789962139888,
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 1434,
+        "cachedInputTokens": 11016,
+        "calls": 5,
+        "costEstimatedCalls": 2,
+        "costKnownCalls": 2,
+        "costUsd": 0.0059824200000000004,
+        "failedCalls": 3,
+        "inputTokens": 12456,
+        "latencyMsTotal": 104116,
+        "outputTokens": 4502,
+        "reasoningTokens": 3191,
+        "stage": "draft"
+      }
+    ],
+    "cacheWriteTokens": 1434,
+    "cachedInputTokens": 11016,
+    "calls": 5,
+    "costEstimatedCalls": 2,
+    "costKnownCalls": 2,
+    "costUsd": 0.0059824200000000004,
+    "failedCalls": 3,
+    "inputTokens": 12456,
+    "latencyMsTotal": 104116,
+    "outputTokens": 4502,
+    "reasoningTokens": 3191
+  },
+  "workerNotes": [
+    "Learn: 3/3 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 0/3 passed local evidence and answer-structure checks. 0 corrected during review. 3 withheld. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget.",
+    "Learn: 0/3 passed local evidence and answer-structure checks. 0 corrected during review. 3 withheld. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget.",
+    "Learn: 0/3 passed local evidence and answer-structure checks. 0 corrected during review. 3 withheld. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget."
+  ],
+  "workerStates": [
+    {
+      "draftedCount": 3,
+      "finishedAt": 1789962131838,
+      "index": 0,
+      "startedAt": 1789962113529
+    },
+    {
+      "draftedCount": 0,
+      "failed": true,
+      "finishedAt": 1789962138289,
+      "index": 1,
+      "startedAt": 1789962114015
+    },
+    {
+      "draftedCount": 0,
+      "failed": true,
+      "finishedAt": 1789962138676,
+      "index": 2,
+      "startedAt": 1789962115083
+    },
+    {
+      "draftedCount": 3,
+      "finishedAt": 1789962133110,
+      "index": 3,
+      "startedAt": 1789962114239
+    },
+    {
+      "draftedCount": 0,
+      "failed": true,
+      "finishedAt": 1789962139154,
+      "index": 4,
+      "startedAt": 1789962113680
+    }
+  ]
+}

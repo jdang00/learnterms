@@ -175,6 +175,7 @@ export type RunTelemetry = {
 	totalTokens: number;
 	costUsd: number;
 	costComplete: boolean;
+	costEstimated?: boolean;
 	costPerKept?: number;
 	secondsPerQuestion?: number;
 	projectedRemainingMs?: number;
@@ -206,7 +207,7 @@ export function runTelemetry(options: {
 	);
 	const kept = reviews.length > 0 ? acceptedReviews(reviews).length : undefined;
 	const costUsd = usage?.costUsd ?? 0;
-	const costComplete = Boolean(usage && usage.costKnownCalls >= usage.calls - usage.failedCalls);
+	const costComplete = Boolean(usage && usage.costKnownCalls >= usage.calls);
 	const perQuestionMs =
 		candidates.length > 0 ? (endedAt - job.createdAt) / candidates.length : undefined;
 	const firstEventAt = activity?.events?.[0]?.at;
@@ -231,6 +232,7 @@ export function runTelemetry(options: {
 		totalTokens,
 		costUsd,
 		costComplete,
+		costEstimated: (usage?.costEstimatedCalls ?? 0) > 0,
 		costPerKept: kept && kept > 0 && costUsd > 0 ? costUsd / kept : undefined,
 		secondsPerQuestion: perQuestionMs ? perQuestionMs / 1000 : undefined,
 		projectedRemainingMs:

@@ -1,0 +1,97 @@
+{
+  "jobId": "n57b9xg5sc6n4m1ww3zqyrnmts8evrv9",
+  "status": "ready",
+  "requested": 15,
+  "accepted": 14,
+  "wallMs": 26931,
+  "firstCandidateMs": 17336,
+  "setupMs": 1396,
+  "workerSpanMs": 25111,
+  "finalizationMs": 424,
+  "aggregateWorkerMs": 98485,
+  "aggregateWorkerModelMs": 93599,
+  "aggregateNonModelWorkerMs": 4886,
+  "acceptedByType": {
+    "learn": 14
+  },
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 13372,
+        "cachedInputTokens": 16645,
+        "calls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.0130593,
+        "failedCalls": 0,
+        "inputTokens": 30032,
+        "latencyMsTotal": 62103,
+        "outputTokens": 7817,
+        "reasoningTokens": 5411,
+        "stage": "draft"
+      },
+      {
+        "cacheWriteTokens": 19502,
+        "cachedInputTokens": 13536,
+        "calls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.00911642,
+        "failedCalls": 0,
+        "inputTokens": 33053,
+        "latencyMsTotal": 31496,
+        "outputTokens": 3306,
+        "reasoningTokens": 1614,
+        "stage": "review"
+      }
+    ],
+    "cacheWriteTokens": 32874,
+    "cachedInputTokens": 30181,
+    "calls": 10,
+    "costKnownCalls": 10,
+    "costUsd": 0.02217572,
+    "failedCalls": 0,
+    "inputTokens": 63085,
+    "latencyMsTotal": 93599,
+    "outputTokens": 11123,
+    "reasoningTokens": 7025
+  },
+  "workerNotes": [
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 2/3 passed evidence checks and independent automated review. 1 withheld. Remove source framing from student-facing text. This directly tests the three embolus types listed in the material, while the alternatives mix embolic materials with locations or unrelated findings.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld."
+  ],
+  "repairs": [],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 1520,
+      "durationMs": 16576,
+      "accepted": 3
+    },
+    {
+      "index": 1,
+      "startMs": 1396,
+      "durationMs": 25111,
+      "accepted": 3
+    },
+    {
+      "index": 2,
+      "startMs": 1727,
+      "durationMs": 20076,
+      "accepted": 3
+    },
+    {
+      "index": 3,
+      "startMs": 1789,
+      "durationMs": 15547,
+      "accepted": 3
+    },
+    {
+      "index": 4,
+      "startMs": 1609,
+      "durationMs": 21175,
+      "accepted": 2
+    }
+  ]
+}

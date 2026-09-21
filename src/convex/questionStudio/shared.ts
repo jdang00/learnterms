@@ -5,12 +5,12 @@ import type { Doc, Id } from '../_generated/dataModel';
 import type { QuestionCounts, QuestionType } from './questionTypes';
 
 export const DEFAULT_TEXT_MODEL = 'openai/gpt-5.6-luna';
-export const QUESTION_STUDIO_MAPPING_MODEL = DEFAULT_TEXT_MODEL;
-export const QUESTION_STUDIO_MODEL = DEFAULT_TEXT_MODEL;
+export const QUESTION_STUDIO_MODEL = 'gpt-5.6-luna';
+export const QUESTION_STUDIO_MAPPING_MODEL = QUESTION_STUDIO_MODEL;
 export const QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS = {
 	openai: {
-		forceReasoning: true,
-		reasoningEffort: 'low'
+		reasoningEffort: 'low',
+		store: true
 	}
 } as const;
 export const questionStudioModelValidator = v.string();
@@ -22,6 +22,12 @@ export const MAX_SOURCE_CHARS = 80_000;
 export const MAX_WORKER_RAG_CHARS = 5_000;
 export const MAX_REVIEW_REASON_CHARS = 320;
 export const MAX_QUESTIONS_PER_WORKER = 3;
+export const LEARN_QUESTIONS_PER_WORKER = 2;
+// Separate model batch size from source-coverage groups.
+export const LEARN_MODEL_BATCH_SIZE = 2;
+export const LEARN_DRAFTING_EFFORT = 'medium' as const;
+export const MAX_CONCURRENT_LEARN_WORKERS = 8;
+export const MAX_CONCURRENT_QUESTION_WORKERS = 5;
 export const MAX_JOB_EVENT_DETAIL_CHARS = 420;
 
 export type ReasoningOrder = 'first' | 'second' | 'third';
@@ -67,6 +73,7 @@ export type CandidateQuestion = {
 		agentThreadId?: string;
 		jobId?: Id<'questionStudioJobs'>;
 		harnessVersion?: string;
+		reviewMode?: 'local' | 'independent';
 		curatorEditedAt?: number;
 		curatorRevision?: number;
 		sourceDocumentId: Id<'contentLib'>;
@@ -208,6 +215,14 @@ export type DocumentRagMetadata = {
 	extractionArtifactKeys?: string[];
 };
 
+export function questionStudioOpenAI() {
+	return createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
+
+export function assertQuestionStudioKey() {
+	if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not configured');
+}
+
 export function openRouter() {
 	return createOpenAI({
 		name: 'openrouter',
@@ -268,6 +283,7 @@ export const candidateValidator = v.object({
 		agentThreadId: v.optional(v.string()),
 		jobId: v.optional(v.id('questionStudioJobs')),
 		harnessVersion: v.optional(v.string()),
+		reviewMode: v.optional(v.union(v.literal('local'), v.literal('independent'))),
 		curatorEditedAt: v.optional(v.number()),
 		curatorRevision: v.optional(v.number()),
 		sourceDocumentId: v.id('contentLib')

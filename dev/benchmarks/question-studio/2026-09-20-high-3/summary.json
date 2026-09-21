@@ -1,0 +1,142 @@
+{
+  "jobId": "n57bjz4akd9frn85nb1s6r50gx8evf8k",
+  "status": "ready",
+  "requested": 15,
+  "accepted": 14,
+  "wallMs": 46625,
+  "firstCandidateMs": 20150,
+  "setupMs": 1899,
+  "workerSpanMs": 44306,
+  "finalizationMs": 420,
+  "aggregateWorkerMs": 168144,
+  "aggregateWorkerModelMs": 161237,
+  "aggregateNonModelWorkerMs": 6907,
+  "acceptedByType": {
+    "learn": 11,
+    "clinical": 3
+  },
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 0,
+        "inputTokens": 0,
+        "latencyMsTotal": 312,
+        "outputTokens": 0,
+        "reasoningTokens": 0,
+        "stage": "plan"
+      },
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 21080,
+        "calls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.013348599999999999,
+        "failedCalls": 0,
+        "inputTokens": 21095,
+        "latencyMsTotal": 81631,
+        "outputTokens": 10770,
+        "reasoningTokens": 8146,
+        "stage": "draft"
+      },
+      {
+        "cacheWriteTokens": 3752,
+        "cachedInputTokens": 16450,
+        "calls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.0065524,
+        "failedCalls": 0,
+        "inputTokens": 20217,
+        "latencyMsTotal": 44112,
+        "outputTokens": 4402,
+        "reasoningTokens": 2978,
+        "stage": "review"
+      },
+      {
+        "cacheWriteTokens": 4225,
+        "cachedInputTokens": 13316,
+        "calls": 4,
+        "costKnownCalls": 4,
+        "costUsd": 0.00403817,
+        "failedCalls": 0,
+        "inputTokens": 17553,
+        "latencyMsTotal": 20009,
+        "outputTokens": 2261,
+        "reasoningTokens": 1520,
+        "stage": "repair"
+      },
+      {
+        "cacheWriteTokens": 1361,
+        "cachedInputTokens": 9870,
+        "calls": 3,
+        "costKnownCalls": 3,
+        "costUsd": 0.0020706500000000003,
+        "failedCalls": 0,
+        "inputTokens": 11240,
+        "latencyMsTotal": 15485,
+        "outputTokens": 1276,
+        "reasoningTokens": 842,
+        "stage": "review_repair"
+      }
+    ],
+    "cacheWriteTokens": 9338,
+    "cachedInputTokens": 60716,
+    "calls": 18,
+    "costKnownCalls": 17,
+    "costUsd": 0.026009819999999996,
+    "failedCalls": 0,
+    "inputTokens": 70105,
+    "latencyMsTotal": 161549,
+    "outputTokens": 18709,
+    "reasoningTokens": 13486
+  },
+  "workerNotes": [
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 2/3 passed evidence checks and independent automated review. 1 withheld. Evidence quote is not in the supplied excerpt: p17c0.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Clinical: 3/3 passed evidence checks and independent automated review. 0 withheld."
+  ],
+  "repairs": [
+    "learn:batch:2:q1: The incorrect options need revision. The correct association is explicitly supported: carotid artery dissection is linked to painful Horner syndrome and contralateral systemic neurologic signs. The short stem directly tests that association. The option combining bilateral facial weakness with no neurologic signs is internally contradictory and functions as a weak, throwaway distractor.",
+    "learn:batch:4:q1: Remove source framing from student-facing text.",
+    "learn:batch:1:q2: Evidence quote is not in the supplied excerpt: p17c0.",
+    "clinical:batch:1:q1: Evidence quote is not in the supplied excerpt: p18c0."
+  ],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 1899,
+      "durationMs": 36959,
+      "accepted": 2
+    },
+    {
+      "index": 1,
+      "startMs": 2343,
+      "durationMs": 30164,
+      "accepted": 3
+    },
+    {
+      "index": 2,
+      "startMs": 2051,
+      "durationMs": 18099,
+      "accepted": 3
+    },
+    {
+      "index": 3,
+      "startMs": 1988,
+      "durationMs": 38901,
+      "accepted": 3
+    },
+    {
+      "index": 4,
+      "startMs": 2184,
+      "durationMs": 44021,
+      "accepted": 3
+    }
+  ]
+}

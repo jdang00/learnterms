@@ -4,6 +4,7 @@ import { internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { authAdminMutation, authAdminQuery, authQuery } from './authQueries';
+import { requireSelfIdentity, requireCurrentUser } from './access';
 
 const quickLinkValidator = v.object({
 	title: v.string(),
@@ -157,16 +158,26 @@ export const validateCohortCode = action({
 export const joinCohort = mutation({
 	args: {
 		clerkUserId: v.string(),
-		cohortId: v.id('cohort')
+		cohortId: v.id('cohort'),
+		code: v.string()
 	},
 	handler: async (ctx, args) => {
+		await requireSelfIdentity(ctx, args.clerkUserId);
 		const user = await ctx.db
 			.query('users')
-			.filter((q) => q.eq(q.field('clerkUserId'), args.clerkUserId))
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
 			.first();
 
-		if (!user) {
+		if (!user || user.deletedAt) {
 			throw new Error('User not found');
+		}
+		const cohort = await ctx.db.get(args.cohortId);
+		if (!cohort || cohort.deletedAt || !cohort.classCode || cohort.classCode !== args.code.trim()) {
+			throw new Error('Invalid code');
+		}
+		// Cohort staff cannot carry their role into another cohort through student onboarding.
+		if (user.role && user.cohortId !== args.cohortId) {
+			throw new Error('Staff cohort changes must be made by an administrator');
 		}
 
 		await ctx.db.patch(user._id, {
@@ -190,7 +201,7 @@ export const cohortCheck = internalQuery({
 	}
 });
 
-export const createCohort = mutation({
+export const createCohort = authAdminMutation({
 	args: {
 		name: v.string(),
 		description: v.optional(v.string()),
@@ -202,16 +213,24 @@ export const createCohort = mutation({
 		classCode: v.optional(v.string())
 	},
 	handler: async (ctx, args) => {
+		const caller = await requireCurrentUser(ctx);
+		const school = await ctx.db.get(args.schoolId);
+		if (!school || school.deletedAt) throw new Error('School not found');
+		if (caller.role !== 'dev') {
+			const ownCohort = caller.cohortId ? await ctx.db.get(caller.cohortId) : null;
+			if (ownCohort?.schoolId !== args.schoolId) throw new Error('Unauthorized for this school');
+		}
 		const id = await ctx.db.insert('cohort', args);
 		return id;
 	}
 });
 
-export const deleteCohort = mutation({
+export const deleteCohort = authAdminMutation({
 	args: {
 		cohortId: v.id('cohort')
 	},
 	handler: async (ctx, args) => {
+		assertCanManageCohort(await requireCurrentUser(ctx), args.cohortId);
 		await ctx.db.delete(args.cohortId);
 		return { deleted: true };
 	}

@@ -1,0 +1,100 @@
+{
+  "jobId": "n57cgvzhyrfz9qmc8ta7see1vd8etyh8",
+  "status": "ready",
+  "requested": 15,
+  "accepted": 15,
+  "wallMs": 31543,
+  "firstCandidateMs": 19150,
+  "setupMs": 1173,
+  "workerSpanMs": 30012,
+  "finalizationMs": 358,
+  "aggregateWorkerMs": 109733,
+  "aggregateWorkerModelMs": 105115,
+  "aggregateNonModelWorkerMs": 4618,
+  "acceptedByType": {
+    "learn": 15
+  },
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 13682,
+        "cachedInputTokens": 16665,
+        "calls": 5,
+        "costEstimatedCalls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.013501999999999998,
+        "failedCalls": 0,
+        "inputTokens": 30362,
+        "latencyMsTotal": 62864,
+        "outputTokens": 8121,
+        "reasoningTokens": 5778,
+        "stage": "draft"
+      },
+      {
+        "cacheWriteTokens": 16347,
+        "cachedInputTokens": 16940,
+        "calls": 5,
+        "costEstimatedCalls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.010140549999999998,
+        "failedCalls": 0,
+        "inputTokens": 33302,
+        "latencyMsTotal": 42251,
+        "outputTokens": 4760,
+        "reasoningTokens": 2440,
+        "stage": "review"
+      }
+    ],
+    "cacheWriteTokens": 30029,
+    "cachedInputTokens": 33605,
+    "calls": 10,
+    "costEstimatedCalls": 10,
+    "costKnownCalls": 10,
+    "costUsd": 0.02364255,
+    "failedCalls": 0,
+    "inputTokens": 63664,
+    "latencyMsTotal": 105115,
+    "outputTokens": 12881,
+    "reasoningTokens": 8218
+  },
+  "workerNotes": [
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 3 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 3 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 2 corrected during review. 0 withheld."
+  ],
+  "repairs": [],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 1173,
+      "durationMs": 21979,
+      "accepted": 3
+    },
+    {
+      "index": 1,
+      "startMs": 1284,
+      "durationMs": 21348,
+      "accepted": 3
+    },
+    {
+      "index": 2,
+      "startMs": 1372,
+      "durationMs": 19349,
+      "accepted": 3
+    },
+    {
+      "index": 3,
+      "startMs": 1770,
+      "durationMs": 17380,
+      "accepted": 3
+    },
+    {
+      "index": 4,
+      "startMs": 1508,
+      "durationMs": 29677,
+      "accepted": 3
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "jobId": "n570w1znxp49xan7qgywc7r0en8evx9b",
+  "status": "failed",
+  "requested": 15,
+  "accepted": 0,
+  "wallMs": 29279,
+  "firstCandidateMs": null,
+  "setupMs": 2320,
+  "workerSpanMs": 26425,
+  "finalizationMs": 534,
+  "aggregateWorkerMs": 26425,
+  "aggregateWorkerModelMs": 25618,
+  "aggregateNonModelWorkerMs": 807,
+  "acceptedByType": {},
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costEstimatedCalls": 0,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 1,
+        "inputTokens": 0,
+        "latencyMsTotal": 25618,
+        "outputTokens": 0,
+        "reasoningTokens": 0,
+        "stage": "draft"
+      }
+    ],
+    "cacheWriteTokens": 0,
+    "cachedInputTokens": 0,
+    "calls": 1,
+    "costEstimatedCalls": 0,
+    "costKnownCalls": 0,
+    "costUsd": 0,
+    "failedCalls": 1,
+    "inputTokens": 0,
+    "latencyMsTotal": 25618,
+    "outputTokens": 0,
+    "reasoningTokens": 0
+  },
+  "workerNotes": [
+    "Learn: 0/15 passed local evidence and answer-structure checks. 0 corrected during review. 15 withheld. Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signa"
+  ],
+  "repairs": [],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 2320,
+      "durationMs": 26425,
+      "accepted": 0
+    }
+  ]
+}

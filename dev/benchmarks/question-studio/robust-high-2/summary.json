@@ -1,0 +1,86 @@
+{
+  "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+  "status": "ready",
+  "requested": 15,
+  "accepted": 6,
+  "wallMs": 28740,
+  "firstCandidateMs": 20690,
+  "setupMs": 2381,
+  "workerSpanMs": 25625,
+  "finalizationMs": 734,
+  "aggregateWorkerMs": 110521,
+  "aggregateWorkerModelMs": 104116,
+  "aggregateNonModelWorkerMs": 6405,
+  "acceptedByType": {
+    "learn": 6
+  },
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 1434,
+        "cachedInputTokens": 11016,
+        "calls": 5,
+        "costEstimatedCalls": 2,
+        "costKnownCalls": 2,
+        "costUsd": 0.0059824200000000004,
+        "failedCalls": 3,
+        "inputTokens": 12456,
+        "latencyMsTotal": 104116,
+        "outputTokens": 4502,
+        "reasoningTokens": 3191,
+        "stage": "draft"
+      }
+    ],
+    "cacheWriteTokens": 1434,
+    "cachedInputTokens": 11016,
+    "calls": 5,
+    "costEstimatedCalls": 2,
+    "costKnownCalls": 2,
+    "costUsd": 0.0059824200000000004,
+    "failedCalls": 3,
+    "inputTokens": 12456,
+    "latencyMsTotal": 104116,
+    "outputTokens": 4502,
+    "reasoningTokens": 3191
+  },
+  "workerNotes": [
+    "Learn: 3/3 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 0/3 passed local evidence and answer-structure checks. 0 corrected during review. 3 withheld. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget.",
+    "Learn: 0/3 passed local evidence and answer-structure checks. 0 corrected during review. 3 withheld. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget.",
+    "Learn: 0/3 passed local evidence and answer-structure checks. 0 corrected during review. 3 withheld. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget."
+  ],
+  "repairs": [],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 2381,
+      "durationMs": 18309,
+      "accepted": 3
+    },
+    {
+      "index": 1,
+      "startMs": 2867,
+      "durationMs": 24274,
+      "accepted": 0
+    },
+    {
+      "index": 2,
+      "startMs": 3935,
+      "durationMs": 23593,
+      "accepted": 0
+    },
+    {
+      "index": 3,
+      "startMs": 3091,
+      "durationMs": 18871,
+      "accepted": 3
+    },
+    {
+      "index": 4,
+      "startMs": 2532,
+      "durationMs": 25474,
+      "accepted": 0
+    }
+  ]
+}

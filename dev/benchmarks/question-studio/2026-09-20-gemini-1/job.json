@@ -1,0 +1,846 @@
+{
+  "_creationTime": 1789959340483.9377,
+  "_id": "n57b09d8ecnqnvx2fb4cr588618evda2",
+  "blockedDuplicateCount": 0,
+  "candidateCount": 9,
+  "candidates": [
+    {
+      "correctAnswers": [
+        "They can occur without causing retinal infarction or visual symptoms."
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v8",
+        "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+        "model": "google/gemini-3.8-flash",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "They can occur without causing retinal infarction or visual symptoms.",
+        "They typically produce complete vascular obstruction and severe ocular pain.",
+        "They cause persistent bilateral visual impairment upon initial presentation.",
+        "They require full arterial lumen occlusion to be detected on examination."
+      ],
+      "questionType": "learn",
+      "rationale": "Retinal arterial emboli do not always result in downstream tissue necrosis or noticeable visual impairment, and many patients with visible emboli remain completely asymptomatic. Retinal arterial occlusive disease is characteristically painless, and partial obstructions, such as those commonly seen with cholesterol plaques, can be identified within retinal vessels without completely blocking blood flow.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 9, excerpt 1",
+          "citationId": "p9c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 9,
+          "quote": "Retinal emboli may not have an associated retinal infarction; many patients with retinal emboli are asymptomatic"
+        }
+      ],
+      "sourcePageNumbers": [
+        9
+      ],
+      "stem": "Which statement accurately describes the clinical presentation of retinal arterial emboli?",
+      "topicId": "pages-4",
+      "topicTitle": "Retinal Arterial Embolus Characteristics",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Diffusion-weighted magnetic resonance imaging (DWI-MRI)"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v8",
+        "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+        "model": "google/gemini-3.8-flash",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Functional magnetic resonance imaging of the brain",
+        "Diffusion-weighted magnetic resonance imaging (DWI-MRI)",
+        "Positron emission tomography of the brain parenchyma",
+        "Magnetic resonance spectroscopy of the cerebral cortex"
+      ],
+      "questionType": "learn",
+      "rationale": "Acute retinal arterial occlusion is considered a stroke equivalent, placing the patient at elevated risk for cerebral infarction. Diffusion-weighted magnetic resonance imaging (DWI-MRI) of the brain is recommended to detect acute cerebral ischemia. Other functional modalities, such as functional MRI or MR spectroscopy, do not assess for acute ischemic brain injury in this clinical setting.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 17, excerpt 1",
+          "citationId": "p17c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 17,
+          "quote": "Diffusion-weighted MRI"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 19, excerpt 1",
+          "citationId": "p19c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 19,
+          "quote": "Head MRI without contrast (DWI)"
+        }
+      ],
+      "sourcePageNumbers": [
+        17,
+        19
+      ],
+      "stem": "Which brain imaging modality is recommended to assess for acute cerebral ischemia in a patient presenting with an acute retinal arterial occlusion?",
+      "topicId": "pages-6",
+      "topicTitle": "Acute Retinal Ischemia Evaluation",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Involvement of the macula"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v8",
+        "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+        "model": "google/gemini-3.8-flash",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Obstruction of nasal vessels",
+        "Sparing of central arterioles",
+        "Ischemia of the far periphery",
+        "Involvement of the macula"
+      ],
+      "questionType": "learn",
+      "rationale": "In branch retinal artery occlusion (BRAO), many patients remain asymptomatic or experience only localized peripheral visual field defects. However, when the occluded branch involves the macula, sudden visual loss is much more likely to occur.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 14, excerpt 1",
+          "citationId": "p14c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 14,
+          "quote": "May have sudden vision loss if there is macular involvement"
+        }
+      ],
+      "sourcePageNumbers": [
+        14
+      ],
+      "stem": "In branch retinal artery occlusion (BRAO), which factor increases the likelihood of sudden visual loss?",
+      "topicId": "pages-10",
+      "topicTitle": "Branch Retinal Artery Occlusion Findings",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Carotid artery dissection"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v8",
+        "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+        "model": "google/gemini-3.8-flash",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Carotid artery dissection",
+        "Central retinal artery occlusion",
+        "Branch retinal artery occlusion",
+        "Ophthalmic artery occlusion"
+      ],
+      "questionType": "learn",
+      "rationale": "Carotid artery dissection is a vascular etiology of transient vision loss characteristically associated with a painful Horner syndrome and contralateral systemic neurologic signs. The vision loss may stem from embolic or hemodynamic ischemia of the retina, choroid, or optic nerve and is often provoked by exposure to bright lights or postural changes.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 7, excerpt 1",
+          "citationId": "p7c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 7,
+          "quote": "Painful Horner's and contralateral systemic neurologic signs"
+        }
+      ],
+      "sourcePageNumbers": [
+        7
+      ],
+      "stem": "Which vascular condition causing transient vision loss is characteristically associated with a painful Horner syndrome and contralateral systemic neurologic signs?",
+      "topicId": "pages-3",
+      "topicTitle": "Carotid Artery Dissection and Transient Vision Loss",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "70% to 99%"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v8",
+        "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+        "model": "google/gemini-3.8-flash",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "70% to 99%",
+        "50% to 69%",
+        "30% to 49%",
+        "10% to 29%"
+      ],
+      "questionType": "learn",
+      "rationale": "Carotid endarterectomy is indicated to reduce stroke risk in patients with 70% to 99% ipsilateral carotid stenosis, including those who are completely asymptomatic. Stenosis between 50% and 69% offers moderate benefit and is reserved for symptomatic individuals.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 20, excerpt 1",
+          "citationId": "p20c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 20,
+          "quote": "Indicated to prevent stroke in patients who have ipsilateral stenosis 70-99% (even if asymptomatic)"
+        }
+      ],
+      "sourcePageNumbers": [
+        20
+      ],
+      "stem": "What degree of ipsilateral carotid artery stenosis serves as an indication for carotid endarterectomy to prevent stroke, even in asymptomatic individuals?",
+      "topicId": "pages-7",
+      "topicTitle": "Carotid Stenosis Treatment Thresholds",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Darkening or fogging of the visual field"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v8",
+        "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+        "model": "google/gemini-3.8-flash",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Darkening or fogging of the visual field",
+        "Gradual central distortion of straight lines",
+        "Rainbow halos around point sources of light",
+        "Prolonged binocular scintillating zigzag lines"
+      ],
+      "questionType": "learn",
+      "rationale": "Monocular embolic transient vision loss typically presents as an abrupt darkening or fogging of the visual field rather than nonspecific optical blurring. This episode is sudden and painless, frequently presenting as an altitudinal curtain or shade closing over the visual field, and is followed by complete recovery of vision.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 6, excerpt 1",
+          "citationId": "p6c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 6,
+          "quote": "Darkening or fogging (not blurring) or visual field"
+        }
+      ],
+      "sourcePageNumbers": [
+        6
+      ],
+      "stem": "Which visual disturbance is characteristic of embolic transient monocular vision loss rather than nonspecific blurring?",
+      "topicId": "pages-2",
+      "topicTitle": "Embolic Transient Monocular Vision Loss",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Cardiovascular disease"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v8",
+        "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+        "model": "google/gemini-3.8-flash",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Cardiovascular disease",
+        "Cerebral stroke",
+        "Renal failure",
+        "Pulmonary embolism"
+      ],
+      "questionType": "learn",
+      "rationale": "Although central retinal artery occlusion is an acute vascular emergency that carries high cerebrovascular risk, the majority (approximately 80%) of affected patients die from underlying cardiovascular disease rather than stroke. This high rate of cardiovascular mortality highlights the critical need for a comprehensive systemic and cardiac workup.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 13, excerpt 1",
+          "citationId": "p13c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 13,
+          "quote": "Majority (80%) of patients with CRAO die from cardiovascular disease vs stroke"
+        }
+      ],
+      "sourcePageNumbers": [
+        13
+      ],
+      "stem": "In patients who experience a central retinal artery occlusion (CRAO), which condition accounts for the majority of subsequent mortality?",
+      "topicId": "pages-5",
+      "topicTitle": "Cardiovascular Implications of Retinal Arterial Occlusion",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "It can immediately precede a non-reversible cerebral stroke."
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v8",
+        "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+        "model": "google/gemini-3.8-flash",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "It can immediately precede a non-reversible cerebral stroke.",
+        "It typically signals an impending intracranial aneurysm rupture.",
+        "It consistently leads to permanent bilateral visual field loss.",
+        "It indicates progressive cavernous sinus thrombosis."
+      ],
+      "questionType": "learn",
+      "rationale": "Transient vision loss is an important warning sign of acute vascular compromise (such as carotid dissection or embolic disease) that can precede a non-reversible cerebral stroke. Because roughly one-third of these patients suffer a permanent stroke shortly after symptom onset, prompt evaluation is required to identify and mitigate cerebrovascular risk.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 7, excerpt 1",
+          "citationId": "p7c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 7,
+          "quote": "~1/3 of patients presenting with TVL subsequently have a non-reversible stroke"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 17, excerpt 1",
+          "citationId": "p17c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 17,
+          "quote": "Determine whether the patient is at risk for subsequent stroke"
+        }
+      ],
+      "sourcePageNumbers": [
+        7,
+        17
+      ],
+      "stem": "Why does an episode of transient vision loss warrant immediate systemic evaluation to assess subsequent cerebrovascular risk?",
+      "topicId": "pages-12",
+      "topicTitle": "Stroke Risk After Transient Vision Loss",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Head and neck vascular imaging and cardiac echocardiography"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v8",
+        "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+        "model": "google/gemini-3.8-flash",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Head and neck vascular imaging and cardiac echocardiography",
+        "Abdominal aortic duplex ultrasound and renal venography",
+        "Lower-extremity venous duplex imaging and lumbar puncture",
+        "Pulmonary angiography and coronary artery catheterization"
+      ],
+      "questionType": "learn",
+      "rationale": "Acute retinal ischemia typically stems from upstream embolic sources in the carotid arteries or the heart. Consequently, the systemic embolic evaluation includes head and neck vascular imaging (such as CTA, MRA, or carotid Doppler ultrasound) and cardiac assessment (such as transthoracic or transesophageal echocardiography).",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 17, excerpt 1",
+          "citationId": "p17c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 17,
+          "quote": "Embolic eval (carotid, cardiac studies)"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 19, excerpt 1",
+          "citationId": "p19c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 19,
+          "quote": "Head/Neck MRA or CTA; if unable, then carotid doppler\n- Transthoracic Echocardiogram"
+        }
+      ],
+      "sourcePageNumbers": [
+        17,
+        19
+      ],
+      "stem": "Which diagnostic studies are recommended as components of the systemic embolic evaluation following acute retinal arterial ischemia?",
+      "topicId": "pages-6",
+      "topicTitle": "Acute Retinal Ischemia Evaluation",
+      "type": "multiple_choice"
+    }
+  ],
+  "claimedWorkers": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+  "completedAt": 1789959469905,
+  "completedWorkerCount": 5,
+  "completedWorkers": [
+    3,
+    2,
+    4,
+    0,
+    1
+  ],
+  "createdAt": 1789959340483,
+  "createdByUserId": "j571jkhm2fkf4eqe52csnhwnbn7xvkfn",
+  "documentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm",
+  "eventCount": 18,
+  "failedWorkerCount": 0,
+  "kind": "candidate_generation",
+  "loop": {
+    "blueprintCount": 15,
+    "blueprintSource": "fallback",
+    "enabled": true,
+    "gatePassedCount": 9,
+    "gateRejectedCount": 0,
+    "pass": "done",
+    "selectedCount": 9
+  },
+  "model": "google/gemini-3.8-flash",
+  "moduleClassId": "jn76grzjj9enzcnd371z8nj38h7mx5tw",
+  "moduleId": "js70qm41mmx7wh5f7j0p03zynd894hrq",
+  "moduleTitle": "Testing Module",
+  "plan": {
+    "coverageNotes": [
+      "Packed 15 requested questions into 5 workers with up to 3 questions each while rotating topic coverage within each batch.",
+      "Assigned 15 deterministic slot contracts across 5 workers."
+    ],
+    "riskNotes": [],
+    "topicAllocations": [
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "pages-4",
+        "topicTitle": "Retinal Arterial Embolus Characteristics"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          17,
+          18,
+          19
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "pages-6",
+        "topicTitle": "Acute Retinal Ischemia Evaluation"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          14
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "pages-10",
+        "topicTitle": "Branch Retinal Artery Occlusion Findings"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          7
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "pages-3",
+        "topicTitle": "Carotid Artery Dissection and Transient Vision Loss"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          20
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "pages-7",
+        "topicTitle": "Carotid Stenosis Treatment Thresholds"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          6
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "pages-2",
+        "topicTitle": "Embolic Transient Monocular Vision Loss"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          16
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "pages-11",
+        "topicTitle": "Ophthalmic Artery Occlusion Findings"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "pages-1",
+        "topicTitle": "Transient Monocular Vision Loss: Etiologic Categories"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          5
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "pages-8",
+        "topicTitle": "Transient Vision Loss Differential Diagnosis"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          13
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "pages-5",
+        "topicTitle": "Cardiovascular Implications of Retinal Arterial Occlusion"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          7,
+          17
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "pages-12",
+        "topicTitle": "Stroke Risk After Transient Vision Loss"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          17,
+          18,
+          19
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "pages-6",
+        "topicTitle": "Acute Retinal Ischemia Evaluation"
+      },
+      {
+        "notes": "Assigned to Clinical batch (2 topics).",
+        "plannedCount": 2,
+        "questionType": "clinical",
+        "sourcePages": [
+          10,
+          11,
+          12,
+          13
+        ],
+        "taskId": "clinical:batch:1",
+        "topicId": "pages-15",
+        "topicTitle": "Interpreting Retinal Emboli in Clinical Context"
+      },
+      {
+        "notes": "Assigned to Clinical batch (2 topics).",
+        "plannedCount": 1,
+        "questionType": "clinical",
+        "sourcePages": [
+          17,
+          18,
+          19
+        ],
+        "taskId": "clinical:batch:1",
+        "topicId": "pages-14",
+        "topicTitle": "Selecting Systemic Testing After Retinal Ischemia"
+      }
+    ],
+    "workerBatches": [
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11,
+          14,
+          17,
+          18,
+          19
+        ],
+        "targetObjective": "Recognize that a retinal arterial embolus may occur without retinal infarction or symptoms.; Identify diffusion-weighted brain MRI as part of the evaluation for cerebral ischemia in acute retinal arterial occlusion.; Recognize that macular involvement in branch retinal artery occlusion increases the likelihood of sudden visual loss.",
+        "taskId": "learn:batch:1",
+        "topicCount": 3,
+        "topicTitles": [
+          "Retinal Arterial Embolus Characteristics",
+          "Acute Retinal Ischemia Evaluation",
+          "Branch Retinal Artery Occlusion Findings"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          6,
+          7,
+          20
+        ],
+        "targetObjective": "Recognize the association of carotid artery dissection with painful Horner syndrome and contralateral neurologic signs.; Identify ipsilateral carotid stenosis of 70% to 99% as an indication for carotid endarterectomy to prevent stroke, including in asymptomatic patients.; Distinguish embolic transient monocular vision loss by its characteristic darkening or fogging of the visual field rather than nonspecific blur.",
+        "taskId": "learn:batch:2",
+        "topicCount": 3,
+        "topicTitles": [
+          "Carotid Artery Dissection and Transient Vision Loss",
+          "Carotid Stenosis Treatment Thresholds",
+          "Embolic Transient Monocular Vision Loss"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5,
+          16
+        ],
+        "targetObjective": "Recognize profound presenting vision loss, often light perception or no light perception, as a feature of ophthalmic artery occlusion.; Classify transient monocular vision loss causes into ocular, orbital, and systemic categories.; Differentiate painful transient monocular vision loss associated with giant cell arteritis, carotid artery dissection, ocular ischemic syndrome, angle-closure glaucoma, and retinal",
+        "taskId": "learn:batch:3",
+        "topicCount": 3,
+        "topicTitles": [
+          "Ophthalmic Artery Occlusion Findings",
+          "Transient Monocular Vision Loss: Etiologic Categories",
+          "Transient Vision Loss Differential Diagnosis"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          7,
+          13,
+          17,
+          18,
+          19
+        ],
+        "targetObjective": "Recognize the reported association between central retinal artery occlusion and subsequent cardiovascular mortality.; Recognize that transient vision loss may precede a nonreversible stroke and therefore warrants assessment for subsequent cerebrovascular risk.; Identify head and neck vascular imaging and cardiac testing as components of systemic embolic evaluation after retinal arterial ischemia.",
+        "taskId": "learn:batch:4",
+        "topicCount": 3,
+        "topicTitles": [
+          "Cardiovascular Implications of Retinal Arterial Occlusion",
+          "Stroke Risk After Transient Vision Loss",
+          "Acute Retinal Ischemia Evaluation"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Clinical batch (2 topics)",
+        "plannedCount": 3,
+        "questionType": "clinical",
+        "sourcePages": [
+          10,
+          11,
+          12,
+          13,
+          17,
+          18,
+          19
+        ],
+        "targetObjective": "For a patient with a glistening yellow retinal embolus, use its appearance and source relationships to prioritize evaluation for carotid atheromatous disease rather than valvular-c; questionTypefric embolism.; For a patient with acute retinal ischemia and concern for giant cell arteritis, select CBC, ESR, and CRP testing while arranging appropriate systemic evaluation.",
+        "taskId": "clinical:batch:1",
+        "topicCount": 2,
+        "topicTitles": [
+          "Interpreting Retinal Emboli in Clinical Context",
+          "Selecting Systemic Testing After Retinal Ischemia"
+        ]
+      }
+    ]
+  },
+  "requestedCount": 15,
+  "requestedCounts": {
+    "clinical": 3,
+    "criticalThinking": 0,
+    "learn": 12
+  },
+  "reviewCount": 9,
+  "selectedPageNumbers": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "sourceIndexedAt": 1789926394236,
+  "sourceMode": "pages",
+  "status": "ready",
+  "statusText": "Partial ready: 9/15 candidates to review.",
+  "updatedAt": 1789959469905,
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 0,
+        "inputTokens": 0,
+        "latencyMsTotal": 287,
+        "outputTokens": 0,
+        "reasoningTokens": 0,
+        "stage": "plan"
+      },
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 5,
+        "costKnownCalls": 3,
+        "costUsd": 0.07244999999999999,
+        "failedCalls": 2,
+        "inputTokens": 14410,
+        "latencyMsTotal": 95543,
+        "outputTokens": 16438,
+        "reasoningTokens": 14436,
+        "stage": "draft"
+      },
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 3,
+        "costKnownCalls": 3,
+        "costUsd": 0.069051,
+        "failedCalls": 0,
+        "inputTokens": 13778,
+        "latencyMsTotal": 89068,
+        "outputTokens": 15658,
+        "reasoningTokens": 14357,
+        "stage": "review"
+      },
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costKnownCalls": 1,
+        "costUsd": 0.02009325,
+        "failedCalls": 0,
+        "inputTokens": 5316,
+        "latencyMsTotal": 25918,
+        "outputTokens": 4295,
+        "reasoningTokens": 3842,
+        "stage": "repair"
+      },
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costKnownCalls": 1,
+        "costUsd": 0.01004025,
+        "failedCalls": 0,
+        "inputTokens": 4317,
+        "latencyMsTotal": 13047,
+        "outputTokens": 1814,
+        "reasoningTokens": 1514,
+        "stage": "review_repair"
+      }
+    ],
+    "cacheWriteTokens": 0,
+    "cachedInputTokens": 0,
+    "calls": 11,
+    "costKnownCalls": 8,
+    "costUsd": 0.1716345,
+    "failedCalls": 2,
+    "inputTokens": 37821,
+    "latencyMsTotal": 223863,
+    "outputTokens": 38205,
+    "reasoningTokens": 34149
+  },
+  "workerNotes": [
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 0/3 passed evidence checks and independent automated review. 3 withheld. Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length)",
+    "Clinical: 0/3 passed evidence checks and independent automated review. 3 withheld. Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length)",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld."
+  ],
+  "workerStates": [
+    {
+      "draftedCount": 3,
+      "finishedAt": 1789959400519,
+      "index": 0,
+      "startedAt": 1789959342352
+    },
+    {
+      "draftedCount": 3,
+      "finishedAt": 1789959469432,
+      "index": 1,
+      "startedAt": 1789959342486
+    },
+    {
+      "draftedCount": 0,
+      "finishedAt": 1789959394757,
+      "index": 2,
+      "startedAt": 1789959342550
+    },
+    {
+      "draftedCount": 3,
+      "finishedAt": 1789959384980,
+      "index": 3,
+      "startedAt": 1789959342611
+    },
+    {
+      "draftedCount": 0,
+      "finishedAt": 1789959397433,
+      "index": 4,
+      "startedAt": 1789959342704
+    }
+  ]
+}

@@ -1,23 +1,12 @@
 <script lang="ts">
-	import AdminStatStrip from './AdminStatStrip.svelte';
 	import type { StatItem } from './adminStatStrip';
 	import { formatDuration, formatTokens, formatUsd } from './questionStudioRun';
 	import type { RunTelemetry } from './questionStudioRun';
 
-	let { telemetry, running = false }: { telemetry: RunTelemetry; running?: boolean } = $props();
+	let { telemetry }: { telemetry: RunTelemetry } = $props();
 
 	const items = $derived.by<StatItem[]>(() => {
 		const out: StatItem[] = [
-			{
-				label: running ? 'Running' : 'Took',
-				value: formatDuration(telemetry.elapsedMs),
-				note:
-					running && telemetry.projectedRemainingMs
-						? `~${formatDuration(telemetry.projectedRemainingMs)} left`
-						: telemetry.queueWaitMs && telemetry.queueWaitMs > 2000
-							? `${formatDuration(telemetry.queueWaitMs)} queued`
-							: undefined
-			},
 			{
 				label: 'Drafted',
 				value: `${telemetry.drafted}/${telemetry.planned}`,
@@ -39,7 +28,7 @@
 						: telemetry.workersRunning > 0
 							? `${telemetry.workersRunning} running`
 							: `${telemetry.workersDone}/${telemetry.workersTotal} done`,
-				note: telemetry.failedCalls > 0 ? `${telemetry.failedCalls} retried` : undefined
+				note: telemetry.failedCalls > 0 ? `${telemetry.failedCalls} failed` : undefined
 			},
 			{
 				label: 'Tokens',
@@ -55,7 +44,7 @@
 			},
 			{
 				label: 'Spend',
-				value: `${telemetry.costComplete ? '' : '≥'}${formatUsd(telemetry.costUsd)}`,
+				value: `${telemetry.costComplete ? '' : '≥'}${telemetry.costEstimated ? '~' : ''}${formatUsd(telemetry.costUsd)}`,
 				note: telemetry.costPerKept ? `${formatUsd(telemetry.costPerKept)} per kept` : undefined
 			}
 		];
@@ -70,4 +59,25 @@
 	});
 </script>
 
-<AdminStatStrip {items} ariaLabel="Run telemetry" />
+<dl
+	class="divide-y divide-base-300 overflow-hidden rounded-xl border border-base-300 bg-base-100"
+	aria-label="Run telemetry"
+>
+	{#each items as item (item.label)}
+		<div class="flex items-center justify-between gap-3 px-3 py-2">
+			<dt class="text-xs text-base-content/55">{item.label}</dt>
+			<dd class="min-w-0 text-right">
+				<span
+					class="text-xs font-semibold tabular-nums {item.tone === 'error'
+						? 'text-error'
+						: item.tone === 'warning'
+							? 'text-warning'
+							: ''}">{item.value}</span
+				>
+				{#if item.note}
+					<span class="ml-2 text-[11px] text-base-content/45">{item.note}</span>
+				{/if}
+			</dd>
+		</div>
+	{/each}
+</dl>

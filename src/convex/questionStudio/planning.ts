@@ -11,8 +11,27 @@ import type {
 	StoredMarkdownPage,
 	TopicMapItem
 } from './shared';
-import { MAX_GENERATED_QUESTIONS, MAX_QUESTIONS_PER_WORKER } from './shared';
+import {
+	MAX_CONCURRENT_QUESTION_WORKERS,
+	MAX_GENERATED_QUESTIONS,
+	MAX_QUESTIONS_PER_WORKER
+} from './shared';
 import { cleanPlainText, normalizeText } from './text';
+
+/** Each lane owns its original task indexes, including the tail of larger runs. */
+export function generationWorkerLanes(
+	tasks: LiveWorkerTask[],
+	stride = MAX_CONCURRENT_QUESTION_WORKERS
+) {
+	return tasks.slice(0, stride).map((task, workerIndex) => ({
+		task,
+		workerIndex,
+		workerStride: stride,
+		remainingTasks: tasks.filter(
+			(_, index) => index > workerIndex && index % stride === workerIndex
+		)
+	}));
+}
 
 export function validateCounts(counts: QuestionCounts) {
 	if (questionTypes.some((type) => !Number.isInteger(counts[type]) || counts[type] < 0))
@@ -25,8 +44,10 @@ export function validateCounts(counts: QuestionCounts) {
 
 export function buildLiveGenerationWork(
 	topics: TopicMapItem[],
-	counts: QuestionCounts
+	counts: QuestionCounts,
+	options: { packByTopic?: boolean; maxPerWorker?: number } = {}
 ): { plan: GenerationPlan; tasks: LiveWorkerTask[] } {
+	const maxPerWorker = options.maxPerWorker ?? MAX_QUESTIONS_PER_WORKER;
 	const orderCounts = {
 		learn: 0,
 		clinical: 0,
@@ -81,7 +102,7 @@ export function buildLiveGenerationWork(
 				break;
 			}
 			const plannedCount = Math.min(
-				MAX_QUESTIONS_PER_WORKER,
+				maxPerWorker,
 				remaining,
 				available.reduce(
 					(sum, topic) => sum + capacity(topic) - (assignedByTopic.get(topic.topicId) ?? 0),
@@ -93,7 +114,7 @@ export function buildLiveGenerationWork(
 				const eligible = pool.filter(
 					(topic) => (assignedByTopic.get(topic.topicId) ?? 0) < capacity(topic)
 				);
-				const topic = eligible[cursor % eligible.length];
+				const topic = eligible[options.packByTopic ? 0 : cursor % eligible.length];
 				assignedByTopic.set(topic.topicId, (assignedByTopic.get(topic.topicId) ?? 0) + 1);
 				const existing = allocationsByTopic.get(topic.topicId);
 				if (existing) existing.plannedCount += 1;
@@ -143,7 +164,7 @@ export function buildLiveGenerationWork(
 			workerBatches,
 			topicAllocations,
 			coverageNotes: [
-				`Packed ${tasks.reduce((sum, task) => sum + task.plannedCount, 0)} requested questions into ${tasks.length} worker${tasks.length === 1 ? '' : 's'} with up to ${MAX_QUESTIONS_PER_WORKER} questions each while rotating topic coverage within each batch.`
+				`Packed ${tasks.reduce((sum, task) => sum + task.plannedCount, 0)} requested questions into ${tasks.length} worker${tasks.length === 1 ? '' : 's'} with up to ${maxPerWorker} questions each.`
 			],
 			riskNotes: unsupported
 		}

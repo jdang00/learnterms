@@ -1,0 +1,929 @@
+{
+  "_creationTime": 1789962236923.98,
+  "_id": "n57ckfpmjwf77z283ws32eapm98evbh2",
+  "blockedDuplicateCount": 0,
+  "candidateCount": 13,
+  "candidates": [
+    {
+      "correctAnswers": [
+        "They are usually calcific, and cardiac disease is a significant embolic source in younger patients."
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "They are usually calcific, and cardiac disease is a significant embolic source in younger patients.",
+        "They are usually calcific, but cardiac disease is a significant embolic source primarily in older patients.",
+        "They are usually noncalcific, and cardiac disease is a significant embolic source in younger patients.",
+        "They are usually inflammatory, and cardiac disease is a significant embolic source primarily in older patients."
+      ],
+      "questionType": "learn",
+      "rationale": "Cardiac emboli are usually calcific, and cardiac disease can be an important embolic source across the age spectrum, including in younger patients. This helps prevent the misconception that a cardiac source is relevant only in older adults. The age association does not mean every younger patient has a cardiac cause; it means cardiac disease deserves consideration when evaluating embolic disease in that group. Composition and patient age together help distinguish the cardiac association from other embolic sources.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 13, excerpt 1",
+          "citationId": "p13c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 13,
+          "quote": "Cardiac emboli are usually calcific"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 13, excerpt 1",
+          "citationId": "p13c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 13,
+          "quote": "Can affect ANY age, however this is a significant source of emboli in younger patients"
+        }
+      ],
+      "sourcePageNumbers": [
+        13
+      ],
+      "stem": "Which characterization of cardiac emboli and age is most accurate?",
+      "topicId": "learn-pages-5",
+      "topicTitle": "Pages 12, 13",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Even a small plaque can release emboli."
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Even a small plaque can release emboli.",
+        "A plaque generally must be large before it can release emboli.",
+        "A plaque generally must cause complete obstruction before it can release emboli.",
+        "A plaque generally must already have caused retinal infarction before it can release emboli."
+      ],
+      "questionType": "learn",
+      "rationale": "A carotid atheromatous plaque does not need to be large to release retinal emboli; a small plaque may be sufficient. Therefore, plaque size alone does not exclude carotid disease as a possible embolic source. Complete arterial obstruction and established retinal infarction are not prerequisites for embolic release. The important takeaway is that a modest-appearing plaque can still have embolic significance.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 12, excerpt 1",
+          "citationId": "p12c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 12,
+          "quote": "Only need a small plaque to release emboli (usually cholesterol)"
+        }
+      ],
+      "sourcePageNumbers": [
+        12
+      ],
+      "stem": "What does the size of a carotid atheromatous plaque imply about its ability to release retinal emboli?",
+      "topicId": "learn-pages-5",
+      "topicTitle": "Pages 12, 13",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Involvement of the macula"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Involvement of the macula",
+        "Involvement of any peripheral branch",
+        "Presence of a prior embolic episode",
+        "Preservation of the central retinal artery"
+      ],
+      "questionType": "learn",
+      "rationale": "Branch retinal artery occlusion can be asymptomatic or cause limited visual-field loss, but sudden vision loss is specifically associated with macular involvement. The macula is therefore the key anatomic factor determining whether a branch occlusion noticeably affects central vision. A peripheral branch occlusion without macular involvement may produce less noticeable symptoms. The important distinction is that BRAO does not invariably cause profound visual loss.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 14, excerpt 1",
+          "citationId": "p14c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 14,
+          "quote": "May have sudden vision loss if there is macular involvement"
+        }
+      ],
+      "sourcePageNumbers": [
+        14
+      ],
+      "stem": "Which feature of branch retinal artery occlusion makes sudden vision loss more likely?",
+      "topicId": "learn-pages-6",
+      "topicTitle": "Pages 14, 15",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "An episode of amaurosis fugax"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "An episode of amaurosis fugax",
+        "A persistent episode of bilateral blindness",
+        "A prolonged episode of binocular diplopia",
+        "A recurrent episode of near blur only"
+      ],
+      "questionType": "learn",
+      "rationale": "A patient with central retinal artery occlusion may report a previous episode of amaurosis fugax, meaning transient monocular visual loss. This history can represent an earlier transient ischemic event before the acute occlusion, but it is not required in every case. Amaurosis fugax is transient, whereas CRAO produces acute, profound monocular visual loss. Recognizing the possible preceding episode helps connect transient retinal ischemia with a later arterial occlusion.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 15, excerpt 1",
+          "citationId": "p15c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 15,
+          "quote": "May report previous amaurosis fugax episode"
+        }
+      ],
+      "sourcePageNumbers": [
+        15
+      ],
+      "stem": "Which prior visual event may be reported before central retinal artery occlusion?",
+      "topicId": "learn-pages-6",
+      "topicTitle": "Pages 14, 15",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Light perception or no light perception"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Light perception or no light perception",
+        "Hand motions or counting fingers",
+        "20/200 to 20/400",
+        "20/40 or better"
+      ],
+      "questionType": "learn",
+      "rationale": "Ophthalmic artery occlusion usually produces extremely profound visual loss, with presenting vision at light perception or no light perception. This severity fits the simultaneous reduction or loss of both choroidal and central retinal artery blood supply. A patient may have less severe acuity loss with a more limited retinal arterial obstruction, so moderate acuity categories should not be treated as the typical presentation of ophthalmic artery occlusion. The key takeaway is that profound vision loss suggests involvement beyond the central retinal circulation.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 16, excerpt 1",
+          "citationId": "p16c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 16,
+          "quote": "Presenting vision is usually LP or NLP"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 16, excerpt 1",
+          "citationId": "p16c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 16,
+          "quote": "No/decreased choroidal AND CRA blood supply"
+        }
+      ],
+      "sourcePageNumbers": [
+        16
+      ],
+      "stem": "What level of presenting visual acuity is usually associated with ophthalmic artery occlusion?",
+      "topicId": "learn-pages-7",
+      "topicTitle": "Pages 16, 17",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Diffusion-weighted magnetic resonance imaging"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Diffusion-weighted magnetic resonance imaging",
+        "Noncontrast orbital computed tomography",
+        "Routine electroencephalography",
+        "Ultrasound measurement of the optic nerve sheath"
+      ],
+      "questionType": "learn",
+      "rationale": "Diffusion-weighted magnetic resonance imaging is included in the evaluation of retinal arterial emboli because these patients may also be at risk for cerebral ischemic events. The work-up is not limited to the eye; it also searches for associated systemic disease and helps assess subsequent stroke risk. Orbital imaging, electroencephalography, and optic nerve sheath ultrasound do not represent the specifically identified brain-imaging study for this evaluation. Retinal arterial emboli therefore warrant consideration of cerebrovascular assessment, not just ocular examination.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 17, excerpt 1",
+          "citationId": "p17c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 17,
+          "quote": "Diffusion-weighted MRI"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 17, excerpt 1",
+          "citationId": "p17c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 17,
+          "quote": "Determine whether the patient is at risk for subsequent stroke"
+        }
+      ],
+      "sourcePageNumbers": [
+        17
+      ],
+      "stem": "Which brain imaging study is included in the work-up of retinal arterial emboli?",
+      "topicId": "learn-pages-7",
+      "topicTitle": "Pages 16, 17",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Hypercoagulable states and primary hematologic disorders"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Hypercoagulable states and primary hematologic disorders",
+        "Carotid arterial imaging abnormalities",
+        "Cardiac rhythm and structural abnormalities",
+        "Diffusion-weighted brain MRI findings"
+      ],
+      "questionType": "learn",
+      "rationale": "When a young patient lacks conventional cardiovascular risk factors, the workup should consider hypercoagulable and primary hematologic disorders. Carotid imaging, cardiac testing, and diffusion-weighted brain MRI are also listed components of embolic evaluation, but they are not the age- and risk-profile-specific addition identified here. The practical takeaway is to broaden the evaluation for systemic blood abnormalities rather than limiting the assessment to usual vascular and cardiac sources.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 18, excerpt 1",
+          "citationId": "p18c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 18,
+          "quote": "Young patients without conventional cardiovascular risk factors – hypercoagulable and primary hematologic disorders"
+        }
+      ],
+      "sourcePageNumbers": [
+        18
+      ],
+      "stem": "Which category should receive particular consideration when a young patient with retinal arterial emboli has no conventional cardiovascular risk factors?",
+      "topicId": "learn-pages-8",
+      "topicTitle": "Pages 18, 19, 20",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Carotid endarterectomy"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Carotid endarterectomy",
+        "Carotid artery stenting",
+        "Antiplatelet therapy",
+        "Statin therapy"
+      ],
+      "questionType": "learn",
+      "rationale": "Carotid endarterectomy is the intervention linked to stroke prevention for 70–99% ipsilateral carotid stenosis, including asymptomatic disease. Antiplatelet and statin therapies are listed medical treatments for retinal arterial emboli, whereas carotid artery stenting is reserved when comorbidities or increased peri-procedural stroke risk make it preferable. The stated benefit of endarterectomy for symptomatic 50–69% stenosis is moderate, so that range should not be substituted for the higher-grade indication.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 20, excerpt 1",
+          "citationId": "p20c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 20,
+          "quote": "Indicated to prevent stroke in patients who have ipsilateral stenosis 70-99% (even if asymptomatic)"
+        }
+      ],
+      "sourcePageNumbers": [
+        20
+      ],
+      "stem": "Which intervention is indicated to prevent stroke in a patient with 70–99% ipsilateral carotid stenosis, even without symptoms?",
+      "topicId": "learn-pages-8",
+      "topicTitle": "Pages 18, 19, 20",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Retinal migraine"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Giant cell arteritis",
+        "Internal carotid artery dissection",
+        "Retinal migraine",
+        "Intermittent angle-closure glaucoma"
+      ],
+      "questionType": "learn",
+      "rationale": "Retinal migraine is the diagnosis that requires exclusion of other causes before it is assigned. Painful transient monocular vision loss has several competing possibilities, including giant cell arteritis, internal carotid artery dissection, ocular ischemic syndrome, and angle-closure glaucoma. Transient visual symptoms alone therefore do not establish retinal migraine. The key distinction is that retinal migraine is a diagnosis of exclusion rather than an initial explanation for unexplained monocular visual loss.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 5, excerpt 1",
+          "citationId": "p5c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 5,
+          "quote": "Retinal migraine is a diagnosis of exclusion"
+        }
+      ],
+      "sourcePageNumbers": [
+        5
+      ],
+      "stem": "Which diagnosis should be made only after other causes of transient monocular vision loss have been excluded?",
+      "topicId": "learn-pages-2",
+      "topicTitle": "Pages 5, 6",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Internal carotid artery dissection"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Internal carotid artery dissection",
+        "Giant cell arteritis",
+        "Ocular ischemic syndrome",
+        "Retinal migraine"
+      ],
+      "questionType": "learn",
+      "rationale": "Internal carotid artery dissection is the diagnosis tied specifically to the internal carotid artery in the differential of painful transient monocular vision loss. The other choices represent different diagnostic entities in that differential: an inflammatory disorder, an ischemic ocular syndrome, and a migraine-related diagnosis. Recognizing the carotid association is important because painful monocular visual loss is not limited to primary ocular causes.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 5, excerpt 1",
+          "citationId": "p5c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 5,
+          "quote": "Internal carotid artery dissection"
+        }
+      ],
+      "sourcePageNumbers": [
+        5
+      ],
+      "stem": "Which diagnosis in the differential of painful transient monocular vision loss specifically involves the internal carotid artery?",
+      "topicId": "learn-pages-2",
+      "topicTitle": "Pages 5, 6",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Painful Horner syndrome with contralateral systemic neurologic signs"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Painful Horner syndrome with contralateral systemic neurologic signs",
+        "Painless Horner syndrome with ipsilateral systemic neurologic signs",
+        "Painful isolated visual loss without neurologic signs",
+        "Bilateral visual loss without pupillary or neurologic signs"
+      ],
+      "questionType": "learn",
+      "rationale": "Carotid artery dissection is particularly associated with the combination of painful Horner syndrome and neurologic findings on the contralateral side. Transient monocular visual loss alone is less specific, but adding this painful sympathetic-pattern finding with contralateral neurologic signs creates a distinctive presentation. The key distinction is not simply whether visual loss occurs, but whether it is accompanied by this characteristic pain-and-neurologic pattern. Recognizing the combination helps link the visual symptom to carotid dissection.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 7, excerpt 1",
+          "citationId": "p7c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 7,
+          "quote": "Painful Horner's and contralateral systemic neurologic signs"
+        }
+      ],
+      "sourcePageNumbers": [
+        7
+      ],
+      "stem": "Which clinical combination most strongly suggests carotid artery dissection in a patient with transient visual loss?",
+      "topicId": "learn-pages-3",
+      "topicTitle": "Pages 7, 8",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "CT/CTA of the head and neck"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "MRI of the brain without vascular imaging",
+        "CT/CTA of the chest and heart",
+        "CT/CTA of the head and neck",
+        "Ultrasound imaging limited to the orbit"
+      ],
+      "questionType": "learn",
+      "rationale": "CT/CTA of the head and neck is the imaging association identified for diagnosing carotid artery dissection. Both the modality and the anatomic coverage matter: the stated study evaluates the head-and-neck region relevant to this vascular condition. A study limited to the chest, heart, or orbit does not match that diagnostic relationship, and brain imaging without the specified vascular CT/CTA does not reproduce it. The practical takeaway is to associate suspected carotid dissection with head-and-neck CT/CTA.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 7, excerpt 1",
+          "citationId": "p7c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 7,
+          "quote": "Diagnosis is made with a CT/CTA of head/neck"
+        }
+      ],
+      "sourcePageNumbers": [
+        7
+      ],
+      "stem": "Which imaging study is identified for diagnosing carotid artery dissection in the setting of transient visual loss?",
+      "topicId": "learn-pages-3",
+      "topicTitle": "Pages 7, 8",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Orbital, nonvascular cause"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v17",
+        "jobId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+        "model": "gpt-5.6-luna",
+        "reviewMode": "local",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Orbital, nonvascular cause",
+        "Ocular, nonvascular cause",
+        "Ocular, vascular cause",
+        "Systemic, vascular cause"
+      ],
+      "questionType": "learn",
+      "rationale": "An orbital mass is categorized as an orbital, nonvascular cause of transient monocular vision loss. This classification separates the lesion’s anatomic location—the orbit—from vascular mechanisms. Ocular causes may be either vascular or nonvascular, whereas systemic causes in this framework are vascular and include processes such as emboli, hypoperfusion, vasculitis, and hyperviscosity or hypercoagulability. The useful distinction is therefore location plus mechanism, rather than treating every structural cause as ocular.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 3, excerpt 1",
+          "citationId": "p3c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 3,
+          "quote": "Orbital causes (non-vascular)\n  - Masses"
+        }
+      ],
+      "sourcePageNumbers": [
+        3
+      ],
+      "stem": "An orbital mass causing transient monocular vision loss is classified as which type of cause?",
+      "topicId": "learn-pages-1",
+      "topicTitle": "Pages 3, 4",
+      "type": "multiple_choice"
+    }
+  ],
+  "claimedWorkers": [
+    1,
+    5,
+    0,
+    4,
+    3,
+    2,
+    7
+  ],
+  "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+  "completedAt": 1789962265930,
+  "completedWorkerCount": 7,
+  "completedWorkers": [
+    7,
+    1,
+    2,
+    3,
+    5,
+    0,
+    4
+  ],
+  "createdAt": 1789962236923,
+  "createdByUserId": "j571jkhm2fkf4eqe52csnhwnbn7xvkfn",
+  "documentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm",
+  "eventCount": 15,
+  "failedWorkerCount": 0,
+  "kind": "candidate_generation",
+  "loop": {
+    "blueprintCount": 15,
+    "blueprintSource": "fallback",
+    "enabled": true,
+    "pass": "draft"
+  },
+  "model": "gpt-5.6-luna",
+  "moduleClassId": "jn76grzjj9enzcnd371z8nj38h7mx5tw",
+  "moduleId": "js70qm41mmx7wh5f7j0p03zynd894hrq",
+  "moduleTitle": "Testing Module",
+  "plan": {
+    "coverageNotes": [
+      "Packed 15 requested questions into 8 workers with up to 2 questions each.",
+      "Assigned 15 deterministic slot contracts across 8 workers."
+    ],
+    "riskNotes": [],
+    "topicAllocations": [
+      {
+        "notes": "Assigned to Learn: Pages 12, 13.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          12,
+          13
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "learn-pages-5",
+        "topicTitle": "Pages 12, 13"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 14, 15.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          14,
+          15
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "learn-pages-6",
+        "topicTitle": "Pages 14, 15"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 16, 17.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          16,
+          17
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "learn-pages-7",
+        "topicTitle": "Pages 16, 17"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 18, 19, 20.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          18,
+          19,
+          20
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "learn-pages-8",
+        "topicTitle": "Pages 18, 19, 20"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 5, 6.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          5,
+          6
+        ],
+        "taskId": "learn:batch:5",
+        "topicId": "learn-pages-2",
+        "topicTitle": "Pages 5, 6"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 7, 8.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          7,
+          8
+        ],
+        "taskId": "learn:batch:6",
+        "topicId": "learn-pages-3",
+        "topicTitle": "Pages 7, 8"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 9, 10, 11.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11
+        ],
+        "taskId": "learn:batch:7",
+        "topicId": "learn-pages-4",
+        "topicTitle": "Pages 9, 10, 11"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 3, 4.",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4
+        ],
+        "taskId": "learn:batch:8",
+        "topicId": "learn-pages-1",
+        "topicTitle": "Pages 3, 4"
+      }
+    ],
+    "workerBatches": [
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 12, 13",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          12,
+          13
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:1",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 12, 13"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 14, 15",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          14,
+          15
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:2",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 14, 15"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 16, 17",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          16,
+          17
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:3",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 16, 17"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 18, 19, 20",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          18,
+          19,
+          20
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:4",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 18, 19, 20"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 5, 6",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          5,
+          6
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:5",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 5, 6"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 7, 8",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          7,
+          8
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:6",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 7, 8"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 9, 10, 11",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:7",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 9, 10, 11"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective",
+        "label": "Learn: Pages 3, 4",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4
+        ],
+        "targetObjective": "Choose distinct fact 1 of 1 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:8",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 3, 4"
+        ]
+      }
+    ]
+  },
+  "requestedCount": 15,
+  "requestedCounts": {
+    "clinical": 0,
+    "criticalThinking": 0,
+    "learn": 15
+  },
+  "reviewCount": 0,
+  "selectedPageNumbers": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "sourceIndexedAt": 1789926394236,
+  "sourceMode": "pages",
+  "status": "failed",
+  "statusText": "Could not finish within the 30-second budget. No late results will be accepted.",
+  "updatedAt": 1789962265930,
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 4783,
+        "cachedInputTokens": 38556,
+        "calls": 7,
+        "costEstimatedCalls": 7,
+        "costKnownCalls": 7,
+        "costUsd": 0.018091869999999996,
+        "failedCalls": 0,
+        "inputTokens": 43360,
+        "latencyMsTotal": 110117,
+        "outputTokens": 13434,
+        "reasoningTokens": 10526,
+        "stage": "draft"
+      }
+    ],
+    "cacheWriteTokens": 4783,
+    "cachedInputTokens": 38556,
+    "calls": 7,
+    "costEstimatedCalls": 7,
+    "costKnownCalls": 7,
+    "costUsd": 0.018091869999999996,
+    "failedCalls": 0,
+    "inputTokens": 43360,
+    "latencyMsTotal": 110117,
+    "outputTokens": 13434,
+    "reasoningTokens": 10526
+  },
+  "workerNotes": [
+    "Learn: 1/1 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld."
+  ],
+  "workerStates": [
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789962261060,
+      "index": 0,
+      "startedAt": 1789962239637
+    },
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789962252070,
+      "index": 1,
+      "startedAt": 1789962239216
+    },
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789962253678,
+      "index": 2,
+      "startedAt": 1789962240580
+    },
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789962256718,
+      "index": 3,
+      "startedAt": 1789962240180
+    },
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789962264123,
+      "index": 4,
+      "startedAt": 1789962239807
+    },
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789962260163,
+      "index": 5,
+      "startedAt": 1789962239363
+    },
+    {
+      "draftedCount": 1,
+      "finishedAt": 1789962249012,
+      "index": 7,
+      "startedAt": 1789962240851
+    }
+  ]
+}

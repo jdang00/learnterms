@@ -1,5 +1,5 @@
 import { authQuery, authAdminMutation } from './authQueries';
-import { mutation } from './_generated/server';
+import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx, QueryCtx } from './_generated/server';
@@ -268,6 +268,14 @@ export const deleteModule = authAdminMutation({
 			.collect();
 		for (const link of moduleTags) {
 			await ctx.db.delete(link._id);
+		}
+
+		const statRows = await ctx.db
+			.query('userModuleStats')
+			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
+			.collect();
+		for (const row of statRows) {
+			await ctx.db.delete(row._id);
 		}
 
 		await ctx.db.delete(args.moduleId);
@@ -546,7 +554,7 @@ export const searchModulesByCohort = authQuery({
  * Backfill module.cohortId from each module's class.cohortId.
  * Run via CLI: bunx convex run module:backfillModuleCohortIds
  */
-export const backfillModuleCohortIds = mutation({
+export const backfillModuleCohortIds = internalMutation({
 	args: {},
 	handler: async (ctx) => {
 		const modules = await ctx.db.query('module').collect();
@@ -577,7 +585,7 @@ export const backfillModuleCohortIds = mutation({
  * Backfill questionCount for all modules.
  * Run via CLI: bunx convex run module:backfillQuestionCounts
  */
-export const backfillQuestionCounts = mutation({
+export const backfillQuestionCounts = internalMutation({
 	args: {},
 	handler: async (ctx) => {
 		const modules = await ctx.db.query('module').collect();

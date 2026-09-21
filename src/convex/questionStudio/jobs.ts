@@ -1,4 +1,5 @@
 import { v } from 'convex/values';
+import { generationDeadline, expireIfDue } from './deadline';
 import type { Doc } from '../_generated/dataModel';
 import { internal } from '../_generated/api';
 import { internalMutation, internalQuery, mutation, query } from '../_generated/server';
@@ -106,9 +107,19 @@ export const createGenerationJob = mutation({
 			label: 'Queued',
 			detail: 'Preparing the agent run.'
 		});
-		await ctx.scheduler.runAfter(10 * 60_000, internal.questionStudio.expireGenerationJob, {
-			jobId
-		});
+		await ctx.scheduler.runAfter(
+			(generationDeadline({
+				createdAt: now,
+				requestedCount: args.requestedCount,
+				requestedCounts: args.counts
+			}) ?? now + 601_000) -
+				now -
+				1000,
+			internal.questionStudio.expireGenerationJob,
+			{
+				jobId
+			}
+		);
 		return jobId;
 	}
 });
@@ -274,6 +285,7 @@ export const listCohortGenerationJobs = query({
 					savedCount: job.savedCandidateIndexes?.length ?? 0,
 					costUsd: job.usage?.costUsd ?? 0,
 					costKnownCalls: job.usage?.costKnownCalls ?? 0,
+					costEstimated: (job.usage?.costEstimatedCalls ?? 0) > 0,
 					totalTokens: (job.usage?.inputTokens ?? 0) + (job.usage?.outputTokens ?? 0),
 					curatorName: curator?.name,
 					moduleId: job.moduleId,
@@ -304,7 +316,7 @@ export const claimGenerationJob = internalMutation({
 		moduleId: v.id('module'),
 		total: v.number()
 	},
-	returns: v.null(),
+	returns: v.boolean(),
 	handler: async (ctx, args) => {
 		const user = await ctx.db
 			.query('users')
@@ -314,11 +326,11 @@ export const claimGenerationJob = internalMutation({
 		if (!user || !job || !['dev', 'admin', 'curator'].includes(user.role ?? ''))
 			throw new Error('Unauthorized');
 		assertJobBinding(job, user._id, args);
+		if (await expireIfDue(ctx, job)) return false;
+		if (job.status !== 'queued' || job.dismissedAt) throw new Error('Generation is not queued');
 		if (user.role !== 'dev' && user.cohortId !== job.cohortId) throw new Error('Unauthorized');
 		await ctx.db.patch(job._id, { status: 'running', updatedAt: Date.now() });
-		await ctx.scheduler.runAfter(10 * 60_000, internal.questionStudio.expireGenerationJob, {
-			jobId: job._id
-		});
+
 		await ctx.scheduler.runAfter(0, internal.aiTelemetry.capture, {
 			event: 'question_generation_started',
 			distinctId: args.clerkUserId,
@@ -328,7 +340,7 @@ export const claimGenerationJob = internalMutation({
 				harness_version: HARNESS_VERSION
 			}
 		});
-		return null;
+		return true;
 	}
 });
 
@@ -343,11 +355,13 @@ export const claimWorker = internalMutation({
 			job.claimedWorkers?.includes(args.workerIndex)
 		)
 			return null;
+		if (await expireIfDue(ctx, job)) return null;
 		await ctx.db.patch(job._id, {
 			claimedWorkers: [...(job.claimedWorkers ?? []), args.workerIndex],
 			workerStates: openWorkerState(job.workerStates, args.workerIndex, Date.now())
 		});
 		return {
+			deadlineAt: generationDeadline(job),
 			sourceIndexedAt: job.sourceIndexedAt,
 			sourceMode: job.sourceMode,
 			selectedPageNumbers: job.selectedPageNumbers
@@ -360,12 +374,7 @@ export const expireGenerationJob = internalMutation({
 	returns: v.null(),
 	handler: async (ctx, args) => {
 		const job = await ctx.db.get(args.jobId);
-		if (job && ['queued', 'running'].includes(job.status))
-			await ctx.db.patch(job._id, {
-				status: 'failed',
-				statusText: 'Run timed out. Start a new run to retry.',
-				completedAt: Date.now()
-			});
+		if (job) await expireIfDue(ctx, job);
 		return null;
 	}
 });

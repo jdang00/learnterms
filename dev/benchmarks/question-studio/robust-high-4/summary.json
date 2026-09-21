@@ -1,0 +1,107 @@
+{
+  "jobId": "n5798hms930aarm0x229qxhqy58etpv3",
+  "status": "ready",
+  "requested": 15,
+  "accepted": 12,
+  "wallMs": 27831,
+  "firstCandidateMs": 11880,
+  "setupMs": 2126,
+  "workerSpanMs": 25011,
+  "finalizationMs": 694,
+  "aggregateWorkerMs": 145294,
+  "aggregateWorkerModelMs": 136593,
+  "aggregateNonModelWorkerMs": 8701,
+  "acceptedByType": {
+    "learn": 12
+  },
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 5252,
+        "cachedInputTokens": 38556,
+        "calls": 8,
+        "costEstimatedCalls": 7,
+        "costKnownCalls": 7,
+        "costUsd": 0.01860752,
+        "failedCalls": 1,
+        "inputTokens": 43829,
+        "latencyMsTotal": 136593,
+        "outputTokens": 13766,
+        "reasoningTokens": 10675,
+        "stage": "draft"
+      }
+    ],
+    "cacheWriteTokens": 5252,
+    "cachedInputTokens": 38556,
+    "calls": 8,
+    "costEstimatedCalls": 7,
+    "costKnownCalls": 7,
+    "costUsd": 0.01860752,
+    "failedCalls": 1,
+    "inputTokens": 43829,
+    "latencyMsTotal": 136593,
+    "outputTokens": 13766,
+    "reasoningTokens": 10675
+  },
+  "workerNotes": [
+    "Learn: 1/1 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 1/2 passed local evidence and answer-structure checks. 0 corrected during review. 1 withheld. Remove source framing from student-facing text.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 0/2 passed local evidence and answer-structure checks. 0 corrected during review. 2 withheld. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget."
+  ],
+  "repairs": [],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 2126,
+      "durationMs": 17893,
+      "accepted": 1
+    },
+    {
+      "index": 1,
+      "startMs": 3238,
+      "durationMs": 22462,
+      "accepted": 2
+    },
+    {
+      "index": 2,
+      "startMs": 2729,
+      "durationMs": 22619,
+      "accepted": 2
+    },
+    {
+      "index": 3,
+      "startMs": 2430,
+      "durationMs": 24707,
+      "accepted": 0
+    },
+    {
+      "index": 4,
+      "startMs": 3068,
+      "durationMs": 9948,
+      "accepted": 2
+    },
+    {
+      "index": 5,
+      "startMs": 3508,
+      "durationMs": 23279,
+      "accepted": 2
+    },
+    {
+      "index": 6,
+      "startMs": 2592,
+      "durationMs": 15430,
+      "accepted": 2
+    },
+    {
+      "index": 7,
+      "startMs": 2924,
+      "durationMs": 8956,
+      "accepted": 1
+    }
+  ]
+}

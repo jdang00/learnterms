@@ -1,0 +1,164 @@
+[
+  {
+    "_creationTime": 1789958039334.9802,
+    "_id": "nd7316g4ca5dy2bdg2m9h4k7dx8etv90",
+    "at": 1789958039334,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Preparing the agent run.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Queued"
+  },
+  {
+    "_creationTime": 1789958039893.6367,
+    "_id": "nd7ag9c8zq712mbysa9hq1bb0x8ev981",
+    "at": 1789958039893,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 questions requested.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Started"
+  },
+  {
+    "_creationTime": 1789958040116.0642,
+    "_id": "nd7cng6bmhshd4cbpgvkjjf4918etv9y",
+    "at": 1789958040116,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "59 existing module questions available for duplicate checks.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Loaded context"
+  },
+  {
+    "_creationTime": 1789958040350.8174,
+    "_id": "nd75zx704zd2vybmcqgspt37kd8etkwk",
+    "at": 1789958040350,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Pages 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20. Only these pages are in context.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Selected pages"
+  },
+  {
+    "_creationTime": 1789958047950.4163,
+    "_id": "nd7c71ps183wch89danayz79j98etdyt",
+    "at": 1789958047950,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "4 topics and 18 pages are in scope.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Prepared context"
+  },
+  {
+    "_creationTime": 1789958048015.5837,
+    "_id": "nd71v0ryq6v9ez526a6az1wg3s8evemh",
+    "at": 1789958048015,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "4 workers queued with at most 3 questions each.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Work orders ready"
+  },
+  {
+    "_creationTime": 1789958048104.1384,
+    "_id": "nd73r7jxqdw3bp9625rwx723h98et3dr",
+    "at": 1789958048104,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Clinical: 3 requested questions could not be assigned because the selected material does not support this type.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Coverage notes"
+  },
+  {
+    "_creationTime": 1789958048238.2725,
+    "_id": "nd72009t1cg27kw1k2rtd5pbns8etbea",
+    "at": 1789958048238,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Each worker drafts from selected page excerpts, then checks the answer and source support independently.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Workers launched"
+  },
+  {
+    "_creationTime": 1789958061848.5046,
+    "_id": "nd7esckt643mt3mpt737bnf5r98evzt0",
+    "at": 1789958061848,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "learn:batch:3:q1: Evidence quote is not in the supplied excerpt: p6c0.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Repair requested"
+  },
+  {
+    "_creationTime": 1789958061910.7559,
+    "_id": "nd7a095sxxva3z4q870t47dv5s8evxpt",
+    "at": 1789958061910,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "learn:batch:3:q3: The assigned objective is already represented by an avoided question asking which laboratory evaluation is recommended when giant cell arteritis is a concern; creating another direct question would repeat the excluded central fact.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Repair requested"
+  },
+  {
+    "_creationTime": 1789958065445.529,
+    "_id": "nd70d9pnh3c855k8nxdzwm32z58etjmf",
+    "at": 1789958065445,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 1/3 passed evidence checks and independent automated review. 2 withheld. Abstain because the defining distinction for amaurosis fugax—transient embolic occlusion followed by complete visual recovery—is already covered by an existing question, and the supplied evidence does not support a non-redundant alternative within this objective. Abstain because the assigned laboratory-evaluation fact",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958066319.6946,
+    "_id": "nd71ssrpv8x5svnaprakqgp4p58ev56m",
+    "at": 1789958066319,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958067783.5032,
+    "_id": "nd7f2p3t5act9ppec90p0egwc58evgmd",
+    "at": 1789958067783,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/3 passed evidence checks and independent automated review. 0 withheld.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958077598.0618,
+    "_id": "nd74zfpsqryt1zf3zp0mew87en8etjds",
+    "at": 1789958077598,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "learn:batch:4:q3: The incorrect options need revision. The first option directly matches the supported combination for ophthalmic artery occlusion: decreased or absent choroidal and central retinal arterial supply, no cherry-red spot, and a flat-line ERG. The stem directly tests one supported distinction, and the first option is uniquely established. However, the distractors include details not explicitly established",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Repair requested"
+  },
+  {
+    "_creationTime": 1789958098702.4243,
+    "_id": "nd722sqb2z3agp5bff6hq090458etna0",
+    "at": 1789958098702,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/3 passed evidence checks and independent automated review. 1 withheld. The question lacks one defensible best answer. The incorrect options need revision. The first option is directly supported and contains the requested ophthalmic artery occlusion pattern: decreased or absent choroidal and central retinal arterial blood supply, no cherry-red spot, and a flat-line ERG. The fourth option i",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958098949.3645,
+    "_id": "nd7fh6xja3x5aj59033wakzhgx8etqhn",
+    "at": 1789958098949,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "8 candidates are ready for local source, answer, and provenance checks.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Reviewing"
+  },
+  {
+    "_creationTime": 1789958099024.5657,
+    "_id": "nd7149merzdhwz1hkfbgrc59y58evcc1",
+    "at": 1789958099024,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "0 rejected, 0 need reasoning review.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Review complete"
+  },
+  {
+    "_creationTime": 1789958099103.2944,
+    "_id": "nd730b4fczk7vpn4gspwrrzxfd8et0rr",
+    "at": 1789958099103,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Draft workers finished with partial usable candidates.",
+    "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+    "label": "Ready"
+  }
+]

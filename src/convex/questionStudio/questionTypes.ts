@@ -7,18 +7,18 @@ export const questionTypeDefinitions = {
 	learn: {
 		label: 'Learn',
 		description: 'Reinforce a fact, relationship, definition, or distinction.',
-		draftingEffort: 'low',
+		draftingEffort: 'high',
 		mapping:
 			'The evidence explicitly supports a fact, relationship, definition, or distinction that can be tested directly.',
 		contract:
-			'Test one source-supported fact, relationship, definition, or distinction directly. Use a short, clear stem without a patient vignette or an added multi-step task. The explanation should reinforce the concept.',
+			'Test one source-supported fact, relationship, definition, or distinction directly. Use a short, clear stem without a patient vignette or an added multi-step task. Prefer a high-yield distinguishing feature, mechanism, or association over incidental trivia. Give informative, plausible answer choices and a substantive rationale explaining the correct relationship and the closest important misconception using the evidence.',
 		review:
 			'The question must directly reinforce one concept. Reject unnecessary scenarios or extra reasoning steps that obscure the learning target.'
 	},
 	clinical: {
 		label: 'Clinical',
 		description: 'Apply the material to a focused patient scenario or clinical finding.',
-		draftingEffort: 'medium',
+		draftingEffort: 'high',
 		mapping:
 			'The evidence connects patient observations or clinical findings to an interpretation or clinical decision. General administrative material alone does not qualify.',
 		contract:
@@ -29,7 +29,7 @@ export const questionTypeDefinitions = {
 	criticalThinking: {
 		label: 'Critical thinking',
 		description: 'Combine concepts, interpret evidence, or weigh meaningful alternatives.',
-		draftingEffort: 'medium',
+		draftingEffort: 'high',
 		mapping:
 			'At least two explicit relationships can be used together to distinguish plausible alternatives or reach a conclusion. Several matching signs of a single memorized diagnosis are insufficient.',
 		contract:

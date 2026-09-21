@@ -3,6 +3,7 @@ import { v } from 'convex/values';
 import { mutation } from './_generated/server';
 import { authAdminMutation } from './authQueries';
 import type { Doc } from './_generated/dataModel';
+import { requireIdentity, requireSelfIdentity, requireUserRead } from './access';
 
 function buildRoleUpdates(role: Doc<'users'>['role'] | null | undefined) {
 	const updates: { updatedAt: number; role?: Doc<'users'>['role'] } = {
@@ -17,12 +18,14 @@ function buildRoleUpdates(role: Doc<'users'>['role'] | null | undefined) {
 export const getUserById = query({
 	args: { id: v.string() },
 	handler: async (ctx, args) => {
+		const identity = await requireIdentity(ctx);
 		const user = await ctx.db
 			.query('users')
-			.filter((q) => q.eq(q.field('clerkUserId'), args.id))
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.id))
 			.first();
 
-		if (!user) return null;
+		if (identity.subject !== args.id) await requireUserRead(ctx, user);
+		if (!user || user.deletedAt) return null;
 
 		const cohort = user.cohortId ? await ctx.db.get(user.cohortId) : null;
 		const school = cohort?.schoolId ? await ctx.db.get(cohort.schoolId) : null;
@@ -49,6 +52,13 @@ export const addUser = mutation({
 		lastActiveAt: v.optional(v.number())
 	},
 	handler: async (ctx, args) => {
+		await requireSelfIdentity(ctx, args.clerkUserId);
+		const existing = await ctx.db
+			.query('users')
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
+			.first();
+		if (existing?.deletedAt) throw new Error('Unauthorized');
+		if (existing) return existing._id;
 		const user = await ctx.db.insert('users', {
 			clerkUserId: args.clerkUserId,
 			metadata: {},
@@ -81,12 +91,13 @@ export const syncUserFromClerk = mutation({
 		lastActiveAt: v.optional(v.number())
 	},
 	handler: async (ctx, args) => {
+		await requireSelfIdentity(ctx, args.clerkUserId);
 		const user = await ctx.db
 			.query('users')
 			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
 			.first();
 
-		if (!user) {
+		if (!user || user.deletedAt) {
 			return null;
 		}
 
@@ -120,6 +131,9 @@ export const updateUserRole = authAdminMutation({
 		const targetUser = await ctx.db.get(args.userId);
 		if (!targetUser) {
 			throw new Error('Target user not found');
+		}
+		if (caller?.role !== 'dev' && (!caller?.cohortId || caller.cohortId !== targetUser.cohortId)) {
+			throw new Error('Unauthorized for this cohort');
 		}
 
 		const callerRole = caller?.role || 'student';

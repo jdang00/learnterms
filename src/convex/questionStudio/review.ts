@@ -56,7 +56,9 @@ export const reviewGenerationJob = internalAction({
 				const gate = mechanicalCandidateGate(candidate);
 				const reasons = gate.pass
 					? [
-							'Passed source evidence checks and separate AI screening. Review the answer and source before publishing.'
+							candidate.metadata.reviewMode === 'local'
+								? 'Passed local quote, answer-structure, and duplicate checks. No separate AI review; verify correctness before publishing.'
+								: 'Passed source evidence checks and separate AI screening. Review the answer and source before publishing.'
 						]
 					: gate.reasons;
 				return {

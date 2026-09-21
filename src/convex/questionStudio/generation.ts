@@ -1,9 +1,20 @@
+import { generationDeadline } from './deadline';
 import { v } from 'convex/values';
 import { internal } from '../_generated/api';
 import { action } from '../_generated/server';
 import { planPageContext, selectedSourcePages } from './pageSelection';
-import { buildLiveGenerationWork, clampTopic, validateCounts } from './planning';
-import { MAPPING_INSTRUCTIONS } from './questionTypes';
+import {
+	buildLiveGenerationWork,
+	clampTopic,
+	generationWorkerLanes,
+	validateCounts
+} from './planning';
+import {
+	learnPageTopics,
+	pagePlanningPrompt,
+	pagePlanSchema,
+	pagePlanTopics
+} from './pagePlanning';
 import { createQuestionStudioAgent, questionStudioRateLimiter } from './runtime';
 import type {
 	GenerationContext,
@@ -14,14 +25,16 @@ import type {
 import {
 	MAX_QUESTIONS_PER_MODULE,
 	MAX_QUESTIONS_PER_WORKER,
+	LEARN_QUESTIONS_PER_WORKER,
+	LEARN_MODEL_BATCH_SIZE,
+	MAX_CONCURRENT_LEARN_WORKERS,
 	QUESTION_STUDIO_MAPPING_MODEL,
 	QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS,
 	QUESTION_STUDIO_MODEL,
-	assertOpenRouterKey,
-	topicInputValidator,
-	topicMapSchema
+	assertQuestionStudioKey,
+	topicInputValidator
 } from './shared';
-import { loadMarkdownPages, pagesToPromptText, selectPages } from './sourceRetrieval';
+import { loadMarkdownPages, selectPages } from './sourceRetrieval';
 import { cleanPlainText } from './text';
 
 // Each slot receives one objective; only nearby reserved objectives cross worker boundaries.
@@ -88,7 +101,7 @@ export const generateCandidates = action({
 				// Queuing progress is best-effort; scheduled workers own the durable result.
 			}
 		};
-		assertOpenRouterKey();
+		assertQuestionStudioKey();
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) throw new Error('Unauthorized');
 		if (!args.jobId) throw new Error('A generation job is required for live worker generation.');
@@ -99,13 +112,15 @@ export const generateCandidates = action({
 		if (!job) throw new Error('Generation job not found');
 		if (job.sourceMode !== 'pages' && args.topics.length === 0)
 			throw new Error('Select at least one topic');
-		await ctx.runMutation(internal.questionStudio.claimGenerationJob, {
+		const claimed = await ctx.runMutation(internal.questionStudio.claimGenerationJob, {
 			jobId: args.jobId,
 			clerkUserId: identity.subject,
 			documentId: args.documentId,
 			moduleId: args.moduleId,
 			total
 		});
+		if (!claimed) throw new Error('Generation deadline reached');
+		const deadlineAt = generationDeadline(job);
 		const model = QUESTION_STUDIO_MODEL;
 		const focusNotes = cleanPlainText(args.focusNotes ?? '', 1800);
 
@@ -153,47 +168,77 @@ export const generateCandidates = action({
 					? selectedSourcePages(allPages, job.selectedPageNumbers ?? [])
 					: selectPages(allPages, args.startPage, args.endPage);
 			let inputTopics = args.topics;
-			if (job.sourceMode === 'pages') {
+			const directLearn =
+				job.sourceMode === 'pages' &&
+				counts.clinical === 0 &&
+				counts.criticalThinking === 0 &&
+				selectedPages.filter((page) => page.text.trim().length >= 40).length >=
+					Math.ceil(counts.learn / LEARN_QUESTIONS_PER_WORKER);
+			if (directLearn) {
+				inputTopics = learnPageTopics(selectedPages, counts.learn);
+				await report({
+					eventLabel: 'Page plan',
+					eventDetail: `Assigned selected pages to ${inputTopics.length} Learn groups without an AI planning call.`
+				});
+			} else if (job.sourceMode === 'pages') {
 				await report({
 					statusText: 'Planning questions from your selected pages.',
 					eventLabel: 'Selected pages',
 					eventDetail: `Pages ${job.selectedPageNumbers?.join(', ')}. Only these pages are in context.`
 				});
-				const agent = createQuestionStudioAgent(QUESTION_STUDIO_MAPPING_MODEL);
+				const agent = createQuestionStudioAgent(QUESTION_STUDIO_MAPPING_MODEL, true);
 				inputTopics = await planPageContext(
 					allPages,
 					job.selectedPageNumbers ?? [],
 					async (group) => {
-						const allowance = group.reduce((sum, page) => sum + page.text.length, 0) + 10000;
-						await questionStudioRateLimiter.limit(ctx, 'questionStudioTokenUsagePerUser', {
-							key: identity.subject,
-							count: allowance,
-							throws: true
-						});
-						await questionStudioRateLimiter.limit(ctx, 'questionStudioGlobalTokenUsage', {
-							count: allowance,
-							throws: true
+						const prompt = pagePlanningPrompt(group, counts, context.existingQuestions);
+						const allowance = prompt.length + 6000;
+						await ctx.runMutation(internal.questionStudio.reserveGenerationTokens, {
+							userId: identity.subject,
+							allowance
 						});
 						const thread = await agent.createThread(ctx, {
 							userId: identity.subject,
 							title: 'Plan selected pages'
 						});
+						const planningStarted = Date.now();
 						const result = await agent.generateObject(
 							ctx,
 							{ threadId: thread.threadId, userId: identity.subject },
 							{
-								schema: topicMapSchema,
+								schema: pagePlanSchema,
+								abortSignal: deadlineAt
+									? AbortSignal.timeout(Math.max(1, deadlineAt - Date.now() - 3000))
+									: undefined,
 								providerOptions: QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS,
-								maxOutputTokens: 10000,
+								maxOutputTokens: 6000,
 								maxRetries: 0,
-								prompt: [
-									MAPPING_INSTRUCTIONS,
-									pagesToPromptText(group, Number.MAX_SAFE_INTEGER)
-								].join('\n\n')
+								prompt
 							},
 							{ storageOptions: { saveMessages: 'none' } }
 						);
-						return result.object.topics;
+						if (result.usage.inputTokens !== undefined && result.usage.outputTokens !== undefined) {
+							await ctx.runMutation(internal.questionStudio.settleGenerationTokens, {
+								userId: identity.subject,
+								allowance,
+								actualTokens: result.usage.inputTokens + result.usage.outputTokens
+							});
+						}
+						await ctx.runMutation(internal.questionStudio.recordGenerationUsage, {
+							jobId: args.jobId!,
+							stage: 'plan',
+							inputTokens: result.usage.inputTokens,
+							outputTokens: result.usage.outputTokens,
+							reasoningTokens: result.usage.outputTokenDetails?.reasoningTokens,
+							cachedInputTokens: result.usage.inputTokenDetails?.cacheReadTokens,
+							cacheWriteTokens: result.usage.inputTokenDetails?.cacheWriteTokens,
+							latencyMs: Date.now() - planningStarted
+						});
+						await report({
+							eventLabel: 'Page plan',
+							eventDetail: `${result.object.topics.length} topic groups planned.`
+						});
+						return pagePlanTopics(result.object);
 					}
 				);
 			}
@@ -219,7 +264,11 @@ export const generateCandidates = action({
 
 			if (!topics.length)
 				throw new Error('No selected topic has evidence in the chosen page range');
-			const { plan, tasks } = buildLiveGenerationWork(topics, counts);
+			const verifiedLearn = counts.learn === total && total <= 15;
+			const { plan, tasks } = buildLiveGenerationWork(topics, counts, {
+				packByTopic: directLearn,
+				maxPerWorker: verifiedLearn ? LEARN_MODEL_BATCH_SIZE : MAX_QUESTIONS_PER_WORKER
+			});
 			if (!tasks.length)
 				throw new Error(plan.riskNotes.join(' ') || 'No supported questions could be assigned.');
 			assignBlueprints(tasks);
@@ -232,45 +281,41 @@ export const generateCandidates = action({
 					.join('; ');
 			});
 			plan.coverageNotes.push(
-				`Assigned ${total} deterministic slot contracts across ${tasks.length} workers.`
+				`Assigned ${tasks.reduce((sum, task) => sum + task.plannedCount, 0)} deterministic slot contracts across ${tasks.length} workers.`
 			);
 			await report({
 				statusText: 'Work orders ready; starting draft workers.',
 				eventLabel: 'Work orders ready',
-				eventDetail: `${tasks.length} worker${tasks.length === 1 ? '' : 's'} queued with at most ${MAX_QUESTIONS_PER_WORKER} questions each.`,
+				eventDetail: `${tasks.length} worker${tasks.length === 1 ? '' : 's'} queued with at most ${verifiedLearn ? LEARN_MODEL_BATCH_SIZE : MAX_QUESTIONS_PER_WORKER} questions each.`,
 				plan,
 				loop: { enabled: true, pass: 'draft', blueprintCount: total, blueprintSource: 'fallback' }
 			});
 
 			if (plan.riskNotes.length)
 				await report({ eventLabel: 'Coverage notes', eventDetail: plan.riskNotes.join(' ') });
-			for (const [workerIndex, task] of tasks.slice(0, 2).entries()) {
-				await ctx.scheduler.runAfter(
-					500 + workerIndex * 100,
-					internal.questionStudio.generateCandidateWorker,
-					{
-						jobId: args.jobId,
-						documentId: args.documentId,
-						moduleId: args.moduleId,
-						clerkUserId: identity.subject,
-						task,
-						remainingTasks: tasks.filter(
-							(_, index) => index > workerIndex && index % 2 === workerIndex
-						),
-						workerIndex,
-						workerTotal: tasks.length,
-						model,
-						focusNotes,
-						startPage: args.startPage,
-						endPage: args.endPage
-					}
-				);
+			for (const lane of generationWorkerLanes(
+				tasks,
+				directLearn ? MAX_CONCURRENT_LEARN_WORKERS : undefined
+			)) {
+				await ctx.scheduler.runAfter(0, internal.questionStudio.generateCandidateWorker, {
+					jobId: args.jobId,
+					documentId: args.documentId,
+					moduleId: args.moduleId,
+					clerkUserId: identity.subject,
+					...lane,
+					workerTotal: tasks.length,
+					model,
+					focusNotes,
+					startPage: args.startPage,
+					endPage: args.endPage
+				});
 			}
 			await report({
 				statusText: `${tasks.length} workers launched. Candidates will appear as they finish.`,
 				eventLabel: 'Workers launched',
-				eventDetail:
-					'Each worker drafts from selected page excerpts, then checks the answer and source support independently.'
+				eventDetail: verifiedLearn
+					? 'Each Learn worker drafts up to two questions, then independently checks and corrects them. Local source and duplicate checks follow.'
+					: 'Each worker drafts from selected page excerpts, then checks the answer and source support independently.'
 			});
 
 			return {

@@ -1,0 +1,107 @@
+{
+  "jobId": "n57901rf67h5v2rv60vrqv11c18etkyg",
+  "status": "ready",
+  "requested": 15,
+  "accepted": 13,
+  "wallMs": 24148,
+  "firstCandidateMs": 10283,
+  "setupMs": 2250,
+  "workerSpanMs": 21148,
+  "finalizationMs": 750,
+  "aggregateWorkerMs": 114403,
+  "aggregateWorkerModelMs": 106699,
+  "aggregateNonModelWorkerMs": 7704,
+  "acceptedByType": {
+    "learn": 13
+  },
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 11534,
+        "cachedInputTokens": 38556,
+        "calls": 8,
+        "costEstimatedCalls": 8,
+        "costKnownCalls": 8,
+        "costUsd": 0.05538363999999999,
+        "failedCalls": 0,
+        "inputTokens": 50114,
+        "latencyMsTotal": 106699,
+        "outputTokens": 20027,
+        "reasoningTokens": 16423,
+        "stage": "draft"
+      }
+    ],
+    "cacheWriteTokens": 11534,
+    "cachedInputTokens": 38556,
+    "calls": 8,
+    "costEstimatedCalls": 8,
+    "costKnownCalls": 8,
+    "costUsd": 0.05538363999999999,
+    "failedCalls": 0,
+    "inputTokens": 50114,
+    "latencyMsTotal": 106699,
+    "outputTokens": 20027,
+    "reasoningTokens": 16423
+  },
+  "workerNotes": [
+    "Learn: 1/1 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 1/2 passed local evidence and answer-structure checks. 0 corrected during review. 1 withheld. Remove source framing from student-facing text.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "Learn: 1/2 passed local evidence and answer-structure checks. 0 corrected during review. 1 withheld. Remove source framing from student-facing text.",
+    "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld."
+  ],
+  "repairs": [],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 2819,
+      "durationMs": 19175,
+      "accepted": 1
+    },
+    {
+      "index": 1,
+      "startMs": 3204,
+      "durationMs": 12798,
+      "accepted": 2
+    },
+    {
+      "index": 2,
+      "startMs": 2250,
+      "durationMs": 14830,
+      "accepted": 1
+    },
+    {
+      "index": 3,
+      "startMs": 2964,
+      "durationMs": 11557,
+      "accepted": 2
+    },
+    {
+      "index": 4,
+      "startMs": 4156,
+      "durationMs": 19242,
+      "accepted": 2
+    },
+    {
+      "index": 5,
+      "startMs": 2660,
+      "durationMs": 12875,
+      "accepted": 2
+    },
+    {
+      "index": 6,
+      "startMs": 3475,
+      "durationMs": 16073,
+      "accepted": 2
+    },
+    {
+      "index": 7,
+      "startMs": 2430,
+      "durationMs": 7853,
+      "accepted": 1
+    }
+  ]
+}

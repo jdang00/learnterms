@@ -3,29 +3,50 @@
 	import type { Id } from '../../../convex/_generated/dataModel';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
+	import type { FunctionReturnType } from 'convex/server';
 	import { onMount } from 'svelte';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { pushState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import {
-		Activity,
+		ArrowDownRight,
 		ArrowLeft,
 		ArrowUpRight,
 		BookOpen,
 		ChevronRight,
 		CircleHelp,
-		Compass,
+		ClipboardCheck,
+		Flag,
+		Flame,
 		LayoutDashboard,
+		Radio,
 		Search,
 		Sparkles,
-		Target,
+		TrendingUp,
 		Users
 	} from 'lucide-svelte';
 	import StudentDetailModal from '$lib/admin/StudentDetailModal.svelte';
 	import CuratorGenerationRuns from '$lib/admin/CuratorGenerationRuns.svelte';
 	import StudentAvatar from '$lib/admin/progress/StudentAvatar.svelte';
 	import Explorer from '$lib/admin/progress/Explorer.svelte';
-	import { percent, relativeTime } from '$lib/admin/progress/utils';
+	import ActivityBars from '$lib/admin/progress/ActivityBars.svelte';
+	import StudyHeatmap from '$lib/admin/progress/StudyHeatmap.svelte';
+	import LiveFeed from '$lib/admin/progress/LiveFeed.svelte';
+	import {
+		DAY_MS,
+		HOUR_MS,
+		changePercent,
+		compactNumber,
+		engagementFor,
+		engagementMeta,
+		localDayKey,
+		percent,
+		plainText,
+		relativeTime,
+		startOfLocalDay,
+		type Engagement
+	} from '$lib/admin/progress/utils';
 
 	let { data }: { data: PageData } = $props();
 	const user = $derived(data.userData);
@@ -33,12 +54,8 @@
 	const client = useConvexClient();
 	const views = [
 		{ id: 'overview', label: 'Overview', icon: LayoutDashboard },
-		{
-			id: 'curriculum',
-			label: 'Classes',
-			icon: BookOpen
-		},
 		{ id: 'students', label: 'Students', icon: Users },
+		{ id: 'curriculum', label: 'Classes', icon: BookOpen },
 		{ id: 'studio', label: 'Studio', icon: Sparkles }
 	] as const;
 	const params = $derived(
@@ -50,8 +67,9 @@
 	const filter = $derived(params.get('filter') ?? 'all');
 	let search = $state('');
 	let sort = $state('recent');
+	let chartMetric = $state<'tries' | 'students'>('tries');
 	let now = $state(Date.now());
-	let connected = $state(false);
+	let connected = $state(true);
 	let everConnected = $state(false);
 	let selectedStudentId = $state<Id<'users'> | null>(null);
 
@@ -62,7 +80,7 @@
 		};
 		updateConnection(client.connectionState());
 		const unsubscribe = client.subscribeToConnectionState(updateConnection);
-		const timer = setInterval(() => (now = Date.now()), 60000);
+		const timer = setInterval(() => (now = Date.now()), 30_000);
 		return () => {
 			unsubscribe();
 			clearInterval(timer);
@@ -85,115 +103,253 @@
 		navigate({ view: 'curriculum', class: classId, module: moduleId, semester: null });
 	}
 
+	const WINDOW_DAYS = 14;
+	const hourStart = $derived(Math.floor(now / HOUR_MS) * HOUR_MS);
+	const since = $derived(hourStart - WINDOW_DAYS * DAY_MS);
+	const wantsActivity = $derived(view === 'overview' || view === 'students');
 	const studentsQuery = useQuery(api.progress.getStudentsWithProgress, () =>
 		cohortId ? { cohortId, includeSubscription: false } : 'skip'
 	);
-	// This query is a ranked sample, not an aggregate over the whole curriculum.
-	const moduleQuery = useQuery(api.progress.getModuleCompletionStats, () =>
+	// Only the current hour is reactive; earlier history is a closed window fetched once per hour.
+	const liveQuery = useQuery(
+		api.progress.getCohortLiveActivity,
+		() => (cohortId && wantsActivity ? { cohortId, since: hourStart } : 'skip'),
+		{ keepPreviousData: true }
+	);
+	const flaggedQuery = useQuery(api.progress.getTopFlaggedQuestions, () =>
 		cohortId && view === 'overview' ? { cohortId, limit: 6 } : 'skip'
 	);
-	const students = $derived(
-		(studentsQuery.data ?? []).map((student) => ({
-			...student,
-			progress: percent(student.questionsInteracted, student.totalQuestions)
-		}))
-	);
-	const measuredStudents = $derived(students.filter((student) => student.statsAvailable === true));
-	const notStarted = $derived(
-		measuredStudents.filter((student) => student.questionsInteracted === 0).length
-	);
-	const started = $derived(measuredStudents.filter((s) => s.questionsInteracted > 0).length);
-	const active = $derived(
-		measuredStudents.filter((s) => (s.lastActivityAt ?? 0) >= now - 7 * 86400000).length
-	);
-	const quiet = $derived(
-		measuredStudents.filter(
-			(s) => s.questionsInteracted > 0 && (s.lastActivityAt ?? 0) < now - 30 * 86400000
-		).length
-	);
-	const median = $derived.by(() => {
-		const values = measuredStudents.map((s) => s.progress).sort((a, b) => a - b);
-		const mid = Math.floor(values.length / 2);
-		return values.length
-			? Math.round(values.length % 2 ? values[mid] : (values[mid - 1] + values[mid]) / 2)
-			: 0;
+	type History = FunctionReturnType<typeof api.progress.getCohortActivityHistory>;
+	let history = $state<{ key: string; data: History } | null>(null);
+	let historyError = $state<string | null>(null);
+	$effect(() => {
+		if (!cohortId || !wantsActivity) return;
+		const key = `${cohortId}:${since}:${hourStart}`;
+		if (history?.key === key) return;
+		let cancelled = false;
+		client
+			.query(api.progress.getCohortActivityHistory, { cohortId, since, until: hourStart })
+			.then((data) => {
+				if (!cancelled) {
+					history = { key, data };
+					historyError = null;
+				}
+			})
+			.catch((error: unknown) => {
+				if (!cancelled) historyError = error instanceof Error ? error.message : String(error);
+			});
+		return () => {
+			cancelled = true;
+		};
 	});
-	const bands = $derived([
-		{
-			id: 'none',
-			label: 'Not started',
-			detail: 'No questions tried',
-			color: 'bg-base-300',
-			text: 'text-base-content',
-			count: notStarted
-		},
-		{
-			id: 'early',
-			label: 'Under 25%',
-			detail: 'Started · <25% tried',
-			color: 'bg-info',
-			text: 'text-info',
-			count: measuredStudents.filter((s) => s.questionsInteracted > 0 && s.progress < 25).length
-		},
-		{
-			id: 'building',
-			label: '25–74%',
-			detail: 'Question bank tried',
-			color: 'bg-primary',
-			text: 'text-primary',
-			count: measuredStudents.filter(
-				(s) => s.questionsInteracted > 0 && s.progress >= 25 && s.progress < 75
-			).length
-		},
-		{
-			id: 'strong',
-			label: '75–100%',
-			detail: 'Question bank tried',
-			color: 'bg-success',
-			text: 'text-success',
-			count: measuredStudents.filter((s) => s.questionsInteracted > 0 && s.progress >= 75).length
+
+	const live = $derived.by(() => {
+		const current = liveQuery.data;
+		const past = history?.data;
+		if (!current || !past) return undefined;
+		const sessionKey = (s: (typeof current.sessions)[number]) =>
+			`${s.kind}:${s.userId}:${s.moduleId ?? s.classId}:${s.startedAt}`;
+		const seen = new SvelteSet<string>();
+		const sessions = [...current.sessions, ...past.sessions]
+			.sort((a, b) => b.at - a.at)
+			.filter((s) => (seen.has(sessionKey(s)) ? false : (seen.add(sessionKey(s)), true)))
+			.slice(0, 40);
+		const moduleMap = new SvelteMap<string, (typeof past.modules)[number]>();
+		for (const module of [...past.modules, ...current.modules]) {
+			const existing = moduleMap.get(module.moduleId);
+			moduleMap.set(
+				module.moduleId,
+				existing
+					? {
+							...existing,
+							tries: existing.tries + module.tries,
+							userIds: [...new Set([...existing.userIds, ...module.userIds])]
+						}
+					: module
+			);
 		}
-	]);
+		const modules = [...moduleMap.values()]
+			.map((module) => ({ ...module, students: module.userIds.length }))
+			.sort((a, b) => b.students - a.students || b.tries - a.tries)
+			.slice(0, 6);
+		const scored = past.quizzes.scored + current.quizzes.scored;
+		return {
+			truncated: past.truncated || current.truncated,
+			students: current.students,
+			sessions,
+			modules,
+			hourStamps: [
+				...past.hours.map((bucket) => ({ ...bucket, at: past.since + bucket.hour * HOUR_MS })),
+				...current.hours.map((bucket) => ({ ...bucket, at: current.since + bucket.hour * HOUR_MS }))
+			],
+			quizzes: {
+				started: past.quizzes.started + current.quizzes.started,
+				submitted: past.quizzes.submitted + current.quizzes.submitted,
+				averageScore: scored
+					? Math.round((past.quizzes.scoreTotal + current.quizzes.scoreTotal) / scored)
+					: null
+			}
+		};
+	});
+
+	const hourStamps = $derived(live?.hourStamps ?? []);
+	const weekStart = $derived(now - 7 * DAY_MS);
+	const weekTries = $derived.by(() => {
+		const tries = new SvelteMap<string, number>();
+		for (const bucket of hourStamps) {
+			if (bucket.at < weekStart) continue;
+			for (const entry of bucket.users)
+				tries.set(entry.userId, (tries.get(entry.userId) ?? 0) + entry.tries);
+		}
+		return tries;
+	});
+	const lastSessionAt = $derived.by(() => {
+		const latest = new SvelteMap<string, number>();
+		for (const session of live?.sessions ?? [])
+			latest.set(session.userId, Math.max(latest.get(session.userId) ?? 0, session.at));
+		return latest;
+	});
+	const liveById = $derived(new Map((live?.students ?? []).map((entry) => [entry.userId, entry])));
+	const todayKey = $derived(localDayKey(now));
+
+	const students = $derived(
+		(studentsQuery.data ?? []).map((student) => {
+			const metric = liveById.get(student._id);
+			const lastActivityAt =
+				Math.max(
+					student.lastActivityAt ?? 0,
+					metric?.lastSeenAt ?? 0,
+					lastSessionAt.get(student._id) ?? 0
+				) || null;
+			const questionsInteracted = Math.max(
+				student.questionsInteracted,
+				metric?.questionsInteracted ?? 0
+			);
+			const streak =
+				metric && metric.streakDayKey !== null && metric.streakDayKey >= todayKey - 1
+					? metric.streakDays
+					: 0;
+			return {
+				...student,
+				lastActivityAt,
+				questionsInteracted,
+				questionsMastered: Math.max(student.questionsMastered, metric?.questionsMastered ?? 0),
+				statsAvailable: student.statsAvailable || metric !== undefined,
+				progress: percent(questionsInteracted, student.totalQuestions),
+				streak,
+				weekTries: weekTries.get(student._id) ?? 0,
+				engagement: engagementFor(lastActivityAt, questionsInteracted, now)
+			};
+		})
+	);
+	type Student = (typeof students)[number];
+	const studentsById = $derived(
+		new Map(students.map((student) => [student._id as string, student]))
+	);
+	const ready = $derived(!!studentsQuery.data);
+
+	const engagementCounts = $derived.by(() => {
+		const counts: Record<Engagement, number> = {
+			live: 0,
+			active: 0,
+			cooling: 0,
+			dormant: 0,
+			none: 0
+		};
+		for (const student of students) counts[student.engagement]++;
+		return counts;
+	});
+	const studyingNow = $derived(students.filter((student) => student.engagement === 'live'));
+	const activeToday = $derived(
+		students.filter((s) => (s.lastActivityAt ?? 0) >= startOfLocalDay(now)).length
+	);
+	const activeWeek = $derived(engagementCounts.live + engagementCounts.active);
+	const onStreak = $derived(students.filter((s) => s.streak >= 2));
+
+	const days = $derived.by(() => {
+		const todayStart = startOfLocalDay(now);
+		const result = Array.from({ length: WINDOW_DAYS }, (_, i) => {
+			const start = startOfLocalDay(todayStart - (WINDOW_DAYS - 1 - i) * DAY_MS + HOUR_MS * 2);
+			return { start, tries: 0, users: new Set<string>(), isToday: start === todayStart };
+		});
+		for (const bucket of hourStamps) {
+			const day = result.findLast((entry) => bucket.at >= entry.start);
+			if (!day) continue;
+			day.tries += bucket.tries;
+			for (const entry of bucket.users) day.users.add(entry.userId);
+		}
+		return result.map(({ users, ...day }) => ({ ...day, students: users.size }));
+	});
+	const weekSplit = $derived.by(() => {
+		const cut = startOfLocalDay(now) - 6 * DAY_MS;
+		const current = hourStamps.filter((bucket) => bucket.at >= cut);
+		const previous = hourStamps.filter(
+			(bucket) => bucket.at < cut && bucket.at >= cut - 7 * DAY_MS
+		);
+		const sum = (list: typeof hourStamps) =>
+			list.reduce((total, bucket) => total + bucket.tries, 0);
+		const uniq = (list: typeof hourStamps) =>
+			new Set(list.flatMap((bucket) => bucket.users.map((entry) => entry.userId))).size;
+		return {
+			tries: sum(current),
+			triesChange: changePercent(sum(current), sum(previous)),
+			learners: uniq(current),
+			learnersChange: changePercent(uniq(current), uniq(previous))
+		};
+	});
+	const heatmap = $derived.by(() => {
+		const cells = Array.from({ length: 7 }, () => Array<number>(24).fill(0));
+		for (const bucket of hourStamps) {
+			const date = new Date(bucket.at);
+			cells[(date.getDay() + 6) % 7][date.getHours()] += bucket.tries;
+		}
+		return cells;
+	});
+	const topLearners = $derived(
+		[...students]
+			.filter((s) => s.weekTries > 0)
+			.sort((a, b) => b.weekTries - a.weekTries || b.streak - a.streak)
+			.slice(0, 5)
+	);
+	const checkIns = $derived(
+		students
+			.filter((s) => s.engagement === 'cooling')
+			.sort((a, b) => (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0))
+			.slice(0, 5)
+	);
+
+	const engagementOrder: Engagement[] = ['live', 'active', 'cooling', 'dormant', 'none'];
 	const filters = $derived([
-		{ id: 'all', label: 'All students', count: students.length },
-		{ id: 'active', label: 'Active this week', count: active },
-		{ id: 'quiet', label: 'Quiet for 30+ days', count: quiet },
-		{ id: 'none', label: 'Not started', count: notStarted },
-		...bands
-			.filter((b) => b.id === filter && b.id !== 'none')
-			.map((b) => ({ id: b.id, label: `${b.label} coverage`, count: b.count }))
+		{ id: 'all', label: 'All', count: students.length },
+		...engagementOrder.map((id) => ({
+			id,
+			label: engagementMeta[id].label,
+			count: engagementCounts[id]
+		})),
+		{ id: 'streak', label: 'On a streak', count: onStreak.length }
 	]);
+	function matchesFilter(student: Student) {
+		if (filter === 'all') return true;
+		if (filter === 'streak') return student.streak >= 2;
+		return student.engagement === filter;
+	}
 	const filteredStudents = $derived(
 		students
-			.filter((s) => {
-				const matches = `${s.name} ${s.email ?? ''} ${s.username ?? ''}`
-					.toLowerCase()
-					.includes(search.toLowerCase());
-				if (!matches) return false;
-				if (filter !== 'all' && !s.statsAvailable) return false;
-				if (filter === 'active') return (s.lastActivityAt ?? 0) >= now - 7 * 86400000;
-				if (filter === 'quiet')
-					return s.questionsInteracted > 0 && (s.lastActivityAt ?? 0) < now - 30 * 86400000;
-				if (filter === 'none') return s.questionsInteracted === 0;
-				if (filter === 'early') return s.questionsInteracted > 0 && s.progress < 25;
-				if (filter === 'building')
-					return s.questionsInteracted > 0 && s.progress >= 25 && s.progress < 75;
-				if (filter === 'strong') return s.questionsInteracted > 0 && s.progress >= 75;
-				return true;
-			})
+			.filter(
+				(s) =>
+					`${s.name} ${s.email ?? ''} ${s.username ?? ''}`
+						.toLowerCase()
+						.includes(search.toLowerCase()) && matchesFilter(s)
+			)
 			.sort((a, b) =>
 				sort === 'name'
 					? a.name.localeCompare(b.name)
-					: sort === 'coverage'
-						? b.progress - a.progress || a.name.localeCompare(b.name)
-						: (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0) || a.name.localeCompare(b.name)
+					: sort === 'tried'
+						? b.questionsInteracted - a.questionsInteracted || a.name.localeCompare(b.name)
+						: sort === 'week'
+							? b.weekTries - a.weekTries || a.name.localeCompare(b.name)
+							: (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0) || a.name.localeCompare(b.name)
 			)
-	);
-	const recentStudents = $derived(
-		[...measuredStudents]
-			.filter((s) => s.lastActivityAt)
-			.sort((a, b) => (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0))
-			.slice(0, 5)
 	);
 	const selectedStudent = $derived(students.find((s) => s._id === selectedStudentId) ?? null);
 	async function updateRole(userId: Id<'users'>, role: 'dev' | 'admin' | 'curator' | null) {
@@ -204,250 +360,410 @@
 	}
 </script>
 
+{#snippet delta(change: number | null)}
+	{#if change !== null}
+		<span
+			class="badge badge-soft badge-xs gap-0.5 tabular-nums {change >= 0
+				? 'badge-success'
+				: 'badge-error'}"
+			>{#if change >= 0}<ArrowUpRight size={11} />{:else}<ArrowDownRight size={11} />{/if}{Math.abs(
+				change
+			)}%</span
+		>
+	{/if}
+{/snippet}
+
+{#snippet cardHeader(title: string, subtitle: string)}
+	<div class="min-w-0">
+		<h2 class="text-base font-semibold">{title}</h2>
+		<p class="text-xs text-base-content/55">{subtitle}</p>
+	</div>
+{/snippet}
+
 <svelte:head
 	><title>Class Progress · LearnTerms</title><meta
 		name="description"
-		content="Explore live cohort participation, student coverage, and question-level insights."
+		content="Live cohort activity, engagement, and study insights for curators."
 	/></svelte:head
 >
 
-<div class="progress-workspace mx-auto max-w-[1800px] p-4 text-base-content sm:p-6">
-	<div class="min-w-0">
-		<header class="mb-6 flex flex-col items-start gap-5">
-			<div class="flex min-w-0 items-center gap-3">
-				<a class="btn btn-ghost btn-circle" href={resolve('/admin')} aria-label="Back to admin"
-					><ArrowLeft size={20} /></a
-				>
-				<div class="min-w-0">
-					<h1 class="text-2xl font-bold tracking-tight">Class progress</h1>
-					<p class="mt-1 text-sm text-base-content/60">{user?.cohortName} · {user?.schoolName}</p>
-				</div>
-			</div>
-			<nav
-				class="flex max-w-full gap-1 overflow-x-auto rounded-full border border-base-300 bg-base-200 p-1"
-				aria-label="Progress views"
+<div class="progress-workspace mx-auto max-w-7xl px-4 pt-6 pb-24 text-base-content sm:px-8">
+	<header class="flex flex-wrap items-end justify-between gap-4">
+		<div class="flex min-w-0 items-center gap-3">
+			<a class="btn btn-ghost btn-circle btn-sm" href={resolve('/admin')} aria-label="Back to admin"
+				><ArrowLeft size={18} /></a
 			>
-				{#each views as item}<button
-						class="btn btn-sm shrink-0 rounded-full border-0 px-4 {view === item.id
-							? 'bg-base-100 text-primary shadow-sm'
-							: 'btn-ghost text-base-content/65'}"
-						aria-pressed={view === item.id}
-						onclick={() => navigate({ view: item.id === 'overview' ? null : item.id })}
-						><item.icon size={16} class="hidden sm:block" />{item.label}</button
-					>{/each}
-			</nav>
-		</header>
-		{#if !cohortId}<div class="alert alert-warning">No cohort is assigned to your account.</div>
-		{:else}
-			{#if !connected && everConnected}<div class="alert alert-warning mb-5" role="status">
-					Connection interrupted. Displayed data may be out of date; updates resume automatically
-					when reconnected.
-				</div>{/if}
+			<div class="min-w-0">
+				<p class="text-xs text-base-content/55">{user?.schoolName}</p>
+				<h1 class="truncate text-2xl font-bold tracking-tight">
+					{user?.cohortName ?? 'Class progress'}
+				</h1>
+			</div>
+		</div>
+	</header>
 
+	<nav
+		class="tabs tabs-box mt-5 rounded-full w-fit max-w-full flex-nowrap overflow-x-auto"
+		aria-label="Progress views"
+	>
+		{#each views as item (item.id)}<button
+				class="tab gap-2 rounded-full {view === item.id ? 'tab-active' : ''}"
+				aria-pressed={view === item.id}
+				onclick={() => navigate({ view: item.id === 'overview' ? null : item.id, filter: null })}
+				><item.icon size={15} />{item.label}</button
+			>{/each}
+	</nav>
+
+	{#if !cohortId}
+		<div class="alert alert-warning mt-6">No cohort is assigned to your account.</div>
+	{:else}
+		{#if !connected && everConnected}<div class="alert alert-warning alert-soft mt-5" role="status">
+				Connection interrupted. Numbers may be out of date until it reconnects.
+			</div>{/if}
+		{#if studentsQuery.error || liveQuery.error || historyError}<div
+				class="alert alert-error alert-soft mt-5"
+				role="alert"
+			>
+				Some insights could not load. {studentsQuery.error?.message ??
+					liveQuery.error?.message ??
+					historyError}
+			</div>{/if}
+
+		<div class="mt-6">
 			{#if view === 'overview'}
-				{#if studentsQuery.error}<div class="alert alert-error mb-5" role="alert">
-						Cohort insights could not load. {studentsQuery.error?.message}
-					</div>{/if}
-				<div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
-					{#each [{ label: 'Students in cohort', value: students.length, suffix: '', note: 'Cohort members', icon: Users, filter: 'all', tone: 'text-base-content' }, { label: 'Active this week', value: measuredStudents.length ? active : '—', suffix: '', note: measuredStudents.length ? `${percent(active, measuredStudents.length)}% of tracked students` : 'Last 7 days', icon: Activity, filter: 'active', tone: 'text-primary' }, { label: 'Median coverage', value: measuredStudents.length ? median : '—', suffix: measuredStudents.length ? '%' : '', note: 'Share of questions tried', icon: Target, filter: 'all', tone: 'text-success' }, { label: 'Not started', value: measuredStudents.length ? notStarted : '—', suffix: '', note: 'No questions tried yet', icon: Compass, filter: 'none', tone: 'text-base-content' }] as metric}<button
-							class="group rounded-2xl border border-base-300 bg-base-100 p-4 text-left transition hover:border-primary sm:p-5"
-							disabled={!studentsQuery.data}
-							onclick={() => showStudents(metric.filter)}
-							><span class="flex items-center justify-between gap-2 text-sm text-base-content/65"
-								>{metric.label}<metric.icon size={18} class="hidden shrink-0 sm:block" /></span
-							>{#if !studentsQuery.data}<span class="skeleton my-4 block h-12 w-20"
-								></span>{:else}<span
-									class="my-3 block text-5xl font-semibold tracking-tighter tabular-nums {metric.tone}"
-									>{metric.value}<span class="text-3xl">{metric.suffix}</span></span
-								>{/if}<span
-								class="flex items-center justify-between gap-2 text-xs text-base-content/55"
-								>{metric.note}<ArrowUpRight size={14} class="shrink-0 text-primary" /></span
-							></button
-						>{/each}
-				</div>
-				<div class="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,1fr)]">
-					<div class="space-y-5">
-						<section class="rounded-2xl border border-base-300 bg-base-100 p-5 sm:p-6">
-							<div class="flex items-start justify-between gap-3">
-								<div>
-									<h2 class="text-xl font-semibold">Coverage distribution</h2>
-								</div>
-								<span class="badge badge-ghost"
-									>{studentsQuery.data ? `${measuredStudents.length} with stats` : 'Loading'}</span
+				<section class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Key metrics">
+					<button
+						class="card card-border col-span-2 bg-base-100 p-4 text-left transition hover:border-success lg:col-span-1"
+						onclick={() => showStudents('live')}
+					>
+						<span class="flex items-center justify-between text-xs text-base-content/60"
+							>Studying now <Radio size={15} class="text-success" /></span
+						>
+						{#if !ready}<span class="skeleton mt-3 h-8 w-16"></span>{:else}
+							<span class="mt-2 flex items-end justify-between gap-2">
+								<span class="text-3xl font-semibold tabular-nums text-success"
+									>{studyingNow.length}</span
 								>
-							</div>
-							<p class="mt-2 text-sm text-base-content/60">
-								Students by share of the question bank tried.
-							</p>
-							{#if studentsQuery.isLoading}<div
-									class="skeleton mt-6 h-32"
-								></div>{:else if !measuredStudents.length}<p
-									class="py-12 text-center text-base-content/60"
-								>
-									No coverage summary yet.
-								</p>{:else}<div
-									class="mt-6 flex h-12 gap-1 overflow-hidden rounded-xl"
-									aria-label="Coverage distribution"
-								>
-									{#each bands.filter((b) => b.count > 0) as band}<button
-											class="min-w-3 transition hover:opacity-75 {band.color}"
-											style="flex: {band.count} 1 0%"
-											aria-label="{band.label}: {band.count} students"
-											title="{band.label}: {band.count} students"
-											onclick={() => showStudents(band.id)}
-										></button>{/each}
-								</div>
-								<div class="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-									{#each bands as band}<button
-											class="rounded-xl p-2 text-left hover:bg-base-200"
-											onclick={() => showStudents(band.id)}
-											><span class="flex items-center gap-2 text-xs text-base-content/65"
-												><span class="h-2 w-2 rounded-full {band.color}"></span>{band.label}</span
-											><strong class="mt-2 block text-3xl font-semibold tabular-nums"
-												>{band.count}<span class="ml-2 text-xs font-normal text-base-content/45"
-													>{percent(band.count, measuredStudents.length)}%</span
-												></strong
-											><span class="mt-1 block text-[11px] leading-relaxed text-base-content/55"
-												>{band.detail}</span
-											></button
-										>{/each}
-								</div>{/if}
-							<details class="mt-5 border-t border-base-300 pt-4">
-								<summary
-									class="flex cursor-pointer list-none items-center gap-2 text-xs text-base-content/60"
-									><CircleHelp size={14} />How to read these numbers<ChevronRight
-										size={14}
-										class="ml-auto"
-									/></summary
-								>
-								<p class="mt-3 text-sm leading-relaxed text-base-content/60">
-									Coverage is the share of questions tried, not an exam score. Participation means a
-									student has tried a question; coverage counts student–question pairs tried. A low
-									percentage may simply reflect new or optional content. Activity windows use the
-									student’s last recorded activity.
-								</p>
-							</details>
-						</section>
-						<section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
-							<header class="flex flex-wrap items-end justify-between gap-3 p-5 sm:p-6">
-								<div>
-									<h2 class="text-xl font-semibold">Least explored modules</h2>
-									<p class="mt-2 text-sm text-base-content/60">
-										{moduleQuery.data
-											? `Lowest coverage · ${moduleQuery.data.modules.length} of ${moduleQuery.data.totalModules} modules`
-											: 'Loading module coverage…'}
-									</p>
-								</div>
-								<button
-									class="btn rounded-full btn-ghost btn-sm"
-									onclick={() => navigate({ view: 'curriculum' })}
-									>Explore all <ArrowUpRight size={15} /></button
-								>
-							</header>
-							{#if moduleQuery.error}<div class="alert alert-error m-5" role="alert">
-									Module insights could not load.
-								</div>{:else if moduleQuery.isLoading}<div class="space-y-3 p-5">
-									{#each [1, 2, 3] as row}<div class="skeleton h-16"></div>{/each}
-								</div>{:else}{#each moduleQuery.data?.modules ?? [] as module (module.moduleId)}<button
-										class="group flex w-full items-center gap-3 border-t border-base-300 px-5 py-4 text-left hover:bg-base-200/60 sm:px-6"
-										onclick={() => showModule(module.classId, module.moduleId)}
-										><span
-											class="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-base-200 text-xl sm:flex"
-											>{module.moduleEmoji ?? '📚'}</span
-										><span class="min-w-0 flex-1"
-											><strong class="block truncate text-sm">{module.moduleTitle}</strong><span
-												class="mt-1 block truncate text-xs text-base-content/55"
-												>{module.className} · {module.totalQuestions} questions</span
-											><span class="mt-1 block text-xs text-base-content/60"
-												>{module.activeStudents}/{module.totalStudents} students{module.questionsFlagged
-													? ` · ${module.questionsFlagged} flags`
-													: ''}</span
-											></span
-										><span class="w-20 shrink-0"
-											><span class="mb-1 block text-right text-sm font-semibold tabular-nums"
-												>{module.completion}%</span
-											><progress
-												class="progress progress-primary h-1.5 w-full"
-												value={module.completion}
-												max="100"
-												aria-label="Question coverage"
-											></progress><span class="block text-right text-[10px] text-base-content/50"
-												>coverage</span
-											></span
-										><ChevronRight
-											size={18}
-											class="shrink-0 text-base-content/35 group-hover:text-primary"
-										/></button
-									>{:else}<p class="p-8 text-center text-base-content/60">
-										No modules available yet.
-									</p>{/each}{/if}
-						</section>
-					</div>
-					<div class="space-y-5">
-						<section class="rounded-2xl bg-primary p-5 text-primary-content sm:p-6">
-							<h2 class="text-xl font-semibold">Participation</h2>
-
-							<div class="mt-5 space-y-2">
-								<button
-									class="flex w-full items-center gap-3 rounded-xl border border-primary-content/20 p-4 text-left hover:bg-primary-content/10"
-									disabled={!studentsQuery.data}
-									onclick={() => showStudents('none')}
-									><span class="text-3xl font-semibold tabular-nums"
-										>{measuredStudents.length ? notStarted : '—'}</span
-									><span class="flex-1 text-sm">Not started</span><ArrowUpRight size={18} /></button
-								><button
-									class="flex w-full items-center gap-3 rounded-xl border border-primary-content/20 p-4 text-left hover:bg-primary-content/10"
-									disabled={!studentsQuery.data}
-									onclick={() => showStudents('quiet')}
-									><span class="text-3xl font-semibold tabular-nums"
-										>{measuredStudents.length ? quiet : '—'}</span
-									><span class="flex-1 text-sm"
-										>Inactive for 30+ days<span class="block text-xs opacity-65"
-											>Previously started studying</span
-										></span
-									><ArrowUpRight size={18} /></button
-								>
-							</div>
-						</section>
-						<section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
-							<header class="flex items-center justify-between p-5">
-								<div>
-									<h2 class="text-xl font-semibold">Recent activity</h2>
-								</div>
-								<Activity size={19} class="text-success" />
-							</header>
-							{#if studentsQuery.isLoading}<div
-									class="skeleton m-5 h-28"
-								></div>{:else}{#each recentStudents as student (student._id)}<button
-										class="flex w-full items-center gap-3 border-t border-base-300 px-5 py-4 text-left hover:bg-base-200/60"
-										onclick={() => openStudent(student._id)}
-										><StudentAvatar name={student.name} imageUrl={student.imageUrl} /><span
-											class="min-w-0 flex-1"
-											><strong class="block truncate text-sm">{student.name}</strong><span
-												class="mt-0.5 block text-xs text-base-content/55"
-												>{student.statsAvailable
-													? relativeTime(student.lastActivityAt, now)
-													: 'Unknown'}</span
-											></span
-										><span class="text-sm font-medium tabular-nums">{student.progress}%</span
-										><ChevronRight size={15} class="text-base-content/40" /></button
-									>{:else}<p class="p-5 pt-0 text-sm text-base-content/60">
-										Recent learners appear here when activity is recorded.
-									</p>{/each}{/if}<button
-								class="btn rounded-full btn-ghost w-full rounded-none border-t border-base-300 text-sm"
-								onclick={() => showStudents()}>View all students <ChevronRight size={16} /></button
+								{#if studyingNow.length}
+									<span class="avatar-group -space-x-3">
+										{#each studyingNow.slice(0, 4) as student (student._id)}
+											<StudentAvatar name={student.name} imageUrl={student.imageUrl} size="xs" />
+										{/each}
+									</span>
+								{/if}
+							</span>
+							<span class="mt-1 block text-xs text-base-content/50"
+								>{activeToday} active today · last 15 minutes</span
 							>
-						</section>
-						<div class="flex items-start gap-3 px-1 text-sm text-base-content/55">
-							<BookOpen size={18} class="mt-0.5 shrink-0" />
-							<p>
-								{moduleQuery.data
-									? `${moduleQuery.data.totalModules} modules to explore.`
-									: 'Loading curriculum…'}<span class="mt-1 block text-xs">{user?.schoolName}</span>
-							</p>
-						</div>
+						{/if}
+					</button>
+					<button
+						class="card card-border bg-base-100 p-4 text-left transition hover:border-primary"
+						onclick={() => showStudents('active')}
+					>
+						<span class="flex items-center justify-between text-xs text-base-content/60"
+							>Active this week <Users size={15} class="text-primary" /></span
+						>
+						{#if !ready}<span class="skeleton mt-3 h-8 w-16"></span>{:else}
+							<span class="mt-2 flex items-baseline gap-2">
+								<span class="text-3xl font-semibold tabular-nums">{activeWeek}</span>
+								<span class="text-sm text-base-content/45">/ {students.length}</span>
+							</span>
+							<span class="mt-1 flex items-center gap-1.5 text-xs text-base-content/50"
+								>{percent(activeWeek, students.length)}% of cohort {@render delta(
+									weekSplit.learnersChange
+								)}</span
+							>
+						{/if}
+					</button>
+					<div class="card card-border bg-base-100 p-4">
+						<span class="flex items-center justify-between text-xs text-base-content/60"
+							>Questions tried · 7d <TrendingUp size={15} class="text-primary" /></span
+						>
+						{#if !live}<span class="skeleton mt-3 h-8 w-16"></span>{:else}
+							<span class="mt-2 block text-3xl font-semibold tabular-nums"
+								>{compactNumber(weekSplit.tries)}{live.truncated ? '+' : ''}</span
+							>
+							<span class="mt-1 flex items-center gap-1.5 text-xs text-base-content/50"
+								>First attempts {@render delta(weekSplit.triesChange)}</span
+							>
+						{/if}
 					</div>
+					<div class="card card-border bg-base-100 p-4">
+						<span class="flex items-center justify-between text-xs text-base-content/60"
+							>Practice tests · 14d <ClipboardCheck size={15} class="text-primary" /></span
+						>
+						{#if !live}<span class="skeleton mt-3 h-8 w-16"></span>{:else}
+							<span class="mt-2 flex items-baseline gap-2">
+								<span class="text-3xl font-semibold tabular-nums">{live.quizzes.submitted}</span>
+								<span class="text-sm text-base-content/45">finished</span>
+							</span>
+							<span class="mt-1 block text-xs text-base-content/50"
+								>{live.quizzes.averageScore !== null
+									? `Average score ${live.quizzes.averageScore}%`
+									: `${live.quizzes.started} started`}</span
+							>
+						{/if}
+					</div>
+				</section>
+
+				<div class="mt-4 grid gap-4 lg:grid-cols-3">
+					<section class="card card-border bg-base-100 p-5 lg:col-span-2">
+						<div class="flex flex-wrap items-start justify-between gap-3">
+							{@render cardHeader('Study activity', 'Last 14 days, by local day')}
+							<div
+								class="tabs tabs-box tabs-xs rounded-full"
+								role="tablist"
+								aria-label="Chart metric"
+							>
+								<button
+									role="tab"
+									class="tab rounded-full {chartMetric === 'tries' ? 'tab-active' : ''}"
+									aria-selected={chartMetric === 'tries'}
+									onclick={() => (chartMetric = 'tries')}>Questions</button
+								>
+								<button
+									role="tab"
+									class="tab rounded-full {chartMetric === 'students' ? 'tab-active' : ''}"
+									aria-selected={chartMetric === 'students'}
+									onclick={() => (chartMetric = 'students')}>Students</button
+								>
+							</div>
+						</div>
+						<div class="mt-4">
+							{#if !live}<div class="skeleton h-52"></div>{:else}<ActivityBars
+									{days}
+									metric={chartMetric}
+								/>{/if}
+						</div>
+					</section>
+
+					<section class="card card-border flex flex-col overflow-hidden bg-base-100 lg:row-span-2">
+						<header
+							class="flex items-center justify-between gap-3 border-b border-base-200 p-5 pb-4"
+						>
+							{@render cardHeader('Live activity', 'Updates as students study')}
+						</header>
+						<div class="max-h-[34rem] min-h-0 flex-1 overflow-y-auto lg:max-h-none lg:basis-0">
+							{#if !live || !ready}
+								<div class="space-y-3 p-5">
+									{#each [1, 2, 3, 4, 5] as row (row)}<div class="skeleton h-12"></div>{/each}
+								</div>
+							{:else}
+								<LiveFeed sessions={live.sessions} {studentsById} {now} onStudent={openStudent} />
+							{/if}
+						</div>
+					</section>
+
+					<section class="card card-border bg-base-100 p-5 lg:col-span-2">
+						{@render cardHeader(
+							'When your cohort studies',
+							'Questions tried by weekday and hour, last 14 days'
+						)}
+						<div class="mt-4">
+							{#if !live}<div class="skeleton h-44"></div>{:else}<StudyHeatmap
+									cells={heatmap}
+								/>{/if}
+						</div>
+					</section>
 				</div>
+
+				<div class="mt-4 grid gap-4 lg:grid-cols-3">
+					<section class="card card-border bg-base-100 p-5">
+						{@render cardHeader('Engagement', 'Where every student is right now')}
+						{#if !ready}<div class="skeleton mt-4 h-40"></div>{:else}
+							<ul class="mt-3 -mx-2">
+								{#each engagementOrder as id (id)}
+									<li>
+										<button
+											class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm hover:bg-base-200"
+											onclick={() => showStudents(id)}
+										>
+											<span class="status {engagementMeta[id].dot}"></span>
+											<span class="min-w-0 flex-1">
+												<span class="block font-medium">{engagementMeta[id].label}</span>
+												<span class="block text-xs text-base-content/50"
+													>{engagementMeta[id].hint}</span
+												>
+											</span>
+											<span class="font-semibold tabular-nums">{engagementCounts[id]}</span>
+										</button>
+									</li>
+								{/each}
+							</ul>
+						{/if}
+					</section>
+
+					<section class="card card-border bg-base-100 p-5">
+						<div class="flex items-start justify-between gap-3">
+							{@render cardHeader('Worth a check-in', 'Studied recently, quiet for over a week')}
+							{#if engagementCounts.cooling > checkIns.length}
+								<button
+									class="btn btn-ghost btn-xs shrink-0 rounded-full"
+									onclick={() => showStudents('cooling')}
+									>All {engagementCounts.cooling} <ChevronRight size={13} /></button
+								>
+							{/if}
+						</div>
+						{#if !ready}<div class="skeleton mt-4 h-40"></div>{:else}
+							<ul class="mt-3 -mx-2">
+								{#each checkIns as student (student._id)}
+									<li>
+										<button
+											class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-base-200"
+											onclick={() => openStudent(student._id)}
+										>
+											<StudentAvatar name={student.name} imageUrl={student.imageUrl} size="sm" />
+											<span class="min-w-0 flex-1">
+												<span class="block truncate text-sm font-medium">{student.name}</span>
+												<span class="block text-xs text-base-content/50"
+													>{student.questionsInteracted} questions tried so far</span
+												>
+											</span>
+											<span class="text-xs whitespace-nowrap text-warning"
+												>{relativeTime(student.lastActivityAt, now)}</span
+											>
+										</button>
+									</li>
+								{:else}
+									<li class="px-2 py-10 text-center text-sm text-base-content/55">
+										Nobody has drifted off. Everyone who started is still active.
+									</li>
+								{/each}
+							</ul>
+						{/if}
+					</section>
+
+					<section class="card card-border bg-base-100 p-5">
+						<div class="flex items-start justify-between gap-3">
+							{@render cardHeader('Most active this week', 'By questions tried in the last 7 days')}
+							{#if onStreak.length}
+								<button
+									class="badge badge-soft badge-warning badge-sm shrink-0 gap-1"
+									onclick={() => showStudents('streak')}
+									><Flame size={12} />{onStreak.length} on streaks</button
+								>
+							{/if}
+						</div>
+						{#if !live || !ready}<div class="skeleton mt-4 h-40"></div>{:else}
+							<ol class="mt-3 -mx-2">
+								{#each topLearners as student, i (student._id)}
+									<li>
+										<button
+											class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-base-200"
+											onclick={() => openStudent(student._id)}
+										>
+											<span class="w-4 text-xs tabular-nums text-base-content/40">{i + 1}</span>
+											<StudentAvatar name={student.name} imageUrl={student.imageUrl} size="sm" />
+											<span class="min-w-0 flex-1">
+												<span class="block truncate text-sm font-medium">{student.name}</span>
+												<span class="block text-xs text-base-content/50"
+													>{relativeTime(student.lastActivityAt, now)}</span
+												>
+											</span>
+											{#if student.streak >= 2}<span
+													class="flex items-center gap-0.5 text-xs font-medium text-warning tabular-nums"
+													title="{student.streak}-day streak"
+													><Flame size={13} />{student.streak}</span
+												>{/if}
+											<span class="text-sm font-semibold tabular-nums">{student.weekTries}</span>
+										</button>
+									</li>
+								{:else}
+									<li class="px-2 py-10 text-center text-sm text-base-content/55">
+										No study sessions this week yet.
+									</li>
+								{/each}
+							</ol>
+						{/if}
+					</section>
+				</div>
+
+				<div class="mt-4 grid gap-4 lg:grid-cols-2">
+					<section class="card card-border overflow-hidden bg-base-100">
+						<header class="p-5 pb-3">
+							{@render cardHeader('Trending modules', 'Most students studying in the last 14 days')}
+						</header>
+						{#if !live}<div class="skeleton m-5 mt-0 h-40"></div>{:else}
+							{#each live.modules as module (module.moduleId)}
+								<button
+									class="group flex w-full items-center gap-3 border-t border-base-200 px-5 py-3 text-left hover:bg-base-200/60"
+									onclick={() => showModule(module.classId, module.moduleId)}
+								>
+									<span
+										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-base-200 text-lg"
+										>{module.emoji ?? '📚'}</span
+									>
+									<span class="min-w-0 flex-1">
+										<span class="block truncate text-sm font-medium group-hover:text-primary"
+											>{module.title}</span
+										>
+										<span class="block truncate text-[11px] text-base-content/50"
+											>{module.className}</span
+										>
+									</span>
+									<span class="w-20 text-right text-xs leading-tight">
+										<span class="block font-semibold tabular-nums">{module.students} students</span>
+										<span class="text-base-content/50 tabular-nums">{module.tries} tries</span>
+									</span>
+								</button>
+							{:else}
+								<p class="border-t border-base-200 p-8 text-center text-sm text-base-content/55">
+									No module activity in the last two weeks.
+								</p>
+							{/each}
+						{/if}
+					</section>
+
+					<section class="card card-border overflow-hidden bg-base-100">
+						<header class="p-5 pb-3">
+							{@render cardHeader(
+								'Flagged by students',
+								'Questions students marked for another look'
+							)}
+						</header>
+						{#if flaggedQuery.error}<div class="alert alert-error alert-soft m-5 mt-0" role="alert">
+								Flagged questions could not load.
+							</div>{:else if !flaggedQuery.data}<div class="skeleton m-5 mt-0 h-40"></div>{:else}
+							{#each flaggedQuery.data as question (question._id)}
+								<button
+									class="group flex w-full items-center gap-3 border-t border-base-200 px-5 py-3 text-left hover:bg-base-200/60"
+									onclick={() => showModule(question.classId, question.moduleId)}
+								>
+									<span class="badge badge-soft badge-warning badge-sm shrink-0 gap-1 tabular-nums"
+										><Flag size={11} />{question.flagCount}</span
+									>
+									<span class="min-w-0 flex-1">
+										<span class="line-clamp-1 text-sm group-hover:text-primary"
+											>{plainText(question.stem)}</span
+										>
+										<span class="block truncate text-[11px] text-base-content/50"
+											>{question.moduleTitle} · {question.className}</span
+										>
+									</span>
+									<ChevronRight size={15} class="shrink-0 text-base-content/35" />
+								</button>
+							{:else}
+								<p class="border-t border-base-200 p-8 text-center text-sm text-base-content/55">
+									No flagged questions right now.
+								</p>
+							{/each}
+						{/if}
+					</section>
+				</div>
+
+				<details class="mt-4 px-1 text-xs text-base-content/55">
+					<summary class="flex cursor-pointer list-none items-center gap-2"
+						><CircleHelp size={14} />How these numbers work</summary
+					>
+					<p class="mt-2 max-w-3xl leading-relaxed">
+						Activity charts count first attempts at questions; re-answering a question updates "last
+						active" but isn't counted again. Practice test averages include finished and timed-out
+						tests.
+						{#if live?.truncated}Activity is sampled from the most recent 4,000 attempts, so totals
+							marked "+" are lower bounds.{/if}
+					</p>
+				</details>
 			{:else if view === 'curriculum'}
 				<Explorer
 					{cohortId}
@@ -461,136 +777,124 @@
 			{:else if view === 'studio'}
 				<CuratorGenerationRuns {cohortId} />
 			{:else}
-				<section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
-					<div class="border-b border-base-300 p-5">
+				<section class="card card-border overflow-hidden bg-base-100">
+					<div class="border-b border-base-200 p-5">
 						<div class="flex flex-wrap items-center justify-between gap-3">
-							<div>
-								<h2 class="text-xl font-semibold">Students</h2>
-								<p class="mt-1 text-sm text-base-content/60">
-									{studentsQuery.data
-										? `${filteredStudents.length} of ${students.length} students`
-										: 'Loading students…'}
-								</p>
-							</div>
+							{@render cardHeader(
+								'Students',
+								ready
+									? `${filteredStudents.length} of ${students.length} students`
+									: 'Loading students…'
+							)}
 							<div class="flex w-full flex-wrap gap-2 sm:w-auto">
-								<label class="input rounded-full min-w-0 flex-1 sm:w-60"
-									><Search size={17} class="text-base-content/50" /><input
+								<label class="input input-sm min-w-0 flex-1 rounded-full sm:w-60"
+									><Search size={15} class="text-base-content/50" /><input
 										type="search"
 										placeholder="Name, email, or username…"
 										aria-label="Search students"
 										bind:value={search}
 									/></label
 								><select
-									class="select rounded-full w-40"
+									class="select select-sm w-44 rounded-full"
 									aria-label="Sort students"
 									bind:value={sort}
-									><option value="recent">Recently active</option><option value="coverage"
-										>Highest coverage</option
-									><option value="name">Name A–Z</option></select
+									><option value="recent">Recently active</option><option value="week"
+										>Most active this week</option
+									><option value="tried">Most questions tried</option><option value="name"
+										>Name A–Z</option
+									></select
 								>
 							</div>
 						</div>
-						<div class="mt-5 flex flex-wrap gap-2" aria-label="Student filters">
-							{#each filters as option}<button
-									class="btn rounded-full btn-sm {filter === option.id
+						<div class="mt-4 flex flex-wrap gap-1.5" aria-label="Student filters">
+							{#each filters as option (option.id)}<button
+									class="btn btn-xs rounded-full {filter === option.id
 										? 'btn-primary'
 										: 'btn-ghost bg-base-200'}"
 									aria-pressed={filter === option.id}
 									onclick={() => navigate({ filter: option.id === 'all' ? null : option.id })}
-									>{option.label}<span class="opacity-60">{option.count}</span></button
+									>{#if option.id in engagementMeta}<span
+											class="status status-xs {engagementMeta[option.id as Engagement].dot}"
+										></span>{/if}{option.label}<span class="opacity-60 tabular-nums"
+										>{option.count}</span
+									></button
 								>{/each}
 						</div>
 					</div>
-					{#if studentsQuery.error}<div class="alert alert-error m-5" role="alert">
-							Students could not load. {studentsQuery.error.message}
-						</div>{:else if studentsQuery.isLoading}<div class="space-y-3 p-5">
-							{#each [1, 2, 3, 4] as row}<div class="skeleton h-20"></div>{/each}
+					{#if studentsQuery.isLoading}<div class="space-y-2 p-5">
+							{#each [1, 2, 3, 4, 5] as row (row)}<div class="skeleton h-12"></div>{/each}
 						</div>{:else if !filteredStudents.length}<div class="p-12 text-center">
-							<Search size={30} class="mx-auto mb-4 text-base-content/40" />
-							<h3 class="text-xl font-semibold">
+							<Search size={26} class="mx-auto mb-3 text-base-content/40" />
+							<h3 class="font-semibold">
 								{students.length ? 'No students in this view' : 'Your cohort is empty'}
 							</h3>
-							<p class="mt-2 text-sm text-base-content/60">
+							<p class="mt-1 text-sm text-base-content/60">
 								{students.length
-									? 'Try another group or clear your search.'
+									? 'Try another filter or clear your search.'
 									: 'Students will appear here when they join.'}
 							</p>
 							{#if students.length}<button
-									class="btn rounded-full btn-outline mt-5"
+									class="btn btn-outline btn-sm mt-4 rounded-full"
 									onclick={() => showStudents()}>Show all students</button
 								>{/if}
 						</div>{:else}<div class="overflow-x-auto">
-							<table class="table">
+							<table class="table table-sm">
 								<thead
-									><tr class="text-xs text-base-content/55"
-										><th class="pl-5">Student</th><th>Coverage</th><th class="text-right"
-											>Questions tried</th
-										><th>Last active</th><th class="hidden xl:table-cell">Joined</th><th
-											><span class="sr-only">Details</span></th
-										></tr
+									><tr class="text-[11px] text-base-content/50"
+										><th class="pl-5">Student</th><th>Status</th><th class="text-right"
+											>This week</th
+										><th class="text-right">All time</th><th class="text-right">Streak</th><th
+											>Last active</th
+										><th><span class="sr-only">Details</span></th></tr
 									></thead
 								><tbody
-									>{#each filteredStudents as student (student._id)}<tr class="hover:bg-base-200/50"
-											><td class="py-4 pl-5"
-												><button
-													class="flex items-center gap-3 text-left"
-													onclick={() => openStudent(student._id)}
-													><span class="avatar avatar-placeholder"
-														><span
-															class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-primary/10 font-semibold text-primary"
-															>{#if student.imageUrl}<img
-																	src={student.imageUrl}
-																	alt=""
-																	class="h-full w-full object-cover"
-																/>{:else}{student.name.slice(0, 1)}{/if}</span
-														></span
-													><span
-														><span class="block font-semibold hover:text-primary"
-															>{student.name}</span
-														><span class="mt-1 block max-w-56 truncate text-xs text-base-content/55"
+									>{#each filteredStudents as student (student._id)}
+										{@const meta = engagementMeta[student.engagement]}
+										<tr
+											class="cursor-pointer hover:bg-base-200/50"
+											onclick={() => openStudent(student._id)}
+											><td class="py-2.5 pl-5"
+												><span class="flex items-center gap-3"
+													><span class="relative"
+														><StudentAvatar
+															name={student.name}
+															imageUrl={student.imageUrl}
+															size="sm"
+														/>{#if student.engagement === 'live'}<span
+																class="status status-success absolute -right-0.5 -bottom-0.5 ring-2 ring-base-100"
+															></span>{/if}</span
+													><span class="min-w-0"
+														><span class="block font-medium">{student.name}</span><span
+															class="block max-w-56 truncate text-xs text-base-content/50"
 															>{student.email ?? student.username ?? 'Student'}</span
-														>{#if student.role}<span
-																class="badge badge-ghost badge-xs mt-1 capitalize"
-																>{student.role}</span
-															>{/if}</span
-													></button
+														></span
+													>{#if student.role}<span class="badge badge-ghost badge-xs capitalize"
+															>{student.role}</span
+														>{/if}</span
 												></td
 											><td
-												><div class="min-w-32">
-													<div class="mb-1 flex items-baseline gap-2">
-														<strong class="text-lg tabular-nums"
-															>{student.statsAvailable ? `${student.progress}%` : '—'}</strong
-														><span class="text-xs text-base-content/50"
-															>{student.statsAvailable
-																? `${student.questionsInteracted}/${student.totalQuestions}`
-																: ''}</span
-														>
-													</div>
-													{#if student.statsAvailable}<progress
-															class="progress h-1.5 w-32 {student.progress >= 75
-																? 'progress-success'
-																: 'progress-primary'}"
-															value={student.progress}
-															max="100"
-															aria-label="{student.name} coverage"
-														></progress>{/if}
-												</div></td
-											><td class="text-right font-medium tabular-nums"
+												><span class="flex items-center gap-2 whitespace-nowrap text-xs"
+													><span class="status {meta.dot}"></span>{meta.label}</span
+												></td
+											><td class="text-right tabular-nums"
+												>{student.weekTries ? student.weekTries : '—'}</td
+											><td class="text-right text-base-content/60 tabular-nums"
 												>{student.statsAvailable ? student.questionsInteracted : '—'}</td
-											><td class="whitespace-nowrap text-sm text-base-content/65"
-												>{student.statsAvailable
-													? relativeTime(student.lastActivityAt, now)
-													: 'Unknown'}</td
-											><td class="hidden text-sm text-base-content/55 xl:table-cell"
-												>{student.createdAt
-													? new Date(student.createdAt).toLocaleDateString()
-													: '—'}</td
-											><td
+											><td class="text-right"
+												>{#if student.streak >= 2}<span
+														class="inline-flex items-center gap-0.5 text-xs font-medium text-warning tabular-nums"
+														><Flame size={13} />{student.streak}d</span
+													>{:else}<span class="text-base-content/35">—</span>{/if}</td
+											><td class="whitespace-nowrap text-xs text-base-content/60"
+												>{relativeTime(student.lastActivityAt, now)}</td
+											><td class="pr-4"
 												><button
-													class="btn rounded-full btn-ghost btn-square"
+													class="btn btn-ghost btn-xs btn-circle"
 													aria-label="View progress for {student.name}"
-													onclick={() => openStudent(student._id)}
-													><ChevronRight size={18} /></button
+													onclick={(event) => {
+														event.stopPropagation();
+														openStudent(student._id);
+													}}><ChevronRight size={15} /></button
 												></td
 											></tr
 										>{/each}</tbody
@@ -599,8 +903,8 @@
 						</div>{/if}
 				</section>
 			{/if}
-		{/if}
-	</div>
+		</div>
+	{/if}
 </div>
 
 {#if cohortId && selectedStudent}
@@ -622,7 +926,7 @@
 	.progress-workspace :global(summary:focus-visible),
 	.progress-workspace :global(a:focus-visible) {
 		outline: 2px solid var(--color-primary);
-		outline-offset: 3px;
+		outline-offset: 2px;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.progress-workspace :global(*) {

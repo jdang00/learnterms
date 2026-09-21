@@ -4,7 +4,7 @@ export function hasSourceFraming(text: string): boolean {
 		.normalize('NFKC')
 		.replace(/<[^>]*>/g, ' ')
 		.replace(/\s+/g, ' ');
-	return /\b(pdf|pdfs|source documents?|source materials?|source notes?|supplied evidence|provided evidence|excerpts?|citations?|rag)\b|\b(?:the|this|these|provided|supplied)\s+sources?\b(?!\s+of\b)|\baccording to\b|\b(?:the|this|these|provided|supplied|uploaded)\s+(?:documents?|notes|slides?|readings?|materials?|passages?|textbooks?|lectures?)\b|\b(?:in|from) the evidence\b|\b(?:listed as|documented example)\b|\b(?:page|slide)\s*\d+\b|\[(?:p\d+c\d+|c\d+|\d+)\]/i.test(
+	return /\b(pdf|pdfs|source documents?|source materials?|source notes?|supplied evidence|provided evidence|excerpts?|citations?|rag)\b|\b(?:provided|supplied)\s+sources?\b|\b(?:the|this|these)\s+sources?\s+(?:states?|says?|describes?|mentions?|lists?|reports?|explains?|provides?|highlights?|shows?)\b|\baccording to\b|\b(?:the|this|these|provided|supplied|uploaded)\s+(?:documents?|notes|slides?|readings?|materials?|passages?|textbooks?|lectures?)\b|\b(?:in|from) the evidence\b|\b(?:page|slide)\s*\d+\b|\[(?:p\d+c\d+|c\d+|\d+)\]/i.test(
 		plain
 	);
 }

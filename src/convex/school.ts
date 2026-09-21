@@ -1,5 +1,5 @@
-import { internalQuery, mutation } from './_generated/server';
-import { authQuery } from './authQueries';
+import { internalQuery } from './_generated/server';
+import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
 
 export const getSchoolById = authQuery({
@@ -16,7 +16,7 @@ export const getSchoolByIdInternal = internalQuery({
 	}
 });
 
-export const createSchool = mutation({
+export const createSchool = authAdminMutation({
 	args: {
 		name: v.string(),
 		description: v.string(),
@@ -29,7 +29,7 @@ export const createSchool = mutation({
 	}
 });
 
-export const deleteSchool = mutation({
+export const deleteSchool = authAdminMutation({
 	args: {
 		schoolId: v.id('school')
 	},

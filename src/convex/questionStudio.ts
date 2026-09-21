@@ -6,6 +6,7 @@ export {
 	getLatestSavedTopicMap
 } from './questionStudio/context';
 export { runDevTool } from './questionStudio/devTools';
+export { reserveGenerationTokens, settleGenerationTokens } from './questionStudio/tokenBudget';
 export {
 	saveTopicMapForRange,
 	claimDocumentTopicMapping,

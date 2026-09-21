@@ -1,13 +1,12 @@
-import { mutation, query } from './_generated/server';
+import { internalMutation, internalQuery } from './_generated/server';
 import { v } from 'convex/values';
-import { authAdminMutation } from './authQueries';
 import { getRationale } from '../lib/utils/rationale';
 
 /**
  * Get stats about questions and userProgress for migration planning (paginated).
  * Run via CLI: bunx convex run migrations:getStats
  */
-export const getStats = query({
+export const getStats = internalQuery({
 	args: {
 		cursor: v.optional(v.string()),
 		type: v.optional(v.union(v.literal('questions'), v.literal('progress')))
@@ -54,7 +53,7 @@ export const getStats = query({
  * Find a class by name (for debugging/lookups).
  * Run via CLI: bunx convex run migrations:findClassByName '{"name": "Ocular Disease"}'
  */
-export const findClassByName = query({
+export const findClassByName = internalQuery({
 	args: {
 		search: v.optional(v.string())
 	},
@@ -83,7 +82,7 @@ export const findClassByName = query({
  * This processes questions in batches to avoid timeouts.
  * Run multiple times if needed until it returns { done: true }.
  */
-export const backfillFlagCounts = mutation({
+export const backfillFlagCounts = internalMutation({
 	args: {
 		batchSize: v.optional(v.number()),
 		cursor: v.optional(v.string())
@@ -142,7 +141,7 @@ export const backfillFlagCounts = mutation({
  *
  * WARNING: May timeout on large datasets. Use backfillFlagCounts for large datasets.
  */
-export const backfillAllFlagCounts = mutation({
+export const backfillAllFlagCounts = internalMutation({
 	args: {},
 	handler: async (ctx) => {
 		// Get all questions
@@ -187,7 +186,7 @@ export const backfillAllFlagCounts = mutation({
  * Reset all flagCounts to 0 (utility for testing).
  * Run via CLI: bunx convex run migrations:resetFlagCounts
  */
-export const resetFlagCounts = mutation({
+export const resetFlagCounts = internalMutation({
 	args: {},
 	handler: async (ctx) => {
 		const questions = await ctx.db.query('question').collect();
@@ -212,7 +211,7 @@ export const resetFlagCounts = mutation({
  * Backfill legacy explanation fields into rationale for quiz attempt snapshots.
  * Run via CLI: bunx convex run migrations:backfillAttemptItemRationales
  */
-export const backfillAttemptItemRationales = mutation({
+export const backfillAttemptItemRationales = internalMutation({
 	args: {
 		batchSize: v.optional(v.number()),
 		cursor: v.optional(v.string())
@@ -253,7 +252,7 @@ export const backfillAttemptItemRationales = mutation({
  * Update all questions in a specific class to have a specific author.
  * Run via CLI: bunx convex run migrations:updateQuestionAuthorForClass --classId "jn78h93750gr8svhbfrys3fcb57pbp8v" --firstName "Brayden" --lastName "Dyer"
  */
-export const updateQuestionAuthorForClass = mutation({
+export const updateQuestionAuthorForClass = internalMutation({
 	args: {
 		classId: v.id('class'),
 		firstName: v.string(),
@@ -307,7 +306,7 @@ export const updateQuestionAuthorForClass = mutation({
  * Find a cohort by name (for debugging/lookups).
  * Run via CLI: bunx convex run migrations:findCohortByName '{"search": "NSUOCO"}'
  */
-export const findCohortByName = query({
+export const findCohortByName = internalQuery({
 	args: {
 		search: v.optional(v.string())
 	},
@@ -346,7 +345,7 @@ export const findCohortByName = query({
  * This computes stats by iterating through all users and their progress.
  * For large cohorts, this may take time but should complete within Convex limits.
  */
-export const backfillCohortStats = mutation({
+export const backfillCohortStats = internalMutation({
 	args: {
 		cohortId: v.id('cohort')
 	},
@@ -454,7 +453,7 @@ export const backfillCohortStats = mutation({
  * Processes users in batches to avoid timeouts.
  * Run multiple times if needed until it returns { done: true }.
  */
-export const backfillUserProgressStats = mutation({
+export const backfillUserProgressStats = internalMutation({
 	args: {
 		cohortId: v.id('cohort'),
 		batchSize: v.optional(v.number()),
@@ -574,7 +573,7 @@ export const backfillUserProgressStats = mutation({
  *
  * Returns information about each cohort and whether it has stats backfilled.
  */
-export const getAllCohortsStatus = query({
+export const getAllCohortsStatus = internalQuery({
 	args: {},
 	handler: async (ctx) => {
 		const cohorts = await ctx.db.query('cohort').collect();
@@ -627,7 +626,7 @@ export const getAllCohortsStatus = query({
  * Note: User-level stats must be backfilled separately using backfillUserProgressStatsForAllCohorts
  * because it requires pagination.
  */
-export const backfillAllCohortsStats = mutation({
+export const backfillAllCohortsStats = internalMutation({
 	args: {},
 	handler: async (ctx) => {
 		const cohorts = await ctx.db.query('cohort').collect();
@@ -738,7 +737,7 @@ export const backfillAllCohortsStats = mutation({
  * Get the next cohort that needs user progress stats backfilled.
  * Run via CLI: bunx convex run migrations:getNextCohortForUserBackfill --prod
  */
-export const getNextCohortForUserBackfill = query({
+export const getNextCohortForUserBackfill = internalQuery({
 	args: {},
 	handler: async (ctx) => {
 		const cohorts = await ctx.db.query('cohort').collect();
@@ -769,7 +768,7 @@ export const getNextCohortForUserBackfill = query({
 	}
 });
 
-export const bootstrapAdmin = authAdminMutation({
+export const bootstrapAdmin = internalMutation({
 	args: {
 		clerkUserId: v.string()
 	},
@@ -786,7 +785,7 @@ export const bootstrapAdmin = authAdminMutation({
 	}
 });
 
-export const bootstrapDev = authAdminMutation({
+export const bootstrapDev = internalMutation({
 	args: {
 		clerkUserId: v.string()
 	},
@@ -810,7 +809,7 @@ export const bootstrapDev = authAdminMutation({
  * Run via CLI: bunx convex run migrations:clearPlanField
  * After running, you can remove the `plan` field from schema.ts
  */
-export const clearPlanField = mutation({
+export const clearPlanField = internalMutation({
 	args: {
 		batchSize: v.optional(v.number()),
 		cursor: v.optional(v.string())

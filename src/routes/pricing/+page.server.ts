@@ -1,11 +1,9 @@
 import type { PageServerLoad } from './$types';
 import { clerkClient } from 'svelte-clerk/server';
-import { ConvexHttpClient } from 'convex/browser';
-import { PUBLIC_CONVEX_URL } from '$env/static/public';
+import { authenticatedConvexClient } from '$lib/server/convex';
 import { api } from '../../convex/_generated/api';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
 	const { userId } = locals.auth();
 
 	const seo = {
@@ -25,6 +23,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	try {
+		const client = await authenticatedConvexClient(locals);
 		const user = await clerkClient.users.getUser(userId);
 		const userData = await client.query(api.polar.getUserWithSubscriptionByClerkId, {
 			clerkUserId: user.id

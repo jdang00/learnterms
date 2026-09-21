@@ -23,26 +23,28 @@
 
 	const citations = $derived(candidate.sourceCitations ?? []);
 	const checks = $derived(
-		[
-			review &&
-				{
-					strong: 'Well supported by the document.',
-					partial: 'Partly supported by the document.',
-					weak: 'Weakly supported by the document.'
-				}[review.sourceSupport],
-			review &&
-				(review.answerQuality === 'clear'
-					? 'The answer is clear.'
-					: 'More than one option could be read as correct.'),
-			{
-				low: 'No overlap with existing questions.',
-				medium: 'May overlap with an existing question.',
-				high: 'Likely repeats an existing question.'
-			}[candidate.duplicateRisk],
-			review?.revisedStem && 'The reviewer rewrote the wording.'
-		]
-			.filter(Boolean)
-			.join(' ')
+		candidate.metadata.reviewMode === 'local'
+			? 'Quotes and answer structure checked. Verify the answer and distractors before publishing; no separate AI review was run.'
+			: [
+					review &&
+						{
+							strong: 'Well supported by the document.',
+							partial: 'Partly supported by the document.',
+							weak: 'Weakly supported by the document.'
+						}[review.sourceSupport],
+					review &&
+						(review.answerQuality === 'clear'
+							? 'The answer is clear.'
+							: 'More than one option could be read as correct.'),
+					{
+						low: 'No overlap with existing questions.',
+						medium: 'May overlap with an existing question.',
+						high: 'Likely repeats an existing question.'
+					}[candidate.duplicateRisk],
+					review?.revisedStem && 'The reviewer rewrote the wording.'
+				]
+					.filter(Boolean)
+					.join(' ')
 	);
 	const intent = $derived(
 		[

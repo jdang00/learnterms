@@ -2,6 +2,7 @@ import { query, mutation } from './_generated/server';
 import { customQuery, customMutation } from 'convex-helpers/server/customFunctions';
 import { v } from 'convex/values';
 import type { MutationCtx, QueryCtx } from './_generated/server';
+import { requireCurrentUser } from './access';
 
 async function getUserRole(ctx: QueryCtx | MutationCtx) {
 	const identity = await ctx.auth.getUserIdentity();
@@ -10,7 +11,7 @@ async function getUserRole(ctx: QueryCtx | MutationCtx) {
 		.query('users')
 		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
 		.first();
-	return { identity, role: user?.role as string | undefined };
+	return { identity, role: user && !user.deletedAt ? user.role : undefined };
 }
 
 export const authQuery = customQuery(query, {
@@ -79,12 +80,24 @@ export const joinCohort = mutation({
 
 		const user = await ctx.db
 			.query('users')
-			.filter((q) => q.eq(q.field('clerkUserId'), args.clerkUserId))
+			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
 			.first();
 
 		if (!user) {
 			throw new Error('User not found');
 		}
+
+		const caller = await requireCurrentUser(ctx);
+		const cohort = await ctx.db.get(args.cohortId);
+		if (!cohort || cohort.deletedAt || user.deletedAt) throw new Error('Cohort or user not found');
+		if (
+			caller.role !== 'dev' &&
+			(caller.cohortId !== args.cohortId ||
+				(user.cohortId !== undefined && user.cohortId !== caller.cohortId) ||
+				user.role === 'dev' ||
+				user.role === 'admin')
+		)
+			throw new Error('Unauthorized for this cohort');
 
 		await ctx.db.patch(user._id, {
 			cohortId: args.cohortId,

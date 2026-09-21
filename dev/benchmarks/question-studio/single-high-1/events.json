@@ -1,0 +1,83 @@
+[
+  {
+    "_creationTime": 1789961852621.6272,
+    "_id": "nd785detnfnbvha269f56ar3a98et0rz",
+    "at": 1789961852621,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Preparing the agent run.",
+    "jobId": "n570w1znxp49xan7qgywc7r0en8evx9b",
+    "label": "Queued"
+  },
+  {
+    "_creationTime": 1789961853597.688,
+    "_id": "nd72pmyb82n00bx171hcqbp77n8etm48",
+    "at": 1789961853597,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 questions requested.",
+    "jobId": "n570w1znxp49xan7qgywc7r0en8evx9b",
+    "label": "Started"
+  },
+  {
+    "_creationTime": 1789961854040.907,
+    "_id": "nd7cn29tyfk40q05qw45jwxfm98et8az",
+    "at": 1789961854040,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "59 existing module questions available for duplicate checks.",
+    "jobId": "n570w1znxp49xan7qgywc7r0en8evx9b",
+    "label": "Loaded context"
+  },
+  {
+    "_creationTime": 1789961854302.624,
+    "_id": "nd76pgt1833fcrzebf3mbfy7zh8etpzm",
+    "at": 1789961854302,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Assigned selected pages to 8 Learn groups without an AI planning call.",
+    "jobId": "n570w1znxp49xan7qgywc7r0en8evx9b",
+    "label": "Page plan"
+  },
+  {
+    "_creationTime": 1789961854536.7874,
+    "_id": "nd71mf66pjm5fbvjhkga2k4we98ev3et",
+    "at": 1789961854536,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "8 topics and 18 pages are in scope.",
+    "jobId": "n570w1znxp49xan7qgywc7r0en8evx9b",
+    "label": "Prepared context"
+  },
+  {
+    "_creationTime": 1789961854670.9473,
+    "_id": "nd7c90q732p614wq943h2ap4ex8etxyw",
+    "at": 1789961854670,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "1 worker queued with at most 15 questions each.",
+    "jobId": "n570w1znxp49xan7qgywc7r0en8evx9b",
+    "label": "Work orders ready"
+  },
+  {
+    "_creationTime": 1789961854819.8213,
+    "_id": "nd75aw5pc8qh423g9hmnj8sxsn8et1s8",
+    "at": 1789961854819,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "One high-reasoning Learn call followed by local evidence, answer-structure, and duplicate checks.",
+    "jobId": "n570w1znxp49xan7qgywc7r0en8evx9b",
+    "label": "Workers launched"
+  },
+  {
+    "_creationTime": 1789961881366.9211,
+    "_id": "nd77d26m844q84r6hbf2m8w4418ete6q",
+    "at": 1789961881366,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/15 passed local evidence and answer-structure checks. 0 corrected during review. 15 withheld. Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signa",
+    "jobId": "n570w1znxp49xan7qgywc7r0en8evx9b",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789961881900.3892,
+    "_id": "nd7b4mqg8e0h4fzvvwhn8ed37s8evams",
+    "at": 1789961881900,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "All workers finished, but no candidate passed local quality checks.",
+    "jobId": "n570w1znxp49xan7qgywc7r0en8evx9b",
+    "label": "Failed"
+  }
+]

@@ -1,0 +1,121 @@
+{
+  "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+  "status": "ready",
+  "requested": 15,
+  "accepted": 8,
+  "wallMs": 59769,
+  "firstCandidateMs": 26111,
+  "setupMs": 8927,
+  "workerSpanMs": 50441,
+  "finalizationMs": 401,
+  "aggregateWorkerMs": 104483,
+  "aggregateWorkerModelMs": 100889,
+  "aggregateNonModelWorkerMs": 3594,
+  "acceptedByType": {
+    "learn": 8
+  },
+  "usage": {
+    "byStage": [
+      {
+        "calls": 1,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 0,
+        "inputTokens": 5417,
+        "latencyMsTotal": 7376,
+        "outputTokens": 714,
+        "reasoningTokens": 109,
+        "stage": "plan"
+      },
+      {
+        "calls": 4,
+        "costKnownCalls": 4,
+        "costUsd": 0.0087521,
+        "failedCalls": 0,
+        "inputTokens": 14054,
+        "latencyMsTotal": 29654,
+        "outputTokens": 4366,
+        "reasoningTokens": 363,
+        "stage": "draft"
+      },
+      {
+        "calls": 4,
+        "costKnownCalls": 4,
+        "costUsd": 0.0088914,
+        "failedCalls": 0,
+        "inputTokens": 12000,
+        "latencyMsTotal": 47405,
+        "outputTokens": 4910,
+        "reasoningTokens": 3510,
+        "stage": "review"
+      },
+      {
+        "calls": 2,
+        "costKnownCalls": 2,
+        "costUsd": 0.0029151999999999997,
+        "failedCalls": 0,
+        "inputTokens": 5902,
+        "latencyMsTotal": 11480,
+        "outputTokens": 1200,
+        "reasoningTokens": 601,
+        "stage": "repair"
+      },
+      {
+        "calls": 1,
+        "costKnownCalls": 1,
+        "costUsd": 0.0018356,
+        "failedCalls": 0,
+        "inputTokens": 1319,
+        "latencyMsTotal": 12350,
+        "outputTokens": 1255,
+        "reasoningTokens": 1034,
+        "stage": "review_repair"
+      }
+    ],
+    "calls": 12,
+    "costKnownCalls": 11,
+    "costUsd": 0.0223943,
+    "failedCalls": 0,
+    "inputTokens": 38692,
+    "latencyMsTotal": 108265,
+    "outputTokens": 12445,
+    "reasoningTokens": 5617
+  },
+  "workerNotes": [
+    "Learn: 1/3 passed evidence checks and independent automated review. 2 withheld. Abstain because the defining distinction for amaurosis fugax—transient embolic occlusion followed by complete visual recovery—is already covered by an existing question, and the supplied evidence does not support a non-redundant alternative within this objective. Abstain because the assigned laboratory-evaluation fact",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 2/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 2/3 passed evidence checks and independent automated review. 1 withheld. The question lacks one defensible best answer. The incorrect options need revision. The first option is directly supported and contains the requested ophthalmic artery occlusion pattern: decreased or absent choroidal and central retinal arterial blood supply, no cherry-red spot, and a flat-line ERG. The fourth option i"
+  ],
+  "repairs": [
+    "learn:batch:3:q1: Evidence quote is not in the supplied excerpt: p6c0.",
+    "learn:batch:3:q3: The assigned objective is already represented by an avoided question asking which laboratory evaluation is recommended when giant cell arteritis is a concern; creating another direct question would repeat the excluded central fact.",
+    "learn:batch:4:q3: The incorrect options need revision. The first option directly matches the supported combination for ophthalmic artery occlusion: decreased or absent choroidal and central retinal arterial supply, no cherry-red spot, and a flat-line ERG. The stem directly tests one supported distinction, and the first option is uniquely established. However, the distractors include details not explicitly established"
+  ],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 8927,
+      "durationMs": 18058,
+      "accepted": 3
+    },
+    {
+      "index": 1,
+      "startMs": 9040,
+      "durationMs": 19409,
+      "accepted": 2
+    },
+    {
+      "index": 2,
+      "startMs": 9158,
+      "durationMs": 16953,
+      "accepted": 1
+    },
+    {
+      "index": 3,
+      "startMs": 9305,
+      "durationMs": 50063,
+      "accepted": 2
+    }
+  ]
+}

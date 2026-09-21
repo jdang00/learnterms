@@ -1,0 +1,820 @@
+{
+  "_creationTime": 1789961057472.3367,
+  "_id": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+  "blockedDuplicateCount": 0,
+  "candidateCount": 10,
+  "candidates": [
+    {
+      "correctAnswers": [
+        "Calcific"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v11",
+        "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Cholesterol",
+        "Calcific",
+        "Fibrin-platelet",
+        "Inflammatory"
+      ],
+      "questionType": "learn",
+      "rationale": "Cardiac emboli are usually calcific, and valvular disease is identified as a frequent cardiac source of retinal emboli.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 13, excerpt 1",
+          "citationId": "p13c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 13,
+          "quote": "Cardiac emboli are usually calcific"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 13, excerpt 1",
+          "citationId": "p13c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 13,
+          "quote": "Most frequently valvular disease"
+        }
+      ],
+      "sourcePageNumbers": [
+        13
+      ],
+      "stem": "Retinal emboli originating from cardiac disease are usually which type?",
+      "topicId": "learn-pages-5",
+      "topicTitle": "Pages 12, 13",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Younger patients"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v11",
+        "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Younger patients",
+        "Patients older than 50 years",
+        "Patients with no cardiac disease",
+        "Patients with only conventional cardiovascular risk factors"
+      ],
+      "questionType": "learn",
+      "rationale": "Cardiac disease can produce retinal emboli at any age, but it is described as a particularly significant source in younger patients.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 13, excerpt 1",
+          "citationId": "p13c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 13,
+          "quote": "Can affect ANY age, however this is a significant source of emboli in younger patients"
+        }
+      ],
+      "sourcePageNumbers": [
+        13
+      ],
+      "stem": "Cardiac disease is a significant source of retinal emboli particularly in which patients?",
+      "topicId": "learn-pages-5",
+      "topicTitle": "Pages 12, 13",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "The macula"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v11",
+        "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "The macula",
+        "The optic nerve",
+        "The vitreous",
+        "The cornea"
+      ],
+      "questionType": "learn",
+      "rationale": "In branch retinal artery occlusion, sudden vision loss may occur when the macula is involved; some cases are asymptomatic.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 14, excerpt 1",
+          "citationId": "p14c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 14,
+          "quote": "May have sudden vision loss if there is macular involvement"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 14, excerpt 1",
+          "citationId": "p14c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 14,
+          "quote": "Sometimes asymptomatic"
+        }
+      ],
+      "sourcePageNumbers": [
+        14
+      ],
+      "stem": "In branch retinal artery occlusion, sudden vision loss may occur when which structure is involved?",
+      "topicId": "learn-pages-6",
+      "topicTitle": "Pages 14, 15",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "20/40 or better"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v11",
+        "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "20/40 or better",
+        "20/50",
+        "20/60",
+        "20/80 or worse"
+      ],
+      "questionType": "learn",
+      "rationale": "Most patients with branch retinal artery occlusion retain relatively good central acuity at presentation: 75% are reported to have visual acuity of 20/40 or better.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 14, excerpt 1",
+          "citationId": "p14c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 14,
+          "quote": "Presenting VA: 75% of patients are 20/40 or better"
+        }
+      ],
+      "sourcePageNumbers": [
+        14
+      ],
+      "stem": "What presenting visual acuity is reported for 75% of patients with branch retinal artery occlusion?",
+      "topicId": "learn-pages-6",
+      "topicTitle": "Pages 14, 15",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "It has limited resolution and does not evaluate arterial extension into the skull and thorax."
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v11",
+        "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "It has limited resolution and does not evaluate arterial extension into the skull and thorax.",
+        "It cannot be used to assess the carotid arteries at all.",
+        "It directly identifies the cardiac source of an embolus.",
+        "It provides diffusion-weighted images of the brain."
+      ],
+      "questionType": "learn",
+      "rationale": "Doppler duplex ultrasound has limited resolution and does not assess how far the artery extends into the skull and thorax. Additional vascular or cardiac studies may therefore be needed to evaluate the embolic source fully.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 18, excerpt 1",
+          "citationId": "p18c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 18,
+          "quote": "Doppler Duplex Ultrasound – limited resolution, does not evaluate the extension of the artery into the skull and thorax"
+        }
+      ],
+      "sourcePageNumbers": [
+        18
+      ],
+      "stem": "What is a limitation of Doppler duplex ultrasound in evaluating possible retinal embolic sources?",
+      "topicId": "learn-pages-8",
+      "topicTitle": "Pages 18, 19, 20",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "A statin"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v11",
+        "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Antiplatelet therapy",
+        "A statin",
+        "Cilostazol",
+        "An ACE inhibitor or angiotensin receptor blocker"
+      ],
+      "questionType": "learn",
+      "rationale": "Statins are used to reduce plaque formation and lower the frequency of stroke. The other listed treatments have different described roles, including inhibiting platelet aggregation or treating associated cardiovascular risk.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 20, excerpt 1",
+          "citationId": "p20c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 20,
+          "quote": "Statin: reduces plaque formation and the frequency of stroke"
+        }
+      ],
+      "sourcePageNumbers": [
+        20
+      ],
+      "stem": "Which treatment is described as reducing plaque formation and the frequency of stroke after retinal arterial emboli?",
+      "topicId": "learn-pages-8",
+      "topicTitle": "Pages 18, 19, 20",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Giant cell arteritis"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v11",
+        "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Ocular ischemic syndrome",
+        "Internal carotid artery dissection",
+        "Angle-closure glaucoma",
+        "Giant cell arteritis"
+      ],
+      "questionType": "learn",
+      "rationale": "Giant cell arteritis is identified as an emergency in the differential diagnosis of painful transient monocular vision loss.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 5, excerpt 1",
+          "citationId": "p5c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 5,
+          "quote": "Giant cell arteritis → ts an emergency"
+        }
+      ],
+      "sourcePageNumbers": [
+        5
+      ],
+      "stem": "Which condition is identified as an emergency in the differential diagnosis of painful transient monocular vision loss?",
+      "topicId": "learn-pages-2",
+      "topicTitle": "Pages 5, 6",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Retinal migraine"
+      ],
+      "duplicateRisk": "medium",
+      "metadata": {
+        "harnessVersion": "question-types-v11",
+        "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Giant cell arteritis",
+        "Internal carotid artery dissection",
+        "Ocular ischemic syndrome",
+        "Retinal migraine"
+      ],
+      "questionType": "learn",
+      "rationale": "Retinal migraine is a diagnosis of exclusion, meaning it is considered only after alternative causes have been excluded.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 5, excerpt 1",
+          "citationId": "p5c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 5,
+          "quote": "Retinal migraine is a diagnosis of exclusion"
+        }
+      ],
+      "sourcePageNumbers": [
+        5
+      ],
+      "stem": "Which diagnosis in the differential diagnosis of painful transient monocular vision loss is specifically considered a diagnosis of exclusion?",
+      "topicId": "learn-pages-2",
+      "topicTitle": "Pages 5, 6",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "CT/CTA of the head and neck"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v11",
+        "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "CT/CTA of the head and neck",
+        "Diffusion-weighted MRI of the brain",
+        "Transthoracic echocardiography",
+        "Automated visual-field testing"
+      ],
+      "questionType": "learn",
+      "rationale": "Carotid artery dissection is diagnosed with CT/CTA of the head and neck.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 7, excerpt 1",
+          "citationId": "p7c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 7,
+          "quote": "Diagnosis is made with a CT/CTA of head/neck"
+        }
+      ],
+      "sourcePageNumbers": [
+        7
+      ],
+      "stem": "Which imaging study is used to diagnose carotid artery dissection?",
+      "topicId": "learn-pages-3",
+      "topicTitle": "Pages 7, 8",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "An orbital mass"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v11",
+        "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "An orbital mass",
+        "Retinal vasospasm",
+        "Systemic hypoperfusion",
+        "Vasculitis"
+      ],
+      "questionType": "learn",
+      "rationale": "An orbital mass is a nonvascular orbital cause of transient monocular vision loss. Retinal vasospasm is ocular, whereas hypoperfusion and vasculitis are systemic vascular causes.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 3, excerpt 1",
+          "citationId": "p3c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 3,
+          "quote": "- Orbital causes (non-vascular)\n  - Masses"
+        }
+      ],
+      "sourcePageNumbers": [
+        3
+      ],
+      "stem": "Which cause of transient monocular vision loss is classified as orbital and nonvascular?",
+      "topicId": "learn-pages-1",
+      "topicTitle": "Pages 3, 4",
+      "type": "multiple_choice"
+    }
+  ],
+  "claimedWorkers": [
+    0,
+    7,
+    2,
+    6,
+    5,
+    4,
+    1,
+    3
+  ],
+  "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+  "completedAt": 1789961080715,
+  "completedWorkerCount": 8,
+  "completedWorkers": [
+    6,
+    2,
+    0,
+    4,
+    7,
+    3,
+    5,
+    1
+  ],
+  "createdAt": 1789961057472,
+  "createdByUserId": "j571jkhm2fkf4eqe52csnhwnbn7xvkfn",
+  "documentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm",
+  "eventCount": 18,
+  "failedWorkerCount": 0,
+  "kind": "candidate_generation",
+  "loop": {
+    "blueprintCount": 15,
+    "blueprintSource": "fallback",
+    "enabled": true,
+    "gatePassedCount": 10,
+    "gateRejectedCount": 0,
+    "pass": "done",
+    "selectedCount": 10
+  },
+  "model": "gpt-5.6-luna",
+  "moduleClassId": "jn76grzjj9enzcnd371z8nj38h7mx5tw",
+  "moduleId": "js70qm41mmx7wh5f7j0p03zynd894hrq",
+  "moduleTitle": "Testing Module",
+  "plan": {
+    "coverageNotes": [
+      "Packed 15 requested questions into 8 workers with up to 2 questions each.",
+      "Assigned 15 deterministic slot contracts across 8 workers."
+    ],
+    "riskNotes": [],
+    "topicAllocations": [
+      {
+        "notes": "Assigned to Learn: Pages 12, 13.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          12,
+          13
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "learn-pages-5",
+        "topicTitle": "Pages 12, 13"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 14, 15.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          14,
+          15
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "learn-pages-6",
+        "topicTitle": "Pages 14, 15"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 16, 17.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          16,
+          17
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "learn-pages-7",
+        "topicTitle": "Pages 16, 17"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 18, 19, 20.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          18,
+          19,
+          20
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "learn-pages-8",
+        "topicTitle": "Pages 18, 19, 20"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 5, 6.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          5,
+          6
+        ],
+        "taskId": "learn:batch:5",
+        "topicId": "learn-pages-2",
+        "topicTitle": "Pages 5, 6"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 7, 8.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          7,
+          8
+        ],
+        "taskId": "learn:batch:6",
+        "topicId": "learn-pages-3",
+        "topicTitle": "Pages 7, 8"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 9, 10, 11.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11
+        ],
+        "taskId": "learn:batch:7",
+        "topicId": "learn-pages-4",
+        "topicTitle": "Pages 9, 10, 11"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 3, 4.",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4
+        ],
+        "taskId": "learn:batch:8",
+        "topicId": "learn-pages-1",
+        "topicTitle": "Pages 3, 4"
+      }
+    ],
+    "workerBatches": [
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 12, 13",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          12,
+          13
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:1",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 12, 13"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 14, 15",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          14,
+          15
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:2",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 14, 15"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 16, 17",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          16,
+          17
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:3",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 16, 17"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 18, 19, 20",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          18,
+          19,
+          20
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:4",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 18, 19, 20"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 5, 6",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          5,
+          6
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:5",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 5, 6"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 7, 8",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          7,
+          8
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:6",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 7, 8"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 9, 10, 11",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:7",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 9, 10, 11"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective",
+        "label": "Learn: Pages 3, 4",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4
+        ],
+        "targetObjective": "Choose distinct fact 1 of 1 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:8",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 3, 4"
+        ]
+      }
+    ]
+  },
+  "requestedCount": 15,
+  "requestedCounts": {
+    "clinical": 0,
+    "criticalThinking": 0,
+    "learn": 15
+  },
+  "reviewCount": 10,
+  "selectedPageNumbers": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "sourceIndexedAt": 1789926394236,
+  "sourceMode": "pages",
+  "status": "ready",
+  "statusText": "Partial ready: 10/15 candidates to review.",
+  "updatedAt": 1789961080715,
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 8625,
+        "cachedInputTokens": 33048,
+        "calls": 7,
+        "costEstimatedCalls": 7,
+        "costKnownCalls": 7,
+        "costUsd": 0.010793009999999999,
+        "failedCalls": 0,
+        "inputTokens": 41694,
+        "latencyMsTotal": 51160,
+        "outputTokens": 6643,
+        "reasoningTokens": 4730,
+        "stage": "draft"
+      },
+      {
+        "cacheWriteTokens": 10279,
+        "cachedInputTokens": 27815,
+        "calls": 6,
+        "costEstimatedCalls": 6,
+        "costKnownCalls": 6,
+        "costUsd": 0.006954049999999999,
+        "failedCalls": 0,
+        "inputTokens": 38112,
+        "latencyMsTotal": 37802,
+        "outputTokens": 3187,
+        "reasoningTokens": 1645,
+        "stage": "review"
+      }
+    ],
+    "cacheWriteTokens": 18904,
+    "cachedInputTokens": 60863,
+    "calls": 13,
+    "costEstimatedCalls": 13,
+    "costKnownCalls": 13,
+    "costUsd": 0.01774706,
+    "failedCalls": 0,
+    "inputTokens": 79806,
+    "latencyMsTotal": 88962,
+    "outputTokens": 9830,
+    "reasoningTokens": 6375
+  },
+  "workerNotes": [
+    "Learn: 0/2 passed evidence checks and independent automated review. 0 corrected during review. 2 withheld. Provider or format failure: Uncaught ConvexError: Uncaught ConvexError: {\"kind\":\"RateLimited\",\"name\":\"questionStudioTokenUsagePerUser\",\"retryAfter\":2434.5} at checkRateLimitOrThrow (../../node_modules/@convex-dev/rate-limiter/src/component/internal.ts:22:6) at async handler (../node_modules/@convex-dev/rate-lim",
+    "Learn: 0/2 passed evidence checks and independent automated review. 0 corrected during review. 2 withheld. Provider or format failure: Uncaught ConvexError: Uncaught ConvexError: {\"kind\":\"RateLimited\",\"name\":\"questionStudioTokenUsagePerUser\",\"retryAfter\":358} at checkRateLimitOrThrow (../../node_modules/@convex-dev/rate-limiter/src/component/internal.ts:22:6) at async handler (../node_modules/@convex-dev/rate-limite",
+    "Learn: 2/2 passed evidence checks and independent automated review. 2 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed evidence checks and independent automated review. 2 corrected during review. 0 withheld.",
+    "Learn: 1/1 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "Learn: 2/2 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "Learn: 1/2 passed evidence checks and independent automated review. 0 corrected during review. 1 withheld. Evidence quote is not in the supplied excerpt: p7c0. The stem directly combines the two distinguishing features explicitly associated with carotid artery dissection, while the alternatives are distinct retinal or ophthalmic arterial occlusions.",
+    "Learn: 2/2 passed evidence checks and independent automated review. 1 corrected during review. 0 withheld."
+  ],
+  "workerStates": [
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789961070618,
+      "index": 0,
+      "startedAt": 1789961058741
+    },
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789961080362,
+      "index": 1,
+      "startedAt": 1789961059277
+    },
+    {
+      "draftedCount": 0,
+      "finishedAt": 1789961068332,
+      "index": 2,
+      "startedAt": 1789961058934
+    },
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789961072901,
+      "index": 3,
+      "startedAt": 1789961059622
+    },
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789961070886,
+      "index": 4,
+      "startedAt": 1789961059190
+    },
+    {
+      "draftedCount": 1,
+      "finishedAt": 1789961074155,
+      "index": 5,
+      "startedAt": 1789961059106
+    },
+    {
+      "draftedCount": 0,
+      "finishedAt": 1789961060728,
+      "index": 6,
+      "startedAt": 1789961059026
+    },
+    {
+      "draftedCount": 1,
+      "finishedAt": 1789961072198,
+      "index": 7,
+      "startedAt": 1789961058869
+    }
+  ]
+}

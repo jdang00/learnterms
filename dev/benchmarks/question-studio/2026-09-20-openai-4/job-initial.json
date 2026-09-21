@@ -1,0 +1,388 @@
+{
+  "_creationTime": 1789961300734.1753,
+  "_id": "n579ev3r96dfvyv6vydpq1hx2n8evbd9",
+  "blockedDuplicateCount": 0,
+  "candidateCount": 0,
+  "claimedWorkers": [
+    0,
+    1,
+    6,
+    7,
+    5,
+    4,
+    2,
+    3
+  ],
+  "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+  "completedWorkerCount": 0,
+  "completedWorkers": [
+    3,
+    7
+  ],
+  "createdAt": 1789961300734,
+  "createdByUserId": "j571jkhm2fkf4eqe52csnhwnbn7xvkfn",
+  "documentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm",
+  "eventCount": 3,
+  "failedWorkerCount": 0,
+  "kind": "candidate_generation",
+  "loop": {
+    "blueprintCount": 15,
+    "blueprintSource": "fallback",
+    "enabled": true,
+    "pass": "draft"
+  },
+  "model": "gpt-5.6-luna",
+  "moduleId": "js70qm41mmx7wh5f7j0p03zynd894hrq",
+  "plan": {
+    "coverageNotes": [
+      "Packed 15 requested questions into 8 workers with up to 2 questions each.",
+      "Assigned 15 deterministic slot contracts across 8 workers."
+    ],
+    "riskNotes": [],
+    "topicAllocations": [
+      {
+        "notes": "Assigned to Learn: Pages 12, 13.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          12,
+          13
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "learn-pages-5",
+        "topicTitle": "Pages 12, 13"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 14, 15.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          14,
+          15
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "learn-pages-6",
+        "topicTitle": "Pages 14, 15"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 16, 17.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          16,
+          17
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "learn-pages-7",
+        "topicTitle": "Pages 16, 17"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 18, 19, 20.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          18,
+          19,
+          20
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "learn-pages-8",
+        "topicTitle": "Pages 18, 19, 20"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 5, 6.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          5,
+          6
+        ],
+        "taskId": "learn:batch:5",
+        "topicId": "learn-pages-2",
+        "topicTitle": "Pages 5, 6"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 7, 8.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          7,
+          8
+        ],
+        "taskId": "learn:batch:6",
+        "topicId": "learn-pages-3",
+        "topicTitle": "Pages 7, 8"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 9, 10, 11.",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11
+        ],
+        "taskId": "learn:batch:7",
+        "topicId": "learn-pages-4",
+        "topicTitle": "Pages 9, 10, 11"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 3, 4.",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4
+        ],
+        "taskId": "learn:batch:8",
+        "topicId": "learn-pages-1",
+        "topicTitle": "Pages 3, 4"
+      }
+    ],
+    "workerBatches": [
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 12, 13",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          12,
+          13
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:1",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 12, 13"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 14, 15",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          14,
+          15
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:2",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 14, 15"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 16, 17",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          16,
+          17
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:3",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 16, 17"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 18, 19, 20",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          18,
+          19,
+          20
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:4",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 18, 19, 20"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 5, 6",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          5,
+          6
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:5",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 5, 6"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 7, 8",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          7,
+          8
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:6",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 7, 8"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective",
+        "label": "Learn: Pages 9, 10, 11",
+        "plannedCount": 2,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11
+        ],
+        "targetObjective": "Choose distinct fact 1 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 2 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:7",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 9, 10, 11"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective",
+        "label": "Learn: Pages 3, 4",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4
+        ],
+        "targetObjective": "Choose distinct fact 1 of 1 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:8",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 3, 4"
+        ]
+      }
+    ]
+  },
+  "requestedCount": 15,
+  "requestedCounts": {
+    "clinical": 0,
+    "criticalThinking": 0,
+    "learn": 15
+  },
+  "reviewCount": 0,
+  "selectedPageNumbers": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "sourceIndexedAt": 1789926394236,
+  "sourceMode": "pages",
+  "status": "running",
+  "statusText": "Work orders ready; starting draft workers.",
+  "updatedAt": 1789961301872,
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 469,
+        "cachedInputTokens": 23321,
+        "calls": 4,
+        "costEstimatedCalls": 4,
+        "costKnownCalls": 4,
+        "costUsd": 0.00358967,
+        "failedCalls": 0,
+        "inputTokens": 23802,
+        "latencyMsTotal": 21975,
+        "outputTokens": 2503,
+        "reasoningTokens": 1461,
+        "stage": "draft"
+      },
+      {
+        "cacheWriteTokens": 605,
+        "cachedInputTokens": 5563,
+        "calls": 1,
+        "costEstimatedCalls": 1,
+        "costKnownCalls": 1,
+        "costUsd": 0.0005019099999999999,
+        "failedCalls": 0,
+        "inputTokens": 6171,
+        "latencyMsTotal": 4191,
+        "outputTokens": 199,
+        "reasoningTokens": 101,
+        "stage": "review"
+      }
+    ],
+    "cacheWriteTokens": 1074,
+    "cachedInputTokens": 28884,
+    "calls": 5,
+    "costEstimatedCalls": 5,
+    "costKnownCalls": 5,
+    "costUsd": 0.00409158,
+    "failedCalls": 0,
+    "inputTokens": 29973,
+    "latencyMsTotal": 26166,
+    "outputTokens": 2702,
+    "reasoningTokens": 1562
+  },
+  "workerStates": [
+    {
+      "index": 0,
+      "startedAt": 1789961302014
+    },
+    {
+      "index": 1,
+      "startedAt": 1789961302164
+    },
+    {
+      "index": 2,
+      "startedAt": 1789961302847
+    },
+    {
+      "draftedCount": 0,
+      "finishedAt": 1789961309664,
+      "index": 3,
+      "startedAt": 1789961302945
+    },
+    {
+      "index": 4,
+      "startedAt": 1789961302622
+    },
+    {
+      "index": 5,
+      "startedAt": 1789961302504
+    },
+    {
+      "index": 6,
+      "startedAt": 1789961302303
+    },
+    {
+      "draftedCount": 1,
+      "finishedAt": 1789961310523,
+      "index": 7,
+      "startedAt": 1789961302363
+    }
+  ]
+}

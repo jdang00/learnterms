@@ -1,0 +1,137 @@
+[
+  {
+    "_creationTime": 1789960630768.0615,
+    "_id": "nd77asqk7a8tq7cynmk01tmhx58evv0z",
+    "at": 1789960630768,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Preparing the agent run.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Queued"
+  },
+  {
+    "_creationTime": 1789960631338.0461,
+    "_id": "nd76nj48bza6bb9be06rq5fa5s8et590",
+    "at": 1789960631338,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 questions requested.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Started"
+  },
+  {
+    "_creationTime": 1789960631533.6746,
+    "_id": "nd75z3dckfdpj8t6w14fdpkwt18etphm",
+    "at": 1789960631533,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "59 existing module questions available for duplicate checks.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Loaded context"
+  },
+  {
+    "_creationTime": 1789960631739.5422,
+    "_id": "nd7d88mc77xv7641brwj9x4q218et3h1",
+    "at": 1789960631739,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Assigned selected pages to 5 Learn groups without an AI planning call.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Page plan"
+  },
+  {
+    "_creationTime": 1789960631799.7327,
+    "_id": "nd70epae0p1b4wvx8nd375f2rh8et6gv",
+    "at": 1789960631799,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "5 topics and 18 pages are in scope.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Prepared context"
+  },
+  {
+    "_creationTime": 1789960631862.6392,
+    "_id": "nd74yq34wcqbp8xpad9r19s9mx8ev1y2",
+    "at": 1789960631862,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "5 workers queued with at most 3 questions each.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Work orders ready"
+  },
+  {
+    "_creationTime": 1789960632140.6636,
+    "_id": "nd73tkta0ghr1j8c77abz03v9s8ev7a0",
+    "at": 1789960632140,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Each worker drafts from selected page excerpts, then checks the answer and source support independently.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Workers launched"
+  },
+  {
+    "_creationTime": 1789960651908.3638,
+    "_id": "nd7ays0p6kgzhxgy8c3rqfgjfn8ev8j3",
+    "at": 1789960651908,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789960653815.5518,
+    "_id": "nd7591ravhdkwfv5xgbp7ng1ds8evqv2",
+    "at": 1789960653815,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789960656513.9902,
+    "_id": "nd7cscjd9t1c5xjb8s469atgz58evepa",
+    "at": 1789960656513,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789960656775.0295,
+    "_id": "nd73dn76rfz3evdzt87wg7bja18evmhr",
+    "at": 1789960656775,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 1 corrected during review. 0 withheld.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789960657363.5403,
+    "_id": "nd708xp2xr6ck0mnxtntbj8bxx8etk82",
+    "at": 1789960657363,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789960657593.2393,
+    "_id": "nd70aqkqz9ck2fzhczkbzyk4ah8ev0k7",
+    "at": 1789960657593,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 candidates are ready for local source, answer, and provenance checks.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Reviewing"
+  },
+  {
+    "_creationTime": 1789960657668.719,
+    "_id": "nd795ny7ytk5e0sy5zb3dk3ct98evqv3",
+    "at": 1789960657668,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "0 rejected, 0 need reasoning review.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Review complete"
+  },
+  {
+    "_creationTime": 1789960657745.3318,
+    "_id": "nd76jbvyksapvx8aee5ncyf5nh8et2fh",
+    "at": 1789960657745,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Draft workers and local review finished.",
+    "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+    "label": "Ready"
+  }
+]

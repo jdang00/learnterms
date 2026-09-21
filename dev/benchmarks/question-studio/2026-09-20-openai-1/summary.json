@@ -1,0 +1,100 @@
+{
+  "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+  "status": "ready",
+  "requested": 15,
+  "accepted": 15,
+  "wallMs": 26977,
+  "firstCandidateMs": 21140,
+  "setupMs": 1268,
+  "workerSpanMs": 25327,
+  "finalizationMs": 382,
+  "aggregateWorkerMs": 114905,
+  "aggregateWorkerModelMs": 110771,
+  "aggregateNonModelWorkerMs": 4134,
+  "acceptedByType": {
+    "learn": 15
+  },
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 16705,
+        "cachedInputTokens": 13332,
+        "calls": 5,
+        "costEstimatedCalls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.01375429,
+        "failedCalls": 0,
+        "inputTokens": 30052,
+        "latencyMsTotal": 71090,
+        "outputTokens": 7757,
+        "reasoningTokens": 5428,
+        "stage": "draft"
+      },
+      {
+        "cacheWriteTokens": 19523,
+        "cachedInputTokens": 13552,
+        "calls": 5,
+        "costEstimatedCalls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.00987319,
+        "failedCalls": 0,
+        "inputTokens": 33090,
+        "latencyMsTotal": 39681,
+        "outputTokens": 3932,
+        "reasoningTokens": 2606,
+        "stage": "review"
+      }
+    ],
+    "cacheWriteTokens": 36228,
+    "cachedInputTokens": 26884,
+    "calls": 10,
+    "costEstimatedCalls": 10,
+    "costKnownCalls": 10,
+    "costUsd": 0.023627479999999996,
+    "failedCalls": 0,
+    "inputTokens": 63142,
+    "latencyMsTotal": 110771,
+    "outputTokens": 11689,
+    "reasoningTokens": 8034
+  },
+  "workerNotes": [
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 1 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld."
+  ],
+  "repairs": [],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 1450,
+      "durationMs": 24295,
+      "accepted": 3
+    },
+    {
+      "index": 1,
+      "startMs": 1268,
+      "durationMs": 25327,
+      "accepted": 3
+    },
+    {
+      "index": 2,
+      "startMs": 1907,
+      "durationMs": 21140,
+      "accepted": 3
+    },
+    {
+      "index": 3,
+      "startMs": 1669,
+      "durationMs": 19471,
+      "accepted": 3
+    },
+    {
+      "index": 4,
+      "startMs": 1335,
+      "durationMs": 24672,
+      "accepted": 3
+    }
+  ]
+}

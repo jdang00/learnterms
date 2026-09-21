@@ -8,19 +8,21 @@ import {
 	type QualitySlot
 } from '../../src/convex/questionStudio/quality';
 import { callQualityModel } from '../../src/convex/questionStudio/provider';
-import { DEFAULT_TEXT_MODEL } from '../../src/convex/questionStudio/shared';
+import { QUESTION_STUDIO_MODEL } from '../../src/convex/questionStudio/shared';
 const root = 'tmp/ai-eval';
 lockEvaluationBudget(root);
-const proc = Bun.spawn(['bunx', 'convex', 'env', 'get', 'OPENROUTER_API_KEY'], {
+const proc = Bun.spawn(['bunx', 'convex', 'env', 'get', 'OPENAI_API_KEY'], {
 	stdout: 'pipe',
 	stderr: 'pipe'
 });
 const key = (await new Response(proc.stdout).text()).trim();
-if ((await proc.exited) || !key) throw new Error('Development OpenRouter key unavailable');
-const models: { data: Array<{ id: string; pricing: { prompt: string; completion: string } }> } =
-	await (await fetch('https://openrouter.ai/api/v1/models')).json();
-const model = models.data.find((m) => m.id === DEFAULT_TEXT_MODEL);
-if (!model) throw new Error('Luna unavailable');
+if ((await proc.exited) || !key) throw new Error('Development OpenAI key unavailable');
+const model = {
+	id: QUESTION_STUDIO_MODEL,
+	provider: 'openai',
+	pricingDate: '2026-09-20',
+	pricing: { prompt: '0.0000002', completion: '0.0000012' }
+};
 await Bun.write(`${root}/model.json`, JSON.stringify(model, null, 2));
 const inputPrice = Number(model.pricing.prompt),
 	outputPrice = Number(model.pricing.completion);
@@ -64,6 +66,7 @@ const configurations = [
 		]
 	}
 ];
+// Retain the historical filename so prior spend remains inside the shared budget.
 const ledgerPath = `${root}/openrouter-ledger.json`;
 const ledger: ModelReservation[] = (await Bun.file(ledgerPath).exists())
 	? await Bun.file(ledgerPath).json()
@@ -104,7 +107,7 @@ for (const doc of manifest) {
 						async (request) => {
 							// Character count is a conservative token upper bound for these English sources, plus schema overhead.
 							const reservation =
-								(request.prompt.length + request.system.length + 16000) * inputPrice +
+								(request.prompt.length + request.system.length + 16000) * inputPrice * 1.25 +
 								request.maxOutputTokens * outputPrice;
 							const spent = ledger.reduce((s, r) => s + (r.actualUsd ?? r.reservedUsd), 0);
 							if (spent + reservation + ocrReserve > 3)

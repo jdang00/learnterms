@@ -1,6 +1,7 @@
 import { Polar } from '@convex-dev/polar';
 import { api, components } from './_generated/api';
 import { query } from './_generated/server';
+import { requireIdentity, requireUserRead } from './access';
 import type { QueryCtx } from './_generated/server';
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
@@ -101,8 +102,10 @@ export const getCurrentUserWithSubscription = query({
 export const getUserWithSubscriptionById = query({
 	args: { userId: v.id('users') },
 	handler: async (ctx, { userId }) => {
+		await requireIdentity(ctx);
 		const user = await ctx.db.get(userId);
-		if (!user) return null;
+		if (!user || user.deletedAt) return null;
+		await requireUserRead(ctx, user);
 
 		const subscription = await polar.getCurrentSubscription(ctx, {
 			userId: user._id
@@ -122,12 +125,14 @@ export const getUserWithSubscriptionById = query({
 export const getUserWithSubscriptionByClerkId = query({
 	args: { clerkUserId: v.string() },
 	handler: async (ctx, { clerkUserId }) => {
+		await requireIdentity(ctx);
 		const user = await ctx.db
 			.query('users')
 			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkUserId))
 			.first();
 
-		if (!user) return null;
+		if (!user || user.deletedAt) return null;
+		await requireUserRead(ctx, user);
 
 		const subscription = await polar.getCurrentSubscription(ctx, {
 			userId: user._id
@@ -145,9 +150,9 @@ export const getUserWithSubscriptionByClerkId = query({
 });
 
 // Sync products from Polar (run this to pull existing products)
-import { action } from './_generated/server';
+import { internalAction } from './_generated/server';
 
-export const syncProducts = action({
+export const syncProducts = internalAction({
 	args: {},
 	handler: async (ctx) => {
 		await polar.syncProducts(ctx);

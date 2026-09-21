@@ -1,0 +1,164 @@
+[
+  {
+    "_creationTime": 1789962740774.9907,
+    "_id": "nd7791tx1ee10pv5nb2x25sc4n8evben",
+    "at": 1789962740774,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Preparing the agent run.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Queued"
+  },
+  {
+    "_creationTime": 1789962741772.8628,
+    "_id": "nd73xtwcp8pdn004apdgmfpnes8evanq",
+    "at": 1789962741772,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 questions requested.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Started"
+  },
+  {
+    "_creationTime": 1789962742078.926,
+    "_id": "nd74vtj00x71v1ne4n8yy9hw0h8et7gp",
+    "at": 1789962742078,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "59 existing module questions available for duplicate checks.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Loaded context"
+  },
+  {
+    "_creationTime": 1789962742331.8489,
+    "_id": "nd7aw96pw37z6xbqp4yb9qyfpx8etwpq",
+    "at": 1789962742331,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Assigned selected pages to 8 Learn groups without an AI planning call.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Page plan"
+  },
+  {
+    "_creationTime": 1789962742443.587,
+    "_id": "nd73mknt9e6ps7czzw8jgh8js98etma5",
+    "at": 1789962742443,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "8 topics and 18 pages are in scope.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Prepared context"
+  },
+  {
+    "_creationTime": 1789962742564.9763,
+    "_id": "nd7cpkkbxx11q5jz4f0kdcfp158evhbz",
+    "at": 1789962742564,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "8 workers queued with at most 2 questions each.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Work orders ready"
+  },
+  {
+    "_creationTime": 1789962742776.0166,
+    "_id": "nd71bvmhy8f9cn8zfy84a1n4pn8ev5yh",
+    "at": 1789962742776,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Each Learn worker uses one high-reasoning call followed by local evidence, answer-structure, and duplicate checks.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Workers launched"
+  },
+  {
+    "_creationTime": 1789962751190.9258,
+    "_id": "nd79b0rd53k3qjfyqch2nhy2jd8ev3qv",
+    "at": 1789962751190,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 1/1 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962752445.7454,
+    "_id": "nd77kzzk8aq5n0g0cafjt38cb18et37g",
+    "at": 1789962752445,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962754456.218,
+    "_id": "nd74fnmgc4vyvp668pc9neq6298etbrd",
+    "at": 1789962754456,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962756532.1997,
+    "_id": "nd70pp0dyn6n10y5e5cykz8vg18evjs1",
+    "at": 1789962756532,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 1/2 passed local evidence and answer-structure checks. 0 corrected during review. 1 withheld. Evidence quote is not in the supplied excerpt: p17c0: \"Consider DWI-MRI of brain\". Copy a short exact passage.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962756874.4448,
+    "_id": "nd7e13rc7y7ej1td8sykkwnfzs8etng4",
+    "at": 1789962756874,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962759663.9722,
+    "_id": "nd723q2synkj1devk8mtjhwxy58evpcc",
+    "at": 1789962759663,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 1/2 passed local evidence and answer-structure checks. 0 corrected during review. 1 withheld. Evidence quote is not in the supplied excerpt: p8c0: \"- Retinal arterial emboli\\n\\n- Retinal infarction\\n\\n- Branch retinal artery occlusion (BRAO)\\n\\n- Central retinal artery occlusion (CRAO)\\n\\n- Ophthalmic artery occlusion (OAO)\". Copy a short exact passage. Remove source framing from student-facing text.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962763853.3894,
+    "_id": "nd7czxycnbjqdgw77bpjzd95618etxsh",
+    "at": 1789962763853,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962765672.5493,
+    "_id": "nd7a6qfjjcwkxj8tz8qxwwhtj58etpak",
+    "at": 1789962765672,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/2 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962766150.3677,
+    "_id": "nd72eavv5642tngzwxtbgxqx598et1nv",
+    "at": 1789962766150,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "13 candidates are ready for local source, answer, and provenance checks.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Reviewing"
+  },
+  {
+    "_creationTime": 1789962766290.7856,
+    "_id": "nd76b7w0zwv5dqg7s32p53b62s8et8g4",
+    "at": 1789962766290,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "0 rejected, 0 need reasoning review.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Review complete"
+  },
+  {
+    "_creationTime": 1789962766430.0127,
+    "_id": "nd794p0fn9f38x5rt3sxtqhf3n8evrax",
+    "at": 1789962766430,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Draft workers finished with partial usable candidates.",
+    "jobId": "n57awf7knjbsrf65nkf2pgmyj98et600",
+    "label": "Ready"
+  }
+]

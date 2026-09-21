@@ -1,0 +1,101 @@
+[
+  {
+    "_creationTime": 1789961980903.4546,
+    "_id": "nd74z2bcpt3ktcdqzm5jbkkw3d8etvm4",
+    "at": 1789961980903,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Preparing the agent run.",
+    "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+    "label": "Queued"
+  },
+  {
+    "_creationTime": 1789961981913.9922,
+    "_id": "nd7fywbk7hs2jtk4tf860dm25n8ev9me",
+    "at": 1789961981913,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 questions requested.",
+    "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+    "label": "Started"
+  },
+  {
+    "_creationTime": 1789961982324.9624,
+    "_id": "nd722f65713qvkm94w65sayjss8ev1a0",
+    "at": 1789961982324,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "59 existing module questions available for duplicate checks.",
+    "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+    "label": "Loaded context"
+  },
+  {
+    "_creationTime": 1789961982592.6094,
+    "_id": "nd7dtm9er6hj6d5chx5bfcwxqd8ev566",
+    "at": 1789961982592,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Assigned selected pages to 3 Learn groups without an AI planning call.",
+    "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+    "label": "Page plan"
+  },
+  {
+    "_creationTime": 1789961982721.8801,
+    "_id": "nd72nbkjvz0er56rhbcv8n4jwn8evpdr",
+    "at": 1789961982721,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "3 topics and 18 pages are in scope.",
+    "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+    "label": "Prepared context"
+  },
+  {
+    "_creationTime": 1789961982947.8452,
+    "_id": "nd7ca7knw63kz7z7qdp5xed9ws8ev27q",
+    "at": 1789961982947,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "3 workers queued with at most 5 questions each.",
+    "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+    "label": "Work orders ready"
+  },
+  {
+    "_creationTime": 1789961983112.9219,
+    "_id": "nd7baw0s1qy84g5z7e0szv7qm18evq5p",
+    "at": 1789961983112,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Each Learn worker uses one high-reasoning call followed by local evidence, answer-structure, and duplicate checks.",
+    "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+    "label": "Workers launched"
+  },
+  {
+    "_creationTime": 1789962009798.2356,
+    "_id": "nd70p1bbebttxvd5vtm06p1kex8evrz8",
+    "at": 1789962009798,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/5 passed local evidence and answer-structure checks. 0 corrected during review. 5 withheld. Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted",
+    "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962010196.1592,
+    "_id": "nd785gsxw2e1x9w5m832c8081h8ev06k",
+    "at": 1789962010196,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/5 passed local evidence and answer-structure checks. 0 corrected during review. 5 withheld. Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted",
+    "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962010588.6194,
+    "_id": "nd79hk0wzpafcgc1q79tbcfdn58etxxt",
+    "at": 1789962010588,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/5 passed local evidence and answer-structure checks. 0 corrected during review. 5 withheld. Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted",
+    "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962010912.61,
+    "_id": "nd7amey5v032rc7zjc82v12wy98evew7",
+    "at": 1789962010912,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "The 30-second limit was reached. No late results will be accepted.",
+    "jobId": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+    "label": "Deadline reached"
+  }
+]

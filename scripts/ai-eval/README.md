@@ -1,6 +1,6 @@
 # LearnTerms question-quality evaluation
 
-Run from the repository root with Bun. Uses the development Convex environment's `DATALAB_API_KEY` and `OPENROUTER_API_KEY` without printing credentials. Raw course sources, OCR, generated questions, and ledgers stay in ignored `tmp/ai-eval/`.
+Run from the repository root with Bun. Uses the development Convex environment's `DATALAB_API_KEY` and `OPENAI_API_KEY` without printing credentials. Raw course sources, OCR, generated questions, and ledgers stay in ignored `tmp/ai-eval/`.
 
 ```sh
 bun run eval:parse '/Users/justindang/Downloads/LEARN TERMS TEST'
@@ -8,14 +8,14 @@ bun run eval:questions --medium-only
 bun run eval:report
 ```
 
-Omit `--medium-only` to compare Luna low, medium, and high drafting. The independent reviewer always uses high reasoning; this isolates drafting effort. Both generation and OCR use the same implementation as the app. The comparison explicitly overrides drafting effort; the app derives it from the question type (Learn: low, Clinical and Critical thinking: medium). Fixtures select explicit objectives and source pages from four PDFs, with one Learn, Clinical, and Critical thinking assignment each. Each type runs in a separate scoped worker. Clinical abstention is expected for nonclinical evidence. They do not test automatic topic selection across every page.
+Omit `--medium-only` to compare Luna low, medium, and high drafting. The independent reviewer always uses high reasoning; this isolates drafting effort. Both generation and OCR use the same implementation as the app. The comparison explicitly overrides drafting effort; the general type policy uses high drafting, while Learn-only runs up to 15 use the benchmarked medium-draft/medium-review policy. Fixtures select explicit objectives and source pages from four PDFs, with one Learn, Clinical, and Critical thinking assignment each. Each type runs in a separate scoped worker. Clinical abstention is expected for nonclinical evidence. They do not test automatic topic selection across every page.
 
 The manifest requires all four PDFs. OCR is cached by file SHA-256; question runs are cached by document hash, thinking level, and harness version. A cached run makes no paid generation call. Increment `HARNESS_VERSION` when changing prompts, and keep the ledgers across versions. Never delete ledgers to rerun an experiment. Model outputs are stochastic; this is a small regression set, not a statistical accuracy study.
 
 Budget controls:
 
 - Reserve OCR at $0.006/page, with a $1.55 OCR ceiling.
-- Reserve model requests before calling, using current OpenRouter prices and a conservative input-token estimate plus output cap.
+- Reserve model requests before calling, using OpenAI Luna standard prices verified 2026-09-20, including the cache-write premium and a conservative input-token estimate plus output cap.
 - Combined ceiling: $3 including OCR, model requests, and `external-reservations.json` for separately run development smoke tests.
 - Failed requests retain their reservation when cost is unknown. HTTP 429 OCR requests release their reservation because no processing occurred.
 - One repair at most; no SDK retries. The production pipeline uses the same bounded repair and token reservation.
@@ -24,3 +24,5 @@ Budget controls:
 `accepted` means passed structural checks, exact quote checks, and a separate model review. It does **not** mean expert-verified factual accuracy. The reviewer is the same model family and can share blind spots. Inspect originals, answer keys, distractors, assumptions, and reasoning depth. Record manual findings separately; do not turn automated acceptance into an accuracy percentage.
 
 The September 2026 report records the original comparison, tightened prompts, final medium regression, manual disagreements, costs, and live draft-save verification. Third-order generation remains experimental and opt-in. Every generated question is saved as a draft for curator review before publication.
+
+The live Learn fast path uses topic-aligned batches of two with medium-effort drafting and independent medium-effort review, including corrections in that response. Both passes return citation IDs; the backend attaches exact source excerpts. The effort-comparison fixture intentionally keeps its original high-review policy. See [architecture/model experiments and live validation](STUDIO_MATRIX.md). OpenAI requests are stored in the provider logs, and costs are token-based estimates. The historical `openrouter-ledger.json` filename is retained to preserve the combined spend ceiling.

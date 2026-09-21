@@ -6,6 +6,12 @@ import {
 } from '../src/convex/questionStudio/pageSelection';
 import { evidenceForObjective, structuralIssues } from '../src/convex/questionStudio/quality';
 import type { StoredMarkdownPage, TopicMapItem } from '../src/convex/questionStudio/shared';
+import {
+	pagePlanSchema,
+	pagePlanTopics,
+	pagePlanningPrompt
+} from '../src/convex/questionStudio/pagePlanning';
+import { buildLiveGenerationWork } from '../src/convex/questionStudio/planning';
 
 const pages: StoredMarkdownPage[] = [1, 2, 3, 4, 5].map((pageNumber) => ({
 	pageNumber,
@@ -20,6 +26,78 @@ const topic: TopicMapItem = {
 	keyTerms: [],
 	estimatedQuestionCapacity: 2
 };
+
+test('compact plans preserve page boundaries and cannot inflate distinct objective capacity', async () => {
+	const planned = await planPageContext(pages, [2, 5], async (group) => {
+		const prompt = pagePlanningPrompt(group, { learn: 3, clinical: 0, criticalThinking: 0 }, [
+			{ stem: 'Which existing question already tests this fact?' }
+		]);
+		const payload = JSON.parse(prompt.split('\n').at(-1)!);
+		expect(payload.pages.map((p: StoredMarkdownPage) => p.pageNumber)).toEqual([2, 5]);
+		expect(payload.avoidExistingQuestions).toEqual([
+			'Which existing question already tests this fact?'
+		]);
+		return pagePlanTopics(
+			pagePlanSchema.parse({
+				topics: [
+					{
+						title: 'Selected facts',
+						pageNumbers: [2, 3, 5],
+						learningObjectives: ['Explain fact two', 'Explain fact two'],
+						questionType: 'learn'
+					}
+				]
+			})
+		);
+	});
+	expect(planned[0].pageNumbers).toEqual([2, 5]);
+	const { tasks } = buildLiveGenerationWork(planned, {
+		learn: 3,
+		clinical: 0,
+		criticalThinking: 0
+	});
+	expect(tasks.reduce((sum, task) => sum + task.plannedCount, 0)).toBe(1);
+	expect(pagePlanTopics({ topics: [] })).toEqual([]);
+});
+
+test('page plans reserve the requested clinical allocation instead of consuming it as learning work', () => {
+	const topics = pagePlanTopics({
+		topics: [
+			...Array.from({ length: 4 }, (_, index) => ({
+				title: `Learn group ${index}`,
+				pageNumbers: [2],
+				learningObjectives: [1, 2, 3].map((n) => `Distinct fact ${index}.${n}`),
+				questionType: 'learn' as const
+			})),
+			{
+				title: 'Clinical decisions',
+				pageNumbers: [5],
+				learningObjectives: [
+					'Clinical finding one',
+					'Clinical finding two',
+					'Clinical finding three'
+				],
+				questionType: 'clinical'
+			}
+		]
+	});
+	const { tasks, plan } = buildLiveGenerationWork(topics, {
+		learn: 12,
+		clinical: 3,
+		criticalThinking: 0
+	});
+	expect(
+		tasks
+			.filter((task) => task.questionType === 'learn')
+			.reduce((sum, task) => sum + task.plannedCount, 0)
+	).toBe(12);
+	expect(
+		tasks
+			.filter((task) => task.questionType === 'clinical')
+			.reduce((sum, task) => sum + task.plannedCount, 0)
+	).toBe(3);
+	expect(plan.riskNotes).toEqual([]);
+});
 
 test('nonadjacent selection excludes intervening pages and rejects missing or invalid pages', () => {
 	expect(selectedSourcePages(pages, [5, 2]).map((p) => p.pageNumber)).toEqual([2, 5]);
@@ -52,9 +130,7 @@ test('page planning sees only selected text, drops invented pages, and isolates 
 			options: ['one', 'two', 'three', 'four'],
 			answerIndex: 1,
 			rationale: 'The chosen value matches the concept.',
-			evidence: [{ citationId: 'p3c0', quote: 'Only page 3 contains fact number 3.' }],
-			reasoningSkill: 'Recall a fact',
-			distractorReasons: ['wrong value one', 'wrong value three', 'wrong value four']
+			evidence: [{ citationId: 'p3c0', quote: 'Only page 3 contains fact number 3.' }]
 		},
 		{
 			slotId: 'slot',

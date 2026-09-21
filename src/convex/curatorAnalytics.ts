@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
 import { authQuery } from './authQueries';
+import { requireCohortStaff } from './access';
 
 type StudentLite = {
 	_id: Id<'users'>;
@@ -79,6 +80,7 @@ export const getModuleSelectorOptions = authQuery({
 		classId: v.optional(v.id('class'))
 	},
 	handler: async (ctx, args) => {
+		await requireCohortStaff(ctx, args.cohortId);
 		let classes = await ctx.db
 			.query('class')
 			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
@@ -146,6 +148,7 @@ export const getModuleOverviewAnalytics = authQuery({
 		flagLimit: v.optional(v.number())
 	},
 	handler: async (ctx, args) => {
+		await requireCohortStaff(ctx, args.cohortId);
 		const participantsLimit = Math.max(3, Math.min(args.participantsLimit ?? 10, 30));
 		const recentLimit = Math.max(5, Math.min(args.recentLimit ?? 10, 50));
 		const flagLimit = Math.max(3, Math.min(args.flagLimit ?? 10, 30));
@@ -378,6 +381,7 @@ export const getModuleQuestionAnalyticsPage = authQuery({
 		pageOffset: v.optional(v.number())
 	},
 	handler: async (ctx, args) => {
+		await requireCohortStaff(ctx, args.cohortId);
 		const pageSize = Math.max(5, Math.min(args.pageSize ?? 8, 50));
 		const pageOffset = Math.max(0, args.pageOffset ?? 0);
 

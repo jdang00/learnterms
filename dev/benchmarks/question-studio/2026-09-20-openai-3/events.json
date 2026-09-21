@@ -1,0 +1,164 @@
+[
+  {
+    "_creationTime": 1789961057472.337,
+    "_id": "nd7b7h6t8595m6m794a2tfqd658evyvy",
+    "at": 1789961057472,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Preparing the agent run.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Queued"
+  },
+  {
+    "_creationTime": 1789961058061.5046,
+    "_id": "nd7a9aqrk5c1mx4y8srkjvbb6d8ev553",
+    "at": 1789961058061,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 questions requested.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Started"
+  },
+  {
+    "_creationTime": 1789961058281.5852,
+    "_id": "nd797sb1nyvq1mk6wmnrn7qedx8evck7",
+    "at": 1789961058281,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "59 existing module questions available for duplicate checks.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Loaded context"
+  },
+  {
+    "_creationTime": 1789961058492.9104,
+    "_id": "nd7dkjgvpg65edw511ppndmawn8evjr1",
+    "at": 1789961058492,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Assigned selected pages to 8 Learn groups without an AI planning call.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Page plan"
+  },
+  {
+    "_creationTime": 1789961058553.0063,
+    "_id": "nd76r8g6at0gf8rs94e614yqp18etgv0",
+    "at": 1789961058553,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "8 topics and 18 pages are in scope.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Prepared context"
+  },
+  {
+    "_creationTime": 1789961058616.8428,
+    "_id": "nd750h9ns7c6mr2689zwets8tn8ev89m",
+    "at": 1789961058616,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "8 workers queued with at most 2 questions each.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Work orders ready"
+  },
+  {
+    "_creationTime": 1789961059403.8616,
+    "_id": "nd7d6kk299rsvjmn5wmcpb4vwd8etf0g",
+    "at": 1789961059403,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Each worker drafts from selected page excerpts, then checks the answer and source support independently.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Workers launched"
+  },
+  {
+    "_creationTime": 1789961060728.699,
+    "_id": "nd7bfccygftq9qf2b8bqpvhejn8et16q",
+    "at": 1789961060728,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/2 passed evidence checks and independent automated review. 0 corrected during review. 2 withheld. Provider or format failure: Uncaught ConvexError: Uncaught ConvexError: {\"kind\":\"RateLimited\",\"name\":\"questionStudioTokenUsagePerUser\",\"retryAfter\":2434.5} at checkRateLimitOrThrow (../../node_modules/@convex-dev/rate-limiter/src/component/internal.ts:22:6) at async handler (../node_modules/@convex-dev/rate-lim",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789961068332.173,
+    "_id": "nd78ac10gtkcfn3kgwwkm853m98ev92c",
+    "at": 1789961068332,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/2 passed evidence checks and independent automated review. 0 corrected during review. 2 withheld. Provider or format failure: Uncaught ConvexError: Uncaught ConvexError: {\"kind\":\"RateLimited\",\"name\":\"questionStudioTokenUsagePerUser\",\"retryAfter\":358} at checkRateLimitOrThrow (../../node_modules/@convex-dev/rate-limiter/src/component/internal.ts:22:6) at async handler (../node_modules/@convex-dev/rate-limite",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789961070618.176,
+    "_id": "nd7e16zafvf70z3c6hpz3w7jjs8etpaz",
+    "at": 1789961070618,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/2 passed evidence checks and independent automated review. 2 corrected during review. 0 withheld.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789961070886.2905,
+    "_id": "nd7c9gr6ydwhkdsy9cp7sxm0sd8etwef",
+    "at": 1789961070886,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/2 passed evidence checks and independent automated review. 2 corrected during review. 0 withheld.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789961072198.2688,
+    "_id": "nd7d0xwrgbezn9b3ha9shrxq4n8evtja",
+    "at": 1789961072198,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 1/1 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789961072901.5186,
+    "_id": "nd7awpp5yzhsetaakk11qs7ach8evmh5",
+    "at": 1789961072901,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/2 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789961074155.6287,
+    "_id": "nd7d5q4je36qz554cgt32nk4hs8etyx8",
+    "at": 1789961074155,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 1/2 passed evidence checks and independent automated review. 0 corrected during review. 1 withheld. Evidence quote is not in the supplied excerpt: p7c0. The stem directly combines the two distinguishing features explicitly associated with carotid artery dissection, while the alternatives are distinct retinal or ophthalmic arterial occlusions.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789961080362.6482,
+    "_id": "nd798rjkscdxjv1myjs484s4kx8ev7gx",
+    "at": 1789961080362,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/2 passed evidence checks and independent automated review. 1 corrected during review. 0 withheld.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789961080570.53,
+    "_id": "nd7dy6phqtrs75jqw3m5q7z0qs8etks2",
+    "at": 1789961080570,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "10 candidates are ready for local source, answer, and provenance checks.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Reviewing"
+  },
+  {
+    "_creationTime": 1789961080640.8162,
+    "_id": "nd735zc5q9jxcw3gr42x1b05v58evqxg",
+    "at": 1789961080640,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "0 rejected, 0 need reasoning review.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Review complete"
+  },
+  {
+    "_creationTime": 1789961080715.6946,
+    "_id": "nd7de06tfj7aasgmg2jwhf4fx58etcde",
+    "at": 1789961080715,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Draft workers finished with partial usable candidates.",
+    "jobId": "n57afv0x2x5db7c9c7baz8bn8s8ev0qv",
+    "label": "Ready"
+  }
+]

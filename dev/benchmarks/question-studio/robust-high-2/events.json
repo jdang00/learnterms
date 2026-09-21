@@ -1,0 +1,137 @@
+[
+  {
+    "_creationTime": 1789962111148.3638,
+    "_id": "nd74wrfb2845nncmc5vry28q858etxe7",
+    "at": 1789962111148,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Preparing the agent run.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Queued"
+  },
+  {
+    "_creationTime": 1789962112259.4644,
+    "_id": "nd7dq205cw6atte35dbj66w0v18et0kr",
+    "at": 1789962112259,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 questions requested.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Started"
+  },
+  {
+    "_creationTime": 1789962112667.4668,
+    "_id": "nd74vtwfr1xc4ftv1cj0r45f958evnh2",
+    "at": 1789962112667,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "59 existing module questions available for duplicate checks.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Loaded context"
+  },
+  {
+    "_creationTime": 1789962112928.2407,
+    "_id": "nd7ftv7rcxgpmnxjzq4vvecv198evcve",
+    "at": 1789962112928,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Assigned selected pages to 5 Learn groups without an AI planning call.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Page plan"
+  },
+  {
+    "_creationTime": 1789962113145.972,
+    "_id": "nd7fshcka9ztwsnwd8rtev1bq58evfea",
+    "at": 1789962113145,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "5 topics and 18 pages are in scope.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Prepared context"
+  },
+  {
+    "_creationTime": 1789962113277.5051,
+    "_id": "nd7e89x3mv36kmzmf12fhzn40h8evphx",
+    "at": 1789962113277,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "5 workers queued with at most 3 questions each.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Work orders ready"
+  },
+  {
+    "_creationTime": 1789962114025.3242,
+    "_id": "nd734hf7dwwtmbbq1sj7v0yb4x8evvk6",
+    "at": 1789962114025,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Each Learn worker uses one high-reasoning call followed by local evidence, answer-structure, and duplicate checks.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Workers launched"
+  },
+  {
+    "_creationTime": 1789962131839.0002,
+    "_id": "nd785tye3hc457d70rh82actk98etwbm",
+    "at": 1789962131838,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962133110.635,
+    "_id": "nd7a8ect3y836gac1v92gwhzqd8ev403",
+    "at": 1789962133110,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed local evidence and answer-structure checks. 0 corrected during review. 0 withheld.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789962138289.7336,
+    "_id": "nd7dxbmdw30xnz5gztmech14mx8et490",
+    "at": 1789962138289,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/3 passed local evidence and answer-structure checks. 0 corrected during review. 3 withheld. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Worker failed"
+  },
+  {
+    "_creationTime": 1789962138676.9136,
+    "_id": "nd70f2xfg7e50k2rjrz64t26sd8etxvm",
+    "at": 1789962138676,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/3 passed local evidence and answer-structure checks. 0 corrected during review. 3 withheld. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Worker failed"
+  },
+  {
+    "_creationTime": 1789962139154.5957,
+    "_id": "nd71byr0cv3tq3mjag31fnm5w58evtw8",
+    "at": 1789962139154,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/3 passed local evidence and answer-structure checks. 0 corrected during review. 3 withheld. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Worker failed"
+  },
+  {
+    "_creationTime": 1789962139633.628,
+    "_id": "nd7821ydzycy6fmw1z15a8tdk18et3n7",
+    "at": 1789962139633,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "6 candidates are ready for local source, answer, and provenance checks.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Reviewing"
+  },
+  {
+    "_creationTime": 1789962139752.8894,
+    "_id": "nd7546vqffpxsewybpxjx33cbh8etm9w",
+    "at": 1789962139752,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "0 rejected, 0 need reasoning review.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Review complete"
+  },
+  {
+    "_creationTime": 1789962139888.42,
+    "_id": "nd721acyqm1tcnz378328tkm3s8ev7ct",
+    "at": 1789962139888,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Draft workers finished with partial usable candidates.",
+    "jobId": "n57d6e8akpsd9j35v86kq18a4s8etw9t",
+    "label": "Ready"
+  }
+]

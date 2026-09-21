@@ -10,7 +10,7 @@ import type { TopicMapItem } from './shared';
 import {
 	QUESTION_STUDIO_MAPPING_MODEL,
 	QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS,
-	assertOpenRouterKey,
+	assertQuestionStudioKey,
 	topicMapSchema
 } from './shared';
 import { loadMarkdownPages, pagesToPromptText, selectPages } from './sourceRetrieval';
@@ -71,7 +71,7 @@ export const autoMapIndexedDocument = internalAction({
 				endPage: pages[pages.length - 1].pageNumber
 			};
 
-			assertOpenRouterKey();
+			assertQuestionStudioKey();
 			const agentUserId = args.triggeredByClerkUserId ?? `document:${args.documentId}`;
 			const creator = args.triggeredByClerkUserId
 				? await ctx.runQuery(internal.ragKnowledgeInternal.getUserForRagAccess, {

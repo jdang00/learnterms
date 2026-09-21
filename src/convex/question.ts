@@ -3,7 +3,8 @@ import {
 	assertStandaloneRationale,
 	shuffleCorrectAnswer
 } from './questionStudio/presentation';
-import { mutation, action, internalMutation } from './_generated/server';
+import { action, internalMutation } from './_generated/server';
+import { shiftQuestionStats } from './moduleStats';
 import { authCuratorMutation } from './authQueries';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
@@ -627,6 +628,7 @@ export const deleteQuestion = authCuratorMutation({
 			throw new Error('Question not found or access denied');
 		}
 
+		await shiftQuestionStats(ctx, [questionToDelete]);
 		await ctx.db.delete(args.questionId);
 		await adjustModuleQuestionCount(ctx, args.moduleId, -1);
 		return { deleted: true };
@@ -655,6 +657,7 @@ export const bulkDeleteQuestions = authCuratorMutation({
 					continue;
 				}
 
+				await shiftQuestionStats(ctx, [questionToDelete]);
 				await ctx.db.delete(questionId);
 				deletedCount++;
 			} catch (error) {
@@ -1112,7 +1115,10 @@ export const moveQuestionsToModule = authCuratorMutation({
 		let nextOrder =
 			targetQuestions.length > 0 ? Math.max(...targetQuestions.map((q) => q.order)) + 1 : 0;
 
+		const targetModule = await ctx.db.get(args.targetModuleId);
+		if (!targetModule) throw new Error('Target module not found');
 		const errors: string[] = [];
+		const movedQuestions: Array<{ _id: Id<'question'>; moduleId: Id<'module'> }> = [];
 		let moved = 0;
 
 		for (const qid of args.questionIds) {
@@ -1130,6 +1136,7 @@ export const moveQuestionsToModule = authCuratorMutation({
 				order: nextOrder,
 				updatedAt: Date.now()
 			});
+			movedQuestions.push({ _id: qid, moduleId: q.moduleId });
 			moved += 1;
 			nextOrder += 1;
 		}
@@ -1144,6 +1151,11 @@ export const moveQuestionsToModule = authCuratorMutation({
 			const item = remaining[i];
 			if (item.order !== i) await ctx.db.patch(item._id, { order: i });
 		}
+
+		await shiftQuestionStats(ctx, movedQuestions, {
+			moduleId: args.targetModuleId,
+			classId: targetModule.classId
+		});
 
 		// Adjust question counts for both modules
 		if (moved > 0) {
@@ -1332,7 +1344,7 @@ export const searchQuestionsByModuleAdmin = authQuery({
 	}
 });
 
-export const backfillQuestionSearchTextForModule = mutation({
+export const backfillQuestionSearchTextForModule = internalMutation({
 	args: { moduleId: v.id('module') },
 	handler: async (ctx, { moduleId }) => {
 		const items = await ctx.db
@@ -1360,7 +1372,7 @@ export const backfillQuestionSearchTextForModule = mutation({
 	}
 });
 
-export const backfillSearchTextForAllModules = mutation({
+export const backfillSearchTextForAllModules = internalMutation({
 	args: {},
 	handler: async (ctx) => {
 		const modules = await ctx.db.query('module').collect();
@@ -1391,7 +1403,7 @@ export const backfillSearchTextForAllModules = mutation({
 	}
 });
 
-export const backfillQuestionRationales = mutation({
+export const backfillQuestionRationales = internalMutation({
 	args: {
 		batchSize: v.optional(v.number()),
 		cursor: v.optional(v.string())

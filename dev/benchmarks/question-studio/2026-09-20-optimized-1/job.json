@@ -1,0 +1,875 @@
+{
+  "_creationTime": 1789958039334.98,
+  "_id": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+  "blockedDuplicateCount": 0,
+  "candidateCount": 8,
+  "candidates": [
+    {
+      "correctAnswers": [
+        "Acute, symptomatic ophthalmic artery, central retinal artery, or branch retinal artery occlusion"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v7",
+        "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+        "model": "openai/gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Acute, symptomatic ophthalmic artery, central retinal artery, or branch retinal artery occlusion",
+        "A retinal embolus without infarction in an asymptomatic patient",
+        "A newly diagnosed, asymptomatic central retinal artery occlusion",
+        "An asymptomatic retinal embolus found incidentally"
+      ],
+      "questionType": "learn",
+      "rationale": "Acute symptomatic occlusion of the ophthalmic, central retinal, or branch retinal artery warrants immediate stroke-capable evaluation because acute retinal ischemia is treated as a stroke-equivalent emergency. Asymptomatic emboli or newly diagnosed asymptomatic occlusions call for prompt evaluation rather than the immediate referral specified for acute symptomatic cases.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 17, excerpt 1",
+          "citationId": "p17c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 17,
+          "quote": "If acute (24 hours), symptomatic ophthalmic artery occlusion, CRAO, or BRAO (Retinal and Ophthalmic Artery Occlusions AAO PPP 2019)"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 17, excerpt 1",
+          "citationId": "p17c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 17,
+          "quote": "Immediate referral to the nearest stroke referral center (or ER if not available)"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 19, excerpt 1",
+          "citationId": "p19c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 19,
+          "quote": "You have been diagnosed with acute retinal ischemia. This diagnosis increases your risk of having a cerebral stroke."
+        }
+      ],
+      "sourcePageNumbers": [
+        17,
+        19
+      ],
+      "stem": "Which presentation indicates immediate referral to the nearest stroke referral center or an emergency department with stroke capabilities?",
+      "topicId": "pages-4",
+      "topicTitle": "Evaluation and Management",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "A cholesterol embolus from carotid artery disease"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v7",
+        "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+        "model": "openai/gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "A cholesterol embolus from carotid artery disease",
+        "A calcific embolus from valvular cardiac disease",
+        "A fibrin-platelet embolus from atheromatous plaque",
+        "An inflammatory embolus from vasculitis"
+      ],
+      "questionType": "learn",
+      "rationale": "Cholesterol, or Hollenhorst, emboli arise from ulcerated carotid atheromatous lesions and are highly reflective, glistening, and yellow-copper; they tend to lodge at arterial bifurcations. Calcific emboli are described as large, round or ovoid, chalk-like lesions, whereas fibrin-platelet emboli are dull, elongated, and highly mobile.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 10, excerpt 1",
+          "citationId": "p10c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 10,
+          "quote": "Cholesterol (Hollenhorst):\n    - 75% of retinal emboli\n    - From carotid artery disease (ulceration of an atheromatous lesion)\n    - Highly reflective, glistening, yellow-copper\n    - Tends to lodge at bifurcations"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 11, excerpt 1",
+          "citationId": "p11c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 11,
+          "quote": "Calcific\n\n- From valvular cardiac disease\n- Large, round/ovoid\n- Chalk-like appearance"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 11, excerpt 1",
+          "citationId": "p11c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 11,
+          "quote": "Fibrin-platelet\n\n- Composed predominantly of platelet aggregates from atheromatous plaque (usually located in the carotid)\n- Dull and elongated\n- Highly mobile"
+        }
+      ],
+      "sourcePageNumbers": [
+        10,
+        11
+      ],
+      "stem": "Which retinal embolus is typically highly reflective, glistening, yellow-copper, and tends to lodge at arterial bifurcations?",
+      "topicId": "pages-2",
+      "topicTitle": "Retinal Emboli",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Embolism"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v7",
+        "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+        "model": "openai/gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Embolism",
+        "Tear-film abnormality",
+        "Orbital mass",
+        "Corneal disease"
+      ],
+      "questionType": "learn",
+      "rationale": "Systemic causes of transient monocular visual loss include vascular mechanisms such as emboli, hypoperfusion, vasculitis, and hyperviscosity or hypercoagulable states. Tear-film abnormalities and corneal disease are ocular causes, whereas an orbital mass is an orbital cause.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 3, excerpt 1",
+          "citationId": "p3c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 3,
+          "quote": "- Systemic causes (vascular)\n  1. Emboli\n  2. Hypoperfusion\n  3. Vasculitis\n  4. Hyperviscosity/hypercoagulable states"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 3, excerpt 1",
+          "citationId": "p3c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 3,
+          "quote": "- Ocular causes (non-vascular/vascular)\n  - Anterior segment\n    - Tear film/cornea/AC/lenticular abnormalities"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 3, excerpt 1",
+          "citationId": "p3c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 3,
+          "quote": "- Orbital causes (non-vascular)\n  - Masses"
+        }
+      ],
+      "sourcePageNumbers": [
+        3
+      ],
+      "stem": "Which cause of transient monocular visual loss is classified as systemic?",
+      "topicId": "pages-1",
+      "topicTitle": "Transient Monocular Vision Loss",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Sectoral or hemifield visual-field loss, with vision sometimes preserved unless the macula is involved"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v7",
+        "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+        "model": "openai/gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Sectoral or hemifield visual-field loss, with vision sometimes preserved unless the macula is involved",
+        "Unilateral, acute, painless, profound loss of vision",
+        "Usually light perception or no light perception with absent choroidal and central retinal artery blood supply",
+        "Flat-line electroretinography caused by infarction of the inner and outer retina"
+      ],
+      "questionType": "learn",
+      "rationale": "Branch retinal artery occlusion affects one branch of the central retinal artery, so visual loss is typically confined to a sector or hemifield and may be absent when the macula is spared. Macular involvement can instead produce sudden visual loss.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 14, excerpt 1",
+          "citationId": "p14c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 14,
+          "quote": "May have sudden vision loss if there is macular involvement\n    - Sometimes asymptomatic\n    - Presenting VA: 75% of patients are 20/40 or better\n    - Sectoral/hemi VF loss"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 15, excerpt 1",
+          "citationId": "p15c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 15,
+          "quote": "Unilateral, acute, painless, profound loss of vision"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 16, excerpt 1",
+          "citationId": "p16c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 16,
+          "quote": "Presenting vision is usually LP or NLP\n- No/decreased choroidal AND CRA blood supply"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 16, excerpt 1",
+          "citationId": "p16c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 16,
+          "quote": "Flat-line ERG"
+        }
+      ],
+      "sourcePageNumbers": [
+        14,
+        15,
+        16
+      ],
+      "stem": "Which finding best distinguishes branch retinal artery occlusion from central retinal artery occlusion?",
+      "topicId": "pages-3",
+      "topicTitle": "Retinal Artery Occlusions",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Diffusion-weighted brain MRI, head and neck MRA or CTA, transthoracic echocardiography, and stroke-team consultation"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v7",
+        "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+        "model": "openai/gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Diffusion-weighted brain MRI, head and neck MRA or CTA, transthoracic echocardiography, and stroke-team consultation",
+        "Routine retinal photography, color-vision testing, visual-field testing, and scheduled primary-care follow-up",
+        "Chest radiography, pulmonary-function testing, abdominal ultrasound, and dermatology consultation",
+        "Optical coherence tomography, tear-film testing, corneal topography, and routine optometry follow-up"
+      ],
+      "questionType": "learn",
+      "rationale": "Acute retinal ischemia is evaluated as a stroke-equivalent condition. The evaluation includes diffusion-weighted brain MRI, vascular imaging of the head and neck, transthoracic echocardiography, and consultation with a stroke team.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 19, excerpt 1",
+          "citationId": "p19c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 19,
+          "quote": "- Head MRI without contrast (DWI)\n- Head/Neck MRA or CTA; if unable, then carotid doppler\n- Transthoracic Echocardiogram\n- Stroke team consult"
+        }
+      ],
+      "sourcePageNumbers": [
+        19
+      ],
+      "stem": "Which set of studies and consultation is included in the evaluation of acute retinal ischemia?",
+      "topicId": "pages-4",
+      "topicTitle": "Evaluation and Management",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Sparing of the cilioretinal artery"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v7",
+        "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+        "model": "openai/gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Sparing of the cilioretinal artery",
+        "Involvement limited to one retinal artery branch",
+        "Reduced choroidal and central retinal artery blood supply",
+        "A transient episode of visual loss that fully resolves"
+      ],
+      "questionType": "learn",
+      "rationale": "Cilioretinal artery sparing can modify how central retinal artery occlusion presents because an additional retinal blood supply remains preserved. Branch retinal artery occlusion, combined loss of choroidal and central retinal artery flow, and complete transient recovery describe different vascular patterns.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 15, excerpt 1",
+          "citationId": "p15c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 15,
+          "quote": "Without cilioretinal artery sparing"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 15, excerpt 1",
+          "citationId": "p15c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 15,
+          "quote": "With cilioretinal artery sparing"
+        }
+      ],
+      "sourcePageNumbers": [
+        15
+      ],
+      "stem": "Which factor can modify the visual presentation of central retinal artery occlusion?",
+      "topicId": "pages-3",
+      "topicTitle": "Retinal Artery Occlusions",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Highly reflective, yellow-copper emboli that tend to lodge at retinal arterial bifurcations without usually causing complete obstruction"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v7",
+        "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+        "model": "openai/gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Highly reflective, yellow-copper emboli that tend to lodge at retinal arterial bifurcations without usually causing complete obstruction",
+        "Large, chalk-like emboli from valvular cardiac disease that tend to cause severe obstruction",
+        "Dull, elongated, highly mobile platelet aggregates that usually arise from carotid plaque",
+        "Small, nonreflective emboli that characteristically lodge away from arterial bifurcations and completely obstruct flow"
+      ],
+      "questionType": "learn",
+      "rationale": "Cholesterol retinal emboli, also called Hollenhorst emboli, are highly reflective and yellow-copper in appearance. They commonly originate from ulcerated carotid atheromatous lesions, lodge at retinal arterial bifurcations, and generally do not completely obstruct the artery.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 10, excerpt 1",
+          "citationId": "p10c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 10,
+          "quote": "Cholesterol (Hollenhorst):\n    - 75% of retinal emboli\n    - From carotid artery disease (ulceration of an atheromatous lesion)\n    - Highly reflective, glistening, yellow-copper\n    - Tends to lodge at bifurcations\n    - Generally does not produce complete obstruction"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 12, excerpt 1",
+          "citationId": "p12c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 12,
+          "quote": "Commonly occurs at the bifurcation of the common carotid into the ICA and ECA\n- Only need a small plaque to release emboli (usually cholesterol)"
+        }
+      ],
+      "sourcePageNumbers": [
+        10,
+        12
+      ],
+      "stem": "Which combination best describes cholesterol retinal emboli associated with carotid artery disease?",
+      "topicId": "pages-2",
+      "topicTitle": "Retinal Emboli",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Sudden, painless, usually 5–15 minutes of partial or complete monocular visual loss followed by complete recovery"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v7",
+        "jobId": "n570rq8sftcj82c3f1z17zwdb58ettrz",
+        "model": "openai/gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Sudden, painless, usually 5–15 minutes of partial or complete monocular visual loss followed by complete recovery",
+        "Gradual, painful, persistent monocular blur without recovery",
+        "Sudden, painless binocular visual loss lasting several hours with incomplete recovery",
+        "Intermittent monocular flashing lights without darkening or loss of vision"
+      ],
+      "questionType": "learn",
+      "rationale": "Amaurosis fugax is transient monocular visual loss caused by a transient embolic occlusion. It typically begins suddenly and painlessly, may appear as a curtain or altitudinal field loss, usually lasts 5–15 minutes, and is followed by complete visual recovery.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 6, excerpt 1",
+          "citationId": "p6c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 6,
+          "quote": "**Amaurosis fugax** (fleeting blindness): term for TMVL due to **transient embolitic occlusion**\n\n- Sudden\n- Painless\n- Like a curtain over part or all of the visual field, possibly altitudinal\n- Usually 5-15 minutes (but can last up to an hour)\n- **Followed by complete recovery of vision**"
+        }
+      ],
+      "sourcePageNumbers": [
+        6
+      ],
+      "stem": "Which presentation is most typical of embolic amaurosis fugax?",
+      "topicId": "pages-1",
+      "topicTitle": "Transient Monocular Vision Loss",
+      "type": "multiple_choice"
+    }
+  ],
+  "claimedWorkers": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+  "completedAt": 1789958099103,
+  "completedWorkerCount": 4,
+  "completedWorkers": [
+    2,
+    0,
+    1,
+    3
+  ],
+  "createdAt": 1789958039334,
+  "createdByUserId": "j571jkhm2fkf4eqe52csnhwnbn7xvkfn",
+  "documentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm",
+  "eventCount": 18,
+  "failedWorkerCount": 0,
+  "kind": "candidate_generation",
+  "loop": {
+    "blueprintCount": 15,
+    "blueprintSource": "fallback",
+    "enabled": true,
+    "gatePassedCount": 8,
+    "gateRejectedCount": 0,
+    "pass": "done",
+    "selectedCount": 8
+  },
+  "model": "openai/gpt-5.6-luna",
+  "moduleClassId": "jn76grzjj9enzcnd371z8nj38h7mx5tw",
+  "moduleId": "js70qm41mmx7wh5f7j0p03zynd894hrq",
+  "moduleTitle": "Testing Module",
+  "plan": {
+    "coverageNotes": [
+      "Packed 12 requested questions into 4 workers with up to 3 questions each while rotating topic coverage within each batch.",
+      "Assigned 15 deterministic slot contracts across 4 workers."
+    ],
+    "riskNotes": [
+      "Clinical: 3 requested questions could not be assigned because the selected material does not support this type."
+    ],
+    "topicAllocations": [
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          17,
+          18,
+          19,
+          20
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "pages-4",
+        "topicTitle": "Evaluation and Management"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "pages-2",
+        "topicTitle": "Retinal Emboli"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "pages-1",
+        "topicTitle": "Transient Monocular Vision Loss"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          8,
+          14,
+          15,
+          16
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "pages-3",
+        "topicTitle": "Retinal Artery Occlusions"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          17,
+          18,
+          19,
+          20
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "pages-4",
+        "topicTitle": "Evaluation and Management"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "pages-2",
+        "topicTitle": "Retinal Emboli"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "pages-1",
+        "topicTitle": "Transient Monocular Vision Loss"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          8,
+          14,
+          15,
+          16
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "pages-3",
+        "topicTitle": "Retinal Artery Occlusions"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          17,
+          18,
+          19,
+          20
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "pages-4",
+        "topicTitle": "Evaluation and Management"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "pages-2",
+        "topicTitle": "Retinal Emboli"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "pages-1",
+        "topicTitle": "Transient Monocular Vision Loss"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          8,
+          14,
+          15,
+          16
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "pages-3",
+        "topicTitle": "Retinal Artery Occlusions"
+      }
+    ],
+    "workerBatches": [
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          9,
+          10,
+          11,
+          12,
+          13,
+          17,
+          18,
+          19,
+          20
+        ],
+        "targetObjective": "Identify acute symptomatic retinal or ophthalmic artery occlusion as an indication for immediate referral to a stroke center or emergency department with stroke capabilities.; Distinguish cholesterol, calcific, and fibrin-platelet retinal emboli by their appearance and usual source.; Classify transient monocular vision loss causes as ocular, orbital, or systemic.",
+        "taskId": "learn:batch:1",
+        "topicCount": 3,
+        "topicTitles": [
+          "Evaluation and Management",
+          "Retinal Emboli",
+          "Transient Monocular Vision Loss"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "targetObjective": "Distinguish branch retinal artery occlusion from central retinal artery occlusion by sectoral versus profound visual loss and by possible macular involvement.; Select diffusion-weighted brain MRI, head and neck vascular imaging, echocardiography, and stroke consultation as components of acute retinal ischemia evaluation.; Identify the common carotid bifurcation as the usual location of atheromatous plaque producing retinal emboli.",
+        "taskId": "learn:batch:2",
+        "topicCount": 3,
+        "topicTitles": [
+          "Retinal Artery Occlusions",
+          "Evaluation and Management",
+          "Retinal Emboli"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "targetObjective": "Differentiate amaurosis fugax from other transient monocular visual disturbances by its transient embolic mechanism and complete visual recovery.; Recognize cilioretinal artery sparing as a factor that can modify the visual presentation of central retinal artery occlusion.; Identify CBC, ESR, and CRP as the laboratory evaluation recommended when giant cell arteritis is a concern in acute retinal ischemia.",
+        "taskId": "learn:batch:3",
+        "topicCount": 3,
+        "topicTitles": [
+          "Transient Monocular Vision Loss",
+          "Retinal Artery Occlusions",
+          "Evaluation and Management"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "targetObjective": "Relate cholesterol emboli to carotid artery disease and their tendency to lodge at retinal arterial bifurcations without complete obstruction.; Recognize the typical abrupt, painless, altitudinal visual-field pattern and duration of embolic transient monocular vision loss.; Differentiate ophthalmic artery occlusion from central retinal artery occlusion using choroidal blood supply, cherry-red spot findings, and electroretinography.",
+        "taskId": "learn:batch:4",
+        "topicCount": 3,
+        "topicTitles": [
+          "Retinal Emboli",
+          "Transient Monocular Vision Loss",
+          "Retinal Artery Occlusions"
+        ]
+      }
+    ]
+  },
+  "requestedCount": 15,
+  "requestedCounts": {
+    "clinical": 3,
+    "criticalThinking": 0,
+    "learn": 12
+  },
+  "reviewCount": 8,
+  "selectedPageNumbers": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "sourceIndexedAt": 1789926394236,
+  "sourceMode": "pages",
+  "status": "ready",
+  "statusText": "Partial ready: 8/15 candidates to review.",
+  "updatedAt": 1789958099103,
+  "usage": {
+    "byStage": [
+      {
+        "calls": 1,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 0,
+        "inputTokens": 5417,
+        "latencyMsTotal": 7376,
+        "outputTokens": 714,
+        "reasoningTokens": 109,
+        "stage": "plan"
+      },
+      {
+        "calls": 4,
+        "costKnownCalls": 4,
+        "costUsd": 0.0087521,
+        "failedCalls": 0,
+        "inputTokens": 14054,
+        "latencyMsTotal": 29654,
+        "outputTokens": 4366,
+        "reasoningTokens": 363,
+        "stage": "draft"
+      },
+      {
+        "calls": 4,
+        "costKnownCalls": 4,
+        "costUsd": 0.0088914,
+        "failedCalls": 0,
+        "inputTokens": 12000,
+        "latencyMsTotal": 47405,
+        "outputTokens": 4910,
+        "reasoningTokens": 3510,
+        "stage": "review"
+      },
+      {
+        "calls": 2,
+        "costKnownCalls": 2,
+        "costUsd": 0.0029151999999999997,
+        "failedCalls": 0,
+        "inputTokens": 5902,
+        "latencyMsTotal": 11480,
+        "outputTokens": 1200,
+        "reasoningTokens": 601,
+        "stage": "repair"
+      },
+      {
+        "calls": 1,
+        "costKnownCalls": 1,
+        "costUsd": 0.0018356,
+        "failedCalls": 0,
+        "inputTokens": 1319,
+        "latencyMsTotal": 12350,
+        "outputTokens": 1255,
+        "reasoningTokens": 1034,
+        "stage": "review_repair"
+      }
+    ],
+    "calls": 12,
+    "costKnownCalls": 11,
+    "costUsd": 0.0223943,
+    "failedCalls": 0,
+    "inputTokens": 38692,
+    "latencyMsTotal": 108265,
+    "outputTokens": 12445,
+    "reasoningTokens": 5617
+  },
+  "workerNotes": [
+    "Learn: 1/3 passed evidence checks and independent automated review. 2 withheld. Abstain because the defining distinction for amaurosis fugax—transient embolic occlusion followed by complete visual recovery—is already covered by an existing question, and the supplied evidence does not support a non-redundant alternative within this objective. Abstain because the assigned laboratory-evaluation fact",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 2/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 2/3 passed evidence checks and independent automated review. 1 withheld. The question lacks one defensible best answer. The incorrect options need revision. The first option is directly supported and contains the requested ophthalmic artery occlusion pattern: decreased or absent choroidal and central retinal arterial blood supply, no cherry-red spot, and a flat-line ERG. The fourth option i"
+  ],
+  "workerStates": [
+    {
+      "draftedCount": 3,
+      "finishedAt": 1789958066319,
+      "index": 0,
+      "startedAt": 1789958048261
+    },
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789958067783,
+      "index": 1,
+      "startedAt": 1789958048374
+    },
+    {
+      "draftedCount": 1,
+      "finishedAt": 1789958065445,
+      "index": 2,
+      "startedAt": 1789958048492
+    },
+    {
+      "draftedCount": 2,
+      "finishedAt": 1789958098702,
+      "index": 3,
+      "startedAt": 1789958048639
+    }
+  ]
+}

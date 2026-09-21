@@ -25,7 +25,7 @@
 		error = '';
 
 		try {
-			const result = await client.action(api.cohort.validateCohortCode, { code: classCode });
+			const result = await client.action(api.cohort.validateCohortCode, { code: classCode.trim() });
 			cohortInfo = result;
 			showConfirmation = true;
 		} catch (err) {
@@ -45,7 +45,8 @@
 		try {
 			await client.mutation(api.cohort.joinCohort, {
 				clerkUserId: user.id,
-				cohortId: cohortInfo.cohort._id
+				cohortId: cohortInfo.cohort._id,
+				code: classCode.trim()
 			});
 			window.location.href = '/classes';
 		} catch (err) {

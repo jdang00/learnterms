@@ -98,6 +98,7 @@ export function candidateToQuestionInsert(
 				model: candidate.metadata.model,
 				jobId: candidate.metadata.jobId,
 				harnessVersion: candidate.metadata.harnessVersion,
+				reviewMode: candidate.metadata.reviewMode,
 				curatorEditedAt: candidate.metadata.curatorEditedAt,
 				curatorRevision: candidate.metadata.curatorRevision,
 				focus: 'question_studio',

@@ -1,0 +1,45 @@
+{
+  "wallMs": 118147,
+  "halfTimeTargetMs": 59073.5,
+  "firstCandidateMs": 50831,
+  "setupMs": 24255,
+  "workerSpanMs": 93486,
+  "finalizationMs": 406,
+  "aggregateWorkerMs": 176037,
+  "aggregateModelMs": 171095,
+  "workers": [
+    {
+      "worker": 0,
+      "seconds": 26.576,
+      "accepted": 3
+    },
+    {
+      "worker": 1,
+      "seconds": 59.404,
+      "accepted": 3
+    },
+    {
+      "worker": 2,
+      "seconds": 20.149,
+      "accepted": 2
+    },
+    {
+      "worker": 3,
+      "seconds": 23.547,
+      "accepted": 0
+    },
+    {
+      "worker": 4,
+      "seconds": 46.361,
+      "accepted": 3
+    }
+  ],
+  "accepted": 11,
+  "requested": 15,
+  "acceptedByType": {
+    "learn": 8,
+    "clinical": 3
+  },
+  "usageExcludesPagePlanning": true,
+  "aggregateNonModelWorkerMs": 4942
+}

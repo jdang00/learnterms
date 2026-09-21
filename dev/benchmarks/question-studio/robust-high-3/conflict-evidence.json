@@ -1,0 +1,22 @@
+[
+  {
+    "identifier": "questionStudio:claimWorker",
+    "timestamp": 1789962240.7619305,
+    "error": "Documents read from or written to the \"questionStudioJobs\" table changed while this mutation was being run and on every subsequent retry. Another call to this mutation changed the document with ID \"n57ckfpmjwf77z283ws32eapm98evbh2\". See https://docs.convex.dev/error#1\n",
+    "occInfo": {
+      "tableName": "questionStudioJobs",
+      "documentId": "n57ckfpmjwf77z283ws32eapm98evbh2",
+      "writeSource": "questionStudio.js:claimWorker",
+      "componentPath": null,
+      "retryCount": 4
+    },
+    "requestId": "96ea8a74cb796d3a"
+  },
+  {
+    "identifier": "questionStudio:generateCandidateWorker",
+    "timestamp": 1789962240.7738774,
+    "error": "Uncaught Error: Documents read from or written to the \"questionStudioJobs\" table changed while this mutation was being run and on every subsequent retry. Another call to this mutation changed the document with ID \"n57ckfpmjwf77z283ws32eapm98evbh2\". See https://docs.convex.dev/error#1\n    at async handler (../../src/convex/questionStudio/workers.ts:86:10)\n",
+    "occInfo": null,
+    "requestId": "96ea8a74cb796d3a"
+  }
+]

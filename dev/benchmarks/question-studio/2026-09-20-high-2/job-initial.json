@@ -1,0 +1,393 @@
+{
+  "_creationTime": 1789958836289.197,
+  "_id": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+  "blockedDuplicateCount": 0,
+  "candidateCount": 0,
+  "claimedWorkers": [
+    0,
+    2,
+    4,
+    3,
+    1
+  ],
+  "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+  "completedWorkerCount": 0,
+  "createdAt": 1789958836289,
+  "createdByUserId": "j571jkhm2fkf4eqe52csnhwnbn7xvkfn",
+  "documentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm",
+  "eventCount": 3,
+  "failedWorkerCount": 0,
+  "kind": "candidate_generation",
+  "loop": {
+    "blueprintCount": 15,
+    "blueprintSource": "fallback",
+    "enabled": true,
+    "pass": "draft"
+  },
+  "model": "openai/gpt-5.6-luna",
+  "moduleId": "js70qm41mmx7wh5f7j0p03zynd894hrq",
+  "plan": {
+    "coverageNotes": [
+      "Packed 15 requested questions into 5 workers with up to 3 questions each while rotating topic coverage within each batch.",
+      "Assigned 15 deterministic slot contracts across 5 workers."
+    ],
+    "riskNotes": [],
+    "topicAllocations": [
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "pages-4",
+        "topicTitle": "Retinal Arterial Embolus Characteristics"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          17,
+          18,
+          19
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "pages-6",
+        "topicTitle": "Acute Retinal Ischemia Evaluation"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          14
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "pages-10",
+        "topicTitle": "Branch Retinal Artery Occlusion Findings"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          7
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "pages-3",
+        "topicTitle": "Carotid Artery Dissection and Transient Vision Loss"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          20
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "pages-7",
+        "topicTitle": "Carotid Stenosis Treatment Thresholds"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          6
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "pages-2",
+        "topicTitle": "Embolic Transient Monocular Vision Loss"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          16
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "pages-11",
+        "topicTitle": "Ophthalmic Artery Occlusion Findings"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "pages-1",
+        "topicTitle": "Transient Monocular Vision Loss: Etiologic Categories"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          5
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "pages-8",
+        "topicTitle": "Transient Vision Loss Differential Diagnosis"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          13
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "pages-5",
+        "topicTitle": "Cardiovascular Implications of Retinal Arterial Occlusion"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          7,
+          17
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "pages-12",
+        "topicTitle": "Stroke Risk After Transient Vision Loss"
+      },
+      {
+        "notes": "Assigned to Learn batch (3 topics).",
+        "plannedCount": 1,
+        "questionType": "learn",
+        "sourcePages": [
+          17,
+          18,
+          19
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "pages-6",
+        "topicTitle": "Acute Retinal Ischemia Evaluation"
+      },
+      {
+        "notes": "Assigned to Clinical batch (2 topics).",
+        "plannedCount": 2,
+        "questionType": "clinical",
+        "sourcePages": [
+          10,
+          11,
+          12,
+          13
+        ],
+        "taskId": "clinical:batch:1",
+        "topicId": "pages-15",
+        "topicTitle": "Interpreting Retinal Emboli in Clinical Context"
+      },
+      {
+        "notes": "Assigned to Clinical batch (2 topics).",
+        "plannedCount": 1,
+        "questionType": "clinical",
+        "sourcePages": [
+          17,
+          18,
+          19
+        ],
+        "taskId": "clinical:batch:1",
+        "topicId": "pages-14",
+        "topicTitle": "Selecting Systemic Testing After Retinal Ischemia"
+      }
+    ],
+    "workerBatches": [
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11,
+          14,
+          17,
+          18,
+          19
+        ],
+        "targetObjective": "Recognize that a retinal arterial embolus may occur without retinal infarction or symptoms.; Identify diffusion-weighted brain MRI as part of the evaluation for cerebral ischemia in acute retinal arterial occlusion.; Recognize that macular involvement in branch retinal artery occlusion increases the likelihood of sudden visual loss.",
+        "taskId": "learn:batch:1",
+        "topicCount": 3,
+        "topicTitles": [
+          "Retinal Arterial Embolus Characteristics",
+          "Acute Retinal Ischemia Evaluation",
+          "Branch Retinal Artery Occlusion Findings"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          6,
+          7,
+          20
+        ],
+        "targetObjective": "Recognize the association of carotid artery dissection with painful Horner syndrome and contralateral neurologic signs.; Identify ipsilateral carotid stenosis of 70% to 99% as an indication for carotid endarterectomy to prevent stroke, including in asymptomatic patients.; Distinguish embolic transient monocular vision loss by its characteristic darkening or fogging of the visual field rather than nonspecific blur.",
+        "taskId": "learn:batch:2",
+        "topicCount": 3,
+        "topicTitles": [
+          "Carotid Artery Dissection and Transient Vision Loss",
+          "Carotid Stenosis Treatment Thresholds",
+          "Embolic Transient Monocular Vision Loss"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5,
+          16
+        ],
+        "targetObjective": "Recognize profound presenting vision loss, often light perception or no light perception, as a feature of ophthalmic artery occlusion.; Classify transient monocular vision loss causes into ocular, orbital, and systemic categories.; Differentiate painful transient monocular vision loss associated with giant cell arteritis, carotid artery dissection, ocular ischemic syndrome, angle-closure glaucoma, and retinal",
+        "taskId": "learn:batch:3",
+        "topicCount": 3,
+        "topicTitles": [
+          "Ophthalmic Artery Occlusion Findings",
+          "Transient Monocular Vision Loss: Etiologic Categories",
+          "Transient Vision Loss Differential Diagnosis"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn batch (3 topics)",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          7,
+          13,
+          17,
+          18,
+          19
+        ],
+        "targetObjective": "Recognize the reported association between central retinal artery occlusion and subsequent cardiovascular mortality.; Recognize that transient vision loss may precede a nonreversible stroke and therefore warrants assessment for subsequent cerebrovascular risk.; Identify head and neck vascular imaging and cardiac testing as components of systemic embolic evaluation after retinal arterial ischemia.",
+        "taskId": "learn:batch:4",
+        "topicCount": 3,
+        "topicTitles": [
+          "Cardiovascular Implications of Retinal Arterial Occlusion",
+          "Stroke Risk After Transient Vision Loss",
+          "Acute Retinal Ischemia Evaluation"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Clinical batch (2 topics)",
+        "plannedCount": 3,
+        "questionType": "clinical",
+        "sourcePages": [
+          10,
+          11,
+          12,
+          13,
+          17,
+          18,
+          19
+        ],
+        "targetObjective": "For a patient with a glistening yellow retinal embolus, use its appearance and source relationships to prioritize evaluation for carotid atheromatous disease rather than valvular-c; questionTypefric embolism.; For a patient with acute retinal ischemia and concern for giant cell arteritis, select CBC, ESR, and CRP testing while arranging appropriate systemic evaluation.",
+        "taskId": "clinical:batch:1",
+        "topicCount": 2,
+        "topicTitles": [
+          "Interpreting Retinal Emboli in Clinical Context",
+          "Selecting Systemic Testing After Retinal Ischemia"
+        ]
+      }
+    ]
+  },
+  "requestedCount": 15,
+  "requestedCounts": {
+    "clinical": 3,
+    "criticalThinking": 0,
+    "learn": 12
+  },
+  "reviewCount": 0,
+  "selectedPageNumbers": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "sourceIndexedAt": 1789926394236,
+  "sourceMode": "pages",
+  "status": "running",
+  "statusText": "Work orders ready; starting draft workers.",
+  "updatedAt": 1789958837849,
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 0,
+        "inputTokens": 0,
+        "latencyMsTotal": 259,
+        "outputTokens": 0,
+        "reasoningTokens": 0,
+        "stage": "plan"
+      }
+    ],
+    "cacheWriteTokens": 0,
+    "cachedInputTokens": 0,
+    "calls": 1,
+    "costKnownCalls": 0,
+    "costUsd": 0,
+    "failedCalls": 0,
+    "inputTokens": 0,
+    "latencyMsTotal": 259,
+    "outputTokens": 0,
+    "reasoningTokens": 0
+  },
+  "workerStates": [
+    {
+      "index": 0,
+      "startedAt": 1789958837978
+    },
+    {
+      "index": 1,
+      "startedAt": 1789958838463
+    },
+    {
+      "index": 2,
+      "startedAt": 1789958838113
+    },
+    {
+      "index": 3,
+      "startedAt": 1789958838280
+    },
+    {
+      "index": 4,
+      "startedAt": 1789958838212
+    }
+  ]
+}

@@ -1,0 +1,164 @@
+[
+  {
+    "_creationTime": 1789959340483.938,
+    "_id": "nd7dsnss8j33shy2k0mgp2b6nx8ev6rk",
+    "at": 1789959340483,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Preparing the agent run.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Queued"
+  },
+  {
+    "_creationTime": 1789959341193.7695,
+    "_id": "nd7bbwbackjq44ev1tzqxxgetd8et3sb",
+    "at": 1789959341193,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 questions requested.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Started"
+  },
+  {
+    "_creationTime": 1789959341372.6975,
+    "_id": "nd7b5h6tbe0d3170hg51k69dvs8evtbj",
+    "at": 1789959341372,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "59 existing module questions available for duplicate checks.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Loaded context"
+  },
+  {
+    "_creationTime": 1789959341563.6492,
+    "_id": "nd74qa0eqjqjv99jh8rsjs1r398evc2f",
+    "at": 1789959341563,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Pages 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20. Only these pages are in context.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Selected pages"
+  },
+  {
+    "_creationTime": 1789959342108.4797,
+    "_id": "nd75fy7vadh4r3w3ezddgvmp7n8etzda",
+    "at": 1789959342108,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Response cache: HIT. 15 topic groups planned.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Page plan"
+  },
+  {
+    "_creationTime": 1789959342171.026,
+    "_id": "nd7f3gcpw1bk0kwpwzf7f0aza58etdsw",
+    "at": 1789959342171,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 topics and 18 pages are in scope.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Prepared context"
+  },
+  {
+    "_creationTime": 1789959342232.6877,
+    "_id": "nd73hs2563z8c41nrd0v6jddy18etbfw",
+    "at": 1789959342232,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "5 workers queued with at most 3 questions each.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Work orders ready"
+  },
+  {
+    "_creationTime": 1789959342343.5298,
+    "_id": "nd719snbnsjtat3nmncvtymkah8ev32t",
+    "at": 1789959342343,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Each worker drafts from selected page excerpts, then checks the answer and source support independently.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Workers launched"
+  },
+  {
+    "_creationTime": 1789959384980.651,
+    "_id": "nd7e3vb8f12s76zeb67j3nyftx8evjz0",
+    "at": 1789959384980,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789959394757.5366,
+    "_id": "nd784jgn2rjqnv764x1w4xrkqs8et4hn",
+    "at": 1789959394757,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/3 passed evidence checks and independent automated review. 3 withheld. Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length)",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789959397433.455,
+    "_id": "nd7cx1e0j6agd8haz4zf77d76h8evrya",
+    "at": 1789959397433,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Clinical: 0/3 passed evidence checks and independent automated review. 3 withheld. Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length)",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789959400519.7253,
+    "_id": "nd7f91q8avx9zresxna5zda9gn8ets0b",
+    "at": 1789959400519,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789959429658.7002,
+    "_id": "nd7518p7nq45f14q7ahg0z8jp58evwwf",
+    "at": 1789959429658,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "learn:batch:2:q1: Some claims are not supported by the assigned source. The question stem and rationale introduce unsupported factual claims not present in the assigned citation (p7c0), including asserting that the Horner syndrome is ipsilateral and occurs due to sympathetic plexus involvement. The rationale justifies distractors by claiming giant cell arteritis and ocular ischemic syndrome do not cause this presenta",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Repair requested"
+  },
+  {
+    "_creationTime": 1789959429723.1184,
+    "_id": "nd74ymc34xvdnx8cavgp309s258etd1j",
+    "at": 1789959429723,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "learn:batch:2:q3: Some claims are not supported by the assigned source. The rationale relies on unsupported factual claims regarding refractive errors and ocular surface abnormalities causing blur, concepts that are entirely absent from the assigned citation (p6c0).",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Repair requested"
+  },
+  {
+    "_creationTime": 1789959469432.7153,
+    "_id": "nd730rpttqywwgw2t1s2bsrjg18evsz9",
+    "at": 1789959469432,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789959469741.575,
+    "_id": "nd7fx48wc9mxd6jqfmcasbmgc18etmhh",
+    "at": 1789959469741,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "9 candidates are ready for local source, answer, and provenance checks.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Reviewing"
+  },
+  {
+    "_creationTime": 1789959469815.7068,
+    "_id": "nd7a3n58emqs0xcnv2dsze4vxs8evs0p",
+    "at": 1789959469815,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "0 rejected, 0 need reasoning review.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Review complete"
+  },
+  {
+    "_creationTime": 1789959469905.536,
+    "_id": "nd7cty3h4qpezc515gy12sxg2h8evrff",
+    "at": 1789959469905,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Draft workers finished with partial usable candidates.",
+    "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+    "label": "Ready"
+  }
+]

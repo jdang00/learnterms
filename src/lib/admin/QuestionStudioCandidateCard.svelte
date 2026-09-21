@@ -35,7 +35,11 @@
 		review?.verdict === 'accept' ? 'kept' : review?.verdict === 'revise' ? 'revised' : 'cut'
 	);
 	const verdictTitle = $derived(
-		review ? `Source support: ${review.sourceSupport}, answer: ${review.answerQuality}` : ''
+		candidate.metadata.reviewMode === 'local'
+			? 'Local evidence and structure checks only; review correctness before publishing.'
+			: review
+				? `Source support: ${review.sourceSupport}, answer: ${review.answerQuality}`
+				: ''
 	);
 </script>
 

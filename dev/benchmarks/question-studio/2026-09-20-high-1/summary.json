@@ -1,0 +1,127 @@
+{
+  "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+  "status": "ready",
+  "requested": 15,
+  "accepted": 10,
+  "wallMs": 44633,
+  "firstCandidateMs": 34319,
+  "setupMs": 13961,
+  "workerSpanMs": 30267,
+  "finalizationMs": 405,
+  "aggregateWorkerMs": 112671,
+  "aggregateWorkerModelMs": 108165,
+  "aggregateNonModelWorkerMs": 4506,
+  "acceptedByType": {
+    "learn": 7,
+    "clinical": 3
+  },
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 0,
+        "inputTokens": 5452,
+        "latencyMsTotal": 12222,
+        "outputTokens": 1472,
+        "reasoningTokens": 414,
+        "stage": "plan"
+      },
+      {
+        "cacheWriteTokens": 7764,
+        "cachedInputTokens": 13316,
+        "calls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.012541120000000001,
+        "failedCalls": 0,
+        "inputTokens": 21095,
+        "latencyMsTotal": 66992,
+        "outputTokens": 8609,
+        "reasoningTokens": 6058,
+        "stage": "draft"
+      },
+      {
+        "cacheWriteTokens": 6575,
+        "cachedInputTokens": 9870,
+        "calls": 4,
+        "costKnownCalls": 4,
+        "costUsd": 0.00650795,
+        "failedCalls": 0,
+        "inputTokens": 16457,
+        "latencyMsTotal": 37387,
+        "outputTokens": 3887,
+        "reasoningTokens": 2606,
+        "stage": "review"
+      },
+      {
+        "cacheWriteTokens": 1088,
+        "cachedInputTokens": 3329,
+        "calls": 1,
+        "costKnownCalls": 1,
+        "costUsd": 0.00079638,
+        "failedCalls": 0,
+        "inputTokens": 4420,
+        "latencyMsTotal": 3786,
+        "outputTokens": 381,
+        "reasoningTokens": 215,
+        "stage": "repair"
+      }
+    ],
+    "cacheWriteTokens": 15427,
+    "cachedInputTokens": 26515,
+    "calls": 11,
+    "costKnownCalls": 10,
+    "costUsd": 0.01984545,
+    "failedCalls": 0,
+    "inputTokens": 47424,
+    "latencyMsTotal": 120387,
+    "outputTokens": 14349,
+    "reasoningTokens": 9293
+  },
+  "workerNotes": [
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 2/3 passed evidence checks and independent automated review. 1 withheld. Provider or format failure: Uncaught ConvexError: {\"kind\":\"RateLimited\",\"name\":\"questionStudioTokenUsagePerUser\",\"retryAfter\":9588} at checkRateLimitOrThrow (../../node_modules/@convex-dev/rate-limiter/src/component/internal.ts:22:6) at async handler (../node_modules/@convex-dev/rate-limiter/src/component/lib.t",
+    "Learn: 0/3 passed evidence checks and independent automated review. 3 withheld. Provider or format failure: Uncaught ConvexError: {\"kind\":\"RateLimited\",\"name\":\"questionStudioTokenUsagePerUser\",\"retryAfter\":10453} at checkRateLimitOrThrow (../../node_modules/@convex-dev/rate-limiter/src/component/internal.ts:22:6) at async handler (../node_modules/@convex-dev/rate-limiter/src/component/lib.",
+    "Learn: 2/3 passed evidence checks and independent automated review. 1 withheld. Provider or format failure: Uncaught ConvexError: {\"kind\":\"RateLimited\",\"name\":\"questionStudioTokenUsagePerUser\",\"retryAfter\":7144} at checkRateLimitOrThrow (../../node_modules/@convex-dev/rate-limiter/src/component/internal.ts:22:6) at async handler (../node_modules/@convex-dev/rate-limiter/src/component/lib.t",
+    "Clinical: 3/3 passed evidence checks and independent automated review. 0 withheld."
+  ],
+  "repairs": [
+    "learn:batch:2:q3: Evidence quote is not in the supplied excerpt: p6c0.",
+    "learn:batch:1:q2: The incorrect options need revision. Diffusion-weighted brain MRI is explicitly included in the work-up for acute retinal ischemia or retinal arterial occlusion. The rationale appropriately connects the study with evaluation beyond the eye in a stroke-oriented work-up. The question fits the Learn type, but routine skull radiography is a weak, implausible distractor; the alternatives are not all equa"
+  ],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 14497,
+      "durationMs": 20974,
+      "accepted": 2
+    },
+    {
+      "index": 1,
+      "startMs": 13961,
+      "durationMs": 20835,
+      "accepted": 2
+    },
+    {
+      "index": 2,
+      "startMs": 14110,
+      "durationMs": 20209,
+      "accepted": 3
+    },
+    {
+      "index": 3,
+      "startMs": 14192,
+      "durationMs": 20825,
+      "accepted": 0
+    },
+    {
+      "index": 4,
+      "startMs": 14400,
+      "durationMs": 29828,
+      "accepted": 3
+    }
+  ]
+}

@@ -4,6 +4,8 @@ import { authQuery } from './authQueries';
 import type { Doc, Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
 import { applyProgressDeltaAndEvaluateBadges } from './badgeEngine';
+import { applyModuleStatsDelta } from './moduleStats';
+import { requireSelfUser, requireUserReadById, requireClassAccess } from './access';
 
 const EARLY_HOUR_CUTOFF = 8;
 const LATE_HOUR_CUTOFF = 22;
@@ -62,6 +64,7 @@ function earlyLateDeltaFromHour(hour: number | undefined, direction: 1 | -1) {
 export const checkExistingRecord = authQuery({
 	args: { userId: v.id('users'), questionId: v.id('question') },
 	handler: async (ctx, args) => {
+		await requireUserReadById(ctx, args.userId);
 		const record = await ctx.db
 			.query('userProgress')
 			.withIndex('by_user_question', (q) =>
@@ -79,6 +82,7 @@ export const getProgressForClass = authQuery({
 		classId: v.id('class')
 	},
 	handler: async (ctx, args) => {
+		await requireUserReadById(ctx, args.userId);
 		const progressRecords = await ctx.db
 			.query('userProgress')
 			.withIndex('by_user_class', (q) => q.eq('userId', args.userId).eq('classId', args.classId))
@@ -170,6 +174,7 @@ export const getUserProgressForModule = authQuery({
 		questionIds: v.array(v.id('question'))
 	},
 	handler: async (ctx, args) => {
+		await requireUserReadById(ctx, args.userId);
 		const records = await getUserProgressRecords(ctx, args.userId, args.classId, args.questionIds);
 
 		const interactedQuestionIds = records
@@ -197,6 +202,19 @@ export const saveUserProgress = mutation({
 		clientUtcOffsetMinutes: v.optional(v.number())
 	},
 	handler: async (ctx, args) => {
+		const actor = await requireSelfUser(ctx, args.userId);
+		const question = await ctx.db.get(args.questionId);
+		const module = question ? await ctx.db.get(question.moduleId) : null;
+		if (
+			!question ||
+			question.deletedAt ||
+			!module ||
+			module.deletedAt ||
+			module.classId !== args.classId
+		) {
+			throw new Error('Question does not belong to this class');
+		}
+		await requireClassAccess(ctx, actor, args.classId);
 		const now = Date.now();
 		const currentHourUtc = new Date(now).getUTCHours();
 		const utcOffsetMinutes = normalizeUtcOffsetMinutes(args.clientUtcOffsetMinutes);
@@ -277,6 +295,16 @@ export const saveUserProgress = mutation({
 				metadata: nextMetadata
 			});
 
+			await applyModuleStatsDelta(ctx, {
+				userId: args.userId,
+				moduleId: module._id,
+				classId: args.classId,
+				interacted: interactedDelta,
+				mastered: masteredDelta,
+				flagged: flaggedDelta,
+				activityAt: isInteracted ? now : undefined
+			});
+
 			await applyProgressDeltaAndEvaluateBadges(ctx, {
 				userId: args.userId,
 				classId: args.classId,
@@ -334,6 +362,16 @@ export const saveUserProgress = mutation({
 				metadata
 			});
 
+			await applyModuleStatsDelta(ctx, {
+				userId: args.userId,
+				moduleId: module._id,
+				classId: args.classId,
+				interacted: Number(isInteracted),
+				mastered: Number(isMastered),
+				flagged: Number(newFlagged),
+				activityAt: isInteracted ? now : undefined
+			});
+
 			await applyProgressDeltaAndEvaluateBadges(ctx, {
 				userId: args.userId,
 				classId: args.classId,
@@ -358,6 +396,7 @@ export const deleteUserProgress = mutation({
 		questionId: v.id('question')
 	},
 	handler: async (ctx, args) => {
+		await requireSelfUser(ctx, args.userId);
 		const now = Date.now();
 
 		// Find and delete the record
@@ -392,6 +431,18 @@ export const deleteUserProgress = mutation({
 
 			await ctx.db.delete(existingRecord._id);
 
+			const question = await ctx.db.get(args.questionId);
+			if (question) {
+				await applyModuleStatsDelta(ctx, {
+					userId: args.userId,
+					moduleId: question.moduleId,
+					classId: existingRecord.classId,
+					interacted: wasInteracted ? -1 : 0,
+					mastered: existingRecord.isMastered ? -1 : 0,
+					flagged: existingRecord.isFlagged ? -1 : 0
+				});
+			}
+
 			await applyProgressDeltaAndEvaluateBadges(ctx, {
 				userId: args.userId,
 				classId: existingRecord.classId,
@@ -416,6 +467,7 @@ export const clearUserProgressForModule = mutation({
 		moduleId: v.id('module')
 	},
 	handler: async (ctx, args) => {
+		await requireSelfUser(ctx, args.userId);
 		const now = Date.now();
 		// Get all questions for this module (efficient, bounded by module size)
 		const questions = await ctx.db
@@ -468,6 +520,14 @@ export const clearUserProgressForModule = mutation({
 		}
 
 		if (deletedCount > 0 && module) {
+			await applyModuleStatsDelta(ctx, {
+				userId: args.userId,
+				moduleId: module._id,
+				classId: module.classId,
+				interacted: interactedDelta,
+				mastered: masteredDelta,
+				flagged: flaggedDelta
+			});
 			await applyProgressDeltaAndEvaluateBadges(ctx, {
 				userId: args.userId,
 				classId: module.classId,

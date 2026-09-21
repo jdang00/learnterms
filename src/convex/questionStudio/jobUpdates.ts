@@ -1,4 +1,5 @@
 import { v } from 'convex/values';
+import { expireIfDue, LEARN_DEADLINE_MS } from './deadline';
 import { internal } from '../_generated/api';
 import { internalMutation } from '../_generated/server';
 import { scoreDuplicateRisk } from './duplicates';
@@ -8,6 +9,7 @@ import type { CandidateQuestion } from './shared';
 import { cleanPlainText } from './text';
 import {
 	MAX_QUESTIONS_PER_WORKER,
+	MAX_GENERATED_QUESTIONS,
 	candidateReviewValidator,
 	candidateValidator,
 	generationPlanValidator,
@@ -35,6 +37,7 @@ export const updateGenerationJob = internalMutation({
 	handler: async (ctx, args) => {
 		const job = await ctx.db.get(args.jobId);
 		if (!job || job.dismissedAt || job.status === 'ready' || job.status === 'failed') return;
+		if (await expireIfDue(ctx, job)) return;
 		const now = Date.now();
 		let eventCount = job.eventCount ?? 0;
 		if (args.eventLabel) {
@@ -113,6 +116,31 @@ export const updateGenerationJob = internalMutation({
 					harness_version: HARNESS_VERSION
 				}
 			});
+		if (args.completed && !job.completedAt) {
+			await ctx.scheduler.runAfter(0, internal.aiTelemetry.capture, {
+				event: '$ai_trace',
+				distinctId: actor?.clerkUserId ?? String(job.createdByUserId),
+				properties: {
+					ai_trace_id: String(job._id),
+					ai_span_id: String(job._id),
+					ai_session_id: null,
+					ai_span_name: 'Question Studio generation',
+					ai_latency: (now - job.createdAt) / 1000,
+					ai_is_error: (args.status ?? job.status) === 'failed',
+					job_id: job._id,
+					requested_count: job.requestedCount,
+					accepted_count: candidateCount,
+					full_count: candidateCount === job.requestedCount,
+					target_met:
+						candidateCount === job.requestedCount && now - job.createdAt <= LEARN_DEADLINE_MS,
+					harness_version: HARNESS_VERSION,
+					model: job.model,
+					cost_estimated: (job.usage?.costEstimatedCalls ?? 0) > 0,
+					model_calls: job.usage?.calls ?? 0,
+					failed_calls: job.usage?.failedCalls ?? 0
+				}
+			});
+		}
 		await ctx.db.patch(args.jobId, {
 			...(args.status ? { status: args.status } : {}),
 			...(args.statusText ? { statusText: args.statusText } : {}),
@@ -157,7 +185,10 @@ export const recordGenerationUsage = internalMutation({
 		inputTokens: v.optional(v.number()),
 		outputTokens: v.optional(v.number()),
 		reasoningTokens: v.optional(v.number()),
+		cachedInputTokens: v.optional(v.number()),
+		cacheWriteTokens: v.optional(v.number()),
 		costUsd: v.optional(v.number()),
+		costEstimated: v.optional(v.boolean()),
 		latencyMs: v.optional(v.number())
 	},
 	returns: v.null(),
@@ -170,8 +201,11 @@ export const recordGenerationUsage = internalMutation({
 			inputTokens: args.inputTokens ?? 0,
 			outputTokens: args.outputTokens ?? 0,
 			reasoningTokens: args.reasoningTokens ?? 0,
+			cachedInputTokens: args.cachedInputTokens ?? 0,
+			cacheWriteTokens: args.cacheWriteTokens ?? 0,
 			costUsd: args.costUsd ?? 0,
 			costKnownCalls: typeof args.costUsd === 'number' ? 1 : 0,
+			costEstimatedCalls: args.costEstimated ? 1 : 0,
 			latencyMsTotal: args.latencyMs ?? 0
 		};
 		const previous = job.usage;
@@ -186,8 +220,11 @@ export const recordGenerationUsage = internalMutation({
 			inputTokens: (previousStage?.inputTokens ?? 0) + call.inputTokens,
 			outputTokens: (previousStage?.outputTokens ?? 0) + call.outputTokens,
 			reasoningTokens: (previousStage?.reasoningTokens ?? 0) + call.reasoningTokens,
+			cachedInputTokens: (previousStage?.cachedInputTokens ?? 0) + call.cachedInputTokens,
+			cacheWriteTokens: (previousStage?.cacheWriteTokens ?? 0) + call.cacheWriteTokens,
 			costUsd: (previousStage?.costUsd ?? 0) + call.costUsd,
 			costKnownCalls: (previousStage?.costKnownCalls ?? 0) + call.costKnownCalls,
+			costEstimatedCalls: (previousStage?.costEstimatedCalls ?? 0) + call.costEstimatedCalls,
 			latencyMsTotal: (previousStage?.latencyMsTotal ?? 0) + call.latencyMsTotal
 		};
 		if (stageIndex >= 0) byStage[stageIndex] = mergedStage;
@@ -199,8 +236,11 @@ export const recordGenerationUsage = internalMutation({
 				inputTokens: (previous?.inputTokens ?? 0) + call.inputTokens,
 				outputTokens: (previous?.outputTokens ?? 0) + call.outputTokens,
 				reasoningTokens: (previous?.reasoningTokens ?? 0) + call.reasoningTokens,
+				cachedInputTokens: (previous?.cachedInputTokens ?? 0) + call.cachedInputTokens,
+				cacheWriteTokens: (previous?.cacheWriteTokens ?? 0) + call.cacheWriteTokens,
 				costUsd: (previous?.costUsd ?? 0) + call.costUsd,
 				costKnownCalls: (previous?.costKnownCalls ?? 0) + call.costKnownCalls,
+				costEstimatedCalls: (previous?.costEstimatedCalls ?? 0) + call.costEstimatedCalls,
 				latencyMsTotal: (previous?.latencyMsTotal ?? 0) + call.latencyMsTotal,
 				byStage
 			}
@@ -232,6 +272,7 @@ export const appendGenerationWorkerResult = internalMutation({
 			return { candidateCount: job?.candidateCount ?? 0 };
 		}
 		const now = Date.now();
+		if (await expireIfDue(ctx, job)) return { candidateCount: job.candidateCount ?? 0 };
 		const acceptedIncoming: CandidateQuestion[] = [];
 		for (const candidate of args.candidates as CandidateQuestion[]) {
 			const duplicate = scoreDuplicateRisk(candidate, [], acceptedIncoming);
@@ -241,12 +282,16 @@ export const appendGenerationWorkerResult = internalMutation({
 				duplicateRisk: duplicate.risk === 'low' ? candidate.duplicateRisk : duplicate.risk
 			});
 		}
-		const insertedCandidates = acceptedIncoming.slice(0, MAX_QUESTIONS_PER_WORKER);
+		const workerLimit = Math.min(
+			MAX_GENERATED_QUESTIONS,
+			job.plan?.workerBatches[args.workerIndex]?.plannedCount ?? MAX_QUESTIONS_PER_WORKER
+		);
+		const insertedCandidates = acceptedIncoming.slice(0, workerLimit);
 		for (const [offset, candidate] of insertedCandidates.entries()) {
 			await ctx.db.insert('questionStudioJobCandidates', {
 				jobId: args.jobId,
 				cohortId: job.cohortId,
-				index: args.workerIndex * MAX_QUESTIONS_PER_WORKER + offset,
+				index: args.workerIndex * MAX_GENERATED_QUESTIONS + offset,
 				candidate,
 				createdAt: now
 			});

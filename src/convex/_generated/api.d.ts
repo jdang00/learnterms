@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as access from "../access.js";
 import type * as aiTelemetry from "../aiTelemetry.js";
 import type * as authQueries from "../authQueries.js";
 import type * as badgeEngine from "../badgeEngine.js";
@@ -28,6 +29,7 @@ import type * as http from "../http.js";
 import type * as migrations from "../migrations.js";
 import type * as module from "../module.js";
 import type * as moduleEmoji from "../moduleEmoji.js";
+import type * as moduleStats from "../moduleStats.js";
 import type * as ogRateLimit from "../ogRateLimit.js";
 import type * as pdfExtraction from "../pdfExtraction.js";
 import type * as polar from "../polar.js";
@@ -44,6 +46,7 @@ import type * as questionStudio_access from "../questionStudio/access.js";
 import type * as questionStudio_authorization from "../questionStudio/authorization.js";
 import type * as questionStudio_candidates from "../questionStudio/candidates.js";
 import type * as questionStudio_context from "../questionStudio/context.js";
+import type * as questionStudio_deadline from "../questionStudio/deadline.js";
 import type * as questionStudio_devTools from "../questionStudio/devTools.js";
 import type * as questionStudio_duplicates from "../questionStudio/duplicates.js";
 import type * as questionStudio_generation from "../questionStudio/generation.js";
@@ -52,18 +55,22 @@ import type * as questionStudio_jobUpdates from "../questionStudio/jobUpdates.js
 import type * as questionStudio_jobs from "../questionStudio/jobs.js";
 import type * as questionStudio_mapping from "../questionStudio/mapping.js";
 import type * as questionStudio_mappingState from "../questionStudio/mappingState.js";
+import type * as questionStudio_pagePlanning from "../questionStudio/pagePlanning.js";
 import type * as questionStudio_pageSelection from "../questionStudio/pageSelection.js";
 import type * as questionStudio_planning from "../questionStudio/planning.js";
 import type * as questionStudio_presentation from "../questionStudio/presentation.js";
 import type * as questionStudio_provider from "../questionStudio/provider.js";
 import type * as questionStudio_quality from "../questionStudio/quality.js";
 import type * as questionStudio_questionTypes from "../questionStudio/questionTypes.js";
+import type * as questionStudio_retry from "../questionStudio/retry.js";
 import type * as questionStudio_review from "../questionStudio/review.js";
 import type * as questionStudio_runtime from "../questionStudio/runtime.js";
 import type * as questionStudio_saving from "../questionStudio/saving.js";
 import type * as questionStudio_shared from "../questionStudio/shared.js";
 import type * as questionStudio_sourceRetrieval from "../questionStudio/sourceRetrieval.js";
 import type * as questionStudio_text from "../questionStudio/text.js";
+import type * as questionStudio_tokenBudget from "../questionStudio/tokenBudget.js";
+import type * as questionStudio_tokenEstimate from "../questionStudio/tokenEstimate.js";
 import type * as questionStudio_topicMaps from "../questionStudio/topicMaps.js";
 import type * as questionStudio_workers from "../questionStudio/workers.js";
 import type * as r2Documents from "../r2Documents.js";
@@ -86,6 +93,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  access: typeof access;
   aiTelemetry: typeof aiTelemetry;
   authQueries: typeof authQueries;
   badgeEngine: typeof badgeEngine;
@@ -106,6 +114,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   module: typeof module;
   moduleEmoji: typeof moduleEmoji;
+  moduleStats: typeof moduleStats;
   ogRateLimit: typeof ogRateLimit;
   pdfExtraction: typeof pdfExtraction;
   polar: typeof polar;
@@ -122,6 +131,7 @@ declare const fullApi: ApiFromModules<{
   "questionStudio/authorization": typeof questionStudio_authorization;
   "questionStudio/candidates": typeof questionStudio_candidates;
   "questionStudio/context": typeof questionStudio_context;
+  "questionStudio/deadline": typeof questionStudio_deadline;
   "questionStudio/devTools": typeof questionStudio_devTools;
   "questionStudio/duplicates": typeof questionStudio_duplicates;
   "questionStudio/generation": typeof questionStudio_generation;
@@ -130,18 +140,22 @@ declare const fullApi: ApiFromModules<{
   "questionStudio/jobs": typeof questionStudio_jobs;
   "questionStudio/mapping": typeof questionStudio_mapping;
   "questionStudio/mappingState": typeof questionStudio_mappingState;
+  "questionStudio/pagePlanning": typeof questionStudio_pagePlanning;
   "questionStudio/pageSelection": typeof questionStudio_pageSelection;
   "questionStudio/planning": typeof questionStudio_planning;
   "questionStudio/presentation": typeof questionStudio_presentation;
   "questionStudio/provider": typeof questionStudio_provider;
   "questionStudio/quality": typeof questionStudio_quality;
   "questionStudio/questionTypes": typeof questionStudio_questionTypes;
+  "questionStudio/retry": typeof questionStudio_retry;
   "questionStudio/review": typeof questionStudio_review;
   "questionStudio/runtime": typeof questionStudio_runtime;
   "questionStudio/saving": typeof questionStudio_saving;
   "questionStudio/shared": typeof questionStudio_shared;
   "questionStudio/sourceRetrieval": typeof questionStudio_sourceRetrieval;
   "questionStudio/text": typeof questionStudio_text;
+  "questionStudio/tokenBudget": typeof questionStudio_tokenBudget;
+  "questionStudio/tokenEstimate": typeof questionStudio_tokenEstimate;
   "questionStudio/topicMaps": typeof questionStudio_topicMaps;
   "questionStudio/workers": typeof questionStudio_workers;
   r2Documents: typeof r2Documents;

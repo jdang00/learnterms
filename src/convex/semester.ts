@@ -1,5 +1,4 @@
-import { mutation } from './_generated/server';
-import { authQuery } from './authQueries';
+import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
 
 export const getAllSemesters = authQuery({
@@ -11,7 +10,7 @@ export const getAllSemesters = authQuery({
 	}
 });
 
-export const createSemester = mutation({
+export const createSemester = authAdminMutation({
 	args: {
 		name: v.string(),
 		description: v.optional(v.string()),
@@ -24,7 +23,7 @@ export const createSemester = mutation({
 	}
 });
 
-export const deleteSemester = mutation({
+export const deleteSemester = authAdminMutation({
 	args: {
 		semesterId: v.id('semester')
 	},

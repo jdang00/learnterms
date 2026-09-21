@@ -43,6 +43,7 @@ const questionStudioCandidate = v.object({
 		agentThreadId: v.optional(v.string()),
 		jobId: v.optional(v.id('questionStudioJobs')),
 		harnessVersion: v.optional(v.string()),
+		reviewMode: v.optional(v.union(v.literal('local'), v.literal('independent'))),
 		curatorEditedAt: v.optional(v.number()),
 		curatorRevision: v.optional(v.number()),
 		sourceDocumentId: v.id('contentLib')
@@ -110,6 +111,8 @@ const questionStudioLoopProgress = v.object({
 });
 
 const questionStudioStageUsage = v.object({
+	cachedInputTokens: v.optional(v.number()),
+	cacheWriteTokens: v.optional(v.number()),
 	stage: v.string(),
 	calls: v.number(),
 	failedCalls: v.number(),
@@ -118,11 +121,14 @@ const questionStudioStageUsage = v.object({
 	reasoningTokens: v.number(),
 	costUsd: v.number(),
 	costKnownCalls: v.number(),
+	costEstimatedCalls: v.optional(v.number()),
 	latencyMsTotal: v.number()
 });
 
 // Spend and latency accrued by the run's model calls, so the UI can report them live.
 const questionStudioJobUsage = v.object({
+	cachedInputTokens: v.optional(v.number()),
+	cacheWriteTokens: v.optional(v.number()),
 	calls: v.number(),
 	failedCalls: v.number(),
 	inputTokens: v.number(),
@@ -130,6 +136,7 @@ const questionStudioJobUsage = v.object({
 	reasoningTokens: v.number(),
 	costUsd: v.number(),
 	costKnownCalls: v.number(),
+	costEstimatedCalls: v.optional(v.number()),
 	latencyMsTotal: v.number(),
 	byStage: v.array(questionStudioStageUsage)
 });
@@ -316,6 +323,7 @@ export default defineSchema({
 					customPromptUsed: v.boolean(),
 					jobId: v.optional(v.id('questionStudioJobs')),
 					harnessVersion: v.optional(v.string()),
+					reviewMode: v.optional(v.union(v.literal('local'), v.literal('independent'))),
 					curatorEditedAt: v.optional(v.number()),
 					curatorRevision: v.optional(v.number()),
 					sourceDocumentId: v.optional(v.id('contentLib')),
@@ -531,6 +539,20 @@ export default defineSchema({
 		.index('by_user_scopeType', ['userId', 'scopeType'])
 		.index('by_user_scope_cohort', ['userId', 'scopeType', 'cohortId'])
 		.index('by_user_scope_class', ['userId', 'scopeType', 'classId']),
+	// Per-student, per-module rollup of userProgress so dashboards never scan raw progress.
+	userModuleStats: defineTable({
+		userId: v.id('users'),
+		moduleId: v.id('module'),
+		classId: v.id('class'),
+		questionsInteracted: v.number(),
+		questionsMastered: v.number(),
+		questionsFlagged: v.number(),
+		lastActivityAt: v.optional(v.number()),
+		updatedAt: v.number()
+	})
+		.index('by_user_module', ['userId', 'moduleId'])
+		.index('by_moduleId', ['moduleId'])
+		.index('by_classId', ['classId']),
 	userProgress: defineTable({
 		userId: v.id('users'),
 		classId: v.id('class'),

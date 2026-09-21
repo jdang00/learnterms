@@ -1,0 +1,241 @@
+{
+  "_creationTime": 1789961980903.4543,
+  "_id": "n57fxe9ef9jfje6tk89naj91xd8etpac",
+  "blockedDuplicateCount": 0,
+  "candidateCount": 0,
+  "candidates": [],
+  "claimedWorkers": [
+    2,
+    0,
+    1
+  ],
+  "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+  "completedAt": 1789962010912,
+  "completedWorkerCount": 3,
+  "completedWorkers": [
+    1,
+    2,
+    0
+  ],
+  "createdAt": 1789961980903,
+  "createdByUserId": "j571jkhm2fkf4eqe52csnhwnbn7xvkfn",
+  "documentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm",
+  "eventCount": 11,
+  "failedWorkerCount": 0,
+  "kind": "candidate_generation",
+  "loop": {
+    "blueprintCount": 15,
+    "blueprintSource": "fallback",
+    "enabled": true,
+    "pass": "draft"
+  },
+  "model": "gpt-5.6-luna",
+  "moduleClassId": "jn76grzjj9enzcnd371z8nj38h7mx5tw",
+  "moduleId": "js70qm41mmx7wh5f7j0p03zynd894hrq",
+  "moduleTitle": "Testing Module",
+  "plan": {
+    "coverageNotes": [
+      "Packed 15 requested questions into 3 workers with up to 5 questions each.",
+      "Assigned 15 deterministic slot contracts across 3 workers."
+    ],
+    "riskNotes": [],
+    "topicAllocations": [
+      {
+        "notes": "Assigned to Learn: Pages 15, 16, 17, 18, 19, 20.",
+        "plannedCount": 5,
+        "questionType": "learn",
+        "sourcePages": [
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "learn-pages-3",
+        "topicTitle": "Pages 15, 16, 17, 18, 19, 20"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 3, 4, 5, 6, 7, 8.",
+        "plannedCount": 5,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "learn-pages-1",
+        "topicTitle": "Pages 3, 4, 5, 6, 7, 8"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 9, 10, 11, 12, 13, 14.",
+        "plannedCount": 5,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "learn-pages-2",
+        "topicTitle": "Pages 9, 10, 11, 12, 13, 14"
+      }
+    ],
+    "workerBatches": [
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 15, 16, 17, 18, 19, 20",
+        "plannedCount": 5,
+        "questionType": "learn",
+        "sourcePages": [
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "targetObjective": "Choose distinct fact 1 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 4 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 5 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:1",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 15, 16, 17, 18, 19, 20"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 3, 4, 5, 6, 7, 8",
+        "plannedCount": 5,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "targetObjective": "Choose distinct fact 1 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 4 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 5 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:2",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 3, 4, 5, 6, 7, 8"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 9, 10, 11, 12, 13, 14",
+        "plannedCount": 5,
+        "questionType": "learn",
+        "sourcePages": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "targetObjective": "Choose distinct fact 1 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 4 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 5 of 5 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:3",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 9, 10, 11, 12, 13, 14"
+        ]
+      }
+    ]
+  },
+  "requestedCount": 15,
+  "requestedCounts": {
+    "clinical": 0,
+    "criticalThinking": 0,
+    "learn": 15
+  },
+  "reviewCount": 0,
+  "selectedPageNumbers": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "sourceIndexedAt": 1789926394236,
+  "sourceMode": "pages",
+  "status": "failed",
+  "statusText": "The 30-second limit was reached. No late results will be accepted.",
+  "updatedAt": 1789962010912,
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 3,
+        "costEstimatedCalls": 0,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 3,
+        "inputTokens": 0,
+        "latencyMsTotal": 75724,
+        "outputTokens": 0,
+        "reasoningTokens": 0,
+        "stage": "draft"
+      }
+    ],
+    "cacheWriteTokens": 0,
+    "cachedInputTokens": 0,
+    "calls": 3,
+    "costEstimatedCalls": 0,
+    "costKnownCalls": 0,
+    "costUsd": 0,
+    "failedCalls": 3,
+    "inputTokens": 0,
+    "latencyMsTotal": 75724,
+    "outputTokens": 0,
+    "reasoningTokens": 0
+  },
+  "workerNotes": [
+    "Learn: 0/5 passed local evidence and answer-structure checks. 0 corrected during review. 5 withheld. Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted",
+    "Learn: 0/5 passed local evidence and answer-structure checks. 0 corrected during review. 5 withheld. Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted",
+    "Learn: 0/5 passed local evidence and answer-structure checks. 0 corrected during review. 5 withheld. Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted Provider or format failure: The signal has been aborted"
+  ],
+  "workerStates": [
+    {
+      "draftedCount": 0,
+      "finishedAt": 1789962010588,
+      "index": 0,
+      "startedAt": 1789961983439
+    },
+    {
+      "draftedCount": 0,
+      "finishedAt": 1789962009798,
+      "index": 1,
+      "startedAt": 1789961983754
+    },
+    {
+      "draftedCount": 0,
+      "finishedAt": 1789962010196,
+      "index": 2,
+      "startedAt": 1789961983245
+    }
+  ]
+}

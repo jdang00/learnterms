@@ -1,0 +1,164 @@
+[
+  {
+    "_creationTime": 1789958471280,
+    "_id": "nd76psxzyc1yw5z69ewefd5xz98evzed",
+    "at": 1789958471279,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Preparing the agent run.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Queued"
+  },
+  {
+    "_creationTime": 1789958471953.5308,
+    "_id": "nd79x0f7k78tc4pravbabhq4618evr9q",
+    "at": 1789958471953,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 questions requested.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Started"
+  },
+  {
+    "_creationTime": 1789958472252.3613,
+    "_id": "nd7949r95kk7sgpsd5kz7h84tx8ev13e",
+    "at": 1789958472252,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "59 existing module questions available for duplicate checks.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Loaded context"
+  },
+  {
+    "_creationTime": 1789958472482.9646,
+    "_id": "nd7bmhk8g95jc4ar6g8kvwy5118etf0x",
+    "at": 1789958472482,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Pages 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20. Only these pages are in context.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Selected pages"
+  },
+  {
+    "_creationTime": 1789958484974.669,
+    "_id": "nd7dzmya0pqk4nv57st1jz7tvd8etw1z",
+    "at": 1789958484974,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Response cache: MISS. 15 topic groups planned.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Page plan"
+  },
+  {
+    "_creationTime": 1789958485037.241,
+    "_id": "nd71ea1qjx77nxcvr1h7gzqd418evg19",
+    "at": 1789958485037,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 topics and 18 pages are in scope.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Prepared context"
+  },
+  {
+    "_creationTime": 1789958485100.726,
+    "_id": "nd7dcfwvrkbtp3b23ta8ve20k58ettte",
+    "at": 1789958485100,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "5 workers queued with at most 3 questions each.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Work orders ready"
+  },
+  {
+    "_creationTime": 1789958485382.3765,
+    "_id": "nd777gqbawd7b8jh1pqzch8efd8evbzq",
+    "at": 1789958485382,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Each worker drafts from selected page excerpts, then checks the answer and source support independently.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Workers launched"
+  },
+  {
+    "_creationTime": 1789958501897.3147,
+    "_id": "nd7exqgjb9q4sedhxzchde5w1n8evwda",
+    "at": 1789958501897,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "learn:batch:2:q3: Evidence quote is not in the supplied excerpt: p6c0.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Repair requested"
+  },
+  {
+    "_creationTime": 1789958505598.0398,
+    "_id": "nd747cr9f9m0dvjkm34wg7g5hh8etfqm",
+    "at": 1789958505598,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958506075.7498,
+    "_id": "nd74j0c4em7qzxh8m82eca3hqx8et28f",
+    "at": 1789958506075,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/3 passed evidence checks and independent automated review. 1 withheld. Provider or format failure: Uncaught ConvexError: {\"kind\":\"RateLimited\",\"name\":\"questionStudioTokenUsagePerUser\",\"retryAfter\":9588} at checkRateLimitOrThrow (../../node_modules/@convex-dev/rate-limiter/src/component/internal.ts:22:6) at async handler (../node_modules/@convex-dev/rate-limiter/src/component/lib.t",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958506296.5544,
+    "_id": "nd7c37vr9pmjtxd4q2h8d4s8918etbbn",
+    "at": 1789958506296,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/3 passed evidence checks and independent automated review. 3 withheld. Provider or format failure: Uncaught ConvexError: {\"kind\":\"RateLimited\",\"name\":\"questionStudioTokenUsagePerUser\",\"retryAfter\":10453} at checkRateLimitOrThrow (../../node_modules/@convex-dev/rate-limiter/src/component/internal.ts:22:6) at async handler (../node_modules/@convex-dev/rate-limiter/src/component/lib.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958506669.2522,
+    "_id": "nd73gweq1fpp2m4pcftededagh8et6eq",
+    "at": 1789958506669,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "learn:batch:1:q2: The incorrect options need revision. Diffusion-weighted brain MRI is explicitly included in the work-up for acute retinal ischemia or retinal arterial occlusion. The rationale appropriately connects the study with evaluation beyond the eye in a stroke-oriented work-up. The question fits the Learn type, but routine skull radiography is a weak, implausible distractor; the alternatives are not all equa",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Repair requested"
+  },
+  {
+    "_creationTime": 1789958506750.75,
+    "_id": "nd71mk55j0dpdr0rekhhtrwn018evdhf",
+    "at": 1789958506750,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 2/3 passed evidence checks and independent automated review. 1 withheld. Provider or format failure: Uncaught ConvexError: {\"kind\":\"RateLimited\",\"name\":\"questionStudioTokenUsagePerUser\",\"retryAfter\":7144} at checkRateLimitOrThrow (../../node_modules/@convex-dev/rate-limiter/src/component/internal.ts:22:6) at async handler (../node_modules/@convex-dev/rate-limiter/src/component/lib.t",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958515507.1904,
+    "_id": "nd73rda4srcvjjkzesy4hvbvr58evdyr",
+    "at": 1789958515507,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Clinical: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958515755.3105,
+    "_id": "nd795vbe187ayy56m2k9rx4dzx8evtn4",
+    "at": 1789958515755,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "10 candidates are ready for local source, answer, and provenance checks.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Reviewing"
+  },
+  {
+    "_creationTime": 1789958515829.596,
+    "_id": "nd74h1pa2eftv6kv0n7atbm16h8et99p",
+    "at": 1789958515829,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "0 rejected, 0 need reasoning review.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Review complete"
+  },
+  {
+    "_creationTime": 1789958515912.4534,
+    "_id": "nd7c3e9j32wrmz2fy7frmdtgc18etj95",
+    "at": 1789958515912,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Draft workers finished with partial usable candidates.",
+    "jobId": "n57a2yy3ab28yezbm499zfrmrd8evhhg",
+    "label": "Ready"
+  }
+]

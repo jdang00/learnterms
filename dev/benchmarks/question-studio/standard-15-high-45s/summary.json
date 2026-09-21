@@ -1,0 +1,56 @@
+{
+  "jobId": "n5794twstjf0d460x7rdy1tbsh8ett7k",
+  "status": "failed",
+  "requested": 15,
+  "accepted": 0,
+  "wallMs": 42805,
+  "firstCandidateMs": null,
+  "setupMs": 2072,
+  "workerSpanMs": 40210,
+  "finalizationMs": 523,
+  "aggregateWorkerMs": 40210,
+  "aggregateWorkerModelMs": 39262,
+  "aggregateNonModelWorkerMs": 948,
+  "acceptedByType": {},
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costEstimatedCalls": 0,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 1,
+        "inputTokens": 0,
+        "latencyMsTotal": 39262,
+        "outputTokens": 0,
+        "reasoningTokens": 0,
+        "stage": "draft"
+      }
+    ],
+    "cacheWriteTokens": 0,
+    "cachedInputTokens": 0,
+    "calls": 1,
+    "costEstimatedCalls": 0,
+    "costKnownCalls": 0,
+    "costUsd": 0,
+    "failedCalls": 1,
+    "inputTokens": 0,
+    "latencyMsTotal": 39262,
+    "outputTokens": 0,
+    "reasoningTokens": 0
+  },
+  "workerNotes": [
+    "Learn: 0/15 passed local evidence and answer-structure checks. 0 corrected during review. 15 withheld. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or format failure: Question generation stopped at its time budget. Provider or f"
+  ],
+  "repairs": [],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 2072,
+      "durationMs": 40210,
+      "accepted": 0
+    }
+  ]
+}

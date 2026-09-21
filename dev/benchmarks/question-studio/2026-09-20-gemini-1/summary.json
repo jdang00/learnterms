@@ -1,0 +1,139 @@
+{
+  "jobId": "n57b09d8ecnqnvx2fb4cr588618evda2",
+  "status": "ready",
+  "requested": 15,
+  "accepted": 9,
+  "wallMs": 129422,
+  "firstCandidateMs": 44497,
+  "setupMs": 1869,
+  "workerSpanMs": 127080,
+  "finalizationMs": 473,
+  "aggregateWorkerMs": 334418,
+  "aggregateWorkerModelMs": 223576,
+  "aggregateNonModelWorkerMs": 110842,
+  "acceptedByType": {
+    "learn": 9
+  },
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 0,
+        "inputTokens": 0,
+        "latencyMsTotal": 287,
+        "outputTokens": 0,
+        "reasoningTokens": 0,
+        "stage": "plan"
+      },
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 5,
+        "costKnownCalls": 3,
+        "costUsd": 0.07244999999999999,
+        "failedCalls": 2,
+        "inputTokens": 14410,
+        "latencyMsTotal": 95543,
+        "outputTokens": 16438,
+        "reasoningTokens": 14436,
+        "stage": "draft"
+      },
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 3,
+        "costKnownCalls": 3,
+        "costUsd": 0.069051,
+        "failedCalls": 0,
+        "inputTokens": 13778,
+        "latencyMsTotal": 89068,
+        "outputTokens": 15658,
+        "reasoningTokens": 14357,
+        "stage": "review"
+      },
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costKnownCalls": 1,
+        "costUsd": 0.02009325,
+        "failedCalls": 0,
+        "inputTokens": 5316,
+        "latencyMsTotal": 25918,
+        "outputTokens": 4295,
+        "reasoningTokens": 3842,
+        "stage": "repair"
+      },
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costKnownCalls": 1,
+        "costUsd": 0.01004025,
+        "failedCalls": 0,
+        "inputTokens": 4317,
+        "latencyMsTotal": 13047,
+        "outputTokens": 1814,
+        "reasoningTokens": 1514,
+        "stage": "review_repair"
+      }
+    ],
+    "cacheWriteTokens": 0,
+    "cachedInputTokens": 0,
+    "calls": 11,
+    "costKnownCalls": 8,
+    "costUsd": 0.1716345,
+    "failedCalls": 2,
+    "inputTokens": 37821,
+    "latencyMsTotal": 223863,
+    "outputTokens": 38205,
+    "reasoningTokens": 34149
+  },
+  "workerNotes": [
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 0/3 passed evidence checks and independent automated review. 3 withheld. Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length)",
+    "Clinical: 0/3 passed evidence checks and independent automated review. 3 withheld. Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length) Provider or format failure: Incomplete question response (length)",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld."
+  ],
+  "repairs": [
+    "learn:batch:2:q1: Some claims are not supported by the assigned source. The question stem and rationale introduce unsupported factual claims not present in the assigned citation (p7c0), including asserting that the Horner syndrome is ipsilateral and occurs due to sympathetic plexus involvement. The rationale justifies distractors by claiming giant cell arteritis and ocular ischemic syndrome do not cause this presenta",
+    "learn:batch:2:q3: Some claims are not supported by the assigned source. The rationale relies on unsupported factual claims regarding refractive errors and ocular surface abnormalities causing blur, concepts that are entirely absent from the assigned citation (p6c0)."
+  ],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 1869,
+      "durationMs": 58167,
+      "accepted": 3
+    },
+    {
+      "index": 1,
+      "startMs": 2003,
+      "durationMs": 126946,
+      "accepted": 3
+    },
+    {
+      "index": 2,
+      "startMs": 2067,
+      "durationMs": 52207,
+      "accepted": 0
+    },
+    {
+      "index": 3,
+      "startMs": 2128,
+      "durationMs": 42369,
+      "accepted": 3
+    },
+    {
+      "index": 4,
+      "startMs": 2221,
+      "durationMs": 54729,
+      "accepted": 0
+    }
+  ]
+}

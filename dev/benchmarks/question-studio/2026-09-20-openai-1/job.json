@@ -1,0 +1,903 @@
+{
+  "_creationTime": 1789960630768.0613,
+  "_id": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+  "blockedDuplicateCount": 0,
+  "candidateCount": 15,
+  "candidates": [
+    {
+      "correctAnswers": [
+        "Highly reflective, glistening, yellow-copper"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Highly reflective, glistening, yellow-copper",
+        "Large, round or ovoid, chalk-like",
+        "Dull, elongated, and highly mobile",
+        "Smooth, translucent, and gelatinous"
+      ],
+      "questionType": "learn",
+      "rationale": "Cholesterol (Hollenhorst) emboli have a highly reflective, glistening yellow-copper appearance. Calcific emboli are chalk-like, whereas fibrin-platelet emboli are dull and elongated.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 10, excerpt 1",
+          "citationId": "p10c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 10,
+          "quote": "Highly reflective, glistening, yellow-copper"
+        }
+      ],
+      "sourcePageNumbers": [
+        10
+      ],
+      "stem": "Which appearance is characteristic of a cholesterol (Hollenhorst) retinal embolus?",
+      "topicId": "learn-pages-3",
+      "topicTitle": "Pages 10, 11, 12",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Calcific embolus"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Cholesterol embolus",
+        "Calcific embolus",
+        "Fibrin-platelet embolus",
+        "A nonvascular vitreous opacity"
+      ],
+      "questionType": "learn",
+      "rationale": "Calcific retinal emboli tend to cause more severe obstruction and are typically large, round or ovoid, with a chalk-like appearance. Cholesterol emboli generally do not produce complete obstruction.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 11, excerpt 1",
+          "citationId": "p11c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 11,
+          "quote": "Tend to cause more severe obstructions"
+        }
+      ],
+      "sourcePageNumbers": [
+        11
+      ],
+      "stem": "Which type of retinal embolus tends to cause more severe arterial obstruction?",
+      "topicId": "learn-pages-3",
+      "topicTitle": "Pages 10, 11, 12",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Fibrin-platelet embolus"
+      ],
+      "duplicateRisk": "medium",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Cholesterol embolus",
+        "Calcific embolus",
+        "Fibrin-platelet embolus",
+        "Ophthalmic artery embolus"
+      ],
+      "questionType": "learn",
+      "rationale": "Fibrin-platelet emboli are described as dull and elongated and are highly mobile. This differs from the glistening appearance of cholesterol emboli and the chalk-like appearance of calcific emboli.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 11, excerpt 1",
+          "citationId": "p11c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 11,
+          "quote": "Dull and elongated"
+        }
+      ],
+      "sourcePageNumbers": [
+        11
+      ],
+      "stem": "Which retinal embolus is described as dull and elongated?",
+      "topicId": "learn-pages-3",
+      "topicTitle": "Pages 10, 11, 12",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Calcific"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Calcific",
+        "Cholesterol",
+        "Fibrin-platelet",
+        "Inflammatory"
+      ],
+      "questionType": "learn",
+      "rationale": "Cardiac emboli are usually calcific. This composition reflects the typical embolic material associated with cardiac disease, although other embolus types can occur.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 13, excerpt 1",
+          "citationId": "p13c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 13,
+          "quote": "Cardiac emboli are usually calcific"
+        }
+      ],
+      "sourcePageNumbers": [
+        13
+      ],
+      "stem": "What type of retinal embolus is usually associated with cardiac disease?",
+      "topicId": "learn-pages-4",
+      "topicTitle": "Pages 13, 14, 15, 16",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Cardiovascular disease rather than stroke"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Cardiovascular disease rather than stroke",
+        "Stroke rather than cardiovascular disease",
+        "Respiratory disease rather than cardiovascular disease",
+        "Ocular complications rather than systemic disease"
+      ],
+      "questionType": "learn",
+      "rationale": "The reported comparison is 80% of deaths from cardiovascular disease versus stroke. CRAO therefore signals substantial systemic cardiovascular risk, not only an ocular problem.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 13, excerpt 1",
+          "citationId": "p13c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 13,
+          "quote": "Majority (80%) of patients with CRAO die from cardiovascular disease vs stroke"
+        }
+      ],
+      "sourcePageNumbers": [
+        13
+      ],
+      "stem": "Among patients with central retinal artery occlusion (CRAO), what accounts for the majority of reported deaths?",
+      "topicId": "learn-pages-4",
+      "topicTitle": "Pages 13, 14, 15, 16",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "20/40 or better"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "20/20 or better",
+        "20/40 or better",
+        "20/80 or better",
+        "Counting fingers or better"
+      ],
+      "questionType": "learn",
+      "rationale": "In BRAO, 75% of patients have presenting visual acuity of 20/40 or better. Visual acuity may remain relatively good when the macula is not involved.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 14, excerpt 1",
+          "citationId": "p14c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 14,
+          "quote": "Presenting VA: 75% of patients are 20/40 or better"
+        }
+      ],
+      "sourcePageNumbers": [
+        14
+      ],
+      "stem": "What presenting visual acuity is reported in 75% of patients with branch retinal artery occlusion (BRAO)?",
+      "topicId": "learn-pages-4",
+      "topicTitle": "Pages 13, 14, 15, 16",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Prompt evaluation"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Prompt evaluation",
+        "Immediate carotid endarterectomy",
+        "Routine annual eye examination only",
+        "No evaluation unless visual acuity decreases"
+      ],
+      "questionType": "learn",
+      "rationale": "A retinal embolus can occur without producing retinal infarction, but it still warrants prompt evaluation. The goal is to identify associated vascular or systemic disease and assess future stroke risk.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 17, excerpt 1",
+          "citationId": "p17c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 17,
+          "quote": "If retinal embolus WITHOUT infarction or asymptomatic, newly diagnosed CRAO/BRAO/OAO, recommend prompt evaluation (AAO PPP)"
+        }
+      ],
+      "sourcePageNumbers": [
+        17
+      ],
+      "stem": "What is recommended for a retinal embolus without infarction?",
+      "topicId": "learn-pages-5",
+      "topicTitle": "Pages 17, 18, 19, 20",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Ipsilateral carotid stenosis of 70–99%, even if asymptomatic"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Ipsilateral carotid stenosis of 70–99%, even if asymptomatic",
+        "Any degree of contralateral carotid stenosis",
+        "Ipsilateral carotid stenosis of 10–29% only when asymptomatic",
+        "Ipsilateral carotid stenosis of 50–69% only when asymptomatic"
+      ],
+      "questionType": "learn",
+      "rationale": "Carotid endarterectomy is indicated for 70–99% ipsilateral stenosis, including patients without symptoms. Symptomatic patients with 50–69% stenosis may receive a moderate benefit, which is a separate threshold and situation.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 20, excerpt 1",
+          "citationId": "p20c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 20,
+          "quote": "Indicated to prevent stroke in patients who have ipsilateral stenosis 70-99% (even if asymptomatic)"
+        }
+      ],
+      "sourcePageNumbers": [
+        20
+      ],
+      "stem": "For retinal arterial emboli, when is carotid endarterectomy indicated to prevent stroke?",
+      "topicId": "learn-pages-5",
+      "topicTitle": "Pages 17, 18, 19, 20",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Hypercoagulable and primary hematologic disorders"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Hypercoagulable and primary hematologic disorders",
+        "Only tear-film abnormalities",
+        "Only accommodative disorders",
+        "No additional systemic disorders"
+      ],
+      "questionType": "learn",
+      "rationale": "When conventional cardiovascular risk factors are absent in a young patient, hypercoagulable and primary hematologic disorders become important considerations in the evaluation of retinal emboli.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 18, excerpt 1",
+          "citationId": "p18c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 18,
+          "quote": "Young patients without conventional cardiovascular risk factors – hypercoagulable and primary hematologic disorders"
+        }
+      ],
+      "sourcePageNumbers": [
+        18
+      ],
+      "stem": "What additional disorders should be considered in young patients with retinal arterial emboli who lack conventional cardiovascular risk factors?",
+      "topicId": "learn-pages-5",
+      "topicTitle": "Pages 17, 18, 19, 20",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Emboli"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Emboli",
+        "Tear-film abnormalities",
+        "Orbital masses",
+        "Macular disease"
+      ],
+      "questionType": "learn",
+      "rationale": "Emboli are systemic vascular causes of transient monocular vision loss. Tear-film abnormalities and macular disease are ocular causes, whereas orbital masses are nonvascular orbital causes.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 3, excerpt 1",
+          "citationId": "p3c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 3,
+          "quote": "Systemic causes (vascular)\n  1. Emboli"
+        }
+      ],
+      "sourcePageNumbers": [
+        3
+      ],
+      "stem": "Which of the following is classified as a systemic vascular cause of transient monocular vision loss?",
+      "topicId": "learn-pages-1",
+      "topicTitle": "Pages 3, 4, 5",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Orbital masses"
+      ],
+      "duplicateRisk": "medium",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Orbital masses",
+        "Retinal vasospasm",
+        "Systemic hypoperfusion",
+        "Vasculitis"
+      ],
+      "questionType": "learn",
+      "rationale": "Orbital masses are categorized as nonvascular orbital causes of transient monocular vision loss. Retinal vasospasm is ocular, while hypoperfusion and vasculitis are systemic vascular causes.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 3, excerpt 1",
+          "citationId": "p3c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 3,
+          "quote": "Orbital causes (non-vascular)\n  - Masses"
+        }
+      ],
+      "sourcePageNumbers": [
+        3
+      ],
+      "stem": "Which of the following is a nonvascular orbital cause of transient monocular vision loss?",
+      "topicId": "learn-pages-1",
+      "topicTitle": "Pages 3, 4, 5",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Giant cell arteritis"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Giant cell arteritis",
+        "Tear-film abnormality",
+        "Vitreous debris",
+        "Macular disease"
+      ],
+      "questionType": "learn",
+      "rationale": "Giant cell arteritis is included among the differential diagnoses of painful transient monocular vision loss and requires urgent attention. The other choices are ocular conditions listed as causes of transient monocular vision loss but are not identified in this painful differential.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 5, excerpt 1",
+          "citationId": "p5c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 5,
+          "quote": "Differential diagnoses of PAINFUL transient monocular vision loss"
+        },
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 5, excerpt 1",
+          "citationId": "p5c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 5,
+          "quote": "Giant cell arteritis → ts an emergency"
+        }
+      ],
+      "sourcePageNumbers": [
+        5
+      ],
+      "stem": "Which condition is included in the differential diagnosis of painful transient monocular vision loss?",
+      "topicId": "learn-pages-1",
+      "topicTitle": "Pages 3, 4, 5",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Painful Horner syndrome with contralateral systemic neurologic signs"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Painful Horner syndrome with contralateral systemic neurologic signs",
+        "Painless bilateral visual loss without neurologic signs",
+        "Gradual bilateral blurring relieved by blinking",
+        "Monocular visual loss occurring only after eye closure"
+      ],
+      "questionType": "learn",
+      "rationale": "Carotid artery dissection can produce transient monocular vision loss along with a painful Horner syndrome and neurologic findings on the opposite side. This combination helps distinguish it from uncomplicated painless embolic episodes.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 7, excerpt 1",
+          "citationId": "p7c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 7,
+          "quote": "Painful Horner's and contralateral systemic neurologic signs"
+        }
+      ],
+      "sourcePageNumbers": [
+        7
+      ],
+      "stem": "Which presentation is associated with carotid artery dissection?",
+      "topicId": "learn-pages-2",
+      "topicTitle": "Pages 6, 7, 8, 9",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "They may occur without retinal infarction, and many affected patients are asymptomatic."
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "They may occur without retinal infarction, and many affected patients are asymptomatic.",
+        "They invariably produce retinal infarction and profound visual loss.",
+        "They are defined only by emboli originating from the heart.",
+        "They always cause permanent loss of the entire visual field."
+      ],
+      "questionType": "learn",
+      "rationale": "Retinal arterial emboli may occur without an associated retinal infarction, and many patients with retinal emboli are asymptomatic.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 9, excerpt 1",
+          "citationId": "p9c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 9,
+          "quote": "Retinal emboli may not have an associated retinal infarction; many patients with retinal emboli are asymptomatic"
+        }
+      ],
+      "sourcePageNumbers": [
+        9
+      ],
+      "stem": "Which statement about retinal arterial emboli is accurate?",
+      "topicId": "learn-pages-2",
+      "topicTitle": "Pages 6, 7, 8, 9",
+      "type": "multiple_choice"
+    },
+    {
+      "correctAnswers": [
+        "Cholesterol (Hollenhorst), calcific, and fibrin-platelet"
+      ],
+      "duplicateRisk": "low",
+      "metadata": {
+        "harnessVersion": "question-types-v9",
+        "jobId": "n57fakh3ph0wgaegfmsa1ny9e58evc6b",
+        "model": "gpt-5.6-luna",
+        "sourceDocumentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm"
+      },
+      "options": [
+        "Cholesterol (Hollenhorst), calcific, and fibrin-platelet",
+        "Cholesterol, infectious, and inflammatory",
+        "Calcific, fat, and silicone",
+        "Fibrin-platelet, air, and talc"
+      ],
+      "questionType": "learn",
+      "rationale": "The three principal retinal arterial embolus types are cholesterol (Hollenhorst), calcific, and fibrin-platelet. Fat, infectious or inflammatory material, talc, silicone, and air are listed as uncommon materials rather than the primary three types.",
+      "similarQuestionIds": [],
+      "sourceCitations": [
+        {
+          "chunkIndex": 0,
+          "chunkTitle": "Page 9, excerpt 1",
+          "citationId": "p9c0",
+          "noteFile": "Cardiovascular, hematologic revised version.pdf",
+          "pageNumber": 9,
+          "quote": "Types:\n\n• Cholesterol (Hollenhorst)\n- Calcific\n- Fibrin-platelet"
+        }
+      ],
+      "sourcePageNumbers": [
+        9
+      ],
+      "stem": "Which group contains the three retinal arterial embolus types identified?",
+      "topicId": "learn-pages-2",
+      "topicTitle": "Pages 6, 7, 8, 9",
+      "type": "multiple_choice"
+    }
+  ],
+  "claimedWorkers": [
+    1,
+    4,
+    0,
+    3,
+    2
+  ],
+  "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+  "completedAt": 1789960657745,
+  "completedWorkerCount": 5,
+  "completedWorkers": [
+    3,
+    2,
+    0,
+    4,
+    1
+  ],
+  "createdAt": 1789960630768,
+  "createdByUserId": "j571jkhm2fkf4eqe52csnhwnbn7xvkfn",
+  "documentId": "kd7chy2bbpngn3rv6ejh4x5f7n8erdnm",
+  "eventCount": 15,
+  "failedWorkerCount": 0,
+  "kind": "candidate_generation",
+  "loop": {
+    "blueprintCount": 15,
+    "blueprintSource": "fallback",
+    "enabled": true,
+    "gatePassedCount": 15,
+    "gateRejectedCount": 0,
+    "pass": "done",
+    "selectedCount": 15
+  },
+  "model": "gpt-5.6-luna",
+  "moduleClassId": "jn76grzjj9enzcnd371z8nj38h7mx5tw",
+  "moduleId": "js70qm41mmx7wh5f7j0p03zynd894hrq",
+  "moduleTitle": "Testing Module",
+  "plan": {
+    "coverageNotes": [
+      "Packed 15 requested questions into 5 workers with up to 3 questions each while rotating topic coverage within each batch.",
+      "Assigned 15 deterministic slot contracts across 5 workers."
+    ],
+    "riskNotes": [],
+    "topicAllocations": [
+      {
+        "notes": "Assigned to Learn: Pages 10, 11, 12.",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          10,
+          11,
+          12
+        ],
+        "taskId": "learn:batch:1",
+        "topicId": "learn-pages-3",
+        "topicTitle": "Pages 10, 11, 12"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 13, 14, 15, 16.",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          13,
+          14,
+          15,
+          16
+        ],
+        "taskId": "learn:batch:2",
+        "topicId": "learn-pages-4",
+        "topicTitle": "Pages 13, 14, 15, 16"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 17, 18, 19, 20.",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          17,
+          18,
+          19,
+          20
+        ],
+        "taskId": "learn:batch:3",
+        "topicId": "learn-pages-5",
+        "topicTitle": "Pages 17, 18, 19, 20"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 3, 4, 5.",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5
+        ],
+        "taskId": "learn:batch:4",
+        "topicId": "learn-pages-1",
+        "topicTitle": "Pages 3, 4, 5"
+      },
+      {
+        "notes": "Assigned to Learn: Pages 6, 7, 8, 9.",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          6,
+          7,
+          8,
+          9
+        ],
+        "taskId": "learn:batch:5",
+        "topicId": "learn-pages-2",
+        "topicTitle": "Pages 6, 7, 8, 9"
+      }
+    ],
+    "workerBatches": [
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 10, 11, 12",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          10,
+          11,
+          12
+        ],
+        "targetObjective": "Choose distinct fact 1 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:1",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 10, 11, 12"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 13, 14, 15, 16",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          13,
+          14,
+          15,
+          16
+        ],
+        "targetObjective": "Choose distinct fact 1 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:2",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 13, 14, 15, 16"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 17, 18, 19, 20",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          17,
+          18,
+          19,
+          20
+        ],
+        "targetObjective": "Choose distinct fact 1 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:3",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 17, 18, 19, 20"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 3, 4, 5",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          3,
+          4,
+          5
+        ],
+        "targetObjective": "Choose distinct fact 1 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:4",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 3, 4, 5"
+        ]
+      },
+      {
+        "cognitiveTemplate": "source-objective, source-objective, source-objective",
+        "label": "Learn: Pages 6, 7, 8, 9",
+        "plannedCount": 3,
+        "questionType": "learn",
+        "sourcePages": [
+          6,
+          7,
+          8,
+          9
+        ],
+        "targetObjective": "Choose distinct fact 1 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 2 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.; Choose distinct fact 3 of 3 from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.",
+        "taskId": "learn:batch:5",
+        "topicCount": 1,
+        "topicTitles": [
+          "Pages 6, 7, 8, 9"
+        ]
+      }
+    ]
+  },
+  "requestedCount": 15,
+  "requestedCounts": {
+    "clinical": 0,
+    "criticalThinking": 0,
+    "learn": 15
+  },
+  "reviewCount": 15,
+  "selectedPageNumbers": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "sourceIndexedAt": 1789926394236,
+  "sourceMode": "pages",
+  "status": "ready",
+  "statusText": "Ready: 15 candidates to review.",
+  "updatedAt": 1789960657745,
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 16705,
+        "cachedInputTokens": 13332,
+        "calls": 5,
+        "costEstimatedCalls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.01375429,
+        "failedCalls": 0,
+        "inputTokens": 30052,
+        "latencyMsTotal": 71090,
+        "outputTokens": 7757,
+        "reasoningTokens": 5428,
+        "stage": "draft"
+      },
+      {
+        "cacheWriteTokens": 19523,
+        "cachedInputTokens": 13552,
+        "calls": 5,
+        "costEstimatedCalls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.00987319,
+        "failedCalls": 0,
+        "inputTokens": 33090,
+        "latencyMsTotal": 39681,
+        "outputTokens": 3932,
+        "reasoningTokens": 2606,
+        "stage": "review"
+      }
+    ],
+    "cacheWriteTokens": 36228,
+    "cachedInputTokens": 26884,
+    "calls": 10,
+    "costEstimatedCalls": 10,
+    "costKnownCalls": 10,
+    "costUsd": 0.023627479999999996,
+    "failedCalls": 0,
+    "inputTokens": 63142,
+    "latencyMsTotal": 110771,
+    "outputTokens": 11689,
+    "reasoningTokens": 8034
+  },
+  "workerNotes": [
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 1 corrected during review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 corrected during review. 0 withheld."
+  ],
+  "workerStates": [
+    {
+      "draftedCount": 3,
+      "finishedAt": 1789960656513,
+      "index": 0,
+      "startedAt": 1789960632218
+    },
+    {
+      "draftedCount": 3,
+      "finishedAt": 1789960657363,
+      "index": 1,
+      "startedAt": 1789960632036
+    },
+    {
+      "draftedCount": 3,
+      "finishedAt": 1789960653815,
+      "index": 2,
+      "startedAt": 1789960632675
+    },
+    {
+      "draftedCount": 3,
+      "finishedAt": 1789960651908,
+      "index": 3,
+      "startedAt": 1789960632437
+    },
+    {
+      "draftedCount": 3,
+      "finishedAt": 1789960656775,
+      "index": 4,
+      "startedAt": 1789960632103
+    }
+  ]
+}

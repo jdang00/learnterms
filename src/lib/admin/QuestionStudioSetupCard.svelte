@@ -227,7 +227,7 @@
 				bind:selectedSourceSummary
 			/>
 			covering
-			{#if !hasStudioContext}
+			{#if !selectedDocumentId}
 				<button type="button" class={tokenClass(false)} disabled>
 					{#if sourceMode === 'pages'}
 						<Grid2X2 size={16} class="shrink-0" />
@@ -254,6 +254,12 @@
 							pages you choose
 						{/if}
 					</span>
+					<ChevronDown size={15} class="shrink-0 opacity-60" />
+				</button>
+			{:else if !hasStudioContext}
+				<button type="button" class={tokenClass(false)} onclick={choosePages}>
+					<Grid2X2 size={16} class="shrink-0" />
+					pages you choose
 					<ChevronDown size={15} class="shrink-0 opacity-60" />
 				</button>
 			{:else if isTopicMapLoading}

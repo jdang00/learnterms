@@ -1,10 +1,11 @@
+import { retryConflict } from './retry';
 import { omit } from 'convex-helpers';
 import { v } from 'convex/values';
 import { internal } from '../_generated/api';
 import { internalAction, internalQuery } from '../_generated/server';
 import { scoreDuplicateRisk } from './duplicates';
 import { selectedSourcePages } from './pageSelection';
-import { callQualityModel } from './provider';
+import { callQualityModel, QuestionProviderError } from './provider';
 import {
 	HARNESS_VERSION,
 	evidenceForObjective,
@@ -13,15 +14,17 @@ import {
 	type QualitySlot
 } from './quality';
 import { questionTypeLabel } from './questionTypes';
-import { captureTelemetry, questionStudioRateLimiter } from './runtime';
+import { captureTelemetry } from './runtime';
 import type { CandidateQuestion, GenerationContext } from './shared';
 import {
 	QUESTION_STUDIO_MODEL,
+	LEARN_DRAFTING_EFFORT,
 	liveWorkerTaskValidator,
 	questionStudioModelValidator
 } from './shared';
 import { loadMarkdownPages, selectPages } from './sourceRetrieval';
 import { cleanPlainText } from './text';
+import { estimateQualityInputTokens } from './tokenEstimate';
 
 export const findLikelyDuplicateQuestions = internalQuery({
 	args: {
@@ -75,21 +78,25 @@ export const generateCandidateWorker = internalAction({
 		remainingTasks: v.optional(v.array(liveWorkerTaskValidator)),
 		workerIndex: v.number(),
 		workerTotal: v.number(),
+		workerStride: v.optional(v.number()),
 		model: questionStudioModelValidator,
 		focusNotes: v.optional(v.string()),
 		startPage: v.optional(v.number()),
 		endPage: v.optional(v.number())
 	},
 	handler: async (ctx, args) => {
-		const claimed = await ctx.runMutation(internal.questionStudio.claimWorker, {
-			jobId: args.jobId,
-			workerIndex: args.workerIndex
-		});
+		const claimed = await retryConflict(() =>
+			ctx.runMutation(internal.questionStudio.claimWorker, {
+				jobId: args.jobId,
+				workerIndex: args.workerIndex
+			})
+		);
 		if (!claimed) return;
 		let candidates: CandidateQuestion[] = [];
 		let detail = '';
 		let failed = false;
 		const started = Date.now();
+		const verifiedLearn = claimed.deadlineAt !== undefined && args.task.questionType === 'learn';
 		try {
 			const context = (await ctx.runQuery(internal.questionStudio.getGenerationContext, {
 				clerkUserId: args.clerkUserId,
@@ -130,76 +137,149 @@ export const generateCandidateWorker = internalAction({
 					});
 					if (!current || current.dismissedAt || current.status !== 'running')
 						throw new Error('Generation cancelled');
-					// Reserve the worst-case token allowance before spending, including failed requests.
-					const allowance = request.system.length + request.prompt.length + request.maxOutputTokens;
-					await questionStudioRateLimiter.limit(ctx, 'questionStudioTokenUsagePerUser', {
-						key: args.clerkUserId,
-						count: allowance,
-						throws: true
-					});
-					await questionStudioRateLimiter.limit(ctx, 'questionStudioGlobalTokenUsage', {
-						count: allowance,
-						throws: true
-					});
+					if (request.stage === 'repair') {
+						for (const failure of request.repairFailures ?? []) {
+							await ctx.runMutation(internal.questionStudio.updateGenerationJob, {
+								jobId: args.jobId,
+								eventLabel: 'Repair requested',
+								eventDetail: `${failure.slotId}: ${failure.reasons.join(' ')}`
+							});
+						}
+					}
+					// Reserve estimated input plus the maximum output before spending.
+					const estimatedInputTokens = estimateQualityInputTokens(request);
+					const allowance = estimatedInputTokens + request.maxOutputTokens;
+					const reservationStarted = Date.now();
+					while (true) {
+						const limited = await retryConflict(() =>
+							ctx.runMutation(internal.questionStudio.reserveGenerationTokens, {
+								userId: args.clerkUserId,
+								allowance,
+								waitForCapacity: true
+							})
+						);
+						if (!limited) break;
+						if (
+							Date.now() - reservationStarted >= 6000 ||
+							(claimed.deadlineAt && Date.now() >= claimed.deadlineAt - 2000)
+						)
+							throw new Error('Question token budget is busy; try again shortly.');
+						await new Promise((resolve) =>
+							setTimeout(resolve, Math.min(1000, Math.max(100, limited.retryAfter)))
+						);
+					}
+					const reservationWaitMs = Date.now() - reservationStarted;
 					let response;
+					let providerError: unknown;
 					try {
-						response = await callQualityModel(request, process.env.OPENROUTER_API_KEY!);
+						response = await callQualityModel(
+							{
+								...request,
+								timeoutMs: claimed.deadlineAt
+									? Math.max(1, claimed.deadlineAt - Date.now() - 3000)
+									: undefined,
+								metadata: {
+									job_id: String(args.jobId),
+									worker_index: String(args.workerIndex),
+									harness_version: HARNESS_VERSION,
+									question_type: args.task.questionType
+								}
+							},
+							process.env.OPENAI_API_KEY!
+						);
 					} catch (error) {
-						await ctx.runMutation(internal.questionStudio.recordGenerationUsage, {
+						if (!(error instanceof QuestionProviderError)) throw error;
+						response = error.usage;
+						providerError = error;
+					}
+					if (response.inputTokens + response.outputTokens > 0) {
+						await retryConflict(() =>
+							ctx.runMutation(internal.questionStudio.settleGenerationTokens, {
+								userId: args.clerkUserId,
+								allowance,
+								actualTokens: response.inputTokens + response.outputTokens
+							})
+						);
+					}
+					await retryConflict(() =>
+						ctx.runMutation(internal.questionStudio.recordGenerationUsage, {
 							jobId: args.jobId,
 							stage: request.stage,
-							failed: true
-						});
-						await captureTelemetry(ctx, {
-							event: '$ai_generation',
-							distinctId: args.clerkUserId,
-							properties: {
-								ai_trace_id: String(args.jobId),
-								ai_span_id: `${args.jobId}:${args.workerIndex}:${request.stage}`,
-								ai_model: QUESTION_STUDIO_MODEL,
-								ai_provider: 'openrouter',
-								ai_is_error: true,
-								job_id: args.jobId,
-								stage: request.stage,
-								thinking: request.thinking,
-								question_type: args.task.questionType,
-								harness_version: HARNESS_VERSION,
-								cost_unknown: true
-							}
-						});
-						throw error;
-					}
-					await ctx.runMutation(internal.questionStudio.recordGenerationUsage, {
-						jobId: args.jobId,
-						stage: request.stage,
-						inputTokens: response.inputTokens,
-						outputTokens: response.outputTokens,
-						reasoningTokens: response.reasoningTokens,
-						costUsd: response.costUsd,
-						latencyMs: response.latencyMs
-					});
+							failed: !!providerError,
+							inputTokens: response.inputTokens,
+							outputTokens: response.outputTokens,
+							reasoningTokens: response.reasoningTokens,
+							cachedInputTokens: response.cachedInputTokens,
+							cacheWriteTokens: response.cacheWriteTokens,
+							costUsd: response.costUsd,
+							costEstimated: response.costEstimated,
+							latencyMs: response.latencyMs
+						})
+					);
+					const generationId =
+						response.responseId ?? `${args.jobId}:${args.workerIndex}:${request.stage}`;
 					await captureTelemetry(ctx, {
 						event: '$ai_generation',
 						distinctId: args.clerkUserId,
 						properties: {
 							ai_trace_id: String(args.jobId),
-							ai_span_id: `${args.jobId}:${args.workerIndex}:${request.stage}`,
+							ai_session_id: null,
+							ai_span_id: generationId,
+							ai_generation_id: generationId,
+							ai_parent_id: String(args.jobId),
+							ai_span_name: `Question Studio ${request.stage}`,
 							ai_model: QUESTION_STUDIO_MODEL,
-							ai_provider: 'openrouter',
+							ai_provider: 'openai',
+							ai_service_tier: response.serviceTier,
+							requested_service_tier: 'default',
 							ai_input_tokens: response.inputTokens,
 							ai_output_tokens: response.outputTokens,
+							ai_cache_read_input_tokens: response.cachedInputTokens ?? 0,
+							ai_cache_creation_input_tokens: response.cacheWriteTokens ?? 0,
 							ai_total_cost_usd: response.costUsd ?? null,
+							cost_estimated: response.costEstimated ?? false,
+							cost_unknown: response.costUsd === undefined,
+							pricing_date: '2026-09-20',
+							reservation_wait_ms: reservationWaitMs,
+							estimated_input_tokens: estimatedInputTokens,
+							reserved_tokens: allowance,
 							ai_latency: response.latencyMs / 1000,
+							ai_is_error: !!providerError,
+							ai_error: providerError instanceof Error ? providerError.message : null,
+							ai_http_status: response.httpStatus,
+							provider_request_id: response.requestId,
+							provider_response_id: response.responseId,
+							finish_reason: response.finishReason,
+							reasoning_tokens: response.reasoningTokens,
 							stage: request.stage,
 							thinking: request.thinking,
 							question_type: args.task.questionType,
 							harness_version: HARNESS_VERSION,
-							job_id: args.jobId
+							job_id: args.jobId,
+							worker_index: args.workerIndex
 						}
 					});
+					console.info(
+						'Question Studio model call',
+						JSON.stringify({
+							jobId: args.jobId,
+							worker: args.workerIndex,
+							stage: request.stage,
+							requestId: response.requestId,
+							responseId: response.responseId,
+							latencyMs: response.latencyMs,
+							failed: !!providerError
+						})
+					);
+					if (providerError) throw providerError;
 					return response;
 				},
 				{
+					referenceLearn: verifiedLearn,
+					fastLearnReview: args.task.questionType === 'learn',
+					...(verifiedLearn ? { draftingEffortOverride: LEARN_DRAFTING_EFFORT } : {}),
+					sourcePages: pages,
+					sessionId: `question-studio:${context.user._id}:${args.documentId}:${claimed.sourceIndexedAt}`,
 					avoid: selectDuplicateContext(
 						slots,
 						context.existingQuestions,
@@ -207,6 +287,11 @@ export const generateCandidateWorker = internalAction({
 					)
 				}
 			);
+			failed =
+				result.accepted.length === 0 &&
+				result.rejected.some((r) =>
+					r.reasons.some((reason) => reason.startsWith('Provider or format failure:'))
+				);
 			candidates = result.accepted.map(({ slot, draft }) => ({
 				type: 'multiple_choice',
 				stem: draft.stem,
@@ -235,13 +320,14 @@ export const generateCandidateWorker = internalAction({
 					model: QUESTION_STUDIO_MODEL,
 					jobId: args.jobId,
 					harnessVersion: HARNESS_VERSION,
+					reviewMode: 'independent',
 					sourceDocumentId: args.documentId
 				}
 			}));
 			candidates = candidates.filter(
 				(c) => scoreDuplicateRisk(c, context.existingQuestions).risk !== 'high'
 			);
-			detail = `${candidates.length}/${slots.length} passed evidence checks and independent automated review. ${result.rejected.length} withheld. ${result.rejected
+			detail = `${candidates.length}/${slots.length} passed evidence checks and independent automated review. ${result.corrections.length} corrected during review. ${result.rejected.length} withheld. ${result.rejected
 				.flatMap((r) => r.reasons)
 				.join(' ')
 				.slice(0, 320)}`;
@@ -277,7 +363,8 @@ export const generateCandidateWorker = internalAction({
 				...args,
 				task,
 				remainingTasks,
-				workerIndex: args.workerIndex + 2
+				// Jobs queued before this change used two lanes.
+				workerIndex: args.workerIndex + (args.workerStride ?? 2)
 			});
 		}
 		await ctx.scheduler.runAfter(0, internal.questionStudio.reviewGenerationJob, {

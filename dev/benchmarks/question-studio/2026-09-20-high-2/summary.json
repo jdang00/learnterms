@@ -1,0 +1,142 @@
+{
+  "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+  "status": "ready",
+  "requested": 15,
+  "accepted": 12,
+  "wallMs": 58856,
+  "firstCandidateMs": 17394,
+  "setupMs": 1689,
+  "workerSpanMs": 56752,
+  "finalizationMs": 415,
+  "aggregateWorkerMs": 156425,
+  "aggregateWorkerModelMs": 150794,
+  "aggregateNonModelWorkerMs": 5631,
+  "acceptedByType": {
+    "learn": 9,
+    "clinical": 3
+  },
+  "usage": {
+    "byStage": [
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 0,
+        "calls": 1,
+        "costKnownCalls": 0,
+        "costUsd": 0,
+        "failedCalls": 0,
+        "inputTokens": 0,
+        "latencyMsTotal": 259,
+        "outputTokens": 0,
+        "reasoningTokens": 0,
+        "stage": "plan"
+      },
+      {
+        "cacheWriteTokens": 0,
+        "cachedInputTokens": 21080,
+        "calls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.0102514,
+        "failedCalls": 0,
+        "inputTokens": 21095,
+        "latencyMsTotal": 61303,
+        "outputTokens": 8189,
+        "reasoningTokens": 5745,
+        "stage": "draft"
+      },
+      {
+        "cacheWriteTokens": 4147,
+        "cachedInputTokens": 16450,
+        "calls": 5,
+        "costKnownCalls": 5,
+        "costUsd": 0.011157150000000001,
+        "failedCalls": 0,
+        "inputTokens": 20612,
+        "latencyMsTotal": 72739,
+        "outputTokens": 8157,
+        "reasoningTokens": 6596,
+        "stage": "review"
+      },
+      {
+        "cacheWriteTokens": 2518,
+        "cachedInputTokens": 6658,
+        "calls": 2,
+        "costKnownCalls": 2,
+        "costUsd": 0.00272946,
+        "failedCalls": 0,
+        "inputTokens": 9182,
+        "latencyMsTotal": 12920,
+        "outputTokens": 1638,
+        "reasoningTokens": 1202,
+        "stage": "repair"
+      },
+      {
+        "cacheWriteTokens": 577,
+        "cachedInputTokens": 3290,
+        "calls": 1,
+        "costKnownCalls": 1,
+        "costUsd": 0.00062825,
+        "failedCalls": 0,
+        "inputTokens": 3870,
+        "latencyMsTotal": 3832,
+        "outputTokens": 348,
+        "reasoningTokens": 175,
+        "stage": "review_repair"
+      }
+    ],
+    "cacheWriteTokens": 7242,
+    "cachedInputTokens": 47478,
+    "calls": 14,
+    "costKnownCalls": 13,
+    "costUsd": 0.02476626,
+    "failedCalls": 0,
+    "inputTokens": 54759,
+    "latencyMsTotal": 151053,
+    "outputTokens": 18332,
+    "reasoningTokens": 13718
+  },
+  "workerNotes": [
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Clinical: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "Learn: 0/3 passed evidence checks and independent automated review. 3 withheld. Abstained because the assigned central fact—retinal arterial emboli may occur without retinal infarction and may be asymptomatic—is already covered by a supplied exclusion. Abstained because the assigned central fact—diffusion-weighted brain MRI is part of the evaluation after acute retinal arterial occlusion—is alread"
+  ],
+  "repairs": [
+    "clinical:batch:1:q3: The assigned objective would require repeating the excluded question about selecting CBC, ESR, and CRP for suspected giant cell arteritis in acute retinal ischemia.",
+    "learn:batch:1:q1: The incorrect options need revision. The correct statement and rationale are directly supported: retinal emboli may occur without infarction, and many patients are asymptomatic. However, the three distractors rely on giveaway absolute wording such as “invariably,” “only,” and “always,” making them weak rather than plausible alternatives.",
+    "learn:batch:1:q2: Some claims are not supported by the assigned source. The incorrect options need revision. Diffusion-weighted MRI is explicitly included in the work-up for acute retinal arterial occlusion. The rationale adds that it assesses “concurrent or recent brain ischemia,” which is not established by the evidence; the evidence states stroke-equivalent status, stroke risk, and inclusion of DWI MRI but not tha",
+    "learn:batch:1:q3: Missing or duplicate independent review."
+  ],
+  "workers": [
+    {
+      "index": 0,
+      "startMs": 1689,
+      "durationMs": 56752,
+      "accepted": 0
+    },
+    {
+      "index": 1,
+      "startMs": 2174,
+      "durationMs": 22198,
+      "accepted": 3
+    },
+    {
+      "index": 2,
+      "startMs": 1824,
+      "durationMs": 15570,
+      "accepted": 3
+    },
+    {
+      "index": 3,
+      "startMs": 1991,
+      "durationMs": 24159,
+      "accepted": 3
+    },
+    {
+      "index": 4,
+      "startMs": 1923,
+      "durationMs": 37746,
+      "accepted": 3
+    }
+  ]
+}

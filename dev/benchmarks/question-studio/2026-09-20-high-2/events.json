@@ -1,0 +1,182 @@
+[
+  {
+    "_creationTime": 1789958836289.1973,
+    "_id": "nd7222bwz0pt4mdwwamyhjez0s8evm9a",
+    "at": 1789958836289,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Preparing the agent run.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Queued"
+  },
+  {
+    "_creationTime": 1789958836840.744,
+    "_id": "nd7f3s6w5qs9gbx002p1rt67yd8etnsd",
+    "at": 1789958836840,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 questions requested.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Started"
+  },
+  {
+    "_creationTime": 1789958837018.918,
+    "_id": "nd74621pj7ce0f5pvhz5d3vq458evjcr",
+    "at": 1789958837018,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "59 existing module questions available for duplicate checks.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Loaded context"
+  },
+  {
+    "_creationTime": 1789958837212.6177,
+    "_id": "nd7ch6e4y9gzffzyjsfvb5f1sn8etks2",
+    "at": 1789958837212,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Pages 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20. Only these pages are in context.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Selected pages"
+  },
+  {
+    "_creationTime": 1789958837715.787,
+    "_id": "nd7e6yh7crmw3ktw7s5dcysxbh8ev9ts",
+    "at": 1789958837715,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Response cache: HIT. 15 topic groups planned.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Page plan"
+  },
+  {
+    "_creationTime": 1789958837784.2114,
+    "_id": "nd79fvpsb9171vm9p4kps1jkmh8evp4f",
+    "at": 1789958837784,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "15 topics and 18 pages are in scope.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Prepared context"
+  },
+  {
+    "_creationTime": 1789958837849.4888,
+    "_id": "nd7b0znpd7eh5de5q7m1n4xq1h8evz98",
+    "at": 1789958837849,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "5 workers queued with at most 3 questions each.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Work orders ready"
+  },
+  {
+    "_creationTime": 1789958837977.2104,
+    "_id": "nd72qmkypna41k95szbwyrvsxs8etax3",
+    "at": 1789958837977,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Each worker drafts from selected page excerpts, then checks the answer and source support independently.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Workers launched"
+  },
+  {
+    "_creationTime": 1789958853683.0798,
+    "_id": "nd7frfnb75w0wynjt57ks2e4358evj63",
+    "at": 1789958853683,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958860661.95,
+    "_id": "nd7479yve6ww7fj2nt1c5d510n8etd6x",
+    "at": 1789958860661,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958862439.6619,
+    "_id": "nd7ezypcxttf00twksq0d57rs58etgz4",
+    "at": 1789958862439,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958865084.7957,
+    "_id": "nd70c31t5hxa8f2jhf1fmeae6h8etq5e",
+    "at": 1789958865084,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "clinical:batch:1:q3: The assigned objective would require repeating the excluded question about selecting CBC, ESR, and CRP for suspected giant cell arteritis in acute retinal ischemia.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Repair requested"
+  },
+  {
+    "_creationTime": 1789958875958.0815,
+    "_id": "nd74n3yrsq61degvx6zf3f1y2x8et55x",
+    "at": 1789958875958,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Clinical: 3/3 passed evidence checks and independent automated review. 0 withheld.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958887695.699,
+    "_id": "nd7b956xgqb1v02pk0x6yvzm7d8ev23d",
+    "at": 1789958887695,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "learn:batch:1:q1: The incorrect options need revision. The correct statement and rationale are directly supported: retinal emboli may occur without infarction, and many patients are asymptomatic. However, the three distractors rely on giveaway absolute wording such as “invariably,” “only,” and “always,” making them weak rather than plausible alternatives.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Repair requested"
+  },
+  {
+    "_creationTime": 1789958887760.0283,
+    "_id": "nd7czb8ssrb1bkkd8ercym9csn8et2z6",
+    "at": 1789958887760,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "learn:batch:1:q2: Some claims are not supported by the assigned source. The incorrect options need revision. Diffusion-weighted MRI is explicitly included in the work-up for acute retinal arterial occlusion. The rationale adds that it assesses “concurrent or recent brain ischemia,” which is not established by the evidence; the evidence states stroke-equivalent status, stroke risk, and inclusion of DWI MRI but not tha",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Repair requested"
+  },
+  {
+    "_creationTime": 1789958887820.5256,
+    "_id": "nd71p0nz0xp027kfhjwwdd6qmn8etkkc",
+    "at": 1789958887820,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "learn:batch:1:q3: Missing or duplicate independent review.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Repair requested"
+  },
+  {
+    "_creationTime": 1789958894730.6223,
+    "_id": "nd7dc728fd50cdkwmp6xf0j6ch8et8g1",
+    "at": 1789958894730,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Learn: 0/3 passed evidence checks and independent automated review. 3 withheld. Abstained because the assigned central fact—retinal arterial emboli may occur without retinal infarction and may be asymptomatic—is already covered by a supplied exclusion. Abstained because the assigned central fact—diffusion-weighted brain MRI is part of the evaluation after acute retinal arterial occlusion—is alread",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Worker complete"
+  },
+  {
+    "_creationTime": 1789958894985.7388,
+    "_id": "nd793q03ab2jdfcnt1hb2dx2b98etjw3",
+    "at": 1789958894985,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "12 candidates are ready for local source, answer, and provenance checks.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Reviewing"
+  },
+  {
+    "_creationTime": 1789958895062.1243,
+    "_id": "nd702vbhn84db44xj8wzsvqjt58etgcr",
+    "at": 1789958895062,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "0 rejected, 0 need reasoning review.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Review complete"
+  },
+  {
+    "_creationTime": 1789958895145.8867,
+    "_id": "nd7c0gtrx5n4f71xxweyxwtpjn8evq22",
+    "at": 1789958895145,
+    "cohortId": "jd7azhmsdxcqcxknf546eeqes17m9gt4",
+    "detail": "Draft workers finished with partial usable candidates.",
+    "jobId": "n571p0kb8vcn312x6pq2d9cd398etrqg",
+    "label": "Ready"
+  }
+]

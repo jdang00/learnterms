@@ -413,11 +413,11 @@
 		savedDraftsLink = null;
 	}
 
-	function resetPlan() {
+	function resetPlan(preserveGuidance = false) {
 		topics = [];
 		selectedTopicIds = new Set();
 		loadedTopicMapId = null;
-		guidanceNotes = '';
+		if (!preserveGuidance) guidanceNotes = '';
 		resetGenerated();
 	}
 
@@ -444,7 +444,7 @@
 		selectedClass = null;
 		selectedModuleId = null;
 		selectedModuleTitle = '';
-		resetPlan();
+		resetPlan(true);
 		saveStudioSelection();
 	}
 
@@ -453,7 +453,7 @@
 		selectedClass = classItem;
 		selectedModuleId = null;
 		selectedModuleTitle = '';
-		resetPlan();
+		resetPlan(true);
 		classOpen = false;
 		saveStudioSelection();
 	}
@@ -462,7 +462,7 @@
 		allowServerResume = false;
 		selectedModuleId = moduleItem._id;
 		selectedModuleTitle = moduleItem.title;
-		resetPlan();
+		resetPlan(true);
 		moduleOpen = false;
 		saveStudioSelection();
 	}

@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'bun:test';
-import { buildLiveGenerationWork } from '../src/convex/questionStudio/planning';
+import {
+	buildLiveGenerationWork,
+	generationWorkerLanes
+} from '../src/convex/questionStudio/planning';
 import type { TopicMapItem } from '../src/convex/questionStudio/shared';
 import type { QuestionType } from '../src/convex/questionStudio/questionTypes';
 
@@ -17,6 +20,30 @@ function topic(index: number, suggestedTypes: QuestionType[]): TopicMapItem {
 }
 
 describe('Question Studio worker batching', () => {
+	test('five bounded lanes cover every task exactly once, including tail workers', () => {
+		const topics = Array.from({ length: 30 }, (_, index) =>
+			topic(index + 1, ['learn', 'clinical', 'criticalThinking'])
+		);
+		for (const counts of [
+			{ learn: 1, clinical: 0, criticalThinking: 0 },
+			{ learn: 12, clinical: 3, criticalThinking: 0 },
+			{ learn: 10, clinical: 10, criticalThinking: 10 }
+		]) {
+			const { tasks } = buildLiveGenerationWork(topics, counts);
+			const lanes = generationWorkerLanes(tasks);
+			expect(lanes).toHaveLength(Math.min(5, tasks.length));
+			const scheduled = lanes
+				.flatMap((lane) =>
+					[lane.task, ...lane.remainingTasks].map((task, offset) => ({
+						task,
+						index: lane.workerIndex + offset * lane.workerStride
+					}))
+				)
+				.sort((a, b) => a.index - b.index);
+			expect(scheduled.map(({ index }) => index)).toEqual(tasks.map((_, index) => index));
+			expect(scheduled.map(({ task }) => task)).toEqual(tasks);
+		}
+	});
 	test('does not force clinical scenarios onto nonclinical topics', () => {
 		const { tasks, plan } = buildLiveGenerationWork([topic(1, ['learn'])], {
 			learn: 1,

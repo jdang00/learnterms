@@ -1,3 +1,4 @@
+import { estimateQualityInputTokens } from '../src/convex/questionStudio/tokenEstimate';
 import { expect, test } from 'bun:test';
 import {
 	evidenceForObjective,
@@ -6,9 +7,19 @@ import {
 	draftPrompt,
 	selectDuplicateContext,
 	reviewPrompt,
+	cachedSourceEvidence,
+	withCachedSource,
+	draftSystem,
+	draftSchema,
+	learnReviewSchema,
 	type QualitySlot,
 	type QualityDraft
 } from '../src/convex/questionStudio/quality';
+import {
+	callQualityModel,
+	QuestionProviderError,
+	estimateLunaCost
+} from '../src/convex/questionStudio/provider';
 import {
 	parseStoredPages,
 	parseOcrPages,
@@ -39,10 +50,105 @@ const draft: QualityDraft = {
 	options: ['Four', 'Five', 'Six', 'Seven'],
 	answerIndex: 0,
 	rationale: 'Two plus two equals four by addition.',
-	evidence: [{ citationId: 'p7c0', quote: 'Two plus two equals four.' }],
-	reasoningSkill: 'Direct retrieval of a fact.',
-	distractorReasons: ['One too many is five.', 'Two too many is six.', 'Three too many is seven.']
+	evidence: [{ citationId: 'p7c0', quote: 'Two plus two equals four.' }]
 };
+
+test('source prefixes stay identical across tasks and repairs without expanding assignment evidence', () => {
+	const pages = [
+		{ pageNumber: 7, text: slot.evidence[0].text },
+		{ pageNumber: 8, text: 'Unassigned fact stays outside the assignment.' }
+	];
+	const source = cachedSourceEvidence([slot], pages);
+	const request = {
+		stage: 'draft' as const,
+		system: draftSystem('learn'),
+		prompt: draftPrompt([slot]),
+		schema: draftSchema,
+		thinking: 'high' as const,
+		maxOutputTokens: 8000
+	};
+	const first = withCachedSource(request, source, 'stable-session');
+	const second = withCachedSource(
+		{
+			...request,
+			prompt: draftPrompt(
+				[{ ...slot, slotId: 'another-slot' }],
+				{},
+				{ failures: ['Fix ambiguity'] }
+			)
+		},
+		source,
+		'stable-session'
+	);
+	expect(first.system).toBe(second.system);
+	expect(first.prompt).not.toContain(slot.evidence[0].text);
+	const payload = JSON.parse(first.prompt.split('\n').at(-1)!);
+	expect(payload.assignments[0].evidence).toEqual([{ citationId: 'p7c0' }]);
+	expect(payload.assignments[0].evidence).not.toContainEqual({ citationId: 'p8c0' });
+	expect(() =>
+		withCachedSource(request, [{ citationId: 'p7c0', text: 'Different source revision' }])
+	).toThrow('mismatch');
+});
+
+test('OpenAI requests keep source caching, stored logs, high effort, and report cache usage', async () => {
+	const originalFetch = globalThis.fetch;
+	let sent: any;
+	globalThis.fetch = (async (_input: unknown, init: RequestInit) => {
+		sent = { url: _input, body: JSON.parse(String(init.body)), headers: init.headers };
+		return new Response(
+			JSON.stringify({
+				id: 'chatcmpl-test',
+				service_tier: 'default',
+				choices: [
+					{
+						finish_reason: 'stop',
+						message: { content: JSON.stringify({ questions: [draft], abstentions: [] }) }
+					}
+				],
+				usage: {
+					prompt_tokens: 2000,
+					completion_tokens: 1000,
+					prompt_tokens_details: { cached_tokens: 1536, cache_write_tokens: 128 },
+					completion_tokens_details: { reasoning_tokens: 600 },
+					cost: 0.001
+				}
+			})
+		);
+	}) as typeof fetch;
+	try {
+		const result = await callQualityModel(
+			{
+				stage: 'draft',
+				system: 'Stable evidence',
+				prompt: 'Variable assignment',
+				schema: draftSchema,
+				thinking: 'high',
+				maxOutputTokens: 8000,
+				sessionId: 'source-revision',
+				metadata: { job_id: 'job-test' }
+			},
+			'test'
+		);
+		expect(sent.url).toBe('https://api.openai.com/v1/chat/completions');
+		expect(sent.body.prompt_cache_key).toBe('source-revision');
+		expect(sent.body.store).toBe(true);
+		expect(sent.body.service_tier).toBe('default');
+		expect(result.serviceTier).toBe('default');
+		expect(sent.body.metadata.job_id).toBe('job-test');
+		expect(sent.body.max_completion_tokens).toBe(8000);
+		expect(sent.body.messages[0].content[0].prompt_cache_breakpoint).toEqual({ mode: 'explicit' });
+		expect(sent.body.reasoning_effort).toBe('high');
+		expect(sent.headers['X-OpenRouter-Cache']).toBeUndefined();
+		expect(result.costEstimated).toBe(true);
+		expect(result.costUsd).toBeCloseTo(estimateLunaCost(2000, 1000, 1536, 128), 10);
+		expect(result.responseId).toBe('chatcmpl-test');
+		expect(result.cachedInputTokens).toBe(1536);
+		expect(result.cacheWriteTokens).toBe(128);
+		expect(result.reasoningTokens).toBe(600);
+	} finally {
+		globalThis.fetch = originalFetch;
+	}
+});
 test('page rules inside pages do not discard evidence', () => {
 	const pages = [
 		{ pageNumber: 1, text: 'before\n\n---\n\nafter' },
@@ -194,7 +300,7 @@ test('source-referencing prose goes to repair without rejecting clinical evidenc
 	).toContain('Remove source framing from student-facing text.');
 	expect(
 		structuralIssues({ ...draft, stem: 'Which answer is listed as the result?' }, slot)
-	).toContain('Remove source framing from student-facing text.');
+	).toEqual([]);
 	expect(
 		structuralIssues(
 			{ ...draft, rationale: 'This observation provides evidence of the relationship.' },
@@ -280,10 +386,7 @@ test('workers receive only their type policy and use its drafting effort', async
 				finishReason: 'stop'
 			};
 		});
-		expect(requests.map((request) => request.thinking)).toEqual([
-			questionType === 'learn' ? 'low' : 'medium',
-			'high'
-		]);
+		expect(requests.map((request) => request.thinking)).toEqual(['high', 'high']);
 		for (const request of requests) {
 			expect(request.system).not.toMatch(/first.order|second.order|third.order|binocular|phoria/i);
 			if (questionType === 'learn')
@@ -363,4 +466,76 @@ test('repair receives only failed assignments and failed previous drafts', async
 		};
 	});
 	expect(repairSeen).toBe(true);
+});
+
+test('incomplete OpenAI responses retain billable usage and request IDs', async () => {
+	const originalFetch = globalThis.fetch;
+	globalThis.fetch = (async () =>
+		new Response(
+			JSON.stringify({
+				id: 'chatcmpl-short',
+				choices: [{ finish_reason: 'length', message: { content: '' } }],
+				usage: {
+					prompt_tokens: 100,
+					completion_tokens: 800,
+					completion_tokens_details: { reasoning_tokens: 700 }
+				}
+			}),
+			{ headers: { 'x-request-id': 'req-short' } }
+		)) as unknown as typeof fetch;
+	try {
+		await callQualityModel(
+			{
+				stage: 'draft',
+				system: 'source',
+				prompt: 'question',
+				schema: draftSchema,
+				thinking: 'high',
+				maxOutputTokens: 800
+			},
+			'test'
+		);
+		throw new Error('Expected incomplete response');
+	} catch (error) {
+		expect(error).toBeInstanceOf(QuestionProviderError);
+		const usage = (error as QuestionProviderError).usage;
+		expect(usage.requestId).toBe('req-short');
+		expect(usage.outputTokens).toBe(800);
+		expect(usage.reasoningTokens).toBe(700);
+		expect(usage.costUsd).toBeGreaterThan(0);
+		expect(usage.finishReason).toBe('length');
+	} finally {
+		globalThis.fetch = originalFetch;
+	}
+});
+
+test('token reservation includes schema and full output without charging every character as a token', () => {
+	const request = {
+		stage: 'draft' as const,
+		system: 'Source evidence. '.repeat(1000),
+		prompt: 'Write a question about the source. <|endoftext|>',
+		schema: draftSchema,
+		thinking: 'high' as const,
+		maxOutputTokens: 6000
+	};
+	const estimated = estimateQualityInputTokens(request);
+	expect(estimated).toBeGreaterThan(3000);
+	expect(estimated).toBeLessThan(request.system.length);
+	const largeSchema = { ...request, schema: learnReviewSchema };
+	expect(estimateQualityInputTokens(largeSchema)).toBeGreaterThan(estimated);
+});
+
+test('embolic sources are not confused with documents while document narration is still withheld', () => {
+	for (const rationale of [
+		'Recognizing this source–composition relationship distinguishes embolic mechanisms.',
+		'Recognizing these sources helps identify systemic vascular risk.'
+	])
+		expect(structuralIssues({ ...draft, rationale }, slot)).toEqual([]);
+	for (const rationale of [
+		'The source states that two plus two equals four.',
+		'The supplied sources describe the calculation.'
+	])
+		expect(structuralIssues({ ...draft, rationale }, slot)).toContain(
+			'Remove source framing from student-facing text.'
+		);
 });
