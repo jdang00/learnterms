@@ -1,17 +1,9 @@
+import { userDisplayName } from '$lib/userDisplayName';
 import type { PageServerLoad } from './$types';
 import { clerkClient } from 'svelte-clerk/server';
 import { authenticatedConvexClient } from '$lib/server/convex';
 import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import { api } from '../../convex/_generated/api';
-
-function displayName(user: Awaited<ReturnType<typeof clerkClient.users.getUser>>) {
-	return (
-		user.fullName ||
-		user.username ||
-		user.emailAddresses?.find((email) => email.id === user.primaryEmailAddressId)?.emailAddress ||
-		'LearnTerms User'
-	);
-}
 
 const seo = {
 	title: 'Join Your Class — LearnTerms',
@@ -40,7 +32,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		if (userData === null) {
 			await client.mutation(api.users.addUser, {
 				clerkUserId: user.id,
-				name: displayName(user),
+				name: userDisplayName(user),
 				firstName: user.firstName || undefined,
 				lastName: user.lastName || undefined,
 				email: primaryEmail || undefined,

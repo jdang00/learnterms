@@ -9,7 +9,7 @@
 		"dev:convex": "bun convex dev",
 		"build": "svelte-kit sync && vite build",
 		"preview": "vite preview",
-		"test": "bun test ./tests/*.test.ts && bunx vitest run && bunx vitest run --config tests/moduleCompletion.state.config.ts",
+		"test": "bun test ./tests/*.test.ts && bunx vitest run && bunx vitest run --config tests/auth.config.ts && bunx vitest run --config tests/moduleCompletion.state.config.ts",
 		"eval:parse": "bun scripts/ai-eval/parse.ts",
 		"eval:questions": "bun scripts/ai-eval/run.ts",
 		"posthog:ai": "bun scripts/posthog-ai-observability.ts",

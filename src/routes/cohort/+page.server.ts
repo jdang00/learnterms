@@ -1,3 +1,4 @@
+import { userDisplayName } from '$lib/userDisplayName';
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { clerkClient } from 'svelte-clerk/server';
@@ -24,10 +25,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 			(email) => email.id === user.primaryEmailAddressId
 		)?.emailAddress;
 
-		if (userData === null && user.fullName) {
+		if (userData === null) {
 			await client.mutation(api.users.addUser, {
 				clerkUserId: user.id,
-				name: user.fullName,
+				name: userDisplayName(user),
 				firstName: user.firstName || undefined,
 				lastName: user.lastName || undefined,
 				email: primaryEmail || undefined,
