@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { SlidersHorizontal, ToolCase, X } from 'lucide-svelte';
+	import { Settings, SlidersHorizontal, ToolCase } from 'lucide-svelte';
+	import Sheet from '$lib/components/Sheet.svelte';
 	import { getQuizCommands, isCommandShown } from './commands.svelte';
 	import { getDockPreferences } from './dockPreferences.svelte';
 	import { isPassive, TONE_BADGE, TONE_TEXT } from './dockStyles';
@@ -7,7 +8,7 @@
 	import { ariaShortcutFor, shortcutLabelFor } from './shortcuts';
 	import type { QuizCommand } from './types';
 
-	// panel: expanded sidebar · rail: collapsed sidebar · sheet: header button + bottom sheet below lg
+	// panel: expanded sidebar · rail: collapsed sidebar · sheet: top-bar button + bottom sheet below lg
 	let { variant }: { variant: 'panel' | 'rail' | 'sheet' } = $props();
 
 	const registry = getQuizCommands();
@@ -26,11 +27,11 @@
 	let focusIndex = $state(0);
 	const rovingIndex = $derived(Math.min(focusIndex, Math.max(actionable.length - 1, 0)));
 	let toolbar = $state<HTMLElement | null>(null);
-	let sheet = $state<HTMLDialogElement | null>(null);
 	let sheetOpen = $state(false);
+	const settings = $derived(registry?.get('settings'));
 
 	async function run(command: QuizCommand) {
-		if (variant === 'sheet') sheet?.close();
+		if (variant === 'sheet') sheetOpen = false;
 		await command.run(source);
 		if (command.active) announcement = `${command.name} ${command.active() ? 'on' : 'off'}`;
 	}
@@ -72,12 +73,11 @@
 	}
 
 	function openSheet() {
-		sheet?.showModal();
 		sheetOpen = true;
 	}
 
 	function customize() {
-		sheet?.close();
+		sheetOpen = false;
 		preferences?.open();
 	}
 </script>
@@ -204,7 +204,7 @@
 			{/each}
 		</div>
 	{/if}
-{:else if tools.length}
+{:else}
 	<button
 		type="button"
 		class="btn btn-ghost btn-circle relative size-11 shrink-0 text-base-content/70"
@@ -223,26 +223,9 @@
 		{/if}
 	</button>
 
-	<dialog
-		bind:this={sheet}
-		class="modal modal-bottom"
-		aria-labelledby="quiz-tools-sheet-title"
-		onclose={() => (sheetOpen = false)}
-	>
-		<div
-			class="modal-box rounded-t-3xl px-5 pt-3"
-			style="padding-bottom: max(1.25rem, env(safe-area-inset-bottom));"
-		>
-			<div class="mx-auto mb-3 h-1.5 w-10 rounded-full bg-base-300" aria-hidden="true"></div>
-			<div class="mb-3 flex items-center justify-between">
-				<h2 id="quiz-tools-sheet-title" class="text-lg font-semibold">Tools</h2>
-				<form method="dialog">
-					<button class="btn btn-ghost btn-circle size-11" aria-label="Close tools">
-						<X size={18} />
-					</button>
-				</form>
-			</div>
-			<ul class="grid grid-cols-3 gap-2">
+	<Sheet bind:open={sheetOpen} title="Tools" desktop="bottom" width="sm:max-w-lg sm:mx-auto">
+		{#if tools.length}
+			<ul class="grid grid-cols-3 gap-2 pt-1">
 				{#each tools as command (command.id)}
 					{@const active = command.active?.() ?? false}
 					{@const Icon = active && command.activeIcon ? command.activeIcon : command.icon}
@@ -254,7 +237,7 @@
 						{:else}
 							<button
 								type="button"
-								class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-base-300 px-2 text-sm font-medium transition-colors disabled:opacity-40
+								class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-base-300 px-2 text-sm font-medium transition-colors active:scale-[0.97] disabled:opacity-40
 									{tileTone(command, active)}"
 								aria-pressed={command.active ? active : undefined}
 								disabled={command.enabled?.() === false}
@@ -270,18 +253,30 @@
 					</li>
 				{/each}
 			</ul>
+		{:else}
+			<p class="py-4 text-sm text-base-content/60">
+				No tools yet. Add a calculator, notes, or highlighter.
+			</p>
+		{/if}
+		<div class="mt-4 flex gap-2">
+			{#if settings}
+				<button
+					type="button"
+					class="btn btn-ghost min-h-11 flex-1 rounded-full text-base-content/70"
+					onclick={() => run(settings)}
+				>
+					<Settings size={16} /> Settings
+				</button>
+			{/if}
 			{#if preferences}
 				<button
 					type="button"
-					class="btn btn-ghost btn-sm mt-4 w-full rounded-full text-base-content/60"
+					class="btn btn-ghost min-h-11 flex-1 rounded-full text-base-content/70"
 					onclick={customize}
 				>
-					<SlidersHorizontal size={14} /> Customize tools
+					<SlidersHorizontal size={16} /> Customize tools
 				</button>
 			{/if}
 		</div>
-		<form method="dialog" class="modal-backdrop">
-			<button tabindex="-1" aria-label="Close tools">close</button>
-		</form>
-	</dialog>
+	</Sheet>
 {/if}

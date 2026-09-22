@@ -29,14 +29,16 @@ export const QUESTION_TYPES = {
 	MULTIPLE_CHOICE: 'multiple_choice',
 	TRUE_FALSE: 'true_false',
 	FILL_IN_THE_BLANK: 'fill_in_the_blank',
-	MATCHING: 'matching'
+	MATCHING: 'matching',
+	FREE_RESPONSE: 'free_response'
 } as const;
 
 export const DISPLAY_QUESTION_TYPES = {
 	[QUESTION_TYPES.MULTIPLE_CHOICE]: 'Multiple Choice',
 	[QUESTION_TYPES.TRUE_FALSE]: 'True/False',
 	[QUESTION_TYPES.FILL_IN_THE_BLANK]: 'Fill in the Blank',
-	[QUESTION_TYPES.MATCHING]: 'Matching'
+	[QUESTION_TYPES.MATCHING]: 'Matching',
+	[QUESTION_TYPES.FREE_RESPONSE]: 'Free Response'
 } as const;
 
 export type QuestionType = (typeof QUESTION_TYPES)[keyof typeof QUESTION_TYPES];

@@ -23,6 +23,8 @@ import type * as documentIngestion from "../documentIngestion.js";
 import type * as documentIngestionActions from "../documentIngestionActions.js";
 import type * as documentParsing from "../documentParsing.js";
 import type * as featureAnnouncements from "../featureAnnouncements.js";
+import type * as freeResponse from "../freeResponse.js";
+import type * as freeResponseValidators from "../freeResponseValidators.js";
 import type * as gradeCalculator from "../gradeCalculator.js";
 import type * as gradeCalculatorCatalog from "../gradeCalculatorCatalog.js";
 import type * as http from "../http.js";
@@ -113,6 +115,8 @@ declare const fullApi: ApiFromModules<{
   documentIngestionActions: typeof documentIngestionActions;
   documentParsing: typeof documentParsing;
   featureAnnouncements: typeof featureAnnouncements;
+  freeResponse: typeof freeResponse;
+  freeResponseValidators: typeof freeResponseValidators;
   gradeCalculator: typeof gradeCalculator;
   gradeCalculatorCatalog: typeof gradeCalculatorCatalog;
   http: typeof http;

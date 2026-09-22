@@ -315,7 +315,7 @@
 	}
 </script>
 
-<div class="flex flex-col h-[calc(100vh-4rem)]" transition:fade={{ duration: 200 }}>
+<div class="flex flex-col h-[calc(100dvh-4rem)]" transition:fade={{ duration: 200 }}>
 	{#if resultsQuery.isLoading}
 		<div class="flex-1 flex items-center justify-center">
 			<div class="text-center">
@@ -1066,20 +1066,20 @@
 
 			<!-- Mobile bottom nav for review -->
 			<div
-				class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-100 border-t border-base-300 p-3 flex items-center justify-between gap-2"
+				class="md:hidden bottom-dock fixed inset-x-0 z-40 bg-base-100/95 backdrop-blur-md border-t border-base-300 px-3 pt-2 flex items-center justify-between gap-2"
 			>
 				<button
-					class="btn btn-sm btn-outline rounded-full"
+					class="btn btn-outline min-h-11 rounded-full"
 					onclick={() => goToAdjacentReviewQuestion(-1)}
 					disabled={selectedIndex === 0}
 				>
 					<ArrowLeft size={16} /> Prev
 				</button>
-				<button class="btn btn-sm btn-soft rounded-full" onclick={() => (tab = 'summary')}>
+				<button class="btn btn-soft min-h-11 rounded-full" onclick={() => (tab = 'summary')}>
 					Summary
 				</button>
 				<button
-					class="btn btn-sm btn-outline rounded-full"
+					class="btn btn-outline min-h-11 rounded-full"
 					onclick={() => goToAdjacentReviewQuestion(1)}
 					disabled={selectedIndex === (filteredReviewEntries.length || 1) - 1}
 				>

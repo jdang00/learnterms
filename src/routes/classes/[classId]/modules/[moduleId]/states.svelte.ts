@@ -1,3 +1,4 @@
+import { responseText, type FreeResponseGrade } from '$lib/utils/freeResponse';
 import { answerStatus, evaluateMatching, summarizeModule } from '$lib/utils/moduleCompletion';
 import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
@@ -52,6 +53,49 @@ export class QuizState {
 	async flushEvidence() {
 		await this.retryBackground();
 		if (this.backgroundJobs.length) throw new Error('Progress has not synced');
+	}
+	freeResponseGrades: Record<string, FreeResponseGrade> = $state({});
+	gradingQuestionId = $state<string | null>(null);
+	gradingErrors: Record<string, string> = $state({});
+	submitFreeResponse:
+		| ((
+				questionId: Id<'question'>,
+				response: string,
+				submissionId: string
+		  ) => Promise<{ isCorrect: boolean; evidence: StudyEvidence; grade: FreeResponseGrade }>)
+		| null = null;
+	async checkFreeResponse(): Promise<boolean> {
+		const question = this.getCurrentFilteredQuestion();
+		const response = this.selectedAnswers[0] ?? '';
+		if (!question || this.gradingQuestionId || !responseText(response))
+			throw new Error('No response to grade');
+		this.cancelAutoNext();
+		this.cancelCompletion();
+		this.gradingQuestionId = question._id;
+		this.gradingErrors[question._id] = '';
+		try {
+			if (!this.submitFreeResponse) throw new Error('Grading unavailable');
+			const result = await this.submitFreeResponse(question._id, response, crypto.randomUUID());
+			this.freeResponseGrades[question._id] = result.grade;
+			this.learningEvidence[question._id] = result.evidence;
+			if (
+				this.getCurrentFilteredQuestion()?._id === question._id &&
+				this.selectedAnswers[0] === response
+			) {
+				this.checkResult = result.isCorrect ? 'Correct!' : 'Not quite yet.';
+				this.checkCount++;
+				this.showSolution = true;
+				this.solutionAutoRevealed = true;
+				this.scheduleSave();
+			}
+			return result.isCorrect;
+		} catch (error) {
+			this.gradingErrors[question._id] =
+				'Grading could not finish. Your response is saved here. Please submit again.';
+			throw error;
+		} finally {
+			this.gradingQuestionId = null;
+		}
 	}
 	checkError = $state('');
 	submitAnswer:
@@ -124,6 +168,8 @@ export class QuizState {
 		return summarizeModule(this.questions, this.learningEvidence, this.liveFlaggedQuestions);
 	}
 	checkResult: string = $state('');
+	// Bumps on every graded check so feedback replays even when the result text repeats.
+	checkCount = $state(0);
 	selectedAnswers: string[] = $state([]);
 	eliminatedAnswers: string[] = $state([]);
 	index: number = $state(0);
@@ -238,6 +284,7 @@ export class QuizState {
 			...(isCorrect ? {} : { cleanRecallCount: 0, firstCleanAt: undefined, masteredAt: undefined })
 		};
 		this.checkResult = isCorrect ? 'Correct!' : 'Incorrect. Please try again.';
+		this.checkCount++;
 		this.cancelAutoNext();
 		if (isCorrect) {
 			this.showSolution = true;
@@ -424,7 +471,7 @@ export class QuizState {
 	sanitizeStateForCurrentQuestion() {
 		const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
 		if (!current) return;
-		if (String(current.type) === 'fill_in_the_blank') return;
+		if (['fill_in_the_blank', 'free_response'].includes(current.type)) return;
 		if (String(current.type) === 'matching') {
 			const options = (current.options || []) as QuestionOption[];
 			const promptIds = options
@@ -651,6 +698,8 @@ export class QuizState {
 			removeHighlights
 		});
 		if (removeHighlights) this.highlightResetVersion++;
+		this.freeResponseGrades = {};
+		this.gradingErrors = {};
 		this.pendingSnapshots = {};
 		this.learningEvidence = Object.fromEntries(
 			Object.entries(this.learningEvidence).map(([id, evidence]) => [

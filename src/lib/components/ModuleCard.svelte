@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowRight, BookOpen } from 'lucide-svelte';
+	import { ArrowRight, BookOpen, ChevronRight } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { resolve } from '$app/paths';
@@ -28,9 +28,46 @@
 	let { module, classId, onSelect }: Props = $props();
 </script>
 
-{#snippet cardContent()}
+{#snippet rowContent()}
 	<div
-		class="module-card group relative rounded-2xl bg-base-100 border border-base-300 shadow-xs min-h-[11rem] transition-all duration-300 overflow-hidden hover:shadow-lg hover:border-primary/40 hover:-translate-y-0.5"
+		class="flex min-h-16 items-center gap-3 rounded-2xl border border-base-300 bg-base-100 px-4 py-3 transition-colors active:bg-base-200 sm:hidden"
+	>
+		<span class="shrink-0 text-2xl leading-none">{module.emoji || '📘'}</span>
+		<span class="min-w-0 flex-1">
+			<span class="line-clamp-2 text-[0.95rem] font-semibold leading-snug text-base-content"
+				>{module.title}</span
+			>
+			<span class="mt-0.5 flex items-center gap-2 text-xs text-base-content/55">
+				{#if module.questionCount !== undefined}
+					<span
+						>{module.questionCount}
+						{module.questionCount === 1 ? 'question' : 'questions'}</span
+					>
+				{/if}
+				{#if module.tags?.length}
+					<span
+						class="flex items-center gap-1"
+						aria-label="Tags: {module.tags.map((tag) => tag.name).join(', ')}"
+					>
+						{#each module.tags.slice(0, 4) as tag (tag._id)}
+							<span
+								class="size-2 rounded-full"
+								style={`background-color: ${tag.color || '#94a3b8'}`}
+								title={tag.name}
+							></span>
+						{/each}
+					</span>
+				{/if}
+			</span>
+		</span>
+		<ChevronRight size={18} class="shrink-0 text-base-content/35" />
+	</div>
+{/snippet}
+
+{#snippet cardContent()}
+	{@render rowContent()}
+	<div
+		class="module-card group relative max-sm:hidden rounded-2xl bg-base-100 border border-base-300 shadow-xs min-h-[11rem] transition-all duration-300 overflow-hidden hover:shadow-lg hover:border-primary/40 hover:-translate-y-0.5"
 	>
 		<div
 			class="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"

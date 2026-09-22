@@ -64,7 +64,8 @@
 
 	$effect(() => {
 		inputText = qs.selectedAnswers && qs.selectedAnswers[0] ? qs.selectedAnswers[0] : '';
-		tick().then(() => inputEl?.focus());
+		// On touch screens focusing would pop the keyboard over the question on every navigation.
+		if (matchMedia('(pointer: fine)').matches) tick().then(() => inputEl?.focus());
 	});
 
 	function handleEnter(source: 'keyboard' | 'button') {
@@ -101,11 +102,16 @@
 			{@html currentlySelected.stem}
 		{/if}
 	</div>
-	<div class="flex items-center mt-4 mb-6">
+	<div class="flex w-full max-w-sm items-center mt-4 mb-6">
 		<input
 			type="text"
 			placeholder="Type here"
-			class="input input-bordered w-64 sm:w-72 rounded-full"
+			enterkeyhint="done"
+			autocomplete="off"
+			autocapitalize="off"
+			autocorrect="off"
+			spellcheck="false"
+			class="input input-bordered min-w-0 flex-1 rounded-full"
 			value={inputText}
 			oninput={(e) => {
 				inputText = (e.target as HTMLInputElement).value;

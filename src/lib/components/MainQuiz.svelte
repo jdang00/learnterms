@@ -7,22 +7,23 @@
 	import QuizNavigation from '$lib/components/QuizNavigation.svelte';
 	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
 	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
+	import FreeResponse from './FreeResponse.svelte';
 	import Matching from '$lib/components/Matching.svelte';
 	import QuizDock from '$lib/components/quiz-dock/QuizDock.svelte';
 	import MobileQuizDock from '$lib/components/quiz-dock/MobileQuizDock.svelte';
 	import QuizShortcuts from '$lib/components/quiz-dock/QuizShortcuts.svelte';
-	import QuizToolsBar from '$lib/components/quiz-dock/QuizToolsBar.svelte';
 	import { createQuizCommands, setQuizCommands } from '$lib/components/quiz-dock/commands.svelte';
 	import DockCustomizer from '$lib/components/quiz-dock/DockCustomizer.svelte';
 	import {
 		DockPreferences,
 		setDockPreferences
 	} from '$lib/components/quiz-dock/dockPreferences.svelte';
-	import MobileInfo from '$lib/components/MobileInfo.svelte';
+	import QuizMobileHeader from '$lib/components/QuizMobileHeader.svelte';
 	import { useQuery } from 'convex-svelte';
 	import { untrack } from 'svelte';
 	import { api } from '../../convex/_generated/api';
 	import ResultBanner from '$lib/components/ResultBanner.svelte';
+	import QuestionMediaStrip from '$lib/components/QuestionMediaStrip.svelte';
 	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
 	import { Flag, BookmarkCheck, ArrowDownNarrowWide, Pencil } from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
@@ -103,6 +104,33 @@
 		untrack(() => dockPreferences.hydrate(remote));
 	});
 
+	// Swipe the question sideways to move between questions on touch screens.
+	let swipe: { x: number; y: number; time: number } | null = null;
+	function swipeStart(event: TouchEvent) {
+		const touch = event.touches[0];
+		const target = event.target as Element;
+		const nearEdge = touch.clientX < 24 || touch.clientX > window.innerWidth - 24;
+		swipe =
+			event.touches.length === 1 &&
+			!nearEdge &&
+			!qs.highlightEnabled &&
+			!target.closest('[data-option], input, textarea, [contenteditable], pre, table, button')
+				? { x: touch.clientX, y: touch.clientY, time: event.timeStamp }
+				: null;
+	}
+	function swipeEnd(event: TouchEvent) {
+		if (!swipe) return;
+		const touch = event.changedTouches[0];
+		const dx = touch.clientX - swipe.x;
+		const dy = touch.clientY - swipe.y;
+		const quick = event.timeStamp - swipe.time < 600;
+		swipe = null;
+		if (!quick || Math.abs(dx) < 80 || Math.abs(dy) > Math.abs(dx) * 0.5) return;
+		if (window.getSelection()?.toString()) return;
+		const command = quizCommands.get(dx < 0 ? 'next' : 'previous');
+		if (command && command.enabled?.() !== false) void command.run('mobile');
+	}
+
 	function isAuthError(error: unknown): boolean {
 		if (!error) return false;
 		const message = getErrorText(error);
@@ -131,7 +159,7 @@
 	<ErrorDisplay error={questions.error} showReload={true} class="mb-4" />
 {:else if currentlySelected}
 	<div
-		class="flex flex-col md:flex-col lg:flex-row bg-base-100 h-full overflow-hidden p-2 md:p-3 lg:p-4 lg:ps-2 gap-3 sm:gap-4 lg:gap-8 transition-all duration-500 ease-in-out"
+		class="flex flex-col lg:flex-row bg-base-100 h-full overflow-hidden lg:p-4 lg:ps-2 lg:gap-8 transition-all duration-500 ease-in-out"
 		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 	>
 		<span id="quiz-top" aria-hidden="true"></span>
@@ -144,10 +172,10 @@
 			{client}
 			classId={data.classId}
 		/>
-		<MobileInfo {module} {qs} classId={data.classId} />
+		<QuizMobileHeader {module} {qs} classId={data.classId} {handleSelect} {handleFilterToggle} />
 
 		<div
-			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
+			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto overscroll-contain grow min-h-0 h-full px-1 md:px-3 lg:px-0 pb-44 md:pb-36 lg:pb-48 relative"
 		>
 			<ResultBanner bind:qs />
 			{#if qs.noFlags}
@@ -166,16 +194,22 @@
 				</div>
 			{/if}
 
-			<QuizNavigation
-				questions={{ data: qs.getFilteredQuestions() }}
-				{handleSelect}
-				{currentlySelected}
-				{qs}
-			/>
+			<div class="hidden lg:block">
+				<QuizNavigation
+					questions={{ data: qs.getFilteredQuestions() }}
+					{handleSelect}
+					{currentlySelected}
+					{qs}
+				/>
+			</div>
 
+			<!-- Swiping sideways is a shortcut for the dock's previous/next buttons. -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
-				class="text-md sm:text-lg lg:text-xl p-4 sm:pe-4"
+				class="sm:text-lg lg:text-xl p-3 sm:p-4"
 				style:zoom={quizCommands.textScale === 1 ? undefined : quizCommands.textScale}
+				ontouchstart={swipeStart}
+				ontouchend={swipeEnd}
 			>
 				<div class="flex flex-row justify-between">
 					{#if currentlySelected.type !== QUESTION_TYPES.FILL_IN_THE_BLANK}
@@ -189,10 +223,6 @@
 							</div>
 						</div>
 					{/if}
-
-					<div class="lg:hidden ms-auto self-start">
-						<QuizToolsBar variant="sheet" />
-					</div>
 
 					<div class="lg:flex hidden items-center gap-2">
 						{#if canEdit && currentlySelected}
@@ -233,6 +263,8 @@
 					</div>
 				</div>
 
+				<QuestionMediaStrip questionId={currentlySelected._id} showSolution={qs.showSolution} />
+
 				{#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}
 					<FillInTheBlank
 						bind:qs
@@ -240,6 +272,8 @@
 						highlightEnabled={qs.highlightEnabled}
 						highlightResetVersion={qs.highlightResetVersion}
 					/>
+				{:else if currentlySelected.type === QUESTION_TYPES.FREE_RESPONSE}
+					{#key currentlySelected._id}<FreeResponse {qs} question={currentlySelected} />{/key}
 				{:else if currentlySelected.type === QUESTION_TYPES.MATCHING}
 					<Matching bind:qs {currentlySelected} />
 				{:else}

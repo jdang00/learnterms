@@ -34,7 +34,7 @@
 	);
 </script>
 
-<SidePanel id="calculator" title="Calculator" icon={Calculator}>
+<SidePanel id="calculator" title="Calculator" icon={Calculator} tall>
 	{#if Panel}<Panel {storageKey} active={sidePanel.current === 'calculator'} />{:else if error}<p
 			role="alert"
 			class="px-5 text-sm text-error"

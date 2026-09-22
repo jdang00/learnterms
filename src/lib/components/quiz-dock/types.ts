@@ -83,8 +83,14 @@ export type QuizCommand = {
 	enabled?: () => boolean;
 	active?: () => boolean;
 	href?: () => string;
+	// Check only: what the last check said, so the phone dock can turn Check into Next.
+	outcome?: () => CheckOutcome;
 	run: (source: CommandSource) => void | Promise<void>;
 };
+
+// correct: right answer · incorrect: wrong, and the answer hasn't changed since · answered: solution
+// shown after a miss or a reveal
+export type CheckOutcome = 'correct' | 'incorrect' | 'answered' | null;
 
 export type QuizCommandMap = Record<string, QuizCommand>;
 
@@ -103,6 +109,7 @@ export type QuizCommandState = {
 	selectedAnswers: string[];
 	eliminatedAnswers: string[];
 	checkResult: string;
+	checkCount?: number;
 	currentQuestionFlagged: boolean;
 	currentQuestionIndex: number;
 	liveInteractedQuestions: string[];
@@ -122,6 +129,8 @@ export type QuizCommandState = {
 		text: string,
 		question?: Doc<'question'> | null
 	) => boolean | Promise<boolean>;
+	checkFreeResponse?: () => Promise<boolean>;
+	gradingQuestionId?: string | null;
 	checkMatching: (question?: Doc<'question'> | null) => boolean | Promise<boolean>;
 	scheduleSave: (delayMs?: number) => void;
 	toggleFlag: () => void;

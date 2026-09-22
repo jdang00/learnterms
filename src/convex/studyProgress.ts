@@ -1,3 +1,5 @@
+import { freeResponseGradeValidator } from './freeResponseValidators';
+import { MAX_RESPONSE_CHARACTERS, type FreeResponseGrade } from '../lib/utils/freeResponse';
 import { v } from 'convex/values';
 import { query, mutation } from './_generated/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
@@ -78,6 +80,7 @@ export const open = mutation({
 		attemptId: v.id('studyAttempts'),
 		selectedOptions: v.array(v.string()),
 		checks: v.number(),
+		freeResponseGrade: v.optional(freeResponseGradeValidator),
 		revealed: v.boolean(),
 		evidence: studyEvidenceValidator
 	}),
@@ -96,6 +99,7 @@ export const open = mutation({
 				attemptId: existing._id,
 				selectedOptions: existing.selectedOptions,
 				checks: existing.checks,
+				freeResponseGrade: existing.freeResponseGrade,
 				revealed: existing.revealedAt !== undefined,
 				evidence: evidence(questionId, saved, version)
 			};
@@ -162,7 +166,7 @@ export const open = mutation({
 	}
 });
 
-async function activeAttempt(ctx: MutationCtx, attemptId: Id<'studyAttempts'>) {
+export async function activeAttempt(ctx: QueryCtx | MutationCtx, attemptId: Id<'studyAttempts'>) {
 	const attempt = await ctx.db.get(attemptId);
 	if (!attempt) throw new Error('Attempt unavailable');
 	const { user, question, module } = await access(ctx, attempt.questionId);
@@ -252,77 +256,96 @@ export const check = mutation({
 		selectedOptions: v.array(v.string())
 	},
 	returns: v.object({ isCorrect: v.boolean(), evidence: studyEvidenceValidator }),
-	handler: async (ctx, { attemptId, submissionId, selectedOptions }) => {
-		if (
-			!submissionId ||
-			submissionId.length > 100 ||
-			selectedOptions.length > 500 ||
-			selectedOptions.some((a) => a.length > 10000)
-		)
-			throw new Error('Invalid answer');
-		const { user, question, module, attempt, saved } = await activeAttempt(ctx, attemptId);
-		const status = answerStatus(question, selectedOptions);
-		if (status === 'unanswered') throw new Error('Choose an answer before checking.');
-		const previous = await ctx.db
-			.query('studyChecks')
-			.withIndex('by_attemptId_submissionId', (q) =>
-				q.eq('attemptId', attemptId).eq('submissionId', submissionId)
-			)
-			.unique();
-		const isCorrect = status === 'correct';
-		const answerKey = JSON.stringify([...selectedOptions].sort());
-		if (previous)
-			return {
-				isCorrect: previous.isCorrect,
-				evidence: evidence(question._id, saved, attempt.version)
-			};
-		if (attempt.lastAnswerKey === answerKey)
-			return { isCorrect, evidence: evidence(question._id, saved, attempt.version) };
-		const now = Date.now();
-		const qualifyingRecall = isCorrect && attempt.checks === 0 && attempt.revealedAt === undefined;
-		const next: StudyEvidence = recordRecall(
-			evidence(question._id, saved, attempt.version),
-			isCorrect,
-			false,
-			now
-		);
-		await ctx.db.insert('studyChecks', {
-			userId: user._id,
-			questionId: question._id,
-			attemptId,
-			submissionId,
-			checkedAt: now,
-			selectedOptions,
-			isCorrect,
-			qualifyingRecall
-		});
-		await ctx.db.patch(attemptId, {
-			checks: attempt.checks + 1,
-			lastAnswerKey: answerKey,
-			selectedOptions
-		});
-		await ctx.db.patch(saved._id, {
-			needsFreshEvidence: false,
-			checkedAt: next.checkedAt,
-			latestCorrect: next.latestCorrect,
-			cleanRecallCount: next.cleanRecallCount,
-			firstCleanAt: next.firstCleanAt,
-			masteredAt: next.masteredAt,
-			lastMasteredAt: next.lastMasteredAt,
-			activeAttemptChecks: attempt.checks + 1,
-			activeAttemptFirstCorrect: attempt.checks === 0 ? isCorrect : saved.activeAttemptFirstCorrect,
-			checks: saved.checks + 1
-		});
-		if (attempt.checks === 0) await recordCompletedRun(ctx, user._id, module);
-		await ctx.runMutation(api.userProgress.saveUserProgress, {
-			userId: user._id,
-			classId: module.classId,
-			questionId: question._id,
-			selectedOptions
-		});
-		return {
-			isCorrect,
-			evidence: evidence(question._id, await ctx.db.get(saved._id), attempt.version)
-		};
-	}
+	handler: (ctx, args) => recordCheck(ctx, args)
 });
+
+// Server-only helper: client calls can never supply their own grade.
+export async function recordCheck(
+	ctx: MutationCtx,
+	{
+		attemptId,
+		submissionId,
+		selectedOptions
+	}: { attemptId: Id<'studyAttempts'>; submissionId: string; selectedOptions: string[] },
+	grade?: FreeResponseGrade
+) {
+	if (
+		!submissionId ||
+		submissionId.length > 100 ||
+		selectedOptions.length > 500 ||
+		selectedOptions.some((a) => a.length > (grade ? MAX_RESPONSE_CHARACTERS : 10000))
+	)
+		throw new Error('Invalid answer');
+	const { user, question, module, attempt, saved } = await activeAttempt(ctx, attemptId);
+	if (question.type === 'free_response' && !grade)
+		throw new Error('Submit free responses for AI grading.');
+	const status = grade
+		? grade.isCorrect
+			? 'correct'
+			: 'incorrect'
+		: answerStatus(question, selectedOptions);
+	if (status === 'unanswered') throw new Error('Choose an answer before checking.');
+	const previous = await ctx.db
+		.query('studyChecks')
+		.withIndex('by_attemptId_submissionId', (q) =>
+			q.eq('attemptId', attemptId).eq('submissionId', submissionId)
+		)
+		.unique();
+	const isCorrect = status === 'correct';
+	const answerKey = JSON.stringify([...selectedOptions].sort());
+	if (previous)
+		return {
+			isCorrect: previous.isCorrect,
+			evidence: evidence(question._id, saved, attempt.version)
+		};
+	if (attempt.lastAnswerKey === answerKey)
+		return { isCorrect, evidence: evidence(question._id, saved, attempt.version) };
+	const now = Date.now();
+	const qualifyingRecall = isCorrect && attempt.checks === 0 && attempt.revealedAt === undefined;
+	const next: StudyEvidence = recordRecall(
+		evidence(question._id, saved, attempt.version),
+		isCorrect,
+		false,
+		now
+	);
+	await ctx.db.insert('studyChecks', {
+		userId: user._id,
+		questionId: question._id,
+		attemptId,
+		submissionId,
+		checkedAt: now,
+		selectedOptions,
+		isCorrect,
+		qualifyingRecall,
+		...(grade ? { freeResponseGrade: grade } : {})
+	});
+	await ctx.db.patch(attemptId, {
+		checks: attempt.checks + 1,
+		...(grade ? { freeResponseGrade: grade, grading: undefined } : {}),
+		lastAnswerKey: answerKey,
+		selectedOptions
+	});
+	await ctx.db.patch(saved._id, {
+		needsFreshEvidence: false,
+		checkedAt: next.checkedAt,
+		latestCorrect: next.latestCorrect,
+		cleanRecallCount: next.cleanRecallCount,
+		firstCleanAt: next.firstCleanAt,
+		masteredAt: next.masteredAt,
+		lastMasteredAt: next.lastMasteredAt,
+		activeAttemptChecks: attempt.checks + 1,
+		activeAttemptFirstCorrect: attempt.checks === 0 ? isCorrect : saved.activeAttemptFirstCorrect,
+		checks: saved.checks + 1
+	});
+	if (attempt.checks === 0) await recordCompletedRun(ctx, user._id, module);
+	await ctx.runMutation(api.userProgress.saveUserProgress, {
+		userId: user._id,
+		classId: module.classId,
+		questionId: question._id,
+		selectedOptions
+	});
+	return {
+		isCorrect,
+		evidence: evidence(question._id, await ctx.db.get(saved._id), attempt.version)
+	};
+}

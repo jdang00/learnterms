@@ -14,6 +14,8 @@
 	import { page } from '$app/state';
 	import { browser, dev } from '$app/environment';
 	import { resolve } from '$app/paths';
+	import { trackKeyboardInset } from '$lib/utils/keyboardInset';
+	import { trackPreviousPath } from '$lib/utils/backNavigation';
 
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
 
@@ -27,6 +29,7 @@
 	const { data, children } = $props();
 
 	const convexClient = useConvexClient();
+	trackPreviousPath();
 
 	// Keep both a mutable token for first use and a backup for fallback
 	let initialToken = $derived(data?.token ?? null);
@@ -87,6 +90,7 @@
 	onMount(() => {
 		theme.init();
 		void getPostHog();
+		return trackKeyboardInset();
 	});
 
 	// Track page views on route changes
@@ -128,6 +132,11 @@
 			(page.url?.search || ''),
 		canonical: (page.url?.origin || 'https://learnterms.com') + (page.url?.pathname || '/')
 	} as Seo);
+
+	// Study and test screens bring their own top bar on phones, so the site nav steps aside below lg.
+	const immersive = $derived(
+		/^\/classes\/[^/]+\/(modules\/[^/]+|tests\/(?!new\/?$)[^/]+)\/?$/.test(page.url.pathname)
+	);
 
 	const hideFooter = $derived.by(() => {
 		const path = page.url.pathname;
@@ -178,7 +187,9 @@
 >
 	<PostHogIdentify />
 	<div class="flex min-h-screen flex-col">
-		<NavBar />
+		<div class={immersive ? 'hidden lg:block' : ''}>
+			<NavBar />
+		</div>
 
 		<main class="flex-1 w-full">
 			{@render children?.()}

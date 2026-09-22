@@ -1,3 +1,4 @@
+import { responseText, responseWordCount, MAX_RESPONSE_WORDS } from '$lib/utils/freeResponse';
 import { getContext, setContext } from 'svelte';
 import {
 	ArrowLeft,
@@ -60,6 +61,9 @@ export function createQuizCommands(ctx: QuizCommandContext): QuizCommandRegistry
 	let elapsedSeconds = $state(0);
 	let timerRunning = $state(true);
 	let textScale = $state(1);
+	// The answer as it was last graded, so a miss only shows until the answer changes.
+	let checkedAnswer = $state('');
+	const answerKey = () => JSON.stringify([...ctx.qs.selectedAnswers].sort());
 
 	$effect(() => {
 		try {
@@ -93,7 +97,10 @@ export function createQuizCommands(ctx: QuizCommandContext): QuizCommandRegistry
 		let isCorrect: boolean;
 
 		try {
-			if (question.type === QUESTION_TYPES.FILL_IN_THE_BLANK) {
+			if (question.type === QUESTION_TYPES.FREE_RESPONSE) {
+				if (!ctx.qs.checkFreeResponse) return;
+				isCorrect = await ctx.qs.checkFreeResponse();
+			} else if (question.type === QUESTION_TYPES.FILL_IN_THE_BLANK) {
 				isCorrect = await ctx.qs.checkFillInTheBlank(selectedOptions[0] ?? '', question);
 			} else if (question.type === QUESTION_TYPES.MATCHING) {
 				isCorrect = await ctx.qs.checkMatching(question);
@@ -103,6 +110,8 @@ export function createQuizCommands(ctx: QuizCommandContext): QuizCommandRegistry
 		} catch {
 			return;
 		}
+
+		checkedAnswer = answerKey();
 
 		if (!scoredQuestions.has(question._id)) {
 			scoredQuestions.add(question._id);
@@ -117,7 +126,7 @@ export function createQuizCommands(ctx: QuizCommandContext): QuizCommandRegistry
 			moduleId: question.moduleId,
 			classId: ctx.classId(),
 			questionType: question.type,
-			selectedOptions,
+			selectedOptions: question.type === QUESTION_TYPES.FREE_RESPONSE ? [] : selectedOptions,
 			eliminatedOptions,
 			isCorrect,
 			submissionSource: source
@@ -171,8 +180,23 @@ export function createQuizCommands(ctx: QuizCommandContext): QuizCommandRegistry
 			icon: Check,
 			defaultDisplay: 'label',
 			description: 'Grade your answer',
-			label: () => 'Check',
-			enabled: () => ctx.qs.selectedAnswers.length > 0,
+			label: () =>
+				ctx.qs.gradingQuestionId
+					? 'Grading…'
+					: ctx.question()?.type === QUESTION_TYPES.FREE_RESPONSE
+						? 'Submit'
+						: 'Check',
+			enabled: () =>
+				ctx.qs.selectedAnswers.length > 0 &&
+				!ctx.qs.gradingQuestionId &&
+				(ctx.question()?.type !== QUESTION_TYPES.FREE_RESPONSE ||
+					(responseWordCount(ctx.qs.selectedAnswers[0]) <= MAX_RESPONSE_WORDS &&
+						!!responseText(ctx.qs.selectedAnswers[0]))),
+			outcome: () => {
+				const correct = ctx.qs.checkResult === 'Correct!';
+				if (ctx.qs.showSolution) return correct ? 'correct' : 'answered';
+				return ctx.qs.checkResult && answerKey() === checkedAnswer ? 'incorrect' : null;
+			},
 			run: check
 		},
 		clear: {
@@ -184,6 +208,7 @@ export function createQuizCommands(ctx: QuizCommandContext): QuizCommandRegistry
 			icon: Eraser,
 			defaultDisplay: 'label',
 			description: 'Wipe selections and eliminations',
+			enabled: () => !ctx.qs.gradingQuestionId,
 			label: () => 'Clear',
 			run: () => {
 				ctx.qs.selectedAnswers = [];

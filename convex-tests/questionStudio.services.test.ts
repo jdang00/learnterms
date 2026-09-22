@@ -78,7 +78,7 @@ test('emoji suggestion authenticates before spending and only accepts a single e
 			'👁️'
 		);
 		const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-		expect(body.model).toBe('openai/gpt-5.6-luna');
+		expect(body.model).toBe('openai/gpt-6-luna');
 		expect(body.reasoning.effort).toBe('none');
 		expect(body.max_tokens).toBe(16);
 		fetchMock.mockResolvedValue(

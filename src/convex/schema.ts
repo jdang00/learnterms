@@ -1,3 +1,4 @@
+import { acceptanceValidator, freeResponseGradeValidator } from './freeResponseValidators';
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
@@ -322,6 +323,7 @@ export default defineSchema({
 		.index('by_classId', ['classId'])
 		.index('by_moduleId_tagId', ['moduleId', 'tagId']),
 	question: defineTable({
+		freeResponseAcceptance: v.optional(acceptanceValidator),
 		metadata: v.object({
 			source: v.optional(manualQuestionSource),
 			generation: v.optional(
@@ -639,6 +641,10 @@ export default defineSchema({
 		.index('by_userId_questionId', ['userId', 'questionId'])
 		.index('by_userId_moduleId', ['userId', 'moduleId']),
 	studyAttempts: defineTable({
+		freeResponseGrade: v.optional(freeResponseGradeValidator),
+		grading: v.optional(
+			v.object({ submissionId: v.string(), response: v.string(), startedAt: v.number() })
+		),
 		userId: v.id('users'),
 		questionId: v.id('question'),
 		moduleId: v.id('module'),
@@ -652,6 +658,7 @@ export default defineSchema({
 		.index('by_userId_questionId', ['userId', 'questionId'])
 		.index('by_moduleId', ['moduleId']),
 	studyChecks: defineTable({
+		freeResponseGrade: v.optional(freeResponseGradeValidator),
 		userId: v.id('users'),
 		questionId: v.id('question'),
 		attemptId: v.id('studyAttempts'),

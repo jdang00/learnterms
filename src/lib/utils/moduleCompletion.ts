@@ -213,6 +213,8 @@ export function evaluateMatching(q: GradableQuestion, selectedAnswers: string[])
 	return true;
 }
 export function answerStatus(question: GradableQuestion, selected: string[] = []): AnswerStatus {
+	// Free responses only receive a result from the authenticated server grader.
+	if (question.type === 'free_response') return 'unanswered';
 	if (!selected.some((answer) => answer.trim().length > 0)) return 'unanswered';
 	if (question.type === 'fill_in_the_blank')
 		return evaluateFillInTheBlank(question, selected[0]) ? 'correct' : 'incorrect';

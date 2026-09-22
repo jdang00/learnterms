@@ -264,8 +264,8 @@
 	}
 </script>
 
-<main class="flex flex-col h-[calc(100vh-4rem)]">
-	<div class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-20">
+<main class="flex flex-col h-[calc(100dvh-4rem)]">
+	<div class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 lg:p-8 pb-8 xl:pb-20">
 		<div class="max-w-6xl mx-auto space-y-6">
 			<div class="flex items-center justify-between gap-3 flex-wrap">
 				<div>
@@ -512,6 +512,9 @@
 
 								<div>
 									<div class="text-sm font-medium mb-2">Question Types</div>
+									<p class="text-xs text-base-content/60 mb-2">
+										Free response questions are available in module practice.
+									</p>
 									<div class="flex flex-wrap gap-2">
 										{#each questionTypeOptions as type (type)}
 											<button
@@ -617,7 +620,7 @@
 								{/if}
 
 								<button
-									class="btn btn-primary rounded-full w-full py-4 text-base gap-2 group shadow-lg hover:shadow-xl transition-all duration-200"
+									class="btn btn-primary rounded-full w-full py-4 text-base gap-2 group shadow-lg hover:shadow-xl transition-all duration-200 max-xl:hidden"
 									onclick={startTest}
 									disabled={starting ||
 										builderQuery.isLoading ||
@@ -750,4 +753,33 @@
 			{/if}
 		</div>
 	</div>
+
+	{#if builderQuery.data}
+		<!-- Below xl the summary column lands under the form, so Start stays pinned here. -->
+		<div
+			class="flex shrink-0 items-center gap-3 border-t border-base-300 bg-base-100 px-4 pt-3 xl:hidden"
+			style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));"
+		>
+			<div class="min-w-0 flex-1 text-sm">
+				<div class="font-semibold tabular-nums">
+					{effectiveQuestionCount}
+					{effectiveQuestionCount === 1 ? 'question' : 'questions'}
+				</div>
+				<div class="text-xs text-base-content/60">
+					{timed ? `${timeLimitMinutes} minutes` : 'Untimed'}, {passThresholdPct}% to pass
+				</div>
+			</div>
+			<button
+				class="btn btn-primary min-h-11 shrink-0 gap-2 rounded-full px-6"
+				onclick={startTest}
+				disabled={starting ||
+					builderQuery.isLoading ||
+					selectedModuleIds.length === 0 ||
+					totalEligible === 0}
+			>
+				<Play size={18} />
+				{starting ? 'Setting up…' : 'Start test'}
+			</button>
+		</div>
+	{/if}
 </main>

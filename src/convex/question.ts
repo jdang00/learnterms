@@ -1,3 +1,5 @@
+import { responseText } from '../lib/utils/freeResponse';
+import { acceptanceValidator } from './freeResponseValidators';
 import { requireCurrentUser, requireModuleAccess } from './access';
 import {
 	answerPosition,
@@ -496,6 +498,7 @@ function convertQuestionType(type: string): string {
 function computeSearchText(input: {
 	stem: string;
 	rationale?: string | null;
+	freeResponseAcceptance?: 'lenient' | 'balanced' | 'strict';
 	explanation?: string | null;
 	type: string;
 	status: string;
@@ -524,10 +527,17 @@ function computeSearchText(input: {
 }
 
 function normalizeIncomingRationale(input: {
+	type?: string;
 	rationale?: string | null;
+	freeResponseAcceptance?: 'lenient' | 'balanced' | 'strict';
 	explanation?: string | null;
 }): string {
-	return getRationale(input);
+	const rationale = getRationale(input);
+	if (input.type === 'free_response' && (!responseText(rationale) || rationale.length > 10000))
+		throw new Error(
+			'Free response requires a rationale of up to 10,000 characters as its ground truth.'
+		);
+	return rationale;
 }
 
 export const getQuestionsByModule = authQuery({
@@ -583,6 +593,7 @@ export const insertQuestion = authCuratorMutation({
 		options: v.array(v.object({ text: v.string() })),
 		correctAnswers: v.array(v.string()),
 		rationale: v.optional(v.string()),
+		freeResponseAcceptance: v.optional(acceptanceValidator),
 		explanation: v.optional(v.string()),
 		aiGenerated: v.boolean(),
 		status: v.string(),
@@ -849,6 +860,7 @@ export const updateQuestion = authCuratorMutation({
 		options: v.array(v.object({ text: v.string(), id: v.optional(v.string()) })),
 		correctAnswers: v.array(v.string()),
 		rationale: v.optional(v.string()),
+		freeResponseAcceptance: v.optional(acceptanceValidator),
 		explanation: v.optional(v.string()),
 		status: v.string()
 	},
@@ -932,6 +944,10 @@ export const updateQuestion = authCuratorMutation({
 			stem: args.stem,
 			options: publishOptions,
 			correctAnswers: correctAnswerIds,
+			freeResponseAcceptance:
+				convertQuestionType(args.type) === 'free_response'
+					? (args.freeResponseAcceptance ?? questionToUpdate.freeResponseAcceptance ?? 'lenient')
+					: undefined,
 			rationale,
 			status: args.status.toLowerCase(),
 			updatedAt: Date.now(),
@@ -964,6 +980,7 @@ export const createQuestion = authCuratorMutation({
 		options: v.array(v.object({ id: v.string(), text: v.string() })),
 		correctAnswers: v.array(v.string()),
 		rationale: v.optional(v.string()),
+		freeResponseAcceptance: v.optional(acceptanceValidator),
 		explanation: v.optional(v.string()),
 		aiGenerated: v.boolean(),
 		status: v.string(),
@@ -1043,6 +1060,7 @@ export const bulkInsertQuestions = authCuratorMutation({
 				options: v.array(v.object({ text: v.string() })),
 				correctAnswers: v.array(v.string()),
 				rationale: v.optional(v.string()),
+				freeResponseAcceptance: v.optional(acceptanceValidator),
 				explanation: v.optional(v.string()),
 				aiGenerated: v.boolean(),
 				status: v.string(),
@@ -1270,6 +1288,7 @@ export const duplicateQuestion = authCuratorMutation({
 			options: optionsWithIds,
 			correctAnswers: normalizedCorrectAnswers,
 			rationale: getRationale(original),
+			freeResponseAcceptance: original.freeResponseAcceptance,
 			aiGenerated: original.aiGenerated,
 			status: original.status,
 			order: nextOrder,
@@ -1278,6 +1297,7 @@ export const duplicateQuestion = authCuratorMutation({
 			searchText: computeSearchText({
 				stem: original.stem,
 				rationale: getRationale(original),
+				freeResponseAcceptance: original.freeResponseAcceptance,
 				type: original.type,
 				status: original.status,
 				aiGenerated: original.aiGenerated,
@@ -1335,6 +1355,7 @@ export const duplicateQuestionMany = authCuratorMutation({
 				options: optionsWithIds,
 				correctAnswers: normalizedCorrectAnswers,
 				rationale: getRationale(original),
+				freeResponseAcceptance: original.freeResponseAcceptance,
 				aiGenerated: original.aiGenerated,
 				status: original.status,
 				order: nextOrder + i,
@@ -1343,6 +1364,7 @@ export const duplicateQuestionMany = authCuratorMutation({
 				searchText: computeSearchText({
 					stem: original.stem,
 					rationale: getRationale(original),
+					freeResponseAcceptance: original.freeResponseAcceptance,
 					type: original.type,
 					status: original.status,
 					aiGenerated: original.aiGenerated,

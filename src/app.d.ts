@@ -6,6 +6,8 @@ declare global {
 	namespace App {
 		interface PageState {
 			classId?: string;
+			// Set when the class was opened in place, so going back can pop history instead.
+			classOpenedInPlace?: boolean;
 			progressSearch?: string;
 			quizView?: { moduleId: string; screen: 'questions' | 'progress' };
 		}

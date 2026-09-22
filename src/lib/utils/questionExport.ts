@@ -21,6 +21,7 @@ export interface ExportableQuestion {
 	options: Array<{ id?: string; text: string }>;
 	correctAnswers: string[];
 	rationale?: string | null;
+	freeResponseAcceptance?: 'lenient' | 'balanced' | 'strict';
 	explanation?: string | null;
 	status?: string;
 	order?: number;
@@ -291,6 +292,9 @@ export function exportAsJson(
 			const questionData: Record<string, unknown> = {
 				number: index + 1,
 				type: q.type,
+				...(q.type === 'free_response'
+					? { freeResponseAcceptance: q.freeResponseAcceptance ?? 'lenient' }
+					: {}),
 				stem: stripHtml(q.stem)
 			};
 

@@ -4,6 +4,14 @@ import { browser } from '$app/environment';
 
 export type ThemeMode = 'light' | 'dark';
 
+// Tints the browser chrome (and the installed app's status bar) to match base-100.
+const CHROME_COLOR: Record<ThemeMode, string> = { light: '#ffffff', dark: '#1d232a' };
+
+function applyTheme(theme: ThemeMode) {
+	document.documentElement.setAttribute('data-theme', theme);
+	document.querySelector('meta[name="theme-color"]')?.setAttribute('content', CHROME_COLOR[theme]);
+}
+
 const createThemeStore = () => {
 	const { subscribe, set, update } = writable<ThemeMode>('light');
 
@@ -13,7 +21,7 @@ const createThemeStore = () => {
 			const theme: ThemeMode =
 				savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'light';
 			set(theme);
-			document.documentElement.setAttribute('data-theme', theme);
+			applyTheme(theme);
 		}
 	};
 
@@ -22,7 +30,7 @@ const createThemeStore = () => {
 			const newTheme = current === 'light' ? 'dark' : 'light';
 			if (browser) {
 				localStorage.setItem('theme', newTheme);
-				document.documentElement.setAttribute('data-theme', newTheme);
+				applyTheme(newTheme);
 			}
 			return newTheme;
 		});
@@ -32,7 +40,7 @@ const createThemeStore = () => {
 		set(theme);
 		if (browser) {
 			localStorage.setItem('theme', theme);
-			document.documentElement.setAttribute('data-theme', theme);
+			applyTheme(theme);
 		}
 	};
 

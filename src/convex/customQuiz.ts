@@ -635,7 +635,8 @@ async function getEligibleQuestionsForAttempt(
 		})
 	);
 
-	let questions = questionLists.flat();
+	// Timed tests use synchronous grading. Free responses are practiced in modules.
+	let questions = questionLists.flat().filter((q) => q.type !== 'free_response');
 	if (normalizedTypeSet) {
 		questions = questions.filter((q) => normalizedTypeSet.has(normalizeQuestionType(q.type)));
 	}

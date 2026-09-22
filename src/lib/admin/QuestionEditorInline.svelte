@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { acceptanceLevels, type AcceptanceLevel } from '$lib/utils/freeResponse';
+	import AcceptanceMeter from '$lib/components/AcceptanceMeter.svelte';
 	import QuestionSourceEditor from './QuestionSourceEditor.svelte';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import {
@@ -26,7 +28,11 @@
 		Save,
 		Image as ImageIcon,
 		FileText,
-		Sparkles
+		Sparkles,
+		Check,
+		ChevronDown,
+		NotebookPen,
+		Target
 	} from 'lucide-svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import type { FunctionArgs, FunctionReturnType } from 'convex/server';
@@ -239,11 +245,90 @@
 	const rationaleMenuItems = $derived(rationaleToolbar.menuItems());
 
 	const questionTypeOptions = [
-		{ value: QUESTION_TYPES.MULTIPLE_CHOICE, label: 'Multiple Choice', icon: CheckSquare },
-		{ value: QUESTION_TYPES.TRUE_FALSE, label: 'True/False', icon: ToggleLeft },
-		{ value: QUESTION_TYPES.FILL_IN_THE_BLANK, label: 'Fill in Blank', icon: Edit3 },
-		{ value: QUESTION_TYPES.MATCHING, label: 'Matching', icon: ListChecks }
+		{
+			value: QUESTION_TYPES.MULTIPLE_CHOICE,
+			label: 'Multiple Choice',
+			description: 'One or more correct options',
+			icon: CheckSquare
+		},
+		{
+			value: QUESTION_TYPES.TRUE_FALSE,
+			label: 'True/False',
+			description: 'A single true or false statement',
+			icon: ToggleLeft
+		},
+		{
+			value: QUESTION_TYPES.FILL_IN_THE_BLANK,
+			label: 'Fill in Blank',
+			description: 'Typed answer checked against accepted text',
+			icon: Edit3
+		},
+		{
+			value: QUESTION_TYPES.MATCHING,
+			label: 'Matching',
+			description: 'Pair each prompt with its answer',
+			icon: ListChecks
+		},
+		{
+			value: QUESTION_TYPES.FREE_RESPONSE,
+			label: 'Free Response',
+			description: 'Written answer graded against a ground truth',
+			icon: NotebookPen
+		}
 	];
+	let typeMenuOpen = $state(false);
+	let typeMenuEl = $state<HTMLDivElement>();
+	let typeTriggerEl = $state<HTMLButtonElement>();
+
+	$effect(() => {
+		if (!typeMenuOpen) return;
+		const handlePointerDown = (event: PointerEvent) => {
+			if (!typeMenuEl?.contains(event.target as Node)) typeMenuOpen = false;
+		};
+		document.addEventListener('pointerdown', handlePointerDown);
+		return () => document.removeEventListener('pointerdown', handlePointerDown);
+	});
+
+	function openTypeMenu() {
+		typeMenuOpen = true;
+		requestAnimationFrame(() =>
+			typeMenuEl?.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus()
+		);
+	}
+
+	function closeTypeMenu() {
+		typeMenuOpen = false;
+		typeTriggerEl?.focus();
+	}
+
+	function selectQuestionType(value: string) {
+		closeTypeMenu();
+		if (value === questionType) return;
+		questionType = value;
+		handleTypeChange();
+		onChange();
+	}
+
+	function handleTypeMenuKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape' || event.key === 'Tab') {
+			if (event.key === 'Escape') event.preventDefault();
+			closeTypeMenu();
+			return;
+		}
+		if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+		event.preventDefault();
+		const items = Array.from(
+			typeMenuEl?.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]') ?? []
+		);
+		const current = items.indexOf(document.activeElement as HTMLButtonElement);
+		const next =
+			event.key === 'Home'
+				? 0
+				: event.key === 'End'
+					? items.length - 1
+					: (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+		items[next]?.focus();
+	}
 
 	const statusOptions = [
 		{
@@ -382,10 +467,15 @@
 		};
 	}
 
+	let freeResponseAcceptance = $state<AcceptanceLevel>('lenient');
 	let questionStem: string = $state('');
 	let questionRationale: string = $state('');
 	let questionStatus: string = $state('draft');
 	let questionType: string = $state(QUESTION_TYPES.MULTIPLE_CHOICE);
+	const currentTypeOption = $derived(
+		questionTypeOptions.find((option) => option.value === questionType) ?? questionTypeOptions[0]
+	);
+	const isFreeResponse = $derived(questionType === QUESTION_TYPES.FREE_RESPONSE);
 	let options: Array<{ id?: string; text: string }> = $state([
 		{ text: '' },
 		{ text: '' },
@@ -726,6 +816,7 @@
 		questionRationale = nextRationale;
 		questionStatus = getInitialQuestionStatus();
 		questionType = getInitialQuestionType();
+		freeResponseAcceptance = editingQuestion?.freeResponseAcceptance ?? 'lenient';
 		options = getInitialOptions();
 		correctAnswers = getInitialCorrectAnswers();
 		fitbAnswers = getInitialFitbAnswers();
@@ -882,9 +973,11 @@
 
 		if (!getRationalePlainText(questionRationale)) {
 			saveError =
-				'Add a rationale before saving this question. Rationales help students understand why the answer is correct and are now required for all questions.';
+				questionType === QUESTION_TYPES.FREE_RESPONSE
+					? 'Add the ground truth / source used to grade responses.'
+					: 'Add a rationale before saving this question. Rationales help students understand why the answer is correct and are now required for all questions.';
 			isRationaleError = true;
-			toastStore.error('Add a rationale before saving this question.');
+			toastStore.error(saveError);
 			return;
 		}
 
@@ -933,6 +1026,11 @@
 			correctAnswers = mappings;
 		}
 
+		if (questionType === QUESTION_TYPES.FREE_RESPONSE) {
+			options = [];
+			correctAnswers = [];
+		}
+
 		const filledOptions = options.filter((opt) => opt.text.trim());
 		if (questionType === QUESTION_TYPES.TRUE_FALSE && correctAnswers.length !== 1) {
 			toastStore.error('Select True or False as the correct answer');
@@ -974,6 +1072,8 @@
 					questionId: editingQuestion._id as Id<'question'>,
 					moduleId: moduleId as Id<'module'>,
 					type: questionType,
+					freeResponseAcceptance:
+						questionType === QUESTION_TYPES.FREE_RESPONSE ? freeResponseAcceptance : undefined,
 					stem: questionStem,
 					options: cleanOptions,
 					correctAnswers,
@@ -999,6 +1099,8 @@
 					source: questionSource,
 					moduleId: moduleId as Id<'module'>,
 					type: questionType,
+					freeResponseAcceptance:
+						questionType === QUESTION_TYPES.FREE_RESPONSE ? freeResponseAcceptance : undefined,
 					stem: questionStem,
 					options: cleanOptions.map((opt) => ({ text: opt.text })),
 					correctAnswers,
@@ -1060,7 +1162,7 @@
 		<div class="px-4 py-3 border-b border-error/20 bg-error/10 text-sm text-error">
 			<div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
 				<span>{saveError}</span>
-				{#if isRationaleError}
+				{#if isRationaleError && questionType !== QUESTION_TYPES.FREE_RESPONSE}
 					<a class="link font-semibold" href={rationaleDocsUrl} target="_blank" rel="noreferrer">
 						Why rationales are required
 					</a>
@@ -1075,26 +1177,77 @@
 	>
 		<!-- Type Selector -->
 		<div class="flex flex-col gap-2">
-			<span class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1"
-				>Type</span
+			<span
+				id="question-type-label"
+				class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1">Type</span
 			>
-			<div class="flex shadow-xs bg-base-100 rounded-full border border-base-300 p-1 gap-0.5">
-				{#each questionTypeOptions as option (option.value)}
+			<div class="relative" bind:this={typeMenuEl}>
+				<div class="flex shadow-xs bg-base-100 rounded-full border border-base-300 p-1">
 					<button
-						class="btn btn-xs sm:btn-sm rounded-full border-0 {questionType === option.value
-							? 'btn-active font-medium'
-							: 'btn-ghost opacity-60 hover:opacity-100 font-normal'}"
-						onclick={() => {
-							questionType = option.value;
-							handleTypeChange();
-							onChange();
+						type="button"
+						bind:this={typeTriggerEl}
+						class="btn btn-xs sm:btn-sm rounded-full border-0 btn-active font-medium gap-2 pr-2.5"
+						aria-haspopup="menu"
+						aria-expanded={typeMenuOpen}
+						aria-labelledby="question-type-label question-type-current"
+						onclick={() => (typeMenuOpen ? closeTypeMenu() : openTypeMenu())}
+						onkeydown={(event) => {
+							if (event.key === 'ArrowDown' && !typeMenuOpen) {
+								event.preventDefault();
+								openTypeMenu();
+							}
 						}}
-						title={option.label}
 					>
-						<option.icon size={16} />
-						<span class="hidden md:inline">{option.label}</span>
+						<currentTypeOption.icon size={16} />
+						<span id="question-type-current">{currentTypeOption.label}</span>
+						<ChevronDown
+							size={14}
+							class="opacity-50 transition-transform duration-200 {typeMenuOpen
+								? 'rotate-180'
+								: ''}"
+						/>
 					</button>
-				{/each}
+				</div>
+
+				{#if typeMenuOpen}
+					<div
+						role="menu"
+						tabindex="-1"
+						aria-labelledby="question-type-label"
+						class="type-menu absolute left-0 top-full z-30 mt-2 w-72 rounded-3xl border border-base-300 bg-base-100 p-1.5 shadow-lg"
+						onkeydown={handleTypeMenuKeydown}
+					>
+						{#each questionTypeOptions as option (option.value)}
+							{@const selected = questionType === option.value}
+							<button
+								type="button"
+								role="menuitemradio"
+								aria-checked={selected}
+								class="flex w-full items-center gap-3 rounded-2xl px-2.5 py-2 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 {selected
+									? 'bg-base-200'
+									: 'hover:bg-base-200/60 focus-visible:bg-base-200/60'}"
+								onclick={() => selectQuestionType(option.value)}
+							>
+								<span
+									class="grid size-8 shrink-0 place-items-center rounded-full transition-colors {selected
+										? 'bg-primary/10 text-primary'
+										: 'bg-base-200 text-base-content/60'}"
+								>
+									<option.icon size={16} />
+								</span>
+								<span class="min-w-0 flex-1">
+									<span class="block text-sm {selected ? 'font-semibold' : 'font-medium'}"
+										>{option.label}</span
+									>
+									<span class="block text-xs text-base-content/50">{option.description}</span>
+								</span>
+								{#if selected}
+									<Check size={14} class="shrink-0 text-primary" />
+								{/if}
+							</button>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		</div>
 
@@ -1174,7 +1327,52 @@
 
 			<!-- Options Section -->
 			<div>
-				{#if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
+				{#if questionType === QUESTION_TYPES.FREE_RESPONSE}
+					<div class="space-y-4">
+						<div
+							id="acceptance-label"
+							class="text-xs font-semibold uppercase tracking-wide text-base-content/60"
+						>
+							Acceptance
+						</div>
+						<div
+							role="radiogroup"
+							aria-labelledby="acceptance-label"
+							class="grid grid-cols-1 gap-3 sm:grid-cols-3"
+						>
+							{#each Object.entries(acceptanceLevels) as [value, level] (value)}
+								{@const selected = freeResponseAcceptance === value}
+								<label
+									class="flex cursor-pointer flex-col gap-1.5 rounded-3xl border-2 px-4 py-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/20 {selected
+										? 'border-primary bg-primary/5'
+										: 'border-base-300 bg-base-100 hover:border-base-content/20'}"
+								>
+									<input
+										type="radio"
+										class="sr-only"
+										name="free-response-acceptance"
+										{value}
+										bind:group={freeResponseAcceptance}
+										onchange={onChange}
+									/>
+									<span class="flex items-center gap-2 text-sm font-semibold">
+										<AcceptanceMeter
+											level={value as AcceptanceLevel}
+											class={selected ? 'text-primary' : 'text-base-content/50'}
+										/>
+										{level.label}
+										{#if value === 'lenient'}
+											<span class="ml-auto text-[10px] font-medium text-base-content/40"
+												>Default</span
+											>
+										{/if}
+									</span>
+									<span class="text-xs leading-snug text-base-content/60">{level.description}</span>
+								</label>
+							{/each}
+						</div>
+					</div>
+				{:else if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
 					<div class="space-y-4">
 						<div class="flex items-center justify-between mb-2">
 							<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60">
@@ -1478,27 +1676,52 @@
 			</div>
 
 			<!-- Rationale & Attachments -->
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-base-200">
+			<div
+				class="grid grid-cols-1 gap-6 pt-4 border-t border-base-200 {isFreeResponse
+					? ''
+					: 'md:grid-cols-2'}"
+			>
 				<div>
+					{#if isFreeResponse}
+						<div
+							class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-1 flex items-center gap-2"
+						>
+							<Target size={14} /> Ground Truth
+						</div>
+						<p class="text-[10px] text-base-content/40 mb-2">
+							The expected answer or source text responses are graded against.
+						</p>
+					{:else}
+						<div
+							class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-1 flex items-center gap-2"
+						>
+							<MessageSquare size={14} /> Rationale
+						</div>
+						<p class="text-[10px] text-base-content/40 mb-2">
+							Required for every saved question.
+							<a class="link" href={rationaleDocsUrl} target="_blank" rel="noreferrer"> Why? </a>
+						</p>
+					{/if}
 					<div
-						class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-1 flex items-center gap-2"
+						class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 group {isFreeResponse
+							? 'shadow-xs flex flex-col-reverse focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all [&_.tiptap]:min-h-56 [&_.tiptap]:px-4 [&_.tiptap]:py-3'
+							: ''}"
 					>
-						<MessageSquare size={14} /> Rationale
-					</div>
-					<p class="text-[10px] text-base-content/40 mb-2">
-						Required for every saved question.
-						<a class="link" href={rationaleDocsUrl} target="_blank" rel="noreferrer"> Why? </a>
-					</p>
-					<div class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 group">
 						{#if rationaleEditor}
 							<EditorContent editor={$rationaleEditor} />
 							<div
-								class="bg-base-200/50 border-t border-base-300 p-1 flex gap-1 opacity-50 group-hover:opacity-100 transition-opacity"
+								class="bg-base-200/50 border-base-300 p-1 flex flex-wrap gap-1 transition-opacity {isFreeResponse
+									? 'border-b opacity-60 group-hover:opacity-100 group-focus-within:opacity-100'
+									: 'border-t opacity-50 group-hover:opacity-100'}"
 							>
 								{#each rationaleMenuItems as item (item.name)}
 									<button
 										type="button"
-										class="btn btn-ghost btn-xs btn-square {item.active() ? 'btn-active' : ''}"
+										class="btn btn-ghost btn-xs btn-square {item.active()
+											? isFreeResponse
+												? 'btn-active text-primary'
+												: 'btn-active'
+											: ''}"
 										onclick={item.command}
 										title={item.name}
 									>
@@ -1581,7 +1804,11 @@
 															m.showOnSolution
 														)}
 												/>
-												<span>Show on rationale</span>
+												<span
+													>{questionType === QUESTION_TYPES.FREE_RESPONSE
+														? 'Show with ground truth'
+														: 'Show on rationale'}</span
+												>
 											</label>
 										</div>
 									</div>
@@ -1622,7 +1849,11 @@
 													bind:checked={m.showOnSolution}
 													onchange={onChange}
 												/>
-												<span>Show on rationale</span>
+												<span
+													>{questionType === QUESTION_TYPES.FREE_RESPONSE
+														? 'Show with ground truth'
+														: 'Show on rationale'}</span
+												>
 											</label>
 										</div>
 									</div>
@@ -1674,8 +1905,8 @@
 						</label>
 						{#if uploadError}<p class="text-sm text-error" role="alert">{uploadError}</p>{/if}
 						<p class="text-xs text-base-content/50">
-							Images appear in the quiz attachments viewer. Select “Show on rationale” for images
-							that should be revealed with the explanation. Save the question to keep new images.
+							Images appear in the quiz attachments viewer. Choose when each image is revealed. Save
+							the question to keep new images.
 						</p>
 					</div>
 				</div>

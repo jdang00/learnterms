@@ -16,6 +16,13 @@
 	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
 	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
+	import QuestionMediaStrip from '$lib/components/QuestionMediaStrip.svelte';
+	import MobileStudyBar from '$lib/components/MobileStudyBar.svelte';
+	import QuestionNavigatorSheet, {
+		type NavigatorItem
+	} from '$lib/components/QuestionNavigatorSheet.svelte';
+	import Sheet from '$lib/components/Sheet.svelte';
+	import { cameFrom } from '$lib/utils/backNavigation';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { getErrorText } from '$lib/utils/errorHandling';
 	import { slide } from 'svelte/transition';
@@ -34,7 +41,9 @@
 		ArrowRight,
 		Info,
 		Calculator,
-		StickyNote
+		StickyNote,
+		Eraser,
+		ToolCase
 	} from 'lucide-svelte';
 
 	type LocalResponse = {
@@ -72,7 +81,8 @@
 	);
 
 	async function goBackToClasses() {
-		await goto(resolve('/classes'), { state: { classId } });
+		if (cameFrom('/classes')) history.back();
+		else await goto(resolve('/classes'), { state: { classId } });
 	}
 
 	let initializedAttemptId = $state<string | null>(null);
@@ -87,6 +97,8 @@
 	let autoSubmitTriggered = $state(false);
 	let hideSidebar = $state(false);
 	let showSubmitModal = $state(false);
+	let navigatorOpen = $state(false);
+	let toolsOpen = $state(false);
 
 	let syncTimeout: number | null = null;
 	let tickerHandle: number | null = null;
@@ -278,6 +290,49 @@
 	const flaggedCount = $derived.by(() => {
 		return Object.values(responses).filter((r) => r.isFlagged).length;
 	});
+
+	function isAnswered(item: AttemptRunnerItem) {
+		const r = responses[item._id];
+		if (!r) return false;
+		return isFitb(item.question.type)
+			? String(r.textResponse ?? r.selectedOptions[0] ?? '').trim().length > 0
+			: r.selectedOptions.length > 0;
+	}
+
+	const navigatorItems: NavigatorItem[] = $derived(
+		(runnerQuery.data?.items ?? []).map((item) => ({
+			id: item._id,
+			status: isAnswered(item) ? 'answered' : 'unanswered',
+			flagged: responses[item._id]?.isFlagged ?? false
+		}))
+	);
+	const isLastQuestion = $derived(currentIndex >= (runnerQuery.data?.items?.length ?? 1) - 1);
+
+	// Swipe the question sideways to move between questions on touch screens.
+	let swipe: { x: number; y: number; time: number } | null = null;
+	function swipeStart(event: TouchEvent) {
+		const touch = event.touches[0];
+		const target = event.target as Element;
+		const nearEdge = touch.clientX < 24 || touch.clientX > window.innerWidth - 24;
+		swipe =
+			event.touches.length === 1 &&
+			!nearEdge &&
+			!target.closest('[data-option], input, textarea, [contenteditable], pre, table, button')
+				? { x: touch.clientX, y: touch.clientY, time: event.timeStamp }
+				: null;
+	}
+	function swipeEnd(event: TouchEvent) {
+		if (!swipe) return;
+		const touch = event.changedTouches[0];
+		const dx = touch.clientX - swipe.x;
+		const dy = touch.clientY - swipe.y;
+		const quick = event.timeStamp - swipe.time < 600;
+		swipe = null;
+		if (!quick || Math.abs(dx) < 80 || Math.abs(dy) > Math.abs(dx) * 0.5) return;
+		if (window.getSelection()?.toString()) return;
+		if (dx < 0) nextQuestion();
+		else previousQuestion();
+	}
 
 	const currentItem = $derived(getCurrentItem());
 	provideStudyToolContext(() => ({
@@ -771,7 +826,7 @@
 	});
 </script>
 
-<div class="flex flex-col h-[calc(100vh-4rem)]">
+<div class="flex flex-col h-dvh lg:h-[calc(100dvh-4rem)]">
 	{#if runnerQuery.isLoading}
 		<div class="flex-1 flex items-center justify-center">
 			<div class="text-center">
@@ -809,7 +864,7 @@
 			</div>
 		{:else}
 			<div
-				class="flex flex-col md:flex-col lg:flex-row bg-base-100 h-full overflow-hidden p-2 md:p-3 lg:p-4 gap-3 sm:gap-4 lg:gap-8 transition-all duration-500 ease-in-out"
+				class="flex flex-col lg:flex-row bg-base-100 h-full overflow-hidden lg:p-4 lg:gap-8 transition-all duration-500 ease-in-out"
 				transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 			>
 				<!-- Sidebar -->
@@ -971,38 +1026,45 @@
 					{/if}
 				</div>
 
-				<!-- Mobile header -->
-				<div class="lg:hidden flex items-center justify-between gap-2 px-2">
-					<button
-						type="button"
-						class="btn btn-ghost btn-sm rounded-full text-secondary"
-						onclick={goBackToClasses}
-					>
-						<ChevronLeft size={16} />
-						<span class="truncate max-w-[120px]">{runnerQuery.data.attempt.className}</span>
-					</button>
-					<div class="flex items-center gap-3 text-sm">
-						<div class="flex items-center gap-1 tabular-nums font-medium">
+				<MobileStudyBar
+					title={runnerQuery.data.attempt.className}
+					emoji="📝"
+					subtitle="Question {currentIndex + 1} of {runnerQuery.data.items.length}"
+					backLabel="Leave test"
+					onback={goBackToClasses}
+					onnavigate={() => (navigatorOpen = true)}
+				>
+					{#snippet trailing()}
+						<span
+							class="flex shrink-0 items-center gap-1 px-2 text-sm font-semibold tabular-nums {remainingMs !==
+								null && remainingMs <= 60_000
+								? 'text-error'
+								: ''}"
+							role="timer"
+							aria-label={remainingMs !== null ? 'Time remaining' : 'Time elapsed'}
+						>
 							<Clock size={14} class="text-base-content/50" />
-							{formatDuration(elapsedMsLocal)}
-						</div>
-						{#if remainingMs !== null}
-							<span
-								class="text-xs {remainingMs <= 60_000
-									? 'text-error font-semibold'
-									: 'text-base-content/50'}"
-							>
-								{formatDuration(remainingMs)}
-							</span>
-						{/if}
-					</div>
-				</div>
+							{formatDuration(remainingMs ?? elapsedMsLocal)}
+						</span>
+					{/snippet}
+					{#snippet tools()}
+						<button
+							type="button"
+							class="btn btn-ghost btn-circle size-11 shrink-0 text-base-content/70"
+							aria-label="Tools"
+							aria-haspopup="dialog"
+							onclick={() => (toolsOpen = true)}
+						>
+							<ToolCase size={20} />
+						</button>
+					{/snippet}
+				</MobileStudyBar>
 
 				<!-- Main content area -->
 				<div
-					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
+					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto overscroll-contain grow min-h-0 h-full px-1 md:px-3 lg:px-0 pb-32 md:pb-36 lg:pb-48 relative"
 				>
-					<div class="flex justify-end pb-2">
+					<div class="hidden justify-end pb-2 lg:flex">
 						{#if clerk.user && currentItem}<button
 								type="button"
 								class="btn btn-sm rounded-full {sidePanel.current === 'notes'
@@ -1024,7 +1086,7 @@
 					</div>
 					<!-- Horizontal question navigator (matches QuizNavigation style) -->
 					<div
-						class="flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-4 relative items-center border border-base-300 px-6 py-3 rounded-4xl h-20 min-h-20 max-h-20 flex-none"
+						class="hidden lg:flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-4 relative items-center border border-base-300 px-6 py-3 rounded-4xl h-20 min-h-20 max-h-20 flex-none"
 					>
 						{#each runnerQuery.data.items as item, index (item._id)}
 							{@const r = responses[item._id]}
@@ -1057,8 +1119,14 @@
 
 					<!-- Question content -->
 					{#if currentItem && currentResponse}
-						<div class="text-md sm:text-lg lg:text-xl p-4 sm:pe-4">
-							<div class="flex flex-row justify-between items-start mb-1">
+						<!-- Swiping sideways is a shortcut for the previous/next buttons. -->
+						<!-- svelte-ignore a11y_no_static_element_interactions -->
+						<div
+							class="sm:text-lg lg:text-xl p-3 sm:p-4"
+							ontouchstart={swipeStart}
+							ontouchend={swipeEnd}
+						>
+							<div class="hidden md:flex flex-row justify-between items-start mb-1">
 								<div class="text-xs text-base-content/40 font-medium">
 									Question {currentIndex + 1} of {runnerQuery.data.items.length}
 								</div>
@@ -1083,6 +1151,8 @@
 									{@html sanitizeHtml(currentItem.question.stem)}
 								</div>
 							{/if}
+
+							<QuestionMediaStrip questionId={currentItem.questionId} />
 
 							{#if isFitb(currentItem.question.type)}
 								{#if currentSharedQuestion}
@@ -1209,105 +1279,180 @@
 				</button>
 			</div>
 
-			<!-- Mobile bottom bar -->
+			<!-- Phone dock: same shape as the quiz dock -->
 			<div
-				class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-100 border-t border-base-300 p-3 flex items-center justify-between gap-2"
+				class="bottom-dock fixed inset-x-0 z-50 border-t border-base-300 bg-base-100/95 backdrop-blur-md md:hidden"
 			>
-				<div class="flex gap-2">
-					<button
-						class="btn btn-sm btn-outline rounded-full"
-						onclick={previousQuestion}
-						disabled={currentIndex === 0}
-					>
-						<ArrowLeft size={16} />
-					</button>
-					<button
-						class="btn btn-sm btn-outline rounded-full"
-						onclick={nextQuestion}
-						disabled={currentIndex === (runnerQuery.data?.items?.length ?? 1) - 1}
-					>
-						<ArrowRight size={16} />
-					</button>
-				</div>
-				<div class="flex gap-2">
-					<button
-						class="btn btn-sm btn-ghost rounded-full"
-						onclick={() => {
-							if (currentItem) clearAnswer(currentItem);
-						}}
-					>
-						Clear
-					</button>
-					<button
-						class="btn btn-sm btn-circle {currentResponse?.isFlagged
-							? 'btn-warning'
-							: 'btn-warning btn-soft'}"
-						onclick={() => {
-							if (currentItem) toggleFlag(currentItem);
-						}}
-						aria-label={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
-					>
-						<Flag size={14} />
-					</button>
-					<button
-						class="btn btn-sm btn-primary rounded-full gap-1"
-						onclick={() => (showSubmitModal = true)}
-						disabled={isSubmitting}
-					>
-						<Send size={12} />
-						Submit
-					</button>
+				<div class="flex items-center gap-1 px-2 pt-2" role="toolbar" aria-label="Test controls">
+					<div class="flex min-w-0 flex-1 items-center justify-center gap-1">
+						<button
+							class="btn btn-ghost btn-circle [--size:2.75rem]"
+							onclick={() => {
+								if (currentItem) clearAnswer(currentItem);
+							}}
+							aria-label="Clear answer"
+						>
+							<Eraser size={18} />
+						</button>
+						<button
+							class="btn btn-circle [--size:2.75rem] {currentResponse?.isFlagged
+								? 'btn-warning'
+								: 'btn-warning btn-outline'}"
+							onclick={() => {
+								if (currentItem) toggleFlag(currentItem);
+							}}
+							aria-label={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
+							aria-pressed={currentResponse?.isFlagged ?? false}
+						>
+							<Flag size={18} />
+						</button>
+						<button
+							class="btn btn-primary h-11 min-w-28 flex-1 gap-1.5 rounded-full {isLastQuestion
+								? ''
+								: 'btn-soft'}"
+							onclick={() => (showSubmitModal = true)}
+							disabled={isSubmitting}
+						>
+							<Send size={16} />
+							{isSubmitting ? 'Submitting…' : 'Submit'}
+						</button>
+					</div>
+					<!-- The same split pill as the desktop dock. -->
+					<div class="ms-1 flex shrink-0 items-center gap-0.5">
+						<button
+							class="btn btn-outline [--size:2.75rem]"
+							style="border-radius: 9999px 0.3rem 0.3rem 9999px;"
+							onclick={previousQuestion}
+							disabled={currentIndex === 0}
+							aria-label="Previous question"
+						>
+							<ArrowLeft size={18} />
+						</button>
+						<button
+							class="btn btn-outline [--size:2.75rem]"
+							style="border-radius: 0.3rem 9999px 9999px 0.3rem;"
+							onclick={nextQuestion}
+							disabled={isLastQuestion}
+							aria-label="Next question"
+						>
+							<ArrowRight size={18} />
+						</button>
+					</div>
 				</div>
 			</div>
 
-			<!-- Submit confirmation modal -->
-			<dialog class="modal max-w-full p-4 z-[1000]" class:modal-open={showSubmitModal}>
-				<div class="modal-box rounded-2xl">
-					<form method="dialog">
+			<QuestionNavigatorSheet
+				bind:open={navigatorOpen}
+				title="Questions"
+				description="{answeredCount} of {runnerQuery.data.items.length} answered{flaggedCount
+					? `, ${flaggedCount} flagged`
+					: ''}"
+				items={navigatorItems}
+				{currentIndex}
+				onselect={jumpToQuestion}
+			>
+				{#snippet footer()}
+					<div class="flex items-center justify-between gap-3">
+						<span class="flex items-center gap-1.5 text-xs {syncStatusIcon(syncStatus)}">
+							{#if syncStatus === 'offline'}<WifiOff size={12} />{:else}<Wifi size={12} />{/if}
+							{syncStatusLabel(syncStatus)}
+						</span>
 						<button
-							class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-							onclick={() => (showSubmitModal = false)}
+							type="button"
+							class="btn btn-primary min-h-11 rounded-full px-5"
+							onclick={() => {
+								navigatorOpen = false;
+								showSubmitModal = true;
+							}}
+							disabled={isSubmitting}><Send size={16} /> Submit test</button
 						>
-							✕
-						</button>
-					</form>
-					<h3 class="text-lg font-bold">Submit Your Test?</h3>
-					<div class="py-4 space-y-3">
-						<p class="text-base-content/70">
-							Once submitted, you won't be able to change your answers. You'll be able to review
-							each question with the correct answers and rationales.
-						</p>
-						<div class="grid grid-cols-2 gap-2 text-sm">
-							<div class="rounded-xl border border-base-300 p-3">
-								<div class="text-xs text-base-content/50">Answered</div>
-								<div class="font-semibold">
-									{answeredCount} / {runnerQuery.data?.items?.length ?? 0}
-								</div>
-							</div>
-							<div class="rounded-xl border border-base-300 p-3">
-								<div class="text-xs text-base-content/50">Unanswered</div>
-								<div
-									class="font-semibold {(runnerQuery.data?.items?.length ?? 0) - answeredCount > 0
-										? 'text-warning'
-										: ''}"
-								>
-									{(runnerQuery.data?.items?.length ?? 0) - answeredCount}
-								</div>
+					</div>
+				{/snippet}
+			</QuestionNavigatorSheet>
+
+			<Sheet bind:open={toolsOpen} title="Tools" desktop="bottom" width="sm:max-w-lg sm:mx-auto">
+				<ul class="grid grid-cols-2 gap-2 pt-1">
+					{#if clerk.user && currentItem}
+						<li>
+							<button
+								type="button"
+								class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-base-300 text-sm font-medium active:scale-[0.97] {sidePanel.current ===
+								'notes'
+									? 'bg-info/12 text-info'
+									: ''}"
+								aria-pressed={sidePanel.current === 'notes'}
+								onclick={() => {
+									toolsOpen = false;
+									sidePanel.toggle('notes', 'mobile');
+								}}><StickyNote size={22} class="text-info" /> Notes</button
+							>
+						</li>
+					{/if}
+					<li>
+						<button
+							type="button"
+							class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-base-300 text-sm font-medium active:scale-[0.97] {sidePanel.current ===
+							'calculator'
+								? 'bg-info/12 text-info'
+								: ''}"
+							aria-pressed={sidePanel.current === 'calculator'}
+							onclick={() => {
+								toolsOpen = false;
+								sidePanel.toggle('calculator', 'mobile');
+							}}><Calculator size={22} class="text-info" /> Calculator</button
+						>
+					</li>
+				</ul>
+				<button
+					type="button"
+					class="btn btn-ghost mt-4 min-h-11 w-full rounded-full text-base-content/70"
+					onclick={() => void flushSync(true)}
+				>
+					<Save size={16} /> Save progress now
+				</button>
+			</Sheet>
+
+			<Sheet bind:open={showSubmitModal} title="Submit your test?">
+				<div class="space-y-3">
+					<p class="text-base-content/70">
+						Once submitted, you won't be able to change your answers. You'll be able to review each
+						question with the correct answers and rationales.
+					</p>
+					<div class="grid grid-cols-2 gap-2 text-sm">
+						<div class="rounded-xl border border-base-300 p-3">
+							<div class="text-xs text-base-content/50">Answered</div>
+							<div class="font-semibold">
+								{answeredCount} / {runnerQuery.data?.items?.length ?? 0}
 							</div>
 						</div>
-						{#if (runnerQuery.data?.items?.length ?? 0) - answeredCount > 0}
-							<div class="alert alert-warning rounded-xl text-sm">
-								<Info size={14} />
-								<span>You have unanswered questions. They will be marked as incorrect.</span>
+						<div class="rounded-xl border border-base-300 p-3">
+							<div class="text-xs text-base-content/50">Unanswered</div>
+							<div
+								class="font-semibold {(runnerQuery.data?.items?.length ?? 0) - answeredCount > 0
+									? 'text-warning'
+									: ''}"
+							>
+								{(runnerQuery.data?.items?.length ?? 0) - answeredCount}
 							</div>
-						{/if}
+						</div>
 					</div>
-					<div class="flex justify-end space-x-2">
-						<button class="btn btn-outline rounded-full" onclick={() => (showSubmitModal = false)}>
-							Keep Working
+					{#if (runnerQuery.data?.items?.length ?? 0) - answeredCount > 0}
+						<div class="alert alert-warning rounded-xl text-sm">
+							<Info size={14} />
+							<span>You have unanswered questions. They will be marked as incorrect.</span>
+						</div>
+					{/if}
+				</div>
+				{#snippet footer()}
+					<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+						<button
+							class="btn btn-outline min-h-11 rounded-full"
+							onclick={() => (showSubmitModal = false)}
+						>
+							Keep working
 						</button>
 						<button
-							class="btn btn-primary rounded-full gap-1"
+							class="btn btn-primary min-h-11 rounded-full gap-1"
 							onclick={() => {
 								showSubmitModal = false;
 								void submitAttempt(false);
@@ -1315,24 +1460,11 @@
 							disabled={isSubmitting}
 						>
 							<Send size={14} />
-							{isSubmitting ? 'Submitting...' : 'Submit Test'}
+							{isSubmitting ? 'Submitting…' : 'Submit test'}
 						</button>
 					</div>
-				</div>
-				<div
-					class="modal-backdrop bg-black/50"
-					role="button"
-					tabindex="-1"
-					aria-label="Close submit dialog"
-					onclick={() => (showSubmitModal = false)}
-					onkeydown={(e) => {
-						if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
-							e.preventDefault();
-							showSubmitModal = false;
-						}
-					}}
-				></div>
-			</dialog>
+				{/snippet}
+			</Sheet>
 		{/if}
 	{/if}
 </div>

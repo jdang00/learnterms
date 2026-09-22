@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
 	import type { Readable } from 'svelte/store';
 	import {
@@ -165,8 +165,22 @@
 			}
 		});
 	});
+	let appliedValue: string | undefined;
 	$effect(() => {
-		$editor?.setEditable(!disabled);
+		const incoming = value;
+		const current = $editor;
+		if (!current || incoming === appliedValue) return;
+		appliedValue = incoming;
+		untrack(() => {
+			if (current.getHTML() !== incoming && !(current.isEmpty && !incoming))
+				current.commands.setContent(incoming, { emitUpdate: false });
+		});
+	});
+	$effect(() => {
+		const editable = !disabled;
+		const current = $editor;
+		if (current && current.isEditable !== editable)
+			untrack(() => current.setEditable(editable, false));
 	});
 </script>
 

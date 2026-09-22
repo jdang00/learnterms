@@ -16,13 +16,18 @@
 		source,
 		display = 'icon',
 		shape = 'auto',
-		iconSize = 18
+		iconSize = 18,
+		touch = false,
+		class: extraClass = ''
 	}: {
 		command: QuizCommand;
 		source: CommandSource;
 		display?: DockDisplay;
 		shape?: DockShape;
 		iconSize?: number;
+		// 44px targets for the phone dock.
+		touch?: boolean;
+		class?: string;
 	} = $props();
 
 	const label = $derived(command.label());
@@ -33,7 +38,9 @@
 		const text = command.detail?.() ?? label;
 		return shortcut ? `${text} (${shortcut})` : text;
 	});
-	const className = $derived(dockButtonClass(command, { display, shape, active }));
+	const className = $derived(
+		`${dockButtonClass(command, { display, shape, active })} ${touch ? '[--size:2.75rem]' : ''} ${extraClass}`
+	);
 	const Icon = $derived(active && command.activeIcon ? command.activeIcon : command.icon);
 </script>
 
@@ -44,7 +51,7 @@
 
 {#if isPassive(command)}
 	<span
-		class={READOUT_CLASS}
+		class="{READOUT_CLASS} {touch ? 'h-11' : ''}"
 		role="status"
 		aria-label={`${command.name}: ${label}`}
 		title={command.description}

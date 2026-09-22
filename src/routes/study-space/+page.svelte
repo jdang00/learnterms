@@ -371,7 +371,7 @@ TODO: Review pressure-volume loops before exam...`;
 	<!-- Ambient background -->
 	<div class="ambient-bg"></div>
 
-	<div class="relative z-10 flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+	<div class="relative z-10 flex flex-col h-[calc(100dvh-4rem)] overflow-hidden">
 		<!-- Top Bar -->
 		<div
 			class="flex items-center justify-between px-4 py-2.5 border-b border-base-300/50 bg-base-100/80 backdrop-blur-xl"

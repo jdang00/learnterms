@@ -1,6 +1,17 @@
 <script lang="ts">
+	import { acceptanceLevels } from '$lib/utils/freeResponse';
+	import AcceptanceMeter from '$lib/components/AcceptanceMeter.svelte';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
-	import { Pencil, Trash2, Copy, CopyPlus, ArrowRightLeft, Paperclip, Check } from 'lucide-svelte';
+	import {
+		Pencil,
+		Trash2,
+		Copy,
+		CopyPlus,
+		ArrowRightLeft,
+		Paperclip,
+		Check,
+		Target
+	} from 'lucide-svelte';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
@@ -48,7 +59,9 @@
 	const isMobile = $derived(variant === 'mobile');
 	const isFillInTheBlank = $derived(question.type === 'fill_in_the_blank');
 	const isMatching = $derived(question.type === 'matching');
-	const isMultipleChoice = $derived(!isFillInTheBlank && !isMatching);
+	const isFreeResponse = $derived(question.type === 'free_response');
+	const isMultipleChoice = $derived(!isFillInTheBlank && !isMatching && !isFreeResponse);
+	const acceptance = $derived(question.freeResponseAcceptance ?? 'lenient');
 	const questionRationale = $derived(sanitizeHtml(getRationale(question)));
 
 	// FITB helpers
@@ -233,8 +246,55 @@
 			</div>
 		</div>
 
-		<!-- Fill in the Blank -->
-		{#if isFillInTheBlank}
+		{#if isFreeResponse}
+			<div class={isMobile ? 'mb-4' : 'mb-6'}>
+				<div
+					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile
+						? 'mb-2'
+						: 'mb-3'}"
+				>
+					Acceptance
+				</div>
+				<div
+					class="flex items-center rounded-3xl border-2 border-base-300 bg-base-200 {isMobile
+						? 'gap-3 px-4 py-2'
+						: 'gap-4 px-5 py-3'}"
+				>
+					<AcceptanceMeter level={acceptance} class="shrink-0 text-primary" />
+					<div class="min-w-0">
+						<div class="{isMobile ? 'text-xs' : 'text-sm'} font-semibold">
+							{acceptanceLevels[acceptance].label}
+						</div>
+						<p class="text-xs text-base-content/60">{acceptanceLevels[acceptance].description}</p>
+					</div>
+				</div>
+			</div>
+
+			<div class={isMobile ? 'mb-4' : 'mb-6'}>
+				<div
+					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 flex items-center gap-2 {isMobile
+						? 'mb-2'
+						: 'mb-3'}"
+				>
+					<Target size={14} /> Ground Truth
+				</div>
+				<div
+					class="rounded-2xl border-2 border-success bg-success/5"
+					class:p-3={isMobile}
+					class:p-4={!isMobile}
+				>
+					{#if hasRationale(question)}
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+						<div class="text-sm text-base-content/80 tiptap-content">{@html questionRationale}</div>
+					{:else}
+						<p class="text-sm italic text-base-content/40">No ground truth defined</p>
+					{/if}
+					<QuestionSources source={question.metadata.source ?? question.metadata.generation} />
+				</div>
+			</div>
+
+			<!-- Fill in the Blank -->
+		{:else if isFillInTheBlank}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
 				<div
 					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile
@@ -410,7 +470,7 @@
 		{/if}
 
 		<!-- Rationale -->
-		{#if hasRationale(question)}
+		{#if hasRationale(question) && !isFreeResponse}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
 				<div
 					class="text-xs font-semibold uppercase tracking-wide text-base-content/60"

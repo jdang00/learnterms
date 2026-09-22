@@ -13,6 +13,38 @@
 :root {
 	--color-highlighter: #fde047;
 	--color-highlighter-ink: color-mix(in oklab, #d4a106 72%, var(--color-base-content));
+	/* Height of the on-screen keyboard, kept current by trackKeyboardInset(). */
+	--keyboard-inset: 0px;
+}
+
+/* viewport-fit=cover lets landscape phones draw under the notch; keep content clear of it. */
+body {
+	padding-left: env(safe-area-inset-left, 0px);
+	padding-right: env(safe-area-inset-right, 0px);
+}
+
+@utility pb-safe {
+	padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@utility pt-safe {
+	padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Fixed bottom bars: clear the home indicator, and ride above the keyboard when it is open. */
+@utility bottom-dock {
+	bottom: var(--keyboard-inset, 0px);
+	padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}
+
+/* iOS zooms the page into any field smaller than 16px when it gets focus. */
+@media (pointer: coarse) {
+	input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']),
+	textarea,
+	select,
+	[contenteditable='true'] {
+		font-size: max(16px, 1em);
+	}
 }
 
 /* Tailwind v4 custom utilities for About page aurora background */

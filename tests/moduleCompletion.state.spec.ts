@@ -270,3 +270,59 @@ test('Back after automatic completion stays in the quiz when a late mastery save
 	expect(qs.showCompletion).toBe(false);
 	expect(qs.getCompletionSummary().isMastered).toBe(true);
 });
+
+test('free response waits for the server and keeps failures retryable without progress', async () => {
+	const qs = new QuizState();
+	qs.setQuestions([question('one', 'free_response')]);
+	qs.selectedAnswers = ['<p>Water becomes gas.</p>'];
+	qs.submitFreeResponse = vi.fn().mockRejectedValue(new Error('timeout'));
+	await expect(qs.checkFreeResponse()).rejects.toThrow('timeout');
+	expect(qs.getCompletionSummary().answered).toBe(0);
+	expect(qs.selectedAnswers).toEqual(['<p>Water becomes gas.</p>']);
+	expect(qs.gradingQuestionId).toBeNull();
+	expect(qs.gradingErrors.one).toContain('submit again');
+	qs.submitFreeResponse = async () => ({
+		isCorrect: true,
+		evidence: { questionId: 'one', checkedAt: 1, latestCorrect: true, cleanRecallCount: 0 },
+		grade: {
+			response: 'Water becomes gas.',
+			isCorrect: true,
+			feedback: 'Correct idea.',
+			comparison: 'Equivalent.'
+		}
+	});
+	await qs.checkFreeResponse();
+	expect(qs.getCompletionSummary().isAllCorrect).toBe(true);
+	expect(qs.showSolution).toBe(true);
+	expect(qs.freeResponseGrades.one.feedback).toBe('Correct idea.');
+});
+
+test('a slow free response grade never reveals the next question or overwrites its answer', async () => {
+	const qs = new QuizState();
+	qs.setQuestions([question('one', 'free_response'), question('two')]);
+	qs.selectedAnswers = ['water becomes gas'];
+	let resolve!: (value: Awaited<ReturnType<NonNullable<QuizState['submitFreeResponse']>>>) => void;
+	qs.submitFreeResponse = () =>
+		new Promise((done) => {
+			resolve = done;
+		});
+	const pending = qs.checkFreeResponse();
+	expect(qs.getCompletionSummary().answered).toBe(0);
+	await expect(qs.checkFreeResponse()).rejects.toThrow();
+	qs.currentQuestionIndex = 1;
+	qs.selectedAnswers = ['b'];
+	resolve({
+		isCorrect: true,
+		evidence: { questionId: 'one', checkedAt: 1, latestCorrect: true, cleanRecallCount: 0 },
+		grade: {
+			response: 'water becomes gas',
+			isCorrect: true,
+			feedback: 'Correct.',
+			comparison: 'Same meaning.'
+		}
+	});
+	await pending;
+	expect(qs.showSolution).toBe(false);
+	expect(qs.selectedAnswers).toEqual(['b']);
+	expect(qs.learningEvidence.one.latestCorrect).toBe(true);
+});

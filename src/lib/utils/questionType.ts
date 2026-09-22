@@ -20,7 +20,8 @@ const TYPE_ABBREVIATIONS: Record<string, string> = {
 	multiple_select: 'MS',
 	true_false: 'T/F',
 	fill_in_the_blank: 'FITB',
-	matching: 'Match'
+	matching: 'Match',
+	free_response: 'FR'
 };
 
 export function abbreviateType(type: string): string {

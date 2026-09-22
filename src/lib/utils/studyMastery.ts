@@ -1,3 +1,4 @@
+import { getRationale } from './rationale';
 import type { Doc } from '../../convex/_generated/dataModel';
 import { stemFingerprint } from './stemHighlights';
 
@@ -15,13 +16,29 @@ export type StudyEvidence = {
 	activeAttemptRevealed?: boolean;
 };
 
-// Reordering a module, changing flags, or editing a rationale does not invalidate evidence.
+// Free-response rationales define the answer, so changing them invalidates grading evidence.
+// Rationales for other question types do not affect correctness.
 export async function questionVersion(
-	question: Pick<Doc<'question'>, 'stem' | 'type' | 'options' | 'correctAnswers'>
+	question: Pick<
+		Doc<'question'>,
+		| 'stem'
+		| 'type'
+		| 'options'
+		| 'correctAnswers'
+		| 'freeResponseAcceptance'
+		| 'rationale'
+		| 'explanation'
+	>
 ) {
 	return stemFingerprint(
 		JSON.stringify({
 			stem: question.stem,
+			...(question.type === 'free_response'
+				? {
+						acceptance: question.freeResponseAcceptance ?? 'lenient',
+						groundTruth: getRationale(question)
+					}
+				: {}),
 			type: question.type,
 			options:
 				question.type === 'matching'

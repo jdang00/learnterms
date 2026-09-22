@@ -14,7 +14,7 @@
 		ArrowRight as ArrowRightIcon
 	} from 'lucide-svelte';
 	import { page } from '$app/state';
-	import { goto, replaceState } from '$app/navigation';
+	import { goto, pushState, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import FeatureSpotlight from '../../lib/components/FeatureSpotlight.svelte';
 	import ModuleCard from '../../lib/components/ModuleCard.svelte';
@@ -44,9 +44,6 @@
 	const admin = $derived(userData?.role === 'admin');
 	const curator = $derived(userData?.role === 'curator');
 
-	let currentView: 'classes' | 'modules' = $state('classes');
-	let selectedClass: ClassWithSemester | null = $state(null);
-	let isNavigatingBack = $state(false);
 	let jumpBackScroller: HTMLDivElement | undefined = $state();
 	let canScrollRight = $state(false);
 	let featureSpotlightOpen = $state(false);
@@ -86,6 +83,17 @@
 		isLoading: classesQuery.isLoading,
 		error: classesQuery.error
 	});
+
+	// The open class lives in history state, so the back gesture returns to the class list.
+	const requestedClassId = $derived(
+		page.state.classId ?? page.url.searchParams.get('classId') ?? null
+	);
+	const selectedClass: ClassWithSemester | null = $derived(
+		requestedClassId
+			? ((classes.data as ClassWithSemester[]).find((cls) => cls._id === requestedClassId) ?? null)
+			: null
+	);
+	const currentView: 'classes' | 'modules' = $derived(selectedClass ? 'modules' : 'classes');
 
 	const firstClassId = $derived.by(() => {
 		const list = classes.data as ClassWithSemester[] | undefined;
@@ -166,37 +174,21 @@
 		return [...source].sort((a, b) => a.order - b.order);
 	});
 
-	$effect(() => {
-		if (isNavigatingBack) return;
-
-		const classId =
-			(typeof page.state === 'object' && page.state && 'classId' in page.state
-				? String(page.state.classId)
-				: null) ?? page.url.searchParams.get('classId');
-
-		if (classId && classes.data && classes.data.length > 0) {
-			const foundClass = classes.data.find((cls) => cls._id === classId);
-			if (foundClass && !selectedClass) {
-				selectedClass = foundClass;
-				currentView = 'modules';
-			}
-		}
-	});
-
-	async function selectClass(classItem: ClassWithSemester | null) {
-		selectedClass = classItem;
-		currentView = 'modules';
-		if (classItem != null) {
-			replaceState(resolve('/classes'), { ...page.state, classId: classItem._id });
-		}
+	function selectClass(classItem: ClassWithSemester | null) {
+		if (!classItem) return;
+		pushState('', { ...page.state, classId: classItem._id, classOpenedInPlace: true });
 	}
 
 	async function goBackToClasses() {
-		isNavigatingBack = true;
-		currentView = 'classes';
-		selectedClass = null;
-		await goto(resolve('/classes'), { replaceState: true });
-		isNavigatingBack = false;
+		if (page.state.classOpenedInPlace) {
+			history.back();
+			return;
+		}
+		if (page.url.searchParams.has('classId')) {
+			await goto(resolve('/classes'), { replaceState: true });
+			return;
+		}
+		replaceState('', { ...page.state, classId: undefined, classOpenedInPlace: undefined });
 	}
 
 	const featureCtaHref = $derived(
@@ -247,8 +239,8 @@
 	});
 </script>
 
-<main class="min-h-screen p-6 sm:p-8 mb-56">
-	<div class="mb-8 flex flex-col gap-2">
+<main class="min-h-screen px-4 pt-5 pb-10 sm:p-8 lg:mb-56">
+	<div class="mb-6 flex flex-col gap-2 sm:mb-8">
 		{#if user === undefined}
 			<div class="flex flex-row gap-5 items-center">
 				<div class="skeleton h-14 w-14 rounded-full shrink-0 hidden xl:block"></div>
@@ -309,6 +301,10 @@
 	<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
 		<div class="lg:col-span-3 overflow-hidden">
 			{#if currentView === 'classes'}
+				<div class="mb-6 lg:hidden">
+					<Sidebar variant="chips" />
+				</div>
+
 				{#if recentModulesLoading}
 					<div class="mb-8">
 						<div class="mb-3 h-6 w-32 skeleton rounded-full"></div>
@@ -334,11 +330,45 @@
 						<span>Failed to load recent modules: {recentModulesError.toString()}</span>
 					</div>
 				{:else if recentModules.length > 0}
-					<div in:fade={{ duration: 300, easing: cubicOut }} class="mb-10">
+					{@const resume = recentModules[0]}
+					<a
+						href={resolve('/classes/[classId]/modules/[moduleId]', {
+							classId: resume.classId,
+							moduleId: resume.moduleId
+						})}
+						class="mb-6 flex items-center gap-4 rounded-3xl border border-primary/25 bg-primary/5 p-4 transition-transform active:scale-[0.99] sm:hidden"
+						in:fade={{ duration: 300, easing: cubicOut }}
+					>
+						<span class="text-4xl leading-none">{resume.moduleEmoji || '📘'}</span>
+						<span class="min-w-0 flex-1">
+							<span class="block text-xs font-medium text-primary">Continue studying</span>
+							<span class="block truncate font-semibold">{resume.moduleTitle}</span>
+							<span class="mt-2 flex items-center gap-2 text-xs text-base-content/60">
+								<span class="h-1.5 flex-1 overflow-hidden rounded-full bg-base-300/70">
+									<span
+										class="block h-full rounded-full bg-success"
+										style="width: {resume.progress}%;"
+									></span>
+								</span>
+								<span class="tabular-nums">{resume.progress}%</span>
+							</span>
+						</span>
+						<span
+							class="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-content"
+							aria-hidden="true"
+						>
+							<ArrowRightIcon size={20} />
+						</span>
+					</a>
+					<div
+						in:fade={{ duration: 300, easing: cubicOut }}
+						class="mb-8 sm:mb-10 {recentModules.length === 1 ? 'hidden sm:block' : ''}"
+					>
 						<div class="flex items-center justify-between mb-3">
 							<div class="flex items-center gap-2">
 								<h3 class="text-sm font-semibold text-base-content/70">
-									Pick up where you left off
+									<span class="sm:hidden">Also recent</span>
+									<span class="max-sm:hidden">Pick up where you left off</span>
 								</h3>
 							</div>
 							{#if canScrollRight}
@@ -358,13 +388,16 @@
 								class="overflow-x-auto scrollbar-none"
 							>
 								<div class="flex min-w-max gap-2">
-									{#each recentModules as recentModule (recentModule.moduleId)}
+									{#each recentModules as recentModule, index (recentModule.moduleId)}
 										<a
 											href={resolve('/classes/[classId]/modules/[moduleId]', {
 												classId: recentModule.classId,
 												moduleId: recentModule.moduleId
 											})}
-											class="group flex items-center gap-2.5 rounded-xl bg-base-100 border border-base-300 pl-3 pr-4 py-2 transition-colors duration-150 hover:border-primary/40"
+											class="group flex min-h-12 items-center gap-2.5 rounded-xl bg-base-100 border border-base-300 pl-3 pr-4 py-2 transition-colors duration-150 hover:border-primary/40 active:bg-base-200 {index ===
+											0
+												? 'max-sm:hidden'
+												: ''}"
 										>
 											<span class="text-base leading-none shrink-0"
 												>{recentModule.moduleEmoji || '📘'}</span
@@ -408,10 +441,11 @@
 				<ClassList {classes} onSelectClass={selectClass} />
 			{:else if currentView === 'modules' && selectedClass}
 				<div in:fade={{ duration: 400, easing: cubicOut }} class="w-full">
-					<div class="flex items-center gap-3 mb-4">
+					<div class="flex items-center gap-1 sm:gap-3 mb-4">
 						<button
 							onclick={goBackToClasses}
-							class="btn btn-sm btn-ghost rounded-full hover:bg-base-200 transition-colors duration-200"
+							class="btn btn-ghost btn-circle size-11 -ms-2 sm:btn-sm sm:size-auto sm:ms-0 sm:rounded-full hover:bg-base-200 transition-colors duration-200"
+							aria-label="Back to classes"
 						>
 							<ArrowLeft size={16} />
 						</button>
@@ -484,7 +518,7 @@
 							</div>
 						</div>
 					{:else}
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-5">
 							{#each sortedModules as module, i (module._id)}
 								<div style="animation: moduleReveal 0.4s cubic-bezier(.16,1,.3,1) {i * 50}ms both;">
 									<ModuleCard {module} classId={selectedClass._id} />
@@ -496,7 +530,9 @@
 			{/if}
 		</div>
 
-		<Sidebar />
+		<div class="hidden lg:block">
+			<Sidebar />
+		</div>
 	</div>
 </main>
 

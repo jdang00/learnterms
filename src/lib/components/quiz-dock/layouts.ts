@@ -160,6 +160,32 @@ export function homeZoneFor(id: string): DockZone {
 	return DEFAULT_TOOLS.includes(id) ? 'tools' : 'items';
 }
 
+// Phones keep one row: Check stretched, More, and previous/next as the split pill on the right.
+// Other tools stay on the row in layout order while they fit; the rest move into More.
+// Returns the indexes of `middle` (everything except previous/next) that stay on the row.
+export function phoneRowFit(
+	middle: { id: string; passive: boolean }[],
+	width: number,
+	navButtons: number
+): Set<number> {
+	const hasCheck = middle.some((item) => item.id === 'check');
+	let budget = width - 16 - navButtons * 50 - 48 - (hasCheck ? 112 : 0);
+	const shown = new Set<number>();
+	let folding = false;
+	middle.forEach((item, index) => {
+		if (item.id === 'check') {
+			shown.add(index);
+			return;
+		}
+		const cost = item.passive ? 80 : 48;
+		if (!folding && budget >= cost) {
+			shown.add(index);
+			budget -= cost;
+		} else folding = true;
+	});
+	return shown;
+}
+
 // Phones keep the same tools in the same order, but only the primary action keeps its text.
 export function displayFor(id: string, display: DockDisplay, surface: DockSurface): DockDisplay {
 	if (surface === 'desktop') return display;

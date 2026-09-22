@@ -1,12 +1,15 @@
 <script lang="ts">
-	import { CircleHelp, MessageSquareText, Paperclip, Settings } from 'lucide-svelte';
+	import { ChevronUp, MessageSquareText, Paperclip, Settings } from 'lucide-svelte';
+	import { fly } from 'svelte/transition';
+	import ImageViewer from '$lib/components/ImageViewer.svelte';
+	import Sheet from '$lib/components/Sheet.svelte';
+	import { sheetDrag } from '$lib/utils/sheetDrag';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import { untrack } from 'svelte';
 	import QuizDock from './QuizDock.svelte';
 	import { getQuizCommands } from './commands.svelte';
-	import { getDockPreferences } from './dockPreferences.svelte';
-	import type { Doc, Id } from '../../../convex/_generated/dataModel';
+	import type { Id } from '../../../convex/_generated/dataModel';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
@@ -14,9 +17,8 @@
 	let { qs = $bindable(), currentlySelected } = $props();
 
 	let isSettingsModalOpen = $state(false);
-	let showAttachments = $state(false);
 	let isAttachmentViewerOpen = $state(false);
-	let selectedAttachment = $state<Doc<'questionMedia'> | null>(null);
+	let attachmentIndex = $state(0);
 
 	const mediaQuery = useQuestionMedia(() => currentlySelected?._id as Id<'question'> | undefined);
 
@@ -27,22 +29,22 @@
 		isLoading: mediaQuery.isLoading
 	});
 
-	$effect(() => {
-		if (!selectedAttachment) return;
-		const current = media.data.find((item) => item._id === selectedAttachment?._id);
-		if (!current && !media.isLoading) {
-			selectedAttachment = null;
-			isAttachmentViewerOpen = false;
-		} else if (
-			current &&
-			(current.url !== selectedAttachment.url || current.updatedAt !== selectedAttachment.updatedAt)
-		) {
-			selectedAttachment = current;
-		}
-	});
-
 	const canShowRationale = $derived.by(() => hasRationale(currentlySelected));
 	const sanitizedRationale = $derived(sanitizeHtml(getRationale(currentlySelected)));
+	const rationalePreview = $derived(
+		typeof DOMParser === 'undefined'
+			? ''
+			: (new DOMParser().parseFromString(sanitizedRationale, 'text/html').body.textContent ?? '')
+					.replace(/\s+/g, ' ')
+					.trim()
+	);
+	// Swipe the peek up to open the full rationale.
+	const peekDrag = {
+		onmove: () => {},
+		onend: (dy: number, velocity: number) => {
+			if (dy < -24 || velocity < -0.4) qs.isModalOpen = true;
+		}
+	};
 
 	$effect(() => {
 		if (!qs.showSolution || !canShowRationale) {
@@ -51,16 +53,12 @@
 	});
 
 	function openAttachments() {
-		if (media.data.length === 1) {
-			selectedAttachment = media.data[0];
-			isAttachmentViewerOpen = true;
-		} else if (media.data.length > 1) {
-			showAttachments = true;
-		}
+		if (!media.data.length) return;
+		attachmentIndex = 0;
+		isAttachmentViewerOpen = true;
 	}
 
 	const registry = getQuizCommands();
-	const preferences = getDockPreferences();
 
 	$effect(() =>
 		untrack(() =>
@@ -107,113 +105,50 @@
 			)
 		)
 	);
-
-	const rationaleDocked = $derived(
-		preferences?.layout.items.some((item) => item.id === 'rationale') ?? false
-	);
 </script>
 
-<QuizDock surface="mobile" source="mobile" />
-
-<dialog
-	class="modal modal-bottom sm:modal-middle max-w-full p-0 sm:p-4"
-	class:modal-open={qs.isModalOpen}
->
-	<div class="modal-box rounded-t-3xl sm:rounded-2xl max-h-[65vh]">
-		<form method="dialog">
-			<button
-				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-				onclick={() => (qs.isModalOpen = false)}>✕</button
+{#snippet rationalePeek()}
+	{#if qs.showSolution && canShowRationale && !qs.isModalOpen}
+		<div class="px-3 pb-2" transition:fly={{ y: 12, duration: 180 }}>
+			<div
+				role="button"
+				tabindex="0"
+				class="flex min-h-12 w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-base-300 bg-base-100 px-4 py-2 text-left shadow-lg active:bg-base-200"
+				aria-label="Show rationale"
+				use:sheetDrag={peekDrag}
+				onclick={() => (qs.isModalOpen = true)}
+				onkeydown={(event) => {
+					if (event.key === 'Enter' || event.key === ' ') {
+						event.preventDefault();
+						qs.isModalOpen = true;
+					}
+				}}
 			>
-		</form>
-		<h3 class="text-lg font-bold">Rationale</h3>
-		{#if canShowRationale}
-			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-			<div class="py-4 tiptap-content">{@html sanitizedRationale}</div>
-			<QuestionSources
-				source={currentlySelected?.metadata?.source ?? currentlySelected?.metadata?.generation}
-			/>
-		{/if}
-	</div>
-</dialog>
-
-<dialog class="modal max-w-full p-4" class:modal-open={showAttachments}>
-	<div class="modal-box max-w-sm w-full rounded-2xl">
-		<form method="dialog">
-			<button
-				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-				onclick={() => (showAttachments = false)}>✕</button
-			>
-		</form>
-		<h3 class="font-semibold text-lg">Attachments ({media.data.length})</h3>
-		<div class="grid grid-cols-2 gap-3 mt-3">
-			{#each media.data as attachment (attachment._id)}
-				<button
-					class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary"
-					onclick={() => {
-						selectedAttachment = attachment;
-						isAttachmentViewerOpen = true;
-						showAttachments = false;
-					}}
-					aria-label={`View attachment: ${attachment.altText}`}
-				>
-					<div class="relative">
-						<img
-							src={attachment.url}
-							alt={attachment.altText}
-							class="w-full h-24 object-cover group-hover:brightness-110 transition-all duration-200"
-						/>
-						{#if attachment.caption}
-							<div
-								class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2"
-							>
-								<p class="text-white text-xs truncate">{attachment.caption}</p>
-							</div>
-						{/if}
-					</div>
-				</button>
-			{/each}
+				<span class="shrink-0 text-sm font-semibold text-success">Why</span>
+				<span class="min-w-0 flex-1 truncate text-sm text-base-content/70">{rationalePreview}</span>
+				<ChevronUp size={18} class="shrink-0 text-base-content/50" />
+			</div>
 		</div>
-	</div>
-</dialog>
+	{/if}
+{/snippet}
 
-<dialog class="modal max-w-full p-4" class:modal-open={isAttachmentViewerOpen}>
-	<div class="modal-box max-w-4xl w-full rounded-2xl">
-		<form method="dialog">
-			<button
-				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-				onclick={() => {
-					isAttachmentViewerOpen = false;
-					selectedAttachment = null;
-				}}>✕</button
-			>
-		</form>
-		{#if selectedAttachment}
-			<h3 class="font-bold text-lg mb-3">{selectedAttachment.altText}</h3>
-			<img
-				src={selectedAttachment.url}
-				alt={selectedAttachment.altText}
-				class="w-full max-h-[70vh] object-contain"
-			/>
-			{#if selectedAttachment.caption}
-				<div class="mt-3">
-					<p class="text-sm text-base-content/70">{selectedAttachment.caption}</p>
-				</div>
-			{/if}
-		{/if}
-	</div>
-</dialog>
+<QuizDock
+	surface="mobile"
+	source="mobile"
+	above={rationalePeek}
+	celebrate={qs.checkResult === 'Correct!'}
+/>
+
+<Sheet bind:open={qs.isModalOpen} title="Rationale" expandable width="sm:max-w-xl">
+	{#if canShowRationale}
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+		<div class="tiptap-content pb-2">{@html sanitizedRationale}</div>
+		<QuestionSources
+			source={currentlySelected?.metadata?.source ?? currentlySelected?.metadata?.generation}
+		/>
+	{/if}
+</Sheet>
+
+<ImageViewer images={media.data} bind:open={isAttachmentViewerOpen} bind:index={attachmentIndex} />
 
 <SettingsModal bind:qs bind:isOpen={isSettingsModalOpen} />
-
-{#if qs.showSolution && canShowRationale && !qs.isModalOpen && !rationaleDocked}
-	<button
-		class="fixed right-4 z-[60] md:hidden btn btn-sm btn-soft rounded-full border border-base-300/70 bg-base-100/85 backdrop-blur-xs normal-case shadow-xs"
-		style="bottom: calc(env(safe-area-inset-bottom, 0px) + 6.25rem);"
-		onclick={() => (qs.isModalOpen = true)}
-		aria-label="Show rationale"
-	>
-		<CircleHelp size={14} />
-		<span class="ml-1">Rationale</span>
-	</button>
-{/if}

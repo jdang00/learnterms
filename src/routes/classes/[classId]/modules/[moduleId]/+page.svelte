@@ -6,6 +6,7 @@
 	import { QuizState } from './states.svelte';
 	import MainQuiz from '$lib/components/MainQuiz.svelte';
 	import ModuleCompletion from '$lib/components/ModuleCompletion.svelte';
+	import Sheet from '$lib/components/Sheet.svelte';
 	import { onMount, tick, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { resolve } from '$app/paths';
@@ -194,12 +195,19 @@
 			const sameAttempt = attempts.get(questionId) === attempt.attemptId;
 			attempts.set(questionId, attempt.attemptId);
 			qs.hydrateEvidence([attempt.evidence]);
+			if (attempt.freeResponseGrade) qs.freeResponseGrades[questionId] = attempt.freeResponseGrade;
+			else delete qs.freeResponseGrades[questionId];
+			const isFreeResponse =
+				qs.questions.find((q) => q._id === questionId)?.type === 'free_response';
+			const restoredAnswers = isFreeResponse
+				? (savedProgress?.selectedOptions ?? attempt.selectedOptions)
+				: attempt.selectedOptions;
 			qs.selectedAnswers =
 				qs.localAnswers[questionId] !== draftBeforeLoad
 					? (qs.localAnswers[questionId] ?? [])
 					: sameAttempt
-						? (qs.localAnswers[questionId] ?? attempt.selectedOptions)
-						: attempt.selectedOptions;
+						? (qs.localAnswers[questionId] ?? restoredAnswers)
+						: restoredAnswers;
 			qs.localAnswers[questionId] = [...qs.selectedAnswers];
 			qs.eliminatedAnswers = sameAttempt ? (savedProgress?.eliminatedOptions ?? []) : [];
 			qs.setCurrentQuestionFlagged(savedProgress?.isFlagged ?? false);
@@ -228,6 +236,17 @@
 		return await client.mutation(api.studyProgress.check, {
 			attemptId,
 			selectedOptions,
+			submissionId
+		});
+	};
+	qs.submitFreeResponse = async (questionId, response, submissionId) => {
+		const request = client.mutation(api.studyProgress.open, { questionId });
+		attemptRequests.set(questionId, request);
+		const attempt = await request;
+		attempts.set(questionId, attempt.attemptId);
+		return client.action(api.freeResponse.grade, {
+			attemptId: attempt.attemptId,
+			response,
 			submissionId
 		});
 	};
@@ -479,7 +498,7 @@
 	</div>
 {:else}
 	<!-- Quiz View -->
-	<div class="flex flex-col h-[calc(100vh-4rem)]" transition:fade={{ duration: 200 }}>
+	<div class="flex flex-col h-dvh lg:h-[calc(100dvh-4rem)]" transition:fade={{ duration: 200 }}>
 		<div class="flex-1 min-h-0 relative">
 			{#if qs.showCompletion}
 				<ModuleCompletion
@@ -515,55 +534,42 @@
 		</div>
 	</div>
 
-	<!-- Global Reset Modal at page root to ensure highest stacking context -->
-	<dialog class="modal max-w-full p-4 z-[1000]" class:modal-open={qs.isResetModalOpen}>
-		<div class="modal-box rounded-2xl">
-			<form method="dialog">
+	<Sheet bind:open={qs.isResetModalOpen} title="Reset module?">
+		<p class="text-base-content/80">
+			Start another run with blank answers. This clears your current results, flags, and saved
+			answers. Your mastery and past study activity are kept.
+		</p>
+		<label class="my-5 flex items-center justify-between gap-4">
+			<span
+				><span class="block font-medium">Remove highlights</span><span
+					class="text-sm text-base-content/60">Also erase your stem highlights in this module.</span
+				></span
+			>
+			<input
+				type="checkbox"
+				role="switch"
+				aria-label="Remove highlights"
+				class="toggle toggle-warning"
+				bind:checked={removeHighlights}
+				disabled={resetting}
+			/>
+		</label>
+		{#if resetError}<p class="text-error mb-3" role="alert">{resetError}</p>{/if}
+		{#snippet footer()}
+			<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
 				<button
-					class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+					class="btn btn-outline min-h-11 rounded-full"
 					onclick={() => (qs.isResetModalOpen = false)}
 				>
-					✕
-				</button>
-			</form>
-			<h3 class="text-lg font-bold">Reset module?</h3>
-			<p class="py-4">
-				Start another run with blank answers. This clears your current results, flags, and saved
-				answers. Your mastery and past study activity are kept.
-			</p>
-			<label class="mb-5 flex items-center justify-between gap-4">
-				<span
-					><span class="block font-medium">Remove highlights</span><span
-						class="text-sm text-base-content/60"
-						>Also erase your stem highlights in this module.</span
-					></span
-				>
-				<input
-					type="checkbox"
-					role="switch"
-					aria-label="Remove highlights"
-					class="toggle toggle-warning"
-					bind:checked={removeHighlights}
-					disabled={resetting}
-				/>
-			</label>
-			{#if resetError}<p class="text-error mb-3" role="alert">{resetError}</p>{/if}
-			<div class="flex justify-end space-x-2">
-				<button class="btn btn-outline rounded-full" onclick={() => (qs.isResetModalOpen = false)}>
 					Cancel
 				</button>
 				<button
-					class="btn btn-error rounded-full"
+					class="btn btn-error min-h-11 rounded-full"
 					disabled={resetting}
-					onclick={() => handleResetModalConfirm()}>{resetting ? 'Resetting…' : 'Reset'}</button
+					onclick={() => handleResetModalConfirm()}
+					>{resetting ? 'Resetting…' : 'Reset module'}</button
 				>
 			</div>
-		</div>
-		<button
-			type="button"
-			class="modal-backdrop bg-black/50"
-			aria-label="Close reset progress dialog"
-			onclick={() => (qs.isResetModalOpen = false)}
-		></button>
-	</dialog>
+		{/snippet}
+	</Sheet>
 {/if}

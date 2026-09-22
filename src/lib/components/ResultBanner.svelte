@@ -2,7 +2,7 @@
 	import { scale, fade } from 'svelte/transition';
 	import { backOut } from 'svelte/easing';
 
-	type BannerState = { checkResult: string };
+	type BannerState = { checkResult: string; checkCount?: number };
 	let { qs = $bindable<BannerState>(), durationMs = 1800 } = $props();
 
 	let visible = $state(false);
@@ -20,6 +20,7 @@
 		}
 
 		const result = qs?.checkResult;
+		void qs?.checkCount;
 		if (!result || result.trim() === '') {
 			visible = false;
 			return () => {};
@@ -46,7 +47,7 @@
 
 {#if visible && qs?.checkResult}
 	<div
-		class="fixed inset-x-0 top-20 md:top-16 z-[70] flex justify-center px-3 touch-pan-y pointer-events-none"
+		class="fixed inset-x-0 top-[calc(env(safe-area-inset-top,0px)+4rem)] z-[70] flex justify-center px-3 touch-pan-y pointer-events-none"
 		in:scale={{ start: 0.9, duration: 180, easing: backOut }}
 		out:fade={{ duration: 240 }}
 	>

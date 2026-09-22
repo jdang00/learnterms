@@ -9,8 +9,7 @@
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Tween, prefersReducedMotion } from 'svelte/motion';
-	import { cubicOut } from 'svelte/easing';
+	import ProgressRing from './ProgressRing.svelte';
 
 	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
 	let hideSidebar = $state(false);
@@ -27,12 +26,6 @@
 			answered: summary.completion
 		};
 	});
-	const ringMotion = {
-		duration: () => (prefersReducedMotion.current ? 0 : 600),
-		easing: cubicOut
-	};
-	const ringCorrect = Tween.of(() => ring?.correct ?? 0, ringMotion);
-	const ringFilled = Tween.of(() => (ring ? ring.correct + ring.review : 0), ringMotion);
 	const sanitizedRationale = $derived(sanitizeHtml(getRationale(currentlySelected)));
 
 	async function goToModuleSelection() {
@@ -176,20 +169,11 @@
 					aria-label="View module progress"
 					class="rounded-full"
 				>
-					<span
-						class="relative grid size-12 place-items-center rounded-full text-[11px] font-semibold tabular-nums"
-						style:background={ring
-							? `conic-gradient(var(--color-success) 0 ${ringCorrect.current}%, var(--color-warning) 0 ${ringFilled.current}%, color-mix(in oklab, var(--color-base-content) 12%, transparent) 0)`
-							: undefined}
-						role="progressbar"
-						aria-label="Questions answered"
-						aria-valuemin={0}
-						aria-valuemax={100}
-						aria-valuenow={ring?.answered ?? qs.getProgressPercentage()}
-					>
-						<span class="absolute inset-[3px] rounded-full bg-base-100"></span>
-						<span class="relative">{ring?.answered ?? qs.getProgressPercentage()}%</span>
-					</span>
+					<ProgressRing
+						correct={ring?.correct ?? 0}
+						review={ring?.review ?? 0}
+						label={ring?.answered ?? qs.getProgressPercentage()}
+					/>
 				</button>
 				<button
 					class="btn btn-circle btn-lg btn-soft"
