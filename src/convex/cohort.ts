@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { action, internalQuery, mutation } from './_generated/server';
+import { action, internalMutation, internalQuery, mutation } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx, QueryCtx } from './_generated/server';
@@ -222,6 +222,14 @@ export const createCohort = authAdminMutation({
 		}
 		const id = await ctx.db.insert('cohort', args);
 		return id;
+	}
+});
+
+export const setCohortPicUrl = internalMutation({
+	args: { cohortId: v.id('cohort'), picUrl: v.string() },
+	handler: async (ctx, args) => {
+		await ctx.db.patch(args.cohortId, { pic_url: args.picUrl, updatedAt: Date.now() });
+		return null;
 	}
 });
 

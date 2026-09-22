@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowRight, Sparkles, School, CheckCircle, Users, Calendar } from 'lucide-svelte';
+	import { ArrowLeft, ArrowRight, Calendar, Check, School, Users } from 'lucide-svelte';
 	import { useClerkContext } from 'svelte-clerk';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
@@ -15,7 +15,10 @@
 	let cohortInfo = $state<CohortInfo | null>(null);
 	let showConfirmation = $state(false);
 
-	async function handleJoinClass() {
+	let cohortImageFailed = $state(false);
+
+	async function handleJoinClass(event?: SubmitEvent) {
+		event?.preventDefault();
 		if (!classCode.trim()) {
 			error = 'Please enter a class code';
 			return;
@@ -27,6 +30,7 @@
 		try {
 			const result = await client.action(api.cohort.validateCohortCode, { code: classCode.trim() });
 			cohortInfo = result;
+			cohortImageFailed = false;
 			showConfirmation = true;
 		} catch (err) {
 			console.error(err);
@@ -68,187 +72,178 @@
 	const user = $derived(ctx.user);
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-base-100 px-4">
-	<div class="w-full max-w-2xl mx-auto">
-		<div in:fade={{ duration: 1000 }}>
-			{#if user === undefined}
-				<!-- Skeleton Loading State -->
-				<div class="flex items-center justify-center gap-4 mb-8">
-					<div class="skeleton h-16 w-16 rounded-full"></div>
-					<div class="skeleton h-8 w-32"></div>
-				</div>
-			{:else if user === null}
-				<div class="flex items-center justify-center gap-4 mb-8">
-					<div class="skeleton h-16 w-16 rounded-full"></div>
-				</div>
-			{:else}
-				<!-- Authenticated User State -->
-				<div class="flex items-center justify-center mb-8" in:fade>
-					<div class="avatar">
-						<div
-							class="ring-primary ring-offset-base-100 {showConfirmation
-								? 'w-16'
-								: 'w-32'} rounded-full ring-[3px] ring-offset-2 transition-all duration-300"
-						>
-							<img src={user.imageUrl} alt="user profile" />
+<main class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
+	<div class="w-full max-w-md" in:fade={{ duration: 300 }}>
+		{#if !showConfirmation}
+			<div class="mb-6 flex flex-col items-center text-center">
+				{#if user === undefined}
+					<div class="skeleton mb-5 h-14 w-14 rounded-full"></div>
+				{:else if user}
+					<div class="avatar mb-5">
+						<div class="ring-primary ring-offset-base-100 w-14 rounded-full ring-3 ring-offset-2">
+							<img src={user.imageUrl} alt="Your profile" />
 						</div>
 					</div>
-
-					<div class="avatar avatar-placeholder">
-						<div
-							class="bg-secondary text-neutral-content {showConfirmation
-								? 'w-16'
-								: 'w-32'} rounded-full ring-primary ring-offset-base-100 ring-[3px] ring-offset-2 transition-all duration-300"
-						>
-							<span class={showConfirmation ? 'text-xl' : 'text-3xl'}
-								><School size={showConfirmation ? 24 : 48} /></span
-							>
-						</div>
+				{:else}
+					<div class="mb-5 grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+						<School size={26} />
 					</div>
-				</div>
-			{/if}
+				{/if}
+				<h1 class="text-2xl font-bold text-base-content sm:text-3xl">Join your class</h1>
+				<p class="mt-1.5 max-w-sm text-sm text-base-content/60">
+					Enter the class code from your invitation to access your class's content.
+				</p>
+			</div>
 
-			{#if !showConfirmation}
-				<div class="text-center mb-12">
-					<h1 class="font-bold text-4xl lg:text-5xl mb-4">Join Your Class</h1>
-
-					<p class="text-xl text-base-content/80 max-w-lg mx-auto">
-						To access your class's content, enter the class code found on your invitation.
+			<div
+				class="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-xs sm:p-6"
+				in:fly={{ y: 12, duration: 350, delay: 100 }}
+			>
+				{#if user === null}
+					<p class="mb-4 text-center text-sm text-base-content/70">
+						Sign in to enter your class code and join your cohort.
 					</p>
-				</div>
-
-				<div
-					class="card bg-base-100 shadow-xl border border-base-200"
-					in:fly={{ y: 20, duration: 500, delay: 300 }}
-				>
-					<div class="card-body p-8">
-						{#if !user}
-							<p class="text-center mb-4">Sign in to enter your class code and join your cohort.</p>
-							<a href="/sign-in?redirect_url=%2Fjoin-class" class="btn btn-primary btn-lg w-full"
-								>Sign in to join your class <ArrowRight size={20} /></a
-							>
-						{:else}
-							<form onsubmit={handleJoinClass} class="space-y-6">
-								<div class="form-control">
-									<input
-										id="class-code"
-										type="text"
-										placeholder="Enter your class code..."
-										class="input input-bordered input-lg w-full text-center text-xl font-mono tracking-wider"
-										bind:value={classCode}
-										disabled={isSubmitting}
-									/>
-								</div>
-
-								{#if error}
-									<div class="alert alert-error" in:fly={{ y: -10, duration: 300 }}>
-										<span>{error}</span>
-									</div>
-								{/if}
-
-								<div class="form-control mt-8">
-									<button
-										type="submit"
-										class="btn btn-primary btn-lg w-full gap-3 text-lg"
-										disabled={isSubmitting || !classCode.trim()}
-									>
-										{#if isSubmitting}
-											<span class="loading loading-spinner loading-md"></span>
-											<span>Checking Code...</span>
-										{:else}
-											<Sparkles size={20} />
-											<span>Join Class</span>
-											<ArrowRight size={20} />
-										{/if}
-									</button>
-								</div>
-							</form>
-						{/if}
-					</div>
-				</div>
-			{:else}
-				<!-- Confirmation State -->
-				<div class="text-center mb-12">
-					<h1 class="font-bold text-4xl lg:text-5xl mb-4">Gotcha!</h1>
-					<p class="text-xl text-base-content/80 max-w-lg mx-auto">
-						We found your class. Review the details below and confirm to join.
-					</p>
-				</div>
-
-				<div
-					class="card bg-base-100 shadow-xl border border-base-200"
-					in:fly={{ y: 20, duration: 500, delay: 300 }}
-				>
-					<div class="card-body p-8">
-						<div class="text-center mb-6">
-							<div class="flex justify-center mb-4">
-								<div class="avatar">
-									<div
-										class="ring-success ring-offset-base-100 w-20 rounded-full ring-[3px] ring-offset-2"
-									>
-										<img src={cohortInfo?.cohort.pic_url} alt="Cohort Avatar" />
-									</div>
-								</div>
-							</div>
-							<h2 class="text-2xl font-bold mb-2">{cohortInfo?.cohort.name}</h2>
-							<p class="text-base-content/70">{cohortInfo?.school.name}</p>
-						</div>
-
-						<div class="space-y-4 mb-8">
-							<div class="flex items-center gap-3 p-4 bg-base-200 rounded-lg">
-								<Users size={20} class="text-primary" />
-								<div>
-									<p class="font-medium">Cohort</p>
-									<p class="text-sm text-base-content/70">{cohortInfo?.cohort.name}</p>
-								</div>
-							</div>
-
-							<div class="flex items-center gap-3 p-4 bg-base-200 rounded-lg">
-								<Calendar size={20} class="text-primary" />
-								<div>
-									<p class="font-medium">Academic Year</p>
-									<p class="text-sm text-base-content/70">
-										{cohortInfo?.cohort.startYear} - {cohortInfo?.cohort.endYear}
-									</p>
-								</div>
-							</div>
-
-							{#if cohortInfo?.cohort.description}
-								<div class="p-4 bg-base-200 rounded-lg">
-									<p class="font-medium mb-1">Description</p>
-									<p class="text-sm text-base-content/70">{cohortInfo.cohort.description}</p>
-								</div>
-							{/if}
-						</div>
+					<a
+						href="/sign-in?redirect_url=%2Fjoin-class"
+						class="btn btn-primary w-full gap-2 rounded-full"
+					>
+						Sign in to continue <ArrowRight size={16} />
+					</a>
+				{:else}
+					<form onsubmit={handleJoinClass} class="space-y-4">
+						<label class="block">
+							<span class="mb-1.5 block text-xs font-medium text-base-content/60">Class code</span>
+							<input
+								id="class-code"
+								type="text"
+								placeholder="e.g. nsuoco2030"
+								autocomplete="off"
+								autocapitalize="off"
+								spellcheck="false"
+								class="input w-full rounded-xl text-center font-mono text-lg tracking-wider"
+								bind:value={classCode}
+								disabled={isSubmitting || !user}
+							/>
+						</label>
 
 						{#if error}
-							<div class="alert alert-error mb-6" in:fly={{ y: -10, duration: 300 }}>
-								<span>{error}</span>
+							<div
+								class="rounded-xl bg-error/10 px-4 py-3 text-sm text-error"
+								role="alert"
+								in:fly={{ y: -6, duration: 200 }}
+							>
+								{error}
 							</div>
 						{/if}
 
-						<div class="flex gap-4">
-							<button type="button" class="btn btn-outline btn-lg flex-1" onclick={resetForm}>
-								Back
-							</button>
-							<button
-								type="button"
-								class="btn btn-primary btn-lg flex-1 gap-3"
-								disabled={isConfirming}
-								onclick={confirmJoin}
-							>
-								{#if isConfirming}
-									<span class="loading loading-spinner loading-sm"></span>
-									Joining...
-								{:else}
-									<CheckCircle size={20} />
-									Confirm & Join
-								{/if}
-							</button>
+						<button
+							type="submit"
+							class="btn btn-primary w-full gap-2 rounded-full"
+							disabled={isSubmitting || !classCode.trim() || !user}
+						>
+							{#if isSubmitting}
+								<span class="loading loading-spinner loading-sm"></span>
+								Checking code…
+							{:else}
+								Continue <ArrowRight size={16} />
+							{/if}
+						</button>
+					</form>
+				{/if}
+			</div>
+		{:else if cohortInfo}
+			<div class="mb-6 text-center">
+				<span class="badge badge-success badge-soft rounded-full">
+					<Check size={13} /> Class found
+				</span>
+				<h1 class="mt-3 text-2xl font-bold text-base-content sm:text-3xl">Confirm your class</h1>
+				<p class="mt-1.5 text-sm text-base-content/60">
+					Make sure this is the right class before joining.
+				</p>
+			</div>
+
+			<div
+				class="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-xs sm:p-6"
+				in:fly={{ y: 12, duration: 350, delay: 100 }}
+			>
+				<div class="flex items-center gap-4">
+					{#if cohortInfo.cohort.pic_url && !cohortImageFailed}
+						<img
+							src={cohortInfo.cohort.pic_url}
+							alt=""
+							class="size-14 shrink-0 rounded-2xl object-cover"
+							onerror={() => (cohortImageFailed = true)}
+						/>
+					{:else}
+						<div
+							class="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary"
+						>
+							<School size={24} />
 						</div>
+					{/if}
+					<div class="min-w-0">
+						<h2 class="text-lg font-semibold leading-tight text-base-content">
+							{cohortInfo.cohort.name}
+						</h2>
+						<p class="mt-0.5 text-sm text-base-content/60">{cohortInfo.school.name}</p>
 					</div>
 				</div>
-			{/if}
-		</div>
+
+				<dl class="mt-5 grid grid-cols-2 gap-2">
+					<div class="rounded-xl bg-base-200/60 px-3 py-2.5">
+						<dt class="flex items-center gap-1.5 text-xs text-base-content/50">
+							<Users size={13} /> Cohort
+						</dt>
+						<dd class="mt-0.5 truncate text-sm font-medium">{cohortInfo.cohort.name}</dd>
+					</div>
+					<div class="rounded-xl bg-base-200/60 px-3 py-2.5">
+						<dt class="flex items-center gap-1.5 text-xs text-base-content/50">
+							<Calendar size={13} /> Academic years
+						</dt>
+						<dd class="mt-0.5 text-sm font-medium">
+							{cohortInfo.cohort.startYear}–{cohortInfo.cohort.endYear}
+						</dd>
+					</div>
+				</dl>
+
+				{#if cohortInfo.cohort.description}
+					<p class="mt-3 text-sm text-base-content/60">{cohortInfo.cohort.description}</p>
+				{/if}
+
+				{#if error}
+					<div
+						class="mt-4 rounded-xl bg-error/10 px-4 py-3 text-sm text-error"
+						role="alert"
+						in:fly={{ y: -6, duration: 200 }}
+					>
+						{error}
+					</div>
+				{/if}
+
+				<div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row">
+					<button
+						type="button"
+						class="btn btn-ghost gap-1.5 rounded-full sm:flex-1"
+						onclick={resetForm}
+						disabled={isConfirming}
+					>
+						<ArrowLeft size={16} /> Back
+					</button>
+					<button
+						type="button"
+						class="btn btn-primary gap-1.5 whitespace-nowrap rounded-full sm:flex-[2]"
+						disabled={isConfirming}
+						onclick={confirmJoin}
+					>
+						{#if isConfirming}
+							<span class="loading loading-spinner loading-sm"></span>
+							Joining…
+						{:else}
+							<Check size={16} /> Join class
+						{/if}
+					</button>
+				</div>
+			</div>
+		{/if}
 	</div>
-</div>
+</main>
