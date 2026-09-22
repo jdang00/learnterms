@@ -1,0 +1,48 @@
+{
+	"projectId": 92871,
+	"dashboardId": 2123257,
+	"definitions": [
+		{
+			"name": "Study tools: daily engaged users",
+			"description": "Unique people with a successful note save, highlight edit, or calculation. Opens and formatting alone do not count. New instrumentation; last 30 days, UTC.",
+			"display": "ActionsLineGraph",
+			"chartSettings": {
+				"xAxis": {
+					"column": "day"
+				},
+				"yAxis": [
+					{
+						"column": "users"
+					}
+				],
+				"seriesBreakdownColumn": "tool"
+			},
+			"sql": "SELECT toStartOfDay(timestamp) AS day, properties.tool AS tool, uniq(person_id) AS users\nFROM events\nWHERE timestamp >= now() - INTERVAL 30 DAY\n  AND properties.$host IN ('learnterms.com', 'www.learnterms.com')\n  AND properties.telemetry_version = 1\n  AND event = 'study_tool_used'\n  AND properties.outcome = 'success'\n  AND properties.action IN ('created', 'updated', 'cleared', 'highlight_changed', 'calculate')\nGROUP BY day, tool\nORDER BY day"
+		},
+		{
+			"name": "Study tools: usage by page and action",
+			"description": "Distinct users and action counts by tool and surface. Autosaved notes can produce multiple actions; use unique users for adoption.",
+			"sql": "SELECT properties.tool AS tool, properties.surface AS surface, properties.action AS action,\n  properties.outcome AS outcome, uniq(person_id) AS users, count() AS actions\nFROM events\nWHERE timestamp >= now() - INTERVAL 30 DAY\n  AND properties.$host IN ('learnterms.com', 'www.learnterms.com')\n  AND properties.telemetry_version = 1\n  AND event = 'study_tool_used'\nGROUP BY tool, surface, action, outcome\nORDER BY users DESC, actions DESC\nLIMIT 100"
+		},
+		{
+			"name": "Study tools: questions using tools",
+			"description": "Question, module, and class IDs share the question_answered naming convention. Successful note saves, highlight edits, and calculations. Up to 100 questions in the last 30 days.",
+			"sql": "SELECT properties.questionId AS question, properties.moduleId AS module, properties.classId AS class,\n  properties.tool AS tool, uniq(person_id) AS users, count() AS actions\nFROM events\nWHERE timestamp >= now() - INTERVAL 30 DAY\n  AND properties.$host IN ('learnterms.com', 'www.learnterms.com')\n  AND properties.telemetry_version = 1\n  AND event = 'study_tool_used'\n  AND properties.questionId IS NOT NULL\n  AND properties.outcome = 'success'\n  AND properties.action IN ('created', 'updated', 'cleared', 'highlight_changed', 'calculate')\nGROUP BY question, module, class, tool\nORDER BY users DESC, actions DESC\nLIMIT 100"
+		},
+		{
+			"name": "Calculator: input methods and formulas",
+			"description": "Successful calculations by typed/keypad/mixed/formula/history input, formula ID, angle mode, and surface. Settled live results count once per input revision; Enter does not count them twice.",
+			"sql": "SELECT properties.surface AS surface, properties.input_method AS input_method,\n  properties.formula_id AS formula, properties.angle_mode AS angle_mode,\n  uniq(person_id) AS users, count() AS calculations\nFROM events\nWHERE timestamp >= now() - INTERVAL 30 DAY\n  AND properties.$host IN ('learnterms.com', 'www.learnterms.com')\n  AND properties.telemetry_version = 1\n  AND event = 'study_tool_used'\n  AND properties.tool = 'calculator'\n  AND properties.action = 'calculate'\n  AND properties.outcome = 'success'\nGROUP BY surface, input_method, formula, angle_mode\nORDER BY users DESC, calculations DESC\nLIMIT 100"
+		},
+		{
+			"name": "Study tools: failures and conflicts",
+			"description": "Client-observed save/load failures, note conflicts, explicit invalid calculations, and worker timeouts. Offline saves may remain pending until reconnection; these are not server failure rates.",
+			"sql": "SELECT properties.tool AS tool, properties.action AS action, properties.outcome AS outcome,\n  properties.surface AS surface, uniq(person_id) AS users, count() AS occurrences\nFROM events\nWHERE timestamp >= now() - INTERVAL 30 DAY\n  AND properties.$host IN ('learnterms.com', 'www.learnterms.com')\n  AND properties.telemetry_version = 1\n  AND event = 'study_tool_used'\n  AND properties.outcome IN ('error', 'conflict', 'invalid', 'timeout')\nGROUP BY tool, action, outcome, surface\nORDER BY occurrences DESC\nLIMIT 100"
+		},
+		{
+			"name": "Study tools: opens and navigation",
+			"description": "Notes/calculator opens, closes, and question changes while open. source=restore distinguishes restored panels. Highlight mode is tracked under mode_changed actions, not panel opens.",
+			"sql": "SELECT properties.tool AS tool, event, properties.surface AS surface, properties.source AS source,\n  uniq(person_id) AS users, count() AS occurrences\nFROM events\nWHERE timestamp >= now() - INTERVAL 30 DAY\n  AND properties.$host IN ('learnterms.com', 'www.learnterms.com')\n  AND properties.telemetry_version = 1\n  AND event IN ('study_tool_opened', 'study_tool_closed', 'study_tool_question_viewed')\nGROUP BY tool, event, surface, source\nORDER BY users DESC, occurrences DESC\nLIMIT 100"
+		}
+	]
+}

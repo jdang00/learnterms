@@ -1,3 +1,5 @@
+import type { StudyToolDetails } from '$lib/analytics/studyToolEvents';
+
 export type SidePanelId = 'calculator' | 'notes';
 
 const KEY = 'lt:sidePanel';
@@ -6,8 +8,10 @@ const KEY = 'lt:sidePanel';
 class SidePanelState {
 	current = $state<SidePanelId | null>(null);
 	#restored = false;
+	source = $state<StudyToolDetails['source']>('automatic');
 
-	set(id: SidePanelId | null) {
+	set(id: SidePanelId | null, source: StudyToolDetails['source'] = 'button') {
+		this.source = source;
 		this.current = id;
 		try {
 			localStorage.setItem(KEY, id ?? '');
@@ -15,8 +19,8 @@ class SidePanelState {
 			/* Storage is optional. */
 		}
 	}
-	toggle(id: SidePanelId) {
-		this.set(this.current === id ? null : id);
+	toggle(id: SidePanelId, source: StudyToolDetails['source'] = 'button') {
+		this.set(this.current === id ? null : id, source);
 	}
 	// Reopens the last panel after a reload; small screens start closed because the panel covers the page.
 	restore() {
@@ -27,8 +31,10 @@ class SidePanelState {
 			if (
 				(saved === 'calculator' || saved === 'notes') &&
 				matchMedia('(min-width: 1024px)').matches
-			)
+			) {
+				this.source = 'restore';
 				this.current = saved;
+			}
 		} catch {
 			/* Storage is optional. */
 		}

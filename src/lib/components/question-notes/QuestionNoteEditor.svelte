@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { captureStudyTool } from '$lib/analytics/studyTools';
+	import { useStudyToolContext } from '$lib/analytics/studyToolContext';
+	import type { StudyToolDetails } from '$lib/analytics/studyToolEvents';
 	import { onMount, untrack } from 'svelte';
 	import { Editor, Extension } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
@@ -38,6 +41,11 @@
 	let pending: Promise<boolean> | undefined;
 	const key = untrack(() => `lt:questionNoteDraft:${draftKey}`);
 	const persist = untrack(() => save);
+	const getTelemetryContext = useStudyToolContext();
+	const telemetryContext = untrack(getTelemetryContext);
+	let editTracked = false;
+	const track = (details: StudyToolDetails) =>
+		captureStudyTool('study_tool_used', 'notes', telemetryContext, details);
 
 	function cacheDraft() {
 		try {
@@ -63,15 +71,28 @@
 				const sent = content;
 				const response = await persist(sent, revision);
 				if (response.status === 'conflict') {
+					track({ action: 'save', outcome: 'conflict' });
 					conflict = response;
 					return false;
 				}
+				const sentCount = normalizeNote(sent).count;
+				track({
+					action:
+						sentCount === 0
+							? 'cleared'
+							: normalizeNote(savedContent).count === 0
+								? 'created'
+								: 'updated',
+					outcome: 'success',
+					character_count: sentCount
+				});
 				revision = response.revision;
 				savedContent = response.content;
 				cacheDraft();
 			}
 			return true;
 		} catch {
+			track({ action: 'save', outcome: 'error' });
 			error = 'Could not save your note. Your text is still here—please retry.';
 			return false;
 		} finally {
@@ -90,6 +111,10 @@
 	}
 	function changed() {
 		if (!editor) return;
+		if (!editTracked) {
+			track({ action: 'edit_started' });
+			editTracked = true;
+		}
 		const normalized = normalizeNote(JSON.stringify(editor.getJSON()));
 		content = normalized.content;
 		count = normalized.count;
@@ -141,6 +166,7 @@
 										normalizeNote(JSON.stringify(transaction.doc.toJSON()));
 										return true;
 									} catch (cause) {
+										if (!limitError) track({ action: 'limit_reached' });
 										limitError = cause instanceof Error ? cause.message : 'This note is too long.';
 										return false;
 									}
@@ -184,6 +210,7 @@
 	});
 	function useLatest() {
 		if (!conflict) return;
+		track({ action: 'conflict_resolved', resolution: 'saved' });
 		revision = conflict.revision;
 		savedContent = conflict.content;
 		replaceDocument(conflict.content);
@@ -192,13 +219,19 @@
 	}
 	function keepMine() {
 		if (!conflict) return;
+		track({ action: 'conflict_resolved', resolution: 'local' });
 		revision = conflict.revision;
 		savedContent = conflict.content;
 		conflict = null;
 		cacheDraft();
 		void flush();
 	}
-	const buttons = [
+	const buttons: {
+		name: string;
+		mark: NonNullable<StudyToolDetails['format']>;
+		icon: typeof Bold;
+		run: () => unknown;
+	}[] = [
 		{
 			name: 'Bold',
 			mark: 'bold',
@@ -259,7 +292,10 @@
 				title={button.name}
 				aria-pressed={isActive(button.mark)}
 				disabled={!editor}
-				onclick={button.run}><button.icon size={16} /></button
+				onclick={() => {
+					button.run();
+					track({ action: 'format', format: button.mark });
+				}}><button.icon size={16} /></button
 			>{/each}
 		<span class="flex-1"></span>
 		<button

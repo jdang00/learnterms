@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { provideStudyToolContext } from '$lib/analytics/studyToolContext';
 	import QuestionNotesTool from '$lib/components/question-notes/QuestionNotesTool.svelte';
 	import CalculatorTool from '$lib/components/calculator/CalculatorTool.svelte';
 	import { sidePanel } from '$lib/components/side-panel/state.svelte';
@@ -279,6 +280,14 @@
 	});
 
 	const currentItem = $derived(getCurrentItem());
+	provideStudyToolContext(() => ({
+		surface: 'test_attempt',
+		classId,
+		attemptId,
+		questionId: currentItem?.questionId,
+		moduleId: currentItem?.moduleId,
+		questionType: currentItem?.question.type
+	}));
 	const currentResponse = $derived(currentItem ? responses[currentItem._id] : null);
 	const currentSharedQuestion = $derived.by(() => {
 		const item = currentItem;

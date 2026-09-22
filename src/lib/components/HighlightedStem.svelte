@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { captureStudyTool } from '$lib/analytics/studyTools';
+	import { useStudyToolContext } from '$lib/analytics/studyToolContext';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Doc } from '../../convex/_generated/dataModel';
@@ -23,6 +25,7 @@
 		resetVersion?: number;
 	} = $props();
 	const client = useConvexClient();
+	const getTelemetryContext = useStudyToolContext();
 	const questionId = $derived(question._id);
 	const stem = $derived(question.stem);
 	const saved = useQuery(api.stemHighlights.get, () => ({ questionId }));
@@ -126,6 +129,12 @@
 		if (!ready) return;
 		const current = generation;
 		const questionId = question._id;
+		const telemetryContext = {
+			...getTelemetryContext(),
+			questionId,
+			moduleId: question.moduleId,
+			questionType: question.type
+		};
 		busy = true;
 		error = '';
 		optimistic = applyHighlightChange(ranges, highlightChange(ranges, operation));
@@ -137,12 +146,25 @@
 				version,
 				operation
 			});
+			if (change.added.length || change.removed.length)
+				captureStudyTool('study_tool_used', 'highlight', telemetryContext, {
+					action: 'highlight_changed',
+					outcome: 'success',
+					undo,
+					ranges_added: change.added.length,
+					ranges_removed: change.removed.length
+				});
 			if (current !== generation) return;
 			if (undo) history = history.slice(0, -1);
 			else if (change.added.length || change.removed.length)
 				history = [...history.slice(-79), change];
 			await tick();
 		} catch (cause) {
+			captureStudyTool('study_tool_used', 'highlight', telemetryContext, {
+				action: 'highlight_changed',
+				outcome: 'error',
+				undo
+			});
 			if (current === generation)
 				error = cause instanceof Error ? cause.message : 'Could not save highlight. Try again.';
 		} finally {
@@ -233,7 +255,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
 <div
 	bind:this={root}
-	class="stem-text"
+	class="stem-text ph-no-capture ph-mask"
 	class:highlighting={enabled}
 	onpointerdown={pointerdown}
 	onclick={click}

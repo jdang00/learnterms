@@ -1,4 +1,11 @@
 <script lang="ts">
+	import { captureStudyTool } from '$lib/analytics/studyTools';
+	import { useStudyToolContext } from '$lib/analytics/studyToolContext';
+	import {
+		createCalculationTracker,
+		type StudyToolContext,
+		type StudyToolDetails
+	} from '$lib/analytics/studyToolEvents';
 	import 'mathlive/static.css';
 	import { ChevronLeft, Delete, X } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
@@ -18,6 +25,27 @@
 		values?: Record<string, string>;
 	};
 
+	const getTelemetryContext = useStudyToolContext();
+	let inputMethod: NonNullable<StudyToolDetails['input_method']> = 'restored';
+	let userEdited = false;
+	let keypadEditing = false;
+	let evaluationTimer: ReturnType<typeof setTimeout> | undefined;
+	const calculationTracker = createCalculationTracker(captureStudyTool);
+	let evaluationContext: StudyToolContext;
+	let evaluationDetails: StudyToolDetails = {};
+	let commitSource: 'button' | 'keyboard' = 'button';
+	const track = (details: StudyToolDetails) =>
+		captureStudyTool('study_tool_used', 'calculator', getTelemetryContext(), details);
+	function markInput(method: 'typed' | 'keypad') {
+		inputMethod = inputMethod === 'restored' || inputMethod === method ? method : 'mixed';
+		userEdited = true;
+	}
+	function trackEvaluation(
+		outcome: StudyToolDetails['outcome'],
+		source: StudyToolDetails['source']
+	) {
+		if (userEdited) calculationTracker.record(sequence, outcome, source);
+	}
 	let { storageKey = 'guest', active = true }: { storageKey?: string; active?: boolean } = $props();
 	let root: HTMLDivElement;
 	let host: HTMLDivElement;
@@ -108,6 +136,7 @@
 				mf.setAttribute('aria-label', 'Expression');
 				mf.setAttribute('placeholder', '0');
 				mf.addEventListener('input', () => {
+					if (!keypadEditing) markInput('typed');
 					latex = mf.value;
 					formula = null;
 					run();
@@ -115,7 +144,7 @@
 				mf.addEventListener('keydown', (event) => {
 					if (event.key === 'Enter') {
 						event.preventDefault();
-						commit();
+						commit('keyboard');
 					}
 				});
 				host.append(mf);
@@ -127,11 +156,13 @@
 				run();
 			})
 			.catch(() => {
+				track({ action: 'load', outcome: 'error' });
 				loadError = 'Could not load the calculator. Reload the page to try again.';
 			});
 		return () => {
 			disposed = true;
 			clearTimeout(timer);
+			clearTimeout(evaluationTimer);
 			worker?.terminate();
 			field?.remove();
 		};
@@ -154,6 +185,10 @@
 	// Evaluates on every edit; only the response for the latest input is kept.
 	function run() {
 		const id = ++sequence;
+		clearTimeout(evaluationTimer);
+		evaluationContext = { ...getTelemetryContext() };
+		evaluationDetails = { input_method: inputMethod, formula_id: formula?.id, angle_mode: angle };
+		calculationTracker.start(id, evaluationContext, evaluationDetails);
 		fresh = false;
 		clearTimeout(timer);
 		if (!latex.trim()) {
@@ -167,26 +202,43 @@
 			worker = new Worker(new URL('../../calculator/calculator.worker.ts', import.meta.url), {
 				type: 'module'
 			});
-			worker.onerror = reset;
+			worker.onerror = () => {
+				trackEvaluation('error', 'automatic');
+				reset();
+			};
 			worker.onmessage = ({ data }) => {
 				if (data.id !== sequence) return;
 				clearTimeout(timer);
 				fresh = true;
 				if (data.result) variables = data.result.variables;
 				result = data.error || !Number.isFinite(data.result.value) ? null : data.result.value;
-				if (commitWhenReady) commit();
+				if (commitWhenReady) commit(commitSource);
+				else if (result !== null && userEdited) {
+					// Count settled live results, not every keystroke or restored history.
+					const evaluated = sequence;
+					evaluationTimer = setTimeout(() => {
+						if (evaluated === sequence) trackEvaluation('success', 'automatic');
+					}, 900);
+				}
 			};
 		}
-		timer = setTimeout(reset, 5000);
+		timer = setTimeout(() => {
+			trackEvaluation('timeout', 'automatic');
+			reset();
+		}, 5000);
 		worker.postMessage({ id, latex, angle, variables: inputs() });
 	}
 
-	function commit() {
+	function commit(source: 'button' | 'keyboard' = 'button') {
+		commitSource = source;
+		if (!latex.trim()) return;
+		userEdited = true;
 		if (!fresh) {
 			commitWhenReady = true;
 			return;
 		}
 		commitWhenReady = false;
+		trackEvaluation(result === null ? 'invalid' : 'success', source);
 		if (result === null) return;
 		const top = history[0];
 		if (top?.latex === latex && top.value === result) return;
@@ -209,7 +261,18 @@
 	$effect(() => {
 		if (active && field) focusField();
 	});
-	function setExpression(value: string, next: Formula | null = null, nextValues = {}) {
+	function setExpression(
+		value: string,
+		next: Formula | null = null,
+		nextValues = {},
+		fromHistory = false
+	) {
+		inputMethod = fromHistory ? 'history' : next ? 'formula' : 'restored';
+		userEdited = value.length > 0;
+		track({
+			action: fromHistory ? 'history_reused' : next ? 'formula_selected' : 'cleared',
+			formula_id: next?.id
+		});
 		field?.setValue(value, { silenceNotifications: true });
 		latex = value;
 		formula = next;
@@ -222,13 +285,20 @@
 	}
 	function insert(value: string) {
 		if (!field) return;
-		field.insert(value, { focus: true });
+		markInput('keypad');
+		field.insert(value, { focus: true, silenceNotifications: true });
 		latex = field.value;
 		formula = null;
 		run();
 	}
 	function backspace() {
-		field?.executeCommand('deleteBackward');
+		markInput('keypad');
+		keypadEditing = true;
+		try {
+			field?.executeCommand('deleteBackward');
+		} finally {
+			keypadEditing = false;
+		}
 		latex = field?.value ?? '';
 		formula = null;
 		run();
@@ -236,12 +306,20 @@
 	}
 	function toggleAngle() {
 		angle = angle === 'deg' ? 'rad' : 'deg';
+		userEdited = true;
+		track({ action: 'angle_changed', angle_mode: angle });
 		run();
 	}
 	async function copy(value: number, key: string) {
+		const context = { ...getTelemetryContext() };
 		try {
 			await navigator.clipboard.writeText(format(value));
 			copied = key;
+			captureStudyTool('study_tool_used', 'calculator', context, {
+				action: 'result_copied',
+				outcome: 'success',
+				source: 'button'
+			});
 			setTimeout(() => {
 				if (copied === key) copied = null;
 			}, 1200);
@@ -329,7 +407,11 @@
 {/snippet}
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div bind:this={root} class="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-4" onmousedown={keepFocus}>
+<div
+	bind:this={root}
+	class="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-4 ph-no-capture ph-mask"
+	onmousedown={keepFocus}
+>
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="cursor-text rounded-2xl bg-base-200/60 px-5 pt-3 pb-4" onmousedown={focusDisplay}>
 		<div class="flex items-center justify-between gap-2">
@@ -350,7 +432,10 @@
 					type="button"
 					class="btn btn-ghost btn-xs rounded-full font-medium text-base-content/60"
 					aria-pressed={view === 'formulas'}
-					onclick={() => (view = view === 'formulas' ? 'keypad' : 'formulas')}>Formulas</button
+					onclick={() => {
+						view = view === 'formulas' ? 'keypad' : 'formulas';
+						if (view === 'formulas') track({ action: 'formulas_opened' });
+					}}>Formulas</button
 				>
 			{/if}
 			<button
@@ -393,13 +478,15 @@
 						placeholder={symbol}
 						value={values[symbol] ?? ''}
 						oninput={(event) => {
+							userEdited = true;
+							if (!formula) markInput('typed');
 							values[symbol] = event.currentTarget.value;
 							run();
 						}}
 						onkeydown={(event) => {
 							if (event.key === 'Enter') {
 								event.preventDefault();
-								commit();
+								commit('keyboard');
 							}
 						}}
 					/>
@@ -470,7 +557,7 @@
 					type="button"
 					class="{keyClass} btn-primary text-xl"
 					aria-label="Calculate"
-					onclick={commit}>=</button
+					onclick={() => commit('button')}>=</button
 				>
 			</div>
 		</fieldset>
@@ -482,7 +569,10 @@
 					<button
 						type="button"
 						class="btn btn-ghost btn-xs rounded-full text-base-content/50"
-						onclick={() => (history = [])}>Clear</button
+						onclick={() => {
+							history = [];
+							track({ action: 'history_cleared' });
+						}}>Clear</button
 					>
 				</div>
 				<ul class="-mx-1 min-h-0 flex-1 overflow-y-auto">
@@ -496,7 +586,8 @@
 									setExpression(
 										entry.latex,
 										FORMULAS.find((f) => f.id === entry.formulaId) ?? null,
-										entry.values ?? {}
+										entry.values ?? {},
+										true
 									)}
 								>{#if renderMath}{@html renderMath(
 										entry.formulaId && entry.values

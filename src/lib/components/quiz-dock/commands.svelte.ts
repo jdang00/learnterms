@@ -26,6 +26,7 @@ import {
 } from 'lucide-svelte';
 import type { Doc, Id } from '../../../convex/_generated/dataModel';
 import { QUESTION_TYPES } from '$lib/utils/questionType';
+import { captureStudyTool } from '$lib/analytics/studyTools';
 import { captureQuestionAnswered } from '$lib/analytics/questionAnswered';
 import { clampTextScale, formatDuration, nextTextScale } from './format';
 import type {
@@ -228,7 +229,26 @@ export function createQuizCommands(ctx: QuizCommandContext): QuizCommandRegistry
 			description: 'Mark up the question stem',
 			label: () => 'Highlight stems',
 			active: () => ctx.qs.highlightEnabled,
-			run: () => ctx.qs.toggleHighlighting()
+			run: async (source) => {
+				const question = ctx.question();
+				const context = {
+					surface: 'module_quiz' as const,
+					pathname: window.location.pathname,
+					classId: ctx.classId(),
+					questionId: question?._id,
+					moduleId: question?.moduleId,
+					questionType: question?.type
+				};
+				const before = ctx.qs.highlightEnabled;
+				const pending = ctx.qs.toggleHighlighting();
+				if (before !== ctx.qs.highlightEnabled)
+					captureStudyTool('study_tool_used', 'highlight', context, {
+						action: 'mode_changed',
+						enabled: ctx.qs.highlightEnabled,
+						source
+					});
+				await pending;
+			}
 		},
 		previous: {
 			id: 'previous',

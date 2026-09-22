@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { provideStudyToolContext } from '$lib/analytics/studyToolContext';
 	import QuestionNotesTool from './question-notes/QuestionNotesTool.svelte';
 	import CalculatorTool from './calculator/CalculatorTool.svelte';
 	import HighlightedStem from './HighlightedStem.svelte';
@@ -44,6 +45,13 @@
 		suppressAuthErrors = false
 	} = $props();
 
+	provideStudyToolContext(() => ({
+		surface: 'module_quiz',
+		questionId: currentlySelected?._id,
+		moduleId: currentlySelected?.moduleId ?? data.moduleId,
+		classId: data.classId,
+		questionType: currentlySelected?.type
+	}));
 	const clerk = useClerkContext();
 	const userDataQuery = useQuery(api.users.getUserById, () =>
 		clerk.user ? { id: clerk.user.id } : 'skip'

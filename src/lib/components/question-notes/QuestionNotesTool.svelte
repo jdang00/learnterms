@@ -29,7 +29,7 @@
 				look: { variant: 'ghost', tone: 'info' },
 				label: () => 'Notes',
 				active: () => sidePanel.current === 'notes',
-				run: () => sidePanel.toggle('notes')
+				run: (source) => sidePanel.toggle('notes', source)
 			})
 		)
 	);

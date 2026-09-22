@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { useStudyToolContext } from '$lib/analytics/studyToolContext';
+	import { captureStudyTool } from '$lib/analytics/studyTools';
+	import { createToolVisibilityTracker } from '$lib/analytics/studyToolEvents';
 	import { X, type Check as IconType } from 'lucide-svelte';
-	import { onMount, tick, type Snippet } from 'svelte';
+	import { onMount, tick, untrack, type Snippet } from 'svelte';
 	import { sidePanel, type SidePanelId } from './state.svelte';
 
 	let {
@@ -19,6 +22,11 @@
 	let aside: HTMLElement;
 	const open = $derived(sidePanel.current === id);
 
+	const getTelemetryContext = useStudyToolContext();
+	const trackVisibility = untrack(() => createToolVisibilityTracker(id, captureStudyTool));
+	$effect(() => {
+		trackVisibility(open, getTelemetryContext(), sidePanel.source);
+	});
 	onMount(() => sidePanel.restore());
 	$effect(() => {
 		if (!open || !focus) return;

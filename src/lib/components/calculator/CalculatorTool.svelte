@@ -28,7 +28,7 @@
 				look: { variant: 'ghost', tone: 'info' },
 				label: () => 'Calculator',
 				active: () => sidePanel.current === 'calculator',
-				run: () => sidePanel.toggle('calculator')
+				run: (source) => sidePanel.toggle('calculator', source)
 			})
 		)
 	);
