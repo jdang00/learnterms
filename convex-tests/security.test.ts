@@ -343,7 +343,7 @@ test('progress writes and resets remain available to the owner, never other call
 			userId: ids.studentId,
 			questionId: ids.questionId
 		})
-	).toMatchObject({ isMastered: true });
+	).toMatchObject({ isMastered: false });
 	expect(
 		await student.mutation(api.userProgress.deleteUserProgress, {
 			userId: ids.studentId,

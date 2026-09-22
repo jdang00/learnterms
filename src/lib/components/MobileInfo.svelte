@@ -1,5 +1,6 @@
 <script lang="ts">
-	let { module, classId } = $props();
+	let { module, classId, qs } = $props();
+	import ModuleProgress from './ModuleProgress.svelte';
 	import { ArrowLeft } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -33,3 +34,14 @@
 	</div>
 	<div class="shrink-0 w-10 sm:w-12"></div>
 </div>
+
+{#if qs?.getCompletionSummary}
+	<div class="lg:hidden px-3 pb-2">
+		<ModuleProgress
+			summary={qs.getCompletionSummary()}
+			compact
+			onclick={() => qs.openCompletion()}
+			onreset={() => (qs.isResetModalOpen = true)}
+		/>
+	</div>
+{/if}

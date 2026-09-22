@@ -1,13 +1,22 @@
 <script lang="ts">
+	import HighlightedStem from './HighlightedStem.svelte';
 	import QuizSideBar from '$lib/components/QuizSideBar.svelte';
 	import QuizNavigation from '$lib/components/QuizNavigation.svelte';
 	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
 	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
 	import Matching from '$lib/components/Matching.svelte';
-	import ActionButtons from '$lib/components/ActionButtons.svelte';
-	import MobileMenu from '$lib/components/MobileMenu.svelte';
+	import QuizDock from '$lib/components/quiz-dock/QuizDock.svelte';
+	import MobileQuizDock from '$lib/components/quiz-dock/MobileQuizDock.svelte';
+	import QuizShortcuts from '$lib/components/quiz-dock/QuizShortcuts.svelte';
+	import { createQuizCommands, setQuizCommands } from '$lib/components/quiz-dock/commands.svelte';
+	import DockCustomizer from '$lib/components/quiz-dock/DockCustomizer.svelte';
+	import {
+		DockPreferences,
+		setDockPreferences
+	} from '$lib/components/quiz-dock/dockPreferences.svelte';
 	import MobileInfo from '$lib/components/MobileInfo.svelte';
 	import { useQuery } from 'convex-svelte';
+	import { untrack } from 'svelte';
 	import { api } from '../../convex/_generated/api';
 	import ResultBanner from '$lib/components/ResultBanner.svelte';
 	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
@@ -36,11 +45,52 @@
 	const userDataQuery = useQuery(api.users.getUserById, () =>
 		clerk.user ? { id: clerk.user.id } : 'skip'
 	);
+	$effect(() => {
+		qs.saveHighlightPreference = (enabled: boolean) =>
+			client.mutation(api.stemHighlights.setEnabled, { enabled });
+		return () => {
+			qs.saveHighlightPreference = null;
+		};
+	});
+	$effect(() => {
+		if (userDataQuery.data && !qs.highlightModeSaving) {
+			qs.highlightEnabled = userDataQuery.data.stemHighlightEnabled ?? false;
+		}
+	});
 	const canEdit = $derived(
 		userDataQuery.data?.role === 'dev' ||
 			userDataQuery.data?.role === 'admin' ||
 			userDataQuery.data?.role === 'curator'
 	);
+
+	const quizCommands = setQuizCommands(
+		createQuizCommands({
+			get qs() {
+				return qs;
+			},
+			question: () => currentlySelected,
+			classId: () => data.classId,
+			toggleFilter: (filter) => handleFilterToggle(filter),
+			selectQuestion: (question) => handleSelect(question),
+			canEdit: () => canEdit,
+			editHref: () =>
+				canEdit && currentlySelected
+					? resolve(`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`)
+					: null
+		})
+	);
+
+	const dockPreferences = setDockPreferences(new DockPreferences());
+	dockPreferences.connect({
+		save: (layout) => client.mutation(api.quizDock.saveLayout, { layout })
+	});
+	const dockLayoutQuery = useQuery(api.quizDock.getLayout, () => (clerk.user ? {} : 'skip'));
+	$effect(() => dockPreferences.load());
+	$effect(() => {
+		const remote = dockLayoutQuery.data;
+		if (remote === undefined) return;
+		untrack(() => dockPreferences.hydrate(remote));
+	});
 
 	function isAuthError(error: unknown): boolean {
 		if (!error) return false;
@@ -83,7 +133,7 @@
 			{client}
 			classId={data.classId}
 		/>
-		<MobileInfo {module} classId={data.classId} />
+		<MobileInfo {module} {qs} classId={data.classId} />
 
 		<div
 			class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
@@ -112,12 +162,19 @@
 				{qs}
 			/>
 
-			<div class="text-md sm:text-lg lg:text-xl p-4 sm:pe-4">
+			<div
+				class="text-md sm:text-lg lg:text-xl p-4 sm:pe-4"
+				style:zoom={quizCommands.textScale === 1 ? undefined : quizCommands.textScale}
+			>
 				<div class="flex flex-row justify-between">
 					{#if currentlySelected.type !== QUESTION_TYPES.FILL_IN_THE_BLANK}
 						<div class="items-end gap-1 sm:gap-2 self-center">
 							<div class="text-base sm:text-xl leading-tight tiptap-content font-medium ms-2">
-								{@html currentlySelected.stem}
+								<HighlightedStem
+									question={currentlySelected}
+									enabled={qs.highlightEnabled}
+									resetVersion={qs.highlightResetVersion}
+								/>
 							</div>
 						</div>
 					{/if}
@@ -162,7 +219,12 @@
 				</div>
 
 				{#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}
-					<FillInTheBlank bind:qs {currentlySelected} />
+					<FillInTheBlank
+						bind:qs
+						{currentlySelected}
+						highlightEnabled={qs.highlightEnabled}
+						highlightResetVersion={qs.highlightResetVersion}
+					/>
 				{:else if currentlySelected.type === QUESTION_TYPES.MATCHING}
 					<Matching bind:qs {currentlySelected} />
 				{:else}
@@ -174,15 +236,20 @@
 					<AnswerOptions bind:qs {currentlySelected} />
 				{/if}
 
-				<ActionButtons {qs} {currentlySelected} classId={data.classId} />
+				{#if qs.highlightPreferenceError}<p role="alert" class="text-sm text-error">
+						{qs.highlightPreferenceError}
+					</p>{/if}
+				<QuizDock surface="desktop" source="button" celebrate={qs.checkResult === 'Correct!'} />
 			</div>
 		</div>
 		<div
 			transition:slide={{ duration: 300, easing: cubicInOut, axis: 'y' }}
 			class="transition-all duration-300 ease-in-out"
 		>
-			<MobileMenu bind:qs {currentlySelected} classId={data.classId} moduleId={data.moduleId} />
+			<MobileQuizDock bind:qs {currentlySelected} />
 		</div>
+		<QuizShortcuts disabled={qs.isResetModalOpen || dockPreferences.customizing} />
+		<DockCustomizer />
 	</div>
 {:else}
 	<p>No questions available.</p>

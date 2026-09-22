@@ -6,9 +6,11 @@ import { polar } from './polar';
 import { requireCohortStaff, requireUserReadById } from './access';
 
 function hasInteraction(
-	record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions'>
+	record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions' | 'attempts'>
 ) {
-	return record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0;
+	return (
+		record.attempts > 0 || record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0
+	);
 }
 
 /**
@@ -679,7 +681,11 @@ export const getUserModuleStats = authQuery({
 					let lastActivityAt: number | undefined = undefined;
 
 					for (const progress of moduleProgress) {
-						if (progress.selectedOptions.length > 0 || progress.eliminatedOptions.length > 0) {
+						if (
+							progress.attempts > 0 ||
+							progress.selectedOptions.length > 0 ||
+							progress.eliminatedOptions.length > 0
+						) {
 							interacted++;
 						}
 						if (progress.isMastered) {

@@ -193,7 +193,8 @@ export default defineSchema({
 				lastResetAt: v.number()
 			})
 		),
-		seenFeatureAnnouncementIds: v.optional(v.array(v.string()))
+		seenFeatureAnnouncementIds: v.optional(v.array(v.string())),
+		stemHighlightEnabled: v.optional(v.boolean())
 	})
 		.index('by_clerkUserId', ['clerkUserId'])
 		.index('by_cohortId', ['cohortId']),
@@ -553,6 +554,28 @@ export default defineSchema({
 		.index('by_user_module', ['userId', 'moduleId'])
 		.index('by_moduleId', ['moduleId'])
 		.index('by_classId', ['classId']),
+	stemHighlights: defineTable({
+		userId: v.id('users'),
+		questionId: v.id('question'),
+		version: v.string(),
+		ranges: v.array(
+			v.object({ id: v.string(), start: v.number(), end: v.number(), quote: v.string() })
+		),
+		updatedAt: v.number()
+	})
+		.index('by_user_question', ['userId', 'questionId'])
+		.index('by_question', ['questionId']),
+	quizDockLayouts: defineTable({
+		userId: v.id('users'),
+		items: v.array(
+			v.object({
+				id: v.string(),
+				display: v.union(v.literal('icon'), v.literal('label'), v.literal('both'))
+			})
+		),
+		overflow: v.array(v.string()),
+		updatedAt: v.number()
+	}).index('by_userId', ['userId']),
 	userProgress: defineTable({
 		userId: v.id('users'),
 		classId: v.id('class'),
@@ -576,6 +599,50 @@ export default defineSchema({
 		.index('by_question_user', ['questionId', 'userId'])
 		.index('by_user_class', ['userId', 'classId'])
 		.index('by_classId', ['classId']),
+	studyQuestionState: defineTable({
+		userId: v.id('users'),
+		questionId: v.id('question'),
+		moduleId: v.id('module'),
+		version: v.string(),
+		activeAttemptId: v.optional(v.id('studyAttempts')),
+		activeAttemptChecks: v.optional(v.number()),
+		activeAttemptRevealed: v.optional(v.boolean()),
+		needsFreshEvidence: v.optional(v.boolean()),
+		checkedAt: v.optional(v.number()),
+		latestCorrect: v.optional(v.boolean()),
+		cleanRecallCount: v.number(),
+		firstCleanAt: v.optional(v.number()),
+		masteredAt: v.optional(v.number()),
+		lastMasteredAt: v.optional(v.number()),
+		checks: v.number()
+	})
+		.index('by_userId_questionId', ['userId', 'questionId'])
+		.index('by_userId_moduleId', ['userId', 'moduleId']),
+	studyAttempts: defineTable({
+		userId: v.id('users'),
+		questionId: v.id('question'),
+		moduleId: v.id('module'),
+		version: v.string(),
+		startedAt: v.number(),
+		revealedAt: v.optional(v.number()),
+		checks: v.number(),
+		lastAnswerKey: v.optional(v.string()),
+		selectedOptions: v.array(v.string())
+	})
+		.index('by_userId_questionId', ['userId', 'questionId'])
+		.index('by_moduleId', ['moduleId']),
+	studyChecks: defineTable({
+		userId: v.id('users'),
+		questionId: v.id('question'),
+		attemptId: v.id('studyAttempts'),
+		submissionId: v.string(),
+		checkedAt: v.number(),
+		selectedOptions: v.array(v.string()),
+		isCorrect: v.boolean(),
+		qualifyingRecall: v.boolean()
+	})
+		.index('by_attemptId_submissionId', ['attemptId', 'submissionId'])
+		.index('by_userId_questionId', ['userId', 'questionId']),
 	quizAttempts: defineTable({
 		userId: v.id('users'),
 		classId: v.id('class'),

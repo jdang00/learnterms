@@ -5,12 +5,11 @@
 	import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 	import { QuizState } from './states.svelte';
 	import MainQuiz from '$lib/components/MainQuiz.svelte';
+	import ModuleCompletion from '$lib/components/ModuleCompletion.svelte';
 	import { onMount, tick, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { resolve } from '$app/paths';
 	import { BookOpen } from 'lucide-svelte';
-	import { QUESTION_TYPES } from '$lib/utils/questionType';
-	import { captureQuestionAnswered } from '$lib/analytics/questionAnswered';
 	import {
 		QUIZ_PREFERENCE_CHANGED_EVENT,
 		QUIZ_PREFERENCE_KEYS,
@@ -26,6 +25,56 @@
 
 	let qs = $state(new QuizState());
 	let loadGeneration = 0;
+	const attempts = new Map<string, Id<'studyAttempts'>>();
+	const attemptRequests = new Map<string, Promise<{ attemptId: Id<'studyAttempts'> }>>();
+	let practiceMode = false;
+	const practicedQuestions = new Set<string>();
+	async function practiceModule() {
+		try {
+			await qs.flushEvidence();
+		} catch {
+			return;
+		}
+		practiceMode = true;
+		practicedQuestions.clear();
+		await reviewQuestion();
+	}
+
+	let saving = $state(false);
+	let saveError = $state('');
+	let saveQueue = Promise.resolve();
+	const summary = $derived(qs.getCompletionSummary());
+	let completionHydrated = false;
+	$effect(() => {
+		const state = qs;
+		return () => state.cancelCompletion();
+	});
+	async function reviewQuestion(questionId?: string, fresh = false) {
+		if (fresh) {
+			try {
+				await qs.flushEvidence();
+			} catch {
+				return;
+			}
+		}
+		qs.cancelCompletion();
+		await qs.flushProgress();
+		qs.completionCelebration = false;
+		qs.showFlagged = false;
+		qs.showIncomplete = false;
+		const list = qs.getFilteredQuestions();
+		qs.currentQuestionIndex = Math.max(
+			0,
+			list.findIndex((q) => q._id === questionId)
+		);
+		qs.checkResult = '';
+		qs.showSolution = false;
+		qs.selectedAnswers = [];
+		qs.eliminatedAnswers = [];
+		const current = qs.getCurrentFilteredQuestion();
+		if (current) await loadProgress(current._id, fresh);
+		qs.showCompletion = false;
+	}
 
 	$effect(() => {
 		qs.loadUserPreferencesFromStorage?.();
@@ -37,27 +86,6 @@
 		eliminatedOptions: string[],
 		isFlagged: boolean
 	) {
-		const hasSelected = selectedOptions.length > 0;
-		const hasEliminated = eliminatedOptions.length > 0;
-
-		if (!hasSelected && !hasEliminated && !isFlagged) {
-			try {
-				const existing = await client.query(api.userProgress.checkExistingRecord, {
-					userId: userId!,
-					questionId
-				});
-				if (existing) {
-					await client.mutation(api.userProgress.deleteUserProgress, {
-						userId: userId!,
-						questionId
-					});
-				}
-			} catch {
-				// no-op
-			}
-			return;
-		}
-
 		try {
 			const existing = await client.query(api.userProgress.checkExistingRecord, {
 				userId: userId!,
@@ -88,12 +116,12 @@
 				isFlagged,
 				clientUtcOffsetMinutes: new Date().getTimezoneOffset()
 			});
-		} catch {
-			// no-op
+		} catch (error) {
+			throw error;
 		}
 	}
 
-	async function saveProgress() {
+	async function saveProgressBatch() {
 		if (!userId) return;
 
 		const snapshots = { ...qs.pendingSnapshots };
@@ -118,48 +146,93 @@
 			}
 		}
 
-		for (const snap of Object.values(snapshots)) {
-			await saveOneQuestion(
-				snap.questionId,
-				snap.selectedAnswers,
-				snap.eliminatedAnswers,
-				snap.isFlagged
-			);
-		}
-	}
-
-	async function loadProgress(questionId: Id<'question'>) {
-		if (!userId) {
-			return;
-		}
-
-		const gen = ++loadGeneration;
-
+		saving = true;
+		saveError = '';
 		try {
-			const savedProgress = await client.query(api.userProgress.checkExistingRecord, {
-				userId: userId,
-				questionId: questionId
-			});
-
-			if (gen !== loadGeneration) return;
-
-			if (savedProgress) {
-				qs.selectedAnswers = savedProgress.selectedOptions || [];
-				qs.eliminatedAnswers = savedProgress.eliminatedOptions || [];
-				qs.setCurrentQuestionFlagged(savedProgress.isFlagged || false);
-				qs.sanitizeStateForCurrentQuestion();
-			} else {
-				qs.selectedAnswers = [];
-				qs.eliminatedAnswers = [];
-				qs.setCurrentQuestionFlagged(false);
+			for (const snap of Object.values(snapshots)) {
+				await saveOneQuestion(
+					snap.questionId,
+					snap.selectedAnswers,
+					snap.eliminatedAnswers,
+					snap.isFlagged
+				);
 			}
 		} catch {
-			if (gen !== loadGeneration) return;
-			qs.selectedAnswers = [];
-			qs.eliminatedAnswers = [];
-			qs.setCurrentQuestionFlagged(false);
+			qs.pendingSnapshots = { ...snapshots, ...qs.pendingSnapshots };
+			saveError = 'Your latest answers could not be saved.';
+		} finally {
+			saving = false;
 		}
 	}
+	function saveProgress() {
+		saveQueue = saveQueue.then(saveProgressBatch);
+		return saveQueue;
+	}
+
+	async function loadProgress(questionId: Id<'question'>, fresh = false) {
+		if (!userId) return;
+		const gen = ++loadGeneration;
+		qs.showSolution = false;
+		qs.solutionAutoRevealed = false;
+		qs.checkResult = '';
+		const shouldStartFresh = fresh || (practiceMode && !practicedQuestions.has(questionId));
+		const draftBeforeLoad = qs.localAnswers[questionId];
+		const request = client.mutation(api.studyProgress.open, {
+			questionId,
+			fresh: shouldStartFresh
+		});
+		attemptRequests.set(questionId, request);
+		try {
+			const [savedProgress, attempt] = await Promise.all([
+				client.query(api.userProgress.checkExistingRecord, { userId, questionId }),
+				request
+			]);
+			if (gen !== loadGeneration) return;
+			const sameAttempt = attempts.get(questionId) === attempt.attemptId;
+			attempts.set(questionId, attempt.attemptId);
+			practicedQuestions.add(questionId);
+			qs.hydrateEvidence([attempt.evidence]);
+			qs.selectedAnswers =
+				qs.localAnswers[questionId] !== draftBeforeLoad
+					? (qs.localAnswers[questionId] ?? [])
+					: sameAttempt && !shouldStartFresh
+						? (qs.localAnswers[questionId] ?? attempt.selectedOptions)
+						: attempt.selectedOptions;
+			qs.localAnswers[questionId] = [...qs.selectedAnswers];
+			qs.eliminatedAnswers =
+				sameAttempt && !shouldStartFresh ? (savedProgress?.eliminatedOptions ?? []) : [];
+			qs.setCurrentQuestionFlagged(savedProgress?.isFlagged ?? false);
+			qs.sanitizeStateForCurrentQuestion();
+		} catch {
+			if (gen !== loadGeneration) return;
+			attempts.delete(questionId);
+			qs.selectedAnswers = [];
+			qs.checkError = 'Your progress could not sync. Please try again.';
+		}
+	}
+
+	async function getAttempt(questionId: Id<'question'>) {
+		try {
+			const request = attemptRequests.get(questionId);
+			if (request) return (await request).attemptId;
+		} catch {
+			/* Retry opening after a transient connection failure. */
+		}
+		const request = client.mutation(api.studyProgress.open, { questionId });
+		attemptRequests.set(questionId, request);
+		return (await request).attemptId;
+	}
+	qs.submitAnswer = async (questionId, selectedOptions, submissionId) => {
+		const attemptId = await getAttempt(questionId);
+		return await client.mutation(api.studyProgress.check, {
+			attemptId,
+			selectedOptions,
+			submissionId
+		});
+	};
+	qs.revealAnswer = async (questionId) => {
+		await client.mutation(api.studyProgress.reveal, { attemptId: await getAttempt(questionId) });
+	};
 
 	// Official convex-svelte pattern for SSR hydration with live updates
 	const questions = useQuery(
@@ -200,6 +273,29 @@
 		error: moduleProgressQuery.error
 	});
 
+	const learningQuery = useQuery(api.studyProgress.getForModule, () =>
+		userId ? { moduleId } : 'skip'
+	);
+	$effect(() => {
+		const evidence = learningQuery.data;
+		const questionsReady = qs.questions.length > 0;
+		if (!evidence || !questionsReady) return;
+		untrack(() => {
+			qs.hydrateEvidence(evidence);
+			if (!completionHydrated) {
+				completionHydrated = true;
+				const current = qs.getCompletionSummary();
+				qs.completionMilestone = current.isMastered
+					? 'mastered'
+					: current.isAllCorrect
+						? 'correct'
+						: current.isComplete
+							? 'complete'
+							: '';
+				qs.showCompletion = current.isComplete;
+			}
+		});
+	});
 	let hasHydratedFlags = false;
 	$effect(() => {
 		if (moduleProgress.data) {
@@ -221,16 +317,16 @@
 		const questionList = questions.data;
 		if (!questionList || questionList.length === 0) return;
 
-		const currentIndex = untrack(() => qs.currentQuestionIndex);
-		const initialQuestion =
-			questionList[Math.min(currentIndex, questionList.length - 1)] ?? questionList[0];
-
-		untrack(() => {
-			qs.setQuestions(questionList);
-		});
-
-		if (initialQuestion && userId) {
-			void loadProgress(initialQuestion._id);
+		const previous = untrack(() => qs.getCurrentFilteredQuestion());
+		const initialQuestion = questionList.find((q) => q._id === previous?._id) ?? questionList[0];
+		const contentKey = (q: Doc<'question'>) =>
+			JSON.stringify([q.stem, q.type, q.options, q.correctAnswers]);
+		const changed = previous && contentKey(previous) !== contentKey(initialQuestion);
+		untrack(() => qs.setQuestions(questionList));
+		if (initialQuestion && userId && (!attempts.has(initialQuestion._id) || changed)) {
+			untrack(() => {
+				void loadProgress(initialQuestion._id);
+			});
 		}
 	});
 
@@ -240,6 +336,7 @@
 	);
 
 	async function handleSelect(question: Doc<'question'>) {
+		qs.cancelCompletion();
 		const currentQuestions = qs.getFilteredQuestions();
 		const index = currentQuestions.findIndex((q) => q._id === question._id);
 		if (index !== -1) {
@@ -279,156 +376,40 @@
 		}
 	}
 
+	let removeHighlights = $state(false);
+	let resetting = $state(false);
+	let resetError = $state('');
+	$effect(() => {
+		if (!qs.isResetModalOpen) {
+			removeHighlights = false;
+			resetError = '';
+		}
+	});
 	async function handleResetModalConfirm() {
-		if (userId && data.moduleId && client) {
-			await qs.reset(userId, data.moduleId as Id<'module'>, client);
-			qs.updateLiveFlaggedQuestions([]);
-			qs.updateLiveInteractedQuestions([]);
+		if (!userId || !data.moduleId || !client || resetting) return;
+		resetting = true;
+		resetError = '';
+		try {
+			++loadGeneration;
+			await qs.reset(userId, data.moduleId as Id<'module'>, client, removeHighlights);
+			attempts.clear();
+			attemptRequests.clear();
+			practiceMode = false;
+			practicedQuestions.clear();
+			const first = qs.getCurrentFilteredQuestion();
+			if (first) await loadProgress(first._id);
 			hasHydratedFlags = false;
+			qs.completionMilestone = '';
+			qs.cancelCompletion();
 			qs.isResetModalOpen = false;
-		}
-	}
-
-	async function handleKeydown(event: KeyboardEvent) {
-		if (
-			!['Tab', 'ArrowLeft', 'ArrowRight'].includes(event.key) &&
-			(event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
-		) {
-			return;
-		}
-
-		switch (event.key) {
-			case 'ArrowRight':
-				event.preventDefault();
-				await qs.goToNextQuestion();
-				break;
-			case 'ArrowLeft':
-				event.preventDefault();
-				await qs.goToPreviousQuestion();
-				break;
-			case 'Tab':
-				event.preventDefault();
-				qs.handleSolution();
-				break;
-			case 'Enter':
-				event.preventDefault();
-				if (currentlySelected) {
-					const selectedAnswers = [...qs.selectedAnswers];
-					const eliminatedOptions = [...qs.eliminatedAnswers];
-					const correctAnswers = currentlySelected.correctAnswers || [];
-					let isCorrect = false;
-
-					if (currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK) {
-						const text = selectedAnswers[0] || '';
-						qs.checkFillInTheBlank(text, currentlySelected);
-						setTimeout(() => {
-							captureQuestionAnswered({
-								questionId: currentlySelected._id,
-								generationJobId: currentlySelected.metadata?.generation?.jobId,
-								harnessVersion: currentlySelected.metadata?.generation?.harnessVersion,
-								moduleId: currentlySelected.moduleId,
-								classId: data.classId,
-								questionType: currentlySelected.type,
-								selectedOptions: selectedAnswers,
-								eliminatedOptions: eliminatedOptions,
-								isCorrect: qs.checkResult === 'Correct!',
-								submissionSource: 'keyboard'
-							});
-						}, 1);
-					} else if (currentlySelected.type === QUESTION_TYPES.MATCHING) {
-						qs.checkMatching(currentlySelected);
-						isCorrect =
-							typeof qs.evaluateMatchingSelection === 'function'
-								? qs.evaluateMatchingSelection(currentlySelected)
-								: correctAnswers.length === selectedAnswers.length &&
-									correctAnswers.every((answer: string) => selectedAnswers.includes(answer));
-						captureQuestionAnswered({
-							questionId: currentlySelected._id,
-							generationJobId: currentlySelected.metadata?.generation?.jobId,
-							harnessVersion: currentlySelected.metadata?.generation?.harnessVersion,
-							moduleId: currentlySelected.moduleId,
-							classId: data.classId,
-							questionType: currentlySelected.type,
-							selectedOptions: selectedAnswers,
-							eliminatedOptions: eliminatedOptions,
-							isCorrect,
-							submissionSource: 'keyboard'
-						});
-					} else {
-						const sortedCorrect = [...correctAnswers].sort();
-						const sortedSelected = [...selectedAnswers].sort();
-						isCorrect =
-							sortedCorrect.length === sortedSelected.length &&
-							sortedCorrect.every(
-								(answer: string, index: number) => answer === sortedSelected[index]
-							);
-						qs.checkAnswer(correctAnswers, selectedAnswers);
-						captureQuestionAnswered({
-							questionId: currentlySelected._id,
-							generationJobId: currentlySelected.metadata?.generation?.jobId,
-							harnessVersion: currentlySelected.metadata?.generation?.harnessVersion,
-							moduleId: currentlySelected.moduleId,
-							classId: data.classId,
-							questionType: currentlySelected.type,
-							selectedOptions: selectedAnswers,
-							eliminatedOptions: eliminatedOptions,
-							isCorrect,
-							submissionSource: 'keyboard'
-						});
-					}
-				}
-				qs.scheduleSave();
-				break;
-			case 'Escape':
-				event.preventDefault();
-				qs.selectedAnswers = [];
-				qs.eliminatedAnswers = [];
-				qs.checkResult = '';
-				qs.scheduleSave();
-				break;
-			case 'f':
-			case 'F':
-				event.preventDefault();
-				qs.toggleFlag();
-				break;
-			case 's':
-			case 'S':
-				if (event.shiftKey) {
-					event.preventDefault();
-					qs.toggleShuffle();
-				}
-				break;
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-			case '0': {
-				if (!currentlySelected) break;
-				if (qs.showSolution) break;
-				if (String(currentlySelected.type) === 'fill_in_the_blank') break;
-				const options = qs.getOrderedOptions(currentlySelected) || [];
-				let idx = event.key === '0' ? 9 : parseInt(event.key, 10) - 1;
-				if (idx >= 0 && idx < options.length) {
-					event.preventDefault();
-					const opt = options[idx];
-					if (opt && opt.id) {
-						qs.toggleOption(opt.id);
-						qs.scheduleSave();
-					}
-				}
-				break;
-			}
+		} catch {
+			resetError = 'Could not reset your questions. Please try again.';
+		} finally {
+			resetting = false;
 		}
 	}
 
 	onMount(() => {
-		document.addEventListener('keydown', handleKeydown);
-
 		const handlePreferenceUpdate = (event: Event) => {
 			const custom = event as CustomEvent<QuizPreferenceChangedDetail>;
 			if (custom.detail.key === QUIZ_PREFERENCE_KEYS.autoNextEnabled) {
@@ -442,7 +423,6 @@
 		window.addEventListener(QUIZ_PREFERENCE_CHANGED_EVENT, handlePreferenceUpdate);
 
 		return () => {
-			document.removeEventListener('keydown', handleKeydown);
 			window.removeEventListener(QUIZ_PREFERENCE_CHANGED_EVENT, handlePreferenceUpdate);
 		};
 	});
@@ -499,18 +479,48 @@
 	<!-- Quiz View -->
 	<div class="flex flex-col h-[calc(100vh-4rem)]" transition:fade={{ duration: 200 }}>
 		<div class="flex-1 min-h-0 relative">
-			<MainQuiz
-				{qs}
-				{questions}
-				{currentlySelected}
-				{userId}
-				{data}
-				{handleSelect}
-				{handleFilterToggle}
-				{client}
-				{module}
-				suppressAuthErrors={true}
-			/>
+			{#if qs.showCompletion}
+				<ModuleCompletion
+					title={module.data?.title ?? 'Study module'}
+					emoji={module.data?.emoji || '📘'}
+					{summary}
+					celebrate={qs.completionCelebration}
+					{saving}
+					saveError={saveError || qs.checkError}
+					onretry={() => {
+						void saveProgress();
+						void qs.retryBackground();
+					}}
+					onreview={(id) => {
+						practiceMode = false;
+						void reviewQuestion(id);
+					}}
+					onresume={() => {
+						practiceMode = false;
+						void reviewQuestion();
+					}}
+					onpractice={() => void practiceModule()}
+					onnewattempt={(id) => {
+						practiceMode = false;
+						void reviewQuestion(id, true);
+					}}
+					onreset={() => (qs.isResetModalOpen = true)}
+					onback={() => void reviewQuestion(qs.getCurrentFilteredQuestion()?._id)}
+				/>
+			{:else}
+				<MainQuiz
+					{qs}
+					{questions}
+					{currentlySelected}
+					{userId}
+					{data}
+					{handleSelect}
+					{handleFilterToggle}
+					{client}
+					{module}
+					suppressAuthErrors={true}
+				/>
+			{/if}
 		</div>
 	</div>
 
@@ -525,16 +535,36 @@
 					✕
 				</button>
 			</form>
-			<h3 class="text-lg font-bold">Reset Progress</h3>
+			<h3 class="text-lg font-bold">Reset module?</h3>
 			<p class="py-4">
-				Do you want to start over? All current progress for this module will be lost.
+				Start again with blank answers. This clears your checked results, mastery, flags, and saved
+				answers for this module. Past study activity is retained.
 			</p>
+			<label class="mb-5 flex items-center justify-between gap-4">
+				<span
+					><span class="block font-medium">Remove highlights</span><span
+						class="text-sm text-base-content/60"
+						>Also erase your stem highlights in this module.</span
+					></span
+				>
+				<input
+					type="checkbox"
+					role="switch"
+					aria-label="Remove highlights"
+					class="toggle toggle-warning"
+					bind:checked={removeHighlights}
+					disabled={resetting}
+				/>
+			</label>
+			{#if resetError}<p class="text-error mb-3" role="alert">{resetError}</p>{/if}
 			<div class="flex justify-end space-x-2">
 				<button class="btn btn-outline rounded-full" onclick={() => (qs.isResetModalOpen = false)}>
 					Cancel
 				</button>
-				<button class="btn btn-error rounded-full" onclick={() => handleResetModalConfirm()}
-					>Reset</button
+				<button
+					class="btn btn-error rounded-full"
+					disabled={resetting}
+					onclick={() => handleResetModalConfirm()}>{resetting ? 'Resetting…' : 'Reset'}</button
 				>
 			</div>
 		</div>

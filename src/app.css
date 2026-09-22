@@ -9,6 +9,12 @@
 		nord;
 }
 
+/* Quiz dock highlighter: the stem-mark lemon, plus an ink that stays readable on any theme. */
+:root {
+	--color-highlighter: #fde047;
+	--color-highlighter-ink: color-mix(in oklab, #d4a106 72%, var(--color-base-content));
+}
+
 /* Tailwind v4 custom utilities for About page aurora background */
 @keyframes auroraShift {
 	0% {

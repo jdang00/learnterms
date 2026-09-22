@@ -1099,7 +1099,7 @@
 				</div>
 			</div>
 
-			<!-- Fixed bottom action bar (matches ActionButtons style) -->
+			<!-- Fixed bottom action bar (matches QuizDock floating style) -->
 			<div
 				class="items-center gap-2 px-3 sm:px-4 md:px-5 lg:px-6 py-3 sm:py-4 md:py-5 rounded-full backdrop-blur-md border border-base-300 shadow-xl w-auto fixed left-1/2 -translate-x-1/2 bottom-4 z-40 hidden md:inline-flex"
 			>

@@ -24,6 +24,45 @@ type Announcement = {
 
 const ANNOUNCEMENTS: Announcement[] = [
 	{
+		id: '2026-09-study-tools-admin-workspaces',
+		eyebrow: 'New in LearnTerms',
+		title: 'Custom quiz dock + progress updates',
+		description: 'Updates to quiz tools, progress, and admin pages.',
+		features: [
+			{
+				title: 'Custom quiz dock',
+				description:
+					'Reorder tools, choose a preset, and move less-used actions into the overflow menu.',
+				icon: 'layout'
+			},
+			{
+				title: 'Module progress',
+				description: 'See answered, correct, and mastered questions, plus what needs review.',
+				icon: 'clipboard'
+			},
+			{
+				title: 'Question highlighting',
+				description: 'Highlight question text. Your highlights are saved for later.',
+				icon: 'sparkles'
+			},
+			{
+				title: 'Admin progress pages',
+				description:
+					'View live class activity and drill into modules, students, and question results.',
+				icon: 'users'
+			},
+			{
+				title: 'Question Studio',
+				description:
+					'Choose topics and question types from uploads. Review drafts and source citations before saving.',
+				icon: 'sparkles'
+			}
+		],
+		ctaLabel: 'See My Classes',
+		ctaHref: '/classes',
+		active: true
+	},
+	{
 		id: '2026-02-classes-dashboard-refresh-tests',
 		eyebrow: 'New in LearnTerms',
 		title: 'A faster dashboard + custom test mode',
@@ -58,7 +97,7 @@ const ANNOUNCEMENTS: Announcement[] = [
 		],
 		ctaLabel: 'See My Classes',
 		ctaHref: '/classes',
-		active: true
+		active: false
 	}
 ];
 

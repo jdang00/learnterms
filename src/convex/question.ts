@@ -630,6 +630,9 @@ export const deleteQuestion = authCuratorMutation({
 
 		await shiftQuestionStats(ctx, [questionToDelete]);
 		await ctx.db.delete(args.questionId);
+		await ctx.scheduler.runAfter(0, internal.stemHighlights.deleteForQuestion, {
+			questionId: args.questionId
+		});
 		await adjustModuleQuestionCount(ctx, args.moduleId, -1);
 		return { deleted: true };
 	}
@@ -659,6 +662,7 @@ export const bulkDeleteQuestions = authCuratorMutation({
 
 				await shiftQuestionStats(ctx, [questionToDelete]);
 				await ctx.db.delete(questionId);
+				await ctx.scheduler.runAfter(0, internal.stemHighlights.deleteForQuestion, { questionId });
 				deletedCount++;
 			} catch (error) {
 				errors.push(`Failed to delete question ${questionId}: ${error}`);

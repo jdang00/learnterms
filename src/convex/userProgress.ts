@@ -1,3 +1,4 @@
+import { questionVersion } from '../lib/utils/studyMastery';
 import { mutation } from './_generated/server';
 import { v } from 'convex/values';
 import { authQuery } from './authQueries';
@@ -137,7 +138,11 @@ export const getProgressForClass = authQuery({
 			for (const question of moduleQuestions) {
 				const progress = progressMap.get(question._id);
 				if (progress) {
-					if (progress.selectedOptions.length > 0 || progress.eliminatedOptions.length > 0) {
+					if (
+						progress.attempts > 0 ||
+						progress.selectedOptions.length > 0 ||
+						progress.eliminatedOptions.length > 0
+					) {
 						interactedQuestions++;
 					}
 					if (progress.isFlagged) {
@@ -173,19 +178,38 @@ export const getUserProgressForModule = authQuery({
 		classId: v.id('class'),
 		questionIds: v.array(v.id('question'))
 	},
+	returns: v.object({
+		interactedQuestionIds: v.array(v.id('question')),
+		flaggedQuestionIds: v.array(v.id('question')),
+		answers: v.array(
+			v.object({ questionId: v.id('question'), selectedOptions: v.array(v.string()) })
+		)
+	}),
 	handler: async (ctx, args) => {
 		await requireUserReadById(ctx, args.userId);
 		const records = await getUserProgressRecords(ctx, args.userId, args.classId, args.questionIds);
 
 		const interactedQuestionIds = records
-			.filter((record) => record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0)
+			.filter(
+				(record) =>
+					record.attempts > 0 ||
+					record.selectedOptions.length > 0 ||
+					record.eliminatedOptions.length > 0
+			)
 			.map((record) => record.questionId);
 
 		const flaggedQuestionIds = records
 			.filter((record) => record.isFlagged === true)
 			.map((record) => record.questionId);
 
-		return { interactedQuestionIds, flaggedQuestionIds };
+		return {
+			interactedQuestionIds,
+			flaggedQuestionIds,
+			answers: records.map((record) => ({
+				questionId: record.questionId,
+				selectedOptions: record.selectedOptions
+			}))
+		};
 	}
 });
 
@@ -215,6 +239,16 @@ export const saveUserProgress = mutation({
 			throw new Error('Question does not belong to this class');
 		}
 		await requireClassAccess(ctx, actor, args.classId);
+		// Mastery and attempt counts come exclusively from checked attempt evidence.
+		const learning = await ctx.db
+			.query('studyQuestionState')
+			.withIndex('by_userId_questionId', (q) =>
+				q.eq('userId', actor._id).eq('questionId', question._id)
+			)
+			.unique();
+		const earnedMastery =
+			!!learning?.masteredAt && learning.version === (await questionVersion(question));
+
 		const now = Date.now();
 		const currentHourUtc = new Date(now).getUTCHours();
 		const utcOffsetMinutes = normalizeUtcOffsetMinutes(args.clientUtcOffsetMinutes);
@@ -231,11 +265,16 @@ export const saveUserProgress = mutation({
 		if (existingRecord) {
 			const nextSelectedOptions = args.selectedOptions ?? existingRecord.selectedOptions;
 			const nextEliminatedOptions = args.eliminatedOptions ?? existingRecord.eliminatedOptions;
-			const nextMastered = args.isMastered ?? existingRecord.isMastered;
+			const nextMastered = earnedMastery;
 
 			const wasInteracted =
-				existingRecord.selectedOptions.length > 0 || existingRecord.eliminatedOptions.length > 0;
-			const isInteracted = nextSelectedOptions.length > 0 || nextEliminatedOptions.length > 0;
+				existingRecord.attempts > 0 ||
+				existingRecord.selectedOptions.length > 0 ||
+				existingRecord.eliminatedOptions.length > 0;
+			const isInteracted =
+				learning?.checkedAt !== undefined ||
+				nextSelectedOptions.length > 0 ||
+				nextEliminatedOptions.length > 0;
 			const interactedDelta = Number(isInteracted) - Number(wasInteracted);
 			const masteredDelta = Number(nextMastered) - Number(existingRecord.isMastered);
 
@@ -289,7 +328,7 @@ export const saveUserProgress = mutation({
 				eliminatedOptions: nextEliminatedOptions,
 				isFlagged: newFlagged,
 				isMastered: nextMastered,
-				attempts: args.attempts ?? existingRecord.attempts,
+				attempts: learning?.checks ?? existingRecord.attempts,
 				lastAttemptAt: now,
 				updatedAt: now,
 				metadata: nextMetadata
@@ -323,8 +362,11 @@ export const saveUserProgress = mutation({
 			const newFlagged = args.isFlagged ?? false;
 			const selectedOptions = args.selectedOptions ?? [];
 			const eliminatedOptions = args.eliminatedOptions ?? [];
-			const isInteracted = selectedOptions.length > 0 || eliminatedOptions.length > 0;
-			const isMastered = args.isMastered ?? false;
+			const isInteracted =
+				learning?.checkedAt !== undefined ||
+				selectedOptions.length > 0 ||
+				eliminatedOptions.length > 0;
+			const isMastered = earnedMastery;
 			const earlyInteractionsDelta = isInteracted && currentHourLocal < EARLY_HOUR_CUTOFF ? 1 : 0;
 			const lateInteractionsDelta = isInteracted && currentHourLocal >= LATE_HOUR_CUTOFF ? 1 : 0;
 			const metadata = isInteracted
@@ -356,7 +398,7 @@ export const saveUserProgress = mutation({
 				eliminatedOptions,
 				isFlagged: newFlagged,
 				isMastered,
-				attempts: args.attempts ?? 0,
+				attempts: learning?.checks ?? 0,
 				lastAttemptAt: now,
 				updatedAt: now,
 				metadata
@@ -409,7 +451,9 @@ export const deleteUserProgress = mutation({
 
 		if (existingRecord) {
 			const wasInteracted =
-				existingRecord.selectedOptions.length > 0 || existingRecord.eliminatedOptions.length > 0;
+				existingRecord.attempts > 0 ||
+				existingRecord.selectedOptions.length > 0 ||
+				existingRecord.eliminatedOptions.length > 0;
 			const interactionHour = getRecordedInteractionHour(existingRecord);
 			const earlyInteractionsDelta = wasInteracted
 				? earlyLateDeltaFromHour(interactionHour, -1).early
@@ -464,18 +508,21 @@ export const deleteUserProgress = mutation({
 export const clearUserProgressForModule = mutation({
 	args: {
 		userId: v.id('users'),
-		moduleId: v.id('module')
+		moduleId: v.id('module'),
+		removeHighlights: v.optional(v.boolean())
 	},
+	returns: v.number(),
 	handler: async (ctx, args) => {
-		await requireSelfUser(ctx, args.userId);
+		const user = await requireSelfUser(ctx, args.userId);
+		const module = await ctx.db.get(args.moduleId);
+		if (!module || module.deletedAt) throw new Error('Module unavailable');
+		await requireClassAccess(ctx, user, module.classId);
 		const now = Date.now();
 		// Get all questions for this module (efficient, bounded by module size)
 		const questions = await ctx.db
 			.query('question')
 			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
 			.collect();
-
-		const module = await ctx.db.get(args.moduleId);
 
 		// For each question, find and delete the user's progress record
 		let deletedCount = 0;
@@ -485,6 +532,23 @@ export const clearUserProgressForModule = mutation({
 		let earlyInteractionsDelta = 0;
 		let lateInteractionsDelta = 0;
 		for (const question of questions) {
+			const learning = await ctx.db
+				.query('studyQuestionState')
+				.withIndex('by_userId_questionId', (q) =>
+					q.eq('userId', user._id).eq('questionId', question._id)
+				)
+				.unique();
+			if (learning) await ctx.db.delete(learning._id);
+
+			if (args.removeHighlights) {
+				const highlights = await ctx.db
+					.query('stemHighlights')
+					.withIndex('by_user_question', (q) =>
+						q.eq('userId', args.userId).eq('questionId', question._id)
+					)
+					.unique();
+				if (highlights) await ctx.db.delete(highlights._id);
+			}
 			// Use by_question_user index to efficiently find the specific progress record
 			const progressRecord = await ctx.db
 				.query('userProgress')
@@ -495,7 +559,9 @@ export const clearUserProgressForModule = mutation({
 
 			if (progressRecord) {
 				const wasInteracted =
-					progressRecord.selectedOptions.length > 0 || progressRecord.eliminatedOptions.length > 0;
+					progressRecord.attempts > 0 ||
+					progressRecord.selectedOptions.length > 0 ||
+					progressRecord.eliminatedOptions.length > 0;
 				if (wasInteracted) {
 					interactedDelta -= 1;
 					const hour = getRecordedInteractionHour(progressRecord);

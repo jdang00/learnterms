@@ -66,9 +66,11 @@ async function requireAttemptOwner(
 }
 
 function hasInteraction(
-	record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions'>
+	record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions' | 'attempts'>
 ) {
-	return record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0;
+	return (
+		record.attempts > 0 || record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0
+	);
 }
 
 function normalizeQuestionType(type: string): string {

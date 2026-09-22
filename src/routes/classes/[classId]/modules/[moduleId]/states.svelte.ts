@@ -1,6 +1,9 @@
+import { answerStatus, evaluateMatching, summarizeModule } from '$lib/utils/moduleCompletion';
 import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
 import type { ConvexClient } from 'convex/browser';
+
+import type { StudyEvidence } from '$lib/utils/studyMastery';
 
 type QuestionOption = { id: string; text: string };
 type PendingSnapshot = {
@@ -11,6 +14,103 @@ type PendingSnapshot = {
 };
 
 export class QuizState {
+	learningEvidence: Record<string, StudyEvidence> = $state({});
+	private evidenceRevision: Record<string, number> = {};
+	private pendingEvidence: Record<string, number> = {};
+	private backgroundJobs: { questionId: string; run: () => Promise<void> }[] = [];
+	private backgroundWork: Promise<void> | null = null;
+	hydrateEvidence(records: StudyEvidence[]) {
+		for (const evidence of records)
+			if (!this.pendingEvidence[evidence.questionId])
+				this.learningEvidence[evidence.questionId] = evidence;
+	}
+	private enqueueEvidence(questionId: string, run: () => Promise<void>) {
+		this.pendingEvidence[questionId] = (this.pendingEvidence[questionId] ?? 0) + 1;
+		this.backgroundJobs.push({ questionId, run });
+		void this.retryBackground();
+	}
+	retryBackground(): Promise<void> {
+		if (this.backgroundWork) return this.backgroundWork;
+		this.backgroundWork = (async () => {
+			while (this.backgroundJobs.length) {
+				const job = this.backgroundJobs[0];
+				try {
+					await job.run();
+					this.backgroundJobs.shift();
+					this.pendingEvidence[job.questionId]--;
+					this.checkError = '';
+				} catch {
+					this.checkError = 'Some checked answers have not synced. Retry to save your progress.';
+					break;
+				}
+			}
+		})().finally(() => {
+			this.backgroundWork = null;
+		});
+		return this.backgroundWork;
+	}
+	async flushEvidence() {
+		await this.retryBackground();
+		if (this.backgroundJobs.length) throw new Error('Progress has not synced');
+	}
+	checkError = $state('');
+	submitAnswer:
+		| ((
+				questionId: Id<'question'>,
+				answers: string[],
+				submissionId: string
+		  ) => Promise<{ isCorrect: boolean; evidence: StudyEvidence }>)
+		| null = null;
+	revealAnswer: ((questionId: Id<'question'>) => Promise<void>) | null = null;
+	showCompletion = $state(false);
+	completionCelebration = $state(false);
+	savedAnswers: Record<string, string[]> = $state({});
+	localAnswers: Record<string, string[]> = $state({});
+	completionMilestone = '';
+	private completionTimer: ReturnType<typeof setTimeout> | undefined;
+	cancelCompletion() {
+		clearTimeout(this.completionTimer);
+	}
+	private scheduleCompletion() {
+		this.cancelCompletion();
+		const summary = this.getCompletionSummary();
+		const milestone = summary.isMastered
+			? 'mastered'
+			: summary.isAllCorrect
+				? 'correct'
+				: summary.isComplete
+					? 'complete'
+					: '';
+		if (
+			!milestone ||
+			milestone === this.completionMilestone ||
+			['', 'complete', 'correct', 'mastered'].indexOf(milestone) <=
+				['', 'complete', 'correct', 'mastered'].indexOf(this.completionMilestone)
+		)
+			return;
+		this.cancelAutoNext();
+		this.completionTimer = setTimeout(() => {
+			const current = this.getCompletionSummary();
+			if (!current.isComplete) return;
+			this.completionMilestone = current.isMastered
+				? 'mastered'
+				: current.isAllCorrect
+					? 'correct'
+					: 'complete';
+			this.completionCelebration = true;
+			this.openCompletion();
+		}, QuizState.AUTO_NEXT_DELAY_MS);
+	}
+	openCompletion() {
+		this.cancelCompletion();
+		this.cancelAutoNext();
+		this.snapshotCurrentQuestion();
+		this.scheduleSave();
+		this.showCompletion = true;
+	}
+	getCompletionSummary() {
+		return summarizeModule(this.questions, this.learningEvidence, this.liveFlaggedQuestions);
+	}
 	checkResult: string = $state('');
 	selectedAnswers: string[] = $state([]);
 	eliminatedAnswers: string[] = $state([]);
@@ -29,10 +129,34 @@ export class QuizState {
 
 	showFlagged: boolean = $state(false);
 	showIncomplete: boolean = $state(false);
+	incompleteQuestionIds: string[] = $state([]);
 	liveFlaggedQuestions: Id<'question'>[] = $state([]);
 	liveInteractedQuestions: Id<'question'>[] = $state([]);
 	noFlags: boolean = $state(false);
 	isResetModalOpen: boolean = $state(false);
+	highlightEnabled = $state(false);
+	highlightResetVersion = $state(0);
+	highlightModeSaving = $state(false);
+	highlightPreferenceError = $state('');
+	saveHighlightPreference: ((enabled: boolean) => Promise<unknown>) | null = null;
+	private highlightToggleSequence = 0;
+
+	async toggleHighlighting() {
+		if (!this.saveHighlightPreference) return;
+		const sequence = ++this.highlightToggleSequence;
+		this.highlightEnabled = !this.highlightEnabled;
+		this.highlightModeSaving = true;
+		this.highlightPreferenceError = '';
+		try {
+			await this.saveHighlightPreference(this.highlightEnabled);
+		} catch {
+			if (sequence === this.highlightToggleSequence)
+				this.highlightPreferenceError = 'Could not save highlight mode. Please try again.';
+		} finally {
+			if (sequence === this.highlightToggleSequence) this.highlightModeSaving = false;
+		}
+	}
+
 	isModalOpen: boolean = $state(false);
 	questionButtons: HTMLButtonElement[] = $state([]);
 	private saveDebounceHandle: number | null = null;
@@ -43,7 +167,17 @@ export class QuizState {
 	optionsShuffleEnabled: boolean = $state(false);
 	fullscreenEnabled: boolean = $state(true);
 
+	async flushProgress() {
+		if (this.saveDebounceHandle) {
+			clearTimeout(this.saveDebounceHandle);
+			this.saveDebounceHandle = null;
+		}
+		await this.saveProgressFunction?.();
+	}
+
 	scheduleSave(delayMs: number = 400) {
+		const current = this.getCurrentFilteredQuestion() || this.getCurrentQuestion();
+		if (current) this.localAnswers[current._id] = [...this.selectedAnswers];
 		if (!this.saveProgressFunction) return;
 		if (this.saveDebounceHandle) {
 			clearTimeout(this.saveDebounceHandle);
@@ -68,263 +202,63 @@ export class QuizState {
 	}
 
 	checkAnswer(
-		correctAnswers: string[],
+		_correctAnswers: string[],
 		userAnswers: string[],
 		options?: { autoNextOnCorrect?: boolean }
-	) {
-		const sortedCorrect = [...correctAnswers].sort();
-		const sortedUser = [...userAnswers].sort();
-
-		const isCorrect =
-			sortedCorrect.length === sortedUser.length &&
-			sortedCorrect.every((answer, index) => answer === sortedUser[index]);
-
-		const message = isCorrect ? 'Correct!' : 'Incorrect. Please try again.';
-
-		this.checkResult = '';
-		setTimeout(() => {
-			this.checkResult = message;
-			if (isCorrect) {
-				this.showSolution = true;
-				this.solutionAutoRevealed = true;
-				const shouldAutoNext = options?.autoNextOnCorrect ?? true;
-				if (shouldAutoNext) {
-					this.scheduleAutoNextIfEnabled();
-				} else {
-					this.cancelAutoNext();
-				}
-			} else {
-				this.cancelAutoNext();
-			}
-		}, 0);
-	}
-
-	checkFillInTheBlank(userText: string, question?: Doc<'question'> | null) {
-		const q = question ?? this.getCurrentQuestion();
-		if (!q) return;
-		const options = (q.options || []) as QuestionOption[];
-		const correctIds = (q.correctAnswers || []) as string[];
-		const encodedAnswers = correctIds
-			.map((id) => options.find((o) => o.id === id)?.text)
-			.filter((t): t is string => Boolean(t));
-
-		type FitbMode = 'exact' | 'exact_cs' | 'contains' | 'regex';
-		function isFitbMode(s: string): s is FitbMode {
-			return s === 'exact' || s === 'exact_cs' || s === 'contains' || s === 'regex';
+	): boolean {
+		const question = this.getCurrentFilteredQuestion();
+		if (!question || answerStatus(question, userAnswers) === 'unanswered') return false;
+		const isCorrect = answerStatus(question, userAnswers) === 'correct';
+		const answers = [...userAnswers];
+		const submissionId = crypto.randomUUID();
+		const revision = (this.evidenceRevision[question._id] ?? 0) + 1;
+		this.evidenceRevision[question._id] = revision;
+		const previous = this.learningEvidence[question._id] ?? {
+			questionId: question._id,
+			cleanRecallCount: 0
+		};
+		this.learningEvidence[question._id] = {
+			...previous,
+			checkedAt: Date.now(),
+			latestCorrect: isCorrect,
+			activeAttemptChecks: (previous.activeAttemptChecks ?? 0) + 1,
+			...(isCorrect ? {} : { cleanRecallCount: 0, firstCleanAt: undefined, masteredAt: undefined })
+		};
+		this.checkResult = isCorrect ? 'Correct!' : 'Incorrect. Please try again.';
+		this.cancelAutoNext();
+		if (isCorrect) {
+			this.showSolution = true;
+			this.solutionAutoRevealed = true;
+			if (options?.autoNextOnCorrect ?? true) this.scheduleAutoNextIfEnabled();
 		}
-
-		function normalizeForFlags(
-			text: string,
-			ignorePunct: boolean,
-			normalizeWs: boolean,
-			toLower: boolean
-		): string {
-			let out = String(text || '')
-				.normalize('NFD')
-				.replace(/[\u0300-\u036f]/g, '');
-			if (toLower) out = out.toLowerCase();
-			if (ignorePunct) out = out.replace(/[^a-z0-9\s]/gi, '');
-			if (normalizeWs) out = out.replace(/\s+/g, ' ');
-			return out.trim();
-		}
-
-		function safeRegex(pattern: string): RegExp | null {
-			try {
-				return new RegExp(pattern);
-			} catch {
-				return null;
-			}
-		}
-
-		let isAnyMatch = false;
-		for (const encoded of encodedAnswers) {
-			const [before, flagsPart] = String(encoded || '').split(' | flags=');
-			const firstColon = before.indexOf(':');
-			let mode: FitbMode = 'exact';
-			let value = before;
-			if (firstColon > -1) {
-				const maybe = before.slice(0, firstColon);
-				if (isFitbMode(maybe)) {
-					mode = maybe;
-					value = before.slice(firstColon + 1);
-				}
-			}
-			const ignorePunct = (flagsPart || '').includes('ignore_punct');
-			const normalizeWs = (flagsPart || '').includes('normalize_ws');
-			if (mode === 'regex') {
-				const re = safeRegex(value);
-				if (re && re.test(userText)) {
-					isAnyMatch = true;
-					break;
-				}
-				continue;
-			}
-			const lowerInsensitive = mode !== 'exact_cs';
-			const u = normalizeForFlags(userText, ignorePunct, normalizeWs, lowerInsensitive);
-			const v = normalizeForFlags(value, ignorePunct, normalizeWs, lowerInsensitive);
-			if (mode === 'contains') {
-				if (u.includes(v)) {
-					isAnyMatch = true;
-					break;
-				}
-			} else {
-				if (u === v) {
-					isAnyMatch = true;
-					break;
-				}
-			}
-		}
-
-		this.selectedAnswers = userText ? [userText] : [];
-		if (this.selectedAnswers.length > 0) {
-			this.markCurrentQuestionInteracted();
-		}
-		this.checkAnswer(isAnyMatch ? ['1'] : ['0'], ['1'], { autoNextOnCorrect: false });
 		this.scheduleSave();
+		this.scheduleCompletion();
+		this.enqueueEvidence(question._id, async () => {
+			if (!this.submitAnswer) throw new Error('No save handler');
+			const result = await this.submitAnswer(question._id, answers, submissionId);
+			if (this.evidenceRevision[question._id] === revision) {
+				this.learningEvidence[question._id] = result.evidence;
+				if (result.evidence.masteredAt !== undefined && !this.showCompletion)
+					this.scheduleCompletion();
+			}
+		});
+		return isCorrect;
 	}
 
-	checkMatching(question?: Doc<'question'> | null) {
-		const q = question ?? this.getCurrentQuestion();
-		if (!q) return;
+	checkFillInTheBlank(userText: string, _question?: Doc<'question'> | null): boolean {
+		this.selectedAnswers = userText.trim() ? [userText] : [];
+		return this.checkAnswer([], this.selectedAnswers, { autoNextOnCorrect: false });
+	}
 
-		const isCorrect = this.evaluateMatchingSelection(q);
-
-		if ((this.selectedAnswers || []).length > 0) {
-			this.markCurrentQuestionInteracted();
-		}
-
-		this.checkAnswer(isCorrect ? ['1'] : ['0'], ['1'], { autoNextOnCorrect: false });
+	checkMatching(_question?: Doc<'question'> | null): boolean {
+		return this.checkAnswer([], this.selectedAnswers, { autoNextOnCorrect: false });
 	}
 
 	evaluateMatchingSelection(question?: Doc<'question'> | null): boolean {
 		const q = question ?? this.getCurrentQuestion();
 		if (!q) return false;
 
-		const options = (q.options || []) as QuestionOption[];
-		const promptOptions = options.filter((o) =>
-			String(o.text).trimStart().toLowerCase().startsWith('prompt:')
-		);
-		const answerOptions = options.filter((o) =>
-			String(o.text).trimStart().toLowerCase().startsWith('answer:')
-		);
-		const promptIds = promptOptions.map((o) => o.id);
-		const answerIds = answerOptions.map((o) => o.id);
-
-		const normalizeAnswerText = (text: string): string =>
-			String(text ?? '')
-				.replace(/^\s*answer:\s*/i, '')
-				.trim()
-				.toLowerCase()
-				.replace(/\s+/g, ' ');
-
-		const answerKeyById: Record<string, string> = {};
-		const answerIdsByKey: Record<string, string[]> = {};
-		for (const answer of answerOptions) {
-			const key = normalizeAnswerText(answer.text);
-			answerKeyById[answer.id] = key;
-			answerIdsByKey[key] = answerIdsByKey[key] ?? [];
-			answerIdsByKey[key].push(answer.id);
-		}
-
-		const parsePair = (value: string): { promptId: string; answerToken: string } | null => {
-			const raw = String(value ?? '').trim();
-			const sep = raw.indexOf('::');
-			if (sep <= 0) return null;
-			const promptId = raw.slice(0, sep).trim();
-			const answerToken = raw.slice(sep + 2).trim();
-			if (!promptId || !answerToken) return null;
-			return { promptId, answerToken };
-		};
-
-		const splitAnswerToken = (answerToken: string): string[] =>
-			String(answerToken ?? '')
-				.split('|')
-				.map((part) => part.trim())
-				.filter((part) => part.length > 0);
-
-		const resolveOptionTokenToId = (token: string): string | null => {
-			const raw = String(token ?? '').trim();
-			if (!raw) return null;
-			if (options.some((opt) => opt.id === raw)) return raw;
-			if (/^\d+$/.test(raw)) {
-				const index = Number(raw);
-				if (Number.isInteger(index) && index >= 0 && index < options.length) {
-					return options[index]?.id ?? null;
-				}
-			}
-			return null;
-		};
-
-		const normalizeCorrectByPrompt: Record<string, string[]> = {};
-		const rawCorrect = (q.correctAnswers || []) as string[];
-		const hasPairFormat = rawCorrect.some((value) => String(value).includes('::'));
-		const addUnique = (ids: string[], id: string) => {
-			if (!ids.includes(id)) ids.push(id);
-		};
-
-		if (hasPairFormat) {
-			for (const raw of rawCorrect) {
-				const parsed = parsePair(raw);
-				if (!parsed) continue;
-				const resolvedPromptId = resolveOptionTokenToId(parsed.promptId);
-				if (!resolvedPromptId || !promptIds.includes(resolvedPromptId)) continue;
-
-				const directIds = splitAnswerToken(parsed.answerToken)
-					.map((token) => resolveOptionTokenToId(token))
-					.filter((id): id is string => Boolean(id))
-					.filter((id) => answerIds.includes(id));
-				if (directIds.length === 0) continue;
-
-				const accepted = normalizeCorrectByPrompt[resolvedPromptId] ?? [];
-				for (const directId of directIds) {
-					addUnique(accepted, directId);
-					const key = answerKeyById[directId];
-					if (!key) continue;
-					const sameMeaning = answerIdsByKey[key];
-					if (!sameMeaning) continue;
-					for (const equivalentId of sameMeaning) {
-						addUnique(accepted, equivalentId);
-					}
-				}
-				normalizeCorrectByPrompt[resolvedPromptId] = accepted;
-			}
-		} else {
-			const n = Math.min(promptOptions.length, rawCorrect.length);
-			for (let i = 0; i < n; i++) {
-				const promptId = promptOptions[i].id;
-				const answerId = resolveOptionTokenToId(String(rawCorrect[i] ?? '').trim());
-				if (!answerId || !answerIds.includes(answerId)) continue;
-
-				const accepted = [answerId];
-				const key = answerKeyById[answerId];
-				if (key) {
-					const sameMeaning = answerIdsByKey[key];
-					if (sameMeaning) {
-						for (const equivalentId of sameMeaning) addUnique(accepted, equivalentId);
-					}
-				}
-				normalizeCorrectByPrompt[promptId] = accepted;
-			}
-		}
-
-		const userByPrompt: Record<string, string> = {};
-		for (const raw of this.selectedAnswers || []) {
-			const parsed = parsePair(raw);
-			if (!parsed) continue;
-			const answerId = splitAnswerToken(parsed.answerToken)[0];
-			if (!answerId || !promptIds.includes(parsed.promptId) || !answerIds.includes(answerId))
-				continue;
-			userByPrompt[parsed.promptId] = answerId;
-		}
-
-		const correctEntries = Object.entries(normalizeCorrectByPrompt);
-		if (Object.keys(userByPrompt).length !== correctEntries.length) return false;
-		for (const [promptId, acceptedAnswerIds] of correctEntries) {
-			const selectedId = userByPrompt[promptId];
-			if (!selectedId || !acceptedAnswerIds.includes(selectedId)) return false;
-		}
-
-		return true;
+		return evaluateMatching(q, this.selectedAnswers);
 	}
 
 	getProgressPercentage(): number {
@@ -360,6 +294,10 @@ export class QuizState {
 	async goToNextQuestion() {
 		this.cancelAutoNext();
 		const filteredQuestions = this.getFilteredQuestions();
+		if (filteredQuestions.length > 0 && this.currentQuestionIndex >= filteredQuestions.length - 1) {
+			this.openCompletion();
+			return;
+		}
 		if (filteredQuestions && this.currentQuestionIndex < filteredQuestions.length - 1) {
 			this.snapshotCurrentQuestion();
 			this.scheduleSave();
@@ -521,7 +459,7 @@ export class QuizState {
 
 	canGoNext() {
 		const currentQuestions = this.getFilteredQuestions();
-		return currentQuestions && this.currentQuestionIndex < currentQuestions.length - 1;
+		return currentQuestions.length > 0;
 	}
 
 	canGoPrevious() {
@@ -557,8 +495,20 @@ export class QuizState {
 	}
 
 	handleSolution() {
-		this.showSolution = !this.showSolution;
+		if (this.showSolution) {
+			this.showSolution = false;
+			return;
+		}
+		const question = this.getCurrentFilteredQuestion();
+		if (!question) return;
+		this.showSolution = true;
 		this.solutionAutoRevealed = false;
+		const evidence = this.learningEvidence[question._id];
+		if (evidence && !evidence.activeAttemptChecks) evidence.activeAttemptRevealed = true;
+		this.enqueueEvidence(question._id, async () => {
+			if (!this.revealAnswer) throw new Error('No save handler');
+			await this.revealAnswer(question._id);
+		});
 	}
 
 	toggleElimination(optionId: string) {
@@ -626,6 +576,11 @@ export class QuizState {
 
 	toggleShowIncomplete() {
 		this.showIncomplete = !this.showIncomplete;
+		this.incompleteQuestionIds = this.showIncomplete
+			? this.questions
+					.filter((q) => this.learningEvidence[q._id]?.checkedAt === undefined)
+					.map((q) => q._id)
+			: [];
 		this.currentQuestionIndex = 0;
 		this.checkResult = '';
 		this.showSolution = false;
@@ -647,8 +602,8 @@ export class QuizState {
 		}
 
 		if (this.showIncomplete) {
-			filteredQuestions = filteredQuestions.filter(
-				(q) => !this.liveInteractedQuestions.includes(q._id)
+			filteredQuestions = filteredQuestions.filter((q) =>
+				this.incompleteQuestionIds.includes(q._id)
 			);
 		}
 
@@ -664,7 +619,36 @@ export class QuizState {
 		return filteredQuestions[safeIndex] || filteredQuestions[0];
 	}
 
-	async reset(userId: Id<'users'>, moduleId: Id<'module'>, client: ConvexClient) {
+	async reset(
+		userId: Id<'users'>,
+		moduleId: Id<'module'>,
+		client: ConvexClient,
+		removeHighlights = false
+	) {
+		this.cancelAutoNext();
+		if (this.saveDebounceHandle) {
+			clearTimeout(this.saveDebounceHandle);
+			this.saveDebounceHandle = null;
+		}
+		await this.flushEvidence();
+		await this.saveProgressFunction?.();
+		await client.mutation(api.userProgress.clearUserProgressForModule, {
+			userId,
+			moduleId,
+			removeHighlights
+		});
+		if (removeHighlights) this.highlightResetVersion++;
+		this.pendingSnapshots = {};
+		this.learningEvidence = {};
+		this.checkError = '';
+		this.savedAnswers = {};
+		this.localAnswers = {};
+		this.showCompletion = false;
+		this.completionCelebration = false;
+		this.completionMilestone = '';
+		this.cancelCompletion();
+		this.liveFlaggedQuestions = [];
+		this.liveInteractedQuestions = [];
 		this.cancelAutoNext();
 		this.selectedAnswers = [];
 		this.eliminatedAnswers = [];
@@ -678,15 +662,6 @@ export class QuizState {
 		this.showFlagged = false;
 		this.showIncomplete = false;
 		this.noFlags = false;
-
-		try {
-			await client.mutation(api.userProgress.clearUserProgressForModule, {
-				userId: userId,
-				moduleId: moduleId
-			});
-		} catch (error) {
-			console.error('Error resetting progress:', error);
-		}
 	}
 
 	getOrderedOptions(question: Doc<'question'>) {

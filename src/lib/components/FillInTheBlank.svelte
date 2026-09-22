@@ -1,6 +1,8 @@
 <script lang="ts">
+	import HighlightedStem from './HighlightedStem.svelte';
 	import { Eye } from 'lucide-svelte';
 	import { tick } from 'svelte';
+	import { getQuizCommands } from './quiz-dock/commands.svelte';
 	type Option = { id: string; text: string };
 	let {
 		qs = $bindable(),
@@ -8,10 +10,13 @@
 		submitOnly = false,
 		allowSolution = true,
 		showAnswerPanel = true,
-		showRevealHint = true
+		showRevealHint = true,
+		highlightEnabled = undefined,
+		highlightResetVersion = 0
 	} = $props();
 	let inputText: string = $state('');
 	let inputEl: HTMLInputElement | null = null;
+	const quizCommands = getQuizCommands();
 
 	const correctRaw = $derived(() => {
 		const first = (currentlySelected?.correctAnswers && currentlySelected.correctAnswers[0]) || '';
@@ -62,13 +67,17 @@
 		tick().then(() => inputEl?.focus());
 	});
 
-	function handleEnter() {
+	function handleEnter(source: 'keyboard' | 'button') {
 		if (submitOnly) {
 			qs.selectedAnswers = inputText ? [inputText] : [];
 			if (qs.selectedAnswers.length > 0) {
 				qs.markCurrentQuestionInteracted?.();
 			}
 			qs.scheduleSave?.();
+			return;
+		}
+		if (quizCommands) {
+			void quizCommands.get('check')?.run(source);
 			return;
 		}
 		qs.checkFillInTheBlank(inputText ?? '', currentlySelected);
@@ -82,7 +91,15 @@
 
 <div class="flex flex-col items-center p-4 w-full">
 	<div class="text-base sm:text-lg mb-4 text-left font-medium tiptap-content whitespace-pre-line">
-		{@html currentlySelected.stem}
+		{#if highlightEnabled !== undefined}
+			<HighlightedStem
+				question={currentlySelected}
+				enabled={highlightEnabled}
+				resetVersion={highlightResetVersion}
+			/>
+		{:else}
+			{@html currentlySelected.stem}
+		{/if}
 	</div>
 	<div class="flex items-center mt-4 mb-6">
 		<input
@@ -101,7 +118,7 @@
 			onkeydown={(e) => {
 				if (e.key === 'Enter') {
 					e.preventDefault();
-					handleEnter();
+					handleEnter('keyboard');
 				} else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
 					e.stopPropagation();
 				}
@@ -111,7 +128,7 @@
 		/>
 		<button
 			class="btn btn-primary ms-2 rounded-full"
-			onclick={handleEnter}
+			onclick={() => handleEnter('button')}
 			disabled={qs.showSolution || !inputText.trim()}>{submitOnly ? 'Save' : 'Enter'}</button
 		>
 	</div>

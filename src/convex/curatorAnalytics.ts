@@ -12,7 +12,9 @@ type StudentLite = {
 };
 
 function hasInteraction(record: Doc<'userProgress'>): boolean {
-	return record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0;
+	return (
+		record.attempts > 0 || record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0
+	);
 }
 
 async function getModuleContext(

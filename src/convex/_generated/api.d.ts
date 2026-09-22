@@ -73,6 +73,7 @@ import type * as questionStudio_tokenBudget from "../questionStudio/tokenBudget.
 import type * as questionStudio_tokenEstimate from "../questionStudio/tokenEstimate.js";
 import type * as questionStudio_topicMaps from "../questionStudio/topicMaps.js";
 import type * as questionStudio_workers from "../questionStudio/workers.js";
+import type * as quizDock from "../quizDock.js";
 import type * as r2Documents from "../r2Documents.js";
 import type * as ragKnowledge from "../ragKnowledge.js";
 import type * as ragKnowledge_indexing from "../ragKnowledge/indexing.js";
@@ -82,6 +83,9 @@ import type * as ragKnowledge_shared from "../ragKnowledge/shared.js";
 import type * as ragKnowledgeInternal from "../ragKnowledgeInternal.js";
 import type * as school from "../school.js";
 import type * as semester from "../semester.js";
+import type * as stemHighlights from "../stemHighlights.js";
+import type * as studyProgress from "../studyProgress.js";
+import type * as studyValidators from "../studyValidators.js";
 import type * as tags from "../tags.js";
 import type * as userProgress from "../userProgress.js";
 import type * as users from "../users.js";
@@ -158,6 +162,7 @@ declare const fullApi: ApiFromModules<{
   "questionStudio/tokenEstimate": typeof questionStudio_tokenEstimate;
   "questionStudio/topicMaps": typeof questionStudio_topicMaps;
   "questionStudio/workers": typeof questionStudio_workers;
+  quizDock: typeof quizDock;
   r2Documents: typeof r2Documents;
   ragKnowledge: typeof ragKnowledge;
   "ragKnowledge/indexing": typeof ragKnowledge_indexing;
@@ -167,6 +172,9 @@ declare const fullApi: ApiFromModules<{
   ragKnowledgeInternal: typeof ragKnowledgeInternal;
   school: typeof school;
   semester: typeof semester;
+  stemHighlights: typeof stemHighlights;
+  studyProgress: typeof studyProgress;
+  studyValidators: typeof studyValidators;
   tags: typeof tags;
   userProgress: typeof userProgress;
   users: typeof users;

@@ -412,7 +412,8 @@ export const backfillCohortStats = internalMutation({
 							.collect();
 
 						studentInteracted += progressRecords.filter(
-							(r) => r.selectedOptions.length > 0 || r.eliminatedOptions.length > 0
+							(r) =>
+								r.attempts > 0 || r.selectedOptions.length > 0 || r.eliminatedOptions.length > 0
 						).length;
 					}
 					totalProgressSum += (studentInteracted / totalQuestions) * 100;
@@ -527,7 +528,11 @@ export const backfillUserProgressStats = internalMutation({
 					.collect();
 
 				for (const record of progressRecords) {
-					if (record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0) {
+					if (
+						record.attempts > 0 ||
+						record.selectedOptions.length > 0 ||
+						record.eliminatedOptions.length > 0
+					) {
 						totalInteracted++;
 					}
 					if (record.isMastered) {
@@ -691,7 +696,8 @@ export const backfillAllCohortsStats = internalMutation({
 								.collect();
 
 							studentInteracted += progressRecords.filter(
-								(r) => r.selectedOptions.length > 0 || r.eliminatedOptions.length > 0
+								(r) =>
+									r.attempts > 0 || r.selectedOptions.length > 0 || r.eliminatedOptions.length > 0
 							).length;
 						}
 						totalProgressSum += totalQuestions > 0 ? (studentInteracted / totalQuestions) * 100 : 0;

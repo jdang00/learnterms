@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ModuleProgress from './ModuleProgress.svelte';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import { PanelRight, Eye, Info, ChevronLeft, Settings } from 'lucide-svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
@@ -7,23 +8,34 @@
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { Tween, prefersReducedMotion } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
 
 	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
 	let hideSidebar = $state(false);
 	let isInfoModalOpen = $state(false);
 	let isSolutionModalOpen = $state(false);
 	let isSettingsModalOpen = $state(false);
+	const ring = $derived.by(() => {
+		const summary = qs.getCompletionSummary?.();
+		if (!summary?.total) return null;
+		const pct = (n: number) => Math.round((n / summary.total) * 100);
+		return {
+			correct: pct(summary.correct),
+			review: pct(summary.incorrect),
+			answered: summary.completion
+		};
+	});
+	const ringMotion = {
+		duration: () => (prefersReducedMotion.current ? 0 : 600),
+		easing: cubicOut
+	};
+	const ringCorrect = Tween.of(() => ring?.correct ?? 0, ringMotion);
+	const ringFilled = Tween.of(() => (ring ? ring.correct + ring.review : 0), ringMotion);
 	const sanitizedRationale = $derived(sanitizeHtml(getRationale(currentlySelected)));
 
 	async function goToModuleSelection() {
 		await goto(resolve('/classes'), { state: { classId } });
-	}
-
-	async function handleReset() {
-		if (userId && moduleId && client) {
-			await qs.reset(userId, moduleId, client);
-			qs.isResetModalOpen = false;
-		}
 	}
 </script>
 
@@ -70,12 +82,22 @@
 			<p class="text-base-content/70 mt-2 break-words hyphens-auto">{module.data.description}</p>
 
 			<div class="mt-6">
-				<p class="text-base-content/60 mb-2">{qs.getProgressPercentage()}% done.</p>
-				<progress
-					class="progress progress-success w-full transition-colors"
-					value={qs.getProgressPercentage()}
-					max="100"
-				></progress>
+				{#if qs.getCompletionSummary}
+					<ModuleProgress
+						summary={qs.getCompletionSummary()}
+						currentId={currentlySelected?._id}
+						onclick={() => qs.openCompletion()}
+						onreset={() => (qs.isResetModalOpen = true)}
+					/>
+				{:else}
+					<p class="mb-2 text-base-content/60">{qs.getProgressPercentage()}% done.</p>
+					<progress
+						class="progress progress-success w-full"
+						value={qs.getProgressPercentage()}
+						max="100"
+						aria-label="Module progress"
+					></progress>
+				{/if}
 			</div>
 		</div>
 
@@ -139,16 +161,34 @@
 					onclick={() => (isInfoModalOpen = true)}><Info /></button
 				>
 
-				<div
-					class="radial-progress text-success text-xs bg-base-300"
-					style="--value:{qs.getProgressPercentage()}; --size:3rem; --thickness: 3px;"
-					aria-valuenow="70"
-					role="progressbar"
+				<button
+					type="button"
+					onclick={() => qs.openCompletion?.()}
+					title="View module progress"
+					aria-label="View module progress"
+					class="rounded-full"
 				>
-					{qs.getProgressPercentage()}%
-				</div>
-				<button class="btn btn-circle btn-lg btn-soft" onclick={() => (isSolutionModalOpen = true)}
-					><Eye /></button
+					<span
+						class="relative grid size-12 place-items-center rounded-full text-[11px] font-semibold tabular-nums"
+						style:background={ring
+							? `conic-gradient(var(--color-success) 0 ${ringCorrect.current}%, var(--color-warning) 0 ${ringFilled.current}%, color-mix(in oklab, var(--color-base-content) 12%, transparent) 0)`
+							: undefined}
+						role="progressbar"
+						aria-label="Questions answered"
+						aria-valuemin={0}
+						aria-valuemax={100}
+						aria-valuenow={ring?.answered ?? qs.getProgressPercentage()}
+					>
+						<span class="absolute inset-[3px] rounded-full bg-base-100"></span>
+						<span class="relative">{ring?.answered ?? qs.getProgressPercentage()}%</span>
+					</span>
+				</button>
+				<button
+					class="btn btn-circle btn-lg btn-soft"
+					onclick={async () => {
+						if (!qs.showSolution) await qs.handleSolution();
+						if (qs.showSolution) isSolutionModalOpen = true;
+					}}><Eye /></button
 				>
 
 				<QuestionAttachmentsSidebar
@@ -207,26 +247,3 @@
 </dialog>
 
 <SettingsModal bind:qs bind:isOpen={isSettingsModalOpen} />
-
-<dialog class="modal max-w-full p-4 z-[1000]" class:modal-open={qs.isResetModalOpen}>
-	<div class="modal-box rounded-2xl">
-		<form method="dialog">
-			<button
-				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-				onclick={() => (qs.isResetModalOpen = false)}
-			>
-				✕
-			</button>
-		</form>
-		<h3 class="text-lg font-bold">Reset Progress</h3>
-		<p class="py-4">
-			Do you want to start over? All current progress for this module will be lost.
-		</p>
-		<div class="flex justify-end space-x-2">
-			<button class="btn btn-outline rounded-full" onclick={() => (qs.isResetModalOpen = false)}>
-				Cancel
-			</button>
-			<button class="btn btn-error rounded-full" onclick={() => handleReset()}>Reset</button>
-		</div>
-	</div>
-</dialog>

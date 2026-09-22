@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { RotateCcw } from 'lucide-svelte';
+	import { RotateCcw, SlidersHorizontal } from 'lucide-svelte';
+	import { getDockPreferences } from './quiz-dock/dockPreferences.svelte';
 	let { qs = $bindable(), isOpen = $bindable(false) } = $props();
+	const dockPreferences = getDockPreferences();
 </script>
 
 <dialog class="modal max-w-full p-4" class:modal-open={isOpen}>
@@ -43,6 +45,25 @@
 				Randomize the order of answer choices across all questions.
 			</p>
 
+			{#if dockPreferences}
+				<div class="flex justify-between items-center">
+					<span>Quiz dock</span>
+					<button
+						class="btn btn-primary btn-soft btn-sm rounded-full"
+						onclick={() => {
+							isOpen = false;
+							dockPreferences.open();
+						}}
+					>
+						<SlidersHorizontal size={16} />
+						<span class="ml-1">Customize</span>
+					</button>
+				</div>
+				<p class="text-xs text-base-content/70">
+					Choose which tools live in your dock and in the More menu.
+				</p>
+			{/if}
+
 			<div class="flex justify-between items-center">
 				<span>Reset progress</span>
 				<button
@@ -63,6 +84,12 @@
 			<div class="mt-6 border-t border-base-300 pt-4">
 				<h4 class="font-semibold mb-2">Shortcuts</h4>
 				<div class="font-mono flex flex-col gap-2">
+					<div class="flex items-center gap-4 justify-between">
+						<kbd class="kbd kbd-sm">h</kbd><span>Highlight mode</span>
+					</div>
+					<div class="flex items-center gap-4 justify-between">
+						<kbd class="kbd kbd-sm">ctrl / ⌘ + z</kbd><span>Undo highlight</span>
+					</div>
 					<div class="flex items-center gap-4 justify-between">
 						<kbd class="kbd kbd-sm">tab</kbd>
 						<span>Rationale</span>
