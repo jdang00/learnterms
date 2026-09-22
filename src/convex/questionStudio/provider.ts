@@ -2,8 +2,8 @@ import { z } from 'zod/v4';
 import type { QualityCall, QualityCallResult } from './quality';
 import { QUESTION_STUDIO_MODEL } from './shared';
 
-// Standard Luna pricing, verified 2026-09-20. An estimate, not an invoice.
-// https://developers.openai.com/api/docs/models/gpt-5.6-luna
+// Standard GPT-6 Luna pricing, verified 2026-09-22. An estimate, not an invoice.
+// https://developers.openai.com/api/docs/models/gpt-6-luna
 export function estimateLunaCost(
 	input: number,
 	output: number,
@@ -14,9 +14,9 @@ export function estimateLunaCost(
 	const longContext = input > 272_000;
 	return (
 		((serviceTier === 'priority' || serviceTier === 'fast' ? 2 : 1) *
-			((Math.max(0, input - cached - written) * 0.2 + cached * 0.02 + written * 0.25) *
+			((Math.max(0, input - cached - written) * 0.1 + cached * 0.01 + written * 0.125) *
 				(longContext ? 2 : 1) +
-				output * 1.2 * (longContext ? 1.5 : 1))) /
+				output * 0.5 * (longContext ? 1.5 : 1))) /
 		1_000_000
 	);
 }

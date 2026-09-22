@@ -4,8 +4,8 @@ import { z } from 'zod/v4';
 import type { Doc, Id } from '../_generated/dataModel';
 import type { QuestionCounts, QuestionType } from './questionTypes';
 
-export const DEFAULT_TEXT_MODEL = 'openai/gpt-5.6-luna';
-export const QUESTION_STUDIO_MODEL = 'gpt-5.6-luna';
+export const DEFAULT_TEXT_MODEL = 'openai/gpt-6-luna';
+export const QUESTION_STUDIO_MODEL = 'gpt-6-luna';
 export const QUESTION_STUDIO_MAPPING_MODEL = QUESTION_STUDIO_MODEL;
 export const QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS = {
 	openai: {
