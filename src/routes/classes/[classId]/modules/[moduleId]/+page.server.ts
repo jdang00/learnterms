@@ -93,6 +93,8 @@ export const load: PageServerLoad = async ({
 			id: moduleId
 		});
 
+		if (!moduleInfo || moduleInfo.classId !== params.classId) redirect(307, '/classes');
+
 		const convexID = await client.query(api.users.getUserById, {
 			id: userId
 		});
@@ -114,6 +116,6 @@ export const load: PageServerLoad = async ({
 		};
 	} catch (error) {
 		console.error('Failed to load module page data:', error);
-		throw error;
+		redirect(307, '/classes');
 	}
 };

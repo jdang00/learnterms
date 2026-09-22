@@ -1,3 +1,4 @@
+import { requireCurrentUser, requireModuleAccess } from './access';
 import {
 	answerPosition,
 	assertStandaloneRationale,
@@ -533,6 +534,7 @@ export const getQuestionsByModule = authQuery({
 	// match the schema: moduleId is an id("module")
 	args: { id: v.id('module') },
 	handler: async (ctx, { id }) => {
+		await requireModuleAccess(ctx, id);
 		const questions = await ctx.db
 			.query('question')
 			.withIndex('by_moduleId_order', (q) => q.eq('moduleId', id))
@@ -546,6 +548,7 @@ export const getQuestionsByModule = authQuery({
 export const getQuestionsByModuleAdmin = authQuery({
 	args: { id: v.id('module') },
 	handler: async (ctx, { id }) => {
+		await requireModuleAccess(ctx, id, true);
 		const questions = await ctx.db
 			.query('question')
 			.withIndex('by_moduleId_order', (q) => q.eq('moduleId', id))
@@ -559,6 +562,7 @@ export const getFirstQuestionInModule = authQuery({
 	// Enter module ID
 	args: { id: v.id('module') },
 	handler: async (ctx, args) => {
+		await requireModuleAccess(ctx, args.id);
 		const firstQuestion = ctx.db
 			.query('question')
 			.withIndex('by_moduleId_order', (q) => q.eq('moduleId', args.id).eq('order', 0))
@@ -661,6 +665,7 @@ export const deleteQuestion = authCuratorMutation({
 		moduleId: v.id('module')
 	},
 	handler: async (ctx, args) => {
+		await requireModuleAccess(ctx, args.moduleId, true);
 		const questionToDelete = await ctx.db.get(args.questionId);
 		if (!questionToDelete || questionToDelete.moduleId !== args.moduleId) {
 			throw new Error('Question not found or access denied');
@@ -685,6 +690,7 @@ export const bulkDeleteQuestions = authCuratorMutation({
 		moduleId: v.id('module')
 	},
 	handler: async (ctx, args) => {
+		await requireModuleAccess(ctx, args.moduleId, true);
 		let deletedCount = 0;
 		const errors = [];
 
@@ -1055,6 +1061,7 @@ export const bulkInsertQuestions = authCuratorMutation({
 		)
 	},
 	handler: async (ctx, { moduleId, questions }) => {
+		await requireModuleAccess(ctx, moduleId, true);
 		await checkModuleCapacity(ctx, moduleId, questions.length);
 
 		const insertedIds: string[] = [];
@@ -1156,6 +1163,8 @@ export const moveQuestionsToModule = authCuratorMutation({
 		questionIds: v.array(v.id('question'))
 	},
 	handler: async (ctx, args) => {
+		await requireModuleAccess(ctx, args.sourceModuleId, true);
+		await requireModuleAccess(ctx, args.targetModuleId, true);
 		if (args.sourceModuleId === args.targetModuleId) {
 			return { moved: 0, errors: [], success: true };
 		}
@@ -1230,6 +1239,7 @@ export const duplicateQuestion = authCuratorMutation({
 			throw new Error('Question not found');
 		}
 
+		await requireModuleAccess(ctx, original.moduleId, true);
 		await checkModuleCapacity(ctx, original.moduleId, 1);
 
 		const lastInModule = await ctx.db
@@ -1292,6 +1302,7 @@ export const duplicateQuestionMany = authCuratorMutation({
 		}
 		const n = Math.max(1, Math.min(10, count));
 
+		await requireModuleAccess(ctx, original.moduleId, true);
 		await checkModuleCapacity(ctx, original.moduleId, n);
 
 		const lastInModule = await ctx.db
@@ -1355,6 +1366,7 @@ export const duplicateQuestionMany = authCuratorMutation({
 export const getAllQuestions = authQuery({
 	args: {},
 	handler: async (ctx) => {
+		if ((await requireCurrentUser(ctx)).role !== 'dev') throw new Error('Unauthorized');
 		const questions = await ctx.db.query('question').collect();
 		return questions;
 	}
@@ -1368,6 +1380,7 @@ export const searchQuestionsByModuleAdmin = authQuery({
 		sort: v.optional(v.string())
 	},
 	handler: async (ctx, { id, query, limit, sort }) => {
+		await requireModuleAccess(ctx, id, true);
 		const trimmed = query.trim().toLowerCase();
 		if (trimmed.length === 0) {
 			if ((sort || 'order') === 'created_desc') {
@@ -1504,6 +1517,7 @@ export const backfillQuestionRationales = internalMutation({
 export const repairMatchingPairsForModule = authCuratorMutation({
 	args: { moduleId: v.id('module') },
 	handler: async (ctx, { moduleId }) => {
+		await requireModuleAccess(ctx, moduleId, true);
 		const items = await ctx.db
 			.query('question')
 			.withIndex('by_moduleId', (q) => q.eq('moduleId', moduleId))

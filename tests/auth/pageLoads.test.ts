@@ -64,3 +64,20 @@ test('join class uses the same name fallback', async () => {
 		expect.objectContaining({ name: 'student@example.com' })
 	);
 });
+
+test.each([undefined, 'admin', 'curator'])(
+	'join class redirects enrolled %s users',
+	async (role) => {
+		mocks.query.mockResolvedValue({ cohortId: 'cohort_test', role });
+		await expect(joinClass(event as never)).rejects.toMatchObject({
+			status: 307,
+			location: '/classes'
+		});
+		expect(mocks.mutation).not.toHaveBeenCalled();
+	}
+);
+
+test('developers can still open join class after enrollment', async () => {
+	mocks.query.mockResolvedValue({ cohortId: 'cohort_test', role: 'dev' });
+	await expect(joinClass(event as never)).resolves.toHaveProperty('seo');
+});

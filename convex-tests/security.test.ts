@@ -295,11 +295,16 @@ test('joining requires the caller identity and correct invitation; staff cannot 
 	);
 	await expect(
 		admin.mutation(api.cohort.joinCohort, { ...join, clerkUserId: 'admin' })
-	).rejects.toThrow('Staff cohort changes');
-	await student.mutation(api.cohort.joinCohort, join);
-	expect((await t.run((ctx) => ctx.db.get(ids.studentId)))?.cohortId).toBe(ids.otherCohortId);
+	).rejects.toThrow('already joined a class');
+	await expect(student.mutation(api.cohort.joinCohort, join)).rejects.toThrow(
+		'already joined a class'
+	);
+	expect((await t.run((ctx) => ctx.db.get(ids.studentId)))?.cohortId).toBe(ids.cohortId);
 	await expect(
-		admin.mutation(api.authQueries.joinCohort, { clerkUserId: 'student', cohortId: ids.cohortId })
+		admin.mutation(api.authQueries.joinCohort, {
+			clerkUserId: 'student',
+			cohortId: ids.otherCohortId
+		})
 	).rejects.toThrow('Unauthorized');
 	await dev.mutation(api.authQueries.joinCohort, {
 		clerkUserId: 'student',
@@ -357,7 +362,17 @@ test('progress writes and resets remain available to the owner, never other call
 			moduleId: ids.moduleId
 		})
 	).toBe(1);
-	expect(await t.run((ctx) => ctx.db.query('userProgress').collect())).toEqual([]);
+	expect(await t.run((ctx) => ctx.db.query('userProgress').collect())).toMatchObject([
+		{
+			userId: ids.studentId,
+			questionId: ids.questionId,
+			selectedOptions: [],
+			eliminatedOptions: [],
+			isFlagged: false,
+			isMastered: false,
+			attempts: 0
+		}
+	]);
 });
 
 test('private profiles, subscriptions and progress allow self and cohort staff, reject anonymous/peers/foreign staff', async () => {
@@ -452,4 +467,120 @@ test('ordinary admins cannot promote themselves or anyone to dev/admin or manage
 	await admin.mutation(api.users.updateUserRole, { userId: ids.studentId, role: null });
 	await dev.mutation(api.users.updateUserRole, { userId: ids.studentId, role: 'admin' });
 	expect((await t.run((ctx) => ctx.db.get(ids.studentId)))?.role).toBe('admin');
+});
+
+test('first enrollment succeeds, repeat enrollment is safe, and only developers can self-switch', async () => {
+	const { t, student, dev, ids } = await setup();
+	await t.run(async (ctx) => {
+		await ctx.db.patch(ids.studentId, { cohortId: undefined });
+	});
+	const join = { clerkUserId: 'student', cohortId: ids.cohortId, code: 'JOIN' };
+	await student.mutation(api.cohort.joinCohort, join);
+	await student.mutation(api.cohort.joinCohort, join);
+	await expect(
+		student.mutation(api.cohort.joinCohort, {
+			...join,
+			cohortId: ids.otherCohortId,
+			code: 'OTHER'
+		})
+	).rejects.toThrow('already joined a class');
+	await dev.mutation(api.cohort.joinCohort, {
+		clerkUserId: 'dev',
+		cohortId: ids.otherCohortId,
+		code: 'OTHER'
+	});
+	expect((await t.run((ctx) => ctx.db.get(ids.devId)))?.cohortId).toBe(ids.otherCohortId);
+});
+
+test('class and module APIs enforce cohort boundaries for every non-developer role', async () => {
+	const { t, student, admin, dev, ids } = await setup();
+	for (const caller of [student, admin, t.withIdentity({ subject: 'curator' })]) {
+		await expect(caller.query(api.class.getUserClasses, { id: ids.otherCohortId })).rejects.toThrow(
+			'access denied'
+		);
+		await expect(caller.query(api.class.getClassById, { id: ids.otherClassId })).rejects.toThrow(
+			'access denied'
+		);
+		await expect(
+			caller.query(api.module.getClassModules, { id: ids.otherClassId })
+		).rejects.toThrow('access denied');
+		await expect(
+			caller.query(api.class.getClassContentCounts, { classId: ids.otherClassId })
+		).rejects.toThrow('access denied');
+		await expect(
+			caller.query(api.tags.getTagsForClass, { classId: ids.otherClassId })
+		).rejects.toThrow('access denied');
+	}
+	for (const subject of ['outside', 'unregistered']) {
+		const caller = t.withIdentity({ subject });
+		await expect(caller.query(api.module.getModuleById, { id: ids.moduleId })).rejects.toThrow();
+		await expect(
+			caller.query(api.module.getModuleQuestionCount, { moduleId: ids.moduleId })
+		).rejects.toThrow();
+		await expect(
+			caller.query(api.question.getQuestionsByModule, { id: ids.moduleId })
+		).rejects.toThrow();
+		await expect(
+			caller.query(api.question.getFirstQuestionInModule, { id: ids.moduleId })
+		).rejects.toThrow();
+		await expect(
+			caller.query(api.question.getQuestionsByModuleAdmin, { id: ids.moduleId })
+		).rejects.toThrow();
+		await expect(
+			caller.query(api.question.searchQuestionsByModuleAdmin, { id: ids.moduleId, query: '' })
+		).rejects.toThrow();
+		await expect(
+			caller.query(api.tags.getTagsForModule, { moduleId: ids.moduleId })
+		).rejects.toThrow();
+	}
+	await expect(
+		student.query(api.question.getQuestionsByModule, { id: ids.moduleId })
+	).resolves.toHaveLength(1);
+	await expect(student.query(api.module.getAdminModule, { id: ids.classId })).rejects.toThrow(
+		'Unauthorized'
+	);
+	await expect(admin.query(api.module.getAdminModule, { id: ids.classId })).resolves.toHaveLength(
+		1
+	);
+	await expect(dev.query(api.class.getClassById, { id: ids.otherClassId })).resolves.toMatchObject({
+		_id: ids.otherClassId
+	});
+	await t.run((ctx) => ctx.db.patch(ids.devId, { cohortId: ids.otherCohortId }));
+	await expect(
+		dev.query(api.question.getQuestionsByModuleAdmin, { id: ids.moduleId })
+	).resolves.toHaveLength(1);
+	for (const query of [
+		api.class.getAllClasses,
+		api.module.getAllModules,
+		api.question.getAllQuestions
+	]) {
+		await expect(student.query(query, {})).rejects.toThrow('Unauthorized');
+		await expect(dev.query(query, {})).resolves.toBeInstanceOf(Array);
+	}
+});
+
+test('foreign staff cannot edit, delete, or create content through direct requests', async () => {
+	const { outside, t, ids } = await setup();
+	await expect(
+		outside.mutation(api.class.deleteClass, { classId: ids.classId, cohortId: ids.cohortId })
+	).rejects.toThrow('Unauthorized');
+	await expect(
+		outside.mutation(api.module.deleteModule, { moduleId: ids.moduleId, classId: ids.classId })
+	).rejects.toThrow('access denied');
+	await expect(
+		outside.mutation(api.tags.createTag, { classId: ids.classId, name: 'Foreign tag' })
+	).rejects.toThrow('access denied');
+	await expect(
+		outside.mutation(api.question.deleteQuestion, {
+			questionId: ids.questionId,
+			moduleId: ids.moduleId
+		})
+	).rejects.toThrow('access denied');
+	await expect(
+		outside.mutation(api.question.bulkInsertQuestions, { moduleId: ids.moduleId, questions: [] })
+	).rejects.toThrow('access denied');
+	await expect(
+		outside.mutation(api.question.duplicateQuestion, { questionId: ids.questionId })
+	).rejects.toThrow('access denied');
+	expect(await t.run((ctx) => ctx.db.get(ids.questionId))).not.toBeNull();
 });

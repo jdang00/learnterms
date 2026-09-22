@@ -1,3 +1,9 @@
+import {
+	requireCurrentUser,
+	requireClassAccess,
+	requireModuleAccess,
+	requireClassStaff
+} from './access';
 import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
 
@@ -19,6 +25,7 @@ function normalizeColor(color?: string) {
 export const getTagsForClass = authQuery({
 	args: { classId: v.id('class') },
 	handler: async (ctx, args) => {
+		await requireClassAccess(ctx, await requireCurrentUser(ctx), args.classId);
 		const tags = await ctx.db
 			.query('tags')
 			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
@@ -31,6 +38,7 @@ export const getTagsForClass = authQuery({
 export const getTagsForModule = authQuery({
 	args: { moduleId: v.id('module') },
 	handler: async (ctx, args) => {
+		await requireModuleAccess(ctx, args.moduleId);
 		const moduleDoc = await ctx.db.get(args.moduleId);
 		if (!moduleDoc) return [];
 
@@ -53,6 +61,7 @@ export const createTag = authAdminMutation({
 		color: v.optional(v.string())
 	},
 	handler: async (ctx, args) => {
+		await requireClassStaff(ctx, args.classId);
 		const name = args.name.trim();
 		if (name.length < 2) throw new Error('Tag name must be at least 2 characters');
 		if (name.length > 40) throw new Error('Tag name cannot exceed 40 characters');
@@ -87,6 +96,7 @@ export const updateTag = authAdminMutation({
 		color: v.optional(v.string())
 	},
 	handler: async (ctx, args) => {
+		await requireClassStaff(ctx, args.classId);
 		const tag = await ctx.db.get(args.tagId);
 		if (!tag || tag.classId !== args.classId) {
 			throw new Error('Tag not found or access denied');
@@ -123,6 +133,7 @@ export const archiveTag = authAdminMutation({
 		classId: v.id('class')
 	},
 	handler: async (ctx, args) => {
+		await requireClassStaff(ctx, args.classId);
 		const tag = await ctx.db.get(args.tagId);
 		if (!tag || tag.classId !== args.classId) {
 			throw new Error('Tag not found or access denied');
@@ -151,6 +162,7 @@ export const setModuleTags = authAdminMutation({
 		tagIds: v.array(v.id('tags'))
 	},
 	handler: async (ctx, args) => {
+		await requireModuleAccess(ctx, args.moduleId, true);
 		const moduleDoc = await ctx.db.get(args.moduleId);
 		if (!moduleDoc) throw new Error('Module not found');
 

@@ -67,3 +67,25 @@ export async function requireClassAccess(ctx: ReadCtx, user: Doc<'users'>, class
 	}
 	return classDoc;
 }
+
+export async function requireCohortAccess(ctx: ReadCtx, cohortId: Id<'cohort'>) {
+	const user = await requireCurrentUser(ctx);
+	if (user.role !== 'dev' && user.cohortId !== cohortId) throw new Error('Cohort access denied');
+	return user;
+}
+
+export async function requireModuleAccess(ctx: ReadCtx, moduleId: Id<'module'>, staff = false) {
+	const user = await requireCurrentUser(ctx);
+	const module = await ctx.db.get(moduleId);
+	if (!module || module.deletedAt) throw new Error('Module access denied');
+	const classDoc = await requireClassAccess(ctx, user, module.classId);
+	if (staff) assertCohortStaff(user, classDoc.cohortId);
+	return module;
+}
+
+export async function requireClassStaff(ctx: ReadCtx, classId: Id<'class'>) {
+	const user = await requireCurrentUser(ctx);
+	const classDoc = await requireClassAccess(ctx, user, classId);
+	assertCohortStaff(user, classDoc.cohortId);
+	return classDoc;
+}

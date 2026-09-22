@@ -175,9 +175,11 @@ export const joinCohort = mutation({
 		if (!cohort || cohort.deletedAt || !cohort.classCode || cohort.classCode !== args.code.trim()) {
 			throw new Error('Invalid code');
 		}
-		// Cohort staff cannot carry their role into another cohort through student onboarding.
-		if (user.role && user.cohortId !== args.cohortId) {
-			throw new Error('Staff cohort changes must be made by an administrator');
+		// Enrollment is permanent through self-service onboarding. Developers may switch cohorts.
+		if (user.role !== 'dev' && user.cohortId && user.cohortId !== args.cohortId) {
+			throw new Error(
+				'You have already joined a class. Contact an administrator to change classes.'
+			);
 		}
 
 		await ctx.db.patch(user._id, {

@@ -1,3 +1,4 @@
+import { redirect } from '@sveltejs/kit';
 import { userDisplayName } from '$lib/userDisplayName';
 import type { PageServerLoad } from './$types';
 import { clerkClient } from 'svelte-clerk/server';
@@ -25,6 +26,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const client = await authenticatedConvexClient(locals);
 		const user = await clerkClient.users.getUser(userId);
 		const userData = await client.query(api.users.getUserById, { id: user.id });
+		if (userData?.cohortId && userData.role !== 'dev') redirect(307, '/classes');
 		const primaryEmail = user.emailAddresses?.find(
 			(email) => email.id === user.primaryEmailAddressId
 		)?.emailAddress;

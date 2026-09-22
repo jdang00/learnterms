@@ -1,3 +1,9 @@
+import {
+	requireCurrentUser,
+	requireClassAccess,
+	requireCohortAccess,
+	requireCohortStaff
+} from './access';
 import { internal } from './_generated/api';
 import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
@@ -16,6 +22,7 @@ const cardThemeValidator = v.object({
 export const getUserClasses = authQuery({
 	args: { id: v.id('cohort') },
 	handler: async (ctx, args) => {
+		await requireCohortAccess(ctx, args.id);
 		const classes = await ctx.db
 			.query('class')
 			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.id))
@@ -39,6 +46,7 @@ export const getUserClasses = authQuery({
 export const getClassById = authQuery({
 	args: { id: v.id('class') },
 	handler: async (ctx, args) => {
+		await requireClassAccess(ctx, await requireCurrentUser(ctx), args.id);
 		return await ctx.db.get(args.id);
 	}
 });
@@ -46,6 +54,7 @@ export const getClassById = authQuery({
 export const getAllClasses = authQuery({
 	args: {},
 	handler: async (ctx) => {
+		if ((await requireCurrentUser(ctx)).role !== 'dev') throw new Error('Unauthorized');
 		const classes = await ctx.db.query('class').collect();
 		return classes.sort((a, b) => a.order - b.order);
 	}
@@ -54,6 +63,7 @@ export const getAllClasses = authQuery({
 export const getClassContentCounts = authQuery({
 	args: { classId: v.id('class') },
 	handler: async (ctx, args) => {
+		await requireClassAccess(ctx, await requireCurrentUser(ctx), args.classId);
 		const modules = await ctx.db
 			.query('module')
 			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
@@ -76,6 +86,7 @@ export const updateClassOrder = authAdminMutation({
 		cohortId: v.id('cohort')
 	},
 	handler: async (ctx, args) => {
+		await requireCohortStaff(ctx, args.cohortId);
 		const allClasses = await ctx.db
 			.query('class')
 			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
@@ -119,6 +130,7 @@ export const insertClass = authAdminMutation({
 		cardTheme: v.optional(cardThemeValidator)
 	},
 	handler: async (ctx, args) => {
+		await requireCohortStaff(ctx, args.cohortId);
 		// Trim whitespace from string fields
 		const trimmedName = args.name.trim();
 		const trimmedCode = args.code.trim();
@@ -206,6 +218,7 @@ export const deleteClass = authAdminMutation({
 		cohortId: v.id('cohort')
 	},
 	handler: async (ctx, args) => {
+		await requireCohortStaff(ctx, args.cohortId);
 		const classToDelete = await ctx.db.get(args.classId);
 		if (!classToDelete || classToDelete.cohortId !== args.cohortId) {
 			throw new Error('Class not found or access denied');
@@ -262,6 +275,7 @@ export const updateClass = authAdminMutation({
 		cardTheme: v.optional(cardThemeValidator)
 	},
 	handler: async (ctx, args) => {
+		await requireCohortStaff(ctx, args.cohortId);
 		const classToUpdate = await ctx.db.get(args.classId);
 		if (!classToUpdate || classToUpdate.cohortId !== args.cohortId) {
 			throw new Error('Class not found or access denied');

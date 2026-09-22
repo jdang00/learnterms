@@ -1,3 +1,9 @@
+import {
+	requireCurrentUser,
+	requireClassAccess,
+	requireModuleAccess,
+	requireClassStaff
+} from './access';
 import { internal } from './_generated/api';
 import { authQuery, authAdminMutation } from './authQueries';
 import { internalMutation } from './_generated/server';
@@ -64,6 +70,7 @@ export const getClassModules = authQuery({
 	// Enter class ID
 	args: { id: v.id('class') },
 	handler: async (ctx, args) => {
+		await requireClassAccess(ctx, await requireCurrentUser(ctx), args.id);
 		const modules = await ctx.db
 			.query('module')
 			.withIndex('by_classId', (q) => q.eq('classId', args.id))
@@ -85,6 +92,7 @@ export const getAdminModule = authQuery({
 	// Enter class ID
 	args: { id: v.id('class') },
 	handler: async (ctx, args) => {
+		await requireClassStaff(ctx, args.id);
 		const modules = await ctx.db
 			.query('module')
 			.withIndex('by_classId', (q) => q.eq('classId', args.id))
@@ -97,6 +105,7 @@ export const getAdminModule = authQuery({
 export const getModuleById = authQuery({
 	args: { id: v.id('module') },
 	handler: async (ctx, args) => {
+		await requireModuleAccess(ctx, args.id);
 		return await ctx.db.get(args.id);
 	}
 });
@@ -104,6 +113,7 @@ export const getModuleById = authQuery({
 export const getModuleQuestionCount = authQuery({
 	args: { moduleId: v.id('module') },
 	handler: async (ctx, args) => {
+		await requireModuleAccess(ctx, args.moduleId);
 		const module = await ctx.db.get(args.moduleId);
 		return module?.questionCount ?? 0;
 	}
@@ -112,6 +122,7 @@ export const getModuleQuestionCount = authQuery({
 export const getAdminModulesWithQuestionCounts = authQuery({
 	args: { classId: v.id('class') },
 	handler: async (ctx, args) => {
+		await requireClassStaff(ctx, args.classId);
 		const modules = await ctx.db
 			.query('module')
 			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
@@ -135,6 +146,7 @@ export const updateModuleOrder = authAdminMutation({
 		classId: v.id('class')
 	},
 	handler: async (ctx, args) => {
+		await requireClassStaff(ctx, args.classId);
 		const allModules = await ctx.db
 			.query('module')
 			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
@@ -174,6 +186,7 @@ export const insertModule = authAdminMutation({
 		updatedAt: v.number()
 	},
 	handler: async (ctx, args) => {
+		await requireClassStaff(ctx, args.classId);
 		const trimmedTitle = args.title.trim();
 		const trimmedEmoji = args.emoji?.trim();
 		const trimmedDescription = args.description.trim();
@@ -249,6 +262,7 @@ export const deleteModule = authAdminMutation({
 		classId: v.id('class')
 	},
 	handler: async (ctx, args) => {
+		await requireClassStaff(ctx, args.classId);
 		const moduleToDelete = await ctx.db.get(args.moduleId);
 		if (!moduleToDelete || moduleToDelete.classId !== args.classId) {
 			throw new Error('Module not found or access denied');
@@ -297,6 +311,7 @@ export const updateModule = authAdminMutation({
 		status: v.string()
 	},
 	handler: async (ctx, args) => {
+		await requireClassStaff(ctx, args.classId);
 		const moduleToUpdate = await ctx.db.get(args.moduleId);
 		if (!moduleToUpdate || moduleToUpdate.classId !== args.classId) {
 			throw new Error('Module not found or access denied');
@@ -371,6 +386,7 @@ export const updateModule = authAdminMutation({
 export const getAllModules = authQuery({
 	args: {},
 	handler: async (ctx) => {
+		if ((await requireCurrentUser(ctx)).role !== 'dev') throw new Error('Unauthorized');
 		const modules = await ctx.db.query('module').collect();
 		return modules;
 	}
