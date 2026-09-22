@@ -1,4 +1,5 @@
 <script lang="ts">
+	import QuestionSourceEditor from './QuestionSourceEditor.svelte';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import {
 		X,
@@ -72,6 +73,7 @@
 
 	let editor = $state() as Readable<Editor>;
 	let rationaleEditor = $state() as Readable<Editor>;
+	let questionSource = $state<Doc<'question'>['metadata']['source']>();
 
 	type ToolbarItem = {
 		name: string;
@@ -719,6 +721,7 @@
 		const nextRationale = getInitialQuestionRationale();
 		const nextMatching = getInitialMatchingState();
 
+		questionSource = editingQuestion?.metadata.source;
 		questionStem = nextStem;
 		questionRationale = nextRationale;
 		questionStatus = getInitialQuestionStatus();
@@ -967,6 +970,7 @@
 			if (mode === 'edit' && editingQuestion) {
 				await client.mutation(api.question.updateQuestion, {
 					images,
+					source: questionSource ?? null,
 					questionId: editingQuestion._id as Id<'question'>,
 					moduleId: moduleId as Id<'module'>,
 					type: questionType,
@@ -992,6 +996,7 @@
 
 				questionId = await client.mutation(api.question.insertQuestion, {
 					images,
+					source: questionSource,
 					moduleId: moduleId as Id<'module'>,
 					type: questionType,
 					stem: questionStem,
@@ -1503,7 +1508,17 @@
 							</div>
 						{/if}
 					</div>
-					<QuestionSources source={editingQuestion?.metadata?.generation} editing />
+					{#if editingQuestion?.aiGenerated && !questionSource}
+						<QuestionSources source={editingQuestion?.metadata?.generation} editing />
+					{/if}
+					{#key editorResetKey}
+						<QuestionSourceEditor
+							moduleId={moduleId as Id<'module'>}
+							bind:source={questionSource}
+							{onChange}
+							disabled={isSubmitting}
+						/>
+					{/key}
 				</div>
 
 				<div>

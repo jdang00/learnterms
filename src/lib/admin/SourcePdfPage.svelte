@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
+	import { restorePdfCanvas, rememberPdfCanvas } from './pdfCanvasCache';
 	import { withPdfRenderSlot } from './pdfRenderQueue';
 	let {
 		document,
@@ -30,6 +31,10 @@
 		async function draw() {
 			if (started) return;
 			started = true;
+			if (restorePdfCanvas(pdf, number, small, target!)) {
+				ready = true;
+				return;
+			}
 			await withPdfRenderSlot(async () => {
 				if (cancelled) return;
 				try {
@@ -44,11 +49,14 @@
 					target!.height = Math.ceil(viewport.height);
 					render = page.render({ canvas: target!, viewport });
 					await render.promise;
-					if (!cancelled) ready = true;
+					if (!cancelled) {
+						rememberPdfCanvas(pdf, number, small, target!);
+						ready = true;
+					}
 				} catch {
 					if (!cancelled) failed = true;
 				}
-			});
+			}, !small);
 		}
 		const observer = new IntersectionObserver(
 			(entries) => {

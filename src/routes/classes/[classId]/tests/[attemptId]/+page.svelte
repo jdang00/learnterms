@@ -1,4 +1,8 @@
 <script lang="ts">
+	import QuestionNotesTool from '$lib/components/question-notes/QuestionNotesTool.svelte';
+	import CalculatorTool from '$lib/components/calculator/CalculatorTool.svelte';
+	import { sidePanel } from '$lib/components/side-panel/state.svelte';
+	import { useClerkContext } from 'svelte-clerk/client';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -27,7 +31,9 @@
 		Send,
 		ArrowLeft,
 		ArrowRight,
-		Info
+		Info,
+		Calculator,
+		StickyNote
 	} from 'lucide-svelte';
 
 	type LocalResponse = {
@@ -56,6 +62,7 @@
 	type AttemptRunnerItem = AttemptRunnerBundle['items'][number];
 
 	const client = useConvexClient();
+	const clerk = useClerkContext();
 	const classId = $derived(page.params.classId as Id<'class'>);
 	const attemptId = $derived(page.params.attemptId as Id<'quizAttempts'>);
 
@@ -638,7 +645,12 @@
 	});
 
 	function handleRunnerKeydown(event: KeyboardEvent) {
-		if (showSubmitModal) return;
+		if (
+			showSubmitModal ||
+			event.defaultPrevented ||
+			(event.target instanceof Element && event.target.closest('dialog'))
+		)
+			return;
 		if (
 			!['Tab', 'ArrowLeft', 'ArrowRight'].includes(event.key) &&
 			(event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)
@@ -981,6 +993,26 @@
 				<div
 					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto grow min-h-0 h-full pb-24 sm:pb-36 lg:pb-48 relative"
 				>
+					<div class="flex justify-end pb-2">
+						{#if clerk.user && currentItem}<button
+								type="button"
+								class="btn btn-sm rounded-full {sidePanel.current === 'notes'
+									? 'btn-soft btn-info'
+									: 'btn-ghost'}"
+								aria-pressed={sidePanel.current === 'notes'}
+								onclick={() => sidePanel.toggle('notes')}
+								><StickyNote size={18} /><span class="hidden sm:inline">Notes</span></button
+							>{/if}
+						<button
+							type="button"
+							class="btn btn-sm rounded-full {sidePanel.current === 'calculator'
+								? 'btn-soft btn-info'
+								: 'btn-ghost'}"
+							aria-pressed={sidePanel.current === 'calculator'}
+							onclick={() => sidePanel.toggle('calculator')}
+							><Calculator size={18} /><span class="hidden sm:inline">Calculator</span></button
+						>
+					</div>
 					<!-- Horizontal question navigator (matches QuizNavigation style) -->
 					<div
 						class="flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-4 relative items-center border border-base-300 px-6 py-3 rounded-4xl h-20 min-h-20 max-h-20 flex-none"
@@ -1097,6 +1129,11 @@
 						{/if}
 					{/if}
 				</div>
+				{#if clerk.user && currentItem}{#key clerk.user.id}<QuestionNotesTool
+							questionId={currentItem.questionId}
+							userKey={clerk.user.id}
+						/>{/key}{/if}
+				{#key clerk.user?.id}<CalculatorTool storageKey={clerk.user?.id ?? 'guest'} />{/key}
 			</div>
 
 			<!-- Fixed bottom action bar (matches QuizDock floating style) -->

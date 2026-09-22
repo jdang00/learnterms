@@ -12,7 +12,8 @@ const layoutValidator = v.object({
 			display: v.union(v.literal('icon'), v.literal('label'), v.literal('both'))
 		})
 	),
-	overflow: v.array(v.string())
+	overflow: v.array(v.string()),
+	tools: v.optional(v.array(v.string()))
 });
 
 export const getLayout = query({
@@ -30,7 +31,10 @@ export const getLayout = query({
 			.query('quizDockLayouts')
 			.withIndex('by_userId', (q) => q.eq('userId', user._id))
 			.unique();
-		return doc ? { items: doc.items, overflow: doc.overflow } : null;
+		if (!doc) return null;
+		return doc.tools === undefined
+			? { items: doc.items, overflow: doc.overflow }
+			: { items: doc.items, overflow: doc.overflow, tools: doc.tools };
 	}
 });
 
@@ -50,13 +54,23 @@ export const saveLayout = mutation({
 			return null;
 		}
 
-		if (layout.items.length > MAX_TOOLS || layout.overflow.length > MAX_TOOLS) {
+		const tools = layout.tools ?? [];
+		if (
+			layout.items.length > MAX_TOOLS ||
+			layout.overflow.length > MAX_TOOLS ||
+			tools.length > MAX_TOOLS
+		) {
 			throw new Error('Too many dock tools');
 		}
-		const ids = [...layout.items.map((item) => item.id), ...layout.overflow];
+		const ids = [...layout.items.map((item) => item.id), ...layout.overflow, ...tools];
 		if (ids.some((id) => !id || id.length > MAX_ID_LENGTH)) throw new Error('Invalid dock tool');
 
-		const fields = { items: layout.items, overflow: layout.overflow, updatedAt: Date.now() };
+		const fields = {
+			items: layout.items,
+			overflow: layout.overflow,
+			tools: layout.tools,
+			updatedAt: Date.now()
+		};
 		if (existing) await ctx.db.patch(existing._id, fields);
 		else await ctx.db.insert('quizDockLayouts', { userId: user._id, ...fields });
 		return null;

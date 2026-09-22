@@ -41,6 +41,7 @@ import type * as questionMediaAccess from "../questionMediaAccess.js";
 import type * as questionMediaActions from "../questionMediaActions.js";
 import type * as questionMediaSaving from "../questionMediaSaving.js";
 import type * as questionMediaUploads from "../questionMediaUploads.js";
+import type * as questionNotes from "../questionNotes.js";
 import type * as questionStudio from "../questionStudio.js";
 import type * as questionStudio_access from "../questionStudio/access.js";
 import type * as questionStudio_authorization from "../questionStudio/authorization.js";
@@ -130,6 +131,7 @@ declare const fullApi: ApiFromModules<{
   questionMediaActions: typeof questionMediaActions;
   questionMediaSaving: typeof questionMediaSaving;
   questionMediaUploads: typeof questionMediaUploads;
+  questionNotes: typeof questionNotes;
   questionStudio: typeof questionStudio;
   "questionStudio/access": typeof questionStudio_access;
   "questionStudio/authorization": typeof questionStudio_authorization;

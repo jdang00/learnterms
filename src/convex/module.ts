@@ -1,3 +1,4 @@
+import { internal } from './_generated/api';
 import { authQuery, authAdminMutation } from './authQueries';
 import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
@@ -260,6 +261,9 @@ export const deleteModule = authAdminMutation({
 
 		for (const question of questions) {
 			await ctx.db.delete(question._id);
+			await ctx.scheduler.runAfter(0, internal.questionNotes.deleteForQuestion, {
+				questionId: question._id
+			});
 		}
 
 		const moduleTags = await ctx.db

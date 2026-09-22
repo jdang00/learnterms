@@ -11,11 +11,18 @@ export default defineConfig({
 		// PDF.js loads these on demand from its worker, including non-Latin fonts
 		// and image decoders. Keep them local and versioned with the renderer.
 		viteStaticCopy({
-			targets: ['cmaps', 'standard_fonts', 'wasm', 'iccs'].map((directory) => ({
-				src: `node_modules/pdfjs-dist/${directory}/*`,
-				dest: `pdfjs/${pdfjsPackage.version}/${directory}`,
-				rename: { stripBase: true }
-			}))
+			targets: [
+				{
+					src: 'node_modules/mathlive/fonts/*',
+					dest: 'mathlive/fonts',
+					rename: { stripBase: true }
+				},
+				...['cmaps', 'standard_fonts', 'wasm', 'iccs'].map((directory) => ({
+					src: `node_modules/pdfjs-dist/${directory}/*`,
+					dest: `pdfjs/${pdfjsPackage.version}/${directory}`,
+					rename: { stripBase: true as const }
+				}))
+			]
 		})
 	],
 	resolve: {

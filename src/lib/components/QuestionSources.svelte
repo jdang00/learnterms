@@ -1,18 +1,20 @@
 <script lang="ts">
-	import { ExternalLink, FileText, LoaderCircle } from 'lucide-svelte';
+	import { ExternalLink, FileText, LoaderCircle, X } from 'lucide-svelte';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
 
 	interface Props {
 		source?: {
+			sourceTitle?: string;
 			sourceDocumentId?: Id<'contentLib'>;
 			sourcePageNumbers?: number[];
 			sourceCitations?: Array<{ pageNumber: number; noteFile: string; quote?: string }>;
 		};
 		editing?: boolean;
+		onRemovePage?: (page: number) => void;
 	}
-	let { source, editing = false }: Props = $props();
+	let { source, editing = false, onRemovePage }: Props = $props();
 	const client = useConvexClient();
 	let opening = $state<number | null>(null);
 	let active = $state<number | null>(null);
@@ -20,10 +22,11 @@
 	// One question cites one document, so the title is the same across its citations.
 	// noteFile is usually the uploaded filename, so drop the extension for display.
 	const title = $derived(
-		((source?.sourceCitations ?? []).map((c) => c.noteFile?.trim()).find(Boolean) ?? '').replace(
-			/\.(pdf|docx?|pptx?|txt|md)$/i,
+		(
+			source?.sourceTitle ??
+			(source?.sourceCitations ?? []).map((c) => c.noteFile?.trim()).find(Boolean) ??
 			''
-		)
+		).replace(/\.(pdf|docx?|pptx?|txt|md)$/i, '')
 	);
 	const pages = $derived.by(() => {
 		const citations = source?.sourceCitations ?? [];
@@ -110,26 +113,36 @@
 				</div>
 			{/if}
 			{#each pages as page (page.pageNumber)}
-				<button
-					type="button"
-					class="btn btn-ghost btn-xs gap-1.5 rounded-full border border-base-300 font-normal"
-					disabled={opening !== null}
-					aria-label={`Open ${title || 'source PDF'} at page ${page.pageNumber} in a new tab`}
-					onclick={() => openSource(page.pageNumber)}
-					onmouseenter={() => (active = page.pageNumber)}
-					aria-describedby={active === page.pageNumber ? previewId : undefined}
-					onkeydown={(event) => {
-						if (event.key === 'Escape') active = null;
-					}}
-					onfocus={() => (active = page.pageNumber)}
-					onblur={() => (active = null)}
-				>
-					{#if opening === page.pageNumber}<LoaderCircle
-							size={12}
-							class="animate-spin"
-						/>{:else}<FileText size={12} />{/if}
-					p. {page.pageNumber}<ExternalLink size={11} />
-				</button>
+				<div class="flex items-center gap-0.5">
+					<button
+						type="button"
+						class="btn btn-ghost btn-xs gap-1.5 rounded-full border border-base-300 font-normal"
+						disabled={opening !== null}
+						aria-label={`Open ${title || 'source PDF'} at page ${page.pageNumber} in a new tab`}
+						onclick={() => openSource(page.pageNumber)}
+						onmouseenter={() => (active = page.pageNumber)}
+						aria-describedby={active === page.pageNumber ? previewId : undefined}
+						onkeydown={(event) => {
+							if (event.key === 'Escape') active = null;
+						}}
+						onfocus={() => (active = page.pageNumber)}
+						onblur={() => (active = null)}
+					>
+						{#if opening === page.pageNumber}<LoaderCircle
+								size={12}
+								class="animate-spin"
+							/>{:else}<FileText size={12} />{/if}
+						p. {page.pageNumber}<ExternalLink size={11} />
+					</button>
+					{#if onRemovePage}
+						<button
+							type="button"
+							class="btn btn-ghost btn-xs btn-circle"
+							aria-label={`Remove source page ${page.pageNumber}`}
+							onclick={() => onRemovePage?.(page.pageNumber)}><X size={11} /></button
+						>
+					{/if}
+				</div>
 			{/each}
 		</div>
 

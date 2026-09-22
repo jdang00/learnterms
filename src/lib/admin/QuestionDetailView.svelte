@@ -426,7 +426,7 @@
 				>
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					<div class="text-sm text-base-content/80 tiptap-content">{@html questionRationale}</div>
-					<QuestionSources source={question.metadata.generation} />
+					<QuestionSources source={question.metadata.source ?? question.metadata.generation} />
 				</div>
 			</div>
 		{/if}

@@ -1,11 +1,16 @@
 export type DockDisplay = 'icon' | 'label' | 'both';
 // One layout, rendered two ways: a floating pill on desktop and an edge bar on mobile.
 export type DockSurface = 'desktop' | 'mobile';
-export type DockZone = 'items' | 'overflow';
+// tools: the Exam tools bar beside the question, for instruments rather than answer actions.
+export type DockZone = 'items' | 'overflow' | 'tools';
 
 export type DockItem = { key: string; id: string; display: DockDisplay };
-export type DockConfig = { items: DockItem[]; overflow: string[] };
-export type StoredDock = { items: { id: string; display: DockDisplay }[]; overflow: string[] };
+export type DockConfig = { items: DockItem[]; overflow: string[]; tools: string[] };
+export type StoredDock = {
+	items: { id: string; display: DockDisplay }[];
+	overflow: string[];
+	tools?: string[];
+};
 
 export const DIVIDER_ID = 'divider';
 const DISPLAYS: DockDisplay[] = ['icon', 'label', 'both'];
@@ -19,19 +24,22 @@ export function dockItem(id: string, display: DockDisplay = 'icon'): DockItem {
 	return { key: keyFor(id), id, display };
 }
 
+export const DEFAULT_TOOLS = ['highlight', 'calculator', 'notes', 'streak'];
+
 const layout = (items: [string, DockDisplay?][], overflow: string[]): DockConfig => ({
 	items: items.map(([id, display]) => dockItem(id, display ?? 'icon')),
-	overflow
+	overflow,
+	tools: [...DEFAULT_TOOLS]
 });
 
-// Classic: the original LearnTerms bar, unchanged. Most people never customize, so this is the default.
+// Classic: the original LearnTerms bar, minus Highlight, which now lives in the tools bar.
+// Most people never customize, so this is the default.
 export const DEFAULT_DOCK: DockConfig = layout(
 	[
 		['clear', 'label'],
 		['check', 'label'],
 		['flag'],
 		['shuffle', 'both'],
-		['highlight'],
 		[DIVIDER_ID],
 		['previous'],
 		['next']
@@ -48,7 +56,7 @@ export const DOCK_PRESETS: DockPreset[] = [
 		description: 'Check, flag, and go',
 		config: layout(
 			[['check', 'label'], ['flag'], [DIVIDER_ID], ['previous'], ['next']],
-			['clear', 'reveal', 'highlight', 'shuffle', 'reset', 'settings']
+			['clear', 'reveal', 'shuffle', 'reset', 'settings']
 		)
 	},
 	{
@@ -68,7 +76,6 @@ export const DOCK_PRESETS: DockPreset[] = [
 				['check', 'label'],
 				['flag'],
 				['reveal'],
-				['highlight'],
 				['attachments'],
 				['rationale'],
 				[DIVIDER_ID],
@@ -97,14 +104,16 @@ export const DOCK_PRESETS: DockPreset[] = [
 export function cloneDock(config: DockConfig): DockConfig {
 	return {
 		items: config.items.map((item) => dockItem(item.id, item.display)),
-		overflow: [...config.overflow]
+		overflow: [...config.overflow],
+		tools: [...config.tools]
 	};
 }
 
 export function toStoredDock(config: DockConfig): StoredDock {
 	return {
 		items: config.items.map(({ id, display }) => ({ id, display })),
-		overflow: [...config.overflow]
+		overflow: [...config.overflow],
+		tools: [...config.tools]
 	};
 }
 
@@ -112,12 +121,43 @@ export function sameDock(a: DockConfig, b: DockConfig): boolean {
 	return JSON.stringify(toStoredDock(a)) === JSON.stringify(toStoredDock(b));
 }
 
+const barKey = (config: DockConfig) =>
+	JSON.stringify([config.items.map(({ id, display }) => [id, display]), config.overflow]);
+
+// Presets describe the dock only; the tools bar is chosen separately.
 export function matchPreset(config: DockConfig): string | null {
-	return DOCK_PRESETS.find((preset) => sameDock(preset.config, config))?.id ?? null;
+	const key = barKey(config);
+	return (
+		DOCK_PRESETS.find((preset) => barKey(withTools(preset.config, config.tools)) === key)?.id ??
+		null
+	);
+}
+
+// A preset's dock with the user's own tools bar kept; tools win over the preset's copies.
+export function withTools(config: DockConfig, tools: string[]): DockConfig {
+	return {
+		items: config.items
+			.filter((item) => !tools.includes(item.id))
+			.map((item) => dockItem(item.id, item.display)),
+		overflow: config.overflow.filter((id) => !tools.includes(id)),
+		tools: [...tools]
+	};
 }
 
 export function dockHas(config: DockConfig, id: string): boolean {
-	return config.overflow.includes(id) || config.items.some((item) => item.id === id);
+	return zoneOf(config, id) !== null;
+}
+
+export function zoneOf(config: DockConfig, id: string): DockZone | null {
+	if (config.tools.includes(id)) return 'tools';
+	if (config.overflow.includes(id)) return 'overflow';
+	if (config.items.some((item) => item.id === id)) return 'items';
+	return null;
+}
+
+// Where a tool goes when switched on without a drop target.
+export function homeZoneFor(id: string): DockZone {
+	return DEFAULT_TOOLS.includes(id) ? 'tools' : 'items';
 }
 
 // Phones keep the same tools in the same order, but only the primary action keeps its text.
@@ -129,10 +169,20 @@ export function displayFor(id: string, display: DockDisplay, surface: DockSurfac
 
 export function sanitizeDock(raw: unknown, fallback: DockConfig = DEFAULT_DOCK): DockConfig {
 	if (!raw || typeof raw !== 'object') return cloneDock(fallback);
-	const value = raw as { items?: unknown; overflow?: unknown };
+	const value = raw as { items?: unknown; overflow?: unknown; tools?: unknown };
 	if (!Array.isArray(value.items) || !Array.isArray(value.overflow)) return cloneDock(fallback);
 
+	// Layouts saved before the tools bar existed get the default tools, pulled out of the dock.
+	const legacy = !Array.isArray(value.tools);
+	const rawTools: unknown[] = legacy ? DEFAULT_TOOLS : (value.tools as unknown[]);
+	const tools: string[] = [];
 	const seen = new Set<string>();
+	for (const id of rawTools) {
+		if (typeof id !== 'string' || !id || id === DIVIDER_ID || seen.has(id)) continue;
+		seen.add(id);
+		tools.push(id);
+	}
+
 	const items: DockItem[] = [];
 	for (const entry of value.items) {
 		const id = (entry as { id?: unknown })?.id;
@@ -152,21 +202,21 @@ export function sanitizeDock(raw: unknown, fallback: DockConfig = DEFAULT_DOCK):
 		overflow.push(id);
 	}
 
-	return { items, overflow };
+	return { items, overflow, tools };
 }
 
 export type DockDrop = { zone: DockZone; index: number };
 
 export function removeFromDock(config: DockConfig, zone: DockZone, index: number): DockConfig {
-	return zone === 'items'
-		? { ...config, items: config.items.filter((_, i) => i !== index) }
-		: { ...config, overflow: config.overflow.filter((_, i) => i !== index) };
+	if (zone === 'items') return { ...config, items: config.items.filter((_, i) => i !== index) };
+	return { ...config, [zone]: config[zone].filter((_, i) => i !== index) };
 }
 
 export function removeTool(config: DockConfig, id: string): DockConfig {
 	return {
 		items: config.items.filter((item) => item.id !== id),
-		overflow: config.overflow.filter((existing) => existing !== id)
+		overflow: config.overflow.filter((existing) => existing !== id),
+		tools: config.tools.filter((existing) => existing !== id)
 	};
 }
 
@@ -178,11 +228,11 @@ export function insertIntoDock(
 ): DockConfig {
 	const base = id === DIVIDER_ID ? config : removeTool(config, id);
 
-	if (drop.zone === 'overflow') {
+	if (drop.zone !== 'items') {
 		if (id === DIVIDER_ID) return config;
-		const overflow = [...base.overflow];
-		overflow.splice(clamp(drop.index, overflow.length), 0, id);
-		return { ...base, overflow };
+		const list = [...base[drop.zone]];
+		list.splice(clamp(drop.index, list.length), 0, id);
+		return { ...base, [drop.zone]: list };
 	}
 
 	const items = [...base.items];

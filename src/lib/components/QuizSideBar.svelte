@@ -4,6 +4,7 @@
 	import { PanelRight, Eye, Info, ChevronLeft, Settings } from 'lucide-svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
+	import QuizToolsBar from '$lib/components/quiz-dock/QuizToolsBar.svelte';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { goto } from '$app/navigation';
@@ -99,6 +100,10 @@
 					></progress>
 				{/if}
 			</div>
+
+			<div class="mt-5">
+				<QuizToolsBar variant="panel" />
+			</div>
 		</div>
 
 		<div class="flex flex-col justify-center m-4">
@@ -126,7 +131,10 @@
 							aria-hidden={!qs.showSolution}
 						>
 							<div class="tiptap-content">{@html sanitizedRationale}</div>
-							<QuestionSources source={currentlySelected?.metadata?.generation} />
+							<QuestionSources
+								source={currentlySelected?.metadata?.source ??
+									currentlySelected?.metadata?.generation}
+							/>
 						</div>
 					</div>
 				</div>
@@ -197,6 +205,8 @@
 					solutionOnlyBehavior="blur"
 					collapsed={true}
 				/>
+
+				<QuizToolsBar variant="rail" />
 			</div>
 
 			<div class="border-t border-base-300 w-full my-2"></div>
@@ -241,7 +251,9 @@
 		<h3 class="text-lg font-bold">Rationale</h3>
 		{#if hasRationale(currentlySelected)}
 			<div class="py-4 tiptap-content">{@html sanitizedRationale}</div>
-			<QuestionSources source={currentlySelected?.metadata?.generation} />
+			<QuestionSources
+				source={currentlySelected?.metadata?.source ?? currentlySelected?.metadata?.generation}
+			/>
 		{/if}
 	</div>
 </dialog>

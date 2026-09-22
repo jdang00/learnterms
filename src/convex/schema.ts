@@ -149,6 +149,12 @@ const questionStudioWorkerState = v.object({
 	draftedCount: v.optional(v.number())
 });
 
+export const manualQuestionSource = v.object({
+	sourceDocumentId: v.id('contentLib'),
+	sourcePageNumbers: v.array(v.number()),
+	sourceTitle: v.string()
+});
+
 export default defineSchema({
 	users: defineTable({
 		updatedAt: v.number(),
@@ -317,6 +323,7 @@ export default defineSchema({
 		.index('by_moduleId_tagId', ['moduleId', 'tagId']),
 	question: defineTable({
 		metadata: v.object({
+			source: v.optional(manualQuestionSource),
 			generation: v.optional(
 				v.object({
 					model: v.string(),
@@ -554,6 +561,15 @@ export default defineSchema({
 		.index('by_user_module', ['userId', 'moduleId'])
 		.index('by_moduleId', ['moduleId'])
 		.index('by_classId', ['classId']),
+	questionNotes: defineTable({
+		userId: v.id('users'),
+		questionId: v.id('question'),
+		content: v.string(),
+		revision: v.number(),
+		updatedAt: v.number()
+	})
+		.index('by_userId_questionId', ['userId', 'questionId'])
+		.index('by_questionId', ['questionId']),
 	stemHighlights: defineTable({
 		userId: v.id('users'),
 		questionId: v.id('question'),
@@ -574,6 +590,8 @@ export default defineSchema({
 			})
 		),
 		overflow: v.array(v.string()),
+		// Absent on layouts saved before the tools bar existed.
+		tools: v.optional(v.array(v.string())),
 		updatedAt: v.number()
 	}).index('by_userId', ['userId']),
 	userProgress: defineTable({
@@ -741,7 +759,8 @@ export default defineSchema({
 				v.object({
 					sourceDocumentId: v.optional(v.id('contentLib')),
 					sourcePageNumbers: v.optional(v.array(v.number())),
-					sourceCitations: v.optional(v.array(questionStudioSourceCitation))
+					sourceCitations: v.optional(v.array(questionStudioSourceCitation)),
+					sourceTitle: v.optional(v.string())
 				})
 			),
 			questionUpdatedAt: v.number()

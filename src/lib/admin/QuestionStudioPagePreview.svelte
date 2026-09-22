@@ -4,6 +4,7 @@
 	import SourcePagePreview from './SourcePagePreview.svelte';
 	import SourcePdfPage from './SourcePdfPage.svelte';
 	let {
+		purpose = 'context',
 		pdf,
 		pageNumbers,
 		selected,
@@ -14,6 +15,7 @@
 		mobilePreview = $bindable(false),
 		onToggle
 	}: {
+		purpose?: 'context' | 'citation';
 		pdf: PDFDocumentProxy | null;
 		pageNumbers: number[];
 		selected: Set<number>;
@@ -59,7 +61,11 @@
 				disabled={sourceIndexedAt === undefined}
 				aria-pressed={selected.has(previewPage)}
 				onclick={() => previewPage !== null && onToggle(previewPage)}
-				>{#if selected.has(previewPage)}<Check size={14} />In context{:else}Add to context{/if}</button
+				>{#if selected.has(previewPage)}<Check size={14} />{purpose === 'citation'
+						? 'Cited'
+						: 'In context'}{:else}{purpose === 'citation'
+						? 'Cite page'
+						: 'Add to context'}{/if}</button
 			>
 		</div>
 		{#if pdf}<div class="flex gap-1 px-4 py-2">
@@ -72,7 +78,8 @@
 					type="button"
 					class="btn btn-xs rounded-full {textPreview ? 'btn-active' : 'btn-ghost'}"
 					aria-pressed={textPreview}
-					onclick={() => (textPreview = true)}>Text used for questions</button
+					onclick={() => (textPreview = true)}
+					>{purpose === 'citation' ? 'Extracted text' : 'Text used for questions'}</button
 				>
 			</div>{/if}
 		<!-- svelte-ignore a11y_no_noninteractive_tabindex (Scrollable preview needs keyboard access.) -->
@@ -94,7 +101,9 @@
 			{/key}
 		</div>
 		<p class="px-4 py-2 text-[11px] text-base-content/45">
-			Questions use the extracted text from your selected pages.
+			{purpose === 'citation'
+				? 'Selected pages appear as source chips below the rationale.'
+				: 'Questions use the extracted text from your selected pages.'}
 		</p>
 	{/if}
 </aside>

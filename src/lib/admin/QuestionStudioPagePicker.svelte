@@ -3,10 +3,9 @@
 	import QuestionStudioPageThumbnails from './QuestionStudioPageThumbnails.svelte';
 	import { Check, RotateCcw, X } from 'lucide-svelte';
 	import { useConvexClient } from 'convex-svelte';
-	import { base } from '$app/paths';
 	import { untrack } from 'svelte';
-	import type { PDFDocumentProxy, PDFDocumentLoadingTask } from 'pdfjs-dist';
-	import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+	import type { PDFDocumentProxy } from 'pdfjs-dist';
+	import { createSourcePdf, type SourcePdfResource } from './sourcePdf';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import QuestionStudioContextMeter from './QuestionStudioContextMeter.svelte';
@@ -15,6 +14,9 @@
 
 	let {
 		documentId,
+		purpose = 'context',
+		pdfResource,
+		onDone,
 		initialSource,
 		onSourceReloaded,
 		selectedPageNumbers = $bindable<number[]>([]),
@@ -22,6 +24,9 @@
 		open = $bindable(false)
 	}: {
 		documentId: Id<'contentLib'>;
+		purpose?: 'context' | 'citation';
+		pdfResource?: SourcePdfResource;
+		onDone?: () => void;
 		initialSource: SourcePreviewBatch;
 		onSourceReloaded: (result: SourcePreviewBatch) => void;
 		selectedPageNumbers?: number[];
@@ -83,38 +88,27 @@
 		const id = documentId;
 		if (!loadPdf) return;
 		let cancelled = false;
-		let task: PDFDocumentLoadingTask | undefined;
+		const resource =
+			pdfResource ??
+			createSourcePdf(() => client.query(api.r2Documents.getDocumentUrl, { documentId: id }));
+		const ownsResource = !pdfResource;
 		pdf = null;
 		pdfError = '';
-		void (async () => {
-			try {
-				const [url, pdfjs] = await Promise.all([
-					client.query(api.r2Documents.getDocumentUrl, { documentId: id }),
-					import('pdfjs-dist')
-				]);
-				if (cancelled) return;
-				pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
-				const assetBase = `${base}/pdfjs/${pdfjs.version}`;
-				task = pdfjs.getDocument({
-					url,
-					cMapUrl: `${assetBase}/cmaps/`,
-					standardFontDataUrl: `${assetBase}/standard_fonts/`,
-					wasmUrl: `${assetBase}/wasm/`,
-					iccUrl: `${assetBase}/iccs/`
-				});
-				const loaded = await task.promise;
+		void resource.promise
+			.then((loaded) => {
 				if (!cancelled) pdf = loaded;
-			} catch {
+			})
+			.catch(() => {
 				if (!cancelled)
 					pdfError =
 						'Original previews are unavailable. You can still choose pages and read their extracted text.';
-			}
-		})();
+			});
 		return () => {
 			cancelled = true;
-			void task?.destroy();
+			if (ownsResource) resource.destroy();
 		};
 	});
+
 	$effect(() => {
 		const page = previewPage;
 		if (
@@ -209,7 +203,7 @@
 			<header class="flex items-center gap-3 border-b border-base-300 px-5 py-4">
 				<div class="min-w-0 flex-1">
 					<h2 id="page-picker-title" class="text-lg font-semibold tracking-tight">
-						Choose your pages
+						{purpose === 'citation' ? 'Choose pages to cite' : 'Choose your pages'}
 					</h2>
 					<p class="mt-0.5 text-xs text-base-content/55">
 						Tap a thumbnail to preview it, or its circle to select it.
@@ -280,6 +274,7 @@
 			<div class="picker-body" class:mobile-preview={mobilePreview}>
 				<div class="thumbnail-pane">
 					<QuestionStudioPageThumbnails
+						{purpose}
 						{pageNumbers}
 						{selected}
 						{pdf}
@@ -294,6 +289,7 @@
 					/>
 				</div>
 				<QuestionStudioPagePreview
+					{purpose}
 					{pdf}
 					{pageNumbers}
 					{selected}
@@ -305,23 +301,35 @@
 					onToggle={toggle}
 				/>
 			</div>
-			<QuestionStudioContextMeter
-				pageStats={initialSource.pageCharacterCounts}
-				{selectedPageNumbers}
-				compact
-				track
-			/>
+			{#if purpose === 'context'}
+				<QuestionStudioContextMeter
+					pageStats={initialSource.pageCharacterCounts}
+					{selectedPageNumbers}
+					compact
+					track
+				/>
+			{/if}
 			<footer class="flex items-center gap-3 border-t border-base-300 px-5 py-4">
 				<div class="min-w-0 flex-1" aria-live="polite">
-					<p class="text-sm font-semibold">{selectedPageNumbers.length} pages in context</p>
+					<p class="text-sm font-semibold">
+						{selectedPageNumbers.length}
+						{selectedPageNumbers.length === 1 ? 'page' : 'pages'}
+						{purpose === 'citation' ? 'to cite' : 'in context'}
+					</p>
 					<p class="truncate text-xs text-base-content/50" title={selectionSummary}>
-						{selectionSummary || 'Select the pages you want questions from.'}
+						{selectionSummary ||
+							(purpose === 'citation'
+								? 'Select pages that support your rationale.'
+								: 'Select the pages you want questions from.')}
 					</p>
 				</div>
 				<button
 					type="button"
 					class="btn btn-primary rounded-full px-7"
-					onclick={() => (open = false)}>Done<Check size={16} /></button
+					onclick={() => {
+						onDone?.();
+						open = false;
+					}}>{purpose === 'citation' ? 'Use pages' : 'Done'}<Check size={16} /></button
 				>
 			</footer>
 		</div>

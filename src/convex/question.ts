@@ -7,6 +7,8 @@ import { action, internalMutation } from './_generated/server';
 import { shiftQuestionStats } from './moduleStats';
 import { authCuratorMutation } from './authQueries';
 import { v } from 'convex/values';
+import { manualQuestionSource } from './schema';
+import type { Infer } from 'convex/values';
 import { authQuery } from './authQueries';
 import { components, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
@@ -33,6 +35,37 @@ async function assertQuestionModuleAccess(ctx: MutationCtx, moduleId: Id<'module
 		(user.role !== 'dev' && user.cohortId !== classDoc.cohortId)
 	)
 		throw new Error('Module access denied');
+}
+
+// Resolve the title on the server and keep source access within the destination cohort.
+async function validateManualSource(
+	ctx: MutationCtx,
+	moduleId: Id<'module'>,
+	source: Infer<typeof manualQuestionSource>
+) {
+	const module = await ctx.db.get(moduleId);
+	const classDoc = module ? await ctx.db.get(module.classId) : null;
+	const document = await ctx.db.get(source.sourceDocumentId);
+	if (
+		!document ||
+		document.deletedAt ||
+		document.cohortId !== classDoc?.cohortId ||
+		document.metadata?.storageProvider !== 'r2' ||
+		!['indexed', 'mapped'].includes(document.metadata.ingestionStatus ?? '')
+	) {
+		throw new Error('Source document is unavailable or belongs to another cohort.');
+	}
+	const pages = [...new Set(source.sourcePageNumbers)].sort((a, b) => a - b);
+	const pageCount = document.metadata.pageCount;
+	if (
+		!pageCount ||
+		!pages.length ||
+		pages.length > pageCount ||
+		pages.some((page) => !Number.isInteger(page) || page < 1 || page > pageCount)
+	) {
+		throw new Error('Select valid pages from the source document.');
+	}
+	return { sourceDocumentId: document._id, sourcePageNumbers: pages, sourceTitle: document.title };
 }
 
 const MAX_QUESTIONS_PER_MODULE = 150;
@@ -539,6 +572,7 @@ export const insertQuestion = authCuratorMutation({
 	returns: v.id('question'),
 	args: {
 		images: v.optional(v.array(imageAttachment)),
+		source: v.optional(manualQuestionSource),
 		moduleId: v.id('module'),
 		type: v.string(),
 		stem: v.string(),
@@ -600,9 +634,13 @@ export const insertQuestion = authCuratorMutation({
 			metadata: args.metadata
 		});
 
-		const { images, ...questionFields } = args;
+		const { images, source, ...questionFields } = args;
+		const metadata = source
+			? { ...args.metadata, source: await validateManualSource(ctx, args.moduleId, source) }
+			: args.metadata;
 		const id = await ctx.db.insert('question', {
 			...questionFields,
+			metadata,
 			rationale,
 			type: convertQuestionType(args.type),
 			status: args.status.toLowerCase(),
@@ -631,6 +669,9 @@ export const deleteQuestion = authCuratorMutation({
 		await shiftQuestionStats(ctx, [questionToDelete]);
 		await ctx.db.delete(args.questionId);
 		await ctx.scheduler.runAfter(0, internal.stemHighlights.deleteForQuestion, {
+			questionId: args.questionId
+		});
+		await ctx.scheduler.runAfter(0, internal.questionNotes.deleteForQuestion, {
 			questionId: args.questionId
 		});
 		await adjustModuleQuestionCount(ctx, args.moduleId, -1);
@@ -663,6 +704,7 @@ export const bulkDeleteQuestions = authCuratorMutation({
 				await shiftQuestionStats(ctx, [questionToDelete]);
 				await ctx.db.delete(questionId);
 				await ctx.scheduler.runAfter(0, internal.stemHighlights.deleteForQuestion, { questionId });
+				await ctx.scheduler.runAfter(0, internal.questionNotes.deleteForQuestion, { questionId });
 				deletedCount++;
 			} catch (error) {
 				errors.push(`Failed to delete question ${questionId}: ${error}`);
@@ -793,6 +835,7 @@ export const updateQuestion = authCuratorMutation({
 	returns: v.object({ updated: v.boolean() }),
 	args: {
 		images: v.optional(v.array(imageAttachment)),
+		source: v.optional(v.union(manualQuestionSource, v.null())),
 		questionId: v.id('question'),
 		moduleId: v.id('module'),
 		type: v.string(),
@@ -870,7 +913,15 @@ export const updateQuestion = authCuratorMutation({
 			metadata: questionToUpdate.metadata
 		});
 
+		const metadata = { ...questionToUpdate.metadata };
+		if (args.source !== undefined) {
+			metadata.source =
+				args.source === null
+					? undefined
+					: await validateManualSource(ctx, args.moduleId, args.source);
+		}
 		await ctx.db.patch(args.questionId, {
+			metadata,
 			type: convertQuestionType(args.type),
 			stem: args.stem,
 			options: publishOptions,

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { CheckCircle2, FileText, Layers, Search, TriangleAlert } from 'lucide-svelte';
+	import { onDestroy } from 'svelte';
 	import { useQuery } from 'convex-svelte';
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 	import { api } from '../../convex/_generated/api';
@@ -8,17 +9,30 @@
 		cohortId: Id<'cohort'>;
 		selectedDocumentId?: Id<'contentLib'> | null;
 		selectedSourceSummary?: string;
+		onSelect?: (document: Doc<'contentLib'>) => void;
+		onIntent?: (document: Doc<'contentLib'>) => void;
 	}
 
 	let {
 		cohortId,
 		selectedDocumentId = $bindable<Id<'contentLib'> | null>(null),
-		selectedSourceSummary = $bindable('')
+		selectedSourceSummary = $bindable(''),
+		onSelect,
+		onIntent
 	}: Props = $props();
 
 	const docs = useQuery(api.contentLib.getR2DocumentsByCohort, () => ({ cohortId }));
 
 	let searchQuery = $state('');
+	let intentTimer: ReturnType<typeof setTimeout> | undefined;
+	function cancelIntent() {
+		clearTimeout(intentTimer);
+	}
+	function scheduleIntent(doc: Doc<'contentLib'>) {
+		cancelIntent();
+		if (onIntent) intentTimer = setTimeout(() => onIntent?.(doc), 150);
+	}
+	onDestroy(cancelIntent);
 
 	function formatSize(bytes?: number) {
 		if (!bytes) return 'Unknown size';
@@ -35,6 +49,7 @@
 			`RAG namespace: ${doc.metadata?.ragNamespace ?? `document:${doc._id}`}`,
 			`RAG entry: ${doc.metadata?.ragEntryId ?? 'not available'}`
 		].join('\n');
+		onSelect?.(doc);
 	}
 
 	const indexedDocs = $derived.by<Doc<'contentLib'>[]>(() =>
@@ -94,7 +109,7 @@
 					{searchQuery ? 'No matching sources' : 'No sources yet'}
 				</p>
 				<p class="mx-auto mt-1 max-w-xs text-xs text-base-content/50">
-					Upload a PDF in Content Library before generating from it.
+					Upload and index a PDF in Content Library to select its pages.
 				</p>
 			</div>
 		{:else}
@@ -103,7 +118,14 @@
 					{@const selected = selectedDocumentId === doc._id}
 					<button
 						type="button"
-						onclick={() => selectDocument(doc as Doc<'contentLib'>)}
+						onclick={() => {
+							cancelIntent();
+							selectDocument(doc);
+						}}
+						onpointerenter={() => scheduleIntent(doc)}
+						onpointerleave={cancelIntent}
+						onfocus={() => scheduleIntent(doc)}
+						onblur={cancelIntent}
 						class="rounded-2xl border transition-colors {selected
 							? 'border-primary bg-primary/5'
 							: 'border-base-300 hover:border-base-content/20 hover:bg-base-200/60'} w-full p-3 text-left"

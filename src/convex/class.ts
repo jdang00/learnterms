@@ -1,3 +1,4 @@
+import { internal } from './_generated/api';
 import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
@@ -224,6 +225,9 @@ export const deleteClass = authAdminMutation({
 
 			for (const question of questions) {
 				await ctx.db.delete(question._id);
+				await ctx.scheduler.runAfter(0, internal.questionNotes.deleteForQuestion, {
+					questionId: question._id
+				});
 			}
 			totalQuestionsDeleted += questions.length;
 

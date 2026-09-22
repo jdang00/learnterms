@@ -130,7 +130,9 @@
 		{#if canShowRationale}
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			<div class="py-4 tiptap-content">{@html sanitizedRationale}</div>
-			<QuestionSources source={currentlySelected?.metadata?.generation} />
+			<QuestionSources
+				source={currentlySelected?.metadata?.source ?? currentlySelected?.metadata?.generation}
+			/>
 		{/if}
 	</div>
 </dialog>

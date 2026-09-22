@@ -4,6 +4,7 @@
 	import type { PDFDocumentProxy } from 'pdfjs-dist';
 	import SourcePdfPage from './SourcePdfPage.svelte';
 	let {
+		purpose = 'context',
 		pageNumbers,
 		selected,
 		pdf,
@@ -16,6 +17,7 @@
 		onPreview,
 		onToggle
 	}: {
+		purpose?: 'context' | 'citation';
 		pageNumbers: number[];
 		selected: Set<number>;
 		pdf: PDFDocumentProxy | null;
@@ -97,7 +99,7 @@
 					<span class="text-xs font-medium tabular-nums text-base-content/55">{page}</span><button
 						type="button"
 						class="selection-target"
-						aria-label={`${selected.has(page) ? 'Remove' : 'Add'} page ${page} ${selected.has(page) ? 'from' : 'to'} context`}
+						aria-label={`${selected.has(page) ? 'Remove' : 'Add'} page ${page} ${selected.has(page) ? 'from' : 'to'} ${purpose === 'citation' ? 'citations' : 'context'}`}
 						aria-pressed={selected.has(page)}
 						disabled={sourceIndexedAt === undefined}
 						onclick={() => onToggle(page)}

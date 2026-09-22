@@ -11,16 +11,12 @@
 		ShieldCheckIcon,
 		UserRoundPenIcon,
 		ClipboardCheck,
-		ArrowRight as ArrowRightIcon,
-		Sparkles,
-		History,
-		Users,
-		LayoutDashboard,
-		X
+		ArrowRight as ArrowRightIcon
 	} from 'lucide-svelte';
 	import { page } from '$app/state';
 	import { goto, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import FeatureSpotlight from '../../lib/components/FeatureSpotlight.svelte';
 	import ModuleCard from '../../lib/components/ModuleCard.svelte';
 	import Sidebar from '../../lib/components/Sidebar.svelte';
 	import ClassList from '../../lib/components/ClassList.svelte';
@@ -203,20 +199,11 @@
 		isNavigatingBack = false;
 	}
 
-	function featureIconComponent(icon: string) {
-		switch (icon) {
-			case 'sparkles':
-				return Sparkles;
-			case 'history':
-				return History;
-			case 'users':
-				return Users;
-			case 'clipboard':
-				return ClipboardCheck;
-			default:
-				return LayoutDashboard;
-		}
-	}
+	const featureCtaHref = $derived(
+		featureAnnouncement?.ctaHref && !/\[[^/]+\]/.test(featureAnnouncement.ctaHref)
+			? featureAnnouncement.ctaHref
+			: '/classes'
+	);
 
 	function featureHref(item: {
 		title: string;
@@ -514,129 +501,23 @@
 </main>
 
 {#if featureAnnouncement}
-	<dialog class="modal max-w-full p-4 z-[1000]" class:modal-open={featureSpotlightOpen}>
-		<div
-			class="modal-box max-w-2xl rounded-4xl border border-base-300 p-0 overflow-hidden shadow-2xl backdrop-blur-md"
-		>
-			<!-- Header -->
-			<div class="relative p-6 sm:p-8 pb-5">
-				<button
-					class="btn btn-ghost btn-sm btn-circle absolute top-5 right-5 z-10"
-					aria-label="Close"
-					onclick={dismissFeatureSpotlight}
-					disabled={featureSpotlightAcknowledging}
-				>
-					<X size={16} />
-				</button>
-
-				<div class="flex items-center gap-3 mb-4">
-					<div
-						class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0"
-					>
-						<Sparkles size={20} />
-					</div>
-					<div class="badge badge-primary badge-soft rounded-full text-xs">
-						{featureAnnouncement.eyebrow}
-					</div>
-				</div>
-
-				<h2 class="text-2xl sm:text-3xl font-bold leading-tight">{featureAnnouncement.title}</h2>
-				<p class="text-sm text-base-content/55 mt-2 max-w-xl leading-relaxed">
-					{featureAnnouncement.description}
-				</p>
-			</div>
-
-			<!-- Feature cards -->
-			<div class="px-6 sm:px-8 pb-6 sm:pb-8">
-				<div class="space-y-2">
-					{#each featureAnnouncement.features as item, i (item.title)}
-						{@const Icon = featureIconComponent(item.icon)}
-						<button
-							type="button"
-							class="group w-full text-left rounded-2xl border-2 border-base-300 p-4 transition-all duration-200 hover:border-primary/40 hover:bg-primary/5 hover:-translate-y-0.5 hover:shadow-md"
-							onclick={async () => {
-								await dismissFeatureSpotlight();
-								await goto(resolve(featureHref(item)));
-							}}
-						>
-							<div class="flex items-center gap-4">
-								<div
-									class="w-10 h-10 rounded-xl bg-base-200 text-base-content/60 flex items-center justify-center shrink-0 group-hover:bg-primary/15 group-hover:text-primary transition-all duration-200 group-hover:scale-110"
-								>
-									<Icon size={18} />
-								</div>
-								<div class="min-w-0 flex-1">
-									<div class="flex items-center gap-2">
-										<div class="font-semibold text-sm">{item.title}</div>
-										{#if i === 0}
-											<span class="badge badge-xs badge-primary badge-soft rounded-full">New</span>
-										{/if}
-									</div>
-									<p class="text-xs text-base-content/50 mt-0.5 leading-relaxed">
-										{item.description}
-									</p>
-								</div>
-								<div
-									class="text-base-content/20 shrink-0 transition-all duration-200 group-hover:text-primary group-hover:translate-x-1"
-								>
-									<ArrowRightIcon size={16} />
-								</div>
-							</div>
-						</button>
-					{/each}
-				</div>
-
-				{#if featureSpotlightError}
-					<div class="alert alert-error rounded-xl mt-4">
-						<span class="text-sm">{featureSpotlightError}</span>
-					</div>
-				{/if}
-
-				<div class="mt-6 flex items-center justify-between gap-3">
-					<a
-						href={resolve('/changelog')}
-						class="text-xs text-base-content/40 hover:text-primary transition-colors duration-150"
-						onclick={dismissFeatureSpotlight}
-					>
-						See all updates
-					</a>
-					<div class="flex items-center gap-2">
-						<button
-							type="button"
-							class="btn btn-ghost btn-sm rounded-full text-base-content/60"
-							onclick={async () => {
-								const href =
-									featureAnnouncement.ctaHref && !/\[[^/]+\]/.test(featureAnnouncement.ctaHref)
-										? featureAnnouncement.ctaHref
-										: '/classes';
-								await dismissFeatureSpotlight();
-								window.location.assign(href);
-							}}
-						>
-							{featureAnnouncement.ctaLabel}
-						</button>
-						<button
-							class="btn btn-primary btn-soft rounded-full"
-							onclick={dismissFeatureSpotlight}
-							disabled={featureSpotlightAcknowledging}
-						>
-							{featureSpotlightAcknowledging ? 'Saving...' : 'Got it'}
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div
-			class="modal-backdrop bg-black/50"
-			role="button"
-			tabindex="-1"
-			aria-label="Dismiss feature update"
-			onclick={dismissFeatureSpotlight}
-			onkeydown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') void dismissFeatureSpotlight();
-			}}
-		></div>
-	</dialog>
+	<FeatureSpotlight
+		announcement={featureAnnouncement}
+		open={featureSpotlightOpen}
+		saving={featureSpotlightAcknowledging}
+		error={featureSpotlightError}
+		showCta={featureCtaHref !== page.url.pathname}
+		canOpen={(item) => featureHref(item) !== page.url.pathname}
+		ondismiss={dismissFeatureSpotlight}
+		onopenfeature={async (item) => {
+			await dismissFeatureSpotlight();
+			await goto(resolve(featureHref(item)));
+		}}
+		oncta={async () => {
+			await dismissFeatureSpotlight();
+			window.location.assign(featureCtaHref);
+		}}
+	/>
 {/if}
 
 <style>

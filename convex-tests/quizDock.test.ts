@@ -42,3 +42,21 @@ test('rejects anonymous writes and oversized layouts', async () => {
 		})
 	).rejects.toThrow('Too many dock tools');
 });
+
+test('round-trips the tools bar and leaves legacy layouts without one', async () => {
+	const { owner } = await setup();
+	await owner.mutation(api.quizDock.saveLayout, { layout: { ...layout, tools: ['highlight'] } });
+	expect(await owner.query(api.quizDock.getLayout, {})).toEqual({
+		...layout,
+		tools: ['highlight']
+	});
+
+	await owner.mutation(api.quizDock.saveLayout, { layout });
+	expect(await owner.query(api.quizDock.getLayout, {})).toEqual(layout);
+
+	await expect(
+		owner.mutation(api.quizDock.saveLayout, {
+			layout: { ...layout, tools: Array.from({ length: 41 }, (_, i) => `tool-${i}`) }
+		})
+	).rejects.toThrow('Too many dock tools');
+});

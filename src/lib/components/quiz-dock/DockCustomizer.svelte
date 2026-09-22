@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { fade, fly, scale } from 'svelte/transition';
+	import { fade, fly, scale, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import {
 		ArrowLeft,
 		ArrowUpWideNarrow,
 		Check,
+		ChevronDown,
 		ChevronLeft,
 		ChevronRight,
 		CloudOff,
@@ -16,6 +17,7 @@
 		SeparatorVertical,
 		SlidersHorizontal,
 		Smartphone,
+		ToolCase,
 		Trash2
 	} from 'lucide-svelte';
 	import { getQuizCommands } from './commands.svelte';
@@ -31,18 +33,20 @@
 	import ReadoutContent from './ReadoutContent.svelte';
 	import { shortcutLabelFor } from './shortcuts';
 	import {
-		cloneDock,
 		DEFAULT_DOCK,
 		DIVIDER_ID,
 		displayFor,
 		DOCK_PRESETS,
 		dockHas,
+		homeZoneFor,
 		insertIntoDock,
 		matchPreset,
 		quickAddIndex,
 		removeFromDock,
 		removeTool,
 		sameDock,
+		withTools,
+		zoneOf,
 		type DockConfig,
 		type DockDisplay,
 		type DockDrop,
@@ -76,8 +80,11 @@
 	];
 
 	const QUICK_TOOLS = [
+		'notes',
+		'calculator',
 		'reveal',
 		'highlight',
+		'streak',
 		'shuffle',
 		'progress',
 		'timer',
@@ -88,6 +95,10 @@
 	];
 
 	const MINI_DOCK_LIMIT = 7;
+	const BONE = 'rounded-full bg-base-content/[0.06]';
+	const MOCK = 'rounded-2xl border border-dashed border-base-content/15 bg-base-100';
+	const PHONE = 'rounded-[2rem] border-[3px] border-base-content/10 bg-base-100';
+	const CAPTION = 'px-1 text-[0.65rem] font-semibold uppercase tracking-wider text-base-content/40';
 
 	const DISPLAY_OPTIONS: [DockDisplay, string][] = [
 		['icon', 'Icon'],
@@ -154,8 +165,21 @@
 
 	function applyPreset(presetConfig: DockConfig) {
 		selected = null;
-		if (sameDock(presetConfig, DEFAULT_DOCK)) preferences?.reset();
-		else commit(cloneDock(presetConfig));
+		const next = withTools(presetConfig, config.tools);
+		if (sameDock(next, DEFAULT_DOCK)) preferences?.reset();
+		else commit(next);
+	}
+
+	function addToHome(id: string, itemsIndex: number) {
+		const zone = homeZoneFor(id);
+		commit(
+			insertIntoDock(
+				config,
+				{ zone, index: zone === 'items' ? itemsIndex : config[zone].length },
+				id,
+				registry?.get(id)?.defaultDisplay ?? 'icon'
+			)
+		);
 	}
 
 	function toggleQuickTool(id: string) {
@@ -164,19 +188,24 @@
 			if (selection?.id === id) selected = null;
 			return;
 		}
-		commit(
-			insertIntoDock(
-				config,
-				{ zone: 'items', index: quickAddIndex(config) },
-				id,
-				registry?.get(id)?.defaultDisplay ?? 'icon'
-			)
-		);
+		addToHome(id, quickAddIndex(config));
 	}
 
 	function acceptsOverflow(id: string) {
 		return id !== DIVIDER_ID && !isPassive(registry?.get(id));
 	}
+
+	function accepts(zone: DockZone, id: string) {
+		if (zone === 'overflow') return acceptsOverflow(id);
+		if (zone === 'tools') return id !== DIVIDER_ID;
+		return true;
+	}
+
+	const ZONE_NAMES: Record<DockZone, string> = {
+		items: 'dock',
+		overflow: 'menu',
+		tools: 'tools'
+	};
 
 	function nameOf(id: string) {
 		return id === DIVIDER_ID ? 'Divider' : (registry?.get(id)?.name ?? id);
@@ -193,9 +222,10 @@
 			const item = config.items[index];
 			return { zone: 'items' as const, index, id: item.id, display: item.display };
 		}
-		const index = config.overflow.indexOf(selected.key);
+		const zone = selected.zone;
+		const index = config[zone].indexOf(selected.key);
 		if (index === -1) return null;
-		return { zone: 'overflow' as const, index, id: selected.key, display: 'icon' as DockDisplay };
+		return { zone, index, id: selected.key, display: 'icon' as DockDisplay };
 	});
 
 	function toggleSelected(zone: DockZone, key: string) {
@@ -214,24 +244,19 @@
 	function moveSelected(delta: number) {
 		if (!selection) return;
 		const target = selection.index + delta;
-		const list = selection.zone === 'items' ? [...config.items] : [...config.overflow];
+		const list = selection.zone === 'items' ? [...config.items] : [...config[selection.zone]];
 		if (target < 0 || target >= list.length) return;
 		[list[selection.index], list[target]] = [list[target], list[selection.index]];
-		commit(
-			selection.zone === 'items'
-				? { ...config, items: list as DockConfig['items'] }
-				: { ...config, overflow: list as string[] }
-		);
+		commit({ ...config, [selection.zone]: list });
 	}
 
-	function switchZone() {
-		if (!selection) return;
-		const zone: DockZone = selection.zone === 'items' ? 'overflow' : 'items';
-		if (zone === 'overflow' && !acceptsOverflow(selection.id)) return;
+	function moveToZone(zone: DockZone) {
+		if (!selection || zone === selection.zone || !accepts(zone, selection.id)) return;
+		if (zone === 'overflow') moreOpen = true;
 		const without = removeFromDock(config, selection.zone, selection.index);
 		const next = insertIntoDock(
 			without,
-			{ zone, index: zone === 'items' ? quickAddIndex(without) : without.overflow.length },
+			{ zone, index: zone === 'items' ? quickAddIndex(without) : without[zone].length },
 			selection.id,
 			registry?.get(selection.id)?.defaultDisplay ?? 'icon'
 		);
@@ -262,14 +287,11 @@
 			if (selection?.id === id) selected = null;
 			return;
 		}
-		commit(
-			insertIntoDock(
-				config,
-				{ zone: 'items', index: config.items.length },
-				id,
-				registry?.get(id)?.defaultDisplay ?? 'icon'
-			)
-		);
+		if (id === DIVIDER_ID) {
+			commit(insertIntoDock(config, { zone: 'items', index: config.items.length }, id));
+			return;
+		}
+		addToHome(id, config.items.length);
 	}
 
 	// ── drag and drop ────────────────────────────────────────────────────────
@@ -283,6 +305,8 @@
 	let ghostOut = $state({ start: 0.6, duration: 180 * motion });
 	let itemsZone = $state<HTMLElement | null>(null);
 	let overflowZone = $state<HTMLElement | null>(null);
+	let toolsZone = $state<HTMLElement | null>(null);
+	let moreOpen = $state(false);
 	let itemsZoneHeight = $state(0);
 	let suppressClick = false;
 	let pending: {
@@ -373,6 +397,7 @@
 	function hitTest(x: number, y: number): DockDrop | null {
 		const id = drag?.source.id ?? pending?.source.id;
 		for (const [zone, element] of [
+			['tools', toolsZone],
 			['items', itemsZone],
 			['overflow', overflowZone]
 		] as const) {
@@ -386,7 +411,9 @@
 				y > rect.bottom + slack
 			)
 				continue;
-			if (zone === 'overflow' && id && !acceptsOverflow(id)) return null;
+			if (id && !accepts(zone, id)) return null;
+			// The collapsed More menu still takes drops; they land at the end.
+			if (zone === 'overflow' && !moreOpen) return { zone, index: config.overflow.length };
 			return { zone, index: indexAt(element, x, y) };
 		}
 		return null;
@@ -416,6 +443,7 @@
 
 	const itemsView = $derived(withPlaceholder(config.items, 'items'));
 	const overflowView = $derived(withPlaceholder(config.overflow, 'overflow'));
+	const toolsView = $derived(withPlaceholder(config.tools, 'tools'));
 	const itemIds = $derived(config.items.map((item) => item.id));
 	const wrapsOnPhone = $derived(preview === 'mobile' && itemsZoneHeight > 72);
 
@@ -427,6 +455,7 @@
 		if (!open) return;
 		selected = null;
 		confirmingReset = false;
+		moreOpen = false;
 		preview = window.matchMedia('(min-width: 768px)').matches ? 'desktop' : 'mobile';
 		void tick().then(() => doneButton?.focus());
 	});
@@ -486,6 +515,170 @@
 	</span>
 {/snippet}
 
+{#snippet toolsZoneEl()}
+	{@const phone = preview === 'mobile'}
+	{@const tileSize = phone ? 'h-14 w-[4.5rem]' : 'h-12 w-14'}
+	<div
+		bind:this={toolsZone}
+		class="mx-auto w-full rounded-2xl border bg-base-100/95 p-2 shadow-lg backdrop-blur transition-all duration-200
+			{phone ? 'max-w-[21rem] pt-1.5' : ''}
+			{drag?.over?.zone === 'tools' ? 'border-primary/60 ring-4 ring-primary/15' : 'border-base-300'}"
+	>
+		{#if phone}
+			<span class="mx-auto mb-1.5 block h-1 w-8 rounded-full bg-base-300"></span>
+			<div class="mb-1.5 px-0.5 text-xs font-semibold">Tools</div>
+		{:else}
+			<div
+				class="mb-1 flex items-center justify-between px-0.5 text-[0.6rem] font-semibold uppercase tracking-wider text-base-content/45"
+			>
+				Tools
+				<SlidersHorizontal size={10} />
+			</div>
+		{/if}
+		<div class="flex flex-wrap gap-1" role="list" aria-label="Tools bar preview">
+			{#each toolsView as entry (entry.kind === 'chip' ? entry.value : 'placeholder')}
+				<div
+					class="flex"
+					role="listitem"
+					animate:flip={{ duration: 220 * motion, easing: cubicOut }}
+					in:scale={{ start: 0.6, duration: 260 * motion, easing: backOut }}
+				>
+					{#if entry.kind === 'placeholder'}
+						<span
+							class="{tileSize} rounded-xl border-2 border-dashed border-primary/50 bg-primary/10"
+						></span>
+					{:else}
+						{@const id = entry.value}
+						{@const command = registry?.get(id)}
+						{@const Icon = command?.icon}
+						{@const isSelected = selected?.zone === 'tools' && selected.key === id}
+						<button
+							type="button"
+							data-chip
+							class="flex {tileSize} touch-none select-none cursor-grab flex-col items-center justify-center gap-0.5 rounded-xl text-[0.6rem] font-semibold shadow-xs ring-1 ring-inset ring-current/20 transition active:cursor-grabbing hover:ring-current/40 {command
+								? TONE_BADGE[command.tone]
+								: 'bg-base-100'}
+							{isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100' : ''}"
+							aria-label={`${nameOf(id)}${isSelected ? ', selected' : ''}`}
+							aria-pressed={isSelected}
+							onpointerdown={(event) =>
+								handlePointerDown(
+									event,
+									{ from: 'tools', id, index: entry.index, display: 'icon' },
+									true
+								)}
+							onclick={() => toggleSelected('tools', id)}
+							onkeydown={(event) => handleChipKeydown(event, 'tools', id)}
+						>
+							{#if Icon}<Icon size={16} />{/if}
+							<span class="max-w-full truncate px-1">{command?.name ?? id}</span>
+						</button>
+					{/if}
+				</div>
+			{:else}
+				<span
+					class="flex min-h-12 w-full items-center justify-center rounded-xl border border-dashed border-base-300 px-2 text-center text-[0.68rem] text-base-content/45"
+				>
+					Drop study tools here
+				</span>
+			{/each}
+		</div>
+	</div>
+{/snippet}
+
+{#snippet optionBone(width: number)}
+	<span class="flex h-7 items-center gap-2 rounded-full border border-base-content/10 px-2.5">
+		<span class="size-3 shrink-0 rounded-full border border-base-content/15"></span>
+		<span class="h-1.5 {BONE}" style="width: {width}%"></span>
+	</span>
+{/snippet}
+
+{#snippet dockZoneEl()}
+	<div
+		bind:this={itemsZone}
+		bind:clientHeight={itemsZoneHeight}
+		style="--dock-gap: {preview === 'desktop' ? '0.5rem' : '0.25rem'}"
+		class="flex min-h-14 flex-wrap items-center justify-center border bg-base-100/95 py-3 backdrop-blur transition-all duration-300
+			{preview === 'desktop'
+			? 'min-w-[14rem] max-w-full gap-2 rounded-full px-4 shadow-lg'
+			: 'w-full max-w-[21rem] gap-1 rounded-2xl px-2 shadow-lg'}
+			{drag?.over?.zone === 'items' ? 'border-primary/60 ring-4 ring-primary/15' : 'border-base-300'}"
+		role="list"
+		aria-label="Dock preview"
+	>
+		{#each itemsView as entry (entry.kind === 'chip' ? entry.value.key : 'placeholder')}
+			<div
+				class="flex"
+				role="listitem"
+				animate:flip={{ duration: 220 * motion, easing: cubicOut }}
+				in:scale={{ start: 0.5, duration: 280 * motion, easing: backOut }}
+			>
+				{#if entry.kind === 'placeholder'}
+					<span class="h-8 w-10 rounded-full border-2 border-dashed border-primary/50 bg-primary/10"
+					></span>
+				{:else}
+					{@const item = entry.value}
+					{@const command = registry?.get(item.id)}
+					{@const display = displayFor(item.id, item.display, preview)}
+					{@const isSelected = selected?.zone === 'items' && selected.key === item.key}
+					{@const ring = isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100' : ''}
+					{@const contextual = command?.visible?.() === false}
+					{@const hiddenOnPhone = item.id === DIVIDER_ID && preview === 'mobile'}
+					<button
+						type="button"
+						data-chip
+						class="touch-none select-none cursor-grab active:cursor-grabbing {item.id === DIVIDER_ID
+							? `flex h-8 w-4 items-center justify-center rounded-full ${ring} ${hiddenOnPhone ? 'opacity-30' : ''}`
+							: isPassive(command)
+								? `${READOUT_CLASS} ${ring}`
+								: command
+									? `${dockButtonClass(command, {
+											display,
+											shape: segmentShape(itemIds, entry.index),
+											active: command.active?.() ?? false
+										})} ${ring}`
+									: `btn btn-sm btn-dash rounded-full ${ring}`}
+							{contextual ? 'outline-1 outline-dashed outline-offset-2 outline-base-content/30' : ''}"
+						style={item.id === DIVIDER_ID || isPassive(command)
+							? undefined
+							: segmentStyle(segmentShape(itemIds, entry.index))}
+						title={hiddenOnPhone
+							? 'Divider · hidden on phones'
+							: contextual
+								? `${nameOf(item.id)} · appears when available`
+								: nameOf(item.id)}
+						aria-label={`${nameOf(item.id)}${isSelected ? ', selected' : ''}`}
+						aria-pressed={isSelected}
+						onpointerdown={(event) =>
+							handlePointerDown(
+								event,
+								{ from: 'items', id: item.id, index: entry.index, display: item.display },
+								true
+							)}
+						onclick={() => toggleSelected('items', item.key)}
+						onkeydown={(event) => handleChipKeydown(event, 'items', item.key)}
+					>
+						{#if item.id === DIVIDER_ID}
+							<span class="h-6 w-px bg-base-content/25"></span>
+						{:else if command && isPassive(command)}
+							<ReadoutContent {command} />
+						{:else if command}
+							{@const Icon =
+								command.active?.() && command.activeIcon ? command.activeIcon : command.icon}
+							{#if display !== 'label'}<Icon size={18} />{/if}
+							{#if display !== 'icon'}{command.label()}{/if}
+						{:else}
+							{nameOf(item.id)}
+						{/if}
+					</button>
+				{/if}
+			</div>
+		{:else}
+			<span class="px-2 text-sm text-base-content/50">Drop tools here</span>
+		{/each}
+	</div>
+{/snippet}
+
 {#if open && preferences}
 	<div class="fixed inset-0 z-[90]">
 		<button
@@ -500,14 +693,16 @@
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="dock-customizer-title"
-			class="absolute inset-x-0 bottom-0 mx-auto flex max-h-[92vh] w-full max-w-3xl flex-col rounded-t-[2rem] border border-b-0 border-base-300 bg-base-100 shadow-2xl"
+			class="absolute inset-x-0 bottom-0 mx-auto flex max-h-[92vh] w-full max-w-4xl flex-col rounded-t-[2rem] border border-b-0 border-base-300 bg-base-100 shadow-2xl"
 			transition:fly={{ y: 120, opacity: 0, duration: 420 * motion, easing: backOut }}
 		>
 			<div class="mx-auto mt-3 h-1.5 w-10 shrink-0 rounded-full bg-base-300"></div>
 
 			<header class="flex flex-wrap items-start justify-between gap-3 px-5 pt-3 sm:px-7">
 				<div>
-					<h2 id="dock-customizer-title" class="text-lg font-semibold tracking-tight">Your dock</h2>
+					<h2 id="dock-customizer-title" class="text-lg font-semibold tracking-tight">
+						Dock and tools
+					</h2>
 					<p class="text-sm text-base-content/60">
 						One layout, synced to your account on every device.
 					</p>
@@ -534,158 +729,200 @@
 				</div>
 			</header>
 
-			<!-- Stage -->
+			<!-- Stage: each zone framed by the part of the module page it lives in. -->
 			<div
-				class="dock-stage mx-5 mt-4 flex shrink-0 flex-col items-center gap-4 rounded-3xl border border-base-300/70 bg-base-200/50 px-3 py-6 sm:mx-7 sm:py-7"
+				class="dock-stage mx-5 mt-4 flex shrink-0 flex-col items-center gap-3 rounded-3xl border border-base-300/70 bg-base-200/50 px-3 py-4 sm:mx-7"
 			>
-				<div
-					bind:this={itemsZone}
-					bind:clientHeight={itemsZoneHeight}
-					style="--dock-gap: {preview === 'desktop' ? '0.5rem' : '0.25rem'}"
-					class="flex min-h-14 flex-wrap items-center justify-center border bg-base-100/95 py-3 shadow-lg backdrop-blur transition-all duration-300
-						{preview === 'desktop'
-						? 'min-w-[14rem] max-w-full gap-2 rounded-full px-4'
-						: 'w-full max-w-[23.5rem] gap-1 rounded-2xl px-2'}
-						{drag?.over?.zone === 'items'
-						? 'scale-[1.02] border-primary/60 ring-4 ring-primary/15'
-						: 'border-base-300'}"
-					role="list"
-					aria-label="Dock preview"
-				>
-					{#each itemsView as entry (entry.kind === 'chip' ? entry.value.key : 'placeholder')}
+				<!-- Mock cards sit on top; the editable zones break out below them, side by side. -->
+				<div class="grid w-full gap-x-3 sm:grid-cols-[minmax(11rem,14rem)_1fr]">
+					<span
+						class="{CAPTION} mb-1.5 sm:col-start-1 sm:row-start-1 {preview === 'mobile'
+							? 'text-center'
+							: ''}">{preview === 'desktop' ? 'Sidebar' : 'Tools sheet'}</span
+					>
+					{#if preview === 'desktop'}
 						<div
-							class="flex"
-							role="listitem"
-							animate:flip={{ duration: 220 * motion, easing: cubicOut }}
-							in:scale={{ start: 0.5, duration: 280 * motion, easing: backOut }}
+							class="flex flex-col gap-2.5 {MOCK} p-3 pb-12 sm:col-start-1 sm:row-start-2"
+							aria-label="Sidebar"
 						>
-							{#if entry.kind === 'placeholder'}
-								<span
-									class="h-8 w-10 rounded-full border-2 border-dashed border-primary/50 bg-primary/10"
-								></span>
-							{:else}
-								{@const item = entry.value}
-								{@const command = registry?.get(item.id)}
-								{@const display = displayFor(item.id, item.display, preview)}
-								{@const isSelected = selected?.zone === 'items' && selected.key === item.key}
-								{@const ring = isSelected
-									? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100'
-									: ''}
-								{@const contextual = command?.visible?.() === false}
-								{@const hiddenOnPhone = item.id === DIVIDER_ID && preview === 'mobile'}
-								<button
-									type="button"
-									data-chip
-									class="touch-none select-none cursor-grab active:cursor-grabbing {item.id ===
-									DIVIDER_ID
-										? `flex h-8 w-4 items-center justify-center rounded-full ${ring} ${hiddenOnPhone ? 'opacity-30' : ''}`
-										: isPassive(command)
-											? `${READOUT_CLASS} ${ring}`
-											: command
-												? `${dockButtonClass(command, {
-														display,
-														shape: segmentShape(itemIds, entry.index),
-														active: command.active?.() ?? false
-													})} ${ring}`
-												: `btn btn-sm btn-dash rounded-full ${ring}`}
-										{contextual ? 'outline-1 outline-dashed outline-offset-2 outline-base-content/30' : ''}"
-									style={item.id === DIVIDER_ID || isPassive(command)
-										? undefined
-										: segmentStyle(segmentShape(itemIds, entry.index))}
-									title={hiddenOnPhone
-										? 'Divider · hidden on phones'
-										: contextual
-											? `${nameOf(item.id)} · appears when available`
-											: nameOf(item.id)}
-									aria-label={`${nameOf(item.id)}${isSelected ? ', selected' : ''}`}
-									aria-pressed={isSelected}
-									onpointerdown={(event) =>
-										handlePointerDown(
-											event,
-											{ from: 'items', id: item.id, index: entry.index, display: item.display },
-											true
-										)}
-									onclick={() => toggleSelected('items', item.key)}
-									onkeydown={(event) => handleChipKeydown(event, 'items', item.key)}
+							<span class="h-2 w-10 {BONE}"></span>
+							<span class="flex items-center gap-1.5">
+								<span class="size-4 shrink-0 {BONE}"></span>
+								<span class="h-2.5 w-3/4 {BONE}"></span>
+							</span>
+							<span class="flex flex-col gap-1.5 rounded-xl border border-base-content/10 p-2">
+								<span class="h-1.5 w-1/2 {BONE}"></span>
+								<span class="h-1 w-full {BONE}"
+									><span class="block h-1 w-1/6 rounded-full bg-base-content/15"></span></span
 								>
-									{#if item.id === DIVIDER_ID}
-										<span class="h-6 w-px bg-base-content/25"></span>
-									{:else if command && isPassive(command)}
-										<ReadoutContent {command} />
-									{:else if command}
-										{@const Icon =
-											command.active?.() && command.activeIcon ? command.activeIcon : command.icon}
-										{#if display !== 'label'}<Icon size={18} />{/if}
-										{#if display !== 'icon'}{command.label()}{/if}
-									{:else}
-										{nameOf(item.id)}
-									{/if}
-								</button>
-							{/if}
+							</span>
+							<span class="h-1.5 w-2/3 {BONE}"></span>
 						</div>
 					{:else}
-						<span class="px-2 text-sm text-base-content/50">Drop tools here</span>
-					{/each}
+						<div
+							class="mx-auto flex w-full max-w-[21rem] flex-col gap-2 {PHONE} px-4 pb-12 pt-4 sm:col-start-1 sm:row-start-2"
+							aria-label="Phone"
+						>
+							<span class="flex items-start gap-2">
+								<span class="flex flex-1 flex-col gap-1.5 pt-1">
+									<span class="h-2.5 w-full {BONE}"></span>
+									<span class="h-2.5 w-2/3 {BONE}"></span>
+								</span>
+								<span
+									class="grid size-8 shrink-0 place-items-center rounded-full text-base-content/40 ring-1 ring-base-content/15"
+									title="The Tools button opens the sheet below"
+								>
+									<ToolCase size={15} />
+								</span>
+							</span>
+							{@render optionBone(40)}
+						</div>
+					{/if}
+					<div class="relative z-10 -mt-9 px-2 sm:col-start-1 sm:row-start-3">
+						{@render toolsZoneEl()}
+					</div>
+
+					<span
+						class="{CAPTION} mb-1.5 mt-4 sm:col-start-2 sm:row-start-1 sm:mt-0 {preview === 'mobile'
+							? 'text-center'
+							: ''}">Question</span
+					>
+					{#if preview === 'desktop'}
+						<div
+							class="flex flex-col gap-2 {MOCK} p-3 pb-12 sm:col-start-2 sm:row-start-2"
+							aria-label="Question"
+						>
+							<span
+								class="mb-1 flex gap-1 overflow-hidden rounded-full border border-base-content/10 p-1"
+							>
+								{#each { length: 12 }, i (i)}
+									<span
+										class="size-3.5 shrink-0 rounded-full {i === 3
+											? 'bg-base-content/15'
+											: 'bg-base-content/[0.06]'}"
+									></span>
+								{/each}
+							</span>
+							<span class="h-2.5 w-11/12 {BONE}"></span>
+							<span class="mb-1 h-2.5 w-2/3 {BONE}"></span>
+							{#each { length: 2 }, i (i)}
+								{@render optionBone([45, 30][i])}
+							{/each}
+						</div>
+					{:else}
+						<div
+							class="mx-auto flex w-full max-w-[21rem] flex-col gap-2 {PHONE} px-4 pb-12 pt-4 sm:col-start-2 sm:row-start-2"
+							aria-label="Phone"
+						>
+							<span class="h-2.5 w-full {BONE}"></span>
+							<span class="mb-1 h-2.5 w-2/3 {BONE}"></span>
+							{@render optionBone(50)}
+						</div>
+					{/if}
+					<div
+						class="relative z-10 -mt-9 flex items-start justify-center px-2 sm:col-start-2 sm:row-start-3"
+					>
+						{@render dockZoneEl()}
+					</div>
 				</div>
 
-				<div
-					bind:this={overflowZone}
-					class="w-full max-w-md rounded-2xl border bg-base-100/85 p-2.5 transition-all duration-200
-						{drag?.over?.zone === 'overflow'
-						? 'scale-[1.02] border-primary/60 ring-4 ring-primary/15'
-						: 'border-base-300'}"
-				>
-					<div class="mb-2 flex items-center gap-1.5 px-1 text-xs font-medium text-base-content/60">
-						<ArrowUpWideNarrow size={13} />
-						More menu
-						<span class="font-normal text-base-content/40">· tucked behind one button</span>
-					</div>
-					<div class="flex min-h-8 flex-wrap gap-1.5" role="list" aria-label="More menu preview">
-						{#each overflowView as entry (entry.kind === 'chip' ? entry.value : 'placeholder')}
-							<div
-								class="flex"
-								role="listitem"
-								animate:flip={{ duration: 220 * motion, easing: cubicOut }}
-								in:scale={{ start: 0.6, duration: 260 * motion, easing: backOut }}
+				<div class="grid w-full gap-3 sm:grid-cols-[minmax(11rem,14rem)_1fr]">
+					<span class="hidden sm:block"></span>
+					<div class="flex justify-center">
+						<div
+							bind:this={overflowZone}
+							class="transition-all duration-200
+							{moreOpen
+								? 'w-full max-w-md rounded-2xl border bg-base-100/85 p-2.5'
+								: 'self-center rounded-full border'}
+							{drag?.over?.zone === 'overflow'
+								? 'scale-[1.02] border-primary/60 ring-4 ring-primary/15'
+								: moreOpen
+									? 'border-base-300'
+									: 'border-transparent'}"
+						>
+							<button
+								type="button"
+								class="flex items-center gap-1.5 rounded-full text-xs font-medium text-base-content/55 transition-colors hover:text-base-content
+								{moreOpen ? 'mb-2 px-1' : 'px-3 py-1.5 hover:bg-base-content/5'}"
+								aria-expanded={moreOpen}
+								aria-controls="dock-more-menu"
+								onclick={() => {
+									moreOpen = !moreOpen;
+									if (!moreOpen && selected?.zone === 'overflow') selected = null;
+								}}
 							>
-								{#if entry.kind === 'placeholder'}
-									<span
-										class="h-8 w-20 rounded-field border-2 border-dashed border-primary/50 bg-primary/10"
-									></span>
-								{:else}
-									{@const id = entry.value}
-									{@const command = registry?.get(id)}
-									{@const Icon = command?.icon}
-									{@const isSelected = selected?.zone === 'overflow' && selected.key === id}
-									<button
-										type="button"
-										data-chip
-										class="inline-flex h-8 touch-none select-none cursor-grab items-center gap-1.5 rounded-field border border-base-300 bg-base-100 px-2.5 text-xs font-medium shadow-xs transition active:cursor-grabbing hover:border-base-content/25
-											{command?.tone === 'error' ? 'text-error' : ''}
-											{isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100' : ''}"
-										aria-label={`${nameOf(id)}${isSelected ? ', selected' : ''}`}
-										aria-pressed={isSelected}
-										onpointerdown={(event) =>
-											handlePointerDown(
-												event,
-												{ from: 'overflow', id, index: entry.index, display: 'icon' },
-												true
-											)}
-										onclick={() => toggleSelected('overflow', id)}
-										onkeydown={(event) => handleChipKeydown(event, 'overflow', id)}
+								<ArrowUpWideNarrow size={13} />
+								More menu
+								{#if config.overflow.length}
+									<span class="badge badge-ghost badge-xs tabular-nums"
+										>{config.overflow.length}</span
 									>
-										{#if Icon}<Icon size={14} />{/if}
-										{nameOf(id)}
-									</button>
 								{/if}
-							</div>
-						{:else}
-							<span
-								class="flex h-8 w-full items-center justify-center rounded-field border border-dashed border-base-300 text-xs text-base-content/45"
-							>
-								Drop tools here to tuck them away
-							</span>
-						{/each}
+								{#if moreOpen}
+									<span class="font-normal text-base-content/40">· tucked behind one button</span>
+								{/if}
+								<ChevronDown
+									size={13}
+									class="transition-transform duration-200 {moreOpen ? 'rotate-180' : ''}"
+								/>
+							</button>
+							{#if moreOpen}
+								<div
+									id="dock-more-menu"
+									class="flex min-h-8 flex-wrap gap-1.5"
+									role="list"
+									aria-label="More menu preview"
+									transition:slide={{ duration: 180 * motion, easing: cubicOut }}
+								>
+									{#each overflowView as entry (entry.kind === 'chip' ? entry.value : 'placeholder')}
+										<div
+											class="flex"
+											role="listitem"
+											animate:flip={{ duration: 220 * motion, easing: cubicOut }}
+											in:scale={{ start: 0.6, duration: 260 * motion, easing: backOut }}
+										>
+											{#if entry.kind === 'placeholder'}
+												<span
+													class="h-8 w-20 rounded-field border-2 border-dashed border-primary/50 bg-primary/10"
+												></span>
+											{:else}
+												{@const id = entry.value}
+												{@const command = registry?.get(id)}
+												{@const Icon = command?.icon}
+												{@const isSelected = selected?.zone === 'overflow' && selected.key === id}
+												<button
+													type="button"
+													data-chip
+													class="inline-flex h-8 touch-none select-none cursor-grab items-center gap-1.5 rounded-field border border-base-300 bg-base-100 px-2.5 text-xs font-medium shadow-xs transition active:cursor-grabbing hover:border-base-content/25
+												{command?.tone === 'error' ? 'text-error' : ''}
+												{isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100' : ''}"
+													aria-label={`${nameOf(id)}${isSelected ? ', selected' : ''}`}
+													aria-pressed={isSelected}
+													onpointerdown={(event) =>
+														handlePointerDown(
+															event,
+															{ from: 'overflow', id, index: entry.index, display: 'icon' },
+															true
+														)}
+													onclick={() => toggleSelected('overflow', id)}
+													onkeydown={(event) => handleChipKeydown(event, 'overflow', id)}
+												>
+													{#if Icon}<Icon size={14} />{/if}
+													{nameOf(id)}
+												</button>
+											{/if}
+										</div>
+									{:else}
+										<span
+											class="flex h-8 w-full items-center justify-center rounded-field border border-dashed border-base-300 text-xs text-base-content/45"
+										>
+											Drop tools here to tuck them away
+										</span>
+									{/each}
+								</div>
+							{/if}
+						</div>
 					</div>
 				</div>
 
@@ -731,18 +968,25 @@
 									aria-label="Move later"
 									title="Move later (→)"
 									disabled={selection.index ===
-										(selection.zone === 'items' ? config.items.length : config.overflow.length) - 1}
+										(selection.zone === 'items'
+											? config.items.length
+											: config[selection.zone].length) -
+											1}
 									onclick={() => moveSelected(1)}><ChevronRight size={14} /></button
 								>
 							</div>
-							{#if selection.zone === 'overflow' || canOverflow}
-								<button
-									type="button"
-									class="btn btn-ghost btn-xs rounded-full"
-									onclick={switchZone}
-								>
-									{selection.zone === 'items' ? 'Move to menu' : 'Move to dock'}
-								</button>
+							{#if selection.id !== DIVIDER_ID}
+								{#each ['tools', 'items', 'overflow'] as const as zone (zone)}
+									{#if zone !== selection.zone && (zone !== 'overflow' || canOverflow)}
+										<button
+											type="button"
+											class="btn btn-ghost btn-xs rounded-full"
+											onclick={() => moveToZone(zone)}
+										>
+											Move to {ZONE_NAMES[zone]}
+										</button>
+									{/if}
+								{/each}
 							{/if}
 							<button
 								type="button"
@@ -832,7 +1076,7 @@
 						<ul class="divide-y divide-base-300/70 rounded-box border border-base-300">
 							{#each quickTools as command, i (command.id)}
 								{@const on = dockHas(config, command.id)}
-								{@const inMenu = config.overflow.includes(command.id)}
+								{@const zone = zoneOf(config, command.id)}
 								{@const Icon = command.icon}
 								<li
 									in:fly|global={{
@@ -855,7 +1099,9 @@
 										<span class="min-w-0 flex-1">
 											<span class="flex items-center gap-1.5 text-sm font-medium">
 												{command.name}
-												{#if inMenu}<span class="badge badge-ghost badge-xs">in menu</span>{/if}
+												{#if zone === 'overflow' || zone === 'tools'}
+													<span class="badge badge-ghost badge-xs">in {ZONE_NAMES[zone]}</span>
+												{/if}
 											</span>
 											<span class="block truncate text-xs text-base-content/55"
 												>{command.description}</span
@@ -866,7 +1112,7 @@
 											class="toggle toggle-primary toggle-sm"
 											checked={on}
 											onchange={() => toggleQuickTool(command.id)}
-											aria-label={`Show ${command.name} in dock`}
+											aria-label={`Show ${command.name} in ${ZONE_NAMES[zone ?? homeZoneFor(command.id)]}`}
 										/>
 									</label>
 								</li>
@@ -923,7 +1169,7 @@
 											: 'border-base-300 bg-base-100 hover:border-base-content/20'}
 											{lifted ? 'scale-95 opacity-40' : ''}"
 										aria-pressed={added}
-										aria-label={`${entry.name}: ${entry.description}. ${added ? 'In dock, activate to remove' : 'Activate to add'}`}
+										aria-label={`${entry.name}: ${entry.description}. ${added ? 'Added, activate to remove' : 'Activate to add'}`}
 										onpointerdown={(event) =>
 											handlePointerDown(event, { from: 'palette', id: entry.id }, false)}
 										onclick={() => togglePaletteEntry(entry.id)}

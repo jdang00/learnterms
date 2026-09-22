@@ -1,4 +1,6 @@
 <script lang="ts">
+	import QuestionNotesTool from './question-notes/QuestionNotesTool.svelte';
+	import CalculatorTool from './calculator/CalculatorTool.svelte';
 	import HighlightedStem from './HighlightedStem.svelte';
 	import QuizSideBar from '$lib/components/QuizSideBar.svelte';
 	import QuizNavigation from '$lib/components/QuizNavigation.svelte';
@@ -8,6 +10,7 @@
 	import QuizDock from '$lib/components/quiz-dock/QuizDock.svelte';
 	import MobileQuizDock from '$lib/components/quiz-dock/MobileQuizDock.svelte';
 	import QuizShortcuts from '$lib/components/quiz-dock/QuizShortcuts.svelte';
+	import QuizToolsBar from '$lib/components/quiz-dock/QuizToolsBar.svelte';
 	import { createQuizCommands, setQuizCommands } from '$lib/components/quiz-dock/commands.svelte';
 	import DockCustomizer from '$lib/components/quiz-dock/DockCustomizer.svelte';
 	import {
@@ -179,6 +182,10 @@
 						</div>
 					{/if}
 
+					<div class="lg:hidden ms-auto self-start">
+						<QuizToolsBar variant="sheet" />
+					</div>
+
 					<div class="lg:flex hidden items-center gap-2">
 						{#if canEdit && currentlySelected}
 							<a
@@ -250,6 +257,11 @@
 		</div>
 		<QuizShortcuts disabled={qs.isResetModalOpen || dockPreferences.customizing} />
 		<DockCustomizer />
+		{#if clerk.user}{#key clerk.user.id}<QuestionNotesTool
+					questionId={currentlySelected._id}
+					userKey={clerk.user.id}
+				/>{/key}{/if}
+		{#key clerk.user?.id}<CalculatorTool storageKey={clerk.user?.id ?? 'guest'} />{/key}
 	</div>
 {:else}
 	<p>No questions available.</p>

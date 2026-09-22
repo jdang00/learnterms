@@ -909,13 +909,15 @@ export const createCustomQuizAttempt = mutation({
 					options: question.options || [],
 					correctAnswers: question.correctAnswers || [],
 					rationale: getRationale(question),
-					source: question.metadata.generation?.sourceDocumentId
-						? {
-								sourceDocumentId: question.metadata.generation.sourceDocumentId,
-								sourcePageNumbers: question.metadata.generation.sourcePageNumbers,
-								sourceCitations: question.metadata.generation.sourceCitations
-							}
-						: undefined,
+					source:
+						question.metadata.source ??
+						(question.metadata.generation?.sourceDocumentId
+							? {
+									sourceDocumentId: question.metadata.generation.sourceDocumentId,
+									sourcePageNumbers: question.metadata.generation.sourcePageNumbers,
+									sourceCitations: question.metadata.generation.sourceCitations
+								}
+							: undefined),
 					questionUpdatedAt: question.updatedAt
 				},
 				response: {
