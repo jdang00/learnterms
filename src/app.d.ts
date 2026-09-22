@@ -4,6 +4,11 @@
 
 declare global {
 	namespace App {
+		interface PageState {
+			classId?: string;
+			progressSearch?: string;
+			quizView?: { moduleId: string; screen: 'questions' | 'progress' };
+		}
 		// Define the Locals interface with session and user details
 		interface Locals {
 			session?: {

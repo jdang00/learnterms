@@ -9,6 +9,8 @@
 	import { onMount, tick, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { resolve } from '$app/paths';
+	import { pushState, replaceState } from '$app/navigation';
+	import { page } from '$app/state';
 	import { BookOpen } from 'lucide-svelte';
 	import {
 		QUIZ_PREFERENCE_CHANGED_EVENT,
@@ -24,21 +26,31 @@
 	const client = useConvexClient();
 
 	let qs = $state(new QuizState());
+	function showProgress() {
+		qs.showCompletion = true;
+		if (page.state.quizView?.moduleId === moduleId && page.state.quizView.screen === 'progress')
+			return;
+		// Keep a quiz entry underneath the overview, including when completion opens it automatically.
+		replaceState('', { ...page.state, quizView: { moduleId, screen: 'questions' } });
+		pushState('', { ...page.state, quizView: { moduleId, screen: 'progress' } });
+	}
+	qs.onOpenCompletion = showProgress;
+	function returnToQuiz() {
+		qs.closeCompletion();
+		if (page.state.quizView?.moduleId === moduleId && page.state.quizView.screen === 'progress')
+			window.history.back();
+	}
+	$effect(() => {
+		const view = page.state.quizView;
+		const isProgress = view?.moduleId === moduleId && view.screen === 'progress';
+		untrack(() => {
+			if (isProgress) qs.showCompletion = true;
+			else qs.closeCompletion();
+		});
+	});
 	let loadGeneration = 0;
 	const attempts = new Map<string, Id<'studyAttempts'>>();
 	const attemptRequests = new Map<string, Promise<{ attemptId: Id<'studyAttempts'> }>>();
-	let practiceMode = false;
-	const practicedQuestions = new Set<string>();
-	async function practiceModule() {
-		try {
-			await qs.flushEvidence();
-		} catch {
-			return;
-		}
-		practiceMode = true;
-		practicedQuestions.clear();
-		await reviewQuestion();
-	}
 
 	let saving = $state(false);
 	let saveError = $state('');
@@ -49,14 +61,7 @@
 		const state = qs;
 		return () => state.cancelCompletion();
 	});
-	async function reviewQuestion(questionId?: string, fresh = false) {
-		if (fresh) {
-			try {
-				await qs.flushEvidence();
-			} catch {
-				return;
-			}
-		}
+	async function reviewQuestion(questionId?: string) {
 		qs.cancelCompletion();
 		await qs.flushProgress();
 		qs.completionCelebration = false;
@@ -72,8 +77,8 @@
 		qs.selectedAnswers = [];
 		qs.eliminatedAnswers = [];
 		const current = qs.getCurrentFilteredQuestion();
-		if (current) await loadProgress(current._id, fresh);
-		qs.showCompletion = false;
+		if (current) await loadProgress(current._id);
+		returnToQuiz();
 	}
 
 	$effect(() => {
@@ -169,17 +174,15 @@
 		return saveQueue;
 	}
 
-	async function loadProgress(questionId: Id<'question'>, fresh = false) {
+	async function loadProgress(questionId: Id<'question'>) {
 		if (!userId) return;
 		const gen = ++loadGeneration;
 		qs.showSolution = false;
 		qs.solutionAutoRevealed = false;
 		qs.checkResult = '';
-		const shouldStartFresh = fresh || (practiceMode && !practicedQuestions.has(questionId));
 		const draftBeforeLoad = qs.localAnswers[questionId];
 		const request = client.mutation(api.studyProgress.open, {
-			questionId,
-			fresh: shouldStartFresh
+			questionId
 		});
 		attemptRequests.set(questionId, request);
 		try {
@@ -190,17 +193,15 @@
 			if (gen !== loadGeneration) return;
 			const sameAttempt = attempts.get(questionId) === attempt.attemptId;
 			attempts.set(questionId, attempt.attemptId);
-			practicedQuestions.add(questionId);
 			qs.hydrateEvidence([attempt.evidence]);
 			qs.selectedAnswers =
 				qs.localAnswers[questionId] !== draftBeforeLoad
 					? (qs.localAnswers[questionId] ?? [])
-					: sameAttempt && !shouldStartFresh
+					: sameAttempt
 						? (qs.localAnswers[questionId] ?? attempt.selectedOptions)
 						: attempt.selectedOptions;
 			qs.localAnswers[questionId] = [...qs.selectedAnswers];
-			qs.eliminatedAnswers =
-				sameAttempt && !shouldStartFresh ? (savedProgress?.eliminatedOptions ?? []) : [];
+			qs.eliminatedAnswers = sameAttempt ? (savedProgress?.eliminatedOptions ?? []) : [];
 			qs.setCurrentQuestionFlagged(savedProgress?.isFlagged ?? false);
 			qs.sanitizeStateForCurrentQuestion();
 		} catch {
@@ -285,14 +286,16 @@
 			if (!completionHydrated) {
 				completionHydrated = true;
 				const current = qs.getCompletionSummary();
-				qs.completionMilestone = current.isMastered
-					? 'mastered'
-					: current.isAllCorrect
-						? 'correct'
-						: current.isComplete
-							? 'complete'
-							: '';
-				qs.showCompletion = current.isComplete;
+				qs.completionMilestone = !current.isComplete
+					? ''
+					: current.isMastered
+						? 'mastered'
+						: current.isAllCorrect
+							? 'correct'
+							: current.isComplete
+								? 'complete'
+								: '';
+				if (current.isComplete && page.state.quizView?.moduleId !== moduleId) showProgress();
 			}
 		});
 	});
@@ -392,10 +395,9 @@
 		try {
 			++loadGeneration;
 			await qs.reset(userId, data.moduleId as Id<'module'>, client, removeHighlights);
+			returnToQuiz();
 			attempts.clear();
 			attemptRequests.clear();
-			practiceMode = false;
-			practicedQuestions.clear();
 			const first = qs.getCurrentFilteredQuestion();
 			if (first) await loadProgress(first._id);
 			hasHydratedFlags = false;
@@ -491,21 +493,10 @@
 						void saveProgress();
 						void qs.retryBackground();
 					}}
-					onreview={(id) => {
-						practiceMode = false;
-						void reviewQuestion(id);
-					}}
-					onresume={() => {
-						practiceMode = false;
-						void reviewQuestion();
-					}}
-					onpractice={() => void practiceModule()}
-					onnewattempt={(id) => {
-						practiceMode = false;
-						void reviewQuestion(id, true);
-					}}
+					onreview={(id) => void reviewQuestion(id)}
+					onresume={() => void reviewQuestion()}
 					onreset={() => (qs.isResetModalOpen = true)}
-					onback={() => void reviewQuestion(qs.getCurrentFilteredQuestion()?._id)}
+					onback={returnToQuiz}
 				/>
 			{:else}
 				<MainQuiz
@@ -537,8 +528,8 @@
 			</form>
 			<h3 class="text-lg font-bold">Reset module?</h3>
 			<p class="py-4">
-				Start again with blank answers. This clears your checked results, mastery, flags, and saved
-				answers for this module. Past study activity is retained.
+				Start another run with blank answers. This clears your current results, flags, and saved
+				answers. Your mastery and past study activity are kept.
 			</p>
 			<label class="mb-5 flex items-center justify-between gap-4">
 				<span

@@ -23,7 +23,12 @@ async function fixture() {
 			updatedAt: 1
 		})
 	);
-	const open = (fresh = false) => f.owner.mutation(api.studyProgress.open, { questionId, fresh });
+	const open = () => f.owner.mutation(api.studyProgress.open, { questionId });
+	const reset = () =>
+		f.owner.mutation(api.userProgress.clearUserProgressForModule, {
+			userId: f.ids.owner,
+			moduleId: f.ids.moduleId
+		});
 	const check = (
 		attemptId: Awaited<ReturnType<typeof open>>['attemptId'],
 		answer = 'a',
@@ -35,11 +40,11 @@ async function fixture() {
 			submissionId
 		});
 	const summary = () => f.owner.query(api.studyProgress.getForModule, { moduleId: f.ids.moduleId });
-	return { ...f, questionId, open, check, summary };
+	return { ...f, questionId, open, check, summary, reset };
 }
 afterEach(() => vi.useRealTimers());
 
-test('two unaided first checks at least 30 minutes apart earn mastery; duplicates and same-day practice do not', async () => {
+test('completed runs separated by 30 minutes earn mastery; retries, reopening and early runs do not', async () => {
 	vi.useFakeTimers({ toFake: ['Date'] });
 	vi.setSystemTime(1000000);
 	const f = await fixture();
@@ -48,17 +53,20 @@ test('two unaided first checks at least 30 minutes apart earn mastery; duplicate
 	await f.check(first.attemptId);
 	expect(await f.t.run((ctx) => ctx.db.query('studyChecks').collect())).toHaveLength(1);
 	vi.setSystemTime(1000000 + MASTERY_INTERVAL_MS - 1);
-	const early = await f.open(true);
+	await f.reset();
+	const early = await f.open();
 	expect((await f.check(early.attemptId)).evidence.masteredAt).toBeUndefined();
 	vi.setSystemTime(1000000 + MASTERY_INTERVAL_MS);
-	const second = await f.open(true);
+	await f.reset();
+	const second = await f.open();
 	const result = await f.check(second.attemptId, 'a', 'second');
 	expect(result.evidence.cleanRecallCount).toBe(2);
 	expect(result.evidence.masteredAt).toBe(Date.now());
 	expect((await f.check(second.attemptId, 'a', 'second')).evidence).toEqual(result.evidence);
 	vi.setSystemTime(Date.now() + 100 * MASTERY_INTERVAL_MS);
 	expect((await f.summary())[0].masteredAt).toBe(result.evidence.masteredAt);
-	const wrong = await f.open(true);
+	await f.reset();
+	const wrong = await f.open();
 	const lost = await f.check(wrong.attemptId, 'b');
 	expect(lost.evidence).toMatchObject({
 		latestCorrect: false,
@@ -76,14 +84,16 @@ test('reveals and corrected retries count as checked but never as unaided recall
 		latestCorrect: true,
 		cleanRecallCount: 0
 	});
-	const retry = await f.open(true);
+	await f.reset();
+	const retry = await f.open();
 	await f.check(retry.attemptId, 'b');
 	expect((await f.check(retry.attemptId)).evidence).toMatchObject({
 		latestCorrect: true,
 		cleanRecallCount: 0
 	});
 	expect((await f.open()).selectedOptions).toEqual(['a']);
-	expect((await f.open(true)).selectedOptions).toEqual([]);
+	await f.reset();
+	expect((await f.open()).selectedOptions).toEqual([]);
 });
 
 test('saved selections and flags cannot grant mastery; reset invalidates tokens and retains attempts', async () => {
@@ -114,7 +124,7 @@ test('saved selections and flags cannot grant mastery; reset invalidates tokens 
 		moduleId: f.ids.moduleId
 	});
 	expect((await f.summary())[0].checkedAt).toBeUndefined();
-	await expect(f.check(attempt.attemptId)).rejects.toThrow('Start a fresh attempt');
+	await expect(f.check(attempt.attemptId)).rejects.toThrow('Reload to continue');
 	expect(await f.t.run((ctx) => ctx.db.query('studyChecks').collect())).toHaveLength(1);
 	expect((await f.open()).selectedOptions).toEqual([]);
 });
@@ -135,44 +145,94 @@ test('question content changes invalidate current evidence and other users canno
 	).rejects.toThrow('Unauthorized');
 	await f.t.run((ctx) => ctx.db.patch(f.questionId, { stem: 'Changed question' }));
 	expect((await f.summary())[0]).toMatchObject({ cleanRecallCount: 0, needsFreshEvidence: true });
-	await expect(f.check(attempt.attemptId)).rejects.toThrow('Start a fresh attempt');
+	await expect(f.check(attempt.attemptId)).rejects.toThrow('Reload to continue');
 	expect((await f.open()).selectedOptions).toEqual([]);
 });
 
-test('fresh blank practice preserves checked history and dashboard coverage until reset', async () => {
+test('reset retains earned mastery and dashboard totals while clearing current run coverage', async () => {
+	vi.useFakeTimers({ toFake: ['Date'] });
+	vi.setSystemTime(1000000);
 	const f = await fixture();
-	const attempt = await f.open();
-	await f.check(attempt.attemptId);
-	const classId = (await f.t.run((ctx) => ctx.db.get(f.ids.moduleId)))!.classId;
-	await f.open(true);
-	await f.owner.mutation(api.userProgress.saveUserProgress, {
+	await f.check((await f.open()).attemptId);
+	await f.reset();
+	expect((await f.summary())[0]).toMatchObject({ cleanRecallCount: 1 });
+	vi.setSystemTime(1000000 + MASTERY_INTERVAL_MS);
+	await f.check((await f.open()).attemptId);
+	const masteredAt = (await f.summary())[0].masteredAt;
+	expect(masteredAt).toBeDefined();
+	await f.reset();
+	const evidence = (await f.summary())[0];
+	expect(evidence).toMatchObject({ cleanRecallCount: 2, masteredAt });
+	expect(evidence.checkedAt).toBeUndefined();
+	const progress = await f.owner.query(api.userProgress.checkExistingRecord, {
 		userId: f.ids.owner,
-		classId,
-		questionId: f.questionId,
-		selectedOptions: []
+		questionId: f.questionId
 	});
-	const stats = () =>
-		f.t.run((ctx) =>
-			ctx.db
-				.query('userModuleStats')
-				.withIndex('by_user_module', (q) =>
-					q.eq('userId', f.ids.owner).eq('moduleId', f.ids.moduleId)
-				)
-				.unique()
-		);
-	expect((await stats())?.questionsInteracted).toBe(1);
+	expect(progress).toMatchObject({
+		isMastered: true,
+		attempts: 0,
+		selectedOptions: [],
+		isFlagged: false
+	});
+	const stats = await f.t.run((ctx) =>
+		ctx.db
+			.query('userModuleStats')
+			.withIndex('by_user_module', (q) =>
+				q.eq('userId', f.ids.owner).eq('moduleId', f.ids.moduleId)
+			)
+			.unique()
+	);
+	expect(stats).toMatchObject({ questionsInteracted: 0, questionsMastered: 1 });
+	expect((await f.open()).selectedOptions).toEqual([]);
+	expect((await f.summary())[0].masteredAt).toBe(masteredAt);
+});
+
+test('only completed module runs earn recalls, once per run, and all question mastery is synced', async () => {
+	vi.useFakeTimers({ toFake: ['Date'] });
+	vi.setSystemTime(1000000);
+	const f = await fixture();
+	const secondId = await f.t.run(async (ctx) => {
+		const { _id, _creationTime, ...question } = (await ctx.db.get(f.questionId))!;
+		return await ctx.db.insert('question', { ...question, stem: 'Second', order: 1 });
+	});
+	const finish = async () => {
+		const second = await f.owner.mutation(api.studyProgress.open, { questionId: secondId });
+		await f.check(second.attemptId);
+	};
+	const abandoned = await f.open();
+	await f.check(abandoned.attemptId);
+	expect((await f.summary()).every((q) => q.cleanRecallCount === 0)).toBe(true);
+	await f.reset();
+	await finish();
+	expect((await f.summary()).every((q) => q.cleanRecallCount === 0)).toBe(true);
+	const first = await f.open();
+	await f.check(first.attemptId);
+	expect((await f.summary()).every((q) => q.cleanRecallCount === 1)).toBe(true);
+	vi.setSystemTime(1000000 + MASTERY_INTERVAL_MS);
+	expect((await f.open()).attemptId).toBe(first.attemptId);
+	await f.check(first.attemptId);
+	expect((await f.summary()).every((q) => q.cleanRecallCount === 1)).toBe(true);
+	await f.reset();
+	await f.check((await f.open()).attemptId);
+	expect((await f.summary()).every((q) => q.masteredAt === undefined)).toBe(true);
+	await finish();
 	expect(
-		(
-			await f.owner.query(api.userProgress.getUserProgressForModule, {
-				userId: f.ids.owner,
-				classId,
-				questionIds: [f.questionId]
-			})
-		).interactedQuestionIds
-	).toEqual([f.questionId]);
-	await f.owner.mutation(api.userProgress.clearUserProgressForModule, {
-		userId: f.ids.owner,
-		moduleId: f.ids.moduleId
-	});
-	expect((await stats())?.questionsInteracted ?? 0).toBe(0);
+		(await f.summary()).every((q) => q.cleanRecallCount === 2 && q.masteredAt !== undefined)
+	).toBe(true);
+	for (const questionId of [f.questionId, secondId]) {
+		expect(
+			(
+				await f.owner.query(api.userProgress.checkExistingRecord, {
+					userId: f.ids.owner,
+					questionId
+				})
+			)?.isMastered
+		).toBe(true);
+	}
+	await expect(
+		f.owner.mutation(api.studyProgress.open, {
+			questionId: f.questionId,
+			fresh: true
+		} as never)
+	).rejects.toThrow();
 });

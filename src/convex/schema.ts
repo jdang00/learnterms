@@ -607,6 +607,8 @@ export default defineSchema({
 		activeAttemptId: v.optional(v.id('studyAttempts')),
 		activeAttemptChecks: v.optional(v.number()),
 		activeAttemptRevealed: v.optional(v.boolean()),
+		activeAttemptFirstCorrect: v.optional(v.boolean()),
+		activeAttemptRecallRecorded: v.optional(v.boolean()),
 		needsFreshEvidence: v.optional(v.boolean()),
 		checkedAt: v.optional(v.number()),
 		latestCorrect: v.optional(v.boolean()),

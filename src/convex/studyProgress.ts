@@ -73,7 +73,7 @@ export const getForModule = query({
 });
 
 export const open = mutation({
-	args: { questionId: v.id('question'), fresh: v.optional(v.boolean()) },
+	args: { questionId: v.id('question') },
 	returns: v.object({
 		attemptId: v.id('studyAttempts'),
 		selectedOptions: v.array(v.string()),
@@ -81,7 +81,7 @@ export const open = mutation({
 		revealed: v.boolean(),
 		evidence: studyEvidenceValidator
 	}),
-	handler: async (ctx, { questionId, fresh }) => {
+	handler: async (ctx, { questionId }) => {
 		const { user, question } = await access(ctx, questionId);
 		const version = await questionVersion(question);
 		const saved = await ctx.db
@@ -91,7 +91,7 @@ export const open = mutation({
 			)
 			.unique();
 		const existing = saved?.activeAttemptId ? await ctx.db.get(saved.activeAttemptId) : null;
-		if (!fresh && existing && existing.version === version && saved?.version === version) {
+		if (existing && existing.version === version && saved?.version === version) {
 			return {
 				attemptId: existing._id,
 				selectedOptions: existing.selectedOptions,
@@ -113,12 +113,20 @@ export const open = mutation({
 			await ctx.db.patch(
 				saved._id,
 				saved.version === version
-					? { activeAttemptId: attemptId, activeAttemptChecks: 0, activeAttemptRevealed: false }
+					? {
+							activeAttemptId: attemptId,
+							activeAttemptChecks: 0,
+							activeAttemptRevealed: false,
+							activeAttemptFirstCorrect: undefined,
+							activeAttemptRecallRecorded: false
+						}
 					: {
 							version,
 							activeAttemptId: attemptId,
 							activeAttemptChecks: 0,
 							activeAttemptRevealed: false,
+							activeAttemptFirstCorrect: undefined,
+							activeAttemptRecallRecorded: false,
 							needsFreshEvidence: true,
 							checkedAt: undefined,
 							latestCorrect: undefined,
@@ -170,8 +178,60 @@ async function activeAttempt(ctx: MutationCtx, attemptId: Id<'studyAttempts'>) {
 		saved.activeAttemptId !== attemptId ||
 		attempt.version !== (await questionVersion(question))
 	)
-		throw new Error('This attempt has changed. Start a fresh attempt.');
+		throw new Error('This module has been reset or the question changed. Reload to continue.');
 	return { user, question, module, attempt, saved };
+}
+
+// Credit each question once per completed module run. Reset only clears the run's
+// answers and attempt tokens, so earned evidence carries into the next run.
+async function recordCompletedRun(ctx: MutationCtx, userId: Id<'users'>, module: Doc<'module'>) {
+	const questions = await ctx.db
+		.query('question')
+		.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
+		.take(MAX_MODULE_QUESTIONS + 1);
+	const states = await ctx.db
+		.query('studyQuestionState')
+		.withIndex('by_userId_moduleId', (q) => q.eq('userId', userId).eq('moduleId', module._id))
+		.take(MAX_MODULE_QUESTIONS + 1);
+	if (questions.length > MAX_MODULE_QUESTIONS || states.length > MAX_MODULE_QUESTIONS)
+		throw new Error('Module exceeds supported question count');
+	const published = questions.filter((q) => !q.deletedAt && q.status === 'published');
+	const byQuestion = new Map(states.map((s) => [s.questionId, s]));
+	const current: Doc<'studyQuestionState'>[] = [];
+	for (const question of published) {
+		const state = byQuestion.get(question._id);
+		if (
+			!state ||
+			state.checkedAt === undefined ||
+			state.version !== (await questionVersion(question))
+		)
+			return;
+		current.push(state);
+	}
+	const now = Date.now();
+	for (const state of current) {
+		if (state.activeAttemptRecallRecorded) continue;
+		const next = recordRecall(
+			evidence(state.questionId, state, state.version),
+			state.latestCorrect === true,
+			state.activeAttemptFirstCorrect === true && !state.activeAttemptRevealed,
+			now
+		);
+		await ctx.db.patch(state._id, {
+			activeAttemptRecallRecorded: true,
+			cleanRecallCount: next.cleanRecallCount,
+			firstCleanAt: next.firstCleanAt,
+			masteredAt: next.masteredAt,
+			lastMasteredAt: next.lastMasteredAt
+		});
+		if (next.masteredAt !== state.masteredAt) {
+			await ctx.runMutation(api.userProgress.saveUserProgress, {
+				userId,
+				classId: module.classId,
+				questionId: state.questionId
+			});
+		}
+	}
 }
 
 export const reveal = mutation({
@@ -223,7 +283,7 @@ export const check = mutation({
 		const next: StudyEvidence = recordRecall(
 			evidence(question._id, saved, attempt.version),
 			isCorrect,
-			qualifyingRecall,
+			false,
 			now
 		);
 		await ctx.db.insert('studyChecks', {
@@ -250,8 +310,10 @@ export const check = mutation({
 			masteredAt: next.masteredAt,
 			lastMasteredAt: next.lastMasteredAt,
 			activeAttemptChecks: attempt.checks + 1,
+			activeAttemptFirstCorrect: attempt.checks === 0 ? isCorrect : saved.activeAttemptFirstCorrect,
 			checks: saved.checks + 1
 		});
+		if (attempt.checks === 0) await recordCompletedRun(ctx, user._id, module);
 		await ctx.runMutation(api.userProgress.saveUserProgress, {
 			userId: user._id,
 			classId: module.classId,
@@ -260,7 +322,7 @@ export const check = mutation({
 		});
 		return {
 			isCorrect,
-			evidence: { ...next, questionId: question._id, activeAttemptChecks: attempt.checks + 1 }
+			evidence: evidence(question._id, await ctx.db.get(saved._id), attempt.version)
 		};
 	}
 });

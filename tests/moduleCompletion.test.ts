@@ -64,6 +64,21 @@ describe('module completion and mastery', () => {
 			isMastered: false
 		});
 	});
+	test('mastery survives reset while completion reflects only the current run', () => {
+		const summary = summarizeModule([question('one')], {
+			one: { questionId: 'one', cleanRecallCount: 2, masteredAt: 1 }
+		});
+		expect(summary).toMatchObject({
+			mastery: 100,
+			mastered: 1,
+			completion: 0,
+			correct: 0,
+			unanswered: 1,
+			isComplete: false,
+			isMastered: true
+		});
+		expect(summary.results[0]).toMatchObject({ status: 'unanswered', isMastered: true });
+	});
 	test('empty modules and blank answers never earn mastery', () => {
 		expect(summarizeModule([], {})).toMatchObject({
 			completion: 0,

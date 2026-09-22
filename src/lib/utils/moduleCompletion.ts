@@ -244,6 +244,7 @@ export function summarizeModule(
 					: 'incorrect';
 		return {
 			questionId: question._id,
+			isMastered: record?.masteredAt !== undefined,
 			status,
 			flagged: flagged.has(question._id),
 			activeAttemptChecks: record?.activeAttemptChecks ?? 0,
@@ -255,7 +256,7 @@ export function summarizeModule(
 		};
 	});
 	const total = results.length;
-	const mastered = results.filter((r) => r.status === 'mastered').length;
+	const mastered = results.filter((r) => r.isMastered).length;
 	const correct = results.filter((r) => r.status === 'correct' || r.status === 'mastered').length;
 	const incorrect = results.filter((r) => r.status === 'incorrect').length;
 	const answered = correct + incorrect;

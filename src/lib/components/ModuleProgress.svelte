@@ -81,13 +81,12 @@
 				>
 					{#key result.status}
 						<span
-							class="absolute inset-0 rounded-[inherit] {cellClass[result.status]}"
+							class="absolute inset-0 rounded-[inherit] {result.flagged
+								? 'bg-warning'
+								: cellClass[result.status]}"
 							in:scale={prefersReducedMotion.current ? { duration: 0 } : pop}
 						></span>
 					{/key}
-					{#if result.flagged}<span
-							class="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-primary ring-1 ring-base-100"
-						></span>{/if}
 				</span>
 			{/each}
 		</span>

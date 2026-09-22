@@ -8,17 +8,13 @@
 	import {
 		ArrowLeft,
 		ArrowRight,
-		Brain,
 		Check,
 		CircleDashed,
-		Clock,
 		Flag,
 		RotateCcw,
-		Sparkles,
 		Trophy,
 		X
 	} from 'lucide-svelte';
-	import { MASTERY_INTERVAL_MS } from '$lib/utils/studyMastery';
 	import type { AnswerStatus, ModuleSummary } from '$lib/utils/moduleCompletion';
 
 	let {
@@ -30,8 +26,6 @@
 		onretry,
 		onreview,
 		onresume,
-		onpractice,
-		onnewattempt,
 		onreset,
 		onback
 	}: {
@@ -44,8 +38,6 @@
 		onretry: () => void;
 		onreview: (questionId: string) => void;
 		onresume: () => void;
-		onpractice: () => void;
-		onnewattempt: (questionId: string) => void;
 		onreset: () => void;
 		onback: () => void;
 	} = $props();
@@ -53,7 +45,6 @@
 	type Filter = 'all' | AnswerStatus | 'flagged';
 	let filter = $state<Filter>('all');
 	let selectedId = $state<string | null>(null);
-	let now = $state(Date.now());
 	let mounted = $state(false);
 	let introDone = $state(false);
 	let burst = $state(0);
@@ -61,21 +52,6 @@
 
 	const reduced = $derived(prefersReducedMotion.current);
 	const selectedResult = $derived(summary.results.find((r) => r.questionId === selectedId));
-	const pending = $derived(summary.results.filter((r) => r.status !== 'mastered'));
-	const firstRecallCount = $derived(pending.filter((r) => r.cleanRecallCount === 0).length);
-	const waitingCount = $derived(
-		pending.filter(
-			(r) => r.firstCleanAt !== undefined && now < r.firstCleanAt + MASTERY_INTERVAL_MS
-		).length
-	);
-	const readyCount = $derived(
-		pending.filter(
-			(r) =>
-				r.cleanRecallCount === 1 &&
-				r.firstCleanAt !== undefined &&
-				now >= r.firstCleanAt + MASTERY_INTERVAL_MS
-		).length
-	);
 
 	const pct = (n: number) => (summary.total ? (n / summary.total) * 100 : 0);
 	const sweep = { duration: 1100, easing: cubicOut };
@@ -93,7 +69,7 @@
 
 	const counts = $derived({
 		mastered: summary.mastered,
-		correct: summary.correct - summary.mastered,
+		correct: summary.results.filter((r) => r.status === 'correct').length,
 		incorrect: summary.incorrect,
 		unanswered: summary.unanswered,
 		flagged: summary.flagged
@@ -112,14 +88,17 @@
 		const opts = { duration: reduced ? 0 : 1100 };
 		void arcs.answered.set(pct(summary.answered), opts);
 		void arcs.correct.set(pct(summary.correct), opts);
-		void arcs.mastered.set(pct(summary.mastered), opts);
+		void arcs.mastered.set(
+			pct(summary.results.filter((r) => r.status === 'mastered').length),
+			opts
+		);
 		void arcs.checked.set(summary.completion, opts);
 		for (const key of Object.keys(countUp) as StatKey[]) void countUp[key].set(counts[key], opts);
 	});
 
 	// 0 in progress, 1 complete, 2 all correct, 3 mastered; confetti fires on open and on each step up.
 	const level = $derived(
-		summary.isMastered ? 3 : summary.isAllCorrect ? 2 : summary.isComplete ? 1 : 0
+		!summary.isComplete ? 0 : summary.isMastered ? 3 : summary.isAllCorrect ? 2 : 1
 	);
 	let lastLevel = -1;
 	$effect(() => {
@@ -134,7 +113,12 @@
 	const visibleResults = $derived(
 		summary.results.filter(
 			(result) =>
-				filter === 'all' || (filter === 'flagged' ? result.flagged : result.status === filter)
+				filter === 'all' ||
+				(filter === 'flagged'
+					? result.flagged
+					: filter === 'mastered'
+						? result.isMastered
+						: result.status === filter)
 		)
 	);
 	const nextReview = $derived(
@@ -175,7 +159,7 @@
 	}[] = [
 		{
 			key: 'mastered',
-			label: 'Mastered',
+			label: 'Mastered overall',
 			icon: Trophy,
 			tone: 'text-emerald-700 dark:text-emerald-400',
 			active: 'border-emerald-600/50 bg-emerald-600/10 ring-emerald-600/20'
@@ -205,14 +189,14 @@
 			key: 'flagged',
 			label: 'Flagged',
 			icon: Flag,
-			tone: 'text-primary',
-			active: 'border-primary/50 bg-primary/10 ring-primary/20'
+			tone: 'text-warning',
+			active: 'border-warning/50 bg-warning/10 ring-warning/20'
 		}
 	];
 
 	const emptyText: Record<Filter, string> = {
 		all: 'No questions in this module yet.',
-		mastered: 'Mastery takes two unaided first checks, at least 30 minutes apart.',
+		mastered: 'Mastery builds automatically across completed module runs.',
 		correct: 'No correct answers waiting on a second recall.',
 		incorrect: 'Nothing needs review.',
 		unanswered: 'Every question has an answer.',
@@ -221,9 +205,9 @@
 
 	const subline = $derived(
 		summary.isMastered
-			? 'Every question is mastered. Practice anytime to keep it fresh.'
+			? 'Every question is mastered. Your mastery carries over when you reset this module.'
 			: summary.isAllCorrect
-				? 'Every answer is correct. Recall them again after 30 minutes to master them.'
+				? 'Every answer is correct. Mastery builds as you return for another module run.'
 				: summary.isComplete
 					? `${summary.incorrect} ${summary.incorrect === 1 ? 'answer needs' : 'answers need'} another look.`
 					: `${summary.unanswered} ${summary.unanswered === 1 ? 'question' : 'questions'} left to check.`
@@ -233,10 +217,8 @@
 		mounted = true;
 		heading?.focus({ preventScroll: true });
 		const intro = setTimeout(() => (introDone = true), 900);
-		const timer = setInterval(() => (now = Date.now()), 15000);
 		return () => {
 			clearTimeout(intro);
-			clearInterval(timer);
 		};
 	});
 </script>
@@ -391,12 +373,6 @@
 								/>
 							</button>
 						{/if}
-						<button
-							class="btn btn-sm gap-1.5 rounded-full px-4 {nextReview
-								? 'btn-soft btn-success'
-								: 'btn-success shadow-sm shadow-success/25'}"
-							onclick={onpractice}><Brain size={15} /> Practice from memory</button
-						>
 						<button class="btn btn-ghost btn-sm gap-1.5 rounded-full px-4" onclick={onresume}
 							><RotateCcw size={14} /> Review all</button
 						>
@@ -454,26 +430,6 @@
 			{/each}
 		</div>
 
-		{#if !summary.isMastered && summary.total && (firstRecallCount || waitingCount || readyCount)}
-			<div class="mt-4 flex flex-wrap gap-2 text-xs" aria-label="Path to mastery">
-				{#if readyCount}<span
-						class="inline-flex items-center gap-1.5 rounded-full bg-emerald-600/12 px-3 py-1 text-emerald-700 dark:text-emerald-400"
-						><Sparkles size={12} />
-						<strong class="font-semibold">{readyCount}</strong> ready for a second recall</span
-					>{/if}
-				{#if waitingCount}<span
-						class="inline-flex items-center gap-1.5 rounded-full bg-base-200/70 px-3 py-1 text-base-content/70"
-						><Clock size={12} />
-						<strong class="font-semibold">{waitingCount}</strong> waiting for 30-minute spacing</span
-					>{/if}
-				{#if firstRecallCount}<span
-						class="inline-flex items-center gap-1.5 rounded-full bg-base-200/70 px-3 py-1 text-base-content/70"
-						><Brain size={12} />
-						<strong class="font-semibold">{firstRecallCount}</strong> need a first recall</span
-					>{/if}
-			</div>
-		{/if}
-
 		<div class="mt-5 rounded-3xl border border-base-300 bg-base-100 p-5 shadow-xs sm:p-6">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<h2 class="font-semibold">
@@ -497,7 +453,7 @@
 				{#each visibleResults as result, i (result.questionId)}
 					{@const number = numberOf.get(result.questionId)}
 					{@const selected = selectedId === result.questionId}
-					{@const label = `Question ${number}: ${statusStyle[result.status].label.toLowerCase()}${result.flagged ? ', flagged' : ''}${result.cleanRecallCount === 1 ? ', 1 of 2 recalls' : ''}`}
+					{@const label = `Question ${number}: ${statusStyle[result.status].label.toLowerCase()}${result.flagged ? ', flagged' : ''}${result.cleanRecallCount === 1 ? ', 1 of 2 completed runs' : ''}`}
 					<button
 						animate:flip={{ duration: reduced ? 0 : 280 }}
 						in:scale={{
@@ -506,9 +462,9 @@
 							start: 0.4,
 							easing: backOut
 						}}
-						class="relative aspect-square rounded-full border text-xs font-semibold tabular-nums transition-all hover:-translate-y-0.5 hover:scale-110 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none {statusStyle[
-							result.status
-						].cell} {selected
+						class="relative aspect-square rounded-full border text-xs font-semibold tabular-nums transition-all hover:-translate-y-0.5 hover:scale-110 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none {result.flagged
+							? 'bg-warning text-warning-content border-warning'
+							: statusStyle[result.status].cell} {selected
 							? 'scale-110 ring-2 ring-base-content/70 ring-offset-2 ring-offset-base-100'
 							: ''}"
 						aria-label={label}
@@ -517,12 +473,6 @@
 						aria-pressed={selected}
 					>
 						{number}
-						{#if result.flagged}
-							<span
-								class="absolute -right-0.5 -top-0.5 grid size-3.5 place-items-center rounded-full bg-primary text-primary-content ring-2 ring-base-100"
-								><Flag size={7} fill="currentColor" /></span
-							>
-						{/if}
 						{#if result.status !== 'mastered' && result.cleanRecallCount === 1}
 							<span
 								class="absolute -bottom-0.5 left-1/2 h-1 w-3 -translate-x-1/2 rounded-full bg-emerald-600 ring-2 ring-base-100"
@@ -537,9 +487,9 @@
 			</div>
 
 			<p class="mt-4 text-xs text-base-content/50">
-				Mastery takes two correct first checks from memory, on fresh attempts at least 30 minutes
-				apart. A green bar under a question marks one recall done. Flags are reminders and don't
-				affect mastery.
+				Mastery builds automatically when you answer from memory across completed module runs at
+				least 30 minutes apart. Reset the module when you want to study it again; your mastery is
+				kept. Flags are reminders and don't affect mastery.
 			</p>
 
 			{#if selectedResult}
@@ -556,7 +506,7 @@
 								>{style.label}</span
 							>
 							{#if selectedResult.flagged}<span
-									class="inline-flex items-center gap-1 rounded-full bg-primary/12 px-2 py-0.5 text-xs text-primary"
+									class="inline-flex items-center gap-1 rounded-full bg-warning px-2 py-0.5 text-xs text-warning-content"
 									><Flag size={10} fill="currentColor" /> Flagged</span
 								>{/if}
 						</div>
@@ -569,54 +519,36 @@
 										: 'bg-base-300'}"
 								></span>
 							{/each}
-							{selectedResult.cleanRecallCount} of 2 recalls
+							{selectedResult.cleanRecallCount} of 2 completed runs
 						</span>
 					</div>
 					<ul class="mt-3 space-y-1 text-base-content/70">
-						{#if selectedResult.status === 'mastered'}
-							<li>Mastered: two correct first checks from memory, at least 30 minutes apart.</li>
+						{#if selectedResult.isMastered}
+							<li>Mastered across two completed module runs, at least 30 minutes apart.</li>
 						{:else}
 							{#if selectedResult.needsFreshEvidence}<li>
-									This question changed. It needs two new recalls.
+									This question changed. Mastery will build again in future module runs.
 								</li>{/if}
 							{#if selectedResult.status === 'unanswered'}<li>No checked answer yet.</li>{/if}
 							{#if selectedResult.status === 'incorrect'}<li>
-									The latest checked answer was incorrect. Two new recalls are needed.
+									The latest checked answer was incorrect. Mastery will build again in future module
+									runs.
 								</li>{/if}
 							{#if selectedResult.activeAttemptRevealed}<li>
-									The answer was revealed before checking this attempt.
+									The answer was revealed before checking in this run.
 								</li>{/if}
 							{#if selectedResult.activeAttemptChecks > 1}<li>
 									{selectedResult.activeAttemptChecks - 1}
-									{selectedResult.activeAttemptChecks === 2 ? 'retry' : 'retries'} in this attempt. Only
-									its first check can earn a recall.
+									{selectedResult.activeAttemptChecks === 2 ? 'retry' : 'retries'} in this run. Mastery
+									uses your first check, before revealing the answer.
 								</li>{/if}
-							{#if selectedResult.firstCleanAt !== undefined && now < selectedResult.firstCleanAt + MASTERY_INTERVAL_MS}
-								<li>
-									Second recall available in {Math.ceil(
-										(selectedResult.firstCleanAt + MASTERY_INTERVAL_MS - now) / 60000
-									)} min.
-								</li>
-							{:else if selectedResult.cleanRecallCount === 1}<li>
-									Ready for the second recall.
-								</li>{/if}
-							<li>
-								{2 - selectedResult.cleanRecallCount} more correct first {selectedResult.cleanRecallCount ===
-								1
-									? 'check'
-									: 'checks'} from memory needed.
-							</li>
+							<li>Your progress updates automatically when you finish the module.</li>
 						{/if}
 						{#if selectedResult.flagged}<li>
 								Flagged for review. This does not affect mastery.
 							</li>{/if}
 					</ul>
 					<div class="mt-4 flex flex-wrap gap-2">
-						<button
-							class="btn btn-primary btn-sm gap-1.5 rounded-full px-4"
-							onclick={() => onnewattempt(selectedResult.questionId)}
-							><Brain size={14} /> New attempt</button
-						>
 						<button
 							class="btn btn-ghost btn-sm rounded-full"
 							onclick={() => onreview(selectedResult.questionId)}>Review question</button

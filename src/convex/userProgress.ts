@@ -205,10 +205,12 @@ export const getUserProgressForModule = authQuery({
 		return {
 			interactedQuestionIds,
 			flaggedQuestionIds,
-			answers: records.map((record) => ({
-				questionId: record.questionId,
-				selectedOptions: record.selectedOptions
-			}))
+			answers: records
+				.filter((record) => record.selectedOptions.length > 0)
+				.map((record) => ({
+					questionId: record.questionId,
+					selectedOptions: record.selectedOptions
+				}))
 		};
 	}
 });
@@ -522,10 +524,11 @@ export const clearUserProgressForModule = mutation({
 		const questions = await ctx.db
 			.query('question')
 			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
-			.collect();
+			.take(2001);
+		if (questions.length > 2000) throw new Error('Module exceeds supported question count');
 
-		// For each question, find and delete the user's progress record
-		let deletedCount = 0;
+		// Clear the current run while retaining accumulated mastery evidence.
+		let resetCount = 0;
 		let interactedDelta = 0;
 		let masteredDelta = 0;
 		let flaggedDelta = 0;
@@ -538,7 +541,17 @@ export const clearUserProgressForModule = mutation({
 					q.eq('userId', user._id).eq('questionId', question._id)
 				)
 				.unique();
-			if (learning) await ctx.db.delete(learning._id);
+			if (learning)
+				await ctx.db.patch(learning._id, {
+					activeAttemptId: undefined,
+					activeAttemptChecks: 0,
+					activeAttemptRevealed: false,
+					activeAttemptFirstCorrect: undefined,
+					activeAttemptRecallRecorded: false,
+					checkedAt: undefined,
+					latestCorrect: undefined,
+					checks: 0
+				});
 
 			if (args.removeHighlights) {
 				const highlights = await ctx.db
@@ -569,7 +582,10 @@ export const clearUserProgressForModule = mutation({
 					earlyInteractionsDelta += delta.early;
 					lateInteractionsDelta += delta.late;
 				}
-				if (progressRecord.isMastered) masteredDelta -= 1;
+				const isMastered =
+					learning?.masteredAt !== undefined &&
+					learning.version === (await questionVersion(question));
+				masteredDelta += Number(isMastered) - Number(progressRecord.isMastered);
 				if (progressRecord.isFlagged) flaggedDelta -= 1;
 
 				// If the record was flagged, decrement the question's flagCount
@@ -580,12 +596,21 @@ export const clearUserProgressForModule = mutation({
 					});
 				}
 
-				await ctx.db.delete(progressRecord._id);
-				deletedCount++;
+				await ctx.db.patch(progressRecord._id, {
+					selectedOptions: [],
+					eliminatedOptions: [],
+					isFlagged: false,
+					isMastered,
+					attempts: 0,
+					lastAttemptAt: undefined,
+					metadata: {},
+					updatedAt: now
+				});
+				resetCount++;
 			}
 		}
 
-		if (deletedCount > 0 && module) {
+		if (resetCount > 0) {
 			await applyModuleStatsDelta(ctx, {
 				userId: args.userId,
 				moduleId: module._id,
@@ -607,6 +632,6 @@ export const clearUserProgressForModule = mutation({
 			});
 		}
 
-		return deletedCount;
+		return resetCount;
 	}
 });

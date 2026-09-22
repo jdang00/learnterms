@@ -63,17 +63,21 @@ export class QuizState {
 		| null = null;
 	revealAnswer: ((questionId: Id<'question'>) => Promise<void>) | null = null;
 	showCompletion = $state(false);
+	onOpenCompletion: (() => void) | null = null;
 	completionCelebration = $state(false);
 	savedAnswers: Record<string, string[]> = $state({});
 	localAnswers: Record<string, string[]> = $state({});
 	completionMilestone = '';
 	private completionTimer: ReturnType<typeof setTimeout> | undefined;
+	private completionDismissed = false;
 	cancelCompletion() {
 		clearTimeout(this.completionTimer);
 	}
 	private scheduleCompletion() {
 		this.cancelCompletion();
+		if (this.completionDismissed) return;
 		const summary = this.getCompletionSummary();
+		if (!summary.isComplete) return;
 		const milestone = summary.isMastered
 			? 'mastered'
 			: summary.isAllCorrect
@@ -107,6 +111,14 @@ export class QuizState {
 		this.snapshotCurrentQuestion();
 		this.scheduleSave();
 		this.showCompletion = true;
+		this.onOpenCompletion?.();
+	}
+	closeCompletion() {
+		this.cancelCompletion();
+		this.cancelAutoNext();
+		this.completionDismissed = true;
+		this.completionCelebration = false;
+		this.showCompletion = false;
 	}
 	getCompletionSummary() {
 		return summarizeModule(this.questions, this.learningEvidence, this.liveFlaggedQuestions);
@@ -208,6 +220,7 @@ export class QuizState {
 	): boolean {
 		const question = this.getCurrentFilteredQuestion();
 		if (!question || answerStatus(question, userAnswers) === 'unanswered') return false;
+		this.completionDismissed = false;
 		const isCorrect = answerStatus(question, userAnswers) === 'correct';
 		const answers = [...userAnswers];
 		const submissionId = crypto.randomUUID();
@@ -639,7 +652,18 @@ export class QuizState {
 		});
 		if (removeHighlights) this.highlightResetVersion++;
 		this.pendingSnapshots = {};
-		this.learningEvidence = {};
+		this.learningEvidence = Object.fromEntries(
+			Object.entries(this.learningEvidence).map(([id, evidence]) => [
+				id,
+				{
+					...evidence,
+					checkedAt: undefined,
+					latestCorrect: undefined,
+					activeAttemptChecks: 0,
+					activeAttemptRevealed: false
+				}
+			])
+		);
 		this.checkError = '';
 		this.savedAnswers = {};
 		this.localAnswers = {};
