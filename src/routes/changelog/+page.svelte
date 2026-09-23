@@ -836,7 +836,9 @@
 				</div>
 				<div class="badge badge-primary badge-soft rounded-full text-xs">Changelog</div>
 			</div>
-			<h1 class="text-4xl font-bold leading-tight sm:text-5xl">What's new in LearnTerms</h1>
+			<h1 class="font-display text-4xl font-bold leading-tight sm:text-5xl">
+				What's new in LearnTerms
+			</h1>
 			<p class="mt-4 max-w-2xl text-lg text-base-content/65 leading-relaxed">
 				A history of LearnTerms updates, with links to the GitHub releases and code behind them.
 			</p>

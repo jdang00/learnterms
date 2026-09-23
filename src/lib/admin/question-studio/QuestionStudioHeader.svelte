@@ -13,6 +13,6 @@
 		<div class="hidden rounded-xl bg-primary/10 p-2 text-primary sm:flex">
 			<Sparkles size={18} />
 		</div>
-		<h1 class="text-xl font-semibold leading-tight">Question Studio</h1>
+		<h1 class="font-display text-xl font-semibold leading-tight">Question Studio</h1>
 	</div>
 </header>

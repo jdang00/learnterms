@@ -201,7 +201,9 @@
 	<div class=" flex flex-col gap-2">
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 			<div>
-				<h1 class="text-3xl sm:text-4xl font-bold text-base-content">Admin Dashboard</h1>
+				<h1 class="font-display text-3xl sm:text-4xl font-bold text-base-content">
+					Admin Dashboard
+				</h1>
 				<p class="text-base text-base-content/70">
 					{userData?.schoolName} - {userData?.cohortName}
 				</p>
@@ -266,7 +268,7 @@
 
 		<div class="flex flex-row justify-between items-start mt-12">
 			<div>
-				<h1 class="font-semibold text-2xl flex items-center gap-2">
+				<h1 class="font-display font-semibold text-2xl flex items-center gap-2">
 					My Classes
 					{#if viewMode === 'reorder'}
 						<span class="badge badge-info badge-sm">Reorder Mode</span>

@@ -32,7 +32,7 @@
 	const CELL: Record<NavigatorStatus, string> = {
 		mastered: 'bg-emerald-800 text-white',
 		correct: 'bg-success/20 text-success',
-		incorrect: 'bg-warning/25 text-base-content',
+		incorrect: 'bg-error/20 text-error',
 		answered: 'bg-accent/20 text-base-content',
 		unanswered: 'bg-base-200 text-base-content/70'
 	};

@@ -336,7 +336,7 @@
 							>
 								<ChevronLeft size={16} /> Back to Class
 							</a>
-							<h1 class="text-2xl sm:text-3xl font-bold">Your Results</h1>
+							<h1 class="font-display text-2xl sm:text-3xl font-bold">Your Results</h1>
 							<p class="text-sm text-base-content/50 mt-1">
 								{friendlyStatus(attempt.status)} · {attempt.className ?? 'Test'}
 							</p>

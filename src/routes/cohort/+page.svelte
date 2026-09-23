@@ -117,7 +117,7 @@
 					</div>
 				</div>
 				<div>
-					<h1 class="text-2xl font-bold md:text-3xl">{cohort.name}</h1>
+					<h1 class="font-display text-2xl font-bold md:text-3xl">{cohort.name}</h1>
 					<div
 						class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/70"
 					>

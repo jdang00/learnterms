@@ -90,7 +90,9 @@
 						<School size={26} />
 					</div>
 				{/if}
-				<h1 class="text-2xl font-bold text-base-content sm:text-3xl">Join your class</h1>
+				<h1 class="font-display text-2xl font-bold text-base-content sm:text-3xl">
+					Join your class
+				</h1>
 				<p class="mt-1.5 max-w-sm text-sm text-base-content/60">
 					Enter the class code from your invitation to access your class's content.
 				</p>
@@ -159,7 +161,9 @@
 				<span class="badge badge-success badge-soft rounded-full">
 					<Check size={13} /> Class found
 				</span>
-				<h1 class="mt-3 text-2xl font-bold text-base-content sm:text-3xl">Confirm your class</h1>
+				<h1 class="mt-3 font-display text-2xl font-bold text-base-content sm:text-3xl">
+					Confirm your class
+				</h1>
 				<p class="mt-1.5 text-sm text-base-content/60">
 					Make sure this is the right class before joining.
 				</p>

@@ -367,7 +367,7 @@
 <div class="min-h-screen bg-base-100">
 	<div class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
 		<header class="mb-6">
-			<h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Grade calculator</h1>
+			<h1 class="font-display text-2xl font-bold sm:text-3xl">Grade calculator</h1>
 			<p class="mt-2 max-w-2xl text-sm text-base-content/70">
 				LearnTerms doesn't store your grades on any server. Everything you type stays in this
 				browser, on your device — no one else can see it unless they're sitting at your screen.

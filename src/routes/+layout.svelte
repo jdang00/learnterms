@@ -1,5 +1,7 @@
 <script lang="ts">
 	import '../app.css';
+	import '@fontsource/space-grotesk/latin-600.css';
+	import '@fontsource/space-grotesk/latin-700.css';
 	import { getRouteSeo, SITE_ORIGIN } from '$lib/seo';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
@@ -110,7 +112,7 @@
 	const year = new Date().getFullYear();
 
 	const defaultSeo = {
-		image: 'https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w',
+		image: `${SITE_ORIGIN}/og.png`,
 		siteName: 'LearnTerms'
 	};
 

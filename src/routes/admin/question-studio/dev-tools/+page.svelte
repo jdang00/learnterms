@@ -210,7 +210,7 @@
 					<Wrench size={18} />
 				</div>
 				<div class="min-w-0">
-					<h1 class="text-xl font-semibold leading-tight">Agent Workbench</h1>
+					<h1 class="font-display text-xl font-semibold leading-tight">Agent Workbench</h1>
 					<p class="truncate text-xs text-base-content/50">
 						Exercise the agent’s tool surface and inspect exactly what it sees.
 					</p>

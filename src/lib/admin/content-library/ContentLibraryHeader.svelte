@@ -16,7 +16,7 @@
 			<Library size={18} />
 		</div>
 		<div>
-			<h1 class="text-xl font-semibold leading-tight">Content Library</h1>
+			<h1 class="font-display text-xl font-semibold leading-tight">Content Library</h1>
 			<p class="hidden text-xs text-base-content/60 sm:block">
 				{totalDocs}
 				{totalDocs === 1 ? 'file' : 'files'}

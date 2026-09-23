@@ -140,8 +140,8 @@
 		},
 		incorrect: {
 			label: 'Needs review',
-			cell: 'bg-warning/75 text-warning-content border-warning/40',
-			chip: 'bg-warning/15 text-warning'
+			cell: 'bg-error/75 text-error-content border-error/40',
+			chip: 'bg-error/15 text-error'
 		},
 		unanswered: {
 			label: 'Unanswered',
@@ -175,8 +175,8 @@
 			key: 'incorrect',
 			label: 'Needs review',
 			icon: X,
-			tone: 'text-warning',
-			active: 'border-warning/50 bg-warning/10 ring-warning/20'
+			tone: 'text-error',
+			active: 'border-error/50 bg-error/10 ring-error/20'
 		},
 		{
 			key: 'unanswered',
@@ -345,7 +345,7 @@
 							<h1
 								bind:this={heading}
 								tabindex="-1"
-								class="text-2xl font-semibold tracking-tight outline-none sm:text-3xl"
+								class="font-display text-2xl font-semibold outline-none sm:text-3xl"
 							>
 								{summary.isMastered
 									? 'Module mastered'

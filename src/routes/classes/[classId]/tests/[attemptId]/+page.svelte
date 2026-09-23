@@ -836,7 +836,7 @@
 				<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs max-w-md w-full">
 					<div class="card-body text-center">
 						<CheckCircle2 class="mx-auto text-success mb-2" size={48} />
-						<h1 class="card-title justify-center text-xl">Test Complete</h1>
+						<h1 class="card-title justify-center font-display text-xl">Test Complete</h1>
 						<p class="text-sm text-base-content/60 mt-1">This test has already been submitted.</p>
 						<div class="card-actions justify-center mt-4">
 							<a

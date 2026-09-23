@@ -199,7 +199,9 @@
 				<div class="flex items-center gap-2">
 					<span class="text-xl">{moduleInfo.data?.emoji || '📘'}</span>
 					<div>
-						<h1 class="text-lg font-semibold leading-tight">{moduleInfo.data.title}</h1>
+						<h1 class="font-display text-lg font-semibold leading-tight">
+							{moduleInfo.data.title}
+						</h1>
 						<p class="text-xs text-base-content/60 hidden sm:block">
 							{curationState.questionList.length} question{curationState.questionList.length !== 1
 								? 's'

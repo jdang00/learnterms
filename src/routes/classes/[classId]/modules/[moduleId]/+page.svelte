@@ -487,7 +487,7 @@
 	<div class="flex items-center justify-center min-h-[60vh]">
 		<div class="text-center max-w-md mx-auto p-8">
 			<BookOpen class="mx-auto mb-4 text-primary" size={48} />
-			<h1 class="text-2xl font-bold mb-2">
+			<h1 class="font-display text-2xl font-bold mb-2">
 				{data.seo?.title?.replace(' — LearnTerms', '') ?? 'Study Module'}
 			</h1>
 			<p class="text-base-content/70 mb-6">Sign in to start studying this module on LearnTerms.</p>

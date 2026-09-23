@@ -47,6 +47,12 @@ body {
 	}
 }
 
+/* Brand face for page titles; body text stays in the system sans. */
+@utility font-display {
+	font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+	letter-spacing: -0.025em;
+}
+
 /* Public-site graph paper: fades out toward the edges so content stays readable. */
 @utility bg-graph-paper {
 	background:

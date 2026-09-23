@@ -42,7 +42,7 @@
 </script>
 
 <main class="container mx-auto px-4 py-24">
-	<h1 class="text-4xl font-bold text-center mb-12">Badge Catalog</h1>
+	<h1 class="font-display text-4xl font-bold text-center mb-12">Badge Catalog</h1>
 	<p class="text-center text-sm text-base-content/65 -mt-9 mb-8">
 		All possible badges users can earn.
 	</p>

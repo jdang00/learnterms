@@ -277,7 +277,7 @@
 						<ChevronLeft size={16} /> Back to Class
 					</a>
 					<!-- eslint-enable svelte/no-navigation-without-resolve -->
-					<h1 class="text-2xl sm:text-3xl font-bold">Build Your Test</h1>
+					<h1 class="font-display text-2xl sm:text-3xl font-bold">Build Your Test</h1>
 					<p class="text-base-content/60 text-sm mt-1">
 						Pick your modules, set your preferences, and jump in.
 					</p>

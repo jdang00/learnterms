@@ -26,7 +26,7 @@
 	const cellClass = {
 		mastered: 'bg-emerald-800',
 		correct: 'bg-success/60',
-		incorrect: 'bg-warning/70',
+		incorrect: 'bg-error/60',
 		unanswered: 'bg-base-content/10'
 	} as const;
 	const pop = { duration: 260, start: 0.4, easing: backOut };
@@ -65,7 +65,7 @@
 		aria-hidden="true"
 	>
 		<span class="h-full bg-success" style:width="{correctWidth.current}%"></span>
-		<span class="h-full bg-warning" style:width="{reviewWidth.current}%"></span>
+		<span class="h-full bg-error/70" style:width="{reviewWidth.current}%"></span>
 	</span>
 
 	{#if !compact && summary.total}
@@ -103,7 +103,7 @@
 			>
 			{#if summary.incorrect}
 				<span class="inline-flex items-center gap-1.5"
-					><span class="size-2 rounded-full bg-warning"></span>{summary.incorrect} needs review</span
+					><span class="size-2 rounded-full bg-error/70"></span>{summary.incorrect} needs review</span
 				>
 			{/if}
 		</span>

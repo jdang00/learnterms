@@ -65,7 +65,7 @@
 		</div>
 
 		<!-- Message -->
-		<h1 class="text-4xl font-bold mb-4">
+		<h1 class="font-display text-4xl font-bold mb-4">
 			{#if isSyncing}
 				Setting up your account...
 			{:else}

@@ -280,7 +280,9 @@
 				</div>
 			{:else}
 				<div>
-					<h1 class="text-xl sm:text-2xl font-bold text-base-content">{classInfo.data.name}</h1>
+					<h1 class="font-display text-xl sm:text-2xl font-bold text-base-content">
+						{classInfo.data.name}
+					</h1>
 					<p class="text-sm sm:text-base text-base-content/70">
 						Manage your learning modules for {classInfo.data.code}. {#if reorderMode}Drag to
 							reorder.{/if}

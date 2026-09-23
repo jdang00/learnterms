@@ -390,7 +390,7 @@
 			>
 			<div class="min-w-0">
 				<p class="text-xs text-base-content/55">{user?.schoolName}</p>
-				<h1 class="truncate text-2xl font-bold tracking-tight">
+				<h1 class="truncate font-display text-2xl font-bold">
 					{user?.cohortName ?? 'Class progress'}
 				</h1>
 			</div>

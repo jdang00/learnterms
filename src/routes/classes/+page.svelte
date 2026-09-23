@@ -250,7 +250,7 @@
 				</div>
 			</div>
 		{:else if user === null}
-			<h1 class="text-2xl font-bold text-base-content">Welcome, Guest!</h1>
+			<h1 class="font-display text-2xl font-bold text-base-content">Welcome, Guest!</h1>
 			<p class="text-base-content/60 text-sm">Here's your learning dashboard.</p>
 		{:else}
 			<div class="flex flex-row gap-5 items-center">
@@ -263,7 +263,7 @@
 				</div>
 
 				<div>
-					<h1 class="text-2xl font-bold text-base-content mb-1">
+					<h1 class="font-display text-2xl font-bold text-base-content mb-1">
 						Hi, {name}!
 					</h1>
 					{#if userData === null}

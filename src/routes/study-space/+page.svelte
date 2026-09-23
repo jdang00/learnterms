@@ -393,7 +393,7 @@ TODO: Review pressure-volume loops before exam...`;
 						<span class="text-sm">❤️</span>
 					</div>
 					<div>
-						<h1 class="text-sm font-semibold text-base-content leading-tight">
+						<h1 class="font-display text-sm font-semibold text-base-content leading-tight">
 							Cardiovascular System
 						</h1>
 						<p class="text-[11px] text-base-content/45">

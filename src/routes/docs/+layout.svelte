@@ -25,7 +25,7 @@
 	<div class="mt-6 grid grid-cols-1 lg:grid-cols-[16rem_1fr] gap-6 items-start">
 		<DocsMenu />
 		<div>
-			<article class="prose max-w-none">
+			<article class="prose max-w-none prose-h1:font-display">
 				{@render children?.()}
 			</article>
 
