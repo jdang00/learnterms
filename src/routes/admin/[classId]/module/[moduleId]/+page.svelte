@@ -8,18 +8,18 @@
 	import { api } from '../../../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
 	import { Plus, ArrowLeft, GripVertical, Trash2, ArrowRightLeft, X } from 'lucide-svelte';
-	import AddQuestionModal from '$lib/admin/AddQuestionModal.svelte';
+	import AddQuestionModal from '$lib/admin/questions/AddQuestionModal.svelte';
 
-	import EditQuestionModal from '$lib/admin/EditQuestionModal.svelte';
-	import DuplicateQuestionModal from '$lib/admin/DuplicateQuestionModal.svelte';
+	import EditQuestionModal from '$lib/admin/questions/EditQuestionModal.svelte';
+	import DuplicateQuestionModal from '$lib/admin/questions/DuplicateQuestionModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
-	import MoveQuestionsModal from '$lib/admin/MoveQuestionsModal.svelte';
-	import QuestionEditorInline from '$lib/admin/QuestionEditorInline.svelte';
-	import QuestionListControls from '$lib/admin/QuestionListControls.svelte';
-	import QuestionListItem from '$lib/admin/QuestionListItem.svelte';
-	import QuestionDetailView from '$lib/admin/QuestionDetailView.svelte';
-	import AttachmentViewerModal from '$lib/admin/AttachmentViewerModal.svelte';
-	import ModuleLimitModal from '$lib/admin/ModuleLimitModal.svelte';
+	import MoveQuestionsModal from '$lib/admin/questions/MoveQuestionsModal.svelte';
+	import QuestionEditorInline from '$lib/admin/questions/QuestionEditorInline.svelte';
+	import QuestionListControls from '$lib/admin/questions/QuestionListControls.svelte';
+	import QuestionListItem from '$lib/admin/questions/QuestionListItem.svelte';
+	import QuestionDetailView from '$lib/admin/questions/QuestionDetailView.svelte';
+	import AttachmentViewerModal from '$lib/admin/questions/AttachmentViewerModal.svelte';
+	import ModuleLimitModal from '$lib/admin/questions/ModuleLimitModal.svelte';
 	import { useClerkContext } from 'svelte-clerk';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';

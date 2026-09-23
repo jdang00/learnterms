@@ -117,6 +117,7 @@
 								/>
 							</button>
 						{:else}
+							<!-- eslint-disable svelte/no-navigation-without-resolve -- base-prefixed by resolveInternalHref -->
 							<a
 								href={resolveInternalHref(action.href)}
 								class="sidebar-link group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200"
@@ -142,6 +143,7 @@
 									class="text-base-content/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-base-content/60"
 								/>
 							</a>
+							<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						{/if}
 					{:else}
 						<button

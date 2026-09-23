@@ -264,6 +264,7 @@
 		}
 	];
 	function isActive(mark: string) {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions -- tracks a reactive dependency
 		toolbarRevision;
 		return editor?.isActive(mark) ?? false;
 	}
@@ -285,7 +286,7 @@
 		role="group"
 		aria-label="Note formatting"
 	>
-		{#each buttons as button}<button
+		{#each buttons as button (button.name)}<button
 				type="button"
 				class="btn btn-sm btn-square {isActive(button.mark) ? 'btn-primary btn-soft' : 'btn-ghost'}"
 				aria-label={button.name}

@@ -40,7 +40,7 @@ async function run(fn: string, args: unknown) {
 const documentId = context.document._id,
 	moduleId = context.module._id;
 const counts = { learn: count, clinical: 0, criticalThinking: 0 };
-const jobId = await run('questionStudio:createGenerationJob', {
+const jobId = await run('questionStudio/jobs:createGenerationJob', {
 	documentId,
 	moduleId,
 	requestedCount: count,
@@ -54,15 +54,21 @@ await Bun.write(
 	JSON.stringify({ jobId, deployment: expectedDeployment, documentId, moduleId })
 );
 console.log('started', jobId);
-await run('questionStudio:generateCandidates', { documentId, moduleId, jobId, counts, topics: [] });
+await run('questionStudio/generation:generateCandidates', {
+	documentId,
+	moduleId,
+	jobId,
+	counts,
+	topics: []
+});
 let job;
 for (let poll = 0; poll < 35; poll++) {
-	job = await run('questionStudio:getGenerationJob', { jobId });
+	job = await run('questionStudio/jobs:getGenerationJob', { jobId });
 	if (['ready', 'failed'].includes(job.status)) break;
 	await Bun.sleep(1500);
 }
 await Bun.write(`${root}/job.json`, JSON.stringify(job, null, 2));
-const events = await run('questionStudio:getGenerationJobActivity', { jobId });
+const events = await run('questionStudio/jobs:getGenerationJobActivity', { jobId });
 await Bun.write(`${root}/events.json`, JSON.stringify(events, null, 2));
 const summary = {
 	jobId,

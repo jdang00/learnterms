@@ -27,7 +27,7 @@
 	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
 	import { Flag, BookmarkCheck, ArrowDownNarrowWide, Pencil } from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
-	import { getErrorText } from '$lib/utils/errorHandling';
+	import { isConvexAuthError } from '$lib/utils/errorHandling';
 	import { slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import { useClerkContext } from 'svelte-clerk/client';
@@ -37,7 +37,6 @@
 		qs,
 		questions,
 		currentlySelected,
-		userId,
 		data,
 		handleSelect,
 		handleFilterToggle,
@@ -131,25 +130,8 @@
 		if (command && command.enabled?.() !== false) void command.run('mobile');
 	}
 
-	function isAuthError(error: unknown): boolean {
-		if (!error) return false;
-		const message = getErrorText(error);
-		const patterns = [
-			'unauthorized',
-			'authentication',
-			'not authenticated',
-			'session expired',
-			'token expired',
-			'invalid token',
-			'jwt',
-			'access denied',
-			'forbidden'
-		];
-		return patterns.some((pattern) => message.toLowerCase().includes(pattern));
-	}
-
 	let shouldShowError = $derived(
-		questions.error && !(suppressAuthErrors && isAuthError(questions.error))
+		questions.error && !(suppressAuthErrors && isConvexAuthError(questions.error))
 	);
 </script>
 
@@ -163,15 +145,7 @@
 		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 	>
 		<span id="quiz-top" aria-hidden="true"></span>
-		<QuizSideBar
-			{qs}
-			{module}
-			{currentlySelected}
-			{userId}
-			moduleId={data.moduleId}
-			{client}
-			classId={data.classId}
-		/>
+		<QuizSideBar {qs} {module} {currentlySelected} classId={data.classId} />
 		<QuizMobileHeader {module} {qs} classId={data.classId} {handleSelect} {handleFilterToggle} />
 
 		<div

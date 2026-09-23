@@ -4,7 +4,7 @@ import type { MutationCtx } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import { internal } from './_generated/api';
 
-function hasInteraction(
+export function hasInteraction(
 	record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions' | 'attempts'>
 ) {
 	return (

@@ -2,7 +2,8 @@ import { Agent } from '@convex-dev/agent';
 import { MINUTE, RateLimiter } from '@convex-dev/rate-limiter';
 import { components, internal } from '../_generated/api';
 import type { ActionCtx } from '../_generated/server';
-import { QUESTION_STUDIO_MODEL, questionStudioOpenAI } from './shared';
+import { questionStudioOpenAI } from './shared';
+import { TEXT_MODEL } from '../aiModels';
 
 export async function captureTelemetry(
 	ctx: ActionCtx,
@@ -33,10 +34,7 @@ export const questionStudioRateLimiter = new RateLimiter(components.rateLimiter,
 	}
 });
 
-export function createQuestionStudioAgent(
-	model = QUESTION_STUDIO_MODEL,
-	usageAlreadyReserved = false
-) {
+export function createQuestionStudioAgent(model = TEXT_MODEL, usageAlreadyReserved = false) {
 	return new Agent(components.agent, {
 		name: 'Question Studio Curator',
 		languageModel: questionStudioOpenAI().chat(model),

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Eye } from 'lucide-svelte';
+	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	let { qs = $bindable(), currentlySelected, compact = false, allowElimination = true } = $props();
 
 	function handleOptionChange(optionId: string) {
@@ -113,11 +114,13 @@
 						: 'ml-3 md:ml-4 my-3 text-base'}"
 				>
 					<span class="font-semibold mr-2 select-none">{String.fromCharCode(65 + i)}.</span>
+					<!-- eslint-disable svelte/no-at-html-tags -->
 					<span
 						class="{qs.isOptionEliminated(option.id)
 							? 'line-through opacity-50'
-							: ''} tiptap-content">{@html option.text}</span
+							: ''} tiptap-content">{@html sanitizeHtml(option.text)}</span
 					>
+					<!-- eslint-enable svelte/no-at-html-tags -->
 				</span>
 
 				{#if allowElimination}

@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
+import { hasInteraction } from './moduleStats';
 import { authQuery } from './authQueries';
 import { requireCohortStaff } from './access';
 
@@ -10,12 +11,6 @@ type StudentLite = {
 	imageUrl?: string;
 	email?: string;
 };
-
-function hasInteraction(record: Doc<'userProgress'>): boolean {
-	return (
-		record.attempts > 0 || record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0
-	);
-}
 
 async function getModuleContext(
 	ctx: Pick<QueryCtx, 'db'>,

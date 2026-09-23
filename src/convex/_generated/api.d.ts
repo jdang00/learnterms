@@ -9,6 +9,7 @@
  */
 
 import type * as access from "../access.js";
+import type * as aiModels from "../aiModels.js";
 import type * as aiTelemetry from "../aiTelemetry.js";
 import type * as authQueries from "../authQueries.js";
 import type * as badgeEngine from "../badgeEngine.js";
@@ -44,7 +45,6 @@ import type * as questionMediaActions from "../questionMediaActions.js";
 import type * as questionMediaSaving from "../questionMediaSaving.js";
 import type * as questionMediaUploads from "../questionMediaUploads.js";
 import type * as questionNotes from "../questionNotes.js";
-import type * as questionStudio from "../questionStudio.js";
 import type * as questionStudio_access from "../questionStudio/access.js";
 import type * as questionStudio_authorization from "../questionStudio/authorization.js";
 import type * as questionStudio_candidates from "../questionStudio/candidates.js";
@@ -78,7 +78,6 @@ import type * as questionStudio_topicMaps from "../questionStudio/topicMaps.js";
 import type * as questionStudio_workers from "../questionStudio/workers.js";
 import type * as quizDock from "../quizDock.js";
 import type * as r2Documents from "../r2Documents.js";
-import type * as ragKnowledge from "../ragKnowledge.js";
 import type * as ragKnowledge_indexing from "../ragKnowledge/indexing.js";
 import type * as ragKnowledge_management from "../ragKnowledge/management.js";
 import type * as ragKnowledge_previews from "../ragKnowledge/previews.js";
@@ -101,6 +100,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   access: typeof access;
+  aiModels: typeof aiModels;
   aiTelemetry: typeof aiTelemetry;
   authQueries: typeof authQueries;
   badgeEngine: typeof badgeEngine;
@@ -136,7 +136,6 @@ declare const fullApi: ApiFromModules<{
   questionMediaSaving: typeof questionMediaSaving;
   questionMediaUploads: typeof questionMediaUploads;
   questionNotes: typeof questionNotes;
-  questionStudio: typeof questionStudio;
   "questionStudio/access": typeof questionStudio_access;
   "questionStudio/authorization": typeof questionStudio_authorization;
   "questionStudio/candidates": typeof questionStudio_candidates;
@@ -170,7 +169,6 @@ declare const fullApi: ApiFromModules<{
   "questionStudio/workers": typeof questionStudio_workers;
   quizDock: typeof quizDock;
   r2Documents: typeof r2Documents;
-  ragKnowledge: typeof ragKnowledge;
   "ragKnowledge/indexing": typeof ragKnowledge_indexing;
   "ragKnowledge/management": typeof ragKnowledge_management;
   "ragKnowledge/previews": typeof ragKnowledge_previews;

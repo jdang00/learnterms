@@ -50,7 +50,9 @@
 		});
 	});
 	let loadGeneration = 0;
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- request cache, not rendered
 	const attempts = new Map<string, Id<'studyAttempts'>>();
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- request cache, not rendered
 	const attemptRequests = new Map<string, Promise<{ attemptId: Id<'studyAttempts'> }>>();
 
 	let saving = $state(false);
@@ -92,39 +94,35 @@
 		eliminatedOptions: string[],
 		isFlagged: boolean
 	) {
-		try {
-			const existing = await client.query(api.userProgress.checkExistingRecord, {
-				userId: userId!,
-				questionId
-			});
+		const existing = await client.query(api.userProgress.checkExistingRecord, {
+			userId: userId!,
+			questionId
+		});
 
-			const savedSelected = (existing?.selectedOptions || []).sort();
-			const savedEliminated = (existing?.eliminatedOptions || []).sort();
-			const savedFlagged = existing?.isFlagged || false;
-			const sortedSelected = [...selectedOptions].sort();
-			const sortedEliminated = [...eliminatedOptions].sort();
+		const savedSelected = (existing?.selectedOptions || []).sort();
+		const savedEliminated = (existing?.eliminatedOptions || []).sort();
+		const savedFlagged = existing?.isFlagged || false;
+		const sortedSelected = [...selectedOptions].sort();
+		const sortedEliminated = [...eliminatedOptions].sort();
 
-			const changed =
-				isFlagged !== savedFlagged ||
-				sortedSelected.length !== savedSelected.length ||
-				!sortedSelected.every((val, i) => val === savedSelected[i]) ||
-				sortedEliminated.length !== savedEliminated.length ||
-				!sortedEliminated.every((val, i) => val === savedEliminated[i]);
+		const changed =
+			isFlagged !== savedFlagged ||
+			sortedSelected.length !== savedSelected.length ||
+			!sortedSelected.every((val, i) => val === savedSelected[i]) ||
+			sortedEliminated.length !== savedEliminated.length ||
+			!sortedEliminated.every((val, i) => val === savedEliminated[i]);
 
-			if (!changed) return;
+		if (!changed) return;
 
-			await client.mutation(api.userProgress.saveUserProgress, {
-				userId: userId!,
-				classId: data.classId as Id<'class'>,
-				questionId,
-				selectedOptions,
-				eliminatedOptions,
-				isFlagged,
-				clientUtcOffsetMinutes: new Date().getTimezoneOffset()
-			});
-		} catch (error) {
-			throw error;
-		}
+		await client.mutation(api.userProgress.saveUserProgress, {
+			userId: userId!,
+			classId: data.classId as Id<'class'>,
+			questionId,
+			selectedOptions,
+			eliminatedOptions,
+			isFlagged,
+			clientUtcOffsetMinutes: new Date().getTimezoneOffset()
+		});
 	}
 
 	async function saveProgressBatch() {
@@ -522,7 +520,6 @@
 					{qs}
 					{questions}
 					{currentlySelected}
-					{userId}
 					{data}
 					{handleSelect}
 					{handleFilterToggle}

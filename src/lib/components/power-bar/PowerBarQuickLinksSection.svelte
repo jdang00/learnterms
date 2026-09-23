@@ -52,6 +52,7 @@
 					<ExternalLink size={13} class="shrink-0 text-base-content/30" />
 				</button>
 			{:else}
+				<!-- eslint-disable svelte/no-navigation-without-resolve -- base-prefixed by resolveInternalHref -->
 				<a
 					href={resolveInternalHref(link.href)}
 					class="group flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-left transition-colors duration-100 hover:bg-base-200/60"
@@ -67,6 +68,7 @@
 					</span>
 					<ExternalLink size={13} class="shrink-0 text-base-content/30" />
 				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			{/if}
 		{/each}
 	{/if}

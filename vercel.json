@@ -1,45 +1,62 @@
 {
+	"redirects": [
+		{
+			"source": "/:path*",
+			"has": [
+				{
+					"type": "host",
+					"value": "www.learnterms.com"
+				}
+			],
+			"destination": "https://learnterms.com/:path*",
+			"permanent": true
+		},
+		{
+			"source": "/docs",
+			"has": [
+				{
+					"type": "host",
+					"value": "learnterms.com"
+				}
+			],
+			"destination": "https://docs.learnterms.com/docs",
+			"permanent": true
+		},
+		{
+			"source": "/docs/getting-started",
+			"has": [
+				{
+					"type": "host",
+					"value": "learnterms.com"
+				}
+			],
+			"destination": "https://docs.learnterms.com/docs/quickstart",
+			"permanent": true
+		},
+		{
+			"source": "/docs/lt-models",
+			"has": [
+				{
+					"type": "host",
+					"value": "learnterms.com"
+				}
+			],
+			"destination": "https://docs.learnterms.com/docs/ai/learnterms-models",
+			"permanent": true
+		},
+		{
+			"source": "/docs/:match*",
+			"has": [
+				{
+					"type": "host",
+					"value": "learnterms.com"
+				}
+			],
+			"destination": "https://docs.learnterms.com/docs/:match*",
+			"permanent": true
+		}
+	],
 	"rewrites": [
-		{
-			"source": "/docs",
-			"has": [
-				{
-					"type": "host",
-					"value": "learnterms.com"
-				}
-			],
-			"destination": "https://learnterms.mintlify.dev/docs"
-		},
-		{
-			"source": "/docs/:match*",
-			"has": [
-				{
-					"type": "host",
-					"value": "learnterms.com"
-				}
-			],
-			"destination": "https://learnterms.mintlify.dev/docs/:match*"
-		},
-		{
-			"source": "/docs",
-			"has": [
-				{
-					"type": "host",
-					"value": "www.learnterms.com"
-				}
-			],
-			"destination": "https://learnterms.mintlify.dev/docs"
-		},
-		{
-			"source": "/docs/:match*",
-			"has": [
-				{
-					"type": "host",
-					"value": "www.learnterms.com"
-				}
-			],
-			"destination": "https://learnterms.mintlify.dev/docs/:match*"
-		},
 		{
 			"source": "/:path*",
 			"has": [
@@ -72,5 +89,16 @@
 		}
 	],
 	"installCommand": "bun install --frozen-lockfile",
-	"buildCommand": "bunx convex deploy --cmd 'bun run build' --cmd-url-env-var-name PUBLIC_CONVEX_URL"
+	"buildCommand": "bunx convex deploy --cmd 'bun run build' --cmd-url-env-var-name PUBLIC_CONVEX_URL",
+	"headers": [
+		{
+			"source": "/(.*)",
+			"headers": [
+				{
+					"key": "Strict-Transport-Security",
+					"value": "max-age=63072000"
+				}
+			]
+		}
+	]
 }

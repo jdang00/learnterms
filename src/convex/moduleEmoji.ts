@@ -2,8 +2,8 @@ import { v } from 'convex/values';
 import { action, internalQuery } from './_generated/server';
 import { components, internal } from './_generated/api';
 import { RateLimiter, MINUTE } from '@convex-dev/rate-limiter';
-import { DEFAULT_TEXT_MODEL } from './questionStudio/shared';
 import { isSingleEmoji } from '../lib/utils/emoji';
+import { OPENROUTER_TEXT_MODEL } from './aiModels';
 
 const limiter = new RateLimiter(components.rateLimiter, {
 	moduleEmoji: { kind: 'token bucket', rate: 20, period: MINUTE, capacity: 5 }
@@ -53,7 +53,7 @@ export const suggest = action({
 					'X-OpenRouter-Title': 'LearnTerms Module Emoji'
 				},
 				body: JSON.stringify({
-					model: DEFAULT_TEXT_MODEL,
+					model: OPENROUTER_TEXT_MODEL,
 					messages: [
 						{
 							role: 'system',

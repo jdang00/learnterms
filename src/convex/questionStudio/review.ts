@@ -20,13 +20,13 @@ export const reviewGenerationJob = internalAction({
 	},
 	handler: async (ctx, args) => {
 		const report = async (update: Record<string, unknown>) => {
-			await ctx.runMutation(internal.questionStudio.updateGenerationJob, {
+			await ctx.runMutation(internal.questionStudio.jobUpdates.updateGenerationJob, {
 				jobId: args.jobId,
 				...update
 			});
 		};
 		try {
-			const job = (await ctx.runQuery(internal.questionStudio.getGenerationJobInternal, {
+			const job = (await ctx.runQuery(internal.questionStudio.jobs.getGenerationJobInternal, {
 				jobId: args.jobId
 			})) as GenerationJobSnapshot | null;
 			if (!job || job.status === 'ready' || job.status === 'failed') return;

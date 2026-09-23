@@ -11,20 +11,20 @@ test('five concurrent worker reservations settle to actual usage and leave capac
 	const t = convexTest(schema, modules);
 	rateLimiter.register(t);
 	for (let worker = 0; worker < 5; worker++) {
-		await t.mutation(internal.questionStudio.reserveGenerationTokens, {
+		await t.mutation(internal.questionStudio.tokenBudget.reserveGenerationTokens, {
 			userId: 'owner',
 			allowance: 30000
 		});
 	}
 	for (let worker = 0; worker < 5; worker++) {
-		await t.mutation(internal.questionStudio.settleGenerationTokens, {
+		await t.mutation(internal.questionStudio.tokenBudget.settleGenerationTokens, {
 			userId: 'owner',
 			allowance: 30000,
 			actualTokens: 6000
 		});
 	}
 	for (let worker = 0; worker < 5; worker++) {
-		await t.mutation(internal.questionStudio.reserveGenerationTokens, {
+		await t.mutation(internal.questionStudio.tokenBudget.reserveGenerationTokens, {
 			userId: 'owner',
 			allowance: 30000
 		});
@@ -42,7 +42,7 @@ test('a rejected global reservation does not consume user capacity', async () =>
 		questionStudioRateLimiter.limit(ctx, 'questionStudioGlobalTokenUsage', { count: 2000000 })
 	);
 	await expect(
-		t.mutation(internal.questionStudio.reserveGenerationTokens, {
+		t.mutation(internal.questionStudio.tokenBudget.reserveGenerationTokens, {
 			userId: 'owner',
 			allowance: 30000
 		})
@@ -56,15 +56,15 @@ test('a rejected global reservation does not consume user capacity', async () =>
 test('cached plan settlement returns the full reservation; uncompleted calls remain charged', async () => {
 	const t = convexTest(schema, modules);
 	rateLimiter.register(t);
-	await t.mutation(internal.questionStudio.reserveGenerationTokens, {
+	await t.mutation(internal.questionStudio.tokenBudget.reserveGenerationTokens, {
 		userId: 'owner',
 		allowance: 30000
 	});
-	await t.mutation(internal.questionStudio.reserveGenerationTokens, {
+	await t.mutation(internal.questionStudio.tokenBudget.reserveGenerationTokens, {
 		userId: 'owner',
 		allowance: 30000
 	});
-	await t.mutation(internal.questionStudio.settleGenerationTokens, {
+	await t.mutation(internal.questionStudio.tokenBudget.settleGenerationTokens, {
 		userId: 'owner',
 		allowance: 30000,
 		actualTokens: 0
@@ -78,12 +78,12 @@ test('cached plan settlement returns the full reservation; uncompleted calls rem
 test('a slow call cannot refund above the bucket capacity after time-based refill', async () => {
 	const t = convexTest(schema, modules);
 	rateLimiter.register(t);
-	await t.mutation(internal.questionStudio.reserveGenerationTokens, {
+	await t.mutation(internal.questionStudio.tokenBudget.reserveGenerationTokens, {
 		userId: 'owner',
 		allowance: 30000
 	});
 	vi.advanceTimersByTime(120000);
-	await t.mutation(internal.questionStudio.settleGenerationTokens, {
+	await t.mutation(internal.questionStudio.tokenBudget.settleGenerationTokens, {
 		userId: 'owner',
 		allowance: 30000,
 		actualTokens: 6000
@@ -97,11 +97,11 @@ test('a slow call cannot refund above the bucket capacity after time-based refil
 test('waiting reservations leave both buckets untouched until capacity is available', async () => {
 	const t = convexTest(schema, modules);
 	rateLimiter.register(t);
-	await t.mutation(internal.questionStudio.reserveGenerationTokens, {
+	await t.mutation(internal.questionStudio.tokenBudget.reserveGenerationTokens, {
 		userId: 'owner',
 		allowance: 240000
 	});
-	const limited = await t.mutation(internal.questionStudio.reserveGenerationTokens, {
+	const limited = await t.mutation(internal.questionStudio.tokenBudget.reserveGenerationTokens, {
 		userId: 'owner',
 		allowance: 10000,
 		waitForCapacity: true
@@ -113,7 +113,7 @@ test('waiting reservations leave both buckets untouched until capacity is availa
 	expect(state.value).toBe(0);
 	vi.advanceTimersByTime(5000);
 	expect(
-		await t.mutation(internal.questionStudio.reserveGenerationTokens, {
+		await t.mutation(internal.questionStudio.tokenBudget.reserveGenerationTokens, {
 			userId: 'owner',
 			allowance: 10000,
 			waitForCapacity: true

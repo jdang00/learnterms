@@ -128,11 +128,16 @@ export const claimDocumentTopicMapping = internalMutation({
 				}
 			}
 		});
-		await ctx.scheduler.runAfter(15 * 60_000, internal.questionStudio.failDocumentTopicMapping, {
-			documentId: args.documentId,
-			sourceIndexedAt: args.sourceIndexedAt,
-			error: 'Upload topic preparation did not finish. Review this document in the Content Library.'
-		});
+		await ctx.scheduler.runAfter(
+			15 * 60_000,
+			internal.questionStudio.mappingState.failDocumentTopicMapping,
+			{
+				documentId: args.documentId,
+				sourceIndexedAt: args.sourceIndexedAt,
+				error:
+					'Upload topic preparation did not finish. Review this document in the Content Library.'
+			}
+		);
 		return { status: 'claimed' as const };
 	}
 });

@@ -2,6 +2,7 @@
 	import { ArrowLeft, ArrowRight, Calendar, Check, School, Users } from 'lucide-svelte';
 	import { useClerkContext } from 'svelte-clerk';
 	import { useConvexClient } from 'convex-svelte';
+	import { resolve } from '$app/paths';
 	import { api } from '../../convex/_generated/api';
 	import type { CohortInfo } from '../../lib/types';
 
@@ -103,12 +104,14 @@
 					<p class="mb-4 text-center text-sm text-base-content/70">
 						Sign in to enter your class code and join your cohort.
 					</p>
+					<!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() with a query string -->
 					<a
-						href="/sign-in?redirect_url=%2Fjoin-class"
+						href={`${resolve('/sign-in')}?redirect_url=%2Fjoin-class`}
 						class="btn btn-primary w-full gap-2 rounded-full"
 					>
 						Sign in to continue <ArrowRight size={16} />
 					</a>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				{:else}
 					<form onsubmit={handleJoinClass} class="space-y-4">
 						<label class="block">

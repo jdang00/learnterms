@@ -4,33 +4,18 @@ import { components } from './_generated/api';
 import type { DataModel, Doc, Id } from './_generated/dataModel';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
+import { requireCurrentUser } from './access';
 
 export const r2 = new R2(components.r2);
 
 type ReadCtx = QueryCtx | MutationCtx;
-
-async function getCurrentUser(ctx: ReadCtx): Promise<Doc<'users'>> {
-	const identity = await ctx.auth.getUserIdentity();
-	if (!identity) {
-		throw new Error('Not authenticated');
-	}
-
-	const user = await ctx.db
-		.query('users')
-		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
-		.first();
-	if (!user) {
-		throw new Error('User not found');
-	}
-	return user;
-}
 
 function canManageDocuments(user: Doc<'users'>) {
 	return user.role === 'dev' || user.role === 'admin' || user.role === 'curator';
 }
 
 async function assertCanUpload(ctx: ReadCtx) {
-	const user = await getCurrentUser(ctx);
+	const user = await requireCurrentUser(ctx);
 	if (!canManageDocuments(user)) {
 		throw new Error('Unauthorized');
 	}
@@ -105,7 +90,7 @@ async function findDocumentByR2Key(ctx: ReadCtx, key: string, user: Doc<'users'>
 }
 
 async function assertCanReadKey(ctx: ReadCtx, key: string) {
-	const user = await getCurrentUser(ctx);
+	const user = await requireCurrentUser(ctx);
 	const document = await findDocumentByR2Key(ctx, key, user);
 	if (!document) {
 		throw new Error('Document not found or access denied');
@@ -156,7 +141,7 @@ export const getDocumentUrl = query({
 		documentId: v.id('contentLib')
 	},
 	handler: async (ctx, args) => {
-		const user = await getCurrentUser(ctx);
+		const user = await requireCurrentUser(ctx);
 		const document = await ctx.db.get(args.documentId);
 		if (
 			!document ||

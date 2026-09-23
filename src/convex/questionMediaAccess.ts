@@ -1,21 +1,11 @@
 import type { Id } from './_generated/dataModel';
 import type { QueryCtx, MutationCtx } from './_generated/server';
+import { requireCurrentUser } from './access';
 
 type ReadCtx = QueryCtx | MutationCtx;
 
-export async function requireMediaUser(ctx: ReadCtx) {
-	const identity = await ctx.auth.getUserIdentity();
-	if (!identity) throw new Error('Not authenticated');
-	const user = await ctx.db
-		.query('users')
-		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
-		.unique();
-	if (!user || user.deletedAt) throw new Error('User not found');
-	return user;
-}
-
 export async function requireMediaModule(ctx: ReadCtx, moduleId: Id<'module'>, write = false) {
-	const user = await requireMediaUser(ctx);
+	const user = await requireCurrentUser(ctx);
 	const module = await ctx.db.get(moduleId);
 	const classDoc = module ? await ctx.db.get(module.classId) : null;
 	const cohort = classDoc ? await ctx.db.get(classDoc.cohortId) : null;

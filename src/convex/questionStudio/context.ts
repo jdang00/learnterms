@@ -133,7 +133,7 @@ export const getSourcePages = action({
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) throw new Error('Unauthorized');
 		const { document }: DocumentMappingContext = await ctx.runQuery(
-			internal.questionStudio.getDocumentMappingContext,
+			internal.questionStudio.context.getDocumentMappingContext,
 			{
 				documentId: args.documentId,
 				clerkUserId: identity.subject

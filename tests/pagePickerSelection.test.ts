@@ -3,7 +3,7 @@ import {
 	formatPageSelection,
 	parsePageSelection,
 	sourcePageBatch
-} from '../src/lib/admin/pagePickerSelection';
+} from '../src/lib/admin/question-studio/pagePickerSelection';
 
 const pages = Array.from({ length: 107 }, (_, index) => index + 1);
 describe('page picker selection', () => {

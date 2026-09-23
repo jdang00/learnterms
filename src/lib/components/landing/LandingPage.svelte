@@ -203,7 +203,7 @@
 
 <svelte:window bind:scrollY />
 
-<main class="relative isolate overflow-hidden pb-28">
+<div class="relative isolate overflow-hidden pb-28">
 	<div class="pointer-events-none absolute inset-0 -z-10">
 		<div class="page-grid"></div>
 		<div bind:this={glowContainer} class="glow-wrap">
@@ -236,6 +236,42 @@
 					</a>
 				</div>
 			</div>
+		</section>
+
+		<section class="mt-2 grid gap-3 sm:grid-cols-3" aria-label="Explore LearnTerms">
+			<a
+				href={resolve('/features')}
+				class="card border border-base-300 bg-base-100 transition-colors hover:border-primary/50"
+			>
+				<span class="card-body gap-1 p-5">
+					<span class="font-semibold">Explore study features</span>
+					<span class="text-sm text-base-content/70"
+						>Question banks, practice tests, feedback, and progress tools.</span
+					>
+				</span>
+			</a>
+			<a
+				href={resolve('/pricing')}
+				class="card border border-base-300 bg-base-100 transition-colors hover:border-primary/50"
+			>
+				<span class="card-body gap-1 p-5">
+					<span class="font-semibold">See access and pricing</span>
+					<span class="text-sm text-base-content/70"
+						>How students and content curators use LearnTerms.</span
+					>
+				</span>
+			</a>
+			<a
+				href="https://docs.learnterms.com/docs"
+				class="card border border-base-300 bg-base-100 transition-colors hover:border-primary/50"
+			>
+				<span class="card-body gap-1 p-5">
+					<span class="font-semibold">Read the documentation</span>
+					<span class="text-sm text-base-content/70"
+						>Guides for study workflows, cohorts, and course content.</span
+					>
+				</span>
+			</a>
 		</section>
 
 		<section class="mt-10" aria-labelledby="quiz-preview-title">
@@ -890,7 +926,7 @@
 			</div>
 		</section>
 	</div>
-</main>
+</div>
 
 <style>
 	.page-grid {

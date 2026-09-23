@@ -56,6 +56,7 @@
 		if (scale <= 1.01) resetZoom();
 	}
 
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- pointer bookkeeping, not rendered
 	const pointers = new Map<number, { x: number; y: number }>();
 	let pinch: { distance: number; scale: number } | null = null;
 	let pan: { x: number; y: number; startX: number; startY: number } | null = null;

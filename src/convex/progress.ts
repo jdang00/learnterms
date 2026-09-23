@@ -2,16 +2,9 @@ import { v } from 'convex/values';
 import { authQuery } from './authQueries';
 import type { Doc, Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
+import { hasInteraction } from './moduleStats';
 import { polar } from './polar';
 import { requireCohortStaff, requireUserReadById } from './access';
-
-function hasInteraction(
-	record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions' | 'attempts'>
-) {
-	return (
-		record.attempts > 0 || record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0
-	);
-}
 
 /**
  * Get all students in a cohort with their basic info

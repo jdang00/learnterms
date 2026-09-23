@@ -6,10 +6,10 @@
 		type ToolRun,
 		type Message,
 		toolDefinitions,
-		formatBytes,
 		parseOptionalNumber,
 		parsePageNumbers
 	} from '$lib/admin/workbench/model';
+	import { formatBytes } from '$lib/utils/format';
 	import ToolResults from '$lib/admin/workbench/ToolResults.svelte';
 	import ToolHistory from '$lib/admin/workbench/ToolHistory.svelte';
 	import RagChat from '$lib/admin/workbench/RagChat.svelte';
@@ -138,7 +138,10 @@
 				if (pages.length) args.pageNumbers = pages;
 			}
 
-			const result = (await client.action(api.questionStudio.runDevTool, args)) as DevToolResult;
+			const result = (await client.action(
+				api.questionStudio.devTools.runDevTool,
+				args
+			)) as DevToolResult;
 			const id = `${Date.now()}-${selectedTool}`;
 			toolRuns = [{ id, tool: selectedTool, at: Date.now(), result }, ...toolRuns].slice(0, 12);
 			selectedRunId = id;
@@ -167,7 +170,7 @@
 		messages = [...messages, { role: 'user', text: question }];
 
 		try {
-			const result = await client.action(api.ragKnowledge.askCohort, {
+			const result = await client.action(api.ragKnowledge.management.askCohort, {
 				cohortId: userData.data.cohortId as Id<'cohort'>,
 				prompt: question,
 				sourceDocumentId: selectedDocumentId ? (selectedDocumentId as Id<'contentLib'>) : undefined,

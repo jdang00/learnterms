@@ -18,7 +18,9 @@ export const ingest = workflow
 				retry: { maxAttempts: 3, initialBackoffMs: 5000, base: 2 }
 			});
 			if (done) {
-				await step.runAction(internal.ragKnowledge.finishDocumentIndex, args, { retry: false });
+				await step.runAction(internal.ragKnowledge.indexing.finishDocumentIndex, args, {
+					retry: false
+				});
 				return null;
 			}
 		}

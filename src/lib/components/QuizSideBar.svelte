@@ -11,7 +11,7 @@
 	import { resolve } from '$app/paths';
 	import ProgressRing from './ProgressRing.svelte';
 
-	let { qs = $bindable(), module, currentlySelected, userId, moduleId, client, classId } = $props();
+	let { qs = $bindable(), module, currentlySelected, classId } = $props();
 	let hideSidebar = $state(false);
 	let isInfoModalOpen = $state(false);
 	let isSolutionModalOpen = $state(false);
@@ -123,6 +123,7 @@
 							inert={!qs.showSolution}
 							aria-hidden={!qs.showSolution}
 						>
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 							<div class="tiptap-content">{@html sanitizedRationale}</div>
 							<QuestionSources
 								source={currentlySelected?.metadata?.source ??
@@ -234,6 +235,7 @@
 		</form>
 		<h3 class="text-lg font-bold">Rationale</h3>
 		{#if hasRationale(currentlySelected)}
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			<div class="py-4 tiptap-content">{@html sanitizedRationale}</div>
 			<QuestionSources
 				source={currentlySelected?.metadata?.source ?? currentlySelected?.metadata?.generation}

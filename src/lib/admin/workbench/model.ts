@@ -130,12 +130,6 @@ export function formatChars(count: number) {
 	return count >= 1000 ? `${(count / 1000).toFixed(1)}k` : String(count);
 }
 
-export function formatBytes(bytes: number) {
-	return bytes >= 1024 * 1024
-		? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-		: `${Math.round(bytes / 1024)} KB`;
-}
-
 export function formatTime(at: number) {
 	return new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }

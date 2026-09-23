@@ -26,8 +26,8 @@
 		TrendingUp,
 		Users
 	} from 'lucide-svelte';
-	import StudentDetailModal from '$lib/admin/StudentDetailModal.svelte';
-	import CuratorGenerationRuns from '$lib/admin/CuratorGenerationRuns.svelte';
+	import StudentDetailModal from '$lib/admin/progress/StudentDetailModal.svelte';
+	import CuratorGenerationRuns from '$lib/admin/progress/CuratorGenerationRuns.svelte';
 	import StudentAvatar from '$lib/admin/progress/StudentAvatar.svelte';
 	import Explorer from '$lib/admin/progress/Explorer.svelte';
 	import ActivityBars from '$lib/admin/progress/ActivityBars.svelte';
@@ -87,12 +87,14 @@
 		};
 	});
 	function navigate(values: Record<string, string | null>) {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local, non-reactive
 		const url = new URL(page.url);
 		url.search = params.toString();
 		for (const [key, value] of Object.entries(values)) {
 			if (value) url.searchParams.set(key, value);
 			else url.searchParams.delete(key);
 		}
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- URL derived from page.url
 		pushState(url, { ...page.state, progressSearch: url.search });
 	}
 	function showStudents(nextFilter = 'all') {
@@ -379,13 +381,6 @@
 		<p class="text-xs text-base-content/55">{subtitle}</p>
 	</div>
 {/snippet}
-
-<svelte:head
-	><title>Class Progress · LearnTerms</title><meta
-		name="description"
-		content="Live cohort activity, engagement, and study insights for curators."
-	/></svelte:head
->
 
 <div class="progress-workspace mx-auto max-w-7xl px-4 pt-6 pb-24 text-base-content sm:px-8">
 	<header class="flex flex-wrap items-end justify-between gap-4">

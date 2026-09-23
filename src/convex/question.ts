@@ -6,7 +6,7 @@ import {
 	assertStandaloneRationale,
 	shuffleCorrectAnswer
 } from './questionStudio/presentation';
-import { action, internalMutation } from './_generated/server';
+import { internalMutation } from './_generated/server';
 import { shiftQuestionStats } from './moduleStats';
 import { authCuratorMutation } from './authQueries';
 import { v } from 'convex/values';
@@ -19,26 +19,6 @@ import type { MutationCtx } from './_generated/server';
 import { applyQuestionCreationDeltaAndEvaluateBadges } from './badgeEngine';
 import { getRationale } from '../lib/utils/rationale';
 import { attachQuestionImages, imageAttachment } from './questionMediaSaving';
-
-async function assertQuestionModuleAccess(ctx: MutationCtx, moduleId: Id<'module'>) {
-	const identity = await ctx.auth.getUserIdentity();
-	if (!identity) throw new Error('Unauthorized');
-	const user = await ctx.db
-		.query('users')
-		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
-		.first();
-	const module = await ctx.db.get(moduleId);
-	const classDoc = module ? await ctx.db.get(module.classId) : null;
-	if (
-		!user ||
-		!module ||
-		module.deletedAt ||
-		!classDoc ||
-		classDoc.deletedAt ||
-		(user.role !== 'dev' && user.cohortId !== classDoc.cohortId)
-	)
-		throw new Error('Module access denied');
-}
 
 // Resolve the title on the server and keep source access within the destination cohort.
 async function validateManualSource(
@@ -109,10 +89,6 @@ async function prepareAiPublication(
 
 const LIMIT_FREE = 15;
 const LIMIT_PRO = 300;
-
-function throwLegacyGenerationRemoved(): never {
-	throw new Error('Legacy AI question generation has been removed. Use the RAG workflow.');
-}
 
 export const checkAndIncrementUsage = internalMutation({
 	args: { count: v.number(), clerkUserId: v.string() },
@@ -616,7 +592,7 @@ export const insertQuestion = authCuratorMutation({
 		)
 	},
 	handler: async (ctx, args) => {
-		await assertQuestionModuleAccess(ctx, args.moduleId);
+		await requireModuleAccess(ctx, args.moduleId);
 		await checkModuleCapacity(ctx, args.moduleId, 1);
 		const rationale = normalizeIncomingRationale(args);
 		if (!rationale) {
@@ -751,7 +727,7 @@ async function updateQuestionStatuses(
 	},
 	distinctId: string
 ) {
-	await assertQuestionModuleAccess(ctx, args.moduleId);
+	await requireModuleAccess(ctx, args.moduleId);
 	let updatedCount = 0;
 	let skippedCount = 0;
 	const errors: string[] = [];
@@ -865,7 +841,7 @@ export const updateQuestion = authCuratorMutation({
 		status: v.string()
 	},
 	handler: async (ctx, args) => {
-		await assertQuestionModuleAccess(ctx, args.moduleId);
+		await requireModuleAccess(ctx, args.moduleId);
 		const questionToUpdate = await ctx.db.get(args.questionId);
 		if (!questionToUpdate || questionToUpdate.moduleId !== args.moduleId) {
 			throw new Error('Question not found or access denied');
@@ -997,7 +973,7 @@ export const createQuestion = authCuratorMutation({
 		updatedAt: v.number()
 	},
 	handler: async (ctx, args) => {
-		await assertQuestionModuleAccess(ctx, args.moduleId);
+		await requireModuleAccess(ctx, args.moduleId);
 		await checkModuleCapacity(ctx, args.moduleId, 1);
 		const rationale = normalizeIncomingRationale(args);
 		if (!rationale) {
@@ -1146,7 +1122,7 @@ export const updateQuestionOrder = authCuratorMutation({
 		moduleId: v.id('module')
 	},
 	handler: async (ctx, args) => {
-		await assertQuestionModuleAccess(ctx, args.moduleId);
+		await requireModuleAccess(ctx, args.moduleId);
 		const allQuestions = await ctx.db
 			.query('question')
 			.withIndex('by_moduleId', (q) => q.eq('moduleId', args.moduleId))
@@ -1577,46 +1553,5 @@ export const repairMatchingPairsForModule = authCuratorMutation({
 		}
 
 		return { updated };
-	}
-});
-
-export const generateQuestions = action({
-	args: {
-		material: v.string(),
-		model: v.string(),
-		numQuestions: v.number(),
-		focus: v.string(),
-		customPrompt: v.optional(v.string())
-	},
-	handler: async (): Promise<{ questions: []; count: 0 }> => {
-		throwLegacyGenerationRemoved();
-	}
-});
-
-export const generateDistractorsAndRationale = action({
-	args: {
-		stem: v.string(),
-		correctAnswers: v.array(v.string()),
-		existingOptions: v.optional(v.array(v.string())),
-		focus: v.string(),
-		numDistractors: v.optional(v.number()),
-		existingRationale: v.optional(v.string()),
-		model: v.optional(v.string())
-	},
-	handler: async (): Promise<{ distractors: string[]; rationale: string }> => {
-		throwLegacyGenerationRemoved();
-	}
-});
-
-export const generateRationale = action({
-	args: {
-		stem: v.string(),
-		answer: v.string(),
-		focus: v.string(),
-		existingRationale: v.optional(v.string()),
-		model: v.optional(v.string())
-	},
-	handler: async (): Promise<{ rationale: string }> => {
-		throwLegacyGenerationRemoved();
 	}
 });

@@ -18,25 +18,7 @@
 	const nextItem: DocsNavItem | null = $derived(
 		currentIndex >= 0 && currentIndex < flatItems.length - 1 ? flatItems[currentIndex + 1] : null
 	);
-
-	const pageTitle = $derived(
-		(flatItems[currentIndex]?.title ? `${flatItems[currentIndex]?.title} – ` : '') +
-			'LearnTerms Docs'
-	);
-	const description = $derived('Guides and documentation for LearnTerms.');
-	const canonical = $derived(page.url.href);
 </script>
-
-<svelte:head>
-	<title>{pageTitle}</title>
-	<meta name="description" content={description} />
-	<link rel="canonical" href={canonical} />
-	<meta property="og:type" content="article" />
-	<meta property="og:title" content={pageTitle} />
-	<meta property="og:description" content={description} />
-	<meta property="og:url" content={canonical} />
-	<meta name="robots" content="index,follow" />
-</svelte:head>
 
 <section class="mx-auto max-w-6xl px-4 py-10 mb-56">
 	<DocsBreadcrumbs />

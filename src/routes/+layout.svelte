@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css';
+	import { getRouteSeo, SITE_ORIGIN } from '$lib/seo';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
@@ -12,8 +13,8 @@
 	import { getPostHog } from '$lib/analytics/posthogClient';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { browser, dev } from '$app/environment';
 	import { resolve } from '$app/paths';
+	import { browser, dev } from '$app/environment';
 	import { trackKeyboardInset } from '$lib/utils/keyboardInset';
 	import { trackPreviousPath } from '$lib/utils/backNavigation';
 
@@ -108,30 +109,21 @@
 	const year = new Date().getFullYear();
 
 	const defaultSeo = {
-		title: 'LearnTerms is Smarter Studying, Simplified.',
-		description:
-			'LearnTerms gives you a live quiz workspace where answers, flags, and progress sync instantly, so every study session stays focused and uninterrupted.',
 		image: 'https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w',
 		siteName: 'LearnTerms'
 	};
 
-	type Seo = {
-		title: string;
-		description: string;
-		image: string;
-		canonical: string;
-		fullUrl: string;
-	};
-	let seo: Seo = $derived({
-		title: page.data?.seo?.title ?? defaultSeo.title,
-		description: page.data?.seo?.description ?? defaultSeo.description,
+	const routeSeo = $derived(getRouteSeo(page.route.id, page.url.pathname, page.status));
+	const seo = $derived({
+		...routeSeo,
+		title: page.status >= 400 ? routeSeo.title : (page.data?.seo?.title ?? routeSeo.title),
+		description:
+			page.status >= 400
+				? routeSeo.description
+				: (page.data?.seo?.description ?? routeSeo.description),
 		image: page.data?.seo?.image ?? defaultSeo.image,
-		fullUrl:
-			(page.url?.origin || 'https://learnterms.com') +
-			(page.url?.pathname || '/') +
-			(page.url?.search || ''),
-		canonical: (page.url?.origin || 'https://learnterms.com') + (page.url?.pathname || '/')
-	} as Seo);
+		indexable: routeSeo.indexable && page.url.origin === SITE_ORIGIN
+	});
 
 	// Study and test screens bring their own top bar on phones, so the site nav steps aside below lg.
 	const immersive = $derived(
@@ -163,10 +155,10 @@
 <svelte:head>
 	<title>{seo.title}</title>
 	<meta name="description" content={seo.description} />
-	<link rel="canonical" href={seo.canonical} />
-	<meta name="robots" content="index,follow" />
+	{#if seo.indexable}<link rel="canonical" href={seo.canonical} />{/if}
+	<meta name="robots" content={seo.indexable ? 'index,follow' : 'noindex,follow'} />
 
-	<meta property="og:url" content={seo.fullUrl} />
+	<meta property="og:url" content={seo.canonical} />
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content={defaultSeo.siteName} />
 	<meta property="og:title" content={seo.title} />
@@ -175,7 +167,7 @@
 
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta property="twitter:domain" content="learnterms.com" />
-	<meta property="twitter:url" content={seo.fullUrl} />
+	<meta property="twitter:url" content={seo.canonical} />
 	<meta name="twitter:title" content={seo.title} />
 	<meta name="twitter:description" content={seo.description} />
 	<meta name="twitter:image" content={seo.image} />
@@ -206,34 +198,38 @@
 					</div>
 
 					<nav aria-label="Product" class="flex flex-col space-y-1">
-						<h6 class="footer-title">Product</h6>
-						<a class="link link-hover" href={resolve('/')}>Features</a>
+						<h2 class="footer-title">Product</h2>
+						<a class="link link-hover" href={resolve('/features')}>Features</a>
 						<a class="link link-hover" href={resolve('/pricing')}>Pricing</a>
 						<a class="link link-hover" href={resolve('/changelog')}>Changelog</a>
 					</nav>
 
 					<nav aria-label="Resources" class="flex flex-col space-y-1">
-						<h6 class="footer-title">Resources</h6>
-						<a class="link link-hover" href="https://docs.learnterms.com/">Docs</a>
+						<h2 class="footer-title">Resources</h2>
+						<a class="link link-hover" href="https://docs.learnterms.com/docs">Documentation</a>
 						<a class="link link-hover" href={resolve('/blog')}>Blog</a>
 						<a class="link link-hover" href={resolve('/status')}>Status</a>
 					</nav>
 
 					<nav aria-label="Development" class="flex flex-col space-y-1">
-						<h6 class="footer-title">Development</h6>
+						<h2 class="footer-title">Development</h2>
 						<a
 							class="link link-hover"
 							href="https://github.com/jdang00/learnterms"
 							target="_blank"
 							rel="noopener noreferrer">GitHub</a
 						>
-						<a class="link link-hover" href={resolve('/about-us')}>About Us</a>
+						<a class="link link-hover" href={resolve('/about-us')}>About</a>
 						<a class="link link-hover" href={resolve('/contact')}>Contact</a>
 					</nav>
 				</div>
 				<div class="border-t border-base-300">
 					<p class="mx-auto max-w-6xl px-4 py-6 text-sm text-base-content/70 text-center">
 						© {year} LearnTerms. All rights reserved.
+						<span class="mt-2 flex justify-center gap-4">
+							<a class="link link-hover" href={resolve('/privacy')}>Privacy Policy</a>
+							<a class="link link-hover" href={resolve('/terms')}>Terms and Conditions</a>
+						</span>
 					</p>
 				</div>
 			</footer>

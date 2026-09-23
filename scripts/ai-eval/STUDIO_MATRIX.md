@@ -6,8 +6,8 @@ Run with Bun. These are paid development experiments, not publishing commands. R
 
 The September 20 experiment reads the development cardiovascular/hematology source, pages 3–20, and the Testing Module's 59 existing-question exclusions. Capture these before running:
 
-- `context.json`: `questionStudio:getGenerationContext` for the authorized curator, document and destination.
-- `pages-a.json`, `pages-b.json`: `questionStudio:getSourcePages` at offsets 2 and 14, as that curator.
+- `context.json`: `questionStudio/context:getGenerationContext` for the authorized curator, document and destination.
+- `pages-a.json`, `pages-b.json`: `questionStudio/context:getSourcePages` at offsets 2 and 14, as that curator.
 - `models.json`: selected model IDs, capabilities and prices from `https://openrouter.ai/api/v1/models`.
 
 These files contain course material and stay local. Credentials are read directly from the development Convex environment and are never written to artifacts. Verify `.env.local` points to development and no deploy-key override is active before running.

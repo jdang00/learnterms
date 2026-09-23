@@ -13,8 +13,9 @@ import type {
 	StoredMarkdownPage,
 	TopicMapItem
 } from './shared';
-import { EMBEDDING_DIMENSION, EMBEDDING_MODEL, MAX_WORKER_RAG_CHARS, openRouter } from './shared';
+import { MAX_WORKER_RAG_CHARS, openRouter } from './shared';
 import { cleanPlainText, normalizeText, uniqueSortedNumbers } from './text';
+import { EMBEDDING_DIMENSION, EMBEDDING_MODEL } from '../aiModels';
 
 export const documentRag = new RAG<DocumentRagFilters, DocumentRagMetadata>(components.rag, {
 	textEmbeddingModel: openRouter().embedding(EMBEDDING_MODEL),

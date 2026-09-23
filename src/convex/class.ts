@@ -8,7 +8,6 @@ import { internal } from './_generated/api';
 import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
-import type { QueryCtx } from './_generated/server';
 
 const cardThemeValidator = v.object({
 	base: v.string(),
@@ -391,20 +390,6 @@ function computeClassSearchScore(
 	return score;
 }
 
-async function assertCohortSearchAccess(
-	ctx: Pick<QueryCtx, 'db'> & { identity: { subject: string } },
-	cohortId: Id<'cohort'>
-) {
-	const viewer = await ctx.db
-		.query('users')
-		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
-		.first();
-	if (!viewer) throw new Error('Unauthorized');
-	if (viewer.role !== 'dev' && viewer.cohortId !== cohortId) {
-		throw new Error('Unauthorized');
-	}
-}
-
 export const searchClassesByCohort = authQuery({
 	args: {
 		cohortId: v.id('cohort'),
@@ -414,7 +399,7 @@ export const searchClassesByCohort = authQuery({
 	handler: async (ctx, { cohortId, query, limit }) => {
 		const trimmed = query.trim().toLowerCase();
 		if (trimmed.length < 2) return [];
-		await assertCohortSearchAccess(ctx, cohortId);
+		await requireCohortAccess(ctx, cohortId);
 		if (!trimmed) return [];
 
 		const max = Math.min(Math.max(limit ?? 12, 1), 40);

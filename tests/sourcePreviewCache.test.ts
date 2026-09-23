@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { createSourcePreviewCache } from '../src/lib/admin/sourcePreviewCache';
-import { withPdfRenderSlot } from '../src/lib/admin/pdfRenderQueue';
-import type { SourcePreviewBatch } from '../src/lib/admin/sourceContext';
+import { createSourcePreviewCache } from '../src/lib/admin/source/sourcePreviewCache';
+import { withPdfRenderSlot } from '../src/lib/admin/source/pdfRenderQueue';
+import type { SourcePreviewBatch } from '../src/lib/admin/source/sourceContext';
 
 const preview = (revision = 1): SourcePreviewBatch => ({
 	pages: [{ pageNumber: 1, text: 'Source text' }],

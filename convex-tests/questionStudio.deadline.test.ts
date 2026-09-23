@@ -24,10 +24,13 @@ test('Learn deadline includes queue time and expires without relying on schedule
 			updatedAt: 100_000
 		})
 	);
-	const first = await t.mutation(internal.questionStudio.claimWorker, { jobId, workerIndex: 0 });
+	const first = await t.mutation(internal.questionStudio.jobs.claimWorker, {
+		jobId,
+		workerIndex: 0
+	});
 	expect(first?.deadlineAt).toBe(145_000);
 	vi.setSystemTime(145_000);
-	await t.mutation(internal.questionStudio.updateGenerationJob, {
+	await t.mutation(internal.questionStudio.jobUpdates.updateGenerationJob, {
 		jobId,
 		status: 'ready',
 		completed: true,
@@ -36,7 +39,7 @@ test('Learn deadline includes queue time and expires without relying on schedule
 	const job = await t.run((ctx) => ctx.db.get(jobId));
 	expect(job?.status).toBe('failed');
 	expect(job?.completedAt).toBe(145_000);
-	await t.mutation(internal.questionStudio.updateGenerationJob, {
+	await t.mutation(internal.questionStudio.jobUpdates.updateGenerationJob, {
 		jobId,
 		status: 'ready',
 		completed: true

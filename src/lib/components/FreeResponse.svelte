@@ -1,5 +1,5 @@
 <script lang="ts">
-	import QuestionRichTextEditor from '$lib/admin/QuestionRichTextEditor.svelte';
+	import QuestionRichTextEditor from '$lib/admin/questions/QuestionRichTextEditor.svelte';
 	import {
 		acceptanceLevels,
 		responseText,

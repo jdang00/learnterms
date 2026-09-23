@@ -1,1 +1,6 @@
 src/convex/_generated/*
+dev/
+.agents/
+.claude/
+skills-lock.json
+bun.lock

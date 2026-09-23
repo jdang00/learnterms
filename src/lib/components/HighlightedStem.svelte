@@ -57,7 +57,9 @@
 
 	$effect(() => {
 		const content = stem;
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions -- tracks a reactive dependency
 		questionId;
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions -- tracks a reactive dependency
 		resetVersion;
 		const current = ++generation;
 		version = '';
@@ -76,6 +78,7 @@
 		const html = sanitizeHtml(stem);
 		const highlights = ranges;
 		if (!root) return;
+		// eslint-disable-next-line svelte/no-dom-manipulating -- isolated subtree Svelte never renders into
 		root.innerHTML = html;
 		const text = root.textContent ?? '';
 		const intervals = highlights.filter((r) => text.slice(r.start, r.end) === r.quote);
@@ -86,6 +89,7 @@
 		for (const node of nodes) {
 			const start = offset;
 			offset += node.length;
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local, non-reactive
 			const cuts = new Set([0, node.length]);
 			for (const r of intervals)
 				if (r.start < offset && r.end > start) {

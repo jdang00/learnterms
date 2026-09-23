@@ -80,6 +80,16 @@
 		<a class="btn btn-ghost rounded-full text-xl" href={resolve('/')}>LearnTerms</a>
 	</div>
 
+	{#if !user}
+		<nav class="navbar-center hidden gap-1 md:flex" aria-label="Public site">
+			<a class="btn btn-ghost btn-sm" href={resolve('/features')}>Features</a>
+			<a class="btn btn-ghost btn-sm" href={resolve('/pricing')}>Pricing</a>
+			<a class="btn btn-ghost btn-sm" href="https://docs.learnterms.com/docs">Documentation</a>
+			<a class="btn btn-ghost btn-sm" href={resolve('/blog')}>Blog</a>
+			<a class="btn btn-ghost btn-sm" href={resolve('/about-us')}>About</a>
+		</nav>
+	{/if}
+
 	{#if user}
 		<div class="navbar-center flex sm:hidden">
 			<button
@@ -137,6 +147,19 @@
 		</div>
 	</div>
 </div>
+
+{#if !user}
+	<nav
+		class="flex justify-center gap-1 overflow-x-auto border-b border-base-300 px-2 pb-2 md:hidden"
+		aria-label="Public site"
+	>
+		<a class="btn btn-ghost btn-xs" href={resolve('/features')}>Features</a>
+		<a class="btn btn-ghost btn-xs" href={resolve('/pricing')}>Pricing</a>
+		<a class="btn btn-ghost btn-xs" href="https://docs.learnterms.com/docs">Documentation</a>
+		<a class="btn btn-ghost btn-xs" href={resolve('/blog')}>Blog</a>
+		<a class="btn btn-ghost btn-xs" href={resolve('/about-us')}>About</a>
+	</nav>
+{/if}
 
 {#if user}
 	<PowerBar

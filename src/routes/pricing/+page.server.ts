@@ -8,7 +8,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const seo = {
 		title: 'Pricing — LearnTerms',
-		description: 'Choose the right plan for your study needs. Free and Pro plans available.'
+		description:
+			'Explore LearnTerms access for students and subscription options for curators building class-aligned question banks.'
 	};
 
 	// Not logged in - show pricing page (they can browse)

@@ -1,6 +1,6 @@
 import { z } from 'zod/v4';
 import type { QualityCall, QualityCallResult } from './quality';
-import { QUESTION_STUDIO_MODEL } from './shared';
+import { TEXT_MODEL } from '../aiModels';
 
 // Standard GPT-6 Luna pricing, verified 2026-09-22. An estimate, not an invoice.
 // https://developers.openai.com/api/docs/models/gpt-6-luna
@@ -50,7 +50,7 @@ export async function callQualityModel(
 			signal: AbortSignal.timeout(Math.max(1, Math.floor(request.timeoutMs ?? 120_000))),
 			headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				model: QUESTION_STUDIO_MODEL,
+				model: TEXT_MODEL,
 				service_tier: 'default',
 				store: true,
 				metadata: {

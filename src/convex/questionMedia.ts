@@ -1,7 +1,8 @@
 import { v } from 'convex/values';
 import { query, mutation } from './_generated/server';
 import schema from './schema';
-import { requireMediaQuestion, requireMediaUser } from './questionMediaAccess';
+import { requireMediaQuestion } from './questionMediaAccess';
+import { requireCurrentUser } from './access';
 import { validateMediaText } from './questionMediaSaving';
 import { r2 } from './r2Documents';
 
@@ -39,7 +40,7 @@ export const getByQuestionIds = query({
 	args: { questionIds: v.array(v.id('question')) },
 	returns: v.array(v.object({ questionId: v.id('question'), hasMedia: v.boolean() })),
 	handler: async (ctx, { questionIds }) => {
-		await requireMediaUser(ctx);
+		await requireCurrentUser(ctx);
 		if (questionIds.length > 150) throw new Error('Too many questions');
 		const results = [];
 		for (const questionId of new Set(questionIds)) {

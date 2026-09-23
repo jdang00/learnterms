@@ -584,3 +584,35 @@ test('foreign staff cannot edit, delete, or create content through direct reques
 	).rejects.toThrow('access denied');
 	expect(await t.run((ctx) => ctx.db.get(ids.questionId))).not.toBeNull();
 });
+
+test('shared access helpers reject deleted users and foreign or deleted classes across modules', async () => {
+	const { t, student, dev, ids } = await setup();
+	await expect(
+		student.query(api.customQuiz.getUserAttemptsForClass, { classId: ids.classId })
+	).resolves.toEqual([]);
+	await expect(
+		student.query(api.customQuiz.getUserAttemptsForClass, { classId: ids.otherClassId })
+	).rejects.toThrow('access denied');
+	await expect(
+		dev.query(api.customQuiz.getUserAttemptsForClass, { classId: ids.otherClassId })
+	).resolves.toEqual([]);
+
+	await t.run((ctx) => ctx.db.patch(ids.classId, { deletedAt: 1 }));
+	await expect(
+		student.query(api.customQuiz.getUserAttemptsForClass, { classId: ids.classId })
+	).rejects.toThrow('access denied');
+
+	await t.run((ctx) => ctx.db.patch(ids.studentId, { deletedAt: 1 }));
+	await expect(
+		student.query(api.customQuiz.getUserAttemptsForClass, { classId: ids.otherClassId })
+	).rejects.toThrow('Unauthorized');
+	await expect(student.query(api.featureAnnouncements.getCurrentForViewer, {})).rejects.toThrow(
+		'Unauthorized'
+	);
+	await expect(
+		student.mutation(api.r2Documents.generateUploadUrl, {
+			cohortId: ids.cohortId,
+			fileName: 'notes.pdf'
+		})
+	).rejects.toThrow('Unauthorized');
+});

@@ -11,7 +11,7 @@ afterEach(() => {
 
 test('save uses server candidates, creates drafts and rejects replay', async () => {
 	const { t, ids, owner } = await setup();
-	const jobId = await owner.mutation(api.questionStudio.createGenerationJob, {
+	const jobId = await owner.mutation(api.questionStudio.jobs.createGenerationJob, {
 		documentId: ids.documentId,
 		moduleId: ids.moduleId,
 		requestedCount: 1
@@ -54,7 +54,7 @@ test('save uses server candidates, creates drafts and rejects replay', async () 
 			}
 		});
 	});
-	const result = await owner.mutation(api.questionStudio.saveSelectedCandidates, {
+	const result = await owner.mutation(api.questionStudio.saving.saveSelectedCandidates, {
 		jobId,
 		documentId: ids.documentId,
 		moduleId: ids.moduleId,
@@ -85,7 +85,7 @@ test('save uses server candidates, creates drafts and rejects replay', async () 
 	expect(editedQuestion?.metadata.generation).toEqual(question?.metadata.generation);
 
 	await expect(
-		owner.mutation(api.questionStudio.saveSelectedCandidates, {
+		owner.mutation(api.questionStudio.saving.saveSelectedCandidates, {
 			jobId,
 			documentId: ids.documentId,
 			moduleId: ids.moduleId,
@@ -93,17 +93,19 @@ test('save uses server candidates, creates drafts and rejects replay', async () 
 		})
 	).rejects.toThrow('already saved');
 	await expect(
-		t.withIdentity({ subject: 'other' }).mutation(api.questionStudio.saveSelectedCandidates, {
-			jobId,
-			documentId: ids.documentId,
-			moduleId: ids.moduleId,
-			candidateIndexes: [0]
-		})
+		t
+			.withIdentity({ subject: 'other' })
+			.mutation(api.questionStudio.saving.saveSelectedCandidates, {
+				jobId,
+				documentId: ids.documentId,
+				moduleId: ids.moduleId,
+				candidateIndexes: [0]
+			})
 	).rejects.toThrow('not available');
 });
 test('curator edits preserve provenance, reject stale/foreign edits, and save the edited answer', async () => {
 	const { t, ids, owner } = await setup();
-	const jobId = await owner.mutation(api.questionStudio.createGenerationJob, {
+	const jobId = await owner.mutation(api.questionStudio.jobs.createGenerationJob, {
 		documentId: ids.documentId,
 		moduleId: ids.moduleId,
 		requestedCount: 1
@@ -157,26 +159,26 @@ test('curator edits preserve provenance, reject stale/foreign edits, and save th
 		rationale: 'Adding two and two gives four.'
 	};
 	await expect(
-		t.withIdentity({ subject: 'other' }).mutation(api.questionStudio.editCandidate, edit)
+		t.withIdentity({ subject: 'other' }).mutation(api.questionStudio.saving.editCandidate, edit)
 	).rejects.toThrow('not available');
 	await expect(
-		owner.mutation(api.questionStudio.editCandidate, {
+		owner.mutation(api.questionStudio.saving.editCandidate, {
 			...edit,
 			options: ['Four', 'four', 'Six', 'Seven']
 		})
 	).rejects.toThrow('distinct options');
 	await expect(
-		owner.mutation(api.questionStudio.editCandidate, { ...edit, answerIndex: 4 })
+		owner.mutation(api.questionStudio.saving.editCandidate, { ...edit, answerIndex: 4 })
 	).rejects.toThrow('correct answer');
-	const edited = await owner.mutation(api.questionStudio.editCandidate, edit);
+	const edited = await owner.mutation(api.questionStudio.saving.editCandidate, edit);
 	expect(edited.correctAnswers).toEqual(['Four']);
 	expect(edited.sourceCitations).toEqual(candidate.sourceCitations);
 	expect(edited.metadata.curatorRevision).toBe(1);
 	expect((await t.run((ctx) => ctx.db.get(rowId)))?.originalCandidate).toEqual(candidate);
-	await expect(owner.mutation(api.questionStudio.editCandidate, edit)).rejects.toThrow(
+	await expect(owner.mutation(api.questionStudio.saving.editCandidate, edit)).rejects.toThrow(
 		'another window'
 	);
-	const saved = await owner.mutation(api.questionStudio.saveSelectedCandidates, {
+	const saved = await owner.mutation(api.questionStudio.saving.saveSelectedCandidates, {
 		jobId,
 		moduleId: ids.moduleId,
 		documentId: ids.documentId,
@@ -192,7 +194,7 @@ test('curator edits preserve provenance, reject stale/foreign edits, and save th
 	expect(question?.metadata.generation?.reasoningOrder).toBeUndefined();
 	expect(question?.metadata.generation?.curatorRevision).toBe(1);
 	await expect(
-		owner.mutation(api.questionStudio.editCandidate, { ...edit, expectedRevision: 1 })
+		owner.mutation(api.questionStudio.saving.editCandidate, { ...edit, expectedRevision: 1 })
 	).rejects.toThrow('already saved');
 });
 

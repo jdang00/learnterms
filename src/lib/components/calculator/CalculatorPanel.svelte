@@ -147,6 +147,7 @@
 						commit('keyboard');
 					}
 				});
+				// eslint-disable-next-line svelte/no-dom-manipulating -- mounts the MathLive field imperatively
 				host.append(mf);
 				mf.menuItems = [];
 				mf.setValue(latex, { silenceNotifications: true });
@@ -511,9 +512,11 @@
 							onclick={() => setExpression(item.latex, item)}
 						>
 							<span class="block text-sm font-medium">{item.name}</span>
+							<!-- eslint-disable svelte/no-at-html-tags -->
 							<span class="block overflow-x-auto text-sm text-base-content/60"
 								>{#if renderMath}{@html renderMath(item.latex)}{/if}</span
 							>
+							<!-- eslint-enable svelte/no-at-html-tags -->
 						</button>
 					</li>
 				{/each}
@@ -578,6 +581,7 @@
 				<ul class="-mx-1 min-h-0 flex-1 overflow-y-auto">
 					{#each history as entry (entry.id)}
 						<li class="flex items-center gap-2 px-1">
+							<!-- eslint-disable svelte/no-at-html-tags -->
 							<button
 								type="button"
 								class="min-w-0 flex-1 truncate py-2 ps-2 text-left text-sm text-base-content/55 transition-colors hover:text-base-content"
@@ -595,6 +599,7 @@
 											: entry.latex
 									)}{/if}</button
 							>
+							<!-- eslint-enable svelte/no-at-html-tags -->
 							{@render copyable(
 								entry.value,
 								`history-${entry.id}`,

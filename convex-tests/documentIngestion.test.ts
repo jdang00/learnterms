@@ -71,7 +71,7 @@ test('budget exhaustion prevents a paid submission reservation', async () => {
 });
 test('unauthenticated callers cannot initiate parsing', async () => {
 	const { t, documentId } = await setup();
-	await expect(t.action(api.ragKnowledge.indexR2Document, { documentId })).rejects.toThrow(
+	await expect(t.action(api.ragKnowledge.indexing.indexR2Document, { documentId })).rejects.toThrow(
 		'Unauthorized'
 	);
 });

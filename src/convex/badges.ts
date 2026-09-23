@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { authAdminMutation, authAdminQuery, authQuery } from './authQueries';
-import { internalMutation, mutation, query } from './_generated/server';
+import { internalMutation, mutation } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import type { DatabaseReader, DatabaseWriter } from './_generated/server';
 
@@ -347,93 +347,6 @@ async function getVisibleBadgesForViewer(ctx: { db: DatabaseReader }, viewer: Do
 
 	return { visible, classCohortMap };
 }
-
-export const listBadgesForViewer = query({
-	args: {},
-	handler: async (ctx) => {
-		const identity = await ctx.auth.getUserIdentity();
-		let viewer: Doc<'users'> | null = null;
-
-		if (identity) {
-			viewer = await ctx.db
-				.query('users')
-				.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
-				.first();
-		}
-
-		const { visible, classCohortMap } = await getVisibleBadgesForViewer(ctx, viewer);
-
-		let awardsByBadgeId = new Map<string, Doc<'userBadgeAwards'>>();
-		if (viewer) {
-			const awards = await ctx.db
-				.query('userBadgeAwards')
-				.withIndex('by_userId', (q) => q.eq('userId', viewer._id))
-				.collect();
-			awardsByBadgeId = new Map(awards.map((award) => [award.badgeDefinitionId, award]));
-		}
-
-		const allUsers = await ctx.db.query('users').collect();
-		const activeUsers = allUsers.filter((user) => !user.deletedAt);
-		const activeUserIds = new Set(activeUsers.map((user) => user._id));
-		const globalDenominator = activeUsers.length;
-
-		const cohortIds = [
-			...new Set(visible.map((badge) => badge.cohortId).filter(Boolean))
-		] as Id<'cohort'>[];
-		const cohortDenominator = new Map<string, number>();
-		for (const cohortId of cohortIds) {
-			const users = await ctx.db
-				.query('users')
-				.withIndex('by_cohortId', (q) => q.eq('cohortId', cohortId))
-				.collect();
-			cohortDenominator.set(cohortId, users.filter((user) => !user.deletedAt).length);
-		}
-
-		const awardCountsByBadgeId = new Map<string, number>();
-		const badgeAwards = await Promise.all(
-			visible.map(async (badge) => {
-				const awards = await ctx.db
-					.query('userBadgeAwards')
-					.withIndex('by_badgeDefinitionId', (q) => q.eq('badgeDefinitionId', badge._id))
-					.collect();
-				return [badge._id, awards] as const;
-			})
-		);
-		for (const [badgeId, awards] of badgeAwards) {
-			const count = awards.filter((award) => activeUserIds.has(award.userId)).length;
-			awardCountsByBadgeId.set(badgeId, count);
-		}
-
-		const withOwnershipAndAwards = visible.map((badge) => {
-			const denominator =
-				badge.scopeType === 'global'
-					? globalDenominator
-					: badge.scopeType === 'cohort'
-						? ((badge.cohortId ? cohortDenominator.get(badge.cohortId) : 0) ?? 0)
-						: ((badge.classId
-								? cohortDenominator.get(classCohortMap.get(badge.classId) ?? '')
-								: 0) ?? 0);
-
-			const activeAwardCount = awardCountsByBadgeId.get(badge._id) ?? 0;
-			const computedPct = denominator > 0 ? (activeAwardCount / denominator) * 100 : 0;
-
-			const award = awardsByBadgeId.get(badge._id);
-
-			return {
-				...badge,
-				ownedPct: computedPct,
-				earned: !!award,
-				awardedAt: award?.awardedAt
-			};
-		});
-
-		return withOwnershipAndAwards.sort((a, b) => {
-			if (Number(b.earned) !== Number(a.earned)) return Number(b.earned) - Number(a.earned);
-			if (b.ownedPct !== a.ownedPct) return b.ownedPct - a.ownedPct;
-			return a.name.localeCompare(b.name);
-		});
-	}
-});
 
 export const listBadgeCatalogForViewer = authQuery({
 	args: {},

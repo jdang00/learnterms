@@ -50,7 +50,7 @@ async function seedUploadMap() {
 
 test('legacy topic maps are reused without relabeling old orders as new types', async () => {
 	const { t, ids, owner } = await setup();
-	const jobId = await owner.mutation(api.questionStudio.createGenerationJob, {
+	const jobId = await owner.mutation(api.questionStudio.jobs.createGenerationJob, {
 		documentId: ids.documentId,
 		moduleId: ids.moduleId,
 		requestedCount: 1
@@ -108,16 +108,16 @@ test('legacy topic maps are reused without relabeling old orders as new types', 
 		});
 	});
 	expect(
-		await owner.query(api.questionStudio.getLatestSavedTopicMap, {
+		await owner.query(api.questionStudio.context.getLatestSavedTopicMap, {
 			documentId: ids.documentId,
 			moduleId: ids.moduleId
 		})
 	).toMatchObject({ topics: [{ topicId: 'old', learningObjectives: ['Recognize a term'] }] });
-	const job = await owner.query(api.questionStudio.getGenerationJob, { jobId });
+	const job = await owner.query(api.questionStudio.jobs.getGenerationJob, { jobId });
 	expect(job?.candidates[0].reasoningOrder).toBe('second');
 	expect(job?.candidates[0].questionType).toBeUndefined();
 	await expect(
-		owner.mutation(api.questionStudio.saveSelectedCandidates, {
+		owner.mutation(api.questionStudio.saving.saveSelectedCandidates, {
 			jobId,
 			documentId: ids.documentId,
 			moduleId: ids.moduleId,
@@ -129,7 +129,7 @@ test('legacy topic maps are reused without relabeling old orders as new types', 
 test('selection reuses old prompt maps across renames and never starts mapping', async () => {
 	const { t, ids, owner } = await seedUploadMap();
 	for (let i = 0; i < 3; i++) {
-		const map = await owner.query(api.questionStudio.getLatestSavedTopicMap, {
+		const map = await owner.query(api.questionStudio.context.getLatestSavedTopicMap, {
 			documentId: ids.documentId,
 			moduleId: ids.moduleId
 		});
@@ -147,7 +147,9 @@ test('duplicate upload mapping returns from cache before fetching source text', 
 	vi.stubGlobal('fetch', fetchMock);
 	try {
 		expect(
-			await t.action(internal.questionStudio.autoMapIndexedDocument, { documentId: ids.documentId })
+			await t.action(internal.questionStudio.mapping.autoMapIndexedDocument, {
+				documentId: ids.documentId
+			})
 		).toEqual({ status: 'cached' });
 		expect(fetchMock).not.toHaveBeenCalled();
 	} finally {
@@ -162,15 +164,17 @@ test('an upload revision can only be claimed once, including after failure', asy
 	);
 	const args = { documentId: ids.documentId, sourceIndexedAt: 1 };
 	const results = await Promise.all([
-		t.mutation(internal.questionStudio.claimDocumentTopicMapping, args),
-		t.mutation(internal.questionStudio.claimDocumentTopicMapping, args)
+		t.mutation(internal.questionStudio.mappingState.claimDocumentTopicMapping, args),
+		t.mutation(internal.questionStudio.mappingState.claimDocumentTopicMapping, args)
 	]);
 	expect(results.map((r) => r.status).sort()).toEqual(['claimed', 'skipped']);
-	await t.mutation(internal.questionStudio.failDocumentTopicMapping, {
+	await t.mutation(internal.questionStudio.mappingState.failDocumentTopicMapping, {
 		...args,
 		error: 'Provider failed'
 	});
-	expect(await t.mutation(internal.questionStudio.claimDocumentTopicMapping, args)).toEqual({
+	expect(
+		await t.mutation(internal.questionStudio.mappingState.claimDocumentTopicMapping, args)
+	).toEqual({
 		status: 'skipped'
 	});
 });
@@ -181,19 +185,19 @@ test('a new indexed revision cannot reuse a prior source map or be claimed by an
 		ctx.db.patch(ids.documentId, { metadata: { indexedAt: 2, ingestionStatus: 'indexed' } })
 	);
 	expect(
-		await owner.query(api.questionStudio.getLatestSavedTopicMap, {
+		await owner.query(api.questionStudio.context.getLatestSavedTopicMap, {
 			documentId: ids.documentId,
 			moduleId: ids.moduleId
 		})
 	).toBeNull();
 	expect(
-		await t.mutation(internal.questionStudio.claimDocumentTopicMapping, {
+		await t.mutation(internal.questionStudio.mappingState.claimDocumentTopicMapping, {
 			documentId: ids.documentId,
 			sourceIndexedAt: 1
 		})
 	).toEqual({ status: 'skipped' });
 	expect(
-		await t.mutation(internal.questionStudio.claimDocumentTopicMapping, {
+		await t.mutation(internal.questionStudio.mappingState.claimDocumentTopicMapping, {
 			documentId: ids.documentId,
 			sourceIndexedAt: 2
 		})
@@ -222,11 +226,11 @@ test('saving a map completes preparation atomically and ignores a later timeout'
 	await t.run((ctx) =>
 		ctx.db.patch(ids.documentId, { metadata: { indexedAt: 1, ingestionStatus: 'indexed' } })
 	);
-	await t.mutation(internal.questionStudio.claimDocumentTopicMapping, {
+	await t.mutation(internal.questionStudio.mappingState.claimDocumentTopicMapping, {
 		documentId: ids.documentId,
 		sourceIndexedAt: 1
 	});
-	await t.mutation(internal.questionStudio.saveTopicMapForRange, {
+	await t.mutation(internal.questionStudio.mappingState.saveTopicMapForRange, {
 		documentId: ids.documentId,
 		cohortId: ids.cohortId,
 		startPage: 1,
@@ -248,7 +252,7 @@ test('saving a map completes preparation atomically and ignores a later timeout'
 			}
 		]
 	});
-	await t.mutation(internal.questionStudio.failDocumentTopicMapping, {
+	await t.mutation(internal.questionStudio.mappingState.failDocumentTopicMapping, {
 		documentId: ids.documentId,
 		sourceIndexedAt: 1,
 		error: 'Late timeout'
@@ -258,7 +262,7 @@ test('saving a map completes preparation atomically and ignores a later timeout'
 	expect(doc?.metadata?.topicMapping?.status).toBe('complete');
 	expect(
 		(
-			await owner.query(api.questionStudio.getLatestSavedTopicMap, {
+			await owner.query(api.questionStudio.context.getLatestSavedTopicMap, {
 				documentId: ids.documentId,
 				moduleId: ids.moduleId
 			})

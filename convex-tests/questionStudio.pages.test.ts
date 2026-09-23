@@ -10,7 +10,7 @@ afterEach(() => {
 
 test('page-mode scope survives resume and worker claims without a saved topic map', async () => {
 	const { t, ids, owner } = await setup();
-	const jobId = await owner.mutation(api.questionStudio.createGenerationJob, {
+	const jobId = await owner.mutation(api.questionStudio.jobs.createGenerationJob, {
 		documentId: ids.documentId,
 		moduleId: ids.moduleId,
 		requestedCount: 2,
@@ -19,13 +19,13 @@ test('page-mode scope survives resume and worker claims without a saved topic ma
 		selectedPageNumbers: [5, 2],
 		sourceIndexedAt: 1
 	});
-	expect(await owner.query(api.questionStudio.getCurrentGenerationJob, {})).toMatchObject({
+	expect(await owner.query(api.questionStudio.jobs.getCurrentGenerationJob, {})).toMatchObject({
 		_id: jobId,
 		sourceMode: 'pages',
 		selectedPageNumbers: [2, 5],
 		sourceIndexedAt: 1
 	});
-	await t.mutation(internal.questionStudio.claimGenerationJob, {
+	await t.mutation(internal.questionStudio.jobs.claimGenerationJob, {
 		jobId,
 		clerkUserId: 'owner',
 		documentId: ids.documentId,
@@ -33,14 +33,14 @@ test('page-mode scope survives resume and worker claims without a saved topic ma
 		total: 2
 	});
 	expect(
-		await t.mutation(internal.questionStudio.claimWorker, { jobId, workerIndex: 0 })
+		await t.mutation(internal.questionStudio.jobs.claimWorker, { jobId, workerIndex: 0 })
 	).toMatchObject({ sourceMode: 'pages', selectedPageNumbers: [2, 5], sourceIndexedAt: 1 });
 });
 
 test('page runs reject stale, empty, duplicate, and out-of-range selections before replacing a run', async () => {
 	const { t, ids, owner } = await setup();
 	await t.run((ctx) => ctx.db.patch(ids.documentId, { metadata: { indexedAt: 1, pageCount: 5 } }));
-	const jobId = await owner.mutation(api.questionStudio.createGenerationJob, {
+	const jobId = await owner.mutation(api.questionStudio.jobs.createGenerationJob, {
 		documentId: ids.documentId,
 		moduleId: ids.moduleId,
 		requestedCount: 1
@@ -54,23 +54,23 @@ test('page runs reject stale, empty, duplicate, and out-of-range selections befo
 	};
 	for (const selectedPageNumbers of [[], [2, 2], [6], [1.5]]) {
 		await expect(
-			owner.mutation(api.questionStudio.createGenerationJob, { ...base, selectedPageNumbers })
+			owner.mutation(api.questionStudio.jobs.createGenerationJob, { ...base, selectedPageNumbers })
 		).rejects.toThrow('valid source pages');
 	}
 	await expect(
-		owner.mutation(api.questionStudio.createGenerationJob, {
+		owner.mutation(api.questionStudio.jobs.createGenerationJob, {
 			...base,
 			selectedPageNumbers: [2],
 			sourceIndexedAt: 0
 		})
 	).rejects.toThrow('Source changed');
-	expect((await owner.query(api.questionStudio.getCurrentGenerationJob, {}))?._id).toBe(jobId);
+	expect((await owner.query(api.questionStudio.jobs.getCurrentGenerationJob, {}))?._id).toBe(jobId);
 });
 
 test('source preview rejects unauthenticated and cross-cohort access before fetching text', async () => {
 	const { t, ids } = await setup();
 	await expect(
-		t.action(api.questionStudio.getSourcePages, { documentId: ids.documentId })
+		t.action(api.questionStudio.context.getSourcePages, { documentId: ids.documentId })
 	).rejects.toThrow('Unauthorized');
 	await t.run(async (ctx) => {
 		await ctx.db.patch(ids.documentId, {
@@ -92,6 +92,6 @@ test('source preview rejects unauthenticated and cross-cohort access before fetc
 	await expect(
 		t
 			.withIdentity({ subject: 'outside' })
-			.action(api.questionStudio.getSourcePages, { documentId: ids.documentId })
+			.action(api.questionStudio.context.getSourcePages, { documentId: ids.documentId })
 	).rejects.toThrow('Unauthorized for this cohort');
 });

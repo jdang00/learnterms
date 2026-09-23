@@ -1,0 +1,5 @@
+# Kept in git, but hidden from ripgrep-based searches (editors, coding agents).
+dev/archive/
+dev/benchmarks/**/*.json
+static/fonts/
+bun.lock

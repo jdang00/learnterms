@@ -2,7 +2,8 @@ import {
 	requireCurrentUser,
 	requireClassAccess,
 	requireModuleAccess,
-	requireClassStaff
+	requireClassStaff,
+	requireCohortAccess
 } from './access';
 import { internal } from './_generated/api';
 import { authQuery, authAdminMutation } from './authQueries';
@@ -411,20 +412,6 @@ function computeModuleSearchScore(
 	return score;
 }
 
-async function assertCohortSearchAccess(
-	ctx: Pick<QueryCtx, 'db'> & { identity: { subject: string } },
-	cohortId: Id<'cohort'>
-) {
-	const viewer = await ctx.db
-		.query('users')
-		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
-		.first();
-	if (!viewer) throw new Error('Unauthorized');
-	if (viewer.role !== 'dev' && viewer.cohortId !== cohortId) {
-		throw new Error('Unauthorized');
-	}
-}
-
 export const searchModulesByCohort = authQuery({
 	args: {
 		cohortId: v.id('cohort'),
@@ -434,7 +421,7 @@ export const searchModulesByCohort = authQuery({
 	handler: async (ctx, { cohortId, query, limit }) => {
 		const trimmed = query.trim().toLowerCase();
 		if (trimmed.length < 3) return [];
-		await assertCohortSearchAccess(ctx, cohortId);
+		await requireCohortAccess(ctx, cohortId);
 
 		const max = Math.min(Math.max(limit ?? 16, 1), 50);
 		const searchWindow = Math.min(max * 4, 120);

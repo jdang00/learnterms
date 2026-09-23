@@ -2,9 +2,6 @@
  * Utility functions for handling errors in the application
  */
 
-/**
- * Check if an error is related to Convex authentication
- */
 export function getErrorText(error: unknown): string {
 	if (!error) return '';
 
@@ -13,6 +10,7 @@ export function getErrorText(error: unknown): string {
 	return String(error);
 }
 
+// Matches the messages Convex and our access helpers throw for auth failures.
 export function isConvexAuthError(error: unknown): boolean {
 	if (!error) return false;
 

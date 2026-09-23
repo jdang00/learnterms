@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HighlightedStem from './HighlightedStem.svelte';
+	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { Eye } from 'lucide-svelte';
 	import { tick } from 'svelte';
 	import { getQuizCommands } from './quiz-dock/commands.svelte';
@@ -99,7 +100,8 @@
 				resetVersion={highlightResetVersion}
 			/>
 		{:else}
-			{@html currentlySelected.stem}
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			{@html sanitizeHtml(currentlySelected.stem)}
 		{/if}
 	</div>
 	<div class="flex w-full max-w-sm items-center mt-4 mb-6">

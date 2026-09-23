@@ -8,7 +8,7 @@ import {
 	type QualitySlot
 } from '../../src/convex/questionStudio/quality';
 import { callQualityModel } from '../../src/convex/questionStudio/provider';
-import { QUESTION_STUDIO_MODEL } from '../../src/convex/questionStudio/shared';
+import { TEXT_MODEL } from '../../src/convex/aiModels';
 const root = 'tmp/ai-eval';
 lockEvaluationBudget(root);
 const proc = Bun.spawn(['bunx', 'convex', 'env', 'get', 'OPENAI_API_KEY'], {
@@ -18,7 +18,7 @@ const proc = Bun.spawn(['bunx', 'convex', 'env', 'get', 'OPENAI_API_KEY'], {
 const key = (await new Response(proc.stdout).text()).trim();
 if ((await proc.exited) || !key) throw new Error('Development OpenAI key unavailable');
 const model = {
-	id: QUESTION_STUDIO_MODEL,
+	id: TEXT_MODEL,
 	provider: 'openai',
 	pricingDate: '2026-09-20',
 	pricing: { prompt: '0.0000002', completion: '0.0000012' }

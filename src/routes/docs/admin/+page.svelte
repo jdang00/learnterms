@@ -3,11 +3,6 @@
 	import { docsNav } from '$lib/docs/nav.js';
 </script>
 
-<svelte:head>
-	<title>Admin Documentation - LearnTerms</title>
-	<meta name="description" content="LearnTerms admin documentation and guides" />
-</svelte:head>
-
 <div class="container mx-auto px-4 py-8">
 	<div class="max-w-4xl mx-auto">
 		<h1 class="text-4xl font-bold text-base-content mb-8">Admin Documentation</h1>

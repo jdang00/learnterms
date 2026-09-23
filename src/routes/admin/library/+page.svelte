@@ -9,24 +9,24 @@
 		X
 	} from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
-	import AddDocumentModal from '../../../lib/admin/AddDocumentModal.svelte';
-	import ContentLibraryExplorer from '../../../lib/admin/ContentLibraryExplorer.svelte';
-	import ContentLibraryHeader from '../../../lib/admin/ContentLibraryHeader.svelte';
-	import ContentLibraryPreviewUnavailable from '../../../lib/admin/ContentLibraryPreviewUnavailable.svelte';
-	import ContentLibraryPropertiesPanel from '../../../lib/admin/ContentLibraryPropertiesPanel.svelte';
-	import ContentLibrarySourcePanel from '../../../lib/admin/ContentLibrarySourcePanel.svelte';
-	import ContentLibraryToolbar from '../../../lib/admin/ContentLibraryToolbar.svelte';
+	import AddDocumentModal from '../../../lib/admin/content-library/AddDocumentModal.svelte';
+	import ContentLibraryExplorer from '../../../lib/admin/content-library/ContentLibraryExplorer.svelte';
+	import ContentLibraryHeader from '../../../lib/admin/content-library/ContentLibraryHeader.svelte';
+	import ContentLibraryPreviewUnavailable from '../../../lib/admin/content-library/ContentLibraryPreviewUnavailable.svelte';
+	import ContentLibraryPropertiesPanel from '../../../lib/admin/content-library/ContentLibraryPropertiesPanel.svelte';
+	import ContentLibrarySourcePanel from '../../../lib/admin/content-library/ContentLibrarySourcePanel.svelte';
+	import ContentLibraryToolbar from '../../../lib/admin/content-library/ContentLibraryToolbar.svelte';
 	import DeleteConfirmationModal from '../../../lib/admin/DeleteConfirmationModal.svelte';
-	import FullscreenTableDialog from '../../../lib/admin/FullscreenTableDialog.svelte';
-	import RenameDocumentModal from '../../../lib/admin/RenameDocumentModal.svelte';
+	import FullscreenTableDialog from '../../../lib/admin/content-library/FullscreenTableDialog.svelte';
+	import RenameDocumentModal from '../../../lib/admin/content-library/RenameDocumentModal.svelte';
 	import {
 		fileKind,
 		formatPages,
-		formatSize,
 		type DrawerTab,
 		type SortKey,
 		type ViewMode
-	} from '../../../lib/admin/contentLibrary';
+	} from '../../../lib/admin/content-library/contentLibrary';
+	import { formatBytes } from '$lib/utils/format';
 	import {
 		buildMarpDeckMarkdown,
 		extractTableLabels,
@@ -36,7 +36,7 @@
 		stripPreviewArtifactReferences,
 		stripStandaloneTableHeadings,
 		styleTag
-	} from '../../../lib/admin/contentLibraryPreview';
+	} from '../../../lib/admin/content-library/contentLibraryPreview';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
@@ -246,7 +246,7 @@
 		fullscreenTableLabel = '';
 
 		try {
-			const preview = await client.action(api.ragKnowledge.getR2DocumentMarkdownPreview, {
+			const preview = await client.action(api.ragKnowledge.previews.getR2DocumentMarkdownPreview, {
 				documentId: document._id
 			});
 			const cleanedPreview = stripPreviewArtifactReferences(preview.text);
@@ -273,7 +273,7 @@
 		deckPreviewDocumentId = document._id;
 
 		try {
-			const preview = await client.action(api.ragKnowledge.getR2DocumentDeckPreview, {
+			const preview = await client.action(api.ragKnowledge.previews.getR2DocumentDeckPreview, {
 				documentId: document._id
 			});
 			deckPreviewMarkdown = buildMarpDeckMarkdown({
@@ -354,7 +354,7 @@
 		error = '';
 
 		try {
-			await client.action(api.ragKnowledge.deleteR2DocumentCompletely, {
+			await client.action(api.ragKnowledge.management.deleteR2DocumentCompletely, {
 				documentId: deletingDocument._id
 			});
 			if (selectedDocumentId === deletingDocument._id) {
@@ -511,7 +511,7 @@
 				<div class="mt-1.5 flex items-center gap-1.5 text-xs text-base-content/60">
 					<span class="font-medium">{kind.label}</span>
 					<span class="text-base-content/30">·</span>
-					<span>{formatSize(selectedDocument.metadata?.sizeBytes)}</span>
+					<span>{formatBytes(selectedDocument.metadata?.sizeBytes)}</span>
 					{#if pages}
 						<span class="text-base-content/30">·</span>
 						<span>{pages}</span>
@@ -635,11 +635,13 @@
 							/>
 						{:else if deckPreviewHtml}
 							<div class="deck-preview h-full min-h-[60vh] overflow-y-auto p-8 pb-24">
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 								{@html styleTag(deckPreviewCss)}
 								<div
 									bind:this={deckPreviewInner}
 									class="deck-preview-inner mx-auto flex max-w-[1100px] flex-col items-center gap-6"
 								>
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 									{@html deckPreviewHtml}
 								</div>
 							</div>
@@ -676,6 +678,7 @@
 								onclick={handleMarkdownPreviewClick}
 								onkeydown={handleMarkdownPreviewKeydown}
 							>
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 								{@html markdownPreviewHtml}
 							</div>
 						</div>

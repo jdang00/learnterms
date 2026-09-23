@@ -1,28 +1,8 @@
 <script lang="ts">
 	import { RefreshCw } from 'lucide-svelte';
-	import { getErrorText } from '$lib/utils/errorHandling';
+	import { isConvexAuthError } from '$lib/utils/errorHandling';
 
 	let { error, showReload = false, size = 'normal', class: className = '' } = $props();
-
-	function isConvexAuthError(error: unknown): boolean {
-		if (!error) return false;
-
-		const errorMessage = getErrorText(error);
-		const lowerMessage = errorMessage.toLowerCase();
-
-		const authPatterns = [
-			'unauthorized',
-			'authentication',
-			'not authenticated',
-			'session expired',
-			'token expired',
-			'invalid token',
-			'jwt',
-			'access denied'
-		];
-
-		return authPatterns.some((pattern) => lowerMessage.includes(pattern));
-	}
 
 	function handleReload() {
 		window.location.reload();

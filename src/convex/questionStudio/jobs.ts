@@ -10,7 +10,8 @@ import { normalizeSelectedPages } from './pageSelection';
 import { validateCounts } from './planning';
 import { HARNESS_VERSION } from './quality';
 import { questionStudioRateLimiter } from './runtime';
-import { MAX_GENERATED_QUESTIONS, QUESTION_STUDIO_MODEL } from './shared';
+import { MAX_GENERATED_QUESTIONS } from './shared';
+import { TEXT_MODEL } from '../aiModels';
 
 function medianOf(values: number[]): number | null {
 	if (values.length === 0) return null;
@@ -62,7 +63,7 @@ export const createGenerationJob = mutation({
 		)
 			throw new Error('Source changed. Reload the pages before starting a run.');
 		const now = Date.now();
-		const model = QUESTION_STUDIO_MODEL;
+		const model = TEXT_MODEL;
 		const existingJobs = await ctx.db
 			.query('questionStudioJobs')
 			.withIndex('by_createdByUserId', (q) => q.eq('createdByUserId', user._id))
@@ -115,7 +116,7 @@ export const createGenerationJob = mutation({
 			}) ?? now + 601_000) -
 				now -
 				1000,
-			internal.questionStudio.expireGenerationJob,
+			internal.questionStudio.jobs.expireGenerationJob,
 			{
 				jobId
 			}

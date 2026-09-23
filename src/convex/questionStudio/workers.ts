@@ -2,7 +2,7 @@ import { retryConflict } from './retry';
 import { omit } from 'convex-helpers';
 import { v } from 'convex/values';
 import { internal } from '../_generated/api';
-import { internalAction, internalQuery } from '../_generated/server';
+import { internalAction } from '../_generated/server';
 import { scoreDuplicateRisk } from './duplicates';
 import { selectedSourcePages } from './pageSelection';
 import { callQualityModel, QuestionProviderError } from './provider';
@@ -17,56 +17,13 @@ import { questionTypeLabel } from './questionTypes';
 import { captureTelemetry } from './runtime';
 import type { CandidateQuestion, GenerationContext } from './shared';
 import {
-	QUESTION_STUDIO_MODEL,
 	LEARN_DRAFTING_EFFORT,
 	liveWorkerTaskValidator,
 	questionStudioModelValidator
 } from './shared';
 import { loadMarkdownPages, selectPages } from './sourceRetrieval';
-import { cleanPlainText } from './text';
 import { estimateQualityInputTokens } from './tokenEstimate';
-
-export const findLikelyDuplicateQuestions = internalQuery({
-	args: {
-		moduleId: v.id('module'),
-		queries: v.array(v.object({ key: v.string(), text: v.string() }))
-	},
-	handler: async (ctx, args) => {
-		const queries = args.queries.slice(0, 3);
-		return await Promise.all(
-			queries.map(async ({ key, text }) => {
-				const searchText = [
-					...new Set(
-						cleanPlainText(text, 600)
-							.toLowerCase()
-							.split(/\s+/)
-							.map((term) => term.replace(/[^a-z0-9-]/g, ''))
-							.filter((term) => term.length >= 3)
-					)
-				]
-					.slice(0, 16)
-					.join(' ');
-				if (!searchText) return { key, matches: [] };
-				const matches = await ctx.db
-					.query('question')
-					.withSearchIndex('by_moduleId_searchText', (q) =>
-						q.search('searchText', searchText).eq('moduleId', args.moduleId)
-					)
-					.take(5);
-				return {
-					key,
-					matches: matches.map((question) => ({
-						questionId: question._id,
-						stem: question.stem,
-						topicTitle: question.metadata.generation?.topicTitle,
-						questionType: question.metadata.generation?.questionType,
-						reasoningOrder: question.metadata.generation?.reasoningOrder
-					}))
-				};
-			})
-		);
-	}
-});
+import { TEXT_MODEL } from '../aiModels';
 
 export const generateCandidateWorker = internalAction({
 	args: {
@@ -86,7 +43,7 @@ export const generateCandidateWorker = internalAction({
 	},
 	handler: async (ctx, args) => {
 		const claimed = await retryConflict(() =>
-			ctx.runMutation(internal.questionStudio.claimWorker, {
+			ctx.runMutation(internal.questionStudio.jobs.claimWorker, {
 				jobId: args.jobId,
 				workerIndex: args.workerIndex
 			})
@@ -98,7 +55,7 @@ export const generateCandidateWorker = internalAction({
 		const started = Date.now();
 		const verifiedLearn = claimed.deadlineAt !== undefined && args.task.questionType === 'learn';
 		try {
-			const context = (await ctx.runQuery(internal.questionStudio.getGenerationContext, {
+			const context = (await ctx.runQuery(internal.questionStudio.context.getGenerationContext, {
 				clerkUserId: args.clerkUserId,
 				documentId: args.documentId,
 				moduleId: args.moduleId
@@ -132,14 +89,17 @@ export const generateCandidateWorker = internalAction({
 			const result = await runQualityBatch(
 				slots,
 				async (request) => {
-					const current = await ctx.runQuery(internal.questionStudio.getGenerationJobInternal, {
-						jobId: args.jobId
-					});
+					const current = await ctx.runQuery(
+						internal.questionStudio.jobs.getGenerationJobInternal,
+						{
+							jobId: args.jobId
+						}
+					);
 					if (!current || current.dismissedAt || current.status !== 'running')
 						throw new Error('Generation cancelled');
 					if (request.stage === 'repair') {
 						for (const failure of request.repairFailures ?? []) {
-							await ctx.runMutation(internal.questionStudio.updateGenerationJob, {
+							await ctx.runMutation(internal.questionStudio.jobUpdates.updateGenerationJob, {
 								jobId: args.jobId,
 								eventLabel: 'Repair requested',
 								eventDetail: `${failure.slotId}: ${failure.reasons.join(' ')}`
@@ -152,7 +112,7 @@ export const generateCandidateWorker = internalAction({
 					const reservationStarted = Date.now();
 					while (true) {
 						const limited = await retryConflict(() =>
-							ctx.runMutation(internal.questionStudio.reserveGenerationTokens, {
+							ctx.runMutation(internal.questionStudio.tokenBudget.reserveGenerationTokens, {
 								userId: args.clerkUserId,
 								allowance,
 								waitForCapacity: true
@@ -194,7 +154,7 @@ export const generateCandidateWorker = internalAction({
 					}
 					if (response.inputTokens + response.outputTokens > 0) {
 						await retryConflict(() =>
-							ctx.runMutation(internal.questionStudio.settleGenerationTokens, {
+							ctx.runMutation(internal.questionStudio.tokenBudget.settleGenerationTokens, {
 								userId: args.clerkUserId,
 								allowance,
 								actualTokens: response.inputTokens + response.outputTokens
@@ -202,7 +162,7 @@ export const generateCandidateWorker = internalAction({
 						);
 					}
 					await retryConflict(() =>
-						ctx.runMutation(internal.questionStudio.recordGenerationUsage, {
+						ctx.runMutation(internal.questionStudio.jobUpdates.recordGenerationUsage, {
 							jobId: args.jobId,
 							stage: request.stage,
 							failed: !!providerError,
@@ -228,7 +188,7 @@ export const generateCandidateWorker = internalAction({
 							ai_generation_id: generationId,
 							ai_parent_id: String(args.jobId),
 							ai_span_name: `Question Studio ${request.stage}`,
-							ai_model: QUESTION_STUDIO_MODEL,
+							ai_model: TEXT_MODEL,
 							ai_provider: 'openai',
 							ai_service_tier: response.serviceTier,
 							requested_service_tier: 'default',
@@ -317,7 +277,7 @@ export const generateCandidateWorker = internalAction({
 				duplicateRisk: 'low',
 				similarQuestionIds: [],
 				metadata: {
-					model: QUESTION_STUDIO_MODEL,
+					model: TEXT_MODEL,
 					jobId: args.jobId,
 					harnessVersion: HARNESS_VERSION,
 					reviewMode: 'independent',
@@ -335,7 +295,7 @@ export const generateCandidateWorker = internalAction({
 			failed = true;
 			detail = error instanceof Error ? error.message : 'Generation failed';
 		}
-		await ctx.runMutation(internal.questionStudio.appendGenerationWorkerResult, {
+		await ctx.runMutation(internal.questionStudio.jobUpdates.appendGenerationWorkerResult, {
 			jobId: args.jobId,
 			workerTotal: args.workerTotal,
 			workerIndex: args.workerIndex,
@@ -359,7 +319,7 @@ export const generateCandidateWorker = internalAction({
 		});
 		if (args.remainingTasks?.length) {
 			const [task, ...remainingTasks] = args.remainingTasks;
-			await ctx.scheduler.runAfter(0, internal.questionStudio.generateCandidateWorker, {
+			await ctx.scheduler.runAfter(0, internal.questionStudio.workers.generateCandidateWorker, {
 				...args,
 				task,
 				remainingTasks,
@@ -367,7 +327,7 @@ export const generateCandidateWorker = internalAction({
 				workerIndex: args.workerIndex + (args.workerStride ?? 2)
 			});
 		}
-		await ctx.scheduler.runAfter(0, internal.questionStudio.reviewGenerationJob, {
+		await ctx.scheduler.runAfter(0, internal.questionStudio.review.reviewGenerationJob, {
 			jobId: args.jobId,
 			documentId: args.documentId,
 			moduleId: args.moduleId,

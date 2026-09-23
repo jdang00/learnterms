@@ -28,14 +28,13 @@ import {
 	LEARN_QUESTIONS_PER_WORKER,
 	LEARN_MODEL_BATCH_SIZE,
 	MAX_CONCURRENT_LEARN_WORKERS,
-	QUESTION_STUDIO_MAPPING_MODEL,
 	QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS,
-	QUESTION_STUDIO_MODEL,
 	assertQuestionStudioKey,
 	topicInputValidator
 } from './shared';
 import { loadMarkdownPages, selectPages } from './sourceRetrieval';
 import { cleanPlainText } from './text';
+import { TEXT_MODEL } from '../aiModels';
 
 // Each slot receives one objective; only nearby reserved objectives cross worker boundaries.
 function assignBlueprints(tasks: LiveWorkerTask[]) {
@@ -93,7 +92,7 @@ export const generateCandidates = action({
 		const report = async (update: Record<string, unknown>) => {
 			if (!args.jobId) return;
 			try {
-				await ctx.runMutation(internal.questionStudio.updateGenerationJob, {
+				await ctx.runMutation(internal.questionStudio.jobUpdates.updateGenerationJob, {
 					jobId: args.jobId,
 					...update
 				});
@@ -106,13 +105,13 @@ export const generateCandidates = action({
 		if (!identity) throw new Error('Unauthorized');
 		if (!args.jobId) throw new Error('A generation job is required for live worker generation.');
 		const { counts, total } = validateCounts(args.counts);
-		const job = (await ctx.runQuery(internal.questionStudio.getGenerationJobInternal, {
+		const job = (await ctx.runQuery(internal.questionStudio.jobs.getGenerationJobInternal, {
 			jobId: args.jobId
 		})) as GenerationJobSnapshot | null;
 		if (!job) throw new Error('Generation job not found');
 		if (job.sourceMode !== 'pages' && args.topics.length === 0)
 			throw new Error('Select at least one topic');
-		const claimed = await ctx.runMutation(internal.questionStudio.claimGenerationJob, {
+		const claimed = await ctx.runMutation(internal.questionStudio.jobs.claimGenerationJob, {
 			jobId: args.jobId,
 			clerkUserId: identity.subject,
 			documentId: args.documentId,
@@ -121,7 +120,7 @@ export const generateCandidates = action({
 		});
 		if (!claimed) throw new Error('Generation deadline reached');
 		const deadlineAt = generationDeadline(job);
-		const model = QUESTION_STUDIO_MODEL;
+		const model = TEXT_MODEL;
 		const focusNotes = cleanPlainText(args.focusNotes ?? '', 1800);
 
 		try {
@@ -140,7 +139,7 @@ export const generateCandidates = action({
 				throws: true
 			});
 
-			const context = (await ctx.runQuery(internal.questionStudio.getGenerationContext, {
+			const context = (await ctx.runQuery(internal.questionStudio.context.getGenerationContext, {
 				clerkUserId: identity.subject,
 				documentId: args.documentId,
 				moduleId: args.moduleId
@@ -186,14 +185,14 @@ export const generateCandidates = action({
 					eventLabel: 'Selected pages',
 					eventDetail: `Pages ${job.selectedPageNumbers?.join(', ')}. Only these pages are in context.`
 				});
-				const agent = createQuestionStudioAgent(QUESTION_STUDIO_MAPPING_MODEL, true);
+				const agent = createQuestionStudioAgent(TEXT_MODEL, true);
 				inputTopics = await planPageContext(
 					allPages,
 					job.selectedPageNumbers ?? [],
 					async (group) => {
 						const prompt = pagePlanningPrompt(group, counts, context.existingQuestions);
 						const allowance = prompt.length + 6000;
-						await ctx.runMutation(internal.questionStudio.reserveGenerationTokens, {
+						await ctx.runMutation(internal.questionStudio.tokenBudget.reserveGenerationTokens, {
 							userId: identity.subject,
 							allowance
 						});
@@ -218,13 +217,13 @@ export const generateCandidates = action({
 							{ storageOptions: { saveMessages: 'none' } }
 						);
 						if (result.usage.inputTokens !== undefined && result.usage.outputTokens !== undefined) {
-							await ctx.runMutation(internal.questionStudio.settleGenerationTokens, {
+							await ctx.runMutation(internal.questionStudio.tokenBudget.settleGenerationTokens, {
 								userId: identity.subject,
 								allowance,
 								actualTokens: result.usage.inputTokens + result.usage.outputTokens
 							});
 						}
-						await ctx.runMutation(internal.questionStudio.recordGenerationUsage, {
+						await ctx.runMutation(internal.questionStudio.jobUpdates.recordGenerationUsage, {
 							jobId: args.jobId!,
 							stage: 'plan',
 							inputTokens: result.usage.inputTokens,
@@ -297,7 +296,7 @@ export const generateCandidates = action({
 				tasks,
 				directLearn ? MAX_CONCURRENT_LEARN_WORKERS : undefined
 			)) {
-				await ctx.scheduler.runAfter(0, internal.questionStudio.generateCandidateWorker, {
+				await ctx.scheduler.runAfter(0, internal.questionStudio.workers.generateCandidateWorker, {
 					jobId: args.jobId,
 					documentId: args.documentId,
 					moduleId: args.moduleId,

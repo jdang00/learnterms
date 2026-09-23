@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { AlertTriangle } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
-	import QuestionStudioCandidateModal from '$lib/admin/QuestionStudioCandidateModal.svelte';
-	import QuestionStudioHeader from '$lib/admin/QuestionStudioHeader.svelte';
-	import QuestionStudioRunBar from '$lib/admin/QuestionStudioRunBar.svelte';
-	import QuestionStudioRunStage from '$lib/admin/QuestionStudioRunStage.svelte';
-	import QuestionStudioSetupCard from '$lib/admin/QuestionStudioSetupCard.svelte';
-	import QuestionStudioTopicDetailModal from '$lib/admin/QuestionStudioTopicDetailModal.svelte';
-	import { buildRunRows, runTelemetry } from '$lib/admin/questionStudioRun';
-	import type { CandidateReview } from '$lib/admin/questionStudioRun';
+	import QuestionStudioCandidateModal from '$lib/admin/question-studio/QuestionStudioCandidateModal.svelte';
+	import QuestionStudioHeader from '$lib/admin/question-studio/QuestionStudioHeader.svelte';
+	import QuestionStudioRunBar from '$lib/admin/question-studio/QuestionStudioRunBar.svelte';
+	import QuestionStudioRunStage from '$lib/admin/question-studio/QuestionStudioRunStage.svelte';
+	import QuestionStudioSetupCard from '$lib/admin/question-studio/QuestionStudioSetupCard.svelte';
+	import QuestionStudioTopicDetailModal from '$lib/admin/question-studio/QuestionStudioTopicDetailModal.svelte';
+	import { buildRunRows, runTelemetry } from '$lib/admin/question-studio/questionStudioRun';
+	import type { CandidateReview } from '$lib/admin/question-studio/questionStudioRun';
 	import type {
 		CandidateQuestion,
 		QuestionType,
 		TopicMapItem
-	} from '$lib/admin/questionStudioTypes';
-	import { questionTypes } from '$lib/admin/questionStudioTypes';
+	} from '$lib/admin/question-studio/questionStudioTypes';
+	import { questionTypes } from '$lib/admin/question-studio/questionStudioTypes';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api';
 	import { useQuery, useConvexClient } from 'convex-svelte';
@@ -139,7 +139,7 @@
 		selectedClass ? { id: selectedClass._id } : 'skip'
 	);
 
-	const savedTopicMap = useQuery(api.questionStudio.getLatestSavedTopicMap, () =>
+	const savedTopicMap = useQuery(api.questionStudio.context.getLatestSavedTopicMap, () =>
 		selectedDocumentId && selectedModuleId
 			? {
 					documentId: selectedDocumentId,
@@ -148,21 +148,21 @@
 			: 'skip'
 	);
 
-	const currentGenerationJob = useQuery(api.questionStudio.getCurrentGenerationJob, () =>
+	const currentGenerationJob = useQuery(api.questionStudio.jobs.getCurrentGenerationJob, () =>
 		clerkUser ? {} : 'skip'
 	);
 
-	const activeJob = useQuery(api.questionStudio.getGenerationJob, () =>
+	const activeJob = useQuery(api.questionStudio.jobs.getGenerationJob, () =>
 		activeJobId ? { jobId: activeJobId } : 'skip'
 	);
 
 	// Verdicts only exist once the reviewer has run; they drive the per-question quality panel.
-	const jobReviews = useQuery(api.questionStudio.getGenerationJobReviews, () =>
+	const jobReviews = useQuery(api.questionStudio.jobs.getGenerationJobReviews, () =>
 		activeJobId && (activeJob.data?.reviewCount ?? 0) > 0 ? { jobId: activeJobId } : 'skip'
 	);
 
 	// The event log is fetched apart from the job snapshot so worker writes don't re-send it.
-	const jobActivity = useQuery(api.questionStudio.getGenerationJobActivity, () =>
+	const jobActivity = useQuery(api.questionStudio.jobs.getGenerationJobActivity, () =>
 		activeJobId ? { jobId: activeJobId } : 'skip'
 	);
 
@@ -563,7 +563,7 @@
 		workflowError = '';
 		resetGenerated();
 		try {
-			const jobId = await client.mutation(api.questionStudio.createGenerationJob, {
+			const jobId = await client.mutation(api.questionStudio.jobs.createGenerationJob, {
 				documentId: selectedDocumentId,
 				moduleId: selectedModuleId,
 				requestedCount: totalRequested,
@@ -574,7 +574,7 @@
 			});
 			activeJobId = jobId;
 			void client
-				.action(api.questionStudio.generateCandidates, {
+				.action(api.questionStudio.generation.generateCandidates, {
 					documentId: selectedDocumentId,
 					moduleId: selectedModuleId,
 					topics: sourceMode === 'pages' ? [] : selectedTopics,
@@ -598,7 +598,7 @@
 		isGenerating = false;
 		workflowError = '';
 		try {
-			await client.mutation(api.questionStudio.clearCurrentGenerationJob, {});
+			await client.mutation(api.questionStudio.jobs.clearCurrentGenerationJob, {});
 			resetGenerated();
 			sourceMode = preferredSourceMode;
 		} catch (error) {
@@ -617,7 +617,7 @@
 		const savedClassId = activeJob.data?.moduleClassId ?? selectedClass?._id;
 		workflowError = '';
 		try {
-			const result = await client.mutation(api.questionStudio.saveSelectedCandidates, {
+			const result = await client.mutation(api.questionStudio.saving.saveSelectedCandidates, {
 				moduleId: selectedModuleId,
 				documentId: selectedDocumentId,
 				jobId: activeJobId,

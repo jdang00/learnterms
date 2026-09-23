@@ -1,9 +1,11 @@
 import { query, mutation } from './_generated/server';
+import { hasInteraction } from './moduleStats';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 import { getRationale } from '../lib/utils/rationale';
 import { applyLargeQuizSubmissionDeltaAndEvaluateBadges } from './badgeEngine';
+import { requireClassAccess, requireCurrentUser } from './access';
 
 type SourceFilter = 'all' | 'flagged' | 'incomplete';
 type AttemptStatus = 'in_progress' | 'submitted' | 'timed_out' | 'abandoned';
@@ -30,28 +32,6 @@ function nowTs() {
 	return Date.now();
 }
 
-async function requireCurrentUser(ctx: ConvexCtx): Promise<Doc<'users'>> {
-	const identity = await ctx.auth.getUserIdentity();
-	if (!identity) throw new Error('Unauthorized');
-
-	const user = await ctx.db
-		.query('users')
-		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
-		.first();
-
-	if (!user) throw new Error('User not found');
-	return user;
-}
-
-async function requireClassAccess(ctx: ConvexCtx, user: Doc<'users'>, classId: Id<'class'>) {
-	const classDoc = await ctx.db.get(classId);
-	if (!classDoc) throw new Error('Class not found');
-	if (!user.cohortId || classDoc.cohortId !== user.cohortId) {
-		throw new Error('Forbidden');
-	}
-	return classDoc;
-}
-
 async function requireAttemptOwner(
 	ctx: ConvexCtx,
 	user: Doc<'users'>,
@@ -63,14 +43,6 @@ async function requireAttemptOwner(
 	if (attempt.userId !== user._id) throw new Error('Forbidden');
 	if (classId && attempt.classId !== classId) throw new Error('Attempt/class mismatch');
 	return attempt;
-}
-
-function hasInteraction(
-	record: Pick<Doc<'userProgress'>, 'selectedOptions' | 'eliminatedOptions' | 'attempts'>
-) {
-	return (
-		record.attempts > 0 || record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0
-	);
 }
 
 function normalizeQuestionType(type: string): string {

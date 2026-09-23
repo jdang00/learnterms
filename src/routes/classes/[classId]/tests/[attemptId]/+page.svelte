@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatClock } from '$lib/utils/format';
 	import { provideStudyToolContext } from '$lib/analytics/studyToolContext';
 	import QuestionNotesTool from '$lib/components/question-notes/QuestionNotesTool.svelte';
 	import CalculatorTool from '$lib/components/calculator/CalculatorTool.svelte';
@@ -256,17 +257,6 @@
 				});
 			}
 		});
-	}
-
-	function formatDuration(ms: number) {
-		const totalSec = Math.max(0, Math.floor(ms / 1000));
-		const hours = Math.floor(totalSec / 3600);
-		const minutes = Math.floor((totalSec % 3600) / 60);
-		const seconds = totalSec % 60;
-		if (hours > 0) {
-			return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-		}
-		return `${minutes}:${String(seconds).padStart(2, '0')}`;
 	}
 
 	const remainingMs = $derived.by(() => {
@@ -943,7 +933,7 @@
 										<span class="text-xs uppercase tracking-wide text-base-content/50">Timer</span>
 									</div>
 									<div class="text-3xl font-bold tabular-nums">
-										{formatDuration(elapsedMsLocal)}
+										{formatClock(elapsedMsLocal)}
 									</div>
 									{#if remainingMs !== null}
 										<div
@@ -951,7 +941,7 @@
 												? 'text-error font-semibold animate-pulse'
 												: 'text-base-content/60'}"
 										>
-											{remainingMs <= 60_000 ? 'Hurry! ' : ''}{formatDuration(remainingMs)} remaining
+											{remainingMs <= 60_000 ? 'Hurry! ' : ''}{formatClock(remainingMs)} remaining
 										</div>
 									{:else}
 										<div class="text-xs mt-1 text-base-content/40">No time limit</div>
@@ -992,10 +982,10 @@
 							</button>
 
 							<div class="text-center">
-								<div class="text-xs font-bold tabular-nums">{formatDuration(elapsedMsLocal)}</div>
+								<div class="text-xs font-bold tabular-nums">{formatClock(elapsedMsLocal)}</div>
 								{#if remainingMs !== null}
 									<div class="text-[10px] text-base-content/50 tabular-nums">
-										{formatDuration(remainingMs)}
+										{formatClock(remainingMs)}
 									</div>
 								{/if}
 							</div>
@@ -1044,7 +1034,7 @@
 							aria-label={remainingMs !== null ? 'Time remaining' : 'Time elapsed'}
 						>
 							<Clock size={14} class="text-base-content/50" />
-							{formatDuration(remainingMs ?? elapsedMsLocal)}
+							{formatClock(remainingMs ?? elapsedMsLocal)}
 						</span>
 					{/snippet}
 					{#snippet tools()}
@@ -1148,6 +1138,7 @@
 								<div
 									class="text-base sm:text-xl leading-tight tiptap-content font-medium ms-2 mt-3"
 								>
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 									{@html sanitizeHtml(currentItem.question.stem)}
 								</div>
 							{/if}

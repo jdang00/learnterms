@@ -9,7 +9,7 @@ const config = {
 		adapter: adapter({ runtime: 'nodejs22.x' })
 	},
 
-	extensions: ['.svelte', '.svx']
+	extensions: ['.svelte']
 };
 
 export default config;

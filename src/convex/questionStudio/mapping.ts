@@ -8,12 +8,12 @@ import { MAPPING_INSTRUCTIONS } from './questionTypes';
 import { createQuestionStudioAgent, questionStudioRateLimiter } from './runtime';
 import type { TopicMapItem } from './shared';
 import {
-	QUESTION_STUDIO_MAPPING_MODEL,
 	QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS,
 	assertQuestionStudioKey,
 	topicMapSchema
 } from './shared';
 import { loadMarkdownPages, pagesToPromptText, selectPages } from './sourceRetrieval';
+import { TEXT_MODEL } from '../aiModels';
 
 export const MAPPING_VERSION = 'question-types-v4';
 
@@ -59,10 +59,13 @@ export const autoMapIndexedDocument = internalAction({
 			return { status: 'skipped' };
 		if (sourceIndexedAt === undefined)
 			throw new Error('Source must finish indexing before mapping');
-		const claim = await ctx.runMutation(internal.questionStudio.claimDocumentTopicMapping, {
-			documentId: args.documentId,
-			sourceIndexedAt
-		});
+		const claim = await ctx.runMutation(
+			internal.questionStudio.mappingState.claimDocumentTopicMapping,
+			{
+				documentId: args.documentId,
+				sourceIndexedAt
+			}
+		);
 		if (claim.status !== 'claimed') return { status: claim.status };
 		try {
 			const pages = selectPages(await loadMarkdownPages(document));
@@ -87,7 +90,7 @@ export const autoMapIndexedDocument = internalAction({
 				throws: true
 			});
 
-			const agent = createQuestionStudioAgent(QUESTION_STUDIO_MAPPING_MODEL);
+			const agent = createQuestionStudioAgent(TEXT_MODEL);
 			let threadId = '';
 			const topics: TopicMapItem[] = [];
 			const usage: unknown[] = [];
@@ -128,19 +131,22 @@ export const autoMapIndexedDocument = internalAction({
 				usage.push(result.usage);
 			}
 			const result = { usage };
-			const topicMapId = (await ctx.runMutation(internal.questionStudio.saveTopicMapForRange, {
-				documentId: args.documentId,
-				cohortId: document.cohortId,
-				startPage: pageRange.startPage,
-				endPage: pageRange.endPage,
-				pageCount: pages.length,
-				topics,
-				model: QUESTION_STUDIO_MAPPING_MODEL,
-				agentThreadId: threadId,
-				sourceDocumentUpdatedAt: document.updatedAt,
-				sourceIndexedAt: document.metadata?.indexedAt,
-				createdByUserId: creator?._id
-			})) as Id<'questionStudioTopicMaps'>;
+			const topicMapId = (await ctx.runMutation(
+				internal.questionStudio.mappingState.saveTopicMapForRange,
+				{
+					documentId: args.documentId,
+					cohortId: document.cohortId,
+					startPage: pageRange.startPage,
+					endPage: pageRange.endPage,
+					pageCount: pages.length,
+					topics,
+					model: TEXT_MODEL,
+					agentThreadId: threadId,
+					sourceDocumentUpdatedAt: document.updatedAt,
+					sourceIndexedAt: document.metadata?.indexedAt,
+					createdByUserId: creator?._id
+				}
+			)) as Id<'questionStudioTopicMaps'>;
 			return {
 				status: 'mapped',
 				topicMapId,
@@ -149,7 +155,7 @@ export const autoMapIndexedDocument = internalAction({
 				usage: result.usage
 			};
 		} catch (error) {
-			await ctx.runMutation(internal.questionStudio.failDocumentTopicMapping, {
+			await ctx.runMutation(internal.questionStudio.mappingState.failDocumentTopicMapping, {
 				documentId: args.documentId,
 				sourceIndexedAt,
 				error: error instanceof Error ? error.message : 'Topic mapping failed'

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatClock } from '$lib/utils/format';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import { page } from '$app/state';
 	import { useQuery } from 'convex-svelte';
@@ -41,16 +42,6 @@
 	let selectedQuestionId = $state<string | null>(null);
 	let hideSidebar = $state(false);
 	let questionButtons = $state<HTMLButtonElement[]>([]);
-
-	function formatDuration(ms: number) {
-		const totalSec = Math.max(0, Math.floor((ms || 0) / 1000));
-		const h = Math.floor(totalSec / 3600);
-		const m = Math.floor((totalSec % 3600) / 60);
-		const s = totalSec % 60;
-		return h > 0
-			? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-			: `${m}:${String(s).padStart(2, '0')}`;
-	}
 
 	function isFitb(type: string) {
 		return String(type || '').toLowerCase() === 'fill_in_the_blank';
@@ -422,7 +413,7 @@
 											<div>
 												<div class="text-xs text-base-content/40">Time</div>
 												<div class="font-semibold tabular-nums">
-													{formatDuration(attempt.elapsedMs)}
+													{formatClock(attempt.elapsedMs)}
 												</div>
 											</div>
 										</div>
@@ -839,11 +830,12 @@
 								</div>
 								<div class="text-xs text-base-content/40 flex items-center gap-1">
 									<Clock size={12} />
-									{formatDuration(selectedItem.response?.timeSpentMs ?? 0)}
+									{formatClock(selectedItem.response?.timeSpentMs ?? 0)}
 								</div>
 							</div>
 
 							<div class="text-base sm:text-xl leading-tight tiptap-content font-medium ms-2 mt-4">
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 								{@html sanitizeHtml(selectedItem.question.stem)}
 							</div>
 
@@ -994,6 +986,7 @@
 												<span class="font-semibold mr-2 select-none"
 													>{String.fromCharCode(65 + i)}.</span
 												>
+												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 												<span class="tiptap-content">{@html sanitizeHtml(option.text)}</span>
 											</span>
 											{#if correct}
@@ -1016,6 +1009,7 @@
 									<div class="card-body">
 										<h3 class="card-title text-base">Rationale</h3>
 										<div class="tiptap-content text-sm text-base-content/80">
+											<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 											{@html sanitizeHtml(getRationale(selectedItem.question))}
 										</div>
 										<QuestionSources source={selectedItem.question.source} />

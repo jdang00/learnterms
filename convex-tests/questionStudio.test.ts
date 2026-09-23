@@ -10,13 +10,13 @@ afterEach(() => {
 
 test('foreign job claim cannot change status', async () => {
 	const { t, ids, owner } = await setup();
-	const jobId = await owner.mutation(api.questionStudio.createGenerationJob, {
+	const jobId = await owner.mutation(api.questionStudio.jobs.createGenerationJob, {
 		documentId: ids.documentId,
 		moduleId: ids.moduleId,
 		requestedCount: 3
 	});
 	await expect(
-		t.mutation(internal.questionStudio.claimGenerationJob, {
+		t.mutation(internal.questionStudio.jobs.claimGenerationJob, {
 			jobId,
 			clerkUserId: 'other',
 			documentId: ids.documentId,
@@ -28,28 +28,28 @@ test('foreign job claim cannot change status', async () => {
 });
 test('clear cancels work but retains the audit record', async () => {
 	const { t, ids, owner } = await setup();
-	const jobId = await owner.mutation(api.questionStudio.createGenerationJob, {
+	const jobId = await owner.mutation(api.questionStudio.jobs.createGenerationJob, {
 		documentId: ids.documentId,
 		moduleId: ids.moduleId,
 		requestedCount: 3
 	});
-	await owner.mutation(api.questionStudio.clearCurrentGenerationJob, {});
+	await owner.mutation(api.questionStudio.jobs.clearCurrentGenerationJob, {});
 	const job = await t.run((ctx) => ctx.db.get(jobId));
 	expect(job?.dismissedAt).toBeTruthy();
 	expect(job?.status).toBe('failed');
 	expect(
-		await t.mutation(internal.questionStudio.claimWorker, { jobId, workerIndex: 0 })
+		await t.mutation(internal.questionStudio.jobs.claimWorker, { jobId, workerIndex: 0 })
 	).toBeNull();
-	expect(await owner.query(api.questionStudio.getCurrentGenerationJob, {})).toBeNull();
+	expect(await owner.query(api.questionStudio.jobs.getCurrentGenerationJob, {})).toBeNull();
 });
 test('a worker can be claimed only once', async () => {
 	const { t, ids, owner } = await setup();
-	const jobId = await owner.mutation(api.questionStudio.createGenerationJob, {
+	const jobId = await owner.mutation(api.questionStudio.jobs.createGenerationJob, {
 		documentId: ids.documentId,
 		moduleId: ids.moduleId,
 		requestedCount: 3
 	});
-	await t.mutation(internal.questionStudio.claimGenerationJob, {
+	await t.mutation(internal.questionStudio.jobs.claimGenerationJob, {
 		jobId,
 		clerkUserId: 'owner',
 		documentId: ids.documentId,
@@ -57,20 +57,20 @@ test('a worker can be claimed only once', async () => {
 		total: 3
 	});
 	expect(
-		await t.mutation(internal.questionStudio.claimWorker, { jobId, workerIndex: 0 })
+		await t.mutation(internal.questionStudio.jobs.claimWorker, { jobId, workerIndex: 0 })
 	).not.toBeNull();
 	expect(
-		await t.mutation(internal.questionStudio.claimWorker, { jobId, workerIndex: 0 })
+		await t.mutation(internal.questionStudio.jobs.claimWorker, { jobId, workerIndex: 0 })
 	).toBeNull();
 });
 test('completed worker retries do not duplicate events', async () => {
 	const { t, ids, owner } = await setup();
-	const jobId = await owner.mutation(api.questionStudio.createGenerationJob, {
+	const jobId = await owner.mutation(api.questionStudio.jobs.createGenerationJob, {
 		documentId: ids.documentId,
 		moduleId: ids.moduleId,
 		requestedCount: 3
 	});
-	await t.mutation(internal.questionStudio.claimGenerationJob, {
+	await t.mutation(internal.questionStudio.jobs.claimGenerationJob, {
 		jobId,
 		clerkUserId: 'owner',
 		documentId: ids.documentId,
@@ -85,8 +85,8 @@ test('completed worker retries do not duplicate events', async () => {
 		rawReturnedCount: 0,
 		eventLabel: 'Worker complete'
 	};
-	await t.mutation(internal.questionStudio.appendGenerationWorkerResult, result);
-	await t.mutation(internal.questionStudio.appendGenerationWorkerResult, result);
+	await t.mutation(internal.questionStudio.jobUpdates.appendGenerationWorkerResult, result);
+	await t.mutation(internal.questionStudio.jobUpdates.appendGenerationWorkerResult, result);
 	const events = await t.run((ctx) =>
 		ctx.db
 			.query('questionStudioJobEvents')

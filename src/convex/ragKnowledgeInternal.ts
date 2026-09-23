@@ -94,33 +94,12 @@ export const updateDocumentIngestion = internalMutation({
 			args.indexedAt !== undefined &&
 			args.indexedAt !== document.metadata?.indexedAt
 		) {
-			await ctx.scheduler.runAfter(0, internal.questionStudio.autoMapIndexedDocument, {
+			await ctx.scheduler.runAfter(0, internal.questionStudio.mapping.autoMapIndexedDocument, {
 				documentId,
 				sourceIndexedAt: args.indexedAt,
 				triggeredByClerkUserId
 			});
 		}
-	}
-});
-
-export const markDocumentMapped = internalMutation({
-	args: {
-		documentId: v.id('contentLib'),
-		mappedAt: v.optional(v.number())
-	},
-	handler: async (ctx, args) => {
-		const document = await ctx.db.get(args.documentId);
-		if (!document) throw new Error('Document not found');
-
-		await ctx.db.patch(args.documentId, {
-			metadata: {
-				...(document.metadata ?? {}),
-				ingestionStatus: 'mapped',
-				mappedAt: args.mappedAt ?? Date.now(),
-				indexError: undefined
-			},
-			updatedAt: Date.now()
-		});
 	}
 });
 

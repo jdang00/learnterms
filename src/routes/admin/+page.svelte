@@ -18,9 +18,9 @@
 		Link2,
 		X
 	} from 'lucide-svelte';
-	import EditClassModal from '$lib/admin/EditClassModal.svelte';
-	import AddClassModal from '$lib/admin/AddClassModal.svelte';
-	import EditQuickLinksModal from '$lib/admin/EditQuickLinksModal.svelte';
+	import EditClassModal from '$lib/admin/catalog/EditClassModal.svelte';
+	import AddClassModal from '$lib/admin/catalog/AddClassModal.svelte';
+	import EditQuickLinksModal from '$lib/admin/catalog/EditQuickLinksModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
 	import { useClerkContext } from 'svelte-clerk/client';

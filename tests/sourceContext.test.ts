@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { selectedContextSize } from '../src/lib/admin/sourceContext';
+import { selectedContextSize } from '../src/lib/admin/source/sourceContext';
 
 test('context counts overlapping topic pages once', () => {
 	expect(

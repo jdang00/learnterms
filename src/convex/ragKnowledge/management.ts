@@ -7,14 +7,13 @@ import type { EntryId } from '@convex-dev/rag';
 
 import { r2 } from '../r2Documents';
 import {
-	EMBEDDING_MODEL,
-	RAG_TESTER_CHAT_MODEL,
 	openRouter,
 	assertOpenRouterKey,
 	documentRag,
 	documentNamespace,
 	assertDocumentAccess
 } from './shared';
+import { EMBEDDING_MODEL, OPENROUTER_TEXT_MODEL } from '../aiModels';
 export const clearR2DocumentIndexes = action({
 	args: {
 		documentIds: v.optional(v.array(v.id('contentLib')))
@@ -124,7 +123,7 @@ export const askCohort = action({
 		await assertDocumentAccess(ctx, document);
 
 		const limit = Math.min(Math.max(args.limit ?? 8, 1), 20);
-		const chatModel = RAG_TESTER_CHAT_MODEL;
+		const chatModel = OPENROUTER_TEXT_MODEL;
 		const namespace = documentNamespace(String(args.sourceDocumentId));
 
 		const result = await documentRag.generateText(ctx, {

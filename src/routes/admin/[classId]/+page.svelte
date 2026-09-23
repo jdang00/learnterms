@@ -8,11 +8,11 @@
 	import { Pencil, Trash2, Plus, ArrowLeft, GripVertical, Download } from 'lucide-svelte';
 	import { resolve } from '$app/paths';
 	import { exportModuleQuestions, type ExportableQuestion } from '$lib/utils/questionExport';
-	import EditModuleModal from '$lib/admin/EditModuleModal.svelte';
-	import AddModuleModal from '$lib/admin/AddModuleModal.svelte';
+	import EditModuleModal from '$lib/admin/catalog/EditModuleModal.svelte';
+	import AddModuleModal from '$lib/admin/catalog/AddModuleModal.svelte';
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
-	import ExportModuleModal from '$lib/admin/ExportModuleModal.svelte';
-	import TagManager from '$lib/admin/TagManager.svelte';
+	import ExportModuleModal from '$lib/admin/catalog/ExportModuleModal.svelte';
+	import TagManager from '$lib/admin/catalog/TagManager.svelte';
 	import { useClerkContext } from 'svelte-clerk';
 
 	let { data }: { data: PageData } = $props();

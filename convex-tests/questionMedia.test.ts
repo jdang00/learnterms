@@ -273,12 +273,10 @@ test('invalid attachment rolls back question creation and cannot be attached in 
 		})
 	).rejects.toThrow('different module');
 	await expect(
-		t
-			.withIdentity({ subject: 'other' })
-			.mutation(api.question.insertQuestion, {
-				...questionArgs,
-				images: [{ uploadId, altText: '' }]
-			})
+		t.withIdentity({ subject: 'other' }).mutation(api.question.insertQuestion, {
+			...questionArgs,
+			images: [{ uploadId, altText: '' }]
+		})
 	).rejects.toThrow('access denied');
 	expect(await t.run((ctx) => ctx.db.query('question').collect())).toHaveLength(0);
 });

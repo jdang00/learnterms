@@ -33,12 +33,12 @@ export const runDevTool = action({
 		if (!identity) throw new Error('Unauthorized');
 
 		const context = args.moduleId
-			? ((await ctx.runQuery(internal.questionStudio.getGenerationContext, {
+			? ((await ctx.runQuery(internal.questionStudio.context.getGenerationContext, {
 					clerkUserId: identity.subject,
 					documentId: args.documentId,
 					moduleId: args.moduleId
 				})) as GenerationContext)
-			: ((await ctx.runQuery(internal.questionStudio.getDocumentMappingContext, {
+			: ((await ctx.runQuery(internal.questionStudio.context.getDocumentMappingContext, {
 					clerkUserId: identity.subject,
 					documentId: args.documentId
 				})) as DocumentMappingContext);
@@ -52,7 +52,7 @@ export const runDevTool = action({
 			String(context.document.metadata?.originalFileName ?? context.document.title),
 			260
 		);
-		const savedMap = (await ctx.runQuery(internal.questionStudio.getSavedTopicMapForRange, {
+		const savedMap = (await ctx.runQuery(internal.questionStudio.context.getSavedTopicMapForRange, {
 			documentId: args.documentId,
 			startPage: selectedPages[0].pageNumber,
 			endPage: selectedPages[selectedPages.length - 1].pageNumber

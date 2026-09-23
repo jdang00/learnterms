@@ -11,8 +11,8 @@ import { DATALAB_MODEL } from '../datalab';
 
 import { MAX_PDF_PAGES } from '../documentParsing';
 import { assertDocumentPermission } from '../questionStudio/access';
-import { DEFAULT_TEXT_MODEL } from '../questionStudio/shared';
 import { r2 } from '../r2Documents';
+import { EMBEDDING_DIMENSION, EMBEDDING_MODEL } from '../aiModels';
 
 export type DocumentRagFilters = {
 	sourceType: string;
@@ -35,9 +35,6 @@ export type DocumentRagMetadata = {
 	extractionArtifactKeys?: string[];
 };
 
-export const EMBEDDING_MODEL = 'openai/text-embedding-3-large';
-export const EMBEDDING_DIMENSION = 3072;
-export const RAG_TESTER_CHAT_MODEL = DEFAULT_TEXT_MODEL;
 export const OCR_MODEL = DATALAB_MODEL;
 export const MAX_INDEX_PAGES = MAX_PDF_PAGES;
 
