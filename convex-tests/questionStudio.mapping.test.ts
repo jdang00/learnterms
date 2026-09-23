@@ -157,10 +157,17 @@ test('duplicate upload mapping returns from cache before fetching source text', 
 	}
 });
 
-test('an upload revision can only be claimed once, including after failure', async () => {
+test('a failed upload map only retries after an explicit reset', async () => {
 	const { t, ids } = await setup();
 	await t.run((ctx) =>
-		ctx.db.patch(ids.documentId, { metadata: { indexedAt: 1, ingestionStatus: 'indexed' } })
+		ctx.db.patch(ids.documentId, {
+			metadata: {
+				indexedAt: 1,
+				ingestionStatus: 'indexed',
+				storageProvider: 'r2',
+				ragEntryId: 'entry'
+			}
+		})
 	);
 	const args = { documentId: ids.documentId, sourceIndexedAt: 1 };
 	const results = await Promise.all([
@@ -177,6 +184,19 @@ test('an upload revision can only be claimed once, including after failure', asy
 	).toEqual({
 		status: 'skipped'
 	});
+	expect(
+		await t.mutation(internal.questionStudio.mappingState.resetFailedDocumentTopicMapping, {
+			documentId: ids.documentId
+		})
+	).toBe(true);
+	expect(
+		await t.mutation(internal.questionStudio.mappingState.resetFailedDocumentTopicMapping, {
+			documentId: ids.documentId
+		})
+	).toBe(false);
+	expect(
+		await t.mutation(internal.questionStudio.mappingState.claimDocumentTopicMapping, args)
+	).toEqual({ status: 'claimed' });
 });
 
 test('a new indexed revision cannot reuse a prior source map or be claimed by an old task', async () => {

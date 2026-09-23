@@ -142,6 +142,30 @@ export const claimDocumentTopicMapping = internalMutation({
 	}
 });
 
+export const resetFailedDocumentTopicMapping = internalMutation({
+	args: { documentId: v.id('contentLib') },
+	returns: v.boolean(),
+	handler: async (ctx, { documentId }) => {
+		const document = await ctx.db.get(documentId);
+		const metadata = document?.metadata;
+		if (
+			!document ||
+			document.deletedAt ||
+			!metadata ||
+			metadata.storageProvider !== 'r2' ||
+			!metadata.ragEntryId ||
+			!['indexed', 'mapped'].includes(metadata.ingestionStatus ?? '') ||
+			metadata.topicMapping?.status !== 'failed' ||
+			metadata.topicMapping.sourceIndexedAt !== metadata.indexedAt
+		)
+			return false;
+		const updatedMetadata = { ...metadata };
+		delete updatedMetadata.topicMapping;
+		await ctx.db.patch(documentId, { metadata: updatedMetadata });
+		return true;
+	}
+});
+
 export const failDocumentTopicMapping = internalMutation({
 	args: { documentId: v.id('contentLib'), sourceIndexedAt: v.number(), error: v.string() },
 	returns: v.null(),
