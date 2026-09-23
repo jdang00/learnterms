@@ -9,7 +9,7 @@ afterEach(() => {
 	vi.unstubAllEnvs();
 });
 
-test('save uses server candidates, creates drafts and rejects replay', async () => {
+test('save uses server candidates, publishes questions and rejects replay', async () => {
 	const { t, ids, owner } = await setup();
 	const jobId = await owner.mutation(api.questionStudio.jobs.createGenerationJob, {
 		documentId: ids.documentId,
@@ -59,11 +59,12 @@ test('save uses server candidates, creates drafts and rejects replay', async () 
 		documentId: ids.documentId,
 		moduleId: ids.moduleId,
 		candidateIndexes: [0],
-		status: 'published'
+		status: 'draft'
 	});
 	expect(result.insertedCount).toBe(1);
 	const question = await t.run((ctx) => ctx.db.get(result.insertedIds[0]));
-	expect(question?.status).toBe('draft');
+	expect(question?.status).toBe('published');
+	expect(question?.searchText).toContain(' published ');
 	expect(question?.metadata.generation?.questionType).toBe('learn');
 	expect(question?.metadata.generation?.reasoningOrder).toBeUndefined();
 	expect(question?.metadata.generation?.jobId).toBe(jobId);
@@ -189,7 +190,7 @@ test('curator edits preserve provenance, reject stale/foreign edits, and save th
 	expect(question?.options.find((option) => option.id === question.correctAnswers[0])?.text).toBe(
 		'Four'
 	);
-	expect(question?.status).toBe('draft');
+	expect(question?.status).toBe('published');
 	expect(question?.metadata.generation?.questionType).toBe('learn');
 	expect(question?.metadata.generation?.reasoningOrder).toBeUndefined();
 	expect(question?.metadata.generation?.curatorRevision).toBe(1);

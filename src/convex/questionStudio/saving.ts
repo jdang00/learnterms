@@ -176,7 +176,7 @@ export const saveSelectedCandidates = mutation({
 		}));
 		let nextOrder =
 			existing.length > 0 ? Math.max(...existing.map((question) => question.order)) + 1 : 0;
-		const status = 'draft';
+		const status = 'published';
 		const insertedIds: Id<'question'>[] = [];
 
 		const previousPositions = existing

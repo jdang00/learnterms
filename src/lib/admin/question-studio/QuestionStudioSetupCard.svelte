@@ -167,13 +167,13 @@
 	);
 	const hint = $derived.by(() => {
 		if (!selectedDocumentId) return 'Choose a document for the agent to write from.';
-		if (!selectedModuleId) return 'Choose the module these drafts should be saved to.';
+		if (!selectedModuleId) return 'Choose the module where these questions will be published.';
 		if (sourceMode === 'topics' && !isTopicMapLoading && topics.length === 0)
 			return "This document hasn't been mapped into topics yet, so choose the pages to use.";
 		if (sourceMode === 'pages' && selectedPageNumbers.length === 0)
 			return 'Choose at least one page.';
 		if (sourceMode === 'topics' && selectedTopics.length === 0) return 'Choose at least one topic.';
-		return 'Every draft is checked against your document. Nothing is published until you say so.';
+		return 'Every question is checked against your document. Selected questions are published when you save them.';
 	});
 </script>
 

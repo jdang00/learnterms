@@ -622,7 +622,7 @@
 				documentId: selectedDocumentId,
 				jobId: activeJobId,
 				candidateIndexes: indexes,
-				status: 'draft'
+				status: 'published'
 			});
 			if (savedClassId && result.insertedIds.length)
 				savedDraftsLink = {
@@ -630,7 +630,7 @@
 					moduleId: String(savedModuleId),
 					query: `generationJob=${savedJobId}&review=${result.insertedIds[0]}`
 				};
-			// The run stays on screen; saved drafts simply stop being selectable.
+			// The run stays on screen; published questions stop being selectable.
 			selectedCandidateIndexes = new Set(
 				[...selectedCandidateIndexes].filter((index) => !indexes.includes(index))
 			);

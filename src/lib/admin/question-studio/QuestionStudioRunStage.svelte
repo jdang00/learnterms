@@ -216,15 +216,14 @@
 			<ChartNoAxesCombined size={16} />
 		</button>
 		{#if editing}
-			<p class="text-xs text-base-content/55">Apply or cancel this edit to keep saving drafts.</p>
+			<p class="text-xs text-base-content/55">Apply or cancel this edit to publish questions.</p>
 		{:else}
 			<p class="text-xs text-base-content/55">
 				{#if savedIndexes.size > 0}
-					<span class="font-medium text-success">Saved {savedIndexes.size}</span>
-					to {moduleTitle}. Publish {savedIndexes.size === 1 ? 'it' : 'them'} from the module when you're
-					ready.
+					<span class="font-medium text-success">Published {savedIndexes.size}</span>
+					to {moduleTitle}.
 				{:else}
-					Drafts stay private until you publish them from the module.
+					Selected questions publish directly to the module when saved.
 				{/if}
 			</p>
 			<p class="hidden items-center gap-1 text-xs text-base-content/35 sm:flex">
@@ -257,10 +256,10 @@
 					>
 						<Save size={14} />
 						{#if isSaving}
-							<ShimmerText text="Saving…" class="font-medium" />
+							<ShimmerText text="Publishing…" class="font-medium" />
 						{:else}
 							<span class="max-w-[18rem] truncate">
-								Save {selectedCount} draft{selectedCount === 1 ? '' : 's'} to {moduleTitle}
+								Publish {selectedCount} question{selectedCount === 1 ? '' : 's'} to {moduleTitle}
 							</span>
 						{/if}
 					</button>

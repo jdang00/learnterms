@@ -231,10 +231,10 @@
 				class="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4"
 			>
 				<div class="min-w-0 flex-1">
-					<h2 class="text-sm font-semibold">Drafts from Question Studio</h2>
+					<h2 class="text-sm font-semibold">Questions from Question Studio</h2>
 					<p class="mt-1 text-xs text-base-content/65">
-						Review the answers and sources, then publish the questions you’re ready to share. Saving
-						a draft does not publish it.
+						Newly saved questions are published. Review their answers and sources here; you can edit
+						or archive them as needed.
 					</p>
 				</div>
 				<a
