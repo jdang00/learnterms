@@ -2,18 +2,19 @@
 	import { resolve } from '$app/paths';
 	import { ArrowUpRight } from 'lucide-svelte';
 	import { blogPosts } from '$lib/content/blog';
+	import PublicPage from '$lib/components/landing/PublicPage.svelte';
 </script>
 
-<div id="main-content" class="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
-	<h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">Blog</h1>
-	<p class="mt-4 text-base-content/65">
-		Notes on building LearnTerms, with a few posts from the early days.
-	</p>
-	<div class="mt-8 divide-y divide-base-300 border-y border-base-300">
+<PublicPage
+	title="Blog"
+	lede="Notes on building LearnTerms, with a few posts from the early days."
+	width="narrow"
+>
+	<div class="divide-y divide-base-content/10 border-y border-base-content/10">
 		{#each blogPosts as post (post.slug)}
 			<article class="py-7">
 				<time datetime={post.date} class="text-sm text-base-content/55">{post.displayDate}</time>
-				<h2 class="mt-2 text-xl font-semibold tracking-tight">
+				<h2 class="mt-2 text-xl font-semibold">
 					<a
 						class="group inline-flex items-start gap-2 hover:text-primary"
 						href={resolve('/blog/[slug]', { slug: post.slug })}
@@ -27,4 +28,4 @@
 			</article>
 		{/each}
 	</div>
-</div>
+</PublicPage>

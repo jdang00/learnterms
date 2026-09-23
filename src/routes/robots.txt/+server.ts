@@ -6,7 +6,7 @@ import type { RequestHandler } from './$types';
 export const GET: RequestHandler = ({ url }) =>
 	new Response(
 		url.origin === SITE_ORIGIN
-			? `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE_ORIGIN}/sitemap.xml\n`
+			? `User-agent: *\nAllow: /\n\nSitemap: ${SITE_ORIGIN}/sitemap.xml\n`
 			: 'User-agent: *\nDisallow: /\n',
 		{
 			headers: {

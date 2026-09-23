@@ -6,6 +6,7 @@
 	import VersionTwoBeta from '$lib/components/blog/VersionTwoBeta.svelte';
 	import VersionTwo from '$lib/components/blog/VersionTwo.svelte';
 	import VersionThree from '$lib/components/blog/VersionThree.svelte';
+	import PublicBackdrop from '$lib/components/landing/PublicBackdrop.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -57,40 +58,43 @@
 	{@html breadcrumbsMarkup}
 </svelte:head>
 
-<article id="main-content" class="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
-	<nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-base-content/65">
-		<a href={resolve('/')} class="hover:text-primary">Home</a>
-		<span aria-hidden="true">/</span>
-		<a href={resolve('/blog')} class="inline-flex items-center gap-1 hover:text-primary"
-			><ArrowLeft size={14} /> Blog</a
+<div class="relative isolate overflow-hidden">
+	<PublicBackdrop />
+	<article id="main-content" class="mx-auto max-w-3xl px-5 pt-14 pb-24 sm:px-8 sm:pt-20">
+		<nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-base-content/65">
+			<a href={resolve('/')} class="hover:text-primary">Home</a>
+			<span aria-hidden="true">/</span>
+			<a href={resolve('/blog')} class="inline-flex items-center gap-1 hover:text-primary"
+				><ArrowLeft size={14} /> Blog</a
+			>
+			<span aria-hidden="true">/</span>
+			<span aria-current="page" class="truncate">{data.post.title}</span>
+		</nav>
+		<header class="mt-7">
+			<h1 class="text-balance text-4xl font-bold leading-tight sm:text-5xl">
+				{data.post.title}
+			</h1>
+			<p class="mt-4 text-sm text-base-content/60">
+				Justin Dang · <time datetime={data.post.date}>{data.post.displayDate}</time>
+			</p>
+		</header>
+		{#if data.post.archived}<p
+				class="my-7 border-l-2 border-base-300 pl-4 text-sm leading-relaxed text-base-content/60"
+			>
+				Archived post. Features, plans, and performance claims describe the original release.
+			</p>{/if}
+		<div
+			class="prose mt-8 max-w-none prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-a:underline-offset-4 prose-img:rounded-xl prose-pre:whitespace-pre-wrap prose-pre:break-words"
 		>
-		<span aria-hidden="true">/</span>
-		<span aria-current="page" class="truncate">{data.post.title}</span>
-	</nav>
-	<header class="mt-7">
-		<h1 class="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-			{data.post.title}
-		</h1>
-		<p class="mt-4 text-sm text-base-content/60">
-			Justin Dang · <time datetime={data.post.date}>{data.post.displayDate}</time>
-		</p>
-	</header>
-	{#if data.post.archived}<p
-			class="my-7 border-l-2 border-base-300 pl-4 text-sm leading-relaxed text-base-content/60"
-		>
-			Archived post. Features, plans, and performance claims describe the original release.
-		</p>{/if}
-	<div
-		class="prose mt-8 max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-h2:text-2xl prose-h3:text-xl prose-a:underline-offset-4 prose-img:rounded-xl prose-pre:whitespace-pre-wrap prose-pre:break-words"
-	>
-		<Article />
-	</div>
-	{#if data.post.archiveNote}<p
-			class="mt-10 border-t border-base-300 pt-5 text-xs leading-relaxed text-base-content/55"
-		>
-			Archive note: {data.post.archiveNote}
-		</p>{/if}
-</article>
+			<Article />
+		</div>
+		{#if data.post.archiveNote}<p
+				class="mt-10 border-t border-base-300 pt-5 text-xs leading-relaxed text-base-content/55"
+			>
+				Archive note: {data.post.archiveNote}
+			</p>{/if}
+	</article>
+</div>
 
 <style>
 	.prose :global(table) {

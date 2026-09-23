@@ -16,6 +16,7 @@
 	} from 'lucide-svelte';
 	import QuizPreviewReplica from '$lib/components/landing/QuizPreviewReplica.svelte';
 	import ReviewsShowcase from '$lib/components/landing/ReviewsShowcase.svelte';
+	import BrandLogo from '$lib/components/BrandLogo.svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { resolve } from '$app/paths';
@@ -205,7 +206,7 @@
 
 <div class="relative isolate overflow-hidden pb-28">
 	<div class="pointer-events-none absolute inset-0 -z-10">
-		<div class="page-grid"></div>
+		<div class="bg-graph-paper absolute inset-0"></div>
 		<div bind:this={glowContainer} class="glow-wrap">
 			<div class="glow glow-focus"></div>
 			<div class="glow glow-momentum"></div>
@@ -221,9 +222,9 @@
 			<div in:fade={{ duration: 550 }} class="max-w-3xl">
 				<h1
 					id="hero-title"
-					class="text-balance text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl"
+					class="hero-title text-balance text-4xl leading-tight sm:text-5xl lg:text-6xl"
 				>
-					LearnTerms is Smarter Studying, Simplified.
+					<BrandLogo class="align-baseline" /> is Smarter Studying, Simplified.
 				</h1>
 				<p class="mt-5 max-w-3xl text-lg text-base-content/80 sm:text-xl">
 					LearnTerms gives you a live quiz workspace where answers, flags, and progress sync
@@ -239,10 +240,7 @@
 		</section>
 
 		<section class="mt-2 grid gap-3 sm:grid-cols-3" aria-label="Explore LearnTerms">
-			<a
-				href={resolve('/features')}
-				class="card border border-base-300 bg-base-100 transition-colors hover:border-primary/50"
-			>
+			<a href={resolve('/features')} class="panel-graph transition-colors hover:border-primary/50">
 				<span class="card-body gap-1 p-5">
 					<span class="font-semibold">Explore study features</span>
 					<span class="text-sm text-base-content/70"
@@ -250,10 +248,7 @@
 					>
 				</span>
 			</a>
-			<a
-				href={resolve('/pricing')}
-				class="card border border-base-300 bg-base-100 transition-colors hover:border-primary/50"
-			>
+			<a href={resolve('/pricing')} class="panel-graph transition-colors hover:border-primary/50">
 				<span class="card-body gap-1 p-5">
 					<span class="font-semibold">See access and pricing</span>
 					<span class="text-sm text-base-content/70"
@@ -263,7 +258,7 @@
 			</a>
 			<a
 				href="https://docs.learnterms.com/docs"
-				class="card border border-base-300 bg-base-100 transition-colors hover:border-primary/50"
+				class="panel-graph transition-colors hover:border-primary/50"
 			>
 				<span class="card-body gap-1 p-5">
 					<span class="font-semibold">Read the documentation</span>
@@ -311,7 +306,7 @@
 
 			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" use:reveal={{ y: 18, stagger: 90 }}>
 				<!-- Flag & filter — interactive mini quiz nav -->
-				<div class="feature-card flex flex-col">
+				<div class="panel-graph p-4 flex flex-col">
 					<div class="mb-3 flex items-start justify-between">
 						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
 							<Flag size={18} />
@@ -372,7 +367,7 @@
 				</div>
 
 				<!-- AI generation — animated pipeline demo -->
-				<div class="feature-card ai-card min-w-0">
+				<div class="panel-graph p-4 ai-card min-w-0">
 					<div class="mb-3 flex items-start justify-between">
 						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
 							<BrainCircuit size={18} />
@@ -524,7 +519,7 @@
 				</div>
 
 				<!-- Rationale-first questions -->
-				<div class="feature-card sm:col-span-2 lg:col-span-1">
+				<div class="panel-graph p-4 sm:col-span-2 lg:col-span-1">
 					<div class="mb-3 flex items-start justify-between">
 						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
 							<Eye size={18} />
@@ -597,7 +592,7 @@
 				use:reveal={{ y: 18, stagger: 90 }}
 			>
 				<!-- Cohort Analytics -->
-				<div class="feature-card">
+				<div class="panel-graph p-4">
 					<div class="mb-3 flex items-start justify-between">
 						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
 							<BarChart3 size={18} />
@@ -675,7 +670,7 @@
 				</div>
 
 				<!-- Keyboard shortcuts — mini quiz that reacts -->
-				<div class="feature-card flex flex-col">
+				<div class="panel-graph p-4 flex flex-col">
 					<div class="mb-3 flex items-start justify-between">
 						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
 							<Keyboard size={18} />
@@ -775,7 +770,7 @@
 				</div>
 
 				<!-- Rich Attachments & Formatting -->
-				<div class="feature-card sm:col-span-2 lg:col-span-1">
+				<div class="panel-graph p-4 sm:col-span-2 lg:col-span-1">
 					<div class="mb-3 flex items-start justify-between">
 						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
 							<Image size={18} />
@@ -929,31 +924,10 @@
 </div>
 
 <style>
-	.page-grid {
-		position: absolute;
-		inset: 0;
-		background:
-			linear-gradient(
-					to right,
-					color-mix(in oklab, var(--color-base-content) 14%, transparent) 1px,
-					transparent 1px
-				)
-				0 0 / 42px 42px,
-			linear-gradient(
-					to bottom,
-					color-mix(in oklab, var(--color-base-content) 14%, transparent) 1px,
-					transparent 1px
-				)
-				0 0 / 42px 42px;
-		opacity: 0.5;
-		mask-image:
-			linear-gradient(to bottom, transparent 0%, black 8%, black 50%, transparent 100%),
-			radial-gradient(ellipse 90% 75% at 50% 45%, black 15%, transparent 100%);
-		mask-composite: intersect;
-		-webkit-mask-image:
-			linear-gradient(to bottom, transparent 0%, black 8%, black 50%, transparent 100%),
-			radial-gradient(ellipse 90% 75% at 50% 45%, black 15%, transparent 100%);
-		-webkit-mask-composite: source-in;
+	.hero-title {
+		font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+		font-weight: 600;
+		letter-spacing: -0.03em;
 	}
 
 	.glow-wrap {
@@ -1058,65 +1032,6 @@
 			opacity: 0.65;
 			transform: scale(1.15) rotate(3deg);
 		}
-	}
-
-	.feature-card {
-		position: relative;
-		border-radius: 1.1rem;
-		padding: 1rem;
-		background:
-			linear-gradient(
-				to bottom,
-				color-mix(in oklab, var(--color-base-200) 70%, transparent),
-				color-mix(in oklab, var(--color-base-100) 95%, transparent)
-			),
-			linear-gradient(
-					to right,
-					color-mix(in oklab, var(--color-base-content) 8%, transparent) 1px,
-					transparent 1px
-				)
-				0 0 / 22px 22px,
-			linear-gradient(
-					to bottom,
-					color-mix(in oklab, var(--color-base-content) 8%, transparent) 1px,
-					transparent 1px
-				)
-				0 0 / 22px 22px;
-		border: 1px solid color-mix(in oklab, var(--color-base-content) 14%, transparent);
-	}
-
-	.feature-card::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		border-radius: inherit;
-		box-shadow: inset 0 0 0 1px color-mix(in oklab, white 18%, transparent);
-		opacity: 0.45;
-	}
-
-	.grid-frame {
-		padding: 1.1rem;
-		border-radius: 1.25rem;
-		border: 1px solid color-mix(in oklab, var(--color-base-content) 14%, transparent);
-		background:
-			linear-gradient(
-					to right,
-					color-mix(in oklab, var(--color-base-content) 8%, transparent) 1px,
-					transparent 1px
-				)
-				0 0 / 26px 26px,
-			linear-gradient(
-					to bottom,
-					color-mix(in oklab, var(--color-base-content) 8%, transparent) 1px,
-					transparent 1px
-				)
-				0 0 / 26px 26px,
-			linear-gradient(
-				180deg,
-				color-mix(in oklab, var(--color-base-200) 72%, transparent),
-				color-mix(in oklab, var(--color-base-100) 95%, transparent)
-			);
 	}
 
 	/* Timeline workflow */

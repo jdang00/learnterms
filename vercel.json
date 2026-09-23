@@ -76,16 +76,6 @@
 				}
 			],
 			"destination": "/admin/:path*"
-		},
-		{
-			"source": "/:path*",
-			"has": [
-				{
-					"type": "host",
-					"value": "api.learnterms.com"
-				}
-			],
-			"destination": "/api/:path*"
 		}
 	],
 	"installCommand": "bun install --frozen-lockfile",

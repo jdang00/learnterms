@@ -1,10 +1,11 @@
-<div class="mx-auto max-w-5xl px-4 py-12">
-	<h1 class="text-3xl font-bold">Status</h1>
-	<p class="text-base-content/70 mt-2">All systems operational.</p>
+<script lang="ts">
+	import PublicPage from '$lib/components/landing/PublicPage.svelte';
+</script>
 
-	<div class="grid gap-4 mt-8 md:grid-cols-2">
-		<div class="card bg-base-100 border border-base-300">
-			<div class="card-body">
+<PublicPage title="Status" lede="All systems operational.">
+	<div class="grid gap-4 md:grid-cols-2">
+		<div class="panel-graph p-5">
+			<div class="space-y-1">
 				<div class="flex items-center justify-between">
 					<h2 class="font-semibold">App & UI</h2>
 					<span class="badge badge-success">Operational</span>
@@ -12,8 +13,8 @@
 				<p class="text-sm text-base-content/70">Vercel hosting and edge network.</p>
 			</div>
 		</div>
-		<div class="card bg-base-100 border border-base-300">
-			<div class="card-body">
+		<div class="panel-graph p-5">
+			<div class="space-y-1">
 				<div class="flex items-center justify-between">
 					<h2 class="font-semibold">Convex API</h2>
 					<span class="badge badge-success">Operational</span>
@@ -21,8 +22,8 @@
 				<p class="text-sm text-base-content/70">Data and actions.</p>
 			</div>
 		</div>
-		<div class="card bg-base-100 border border-base-300">
-			<div class="card-body">
+		<div class="panel-graph p-5">
+			<div class="space-y-1">
 				<div class="flex items-center justify-between">
 					<h2 class="font-semibold">Auth (Clerk)</h2>
 					<span class="badge badge-success">Operational</span>
@@ -30,8 +31,8 @@
 				<p class="text-sm text-base-content/70">Sessions and user data.</p>
 			</div>
 		</div>
-		<div class="card bg-base-100 border border-base-300">
-			<div class="card-body">
+		<div class="panel-graph p-5">
+			<div class="space-y-1">
 				<div class="flex items-center justify-between">
 					<h2 class="font-semibold">AI Processing</h2>
 					<span class="badge badge-success">Operational</span>
@@ -40,4 +41,4 @@
 			</div>
 		</div>
 	</div>
-</div>
+</PublicPage>

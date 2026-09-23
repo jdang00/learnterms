@@ -818,7 +818,7 @@
 
 <div class="relative isolate overflow-hidden pb-28">
 	<div class="pointer-events-none absolute inset-0 -z-10">
-		<div class="page-grid"></div>
+		<div class="bg-graph-paper absolute inset-0"></div>
 		<div bind:this={glowContainer} class="glow-wrap">
 			<div class="glow glow-focus"></div>
 			<div class="glow glow-momentum"></div>
@@ -918,33 +918,6 @@
 </div>
 
 <style>
-	.page-grid {
-		position: absolute;
-		inset: 0;
-		background:
-			linear-gradient(
-					to right,
-					color-mix(in oklab, var(--color-base-content) 14%, transparent) 1px,
-					transparent 1px
-				)
-				0 0 / 42px 42px,
-			linear-gradient(
-					to bottom,
-					color-mix(in oklab, var(--color-base-content) 14%, transparent) 1px,
-					transparent 1px
-				)
-				0 0 / 42px 42px;
-		opacity: 0.5;
-		mask-image:
-			linear-gradient(to bottom, transparent 0%, black 8%, black 50%, transparent 100%),
-			radial-gradient(ellipse 90% 75% at 50% 35%, black 15%, transparent 100%);
-		mask-composite: intersect;
-		-webkit-mask-image:
-			linear-gradient(to bottom, transparent 0%, black 8%, black 50%, transparent 100%),
-			radial-gradient(ellipse 90% 75% at 50% 35%, black 15%, transparent 100%);
-		-webkit-mask-composite: source-in;
-	}
-
 	.glow-wrap {
 		position: absolute;
 		inset: 0;

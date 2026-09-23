@@ -47,34 +47,56 @@ body {
 	}
 }
 
-/* Tailwind v4 custom utilities for About page aurora background */
-@keyframes auroraShift {
-	0% {
-		background-position: 0% 50%;
-	}
-	50% {
-		background-position: 100% 50%;
-	}
-	100% {
-		background-position: 0% 50%;
-	}
+/* Public-site graph paper: fades out toward the edges so content stays readable. */
+@utility bg-graph-paper {
+	background:
+		linear-gradient(
+				to right,
+				color-mix(in oklab, var(--color-base-content) 14%, transparent) 1px,
+				transparent 1px
+			)
+			0 0 / 42px 42px,
+		linear-gradient(
+				to bottom,
+				color-mix(in oklab, var(--color-base-content) 14%, transparent) 1px,
+				transparent 1px
+			)
+			0 0 / 42px 42px;
+	opacity: 0.5;
+	mask-image:
+		linear-gradient(to bottom, transparent 0%, black 8%, black 50%, transparent 100%),
+		radial-gradient(ellipse 90% 75% at 50% 40%, black 15%, transparent 100%);
+	mask-composite: intersect;
+	-webkit-mask-image:
+		linear-gradient(to bottom, transparent 0%, black 8%, black 50%, transparent 100%),
+		radial-gradient(ellipse 90% 75% at 50% 40%, black 15%, transparent 100%);
+	-webkit-mask-composite: source-in;
 }
 
-@utility bg-aurora {
-	background-color: #b999ff;
-	background-image:
-		radial-gradient(at 62% 99%, hsla(359, 82%, 70%, 1) 0px, transparent 50%),
-		radial-gradient(at 5% 11%, hsla(252, 72%, 61%, 1) 0px, transparent 50%),
-		radial-gradient(at 33% 78%, hsla(269, 73%, 65%, 1) 0px, transparent 50%),
-		radial-gradient(at 19% 33%, hsla(199, 65%, 63%, 1) 0px, transparent 50%),
-		radial-gradient(at 12% 34%, hsla(84, 95%, 66%, 1) 0px, transparent 50%),
-		radial-gradient(at 15% 86%, hsla(330, 80%, 76%, 1) 0px, transparent 50%),
-		radial-gradient(at 63% 94%, hsla(120, 64%, 76%, 1) 0px, transparent 50%);
-	background-size: 200% 200%;
-}
-
-@utility animate-aurora {
-	animation: auroraShift 18s ease-in-out infinite;
+/* Public-site card surface: a faint 22px grid under a soft wash, as on the landing demos. */
+@utility panel-graph {
+	position: relative;
+	border-radius: 1.1rem;
+	border: 1px solid color-mix(in oklab, var(--color-base-content) 14%, transparent);
+	background:
+		linear-gradient(
+			to bottom,
+			color-mix(in oklab, var(--color-base-200) 70%, transparent),
+			color-mix(in oklab, var(--color-base-100) 95%, transparent)
+		),
+		linear-gradient(
+				to right,
+				color-mix(in oklab, var(--color-base-content) 8%, transparent) 1px,
+				transparent 1px
+			)
+			0 0 / 22px 22px,
+		linear-gradient(
+				to bottom,
+				color-mix(in oklab, var(--color-base-content) 8%, transparent) 1px,
+				transparent 1px
+			)
+			0 0 / 22px 22px;
+	box-shadow: inset 0 0 0 1px color-mix(in oklab, white 8%, transparent);
 }
 
 .tiptap p.is-editor-empty:first-child::before {

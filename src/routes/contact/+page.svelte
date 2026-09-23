@@ -1,21 +1,21 @@
-<div class="mx-auto max-w-5xl px-4 py-12">
-	<h1 class="text-3xl font-bold">Contact</h1>
-	<p class="mt-2 text-base-content/80">
-		Support on LearnTerms is simple: you’re talking to me, the guy who built it. No sales teams, no
-		canned replies — just me making sure it works for you. Feel free to send me a DM for whatever it
-		is you need.
-	</p>
+<script lang="ts">
+	import PublicPage from '$lib/components/landing/PublicPage.svelte';
+</script>
 
-	<section class="mt-8">
+<PublicPage
+	title="Contact"
+	lede="Support on LearnTerms is simple: you’re talking to me, the guy who built it. No sales teams, no canned replies — just me making sure it works for you. Feel free to send me a DM for whatever it is you need."
+	width="narrow"
+>
+	<section>
 		<a
 			href="https://www.instagram.com/justin_a_dang/"
 			target="_blank"
 			rel="noopener"
 			aria-label="Open Instagram profile @justin_a_dang in a new tab"
-			class="card bg-base-200 shadow-md transition-colors hover:bg-base-300
-		  focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/40"
+			class="panel-graph block p-6 transition-colors hover:border-primary/50 focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/40"
 		>
-			<div class="card-body">
+			<div>
 				<div class="flex items-center gap-4">
 					<div class="avatar">
 						<div
@@ -54,4 +54,4 @@
 			</div>
 		</a>
 	</section>
-</div>
+</PublicPage>

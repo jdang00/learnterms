@@ -5,6 +5,7 @@
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import NavBar from '$lib/components/NavBar.svelte';
+	import BrandLogo from '$lib/components/BrandLogo.svelte';
 	import BadgeAwardModal from '$lib/components/BadgeAwardModal.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
@@ -188,49 +189,56 @@
 		</main>
 
 		{#if !hideFooter}
-			<footer class="bg-base-200 text-base-content border-t border-base-300 mt-auto">
-				<div class="mx-auto w-full max-w-6xl px-4 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
-					<div class="col-span-2 sm:col-span-1 pr-8">
-						<a href={resolve('/')} class="text-lg font-semibold">LearnTerms</a>
-						<p class="mt-2 text-sm text-base-content/70">
-							Study smarter today—build your board prep as you learn.
+			<footer class="mt-auto border-t border-base-300 bg-base-200 text-base-content">
+				<div
+					class="mx-auto grid w-full max-w-6xl grid-cols-2 gap-8 px-5 py-12 sm:grid-cols-4 sm:px-8 lg:px-12"
+				>
+					<div class="col-span-2 pr-8 sm:col-span-1">
+						<BrandLogo class="text-lg" />
+						<p class="mt-2 text-sm leading-relaxed text-base-content/70">
+							Class-aligned question banks and practice tests for health-professions cohorts.
 						</p>
 					</div>
 
-					<nav aria-label="Product" class="flex flex-col space-y-1">
+					<nav aria-label="Product" class="flex flex-col space-y-1.5 text-sm">
 						<h2 class="footer-title">Product</h2>
 						<a class="link link-hover" href={resolve('/features')}>Features</a>
 						<a class="link link-hover" href={resolve('/pricing')}>Pricing</a>
 						<a class="link link-hover" href={resolve('/changelog')}>Changelog</a>
+						<a class="link link-hover" href={resolve('/tools/grade-calculator')}>Grade calculator</a
+						>
+						<a class="link link-hover" href={resolve('/tools/calculator')}>Scientific calculator</a>
 					</nav>
 
-					<nav aria-label="Resources" class="flex flex-col space-y-1">
+					<nav aria-label="Resources" class="flex flex-col space-y-1.5 text-sm">
 						<h2 class="footer-title">Resources</h2>
 						<a class="link link-hover" href="https://docs.learnterms.com/docs">Documentation</a>
 						<a class="link link-hover" href={resolve('/blog')}>Blog</a>
 						<a class="link link-hover" href={resolve('/status')}>Status</a>
 					</nav>
 
-					<nav aria-label="Development" class="flex flex-col space-y-1">
-						<h2 class="footer-title">Development</h2>
+					<nav aria-label="Project" class="flex flex-col space-y-1.5 text-sm">
+						<h2 class="footer-title">Project</h2>
+						<a class="link link-hover" href={resolve('/about-us')}>About</a>
+						<a class="link link-hover" href={resolve('/contact')}>Contact</a>
 						<a
 							class="link link-hover"
 							href="https://github.com/jdang00/learnterms"
 							target="_blank"
 							rel="noopener noreferrer">GitHub</a
 						>
-						<a class="link link-hover" href={resolve('/about-us')}>About</a>
-						<a class="link link-hover" href={resolve('/contact')}>Contact</a>
 					</nav>
 				</div>
 				<div class="border-t border-base-300">
-					<p class="mx-auto max-w-6xl px-4 py-6 text-sm text-base-content/70 text-center">
-						© {year} LearnTerms. All rights reserved.
-						<span class="mt-2 flex justify-center gap-4">
+					<div
+						class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-6 text-sm text-base-content/65 sm:flex-row sm:px-8 lg:px-12"
+					>
+						<p>© {year} LearnTerms. All rights reserved.</p>
+						<div class="flex gap-5">
 							<a class="link link-hover" href={resolve('/privacy')}>Privacy Policy</a>
 							<a class="link link-hover" href={resolve('/terms')}>Terms and Conditions</a>
-						</span>
-					</p>
+						</div>
+					</div>
 				</div>
 			</footer>
 		{/if}

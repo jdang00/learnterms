@@ -9,7 +9,7 @@ async function convex(...args: string[]) {
 	if (code !== 0) throw new Error(error);
 	return JSON.parse(output);
 }
-const job = await convex('run', 'questionStudio:getGenerationJobInternal', JSON.stringify({ jobId }));
+const job = await convex('run', 'questionStudio/jobs:getGenerationJobInternal', JSON.stringify({ jobId }));
 if (!job || job._id !== jobId) throw new Error('Job not found');
 await mkdir(directory, { recursive: true });
 await Bun.write(`${directory}/job.json`, JSON.stringify(job, null, 2) + '\n');

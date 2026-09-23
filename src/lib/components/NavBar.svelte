@@ -1,14 +1,28 @@
 <script lang="ts">
-	import { SignedIn, SignedOut, SignInButton, UserButton } from 'svelte-clerk';
+	import { SignedIn, SignedOut, UserButton } from 'svelte-clerk';
 	import { useClerkContext } from 'svelte-clerk/client';
 	import ThemeToggle from './ThemeToggle.svelte';
+	import BrandLogo from './BrandLogo.svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { Search } from 'lucide-svelte';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import PowerBar from './power-bar/PowerBar.svelte';
 	import type { CohortItem, QuickLinkItem } from './power-bar/types';
+
+	const publicLinks = [
+		{ href: resolve('/features'), label: 'Features' },
+		{ href: resolve('/pricing'), label: 'Pricing' },
+		{ href: 'https://docs.learnterms.com/docs', label: 'Docs' },
+		{ href: resolve('/blog'), label: 'Blog' },
+		{ href: resolve('/about-us'), label: 'About' }
+	];
+
+	const isCurrent = (href: string) =>
+		href.startsWith('/') &&
+		(page.url.pathname === href || page.url.pathname.startsWith(`${href}/`));
 
 	const ctx = useClerkContext();
 	const user = $derived(ctx.user);
@@ -77,16 +91,20 @@
 
 <div class="navbar bg-base-100 h-16">
 	<div class="navbar-start">
-		<a class="btn btn-ghost rounded-full text-xl" href={resolve('/')}>LearnTerms</a>
+		<BrandLogo class="ml-1 rounded-full px-2 py-1 text-xl sm:ml-2" />
 	</div>
 
 	{#if !user}
 		<nav class="navbar-center hidden gap-1 md:flex" aria-label="Public site">
-			<a class="btn btn-ghost btn-sm" href={resolve('/features')}>Features</a>
-			<a class="btn btn-ghost btn-sm" href={resolve('/pricing')}>Pricing</a>
-			<a class="btn btn-ghost btn-sm" href="https://docs.learnterms.com/docs">Documentation</a>
-			<a class="btn btn-ghost btn-sm" href={resolve('/blog')}>Blog</a>
-			<a class="btn btn-ghost btn-sm" href={resolve('/about-us')}>About</a>
+			{#each publicLinks as link (link.href)}
+				<!-- eslint-disable svelte/no-navigation-without-resolve -- resolved in publicLinks; Docs is external -->
+				<a
+					class="nav-link"
+					href={link.href}
+					aria-current={isCurrent(link.href) ? 'page' : undefined}>{link.label}</a
+				>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
+			{/each}
 		</nav>
 	{/if}
 
@@ -118,7 +136,7 @@
 	{/if}
 
 	<div class="navbar-end">
-		<div class="flex flex-row gap-4">
+		<div class="flex flex-row items-center gap-2 sm:gap-3">
 			<ThemeToggle variant="ghost" size="md" class="btn-circle m-1" />
 
 			{#if isPro}
@@ -134,13 +152,12 @@
 					</div>
 				</SignedIn>
 				<SignedOut>
-					<div class="btn btn-outline btn-primary rounded-full self-end">
-						<SignInButton
-							forceRedirectUrl="/sign-in"
-							fallbackRedirectUrl="/sign-in"
-							signUpForceRedirectUrl="/sign-up"
-							signUpFallbackRedirectUrl="/sign-up"
-						/>
+					<div class="flex items-center gap-1">
+						<a class="btn btn-ghost btn-sm rounded-full" href={resolve('/sign-in')}>Sign in</a>
+						<a
+							class="btn btn-primary btn-sm hidden rounded-full px-4 sm:inline-flex"
+							href={resolve('/sign-up')}>Get started</a
+						>
 					</div>
 				</SignedOut>
 			</div>
@@ -153,11 +170,15 @@
 		class="flex justify-center gap-1 overflow-x-auto border-b border-base-300 px-2 pb-2 md:hidden"
 		aria-label="Public site"
 	>
-		<a class="btn btn-ghost btn-xs" href={resolve('/features')}>Features</a>
-		<a class="btn btn-ghost btn-xs" href={resolve('/pricing')}>Pricing</a>
-		<a class="btn btn-ghost btn-xs" href="https://docs.learnterms.com/docs">Documentation</a>
-		<a class="btn btn-ghost btn-xs" href={resolve('/blog')}>Blog</a>
-		<a class="btn btn-ghost btn-xs" href={resolve('/about-us')}>About</a>
+		{#each publicLinks as link (link.href)}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -- resolved in publicLinks; Docs is external -->
+			<a
+				class="nav-link nav-link-sm"
+				href={link.href}
+				aria-current={isCurrent(link.href) ? 'page' : undefined}>{link.label}</a
+			>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
+		{/each}
 	</nav>
 {/if}
 
@@ -172,3 +193,44 @@
 		onSwitchCohort={handleCohortChange}
 	/>
 {/if}
+
+<style>
+	.nav-link {
+		position: relative;
+		border-radius: 999px;
+		padding: 0.35rem 0.8rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+		transition:
+			color 0.15s ease,
+			background-color 0.15s ease;
+	}
+
+	.nav-link:hover {
+		color: var(--color-base-content);
+		background: color-mix(in oklab, var(--color-base-content) 6%, transparent);
+	}
+
+	.nav-link[aria-current='page'] {
+		color: var(--color-base-content);
+	}
+
+	.nav-link[aria-current='page']::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		bottom: -0.2rem;
+		width: 0.3rem;
+		height: 0.3rem;
+		border-radius: 999px;
+		background: var(--color-primary);
+		transform: translateX(-50%);
+	}
+
+	.nav-link-sm {
+		padding: 0.25rem 0.65rem;
+		font-size: 0.8rem;
+		white-space: nowrap;
+	}
+</style>
