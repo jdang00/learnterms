@@ -86,6 +86,7 @@ import type * as ragKnowledgeInternal from "../ragKnowledgeInternal.js";
 import type * as school from "../school.js";
 import type * as semester from "../semester.js";
 import type * as stemHighlights from "../stemHighlights.js";
+import type * as studyOverview from "../studyOverview.js";
 import type * as studyProgress from "../studyProgress.js";
 import type * as studyValidators from "../studyValidators.js";
 import type * as tags from "../tags.js";
@@ -177,6 +178,7 @@ declare const fullApi: ApiFromModules<{
   school: typeof school;
   semester: typeof semester;
   stemHighlights: typeof stemHighlights;
+  studyOverview: typeof studyOverview;
   studyProgress: typeof studyProgress;
   studyValidators: typeof studyValidators;
   tags: typeof tags;

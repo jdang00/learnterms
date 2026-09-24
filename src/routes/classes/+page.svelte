@@ -17,7 +17,9 @@
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import FeatureSpotlight from '../../lib/components/FeatureSpotlight.svelte';
-	import ModuleCard from '../../lib/components/ModuleCard.svelte';
+	import ModuleRow from '../../lib/components/ModuleRow.svelte';
+	import ColorMark from '../../lib/components/ColorMark.svelte';
+	import { classColor, summarizeClassProgress } from '$lib/utils/classProgress';
 	import Sidebar from '../../lib/components/Sidebar.svelte';
 	import ClassList from '../../lib/components/ClassList.svelte';
 	import type { ClassWithSemester } from '../../lib/types';
@@ -107,56 +109,26 @@
 
 	type TagSummary = { _id: Id<'tags'>; name: string; color?: string };
 	type ModuleWithTags = Doc<'module'> & { tags?: TagSummary[] };
-	type RecentModuleActivity = { moduleId: Id<'module'>; lastActivityAt: number };
-	type RecentModuleProgress = {
-		moduleId: Id<'module'>;
-		moduleTitle: string;
-		moduleEmoji?: string;
-		classId: Id<'class'>;
-		className: string;
-		classCode: string;
-		totalQuestions: number;
-		questionsInteracted: number;
-		questionsMastered: number;
-		questionsFlagged: number;
-		progress: number;
-	};
 
-	const recentModuleActivityQuery = useQuery(api.progress.getRecentModuleActivity, () =>
-		currentView === 'classes' && userData?.cohortId ? { limit: 4 } : 'skip'
+	// One rollup-backed query feeds the class cards, the module list, and the resume strip.
+	const overviewQuery = useQuery(api.studyOverview.getMine, () =>
+		userData?.cohortId ? {} : 'skip'
 	);
-
-	const recentModuleIds = $derived.by(() => {
-		const activity = (recentModuleActivityQuery.data ?? []) as RecentModuleActivity[];
-		return activity.map((item) => item.moduleId);
-	});
-
-	const recentModuleProgressQuery = useQuery(api.progress.getRecentModulesProgress, () =>
-		currentView === 'classes' && recentModuleIds.length > 0
-			? { moduleIds: recentModuleIds }
-			: 'skip'
+	const progressByClass = $derived(
+		new Map((overviewQuery.data?.classes ?? []).map((item) => [item.classId as string, item]))
 	);
+	const recentModules = $derived(overviewQuery.data?.recent ?? []);
+	const recentModulesLoading = $derived(overviewQuery.isLoading);
+	const recentModulesError = $derived(overviewQuery.error);
 
-	const recentModules = $derived.by(() => {
-		const activity = (recentModuleActivityQuery.data ?? []) as RecentModuleActivity[];
-		const progress = (recentModuleProgressQuery.data ?? []) as RecentModuleProgress[];
-		if (activity.length === 0 || progress.length === 0) return [];
-
-		const progressByModuleId = new Map(progress.map((item) => [item.moduleId, item]));
-		return activity
-			.map((item) => {
-				const moduleProgress = progressByModuleId.get(item.moduleId);
-				if (!moduleProgress) return null;
-				return { ...moduleProgress, lastActivityAt: item.lastActivityAt };
-			})
-			.filter((item): item is RecentModuleProgress & { lastActivityAt: number } => item !== null);
-	});
-
-	const recentModulesLoading = $derived(
-		recentModuleActivityQuery.isLoading || recentModuleProgressQuery.isLoading
+	const selectedProgress = $derived(
+		selectedClass ? progressByClass.get(selectedClass._id) : undefined
 	);
-	const recentModulesError = $derived(
-		recentModuleActivityQuery.error ?? recentModuleProgressQuery.error
+	const selectedSummary = $derived(
+		selectedProgress ? summarizeClassProgress(selectedProgress.modules) : null
+	);
+	const moduleProgress = $derived(
+		new Map((selectedProgress?.modules ?? []).map((m) => [m.moduleId as string, m]))
 	);
 
 	const modulesQuery = useQuery(api.module.getClassModules, () =>
@@ -438,68 +410,62 @@
 					</div>
 				{/if}
 
-				<ClassList {classes} onSelectClass={selectClass} />
+				<ClassList
+					{classes}
+					onSelectClass={selectClass}
+					progress={progressByClass}
+					progressLoading={overviewQuery.isLoading}
+				/>
 			{:else if currentView === 'modules' && selectedClass}
 				<div in:fade={{ duration: 400, easing: cubicOut }} class="w-full">
-					<div class="flex items-center gap-1 sm:gap-3 mb-4">
+					<div class="mb-5 flex flex-wrap items-center gap-x-3 gap-y-3">
 						<button
 							onclick={goBackToClasses}
-							class="btn btn-ghost btn-circle size-11 -ms-2 sm:btn-sm sm:size-auto sm:ms-0 sm:rounded-full hover:bg-base-200 transition-colors duration-200"
+							class="btn btn-ghost btn-circle size-11 -ms-2 sm:btn-sm sm:size-8 sm:ms-0"
 							aria-label="Back to classes"
 						>
 							<ArrowLeft size={16} />
 						</button>
-						<div class="flex items-center gap-2 min-w-0">
-							<h3 class="text-lg font-semibold text-base-content truncate">{selectedClass.name}</h3>
-							<span class="badge badge-soft badge-sm rounded-full font-mono opacity-60 shrink-0"
-								>{selectedClass.code}</span
-							>
+						<ColorMark color={classColor(selectedClass)} class="size-8 text-base-content" />
+						<div class="min-w-0 flex-1">
+							<p class="font-mono text-xs text-base-content/55">{selectedClass.code}</p>
+							<h2 class="text-xl leading-snug font-semibold text-balance text-base-content">
+								{selectedClass.name}
+							</h2>
+							{#if selectedClass.description}
+								<p class="mt-1 max-w-3xl text-sm leading-relaxed text-base-content/65">
+									{selectedClass.description}
+								</p>
+							{/if}
+							{#if selectedSummary && selectedSummary.modules > 0}
+								<p class="mt-1 text-xs text-base-content/60 tabular-nums">
+									{selectedSummary.started} of {selectedSummary.modules}
+									{selectedSummary.modules === 1 ? 'module' : 'modules'} started
+									{#if selectedSummary.mastered}· {selectedSummary.mastered} mastered{/if}
+								</p>
+							{/if}
 						</div>
+						<a
+							href={resolve('/classes/[classId]/tests/new', { classId: selectedClass._id })}
+							class="btn btn-primary btn-soft btn-sm min-h-11 w-full rounded-full sm:min-h-8 sm:w-auto"
+						>
+							<ClipboardCheck size={16} /> Test yourself
+						</a>
 					</div>
 
-					<a
-						href={resolve('/classes/[classId]/tests/new', { classId: selectedClass._id })}
-						class="group flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 mb-6 transition-all duration-200 hover:border-primary/40 hover:bg-primary/10 hover:shadow-md hover:-translate-y-0.5"
-					>
-						<div
-							class="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/15 text-primary shrink-0 transition-transform duration-200 group-hover:scale-110"
-						>
-							<ClipboardCheck size={22} />
-						</div>
-						<div class="flex-1 min-w-0">
-							<div class="font-semibold text-sm text-base-content">Test yourself</div>
-							<p class="text-xs text-base-content/50 mt-0.5">
-								Build a timed, scored practice test from any combination of modules. See exactly
-								where you stand.
-							</p>
-						</div>
-						<div
-							class="text-primary shrink-0 transition-transform duration-200 group-hover:translate-x-1"
-						>
-							<ArrowRightIcon size={18} />
-						</div>
-					</a>
-
 					{#if modules.isLoading}
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-							{#each Array(4), index (index)}
+						<div class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
+							{#each Array(5), index (index)}
 								<div
-									class="rounded-2xl bg-base-100 shadow-xs border border-base-300 p-5 animate-pulse"
+									class="flex items-center gap-4 border-b border-base-300 px-4 py-4 last:border-b-0"
 								>
-									<div class="flex items-start gap-3 mb-3">
-										<div class="skeleton h-9 w-9 rounded-lg shrink-0"></div>
-										<div class="flex-1 space-y-2">
-											<div class="skeleton h-5 w-3/4"></div>
-											<div class="skeleton h-4 w-20 rounded-full"></div>
-										</div>
+									<div class="skeleton h-3 w-5"></div>
+									<div class="skeleton size-7 rounded-lg"></div>
+									<div class="flex-1 space-y-2">
+										<div class="skeleton h-4 w-1/2"></div>
+										<div class="skeleton h-3 w-24"></div>
 									</div>
-									<div class="space-y-2 mb-4">
-										<div class="skeleton h-3.5 w-full"></div>
-										<div class="skeleton h-3.5 w-2/3"></div>
-									</div>
-									<div class="flex justify-end">
-										<div class="skeleton h-8 w-20 rounded-full"></div>
-									</div>
+									<div class="skeleton hidden h-1.5 w-28 rounded-full md:block"></div>
 								</div>
 							{/each}
 						</div>
@@ -518,13 +484,21 @@
 							</div>
 						</div>
 					{:else}
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-5">
+						<ol
+							class="divide-y divide-base-300 overflow-hidden rounded-2xl border border-base-300 bg-base-100"
+							aria-label="Modules in {selectedClass.name}"
+						>
 							{#each sortedModules as module, i (module._id)}
-								<div style="animation: moduleReveal 0.4s cubic-bezier(.16,1,.3,1) {i * 50}ms both;">
-									<ModuleCard {module} classId={selectedClass._id} />
-								</div>
+								<li style="animation: moduleReveal 0.35s cubic-bezier(.16,1,.3,1) {i * 30}ms both;">
+									<ModuleRow
+										{module}
+										classId={selectedClass._id}
+										position={i + 1}
+										progress={moduleProgress.get(module._id)}
+									/>
+								</li>
 							{/each}
-						</div>
+						</ol>
 					{/if}
 				</div>
 			{/if}

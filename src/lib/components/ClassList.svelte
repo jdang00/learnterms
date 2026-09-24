@@ -3,6 +3,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import ClassCard from './ClassCard.svelte';
 	import type { ClassWithSemester } from '../types';
+	import type { ClassOverview } from '../utils/classProgress';
 	import { pickDefaultSemesterName, setLastSemesterName } from '../utils/semester';
 	import { ChevronDown } from 'lucide-svelte';
 
@@ -13,11 +14,20 @@
 			error: unknown;
 		};
 		onSelectClass: (classItem: ClassWithSemester) => void;
+		progress?: Map<string, ClassOverview>;
+		progressLoading?: boolean;
 		title?: string;
 		variant?: 'grid' | 'list';
 	}
 
-	let { classes, onSelectClass, title = 'My Classes', variant = 'grid' }: Props = $props();
+	let {
+		classes,
+		onSelectClass,
+		progress,
+		progressLoading = false,
+		title = 'My Classes',
+		variant = 'grid'
+	}: Props = $props();
 
 	type SemesterOption = { _id: string; name: string };
 	const semesters = $derived.by(() => {
@@ -148,8 +158,16 @@
 	{:else if variant === 'grid'}
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 			{#each filteredClasses as classItem, i (classItem._id)}
-				<div style="animation: cardReveal 0.4s cubic-bezier(.16,1,.3,1) {i * 60}ms both;">
-					<ClassCard {classItem} onSelect={onSelectClass} />
+				<div
+					class="h-full"
+					style="animation: cardReveal 0.4s cubic-bezier(.16,1,.3,1) {i * 60}ms both;"
+				>
+					<ClassCard
+						{classItem}
+						onSelect={onSelectClass}
+						progress={progress?.get(classItem._id)}
+						loading={progressLoading}
+					/>
 				</div>
 			{/each}
 		</div>

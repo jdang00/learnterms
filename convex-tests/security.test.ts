@@ -616,3 +616,39 @@ test('shared access helpers reject deleted users and foreign or deleted classes 
 		})
 	).rejects.toThrow('Unauthorized');
 });
+
+test('study overview only reports the caller’s own progress inside their cohort', async () => {
+	const { t, student, ids } = await setup();
+	await t.run(async (ctx) => {
+		for (const [userId, interacted] of [
+			[ids.studentId, 1],
+			[ids.peerId, 1]
+		] as const) {
+			await ctx.db.insert('userModuleStats', {
+				userId,
+				moduleId: ids.moduleId,
+				classId: ids.classId,
+				questionsInteracted: interacted,
+				questionsMastered: userId === ids.peerId ? 1 : 0,
+				questionsFlagged: 0,
+				lastActivityAt: 5,
+				updatedAt: 5
+			});
+		}
+	});
+	await expect(t.query(api.studyOverview.getMine, {})).rejects.toThrow('Unauthorized');
+	await expect(
+		t.withIdentity({ subject: 'unregistered' }).query(api.studyOverview.getMine, {})
+	).rejects.toThrow('Unauthorized');
+
+	const mine = await student.query(api.studyOverview.getMine, {});
+	expect(mine.classes.map((c) => c.classId)).toEqual([ids.classId]);
+	expect(mine.classes[0].modules).toEqual([
+		{ moduleId: ids.moduleId, total: 1, answered: 1, mastered: 0, flagged: 0 }
+	]);
+	expect(mine.recent).toMatchObject([{ moduleId: ids.moduleId, remaining: 0, progress: 100 }]);
+
+	const outside = await t.withIdentity({ subject: 'outside' }).query(api.studyOverview.getMine, {});
+	expect(outside.classes.map((c) => c.classId)).toEqual([ids.otherClassId]);
+	expect(outside.recent).toEqual([]);
+});
