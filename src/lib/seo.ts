@@ -147,10 +147,6 @@ const routeMetadata: Record<string, readonly [string, string]> = {
 	'/docs/students/study-flow': [
 		'Student Study Flow',
 		'Learn how to practice questions, review feedback, and track progress in LearnTerms.'
-	],
-	'/landing': [
-		'Smarter Studying, Simplified',
-		'Study class-aligned question banks, practice with instant feedback, and track your learning progress with LearnTerms.'
 	]
 };
 
@@ -177,7 +173,7 @@ export function getRouteSeo(routeId: string | null, pathname: string, status = 2
 				? 'This LearnTerms page could not be found. Return home or contact support for help.'
 				: 'This page could not be loaded. Try again or contact LearnTerms support.'
 			: description,
-		canonical: `${SITE_ORIGIN}${path === '/landing' ? '/' : path}`,
+		canonical: `${SITE_ORIGIN}${path}`,
 		indexable: !isError && publicPaths.some((entry) => entry === path)
 	};
 }

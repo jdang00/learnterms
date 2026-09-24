@@ -51,12 +51,6 @@ const PRIVILEGED_QUICK_LINKS: QuickLink[] = [
 		description: 'Track student performance',
 		href: '/admin/progress',
 		icon: '📊'
-	},
-	{
-		title: 'Landing Page',
-		description: 'Open the internal landing view',
-		href: '/landing',
-		icon: '🚀'
 	}
 ];
 

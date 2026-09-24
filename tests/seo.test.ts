@@ -33,7 +33,6 @@ describe('route metadata and indexing', () => {
 			'/cohort',
 			'/pricing/success',
 			'/study-space',
-			'/landing',
 			'/status',
 			'/docs',
 			'/docs/getting-started'
@@ -50,9 +49,8 @@ describe('route metadata and indexing', () => {
 		}
 		expect(getRouteSeo(null, '/missing', 404).title).toContain('Page Not Found');
 	});
-	test('canonical URLs use the production origin and consolidate the landing alias', () => {
+	test('canonical URLs use the production origin', () => {
 		expect(getRouteSeo('/', '/').title).toBe('LearnTerms | Smarter Studying, Simplified');
-		expect(getRouteSeo('/landing', '/landing').canonical).toBe(`${SITE_ORIGIN}/`);
 		expect(getRouteSeo('/privacy', '/privacy/').canonical).toBe(`${SITE_ORIGIN}/privacy`);
 	});
 });
