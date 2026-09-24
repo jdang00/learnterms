@@ -69,14 +69,14 @@
 	// Flag & filter demo state
 	let showFlaggedOnly = $state(false);
 	let mockQuestions = $state([
-		{ id: 1, label: 'Q1', flagged: false },
-		{ id: 2, label: 'Q2', flagged: true },
-		{ id: 3, label: 'Q3', flagged: false },
-		{ id: 4, label: 'Q4', flagged: true },
-		{ id: 5, label: 'Q5', flagged: false },
-		{ id: 6, label: 'Q6', flagged: false },
-		{ id: 7, label: 'Q7', flagged: false },
-		{ id: 8, label: 'Q8', flagged: true }
+		{ id: 1, answered: true, flagged: false },
+		{ id: 2, answered: true, flagged: true },
+		{ id: 3, answered: true, flagged: false },
+		{ id: 4, answered: true, flagged: true },
+		{ id: 5, answered: false, flagged: false },
+		{ id: 6, answered: false, flagged: false },
+		{ id: 7, answered: false, flagged: false },
+		{ id: 8, answered: false, flagged: true }
 	]);
 	let flagActiveQ = $state(3); // which question is "selected" in the demo
 	let visibleQuestions = $derived(
@@ -88,16 +88,21 @@
 		flagActiveQ = id;
 	}
 
-	// Keyboard shortcut animation — matches actual quizzing shortcuts
+	// Keyboard shortcut animation, using the quiz's real bindings (quiz-dock/shortcuts.ts)
 	const keySequence: { key: string; label: string; action: string }[] = [
-		{ key: '1', label: 'Select A', action: 'selected-a' },
 		{ key: '3', label: 'Select C', action: 'selected-c' },
-		{ key: '⏎', label: 'Check', action: 'checking' },
-		{ key: '→', label: 'Next', action: 'next' },
+		{ key: '1', label: 'Select A', action: 'selected-a' },
+		{ key: 'Enter', label: 'Check', action: 'checking' },
+		{ key: 'Tab', label: 'Rationale', action: 'solution' },
 		{ key: 'F', label: 'Flag', action: 'flagging' },
-		{ key: 'Tab', label: 'Rationale', action: 'solution' }
+		{ key: '→', label: 'Next', action: 'next' }
 	];
 	let activeKeyIndex = $state(0);
+	const keyOptions = [
+		'Demodex blepharitis',
+		'Seborrheic blepharitis',
+		'Meibomian gland dysfunction'
+	];
 
 	let activeAction = $derived(keySequence[activeKeyIndex]?.action ?? '');
 
@@ -283,7 +288,7 @@
 					class="mockup-browser relative z-10 overflow-visible border border-base-300 bg-base-100"
 				>
 					<div class="mockup-browser-toolbar">
-						<div class="input border border-base-300">app.learnterms.com/classes/module</div>
+						<div class="input border border-base-300">learnterms.com/classes</div>
 					</div>
 					<div class="overflow-visible border-t border-base-300 bg-base-100 pb-10">
 						<QuizPreviewReplica />
@@ -325,36 +330,37 @@
 								>{visibleQuestions.length} of {mockQuestions.length} questions</span
 							>
 							<label class="flex cursor-pointer items-center gap-1.5">
+								<Flag size={10} class={showFlaggedOnly ? 'text-warning' : 'text-base-content/40'} />
 								<span class="text-[10px] font-medium" class:text-warning={showFlaggedOnly}
-									>Flagged</span
+									>Flagged only</span
 								>
 								<input
 									type="checkbox"
-									class="toggle toggle-xs toggle-accent"
+									class="toggle toggle-xs toggle-warning"
 									bind:checked={showFlaggedOnly}
 								/>
 							</label>
 						</div>
-						<div class="flex-1 p-2">
-							<div class="grid grid-cols-4 gap-1.5">
+						<div class="flex-1 p-3">
+							<!-- Same buttons as the question strip above each quiz. -->
+							<div class="flex flex-wrap gap-3">
 								{#each visibleQuestions as q (q.id)}
-									<button
-										class="flag-q-btn relative flex flex-col items-center justify-center rounded-lg border py-2 px-1 text-[10px] font-medium transition-all duration-200 {q.id ===
-										flagActiveQ
-											? 'ring-1 ring-primary/40'
-											: ''} {q.flagged
-											? 'bg-warning/10 text-warning border-warning/30 hover:bg-warning/20'
-											: 'bg-base-200/60 text-base-content/60 border-base-300/60 hover:bg-base-200'}"
-										onclick={() => toggleFlag(q.id)}
-									>
-										<span>{q.label}</span>
-										<Flag
-											size={9}
-											class="mt-0.5 transition-all duration-200 {q.flagged
-												? 'text-warning opacity-100 scale-100'
-												: 'opacity-20 scale-75'}"
-										/>
-									</button>
+									<div class="indicator">
+										{#if q.flagged}
+											<span
+												class="indicator-item indicator-start badge badge-warning badge-xs z-[1]"
+											></span>
+										{/if}
+										<button
+											class="flag-q-btn btn btn-circle btn-md btn-soft {q.id === flagActiveQ
+												? 'btn-primary'
+												: 'btn-outline'} {q.answered && q.id !== flagActiveQ ? 'btn-accent' : ''}"
+											aria-label="{q.flagged ? 'Unflag' : 'Flag'} question {q.id}"
+											onclick={() => toggleFlag(q.id)}
+										>
+											{q.id}
+										</button>
+									</div>
 								{/each}
 							</div>
 						</div>
@@ -433,7 +439,7 @@
 											<span class="text-[8px] font-bold text-error">PDF</span>
 										</div>
 										<span class="min-w-0 flex-1 text-[11px] font-medium truncate"
-											>Chapter_06_Anterior_Blepharitis_and_Astigmatism.pdf</span
+											>Lecture_06_Lids_and_Adnexa.pdf</span
 										>
 									</div>
 									<div class="mt-2 space-y-1">
@@ -469,7 +475,7 @@
 									>
 										<span class="text-[10px] text-secondary/60 font-mono">Q1</span>
 										<span class="text-[10px] leading-tight"
-											>Which lid finding most strongly suggests anterior blepharitis?</span
+											>Which two findings best support meibomian gland dysfunction?</span
 										>
 									</div>
 									<div
@@ -478,7 +484,7 @@
 									>
 										<span class="text-[10px] text-secondary/60 font-mono">Q2</span>
 										<span class="text-[10px] leading-tight"
-											>Which refraction change best improves myopic astigmatism?</span
+											>Clear collarettes at the lash base are pathognomonic for:</span
 										>
 									</div>
 									<div
@@ -532,55 +538,54 @@
 					</p>
 
 					<div class="mt-4 rounded-xl border border-base-300/60 bg-base-100/50 p-3">
-						<div class="mb-1.5 flex items-center gap-1.5">
-							<span
-								class="rounded-sm bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium text-primary"
-								>Question</span
-							>
-						</div>
-						<p class="text-[11px] font-medium leading-tight text-base-content/80 mb-2">
-							Why does uncorrected astigmatism create ghosted letters?
+						<p class="text-[11px] font-medium leading-snug text-base-content/80">
+							Clear, cylindrical collarettes wrapping the base of the lashes are pathognomonic for:
 						</p>
-						<div class="flex items-center gap-1.5 mb-1.5">
-							<span
-								class="rounded-sm bg-secondary/10 px-1.5 py-0.5 text-[9px] font-medium text-secondary"
-								>Rationale</span
-							>
-							<span class="text-[9px] text-base-content/35">auto-generated with question</span>
-						</div>
+						<p class="mt-1 text-[10px] text-base-content/55">
+							<span class="font-semibold">A.</span> Demodex blepharitis
+						</p>
 						<div
-							class="solution-box relative rounded-lg border border-base-300/50 bg-base-200/40 p-2.5 overflow-hidden"
+							class="solution-box mt-2.5 rounded-xl border bg-base-100 p-2.5 {solutionRevealed
+								? 'border-success/40'
+								: 'border-base-300'}"
 						>
-							<p
-								class="text-[10px] leading-relaxed text-base-content/70 transition-all duration-400 {solutionRevealed
+							<div class="flex items-center justify-between border-b border-base-300 pb-1.5">
+								<span class="text-xs font-semibold">Rationale</span>
+								<span class="flex items-center gap-1">
+									<kbd class="kbd kbd-xs">tab</kbd>
+									<button
+										class="btn btn-ghost btn-xs btn-circle"
+										aria-label={solutionRevealed ? 'Hide rationale' : 'Show rationale'}
+										onclick={() => (solutionRevealed = !solutionRevealed)}
+									>
+										{#if solutionRevealed}<EyeOff size={12} />{:else}<Eye size={12} />{/if}
+									</button>
+								</span>
+							</div>
+							<div
+								class="mt-1.5 transition-[filter] duration-300 {solutionRevealed
 									? ''
 									: 'blur-xs select-none'}"
+								aria-hidden={!solutionRevealed}
 							>
-								When corneal power differs between meridians, light focuses at different planes
-								instead of one retinal point. That split focus produces blur, shadowing, and
-								double-edge letters.
-							</p>
-							{#if !solutionRevealed}
-								<div class="absolute inset-0 flex items-center justify-center">
-									<button
-										class="btn btn-xs btn-ghost gap-1 text-base-content/50 hover:text-base-content/80"
-										onclick={() => (solutionRevealed = true)}
+								<p class="text-[10px] leading-relaxed text-base-content/70">
+									Collarettes are made of mite waste, keratinized cells, and eggs, and are
+									considered pathognomonic for Demodex blepharitis.
+								</p>
+								<div class="mt-1.5 flex items-center gap-1.5 border-t border-base-300 pt-1.5">
+									<FileText size={9} class="text-base-content/50" />
+									<span class="truncate text-[9px] text-base-content/55"
+										>Lecture 6 – Lids and Adnexa</span
 									>
-										<EyeOff size={12} />
-										<span class="text-[10px]">Reveal</span>
-									</button>
+									<span
+										class="ml-auto shrink-0 rounded-full border border-base-300 px-1.5 font-mono text-[9px] text-base-content/70"
+										>p. 12</span
+									>
 								</div>
-							{:else}
-								<button
-									class="absolute top-1 right-1 btn btn-xs btn-ghost btn-circle opacity-40 hover:opacity-100"
-									onclick={() => (solutionRevealed = false)}
-								>
-									<Eye size={10} />
-								</button>
-							{/if}
+							</div>
 						</div>
-						<p class="mt-1.5 text-[9px] text-base-content/40 italic">
-							Revealed on demand, or automatically when answered correctly
+						<p class="mt-1.5 text-[9px] text-base-content/40">
+							Tied to the page it came from. Revealed on demand, or after a correct answer.
 						</p>
 					</div>
 				</div>
@@ -611,7 +616,7 @@
 					>
 						<div class="mb-2.5 flex items-center justify-between">
 							<span class="text-[10px] font-medium text-base-content/50"
-								>OPT 301 &middot; Lids, Cornea, and Retina</span
+								>OPT 341 &middot; Ocular Disease I</span
 							>
 							<span
 								class="rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-medium text-success"
@@ -662,9 +667,7 @@
 								<Users size={9} class="text-base-content/40" />
 								<span class="text-[9px] text-base-content/40">32 enrolled</span>
 							</div>
-							<span class="text-[9px] text-base-content/35"
-								>Hotspots: anterior bleph, astigmatism, AMD</span
-							>
+							<span class="text-[9px] text-base-content/35">Hotspots: Demodex, MGD, chalazion</span>
 						</div>
 					</div>
 				</div>
@@ -686,44 +689,36 @@
 					>
 						<!-- Mini quiz context — fixed height to prevent layout shift -->
 						<div class="flex-1 border-b border-base-300/40 p-3">
-							<p class="text-[10px] text-base-content/50 mb-1.5">Q7 of 48</p>
-							<p class="text-[11px] font-medium leading-tight text-base-content/80 mb-2">
-								Which sign most strongly supports anterior blepharitis?
+							<p class="mb-1.5 text-[10px] text-base-content/50">Lids &amp; Adnexa · 2 of 6</p>
+							<p class="mb-2 text-[11px] font-medium leading-tight text-base-content/80">
+								Clear collarettes at the lash base are pathognomonic for:
 							</p>
 							<div class="space-y-1">
-								<div
-									class="kbd-option rounded-md border px-2 py-1 text-[10px] transition-all duration-300 {activeAction ===
-										'selected-a' || activeAction === 'checking'
-										? 'border-primary/40 bg-primary/8 text-primary font-medium'
-										: 'border-base-300/50 bg-base-200/40 text-base-content/60'} flex items-center justify-between gap-2"
-								>
-									<span class="min-w-0"
-										><span class="text-base-content/30 mr-1">1.</span>Collarettes at lash bases with
-										lid margin erythema</span
+								{#each keyOptions as option, i (option)}
+									{@const answered = ['checking', 'solution', 'flagging'].includes(activeAction)}
+									{@const picked =
+										(i === 0 && (answered || activeAction === 'selected-a')) ||
+										(i === 2 && activeAction === 'selected-c')}
+									<div
+										class="kbd-option flex items-center gap-2 rounded-full border bg-base-200 px-2 py-1 text-[10px] transition-colors duration-300 {i ===
+											0 && answered
+											? 'border-success'
+											: 'border-base-300'}"
 									>
-									<span
-										class="w-3 shrink-0 text-center text-[8px] transition-opacity duration-200 {activeAction ===
-										'checking'
-											? 'opacity-100 text-success'
-											: 'opacity-0'}"
-										aria-hidden="true"
-									>
-										✓
-									</span>
-								</div>
-								<div
-									class="kbd-option rounded-md border px-2 py-1 text-[10px] transition-all duration-300 border-base-300/50 bg-base-200/40 text-base-content/60"
-								>
-									<span class="text-base-content/30 mr-1">2.</span> Immediate full-thickness corneal melt
-								</div>
-								<div
-									class="kbd-option rounded-md border px-2 py-1 text-[10px] transition-all duration-300 {activeAction ===
-									'selected-c'
-										? 'border-secondary/40 bg-secondary/8 text-secondary font-medium'
-										: 'border-base-300/50 bg-base-200/40 text-base-content/60'}"
-								>
-									<span class="text-base-content/30 mr-1">3.</span> Cherry-red spot with retinal pallor
-								</div>
+										<span
+											class="grid size-3 shrink-0 place-items-center rounded-[3px] border transition-colors duration-200 {picked
+												? 'border-primary bg-primary text-primary-content'
+												: 'border-primary/60'}"
+											aria-hidden="true"
+										>
+											{#if picked}<Check size={8} strokeWidth={4} />{/if}
+										</span>
+										<span class="min-w-0 text-base-content/75"
+											><span class="mr-1 font-semibold">{String.fromCharCode(65 + i)}.</span
+											>{option}</span
+										>
+									</div>
+								{/each}
 							</div>
 							<!-- Reserved space for contextual feedback — no layout shift -->
 							<div class="mt-1.5 h-5">
@@ -732,15 +727,18 @@
 										class="flex items-center gap-1 text-[9px] text-warning"
 										in:fade={{ duration: 200 }}
 									>
-										<Flag size={9} /> Flagged
+										<Flag size={9} /> Flagged for review
 									</div>
 								{:else if activeAction === 'solution'}
 									<p
-										class="text-[9px] text-base-content/50 italic truncate"
+										class="truncate text-[9px] text-base-content/50 italic"
 										in:fade={{ duration: 200 }}
 									>
-										Lash collarettes plus lid margin inflammation strongly fit anterior
-										blepharitis...
+										Collarettes are made of mite waste, keratinized cells, and eggs...
+									</p>
+								{:else if activeAction === 'checking'}
+									<p class="text-[9px] font-semibold text-success" in:fade={{ duration: 200 }}>
+										Correct!
 									</p>
 								{/if}
 							</div>
@@ -815,7 +813,7 @@
 										>
 											<div class="h-3 w-3 rounded-full bg-primary/20"></div>
 										</div>
-										<span class="text-[7px] text-base-content/40">slitlamp_anterior_bleph.png</span>
+										<span class="text-[7px] text-base-content/40">slit-lamp_collarettes.jpg</span>
 									</div>
 								</div>
 								<div
@@ -831,7 +829,7 @@
 									<div
 										class="h-full w-full bg-gradient-to-r from-secondary/8 to-accent/8 flex items-center justify-center"
 									>
-										<span class="text-[7px] text-base-content/40">keratometry_astigmatism.svg</span>
+										<span class="text-[7px] text-base-content/40">meibography_lower_lid.png</span>
 									</div>
 								</div>
 								<div
@@ -840,7 +838,7 @@
 									<div
 										class="h-full w-full bg-gradient-to-r from-info/8 to-primary/8 flex items-center justify-center"
 									>
-										<span class="text-[7px] text-base-content/40">fundus_drusen_macular.png</span>
+										<span class="text-[7px] text-base-content/40">everted_lid_chalazion.jpg</span>
 									</div>
 								</div>
 							</div>
@@ -1189,10 +1187,6 @@
 	/* Rationale blur transition */
 	.solution-box {
 		transition: border-color 0.3s ease;
-	}
-
-	.solution-box:has(p:not(.blur-xs)) {
-		border-color: color-mix(in oklab, var(--color-success) 30%, transparent);
 	}
 
 	/* Rich text toolbar buttons */

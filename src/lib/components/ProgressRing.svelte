@@ -2,7 +2,7 @@
 	import { Tween, prefersReducedMotion } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 
-	// Green for correct, amber for needs review, both as percentages of the whole module.
+	// Green for correct, soft red for needs review, both as percentages of the whole module.
 	let {
 		correct,
 		review,
@@ -14,7 +14,7 @@
 	const correctArc = Tween.of(() => correct, motion);
 	const filledArc = Tween.of(() => correct + review, motion);
 	const background = $derived(
-		`conic-gradient(var(--color-success) 0 ${correctArc.current}%, var(--color-warning) 0 ${filledArc.current}%, color-mix(in oklab, var(--color-base-content) 12%, transparent) 0)`
+		`conic-gradient(var(--color-success) 0 ${correctArc.current}%, color-mix(in oklab, var(--color-error) 70%, transparent) 0 ${filledArc.current}%, color-mix(in oklab, var(--color-base-content) 12%, transparent) 0)`
 	);
 </script>
 
