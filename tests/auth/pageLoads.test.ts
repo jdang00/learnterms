@@ -60,7 +60,25 @@ describe.each([
 		mocks.query.mockResolvedValue(userData);
 		await expect(load(event as never)).resolves.toMatchObject({ userData });
 		expect(mocks.mutation).toHaveBeenCalledTimes(1);
-		expect(mocks.mutation.mock.calls[0][1]).not.toHaveProperty('name');
+		expect(mocks.mutation.mock.calls[0][1].name).toBeUndefined();
+	});
+
+	test('refreshes the stored name once Clerk has one', async () => {
+		mocks.getUser.mockResolvedValue({
+			id: 'user_test',
+			fullName: 'Jane Doe',
+			firstName: 'Jane',
+			lastName: 'Doe',
+			primaryEmailAddressId: 'primary',
+			emailAddresses: [{ id: 'primary', emailAddress: 'student@example.com' }]
+		});
+		mocks.query.mockResolvedValue({ clerkUserId: 'user_test', cohortId: 'cohort_test' });
+		await load(event as never);
+		expect(mocks.mutation.mock.calls[0][1]).toMatchObject({
+			name: 'Jane Doe',
+			firstName: 'Jane',
+			lastName: 'Doe'
+		});
 	});
 });
 

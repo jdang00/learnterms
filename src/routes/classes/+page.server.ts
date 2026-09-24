@@ -46,6 +46,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		} else {
 			await client.mutation(api.users.syncUserFromClerk, {
 				clerkUserId: user.id,
+				name: user.fullName?.trim() || undefined,
 				firstName: user.firstName || undefined,
 				lastName: user.lastName || undefined,
 				email: primaryEmail || undefined,

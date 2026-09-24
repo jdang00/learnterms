@@ -82,6 +82,7 @@ export const addUser = mutation({
 export const syncUserFromClerk = mutation({
 	args: {
 		clerkUserId: v.string(),
+		name: v.optional(v.string()),
 		firstName: v.optional(v.string()),
 		lastName: v.optional(v.string()),
 		email: v.optional(v.string()),
@@ -102,6 +103,7 @@ export const syncUserFromClerk = mutation({
 		}
 
 		await ctx.db.patch(user._id, {
+			...(args.name ? { name: args.name } : {}),
 			firstName: args.firstName,
 			lastName: args.lastName,
 			email: args.email,

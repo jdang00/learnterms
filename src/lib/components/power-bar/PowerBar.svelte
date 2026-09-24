@@ -358,13 +358,16 @@
 </script>
 
 <dialog
-	class="modal max-w-full p-4"
+	class="modal max-w-full items-start p-0 sm:items-center sm:p-4"
 	class:modal-open={isOpen}
 	onkeydown={handleDialogKeydown}
 	bind:this={dialogRef}
 >
-	<div class="modal-box w-full max-w-2xl rounded-2xl border border-base-300 p-0 shadow-2xl">
-		<div class="flex items-center gap-2.5 border-b border-base-300 px-4">
+	<!-- Phones get a full-screen panel that stops above the keyboard so the results can scroll. -->
+	<div
+		class="modal-box pt-safe flex h-[calc(100dvh-var(--keyboard-inset,0px))] max-h-none w-full max-w-none flex-col overflow-hidden rounded-none p-0 shadow-2xl sm:h-auto sm:max-h-[min(80vh,40rem)] sm:max-w-2xl sm:rounded-2xl sm:border sm:border-base-300 sm:pt-0"
+	>
+		<div class="flex shrink-0 items-center gap-2.5 border-b border-base-300 px-4">
 			<Search size={15} class="shrink-0 text-base-content/40" />
 			<input
 				type="text"
@@ -373,10 +376,19 @@
 				bind:value={searchQuery}
 				bind:this={searchInputRef}
 			/>
-			<kbd class="kbd kbd-xs opacity-40">esc</kbd>
+			<kbd class="kbd kbd-xs hidden opacity-40 sm:inline-flex">esc</kbd>
+			<button
+				type="button"
+				class="btn btn-ghost btn-sm -mr-2 shrink-0 sm:hidden"
+				onclick={() => (isOpen = false)}
+			>
+				Cancel
+			</button>
 		</div>
 
-		<div class="max-h-[min(70vh,34rem)] space-y-4 overflow-y-auto p-3">
+		<div
+			class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3"
+		>
 			{#if searchQuery.trim()}
 				<section class="space-y-2">
 					<div class="px-3 pt-1">
@@ -448,7 +460,9 @@
 			/>
 		</div>
 
-		<div class="flex items-center justify-between border-t border-base-300 px-4 py-2">
+		<div
+			class="hidden shrink-0 items-center justify-between border-t border-base-300 px-4 py-2 sm:flex"
+		>
 			<div class="flex items-center gap-2 text-[11px] text-base-content/40">
 				<Command size={12} />
 				<span>Cmd/Ctrl+K</span>
