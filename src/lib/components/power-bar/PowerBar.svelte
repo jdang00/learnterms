@@ -5,8 +5,9 @@
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
-	import { Search, Command, Sparkles } from 'lucide-svelte';
+	import { Search, Keyboard, Sparkles } from 'lucide-svelte';
 	import { isDark, theme } from '$lib/theme.svelte';
+	import { modifierKeyLabel } from '$lib/utils/platform';
 	import PowerBarCohortSearchSection from './PowerBarCohortSearchSection.svelte';
 	import PowerBarCohortSection from './PowerBarCohortSection.svelte';
 	import PowerBarQuickLinksSection from './PowerBarQuickLinksSection.svelte';
@@ -329,7 +330,9 @@
 		return () => clearTimeout(handle);
 	});
 
+	let modifierKey = $state('Ctrl');
 	onMount(() => {
+		modifierKey = modifierKeyLabel();
 		syncPreferencesFromStorage();
 
 		const handleHotkey = (event: KeyboardEvent) => {
@@ -464,8 +467,8 @@
 			class="hidden shrink-0 items-center justify-between border-t border-base-300 px-4 py-2 sm:flex"
 		>
 			<div class="flex items-center gap-2 text-[11px] text-base-content/40">
-				<Command size={12} />
-				<span>Cmd/Ctrl+K</span>
+				<Keyboard size={12} />
+				<span>{modifierKey} K</span>
 				<span>·</span>
 				<span>Arrow keys</span>
 				<span>·</span>

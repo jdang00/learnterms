@@ -7,6 +7,8 @@
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { Search } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { modifierKeyLabel } from '$lib/utils/platform';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import PowerBar from './power-bar/PowerBar.svelte';
@@ -47,6 +49,9 @@
 
 	let selectedCohortId = $state('');
 	let isPowerBarOpen = $state(false);
+	// Read after mount: the server can't know whether this is a Mac.
+	let modifierKey = $state('');
+	onMount(() => (modifierKey = modifierKeyLabel()));
 	let isSwitchingCohort = $state(false);
 
 	const allCohorts = $derived((cohortsList?.data ?? []) as CohortItem[]);
@@ -130,7 +135,11 @@
 				<span class="truncate text-xs">
 					<span class="font-medium">Search</span>
 				</span>
-				<kbd class="kbd kbd-xs hidden lg:inline-flex opacity-40">⌘K</kbd>
+				{#if modifierKey}
+					<span class="hidden items-center gap-0.5 opacity-50 lg:inline-flex" aria-hidden="true">
+						<kbd class="kbd kbd-xs">{modifierKey}</kbd><kbd class="kbd kbd-xs">K</kbd>
+					</span>
+				{/if}
 			</button>
 		</div>
 	{/if}
