@@ -83,7 +83,7 @@
 					</span>
 				{/if}
 				{#if pageLabel}
-					<span class="tabular-nums text-base-content/35">{pageLabel}</span>
+					<span class="font-mono text-base-content/35">{pageLabel}</span>
 				{/if}
 				{#if review}
 					<span class="uppercase tracking-wide text-base-content/35" title={verdictTitle}>

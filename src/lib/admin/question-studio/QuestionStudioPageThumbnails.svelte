@@ -96,7 +96,7 @@
 						</div>{/if}
 				</button>
 				<div class="flex items-center justify-between px-1 pt-2">
-					<span class="text-xs font-medium tabular-nums text-base-content/55">{page}</span><button
+					<span class="font-mono text-xs font-medium text-base-content/55">{page}</span><button
 						type="button"
 						class="selection-target"
 						aria-label={`${selected.has(page) ? 'Remove' : 'Add'} page ${page} ${selected.has(page) ? 'from' : 'to'} ${purpose === 'citation' ? 'citations' : 'context'}`}

@@ -2,6 +2,7 @@
 	import '../app.css';
 	import '@fontsource/space-grotesk/latin-600.css';
 	import '@fontsource/space-grotesk/latin-700.css';
+	import '@fontsource-variable/geist-mono';
 	import { getRouteSeo, SITE_ORIGIN } from '$lib/seo';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';

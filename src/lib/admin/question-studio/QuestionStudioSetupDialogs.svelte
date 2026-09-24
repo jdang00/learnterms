@@ -109,7 +109,7 @@
 									{topic.title}
 								</span>
 								{#if topic.pageNumbers.length}
-									<span class="text-[11px] text-base-content/35">
+									<span class="font-mono text-[11px] text-base-content/35">
 										pp. {topic.pageNumbers.slice(0, 4).join(', ')}{topic.pageNumbers.length > 4
 											? '…'
 											: ''}

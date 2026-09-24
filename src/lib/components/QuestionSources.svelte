@@ -97,7 +97,7 @@
 						class="rounded-xl border border-base-300 bg-base-100 p-3 text-left shadow-lg"
 					>
 						<p class="text-xs font-semibold text-base-content">
-							{title || 'Source'} · p. {activePage.pageNumber}
+							{title || 'Source'} · <span class="font-mono">p. {activePage.pageNumber}</span>
 						</p>
 						{#if activePage.quote}
 							<p
@@ -116,7 +116,7 @@
 				<div class="flex items-center gap-0.5">
 					<button
 						type="button"
-						class="btn btn-ghost btn-xs gap-1.5 rounded-full border border-base-300 font-normal"
+						class="btn btn-ghost btn-xs gap-1.5 rounded-full border border-base-300 font-mono font-normal"
 						disabled={opening !== null}
 						aria-label={`Open ${title || 'source PDF'} at page ${page.pageNumber} in a new tab`}
 						onclick={() => openSource(page.pageNumber)}
