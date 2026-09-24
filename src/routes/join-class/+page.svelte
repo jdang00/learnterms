@@ -48,7 +48,7 @@
 		error = '';
 
 		try {
-			const response = await fetch(resolve('/join-class'), {
+			const response = await fetch(resolve('/api/join-class'), {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ cohortId: cohortInfo.cohort._id, code: classCode.trim() })

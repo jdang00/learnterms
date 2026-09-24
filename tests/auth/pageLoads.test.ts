@@ -17,7 +17,7 @@ vi.mock('$lib/server/convex', () => ({
 import { load as classes } from '../../src/routes/classes/+page.server';
 import { load as cohort } from '../../src/routes/cohort/+page.server';
 import { load as joinClass } from '../../src/routes/join-class/+page.server';
-import { POST as joinClassPost } from '../../src/routes/join-class/+server';
+import { POST as joinClassPost } from '../../src/routes/api/join-class/+server';
 
 const event = { locals: { auth: () => ({ userId: 'user_test' }) } };
 
@@ -91,7 +91,7 @@ test('developers can still open join class after enrollment', async () => {
 
 const joinRequest = (body: unknown, userId: string | null = 'user_test') => ({
 	locals: { auth: () => ({ userId }) },
-	request: new Request('https://learnterms.com/join-class', {
+	request: new Request('https://learnterms.com/api/join-class', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(body)

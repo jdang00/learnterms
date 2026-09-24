@@ -1,7 +1,7 @@
 import { isRedirect, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import type { Id } from '../../convex/_generated/dataModel';
-import { api } from '../../convex/_generated/api';
+import type { Id } from '../../../convex/_generated/dataModel';
+import { api } from '../../../convex/_generated/api';
 import { authenticatedConvexClient } from '$lib/server/convex';
 import { userDisplayName } from '$lib/userDisplayName';
 import { clerkClient } from 'svelte-clerk/server';
