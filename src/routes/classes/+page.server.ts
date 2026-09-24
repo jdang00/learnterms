@@ -1,6 +1,6 @@
 import { userDisplayName } from '$lib/userDisplayName';
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
+import { isRedirect, redirect } from '@sveltejs/kit';
 import { clerkClient } from 'svelte-clerk/server';
 import { authenticatedConvexClient } from '$lib/server/convex';
 import { PUBLIC_CONVEX_URL } from '$env/static/public';
@@ -64,6 +64,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			}
 		};
 	} catch (error) {
+		if (isRedirect(error)) throw error;
 		console.error('Failed to load classes page data:', error);
 		throw error;
 	}

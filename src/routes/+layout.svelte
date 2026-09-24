@@ -11,7 +11,8 @@
 	import BadgeAwardModal from '$lib/components/BadgeAwardModal.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
-	import { setupConvex, useConvexClient } from 'convex-svelte';
+	import { setupConvex } from 'convex-svelte';
+	import ConvexClerkBridge from '$lib/components/ConvexClerkBridge.svelte';
 	import { theme, clerkTheme } from '$lib/theme.svelte';
 	import { getPostHog } from '$lib/analytics/posthogClient';
 	import { onMount } from 'svelte';
@@ -32,64 +33,7 @@
 
 	const { data, children } = $props();
 
-	const convexClient = useConvexClient();
 	trackPreviousPath();
-
-	// Keep both a mutable token for first use and a backup for fallback
-	let initialToken = $derived(data?.token ?? null);
-	const ssrTokenBackup = $derived(data?.token ?? null);
-
-	// Helper to wait for Clerk session with timeout
-	async function waitForClerkSession(timeoutMs: number = 5000): Promise<boolean> {
-		if (window.Clerk?.session) return true;
-
-		const startTime = Date.now();
-		while (Date.now() - startTime < timeoutMs) {
-			await new Promise((resolve) => setTimeout(resolve, 100));
-			if (window.Clerk?.session) return true;
-		}
-		return false;
-	}
-
-	$effect(() => {
-		convexClient.setAuth(async (args) => {
-			const forceRefreshToken = args?.forceRefreshToken ?? false;
-
-			// Use initial SSR token on first call (non-forced)
-			if (!forceRefreshToken && initialToken) {
-				const token = initialToken;
-				initialToken = null;
-				return token;
-			}
-
-			// Wait for Clerk to be ready (with timeout)
-			const clerkReady = await waitForClerkSession(3000);
-
-			if (!clerkReady || !window.Clerk?.session) {
-				console.warn('[Convex Auth] Clerk session not available, using SSR token fallback');
-				// Use the backup SSR token if Clerk isn't ready
-				// This keeps the session alive while Clerk initializes
-				return ssrTokenBackup ?? undefined;
-			}
-
-			try {
-				const token = await window.Clerk.session.getToken({
-					template: 'convex',
-					skipCache: forceRefreshToken
-				});
-
-				if (!token) {
-					console.warn('[Convex Auth] Clerk returned null token, user may be signed out');
-				}
-
-				return token ?? undefined;
-			} catch (error) {
-				console.error('[Convex Auth] Error fetching token from Clerk:', error);
-				// On error, try the backup token as last resort
-				return ssrTokenBackup ?? undefined;
-			}
-		});
-	});
 
 	onMount(() => {
 		theme.init();
@@ -180,6 +124,7 @@
 	publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}
 	appearance={{ baseTheme: $clerkTheme }}
 >
+	<ConvexClerkBridge initialToken={data?.token ?? null} />
 	<PostHogIdentify />
 	<div class="flex min-h-screen flex-col">
 		<div class={immersive ? 'hidden lg:block' : ''}>

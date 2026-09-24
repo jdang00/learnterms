@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+import { isRedirect, redirect } from '@sveltejs/kit';
 import { userDisplayName } from '$lib/userDisplayName';
 import type { PageServerLoad } from './$types';
 import { clerkClient } from 'svelte-clerk/server';
@@ -59,6 +59,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 		return { seo };
 	} catch (error) {
+		if (isRedirect(error)) throw error;
 		console.error('Failed to prepare join class page:', error);
 		throw error;
 	}

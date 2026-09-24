@@ -48,15 +48,19 @@
 		error = '';
 
 		try {
-			await client.mutation(api.cohort.joinCohort, {
-				clerkUserId: user.id,
-				cohortId: cohortInfo.cohort._id,
-				code: classCode.trim()
+			const response = await fetch(resolve('/join-class'), {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ cohortId: cohortInfo.cohort._id, code: classCode.trim() })
 			});
-			window.location.href = '/classes';
+			if (!response.ok) {
+				const result = (await response.json().catch(() => null)) as { error?: string } | null;
+				throw new Error(result?.error ?? 'Unable to join class. Please try again.');
+			}
+			window.location.href = resolve('/classes');
 		} catch (err) {
 			console.error(err);
-			error = 'Failed to join class. Please try again.';
+			error = err instanceof Error ? err.message : 'Unable to join class. Please try again.';
 		} finally {
 			isConfirming = false;
 		}
