@@ -682,6 +682,8 @@ function redactAttemptItemForRunner(item: Doc<'quizAttemptItems'>) {
 		question: {
 			type: item.questionSnapshot.type,
 			stem: item.questionSnapshot.stem,
+			examFindings: item.questionSnapshot.examFindings,
+			examFindingsStyle: item.questionSnapshot.examFindingsStyle,
 			options: orderedOptions,
 			correctAnswerCount: (item.questionSnapshot.correctAnswers || []).length
 		},
@@ -882,6 +884,8 @@ export const createCustomQuizAttempt = mutation({
 					options: question.options || [],
 					correctAnswers: question.correctAnswers || [],
 					rationale: getRationale(question),
+					examFindings: question.examFindings,
+					examFindingsStyle: question.examFindingsStyle,
 					source:
 						question.metadata.source ??
 						(question.metadata.generation?.sourceDocumentId
@@ -1306,6 +1310,8 @@ export const getAttemptResults = query({
 					question: {
 						type: item.questionSnapshot.type,
 						stem: item.questionSnapshot.stem,
+						examFindings: item.questionSnapshot.examFindings,
+						examFindingsStyle: item.questionSnapshot.examFindingsStyle,
 						options: orderedOptions,
 						rationale: getRationale(item.questionSnapshot),
 						source: item.questionSnapshot.source

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { formatClock } from '$lib/utils/format';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
+	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
 	import { page } from '$app/state';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../../../../convex/_generated/api';
@@ -838,6 +839,12 @@
 								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 								{@html sanitizeHtml(selectedItem.question.stem)}
 							</div>
+
+							<ExamFindings
+								findings={selectedItem.question.examFindings}
+								compact={selectedItem.question.examFindingsStyle === 'compact'}
+								class="mt-4 ms-2"
+							/>
 
 							{#if isFitb(selectedItem.question.type)}
 								<div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4 ms-2">

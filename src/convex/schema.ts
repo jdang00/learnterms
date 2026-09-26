@@ -1,4 +1,5 @@
 import { acceptanceValidator, freeResponseGradeValidator } from './freeResponseValidators';
+import { examFindingsStyleValidator, examFindingsValidator } from './examFindingsValidators';
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
@@ -324,6 +325,8 @@ export default defineSchema({
 		.index('by_moduleId_tagId', ['moduleId', 'tagId']),
 	question: defineTable({
 		freeResponseAcceptance: v.optional(acceptanceValidator),
+		examFindings: v.optional(examFindingsValidator),
+		examFindingsStyle: v.optional(examFindingsStyleValidator),
 		metadata: v.object({
 			source: v.optional(manualQuestionSource),
 			generation: v.optional(
@@ -760,6 +763,8 @@ export default defineSchema({
 			options: v.array(v.object({ id: v.string(), text: v.string() })),
 			correctAnswers: v.array(v.string()),
 			rationale: v.optional(v.string()),
+			examFindings: v.optional(examFindingsValidator),
+			examFindingsStyle: v.optional(examFindingsStyleValidator),
 			// DEPRECATED: retained temporarily for legacy attempt snapshots
 			explanation: v.optional(v.string()),
 			source: v.optional(

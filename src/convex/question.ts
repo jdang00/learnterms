@@ -1,5 +1,11 @@
 import { responseText } from '../lib/utils/freeResponse';
 import { acceptanceValidator } from './freeResponseValidators';
+import { examFindingsStyleValidator, examFindingsValidator } from './examFindingsValidators';
+import {
+	examFindingsText,
+	normalizeExamFindings,
+	type ExamFinding
+} from '../lib/examFindings/findings';
 import { requireCurrentUser, requireModuleAccess } from './access';
 import {
 	answerPosition,
@@ -482,9 +488,11 @@ function computeSearchText(input: {
 	options: Array<{ id?: string; text: string }>;
 	correctAnswers: Array<string>;
 	metadata?: { generation?: { model: string; focus: string; customPromptUsed: boolean } };
+	examFindings?: ExamFinding[];
 }): string {
 	const parts: Array<string> = [];
 	parts.push(input.stem || '');
+	parts.push(examFindingsText(input.examFindings));
 	const rationale = getRationale(input);
 	if (rationale) parts.push(rationale);
 	parts.push(convertQuestionType(input.type));
@@ -500,6 +508,14 @@ function computeSearchText(input: {
 		if (g.customPromptUsed) parts.push('custom');
 	}
 	return parts.join(' ').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+// Exam findings are in beta and limited to manually written questions.
+function manualExamFindings(aiGenerated: boolean, findings: ExamFinding[] | undefined) {
+	const normalized = normalizeExamFindings(findings);
+	if (normalized && aiGenerated)
+		throw new Error('Exam findings are only available on manually written questions.');
+	return normalized;
 }
 
 function normalizeIncomingRationale(input: {
@@ -563,6 +579,8 @@ export const insertQuestion = authCuratorMutation({
 	args: {
 		images: v.optional(v.array(imageAttachment)),
 		source: v.optional(manualQuestionSource),
+		examFindings: v.optional(examFindingsValidator),
+		examFindingsStyle: v.optional(examFindingsStyleValidator),
 		moduleId: v.id('module'),
 		type: v.string(),
 		stem: v.string(),
@@ -598,6 +616,7 @@ export const insertQuestion = authCuratorMutation({
 		if (!rationale) {
 			throw new Error('Question rationale is required');
 		}
+		const examFindings = manualExamFindings(args.aiGenerated, args.examFindings);
 
 		const { optionsWithIds } = assignOptionIds(args.options);
 
@@ -622,7 +641,8 @@ export const insertQuestion = authCuratorMutation({
 			aiGenerated: args.aiGenerated,
 			options: optionsWithIds,
 			correctAnswers: correctAnswerIds,
-			metadata: args.metadata
+			metadata: args.metadata,
+			examFindings
 		});
 
 		const { images, source, ...questionFields } = args;
@@ -633,6 +653,8 @@ export const insertQuestion = authCuratorMutation({
 			...questionFields,
 			metadata,
 			rationale,
+			examFindings,
+			examFindingsStyle: examFindings ? args.examFindingsStyle : undefined,
 			type: convertQuestionType(args.type),
 			status: args.status.toLowerCase(),
 			options: optionsWithIds,
@@ -759,6 +781,7 @@ async function updateQuestionStatuses(
 			const searchText = computeSearchText({
 				stem: question.stem,
 				rationale: question.rationale,
+				examFindings: question.examFindings,
 				explanation: question.explanation,
 				type: question.type,
 				status: args.status,
@@ -829,6 +852,8 @@ export const updateQuestion = authCuratorMutation({
 	args: {
 		images: v.optional(v.array(imageAttachment)),
 		source: v.optional(v.union(manualQuestionSource, v.null())),
+		examFindings: v.optional(v.union(examFindingsValidator, v.null())),
+		examFindingsStyle: v.optional(v.union(examFindingsStyleValidator, v.null())),
 		questionId: v.id('question'),
 		moduleId: v.id('module'),
 		type: v.string(),
@@ -850,6 +875,15 @@ export const updateQuestion = authCuratorMutation({
 		if (!rationale) {
 			throw new Error('Question rationale is required');
 		}
+		const examFindings =
+			args.examFindings === undefined
+				? questionToUpdate.examFindings
+				: manualExamFindings(questionToUpdate.aiGenerated, args.examFindings ?? undefined);
+		const examFindingsStyle = !examFindings
+			? undefined
+			: args.examFindingsStyle === undefined
+				? questionToUpdate.examFindingsStyle
+				: (args.examFindingsStyle ?? undefined);
 
 		const isMatching = convertQuestionType(args.type) === 'matching';
 		const { optionsWithIds, legacyIdMap } = isMatching
@@ -904,7 +938,8 @@ export const updateQuestion = authCuratorMutation({
 			aiGenerated: questionToUpdate.aiGenerated,
 			options: publishOptions,
 			correctAnswers: correctAnswerIds,
-			metadata: questionToUpdate.metadata
+			metadata: questionToUpdate.metadata,
+			examFindings
 		});
 
 		const metadata = { ...questionToUpdate.metadata };
@@ -925,6 +960,8 @@ export const updateQuestion = authCuratorMutation({
 					? (args.freeResponseAcceptance ?? questionToUpdate.freeResponseAcceptance ?? 'lenient')
 					: undefined,
 			rationale,
+			examFindings,
+			examFindingsStyle,
 			status: args.status.toLowerCase(),
 			updatedAt: Date.now(),
 			searchText
@@ -1265,6 +1302,8 @@ export const duplicateQuestion = authCuratorMutation({
 			correctAnswers: normalizedCorrectAnswers,
 			rationale: getRationale(original),
 			freeResponseAcceptance: original.freeResponseAcceptance,
+			examFindings: original.examFindings,
+			examFindingsStyle: original.examFindingsStyle,
 			aiGenerated: original.aiGenerated,
 			status: original.status,
 			order: nextOrder,
@@ -1273,6 +1312,7 @@ export const duplicateQuestion = authCuratorMutation({
 			searchText: computeSearchText({
 				stem: original.stem,
 				rationale: getRationale(original),
+				examFindings: original.examFindings,
 				freeResponseAcceptance: original.freeResponseAcceptance,
 				type: original.type,
 				status: original.status,
@@ -1332,6 +1372,8 @@ export const duplicateQuestionMany = authCuratorMutation({
 				correctAnswers: normalizedCorrectAnswers,
 				rationale: getRationale(original),
 				freeResponseAcceptance: original.freeResponseAcceptance,
+				examFindings: original.examFindings,
+				examFindingsStyle: original.examFindingsStyle,
 				aiGenerated: original.aiGenerated,
 				status: original.status,
 				order: nextOrder + i,
@@ -1340,6 +1382,7 @@ export const duplicateQuestionMany = authCuratorMutation({
 				searchText: computeSearchText({
 					stem: original.stem,
 					rationale: getRationale(original),
+					examFindings: original.examFindings,
 					freeResponseAcceptance: original.freeResponseAcceptance,
 					type: original.type,
 					status: original.status,
@@ -1422,6 +1465,7 @@ export const backfillQuestionSearchTextForModule = internalMutation({
 			const searchText = computeSearchText({
 				stem: q.stem,
 				rationale: getRationale(q),
+				examFindings: q.examFindings,
 				type: q.type,
 				status: q.status,
 				aiGenerated: q.aiGenerated,
@@ -1452,6 +1496,7 @@ export const backfillSearchTextForAllModules = internalMutation({
 				const searchText = computeSearchText({
 					stem: q.stem,
 					rationale: getRationale(q),
+					examFindings: q.examFindings,
 					type: q.type,
 					status: q.status,
 					aiGenerated: q.aiGenerated,
@@ -1492,6 +1537,7 @@ export const backfillQuestionRationales = internalMutation({
 				searchText: computeSearchText({
 					stem: question.stem,
 					rationale,
+					examFindings: question.examFindings,
 					type: question.type,
 					status: question.status,
 					aiGenerated: question.aiGenerated,
@@ -1540,6 +1586,7 @@ export const repairMatchingPairsForModule = authCuratorMutation({
 			const searchText = computeSearchText({
 				stem: q.stem,
 				rationale: getRationale(q),
+				examFindings: q.examFindings,
 				type: q.type,
 				status: q.status,
 				aiGenerated: q.aiGenerated,

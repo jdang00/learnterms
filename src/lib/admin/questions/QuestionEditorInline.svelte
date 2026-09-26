@@ -2,6 +2,8 @@
 	import { acceptanceLevels, type AcceptanceLevel } from '$lib/utils/freeResponse';
 	import AcceptanceMeter from '$lib/components/AcceptanceMeter.svelte';
 	import QuestionSourceEditor from './QuestionSourceEditor.svelte';
+	import ExamFindingsWorkspace from './ExamFindingsWorkspace.svelte';
+	import type { ExamFinding } from '$lib/examFindings/findings';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import {
 		X,
@@ -32,6 +34,7 @@
 		Check,
 		ChevronDown,
 		NotebookPen,
+		Stethoscope,
 		Target
 	} from 'lucide-svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
@@ -80,6 +83,12 @@
 	let editor = $state() as Readable<Editor>;
 	let rationaleEditor = $state() as Readable<Editor>;
 	let questionSource = $state<Doc<'question'>['metadata']['source']>();
+	let examFindings = $state<ExamFinding[]>([]);
+	let compactFindings = $state(false);
+	// Exam findings are in beta and limited to manually written questions.
+	const canEditExamFindings = $derived(!editingQuestion?.aiGenerated);
+	let editorView = $state<'question' | 'findings'>('question');
+	const showFindings = $derived(canEditExamFindings && editorView === 'findings');
 
 	type ToolbarItem = {
 		name: string;
@@ -801,12 +810,18 @@
 		const resetKey = editorResetKey;
 		if (appliedEditorResetKey === resetKey) return;
 		appliedEditorResetKey = resetKey;
+		editorView = 'question';
 
 		const nextStem = getInitialQuestionStem();
 		const nextRationale = getInitialQuestionRationale();
 		const nextMatching = getInitialMatchingState();
 
 		questionSource = editingQuestion?.metadata.source;
+		compactFindings = editingQuestion?.examFindingsStyle === 'compact';
+		examFindings = (editingQuestion?.examFindings ?? []).map((finding) => ({
+			...finding,
+			values: { ...finding.values }
+		}));
 		questionStem = nextStem;
 		questionRationale = nextRationale;
 		questionStatus = getInitialQuestionStatus();
@@ -1064,6 +1079,8 @@
 				await client.mutation(api.question.updateQuestion, {
 					images,
 					source: questionSource ?? null,
+					examFindings: canEditExamFindings ? $state.snapshot(examFindings) : undefined,
+					examFindingsStyle: canEditExamFindings ? (compactFindings ? 'compact' : null) : undefined,
 					questionId: editingQuestion._id as Id<'question'>,
 					moduleId: moduleId as Id<'module'>,
 					type: questionType,
@@ -1092,6 +1109,8 @@
 				questionId = await client.mutation(api.question.insertQuestion, {
 					images,
 					source: questionSource,
+					examFindings: $state.snapshot(examFindings),
+					examFindingsStyle: compactFindings ? 'compact' : undefined,
 					moduleId: moduleId as Id<'module'>,
 					type: questionType,
 					freeResponseAcceptance:
@@ -1129,10 +1148,42 @@
 <div class="h-full flex flex-col overflow-hidden bg-base-100">
 	<!-- Top Bar: Title & Actions -->
 	<div
-		class="flex items-center justify-between px-4 py-3 border-b border-base-300 bg-base-100 shrink-0"
+		class="flex flex-wrap items-center justify-between gap-y-2 px-4 py-3 border-b border-base-300 bg-base-100 shrink-0"
 	>
 		<h3 class="text-base font-semibold">{mode === 'edit' ? 'Edit Question' : 'New Question'}</h3>
-		<div class="flex items-center gap-2">
+		{#if canEditExamFindings}
+			<div
+				role="tablist"
+				aria-label="Editor view"
+				class="tabs tabs-box tabs-xs mx-3 rounded-full p-1"
+			>
+				<button
+					role="tab"
+					type="button"
+					class="tab gap-1.5 rounded-full px-3 {editorView === 'question' ? 'tab-active' : ''}"
+					aria-selected={editorView === 'question'}
+					onclick={() => (editorView = 'question')}
+				>
+					<MessageSquare size={13} /> Question
+				</button>
+				<button
+					role="tab"
+					type="button"
+					class="tab gap-1.5 rounded-full px-3 {editorView === 'findings' ? 'tab-active' : ''}"
+					aria-selected={editorView === 'findings'}
+					onclick={() => (editorView = 'findings')}
+				>
+					<Stethoscope size={13} />
+					<span class="hidden sm:inline">Exam findings</span>
+					{#if examFindings.length}
+						<span class="badge badge-primary badge-xs tabular-nums">{examFindings.length}</span>
+					{:else}
+						<span class="badge badge-soft badge-info badge-xs">Beta</span>
+					{/if}
+				</button>
+			</div>
+		{/if}
+		<div class="ml-auto flex items-center gap-2">
 			<button
 				class="btn btn-sm btn-ghost rounded-full"
 				onclick={onCancel}
@@ -1166,9 +1217,24 @@
 		</div>
 	{/if}
 
+	{#if showFindings}
+		<div class="min-h-0 flex-1">
+			<ExamFindingsWorkspace
+				bind:findings={examFindings}
+				bind:compact={compactFindings}
+				stem={questionStem}
+				onBack={() => (editorView = 'question')}
+				{onChange}
+				disabled={isSubmitting}
+			/>
+		</div>
+	{/if}
+
 	<!-- Toolbar: Type & Status -->
+	<!-- The question view is hidden, not unmounted, so its TipTap editors keep their state. -->
 	<div
 		class="flex flex-wrap items-center gap-8 px-6 py-4 border-b border-base-300 bg-base-200/30 shrink-0"
+		class:hidden={showFindings}
 	>
 		<!-- Type Selector -->
 		<div class="flex flex-col gap-2">
@@ -1279,7 +1345,11 @@
 	</div>
 
 	<!-- Main Scrollable Content -->
-	<div class="flex-1 overflow-y-auto min-h-0 p-4 pb-40 sm:p-6 sm:pb-40" onpaste={handlePaste}>
+	<div
+		class="flex-1 overflow-y-auto min-h-0 p-4 pb-40 sm:p-6 sm:pb-40"
+		class:hidden={showFindings}
+		onpaste={handlePaste}
+	>
 		<div class="w-full max-w-none space-y-8">
 			<!-- Question Stem -->
 			<div class="space-y-2">

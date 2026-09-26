@@ -23,6 +23,7 @@ import type * as datalab from "../datalab.js";
 import type * as documentIngestion from "../documentIngestion.js";
 import type * as documentIngestionActions from "../documentIngestionActions.js";
 import type * as documentParsing from "../documentParsing.js";
+import type * as examFindingsValidators from "../examFindingsValidators.js";
 import type * as featureAnnouncements from "../featureAnnouncements.js";
 import type * as freeResponse from "../freeResponse.js";
 import type * as freeResponseValidators from "../freeResponseValidators.js";
@@ -115,6 +116,7 @@ declare const fullApi: ApiFromModules<{
   documentIngestion: typeof documentIngestion;
   documentIngestionActions: typeof documentIngestionActions;
   documentParsing: typeof documentParsing;
+  examFindingsValidators: typeof examFindingsValidators;
   featureAnnouncements: typeof featureAnnouncements;
   freeResponse: typeof freeResponse;
   freeResponseValidators: typeof freeResponseValidators;

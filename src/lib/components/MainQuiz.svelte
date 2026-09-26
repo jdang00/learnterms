@@ -24,6 +24,7 @@
 	import { api } from '../../convex/_generated/api';
 	import ResultBanner from '$lib/components/ResultBanner.svelte';
 	import QuestionMediaStrip from '$lib/components/QuestionMediaStrip.svelte';
+	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
 	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
 	import { Flag, BookmarkCheck, ArrowDownNarrowWide, Pencil } from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
@@ -237,6 +238,11 @@
 					</div>
 				</div>
 
+				<ExamFindings
+					findings={currentlySelected.examFindings}
+					compact={currentlySelected.examFindingsStyle === 'compact'}
+					class="my-4 ms-2"
+				/>
 				<QuestionMediaStrip questionId={currentlySelected._id} showSolution={qs.showSolution} />
 
 				{#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}

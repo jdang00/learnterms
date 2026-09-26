@@ -18,6 +18,7 @@
 	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
 	import QuestionMediaStrip from '$lib/components/QuestionMediaStrip.svelte';
+	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
 	import MobileStudyBar from '$lib/components/MobileStudyBar.svelte';
 	import QuestionNavigatorSheet, {
 		type NavigatorItem
@@ -1142,6 +1143,12 @@
 									{@html sanitizeHtml(currentItem.question.stem)}
 								</div>
 							{/if}
+
+							<ExamFindings
+								findings={currentItem.question.examFindings}
+								compact={currentItem.question.examFindingsStyle === 'compact'}
+								class="my-4 ms-2"
+							/>
 
 							<QuestionMediaStrip questionId={currentItem.questionId} />
 

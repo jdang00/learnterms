@@ -2,6 +2,7 @@
 	import { acceptanceLevels } from '$lib/utils/freeResponse';
 	import AcceptanceMeter from '$lib/components/AcceptanceMeter.svelte';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
+	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
 	import {
 		Pencil,
 		Trash2,
@@ -244,6 +245,11 @@
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html sanitizeHtml(question.stem)}
 			</div>
+			<ExamFindings
+				findings={question.examFindings}
+				compact={question.examFindingsStyle === 'compact'}
+				class="mt-4"
+			/>
 		</div>
 
 		{#if isFreeResponse}

@@ -112,6 +112,35 @@ body {
 	box-shadow: inset 0 0 0 1px color-mix(in oklab, white 8%, transparent);
 }
 
+/* Editor stages (exam findings workspace and picker): faint graph paper fading from the center. */
+@utility graph-stage {
+	position: relative;
+	isolation: isolate;
+	&::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border-radius: inherit;
+		pointer-events: none;
+		background:
+			linear-gradient(
+					to right,
+					color-mix(in oklab, var(--color-base-content) 9%, transparent) 1px,
+					transparent 1px
+				)
+				0 0 / 24px 24px,
+			linear-gradient(
+					to bottom,
+					color-mix(in oklab, var(--color-base-content) 9%, transparent) 1px,
+					transparent 1px
+				)
+				0 0 / 24px 24px;
+		mask-image: radial-gradient(ellipse 90% 85% at 50% 40%, black 30%, transparent 100%);
+		-webkit-mask-image: radial-gradient(ellipse 90% 85% at 50% 40%, black 30%, transparent 100%);
+	}
+}
+
 .tiptap p.is-editor-empty:first-child::before {
 	color: #adb5bd;
 	content: attr(data-placeholder);
