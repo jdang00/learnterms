@@ -24,7 +24,12 @@ export const autoMapIndexedDocument = internalAction({
 		triggeredByClerkUserId: v.optional(v.string())
 	},
 	returns: v.object({
-		status: v.union(v.literal('cached'), v.literal('skipped'), v.literal('mapped')),
+		status: v.union(
+			v.literal('cached'),
+			v.literal('skipped'),
+			v.literal('deferred'),
+			v.literal('mapped')
+		),
 		topicMapId: v.optional(v.id('questionStudioTopicMaps')),
 		topicCount: v.optional(v.number()),
 		threadId: v.optional(v.string()),
@@ -34,7 +39,7 @@ export const autoMapIndexedDocument = internalAction({
 		ctx,
 		args
 	): Promise<{
-		status: 'cached' | 'skipped' | 'mapped';
+		status: 'cached' | 'skipped' | 'deferred' | 'mapped';
 		topicMapId?: Id<'questionStudioTopicMaps'>;
 		topicCount?: number;
 		threadId?: string;
@@ -63,7 +68,8 @@ export const autoMapIndexedDocument = internalAction({
 			internal.questionStudio.mappingState.claimDocumentTopicMapping,
 			{
 				documentId: args.documentId,
-				sourceIndexedAt
+				sourceIndexedAt,
+				triggeredByClerkUserId: args.triggeredByClerkUserId
 			}
 		);
 		if (claim.status !== 'claimed') return { status: claim.status };
@@ -81,14 +87,6 @@ export const autoMapIndexedDocument = internalAction({
 						clerkUserId: args.triggeredByClerkUserId
 					})
 				: null;
-
-			await questionStudioRateLimiter.limit(ctx, 'questionStudioGenerationStart', {
-				key: agentUserId,
-				throws: true
-			});
-			await questionStudioRateLimiter.limit(ctx, 'questionStudioGlobalGenerationStart', {
-				throws: true
-			});
 
 			const agent = createQuestionStudioAgent(TEXT_MODEL);
 			let threadId = '';

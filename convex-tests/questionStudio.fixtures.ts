@@ -1,10 +1,12 @@
 /// <reference types="vite/client" />
+import rateLimiter from '@convex-dev/rate-limiter/test';
 import { convexTest } from 'convex-test';
 import schema from '../src/convex/schema';
 export const modules = import.meta.glob('../src/convex/**/*.ts');
 export { convexTest, schema };
 export async function setup() {
 	const t = convexTest(schema, modules);
+	rateLimiter.register(t);
 	const ids = await t.run(async (ctx) => {
 		const schoolId = await ctx.db.insert('school', {
 			name: 'Test',

@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { internal } from '../_generated/api';
 import { internalMutation } from '../_generated/server';
 import { MAPPING_VERSION } from './mapping';
+import { questionStudioRateLimiter } from './runtime';
 import { topicInputValidator } from './shared';
 import { isSavedMapForSource } from './topicMaps';
 
@@ -96,9 +97,18 @@ export const saveTopicMapForRange = internalMutation({
 
 // The upload pipeline owns mapping. Claim the source revision before any external work.
 export const claimDocumentTopicMapping = internalMutation({
-	args: { documentId: v.id('contentLib'), sourceIndexedAt: v.number() },
+	args: {
+		documentId: v.id('contentLib'),
+		sourceIndexedAt: v.number(),
+		triggeredByClerkUserId: v.optional(v.string())
+	},
 	returns: v.object({
-		status: v.union(v.literal('claimed'), v.literal('cached'), v.literal('skipped'))
+		status: v.union(
+			v.literal('claimed'),
+			v.literal('cached'),
+			v.literal('skipped'),
+			v.literal('deferred')
+		)
 	}),
 	handler: async (ctx, args) => {
 		const document = await ctx.db.get(args.documentId);
@@ -118,6 +128,28 @@ export const claimDocumentTopicMapping = internalMutation({
 			return { status: 'cached' as const };
 		if (document.metadata?.topicMapping?.sourceIndexedAt === args.sourceIndexedAt)
 			return { status: 'skipped' as const };
+		// Batch uploads can exceed the per-user start limit; wait for the window instead of failing.
+		const key = args.triggeredByClerkUserId ?? `document:${args.documentId}`;
+		const checks = [
+			await questionStudioRateLimiter.check(ctx, 'questionStudioGenerationStart', { key }),
+			await questionStudioRateLimiter.check(ctx, 'questionStudioGlobalGenerationStart')
+		];
+		const retryAfter = Math.max(0, ...checks.map((c) => c.retryAfter ?? 0));
+		if (checks.some((c) => !c.ok)) {
+			await ctx.scheduler.runAfter(
+				retryAfter + 1000,
+				internal.questionStudio.mapping.autoMapIndexedDocument,
+				args
+			);
+			return { status: 'deferred' as const };
+		}
+		await questionStudioRateLimiter.limit(ctx, 'questionStudioGenerationStart', {
+			key,
+			throws: true
+		});
+		await questionStudioRateLimiter.limit(ctx, 'questionStudioGlobalGenerationStart', {
+			throws: true
+		});
 		await ctx.db.patch(args.documentId, {
 			metadata: {
 				...document.metadata,

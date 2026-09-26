@@ -289,3 +289,32 @@ test('saving a map completes preparation atomically and ignores a later timeout'
 		)?.topics
 	).toHaveLength(1);
 });
+
+test('a batch past the per-user start limit defers mapping instead of failing', async () => {
+	const { t, ids } = await setup();
+	const claim = async (indexedAt: number) => {
+		await t.run((ctx) =>
+			ctx.db.patch(ids.documentId, { metadata: { indexedAt, ingestionStatus: 'indexed' } })
+		);
+		return await t.mutation(internal.questionStudio.mappingState.claimDocumentTopicMapping, {
+			documentId: ids.documentId,
+			sourceIndexedAt: indexedAt,
+			triggeredByClerkUserId: 'owner'
+		});
+	};
+	for (let indexedAt = 1; indexedAt <= 6; indexedAt++)
+		expect((await claim(indexedAt)).status).toBe('claimed');
+
+	expect((await claim(7)).status).toBe('deferred');
+	const doc = await t.run((ctx) => ctx.db.get(ids.documentId));
+	expect(doc?.metadata?.topicMapping).toBeUndefined();
+	const retries = await t.run((ctx) =>
+		ctx.db.system
+			.query('_scheduled_functions')
+			.filter((q) => q.eq(q.field('name'), 'questionStudio/mapping:autoMapIndexedDocument'))
+			.collect()
+	);
+	expect(retries.map((job) => job.args[0])).toEqual([
+		{ documentId: ids.documentId, sourceIndexedAt: 7, triggeredByClerkUserId: 'owner' }
+	]);
+});
