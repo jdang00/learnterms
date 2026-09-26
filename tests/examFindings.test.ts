@@ -12,12 +12,14 @@ import {
 } from '../src/lib/examFindings/findings';
 import {
 	combineCoverDeviation,
+	combinePhoria,
 	combinePrism,
 	coverCorrectionValues,
 	coverDeviationParts,
 	effectiveField,
 	fieldChoices,
 	formatExamValue,
+	phoriaParts,
 	prismParts,
 	toggleCoverCorrection
 } from '../src/lib/examFindings/input';
@@ -246,6 +248,35 @@ test('cover test keeps UCT choices, ACT amount and direction, and both correctio
 			values: { 'act.distance': '8 Exoph', correction: both }
 		})?.sections[0]
 	).toMatchObject({ kind: 'grid', rows: [{ label: 'ACT' }] });
+});
+
+test('phorias record distance and near amounts with RevEHR lateral and vertical directions', () => {
+	const phorias = testById('phorias');
+	const grid = phorias.layout[0];
+	if (grid.kind !== 'grid') throw new Error('expected phorias grid');
+	expect(grid.rows.map((row) => row.label)).toEqual(['Distance', 'Near']);
+	expect(grid.columns.map((column) => column.label)).toEqual(['Lateral', 'Vertical']);
+	expect(grid.columns.map((column) => column.input)).toEqual(['phoria', 'phoria']);
+	expect(fieldChoices(grid.columns[0], grid.rows[0])).toEqual(['Ortho', 'BI', 'BO']);
+	expect(fieldChoices(grid.columns[1], grid.rows[1])).toEqual([
+		'Ortho',
+		'BUOD',
+		'BDOD',
+		'BUOS',
+		'BDOS'
+	]);
+	expect(phoriaParts('3Δ BI')).toEqual({ magnitude: '3', direction: 'BI' });
+	expect(phoriaParts('2 buos')).toEqual({ magnitude: '2', direction: 'BUOS' });
+	expect(phoriaParts('Ortho')).toEqual({ magnitude: '', direction: 'Ortho' });
+	expect(combinePhoria('3', 'BI')).toBe('3 BI');
+	expect(combinePhoria('', 'BDOD')).toBe('BDOD');
+	expect(formatExamValue('1200 bo', grid.columns[0])).toBe('999 BO');
+	expect(formatExamValue('1.5 buos', grid.columns[1])).toBe('1.5 BUOS');
+	expect(formatExamValue('small XP', grid.columns[0])).toBe('small XP');
+	expect(normalExamValues(phorias)).toMatchObject({
+		'distance.lateral': 'Ortho',
+		'near.vertical': 'Ortho'
+	});
 });
 
 test('prism amount and direction stay separately editable and save as one finding', () => {

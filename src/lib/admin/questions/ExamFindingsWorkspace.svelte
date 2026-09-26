@@ -468,17 +468,21 @@
 						{#each findings as finding, index (finding)}
 							{@const view = buildExamFindingView(finding)}
 							{#if view}
-								<button
-									type="button"
-									class="rounded-2xl text-left outline-none transition-shadow hover:ring-2 hover:ring-primary/25 focus-visible:ring-2 focus-visible:ring-primary/50 {view.wide &&
+								<div
+									class="relative rounded-2xl text-left transition-shadow hover:ring-2 hover:ring-primary/25 {view.wide &&
 									device === 'desktop'
 										? '@lg:col-span-2'
 										: ''}"
-									title="Edit {view.title}"
-									onclick={() => openInEditor(index)}
 								>
 									<ExamFindingCard {view} {compact} class="pointer-events-none h-full" />
-								</button>
+									<button
+										type="button"
+										class="absolute inset-0 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+										aria-label="Edit {view.title}"
+										title="Edit {view.title}"
+										onclick={() => openInEditor(index)}
+									></button>
+								</div>
 							{/if}
 						{/each}
 					</div>

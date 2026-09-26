@@ -38,6 +38,7 @@
 	import {
 		COVER_CORRECTION_CHOICES,
 		combinePrism,
+		combinePhoria,
 		combineCoverDeviation,
 		coverCorrectionValues,
 		coverDeviationParts,
@@ -47,6 +48,7 @@
 		fieldHint,
 		formatExamValue,
 		inputMode,
+		phoriaParts,
 		prismParts,
 		toggleCoverCorrection
 	} from '$lib/examFindings/input';
@@ -207,6 +209,13 @@
 		return customKeys.includes(key) || Boolean(value && !choices.includes(value));
 	}
 
+	const deviationParts = (value: string, input: ExamField['input']) =>
+		input === 'phoria' ? phoriaParts(value) : coverDeviationParts(value);
+	const combineDeviation = (magnitude: string, direction: string, input: ExamField['input']) =>
+		input === 'phoria'
+			? combinePhoria(magnitude, direction)
+			: combineCoverDeviation(magnitude, direction);
+
 	function chooseValue(key: string, value: string) {
 		customKeys =
 			value === '__custom__'
@@ -261,7 +270,7 @@
 				{disabled}
 			/>
 		{/if}
-	{:else if column.input === 'coverDeviation'}
+	{:else if column.input === 'coverDeviation' || column.input === 'phoria'}
 		<div class="flex min-w-40 items-center gap-1">
 			<input
 				id="{uid}-{key}"
@@ -271,13 +280,14 @@
 				aria-label={`${label} prism diopters`}
 				placeholder="Δ"
 				inputmode="decimal"
-				maxlength="8"
-				value={coverDeviationParts(finding.values[key] ?? '').magnitude}
+				maxlength={MAX_VALUE_LENGTH}
+				value={deviationParts(finding.values[key] ?? '', column.input).magnitude}
 				oninput={(event) => {
-					const direction = coverDeviationParts(finding.values[key] ?? '').direction;
-					finding.values[key] = combineCoverDeviation(
+					const direction = deviationParts(finding.values[key] ?? '', column.input).direction;
+					finding.values[key] = combineDeviation(
 						event.currentTarget.value,
-						direction === 'Ortho' ? '' : direction
+						direction === 'Ortho' ? '' : direction,
+						column.input
 					);
 					onChange();
 				}}
@@ -288,11 +298,12 @@
 			<select
 				class="select select-sm h-8 w-24 shrink-0 rounded-full border-base-300 bg-base-100 px-2 text-xs"
 				aria-label={`${label} direction`}
-				value={coverDeviationParts(finding.values[key] ?? '').direction}
+				value={deviationParts(finding.values[key] ?? '', column.input).direction}
 				onchange={(event) => {
-					finding.values[key] = combineCoverDeviation(
-						coverDeviationParts(finding.values[key] ?? '').magnitude,
-						event.currentTarget.value
+					finding.values[key] = combineDeviation(
+						deviationParts(finding.values[key] ?? '', column.input).magnitude,
+						event.currentTarget.value,
+						column.input
 					);
 					onChange();
 				}}
@@ -751,7 +762,7 @@
 					{note ? 'Edit note' : 'Add note'}
 				</h3>
 				<p class="truncate text-xs text-base-content/55">
-					{finding.title || test.title} · shown to students under this box
+					{finding.title || test.title} · students open this note from the box header
 				</p>
 			</div>
 			<button

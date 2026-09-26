@@ -22,6 +22,7 @@ export type ExamField = {
 		| 'bp'
 		| 'check'
 		| 'coverDeviation'
+		| 'phoria'
 		| 'coverCorrection';
 	min?: number;
 	max?: number;
@@ -257,8 +258,16 @@ export const EXAM_LAYOUTS = {
 	phorias: [
 		eyeGrid(
 			[
-				normalField('lateral', 'Lateral', 'Ortho', { wide: true }),
-				normalField('vertical', 'Vertical', 'Ortho', { wide: true })
+				normalField('lateral', 'Lateral', 'Ortho', {
+					input: 'phoria',
+					wide: true,
+					choices: ['BI', 'BO']
+				}),
+				normalField('vertical', 'Vertical', 'Ortho', {
+					input: 'phoria',
+					wide: true,
+					choices: ['BUOD', 'BDOD', 'BUOS', 'BDOS']
+				})
 			],
 			rows([
 				['distance', 'Distance'],

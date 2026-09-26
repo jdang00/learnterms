@@ -97,6 +97,26 @@ export function combinePrism(magnitude: string, direction: string) {
 	return `${amount}Δ${direction ? ` ${direction}` : ''}`;
 }
 
+const PHORIA_DIRECTIONS = ['BI', 'BO', 'BUOD', 'BDOD', 'BUOS', 'BDOS'] as const;
+
+export function phoriaParts(value: string) {
+	const trimmed = value.trim();
+	if (trimmed.toLowerCase() === 'ortho') return { magnitude: '', direction: 'Ortho' };
+	const match = trimmed.match(/^(?:(\d+(?:\.\d*)?)\s*(?:Δ|pd)?\s*)?(BI|BO|BUOD|BDOD|BUOS|BDOS)?$/i);
+	if (!match || (!match[1] && !match[2])) return { magnitude: value, direction: '' };
+	return {
+		magnitude: match[1] ?? '',
+		direction:
+			PHORIA_DIRECTIONS.find((item) => item.toLowerCase() === match[2]?.toLowerCase()) ?? ''
+	};
+}
+
+export function combinePhoria(magnitude: string, direction: string) {
+	if (direction === 'Ortho') return 'Ortho';
+	const amount = magnitude.trim();
+	return [amount, direction].filter(Boolean).join(' ');
+}
+
 export function displayAffix(field: ExamField, value: string): boolean {
 	if (!value) return true;
 	if (field.input === 'acuity') return /^\d/.test(value);
@@ -146,6 +166,12 @@ export function formatExamValue(raw: string, field: ExamField): string {
 	if (field.input === 'prism') {
 		const match = value.match(/^(\d+(?:\.\d+)?)\s*(?:Δ|d|pd)?\s*(BI|BO|BU|BD)$/i);
 		return match ? `${Number(match[1])}Δ ${match[2].toUpperCase()}` : value;
+	}
+	if (field.input === 'phoria') {
+		const { magnitude, direction } = phoriaParts(value);
+		if (direction === 'Ortho') return 'Ortho';
+		if (!/^\d+(?:\.\d+)?$/.test(magnitude)) return value;
+		return combinePhoria(String(Math.min(999, Number(magnitude))), direction);
 	}
 	if (field.input === 'coverDeviation') {
 		const { magnitude, direction } = coverDeviationParts(value);
