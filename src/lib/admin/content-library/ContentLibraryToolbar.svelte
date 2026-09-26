@@ -106,8 +106,12 @@
 		</button>
 	</div>
 
-	<button class="btn btn-primary btn-sm gap-2 rounded-full" onclick={onAdd}>
+	<button
+		class="btn btn-primary btn-sm gap-2 rounded-full"
+		onclick={onAdd}
+		aria-label="Upload PDFs"
+	>
 		<Plus size={15} />
-		<span class="hidden sm:inline">Add file</span>
+		<span class="hidden sm:inline">Upload PDFs</span>
 	</button>
 </div>
