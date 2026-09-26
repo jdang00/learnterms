@@ -44,7 +44,27 @@
 					.join('\n\n')
 			}));
 	});
-	const activePage = $derived(pages.find((page) => page.pageNumber === active));
+	// Consecutive pages share one chip; editing keeps one chip per page so each can be removed.
+	const groups = $derived.by(() => {
+		const runs: Array<typeof pages> = [];
+		for (const page of pages) {
+			const run = runs.at(-1);
+			const last = run?.at(-1);
+			if (run && last && !onRemovePage && page.pageNumber === last.pageNumber + 1) run.push(page);
+			else runs.push([page]);
+		}
+		return runs.map((run) => {
+			const start = run[0].pageNumber;
+			const end = run[run.length - 1].pageNumber;
+			return {
+				start,
+				end,
+				pages: run,
+				label: start === end ? `p. ${start}` : `pp. ${start}–${end}`
+			};
+		});
+	});
+	const activeGroup = $derived(groups.find((group) => group.start === active));
 	const previewId = $props.id();
 
 	$effect(() => {
@@ -89,7 +109,7 @@
 			class="relative flex flex-wrap gap-2"
 			onmouseleave={() => (active = null)}
 		>
-			{#if activePage}
+			{#if activeGroup}
 				<div class="absolute inset-x-0 top-full z-30 pt-2">
 					<div
 						id={previewId}
@@ -97,49 +117,59 @@
 						class="rounded-xl border border-base-300 bg-base-100 p-3 text-left shadow-lg"
 					>
 						<p class="text-xs font-semibold text-base-content">
-							{title || 'Source'} · <span class="font-mono">p. {activePage.pageNumber}</span>
+							{title || 'Source'} · <span class="font-mono">{activeGroup.label}</span>
 						</p>
-						{#if activePage.quote}
-							<p
-								class="mt-2 max-h-48 overflow-y-auto whitespace-pre-line text-xs leading-relaxed text-base-content/75"
+						{#if activeGroup.pages.some((page) => page.quote)}
+							<div
+								class="mt-2 max-h-48 space-y-2 overflow-y-auto text-xs leading-relaxed text-base-content/75"
 							>
-								{activePage.quote}
-							</p>
+								{#each activeGroup.pages.filter((page) => page.quote) as page (page.pageNumber)}
+									<p class="whitespace-pre-line">
+										{#if activeGroup.pages.length > 1}<span class="font-mono text-base-content/50"
+												>p. {page.pageNumber}</span
+											><br />{/if}{page.quote}
+									</p>
+								{/each}
+							</div>
 						{/if}
 						<p class="mt-2 text-[11px] text-base-content/50">
-							Click the page chip to open the PDF.
+							Click the page chip to open the PDF{activeGroup.start === activeGroup.end
+								? ''
+								: ` at p. ${activeGroup.start}`}.
 						</p>
 					</div>
 				</div>
 			{/if}
-			{#each pages as page (page.pageNumber)}
+			{#each groups as group (group.start)}
 				<div class="flex items-center gap-0.5">
 					<button
 						type="button"
 						class="btn btn-ghost btn-xs gap-1.5 rounded-full border border-base-300 font-mono font-normal"
 						disabled={opening !== null}
-						aria-label={`Open ${title || 'source PDF'} at page ${page.pageNumber} in a new tab`}
-						onclick={() => openSource(page.pageNumber)}
-						onmouseenter={() => (active = page.pageNumber)}
-						aria-describedby={active === page.pageNumber ? previewId : undefined}
+						aria-label={group.start === group.end
+							? `Open ${title || 'source PDF'} at page ${group.start} in a new tab`
+							: `Open ${title || 'source PDF'} at page ${group.start} (cites pages ${group.start}–${group.end}) in a new tab`}
+						onclick={() => openSource(group.start)}
+						onmouseenter={() => (active = group.start)}
+						aria-describedby={active === group.start ? previewId : undefined}
 						onkeydown={(event) => {
 							if (event.key === 'Escape') active = null;
 						}}
-						onfocus={() => (active = page.pageNumber)}
+						onfocus={() => (active = group.start)}
 						onblur={() => (active = null)}
 					>
-						{#if opening === page.pageNumber}<LoaderCircle
+						{#if opening === group.start}<LoaderCircle
 								size={12}
 								class="animate-spin"
 							/>{:else}<FileText size={12} />{/if}
-						p. {page.pageNumber}<ExternalLink size={11} />
+						{group.label}<ExternalLink size={11} />
 					</button>
 					{#if onRemovePage}
 						<button
 							type="button"
 							class="btn btn-ghost btn-xs btn-circle"
-							aria-label={`Remove source page ${page.pageNumber}`}
-							onclick={() => onRemovePage?.(page.pageNumber)}><X size={11} /></button
+							aria-label={`Remove source page ${group.start}`}
+							onclick={() => onRemovePage?.(group.start)}><X size={11} /></button
 						>
 					{/if}
 				</div>
