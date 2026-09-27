@@ -23,9 +23,9 @@
 		MAX_EXAM_FINDINGS,
 		type ExamFinding
 	} from '$lib/examFindings/findings';
-	import { buildExamFindingView } from '$lib/examFindings/view';
+	import { WIDE_GRID_COLUMNS } from '$lib/examFindings/view';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
-	import ExamFindingCard from '$lib/components/exam-findings/ExamFindingCard.svelte';
+	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
 	import { EXAM_GROUP_STYLE } from '$lib/components/exam-findings/groups';
 	import ExamFindingEditorCard from './ExamFindingEditorCard.svelte';
 	import ExamFindingsPicker from './ExamFindingsPicker.svelte';
@@ -129,10 +129,12 @@
 		void focusBox(index);
 	}
 
-	// Wide layouts (5+ columns) get the full row while editing so inputs stay usable.
+	// Wide layouts get the full row while editing so inputs stay usable.
 	function editsWide(finding: ExamFinding, test: ExamTest) {
 		if (finding.size) return finding.size === 'full';
-		return test.layout.some((section) => section.kind === 'grid' && section.columns.length > 4);
+		return test.layout.some(
+			(section) => section.kind === 'grid' && section.columns.length > WIDE_GRID_COLUMNS
+		);
 	}
 
 	// ── drag to arrange by the grip, same feel as the dock customizer ───────
@@ -458,36 +460,9 @@
 							<span class="block h-2.5 w-2/3 {BONE}"></span>
 						</div>
 					{/if}
-					<div
-						class="mt-4 grid grid-cols-1 {compact ? 'gap-2' : 'gap-3'} {device === 'desktop'
-							? compact
-								? '@lg:grid-cols-2 @3xl:grid-cols-3'
-								: '@lg:grid-cols-2'
-							: ''}"
-					>
-						{#each findings as finding, index (finding)}
-							{@const view = buildExamFindingView(finding)}
-							{#if view}
-								<div
-									class="relative rounded-2xl text-left transition-shadow hover:ring-2 hover:ring-primary/25 {view.wide &&
-									device === 'desktop'
-										? '@lg:col-span-2'
-										: ''}"
-								>
-									<ExamFindingCard {view} {compact} class="pointer-events-none h-full" />
-									<button
-										type="button"
-										class="absolute inset-0 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-										aria-label="Edit {view.title}"
-										title="Edit {view.title}"
-										onclick={() => openInEditor(index)}
-									></button>
-								</div>
-							{/if}
-						{/each}
-					</div>
+					<ExamFindings {findings} {compact} onOpen={openInEditor} />
 					{#if emptyCount}
-						<p class="mt-3 text-center text-xs text-base-content/45">
+						<p class="text-center text-xs text-base-content/45">
 							{emptyCount} empty {emptyCount === 1 ? 'box is' : 'boxes are'} hidden from students.
 						</p>
 					{/if}

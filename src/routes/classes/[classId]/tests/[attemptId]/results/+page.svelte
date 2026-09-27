@@ -843,7 +843,7 @@
 							<ExamFindings
 								findings={selectedItem.question.examFindings}
 								compact={selectedItem.question.examFindingsStyle === 'compact'}
-								class="mt-4 ms-2"
+								class="ms-2"
 							/>
 
 							{#if isFitb(selectedItem.question.type)}

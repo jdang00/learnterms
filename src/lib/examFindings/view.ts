@@ -5,11 +5,25 @@ import {
 	type ExamField,
 	type ExamTestGroup
 } from './catalog';
-import { examFindingTitle, hasRecordedValues, type ExamFinding } from './findings';
+import {
+	examFindingTitle,
+	hasRecordedValues,
+	type ExamFinding,
+	type ExamFindingSize
+} from './findings';
 import { displayAffix, effectiveField } from './input';
 
 // Wide fields hold words ("trace NS"), so they render in sans; short ones are measurements.
 export type ExamCell = { value: string; prefix?: string; suffix?: string; wide?: boolean };
+
+// Grids wider than this take the full row (and stack per eye on phones).
+export const WIDE_GRID_COLUMNS = 4;
+// A small box fits a grid row of about this many characters, or a few short fields.
+const SMALL_ROW_CHARS = 18;
+const SMALL_FIELD_CHARS = 14;
+const SMALL_FIELD_COUNT = 3;
+const SMALL_NOTE_CHARS = 120;
+const FULL_NOTE_CHARS = 160;
 
 export type ExamSectionView =
 	| {
@@ -26,7 +40,7 @@ export type ExamFindingView = {
 	group: ExamTestGroup;
 	sections: ExamSectionView[];
 	note?: string;
-	wide: boolean;
+	size: ExamFindingSize;
 };
 
 const cell = (field: ExamField, value: string): ExamCell => ({
@@ -73,13 +87,47 @@ export function buildExamFindingView(finding: ExamFinding): ExamFindingView | nu
 	});
 	const note = finding.note?.trim() || undefined;
 	if (!sections.length && !note) return null;
-	const wide =
-		finding.size === 'full' ||
-		(finding.size !== 'half' &&
-			sections.some(
-				(section) =>
-					(section.kind === 'grid' && section.columns.length > 4) ||
-					(section.kind === 'note' && section.value.length > 160)
-			));
-	return { title: examFindingTitle(finding), group: test.group, sections, note, wide };
+	return {
+		title: examFindingTitle(finding),
+		group: test.group,
+		sections,
+		note,
+		size: finding.size ?? autoSize(sections, note)
+	};
+}
+
+const cellText = (cell: ExamCell | null) =>
+	cell ? `${cell.prefix ?? ''}${cell.value}${cell.suffix ?? ''}` : '';
+
+// Sizes a box by what it shows: wide grids take the row, short readings take a third.
+function autoSize(sections: ExamSectionView[], note?: string): ExamFindingSize {
+	// The box note is clamped, so only note sections (shown in full) widen a box.
+	if (
+		sections.some(
+			(section) =>
+				(section.kind === 'grid' && section.columns.length > WIDE_GRID_COLUMNS) ||
+				(section.kind === 'note' && section.value.length > FULL_NOTE_CHARS)
+		)
+	)
+		return 'full';
+	const fitsSmall = (section: ExamSectionView) => {
+		if (section.kind === 'note') return false;
+		if (section.kind === 'fields')
+			return (
+				section.items.length <= SMALL_FIELD_COUNT &&
+				section.items.every(
+					(item) => Math.max(item.label.length, cellText(item).length) <= SMALL_FIELD_CHARS
+				)
+			);
+		const labelChars = Math.max(
+			section.label?.length ?? 0,
+			...section.rows.map((r) => r.label.length)
+		);
+		const columnChars = section.columns.map((column, index) =>
+			Math.max(column.label.length, ...section.rows.map((row) => cellText(row.cells[index]).length))
+		);
+		// Each column carries about two characters of padding.
+		return labelChars + columnChars.reduce((sum, chars) => sum + chars + 2, 2) <= SMALL_ROW_CHARS;
+	};
+	return sections.every(fitsSmall) && (note?.length ?? 0) <= SMALL_NOTE_CHARS ? 'small' : 'half';
 }

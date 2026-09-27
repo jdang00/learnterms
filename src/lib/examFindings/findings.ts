@@ -7,8 +7,9 @@ import {
 } from './catalog';
 import { effectiveField, formatExamValue } from './input';
 
-// Boxes size themselves unless a curator pins them to half or full width.
-export type ExamFindingSize = 'half' | 'full';
+// Boxes size themselves unless a curator pins them to a third, half or the full row.
+export const EXAM_FINDING_SIZES = ['small', 'half', 'full'] as const;
+export type ExamFindingSize = (typeof EXAM_FINDING_SIZES)[number];
 
 export type ExamFinding = {
 	test: string;
@@ -51,7 +52,7 @@ export function normalizeExamFindings(
 			{
 				test: test.id,
 				...(title && title !== test.title && { title }),
-				...((finding.size === 'half' || finding.size === 'full') && { size: finding.size }),
+				...(finding.size && EXAM_FINDING_SIZES.includes(finding.size) && { size: finding.size }),
 				values,
 				...(note && { note })
 			}

@@ -1144,11 +1144,16 @@
 								</div>
 							{/if}
 
-							<ExamFindings
-								findings={currentItem.question.examFindings}
-								compact={currentItem.question.examFindingsStyle === 'compact'}
-								class="my-4 ms-2"
-							/>
+							{#snippet examFindings()}
+								<ExamFindings
+									findings={currentItem.question.examFindings}
+									compact={currentItem.question.examFindingsStyle === 'compact'}
+									class="ms-2"
+								/>
+							{/snippet}
+							{#if !isFitb(currentItem.question.type)}
+								{@render examFindings()}
+							{/if}
 
 							<QuestionMediaStrip questionId={currentItem.questionId} />
 
@@ -1161,6 +1166,7 @@
 										allowSolution={false}
 										showAnswerPanel={false}
 										showRevealHint={false}
+										belowStem={examFindings}
 									/>
 								{/if}
 							{:else if isMatching(currentItem.question.type)}

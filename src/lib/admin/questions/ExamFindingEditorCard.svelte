@@ -4,8 +4,10 @@
 		ArrowDown,
 		ArrowUp,
 		CircleDot,
+		Clock,
 		Equal,
 		Columns2,
+		Columns3,
 		Copy,
 		Ellipsis,
 		EyeOff,
@@ -39,6 +41,7 @@
 		COVER_CORRECTION_CHOICES,
 		combinePrism,
 		combinePhoria,
+		currentExamTime,
 		combineCoverDeviation,
 		coverCorrectionValues,
 		coverDeviationParts,
@@ -87,6 +90,7 @@
 		icon: typeof Sparkles;
 	}> = [
 		{ value: undefined, label: 'Auto', icon: Sparkles },
+		{ value: 'small', label: 'Small', icon: Columns3 },
 		{ value: 'half', label: 'Half', icon: Columns2 },
 		{ value: 'full', label: 'Full', icon: RectangleHorizontal }
 	];
@@ -459,6 +463,20 @@
 			{#if column.suffix && displayAffix(column, finding.values[key] ?? '')}<span
 					class="shrink-0 text-[0.68rem] text-base-content/45">{column.suffix}</span
 				>{/if}
+			{#if column.input === 'time'}
+				<button
+					type="button"
+					class="btn btn-ghost btn-xs btn-circle -mr-2 shrink-0 text-base-content/55 hover:text-primary"
+					title="Record the current time"
+					aria-label={`${label}: record the current time`}
+					onclick={() => {
+						finding.values[key] = currentExamTime();
+						flash([key]);
+						onChange();
+					}}
+					{disabled}><Clock size={13} /></button
+				>
+			{/if}
 		</label>
 	{/if}
 {/snippet}
@@ -561,7 +579,7 @@
 				popover="auto"
 				ontoggle={handleMenuToggle}
 				style="visibility: hidden"
-				class="dropdown-content fixed inset-auto m-0 w-56 rounded-2xl border border-base-300 bg-base-100 p-1.5 text-base-content shadow-xl"
+				class="dropdown-content fixed inset-auto m-0 w-64 rounded-2xl border border-base-300 bg-base-100 p-1.5 text-base-content shadow-xl"
 			>
 				<p
 					class="px-2 pb-1 pt-1 text-[0.65rem] font-semibold uppercase tracking-wider text-base-content/40"
@@ -569,7 +587,7 @@
 					Width
 				</p>
 				<div
-					class="mb-1 grid grid-cols-3 gap-1 rounded-full bg-base-200/70 p-1"
+					class="mb-1 grid grid-cols-4 gap-1 rounded-full bg-base-200/70 p-1"
 					role="radiogroup"
 					aria-label="Box width"
 				>

@@ -238,19 +238,26 @@
 					</div>
 				</div>
 
-				<ExamFindings
-					findings={currentlySelected.examFindings}
-					compact={currentlySelected.examFindingsStyle === 'compact'}
-					class="my-4 ms-2"
-				/>
+				{#snippet examFindings()}
+					<ExamFindings
+						findings={currentlySelected.examFindings}
+						compact={currentlySelected.examFindingsStyle === 'compact'}
+						class="ms-2"
+					/>
+				{/snippet}
+				{#if currentlySelected.type !== QUESTION_TYPES.FILL_IN_THE_BLANK}
+					{@render examFindings()}
+				{/if}
 				<QuestionMediaStrip questionId={currentlySelected._id} showSolution={qs.showSolution} />
 
 				{#if currentlySelected.type === QUESTION_TYPES.FILL_IN_THE_BLANK}
+					<!-- Fill in the blank draws its own stem, so findings go inside, under it. -->
 					<FillInTheBlank
 						bind:qs
 						{currentlySelected}
 						highlightEnabled={qs.highlightEnabled}
 						highlightResetVersion={qs.highlightResetVersion}
+						belowStem={examFindings}
 					/>
 				{:else if currentlySelected.type === QUESTION_TYPES.FREE_RESPONSE}
 					{#key currentlySelected._id}<FreeResponse {qs} question={currentlySelected} />{/key}

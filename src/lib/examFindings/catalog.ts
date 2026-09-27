@@ -10,6 +10,8 @@ export type ExamField = {
 	prefix?: string;
 	suffix?: string;
 	wide?: boolean;
+	// Reads without its label when a wide grid stacks into lines on phones (-2.25 -0.75 ×180).
+	bare?: boolean;
 	input?:
 		| 'axis'
 		| 'power'
@@ -125,9 +127,9 @@ const structureGrid = (
 	columns: [field('od', 'OD', { wide: true }), field('os', 'OS', { wide: true })]
 });
 
-const sphere = field('sphere', 'Sphere', { input: 'power', sample: '-2.25' });
-const cyl = field('cyl', 'Cyl', { input: 'power', sample: '-0.75' });
-const axis = field('axis', 'Axis', { input: 'axis', prefix: '×', sample: '180' });
+const sphere = field('sphere', 'Sphere', { input: 'power', bare: true, sample: '-2.25' });
+const cyl = field('cyl', 'Cyl', { input: 'power', bare: true, sample: '-0.75' });
+const axis = field('axis', 'Axis', { input: 'axis', prefix: '×', bare: true, sample: '180' });
 const add = field('add', 'Add', { input: 'power', sample: '+1.50' });
 const acuity = (key: string, label: string) =>
 	field(key, label, {

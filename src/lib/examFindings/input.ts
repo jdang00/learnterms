@@ -153,6 +153,13 @@ function formatTime(value: string) {
 	return `${hour % 12 || 12}:${String(minute).padStart(2, '0')}${period ? ` ${period}` : ''}`;
 }
 
+// The Now button stamps the local time with an explicit AM/PM (9:05 AM, 12:30 PM).
+export function currentExamTime(date = new Date()) {
+	const hour = date.getHours();
+	const minute = String(date.getMinutes()).padStart(2, '0');
+	return `${hour % 12 || 12}:${minute} ${hour < 12 ? 'AM' : 'PM'}`;
+}
+
 export function formatExamValue(raw: string, field: ExamField): string {
 	let value = stripAffixes(raw, field);
 	if (!value) return '';

@@ -8,7 +8,7 @@ export const examFindingsValidator = v.array(
 	v.object({
 		test: v.string(),
 		title: v.optional(v.string()),
-		size: v.optional(v.union(v.literal('half'), v.literal('full'))),
+		size: v.optional(v.union(v.literal('small'), v.literal('half'), v.literal('full'))),
 		values: v.record(v.string(), v.string()),
 		note: v.optional(v.string())
 	})

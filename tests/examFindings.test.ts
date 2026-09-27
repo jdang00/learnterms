@@ -16,6 +16,7 @@ import {
 	combinePrism,
 	coverCorrectionValues,
 	coverDeviationParts,
+	currentExamTime,
 	effectiveField,
 	fieldChoices,
 	formatExamValue,
@@ -336,4 +337,49 @@ test('prism amount and direction stay separately editable and save as one findin
 	const spectacle = EXAM_LAYOUTS.spectacleRx[0];
 	if (spectacle.kind !== 'grid') throw new Error('expected grid');
 	expect(formatExamValue('1.5dBI', spectacle.columns[5])).toBe('1.5Δ BI');
+});
+
+test('boxes size themselves from what they show', () => {
+	const size = (finding: ExamFinding) => buildExamFindingView(finding)?.size;
+	expect(
+		size({ test: 'gat', values: { 'od.pressure': '16', 'os.pressure': '17', time: '9:30 AM' } })
+	).toBe('small');
+	expect(size({ test: 'pachymetry', values: { 'od.cct': '545', 'os.cct': '548' } })).toBe('small');
+	expect(size({ test: 'pinholeVa', values: { 'od.distance': '20', 'os.distance': '25' } })).toBe(
+		'small'
+	);
+	expect(
+		size({ test: 'unaidedVa', values: { 'od.distance': '40', 'od.near': '20' } }),
+		'two acuity columns clip at a phone third'
+	).toBe('half');
+	expect(
+		size({ test: 'unaidedVa', values: { 'od.distance': '20', method: 'Snellen w/crowding bars' } })
+	).toBe('half');
+	expect(
+		size({
+			test: 'anteriorSegment',
+			values: { 'cornea.od': 'Clear', 'cornea.os': 'Trace SPK inferior' }
+		})
+	).toBe('half');
+	expect(size(sampleExamFinding(testById('finalRx')))).toBe('full');
+	expect(size({ test: 'gat', values: { 'od.pressure': '16' }, note: 'x'.repeat(200) })).toBe(
+		'half'
+	);
+	expect(size({ test: 'notes', values: { text: 'x'.repeat(200) } })).toBe('full');
+	expect(size({ test: 'finalRx', size: 'small', values: { 'od.sphere': '-1.00' } })).toBe('small');
+});
+
+test('small is a storable size', () => {
+	expect(
+		normalizeExamFindings([{ test: 'gat', size: 'small', values: { 'od.pressure': '16' } }])
+	).toEqual([{ test: 'gat', size: 'small', values: { 'od.pressure': '16' } }]);
+});
+
+test('the Now button records local time with an explicit period', () => {
+	expect(currentExamTime(new Date(2026, 8, 26, 0, 5))).toBe('12:05 AM');
+	expect(currentExamTime(new Date(2026, 8, 26, 9, 30))).toBe('9:30 AM');
+	expect(currentExamTime(new Date(2026, 8, 26, 12, 0))).toBe('12:00 PM');
+	expect(currentExamTime(new Date(2026, 8, 26, 16, 45))).toBe('4:45 PM');
+	const time = { key: 'time', label: 'Time', input: 'time' } as const;
+	expect(formatExamValue(currentExamTime(new Date(2026, 8, 26, 16, 45)), time)).toBe('4:45 PM');
 });

@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { StickyNote, X } from 'lucide-svelte';
-	import type { ExamCell, ExamFindingView } from '$lib/examFindings/view';
+	import {
+		WIDE_GRID_COLUMNS,
+		type ExamCell,
+		type ExamFindingView,
+		type ExamSectionView
+	} from '$lib/examFindings/view';
 	import { EXAM_GROUP_STYLE } from './groups';
 
 	let {
@@ -12,10 +17,23 @@
 	const style = $derived(EXAM_GROUP_STYLE[view.group]);
 	const uid = $props.id();
 	const note = $derived(view.note?.trim() ?? '');
-	const notePreview = $derived(note.length > 240 ? `${note.slice(0, 240)}…` : note);
+	let noteClamped = $state(false);
 	let notesDialog = $state<HTMLDialogElement | null>(null);
 	// Eye rows read as small tags; structure rows (Cornea, A/C) stay plain.
 	const isTag = (label: string) => ['OD', 'OS', 'OU'].includes(label);
+	// A section label that repeats the box title ("Cover test" in Cover test) adds nothing.
+	const sectionLabel = (section: ExamSectionView) =>
+		section.label && section.label.toLowerCase() !== view.title.toLowerCase()
+			? section.label
+			: undefined;
+
+	function watchClamp(element: HTMLElement) {
+		const measure = () => (noteClamped = element.scrollHeight > element.clientHeight + 1);
+		const observer = new ResizeObserver(measure);
+		observer.observe(element);
+		measure();
+		return () => observer.disconnect();
+	}
 </script>
 
 {#snippet value(cell: ExamCell)}
@@ -25,8 +43,19 @@
 	</span>
 {/snippet}
 
+{#snippet rowLabel(label: string)}
+	{#if isTag(label)}
+		<span
+			class="inline-block rounded-md bg-base-200 px-1.5 py-0.5 font-mono text-[0.68rem] font-semibold text-base-content/70"
+			>{label}</span
+		>
+	{:else}
+		<span class="text-xs font-medium text-base-content/70">{label}</span>
+	{/if}
+{/snippet}
+
 <article
-	class="relative overflow-visible border border-base-300 bg-base-100 shadow-xs hover:z-20 focus-within:z-20 {compact
+	class="border border-base-300 bg-base-100 shadow-xs {compact
 		? 'rounded-xl'
 		: 'rounded-2xl'} {className}"
 >
@@ -42,68 +71,86 @@
 		>
 			<style.icon size={compact ? 10 : 13} />
 		</span>
-		<h3 class="min-w-0 truncate font-semibold {compact ? 'text-xs' : 'text-sm'}">{view.title}</h3>
-		{#if note}
-			<button
-				type="button"
-				class="btn btn-circle btn-xs tooltip tooltip-left pointer-events-auto relative z-10 ml-auto size-7 shrink-0 border-blue-200 bg-blue-50 text-blue-600 shadow-none before:max-w-64 before:whitespace-pre-line before:text-left hover:border-blue-300 hover:bg-blue-100 dark:border-blue-500/40 dark:bg-blue-500/15 dark:text-blue-300 dark:hover:bg-blue-500/25"
-				data-tip={notePreview}
-				aria-label={`View note for ${view.title}`}
-				aria-haspopup="dialog"
-				onclick={() => notesDialog?.showModal()}
-			>
-				<StickyNote size={compact ? 13 : 15} />
-			</button>
-		{/if}
+		<h3 class="min-w-0 line-clamp-2 font-semibold leading-snug {compact ? 'text-xs' : 'text-sm'}">
+			{view.title}
+		</h3>
 	</header>
-	{#if view.sections.length}
-		<div class={compact ? 'space-y-2 px-2.5 py-2 text-xs' : 'space-y-3 px-3.5 py-3 text-sm'}>
-			{#each view.sections as section, index (index)}
-				{#if section.kind === 'grid'}
-					<div class="-mx-1 overflow-x-auto px-1">
-						<table class="w-full border-collapse text-left">
-							<thead>
-								<tr class="text-[0.7rem] text-base-content/50">
-									<th scope="col" class="w-px pb-1 pr-3 font-medium"
-										><span class="sr-only">Row</span></th
+	<div
+		class="@container {compact ? 'space-y-2 px-2.5 py-2 text-xs' : 'space-y-3 px-3.5 py-3 text-sm'}"
+	>
+		{#each view.sections as section, index (index)}
+			{#if section.kind === 'grid'}
+				{@const label = sectionLabel(section)}
+				{@const stacks = section.columns.length > WIDE_GRID_COLUMNS}
+				{#if stacks}
+					<!-- Wide grids read as one line per row on narrow boxes: OD -2.25 -0.75 ×180 · Add +1.50 -->
+					<div class="space-y-1.5 @lg:hidden">
+						{#if label}<p class="text-[0.7rem] font-medium text-base-content/50">{label}</p>{/if}
+						<ul class="space-y-1">
+							{#each section.rows as row (row.label)}
+								<li class="flex items-baseline gap-2">
+									<span class="shrink-0">{@render rowLabel(row.label)}</span>
+									<span class="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+										{#each row.cells as cell, cellIndex (cellIndex)}
+											{#if cell?.value}
+												{@const column = section.columns[cellIndex]}
+												<span class="whitespace-nowrap">
+													{#if column.bare}<span class="sr-only">{column.label}</span>{:else}<span
+															class="text-[0.7rem] text-base-content/50">{column.label}</span
+														>{/if}
+													{@render value(cell)}
+												</span>
+											{/if}
+										{/each}
+									</span>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+				<div class="-mx-1 overflow-x-auto px-1 {stacks ? 'hidden @lg:block' : ''}">
+					<table class="w-full border-collapse text-left">
+						<thead>
+							<tr class="text-[0.7rem] text-base-content/50">
+								<th
+									scope="col"
+									class="sticky left-0 w-px bg-base-100 pb-1 pr-3 font-medium whitespace-nowrap"
+									>{#if label}{label}{:else}<span class="sr-only">Row</span>{/if}</th
+								>
+								{#each section.columns as column (column.key)}
+									<th scope="col" class="pb-1 pr-3 font-medium whitespace-nowrap">{column.label}</th
 									>
-									{#each section.columns as column (column.key)}
-										<th scope="col" class="pb-1 pr-3 font-medium whitespace-nowrap"
-											>{column.label}</th
-										>
+								{/each}
+							</tr>
+						</thead>
+						<tbody>
+							{#each section.rows as row (row.label)}
+								<tr class="border-t border-base-200/80 first:border-t-0">
+									<th
+										scope="row"
+										class="sticky left-0 bg-base-100 {compact
+											? 'py-0.5'
+											: 'py-1.5'} pr-3 align-top whitespace-nowrap"
+									>
+										{@render rowLabel(row.label)}
+									</th>
+									{#each row.cells as cell, cellIndex (cellIndex)}
+										<td class="{compact ? 'py-0.5' : 'py-1.5'} pr-3 align-top">
+											{#if cell}{@render value(cell)}{:else}<span
+													class="text-base-content/25"
+													aria-hidden="true">–</span
+												><span class="sr-only">Not recorded</span>{/if}
+										</td>
 									{/each}
 								</tr>
-							</thead>
-							<tbody>
-								{#each section.rows as row (row.label)}
-									<tr class="border-t border-base-200/80 first:border-t-0">
-										<th
-											scope="row"
-											class="{compact ? 'py-0.5' : 'py-1.5'} pr-3 align-top whitespace-nowrap"
-										>
-											{#if isTag(row.label)}
-												<span
-													class="inline-block rounded-md bg-base-200 px-1.5 py-0.5 font-mono text-[0.68rem] font-semibold text-base-content/70"
-													>{row.label}</span
-												>
-											{:else}
-												<span class="text-xs font-medium text-base-content/70">{row.label}</span>
-											{/if}
-										</th>
-										{#each row.cells as cell, cellIndex (cellIndex)}
-											<td class="{compact ? 'py-0.5' : 'py-1.5'} pr-3 align-top">
-												{#if cell}{@render value(cell)}{:else}<span
-														class="text-base-content/25"
-														aria-label="Not recorded">–</span
-													>{/if}
-											</td>
-										{/each}
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{:else if section.kind === 'fields'}
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{:else if section.kind === 'fields'}
+				{@const label = sectionLabel(section)}
+				<div>
+					{#if label}<p class="mb-1 text-[0.7rem] font-medium text-base-content/50">{label}</p>{/if}
 					<dl class="flex flex-wrap gap-x-6 gap-y-2">
 						{#each section.items as item (item.label)}
 							<div class={item.wide ? 'basis-full' : ''}>
@@ -112,30 +159,46 @@
 							</div>
 						{/each}
 					</dl>
-				{:else}
-					<div>
-						<p class="text-[0.7rem] text-base-content/50">{section.label}</p>
-						<p class="whitespace-pre-line">{section.value}</p>
-					</div>
-				{/if}
-			{/each}
-		</div>
-	{/if}
+				</div>
+			{:else}
+				<div>
+					<p class="text-[0.7rem] text-base-content/50">{section.label}</p>
+					<p class="whitespace-pre-line">{section.value}</p>
+				</div>
+			{/if}
+		{/each}
+		{#if note}
+			<div class="flex gap-2 rounded-lg bg-info/8 {compact ? 'px-2 py-1' : 'px-2.5 py-1.5'}">
+				<StickyNote size={compact ? 12 : 13} class="mt-0.5 shrink-0 text-info" aria-hidden="true" />
+				<div class="min-w-0 flex-1">
+					<p class="line-clamp-3 break-words whitespace-pre-line" {@attach watchClamp}>
+						<span class="sr-only">Note: </span>{note}
+					</p>
+					{#if noteClamped}
+						<button
+							type="button"
+							class="link link-info text-[0.7rem] font-medium no-underline hover:underline"
+							aria-haspopup="dialog"
+							onclick={() => notesDialog?.showModal()}>Read full note</button
+						>
+					{/if}
+				</div>
+			</div>
+		{/if}
+	</div>
 </article>
 
 {#if note}
 	<dialog
 		bind:this={notesDialog}
-		class="modal modal-bottom pointer-events-auto sm:modal-middle"
+		class="modal modal-bottom sm:modal-middle"
 		aria-labelledby="{uid}-note-title"
 	>
 		<div
 			class="modal-box w-full max-w-xl rounded-t-[2rem] border border-base-300 p-0 shadow-2xl sm:rounded-[1.75rem]"
 		>
 			<header class="flex items-center gap-3 border-b border-base-200 px-5 py-4">
-				<span
-					class="grid size-9 shrink-0 place-items-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300"
-				>
+				<span class="grid size-9 shrink-0 place-items-center rounded-full bg-info/12 text-info">
 					<StickyNote size={16} />
 				</span>
 				<div class="min-w-0 flex-1">

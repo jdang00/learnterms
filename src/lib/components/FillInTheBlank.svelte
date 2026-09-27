@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import HighlightedStem from './HighlightedStem.svelte';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { Eye } from 'lucide-svelte';
@@ -13,7 +14,8 @@
 		showAnswerPanel = true,
 		showRevealHint = true,
 		highlightEnabled = undefined,
-		highlightResetVersion = 0
+		highlightResetVersion = 0,
+		belowStem = undefined as Snippet | undefined
 	} = $props();
 	let inputText: string = $state('');
 	let inputEl: HTMLInputElement | null = null;
@@ -104,6 +106,7 @@
 			{@html sanitizeHtml(currentlySelected.stem)}
 		{/if}
 	</div>
+	{#if belowStem}<div class="w-full">{@render belowStem()}</div>{/if}
 	<div class="flex w-full max-w-sm items-center mt-4 mb-6">
 		<input
 			type="text"

@@ -248,7 +248,6 @@
 			<ExamFindings
 				findings={question.examFindings}
 				compact={question.examFindingsStyle === 'compact'}
-				class="mt-4"
 			/>
 		</div>
 
