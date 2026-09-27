@@ -16,17 +16,15 @@
 		onOpen?: (index: number) => void;
 	} = $props();
 
-	// Boxes wrap by container width and grow to fill their row, so a half box beside a small one
-	// leaves no gap. A small box never grows past half the row.
-	const THIRD = '@xl:basis-[calc((100%-2*var(--gap))/3)]';
-	const HALF_CAP = '@xs:max-w-[calc((100%-var(--gap))/2)]';
+	// Boxes wrap by container width. Small boxes are fixed square-ish tiles; half and full boxes
+	// grow to take whatever room is left in their row.
 	const BASIS: Record<ExamFindingSize, string> = {
-		small: `basis-full @xs:basis-[calc((100%-var(--gap))/2)] ${HALF_CAP} ${THIRD}`,
-		half: 'basis-full @2xl:basis-[calc((100%-var(--gap))/2)]',
-		full: 'basis-full'
+		small: 'grow-0 self-start basis-full @xs:basis-[calc((100%-var(--gap))/2)] @xl:basis-48',
+		half: 'grow basis-full @2xl:basis-[calc((100%-var(--gap))/2)]',
+		full: 'grow basis-full'
 	};
 	const COMPACT_BASIS: Record<ExamFindingSize, string> = {
-		small: '@4xl:basis-[calc((100%-3*var(--gap))/4)]',
+		small: '@xl:basis-40',
 		half: '@4xl:basis-[calc((100%-2*var(--gap))/3)]',
 		full: ''
 	};
@@ -47,7 +45,7 @@
 		>
 			{#each views as { view, index } (index)}
 				<div
-					class="relative min-w-0 grow {BASIS[view.size]} {compact
+					class="relative min-w-0 {BASIS[view.size]} {compact
 						? COMPACT_BASIS[view.size]
 						: ''} {onOpen
 						? 'rounded-2xl transition-shadow hover:ring-2 hover:ring-primary/25'
