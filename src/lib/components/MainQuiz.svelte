@@ -242,6 +242,7 @@
 					<ExamFindings
 						findings={currentlySelected.examFindings}
 						compact={currentlySelected.examFindingsStyle === 'compact'}
+						reveal={qs.showSolution}
 						class="ms-2"
 					/>
 				{/snippet}

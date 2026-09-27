@@ -9,6 +9,7 @@ import {
 	parseOffset,
 	presetOffset,
 	redEyeFor,
+	worth4DotPercept,
 	worth4DotSummary
 } from '../src/lib/examFindings/worth4dot';
 
@@ -114,4 +115,25 @@ test('the display shows one diagram per recorded distance', () => {
 		]
 	});
 	expect(view.size).toBe('half');
+});
+
+test('quiz boxes keep their flag and describe dots without the diagnosis', () => {
+	const [saved] = normalizeExamFindings([
+		{ test: 'worth4Dot', hideInterpretation: true, values: { 'near.response': 'Fusion' } }
+	])!;
+	expect(saved.hideInterpretation).toBe(true);
+	expect(buildExamFindingView(saved)!.hideInterpretation).toBe(true);
+	expect(
+		normalizeExamFindings([{ test: 'worth4Dot', values: { 'near.response': 'Fusion' } }])![0]
+	).not.toHaveProperty('hideInterpretation');
+
+	const percept = (response: string, offset: { x: number; y: number } | null = null) =>
+		worth4DotPercept({ response: response as never, offset }, 'OD');
+	expect(percept('Diplopia', { x: -1.5, y: 0.9 })).toBe(
+		'5 dots: 2 red shifted left and down from 3 green'
+	);
+	expect(percept('Suppression OS')).toBe('2 red dots');
+	expect(percept('Fusion')).toBe('4 dots: red above, green left and right, mixed below');
+	for (const text of [percept('Diplopia', { x: 1.6, y: 0 }), percept('Suppression OD')])
+		expect(text).not.toMatch(/eso|exo|crossed|suppression|hyper|dominant/i);
 });

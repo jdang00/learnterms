@@ -10,6 +10,7 @@ export const examFindingsValidator = v.array(
 		title: v.optional(v.string()),
 		size: v.optional(v.union(v.literal('small'), v.literal('half'), v.literal('full'))),
 		values: v.record(v.string(), v.string()),
-		note: v.optional(v.string())
+		note: v.optional(v.string()),
+		hideInterpretation: v.optional(v.boolean())
 	})
 );

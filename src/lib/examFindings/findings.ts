@@ -18,6 +18,8 @@ export type ExamFinding = {
 	values: Record<string, string>;
 	// Free-text notes any box can carry, shown under its findings.
 	note?: string;
+	// Quiz on the pattern: interpretations (Worth 4 Dot readouts) stay hidden until the answer shows.
+	hideInterpretation?: boolean;
 };
 
 export const MAX_EXAM_FINDINGS = 12;
@@ -54,7 +56,8 @@ export function normalizeExamFindings(
 				...(title && title !== test.title && { title }),
 				...(finding.size && EXAM_FINDING_SIZES.includes(finding.size) && { size: finding.size }),
 				values,
-				...(note && { note })
+				...(note && { note }),
+				...(finding.hideInterpretation && { hideInterpretation: true })
 			}
 		];
 	});

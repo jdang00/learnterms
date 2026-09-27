@@ -1148,6 +1148,7 @@
 								<ExamFindings
 									findings={currentItem.question.examFindings}
 									compact={currentItem.question.examFindingsStyle === 'compact'}
+									reveal={false}
 									class="ms-2"
 								/>
 							{/snippet}

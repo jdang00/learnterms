@@ -48,6 +48,7 @@ export type ExamFindingView = {
 	sections: ExamSectionView[];
 	note?: string;
 	size: ExamFindingSize;
+	hideInterpretation: boolean;
 };
 
 const cell = (field: ExamField, value: string): ExamCell => ({
@@ -117,7 +118,8 @@ export function buildExamFindingView(finding: ExamFinding): ExamFindingView | nu
 		group: test.group,
 		sections,
 		note,
-		size: finding.size ?? autoSize(sections, note)
+		size: finding.size ?? autoSize(sections, note),
+		hideInterpretation: Boolean(finding.hideInterpretation)
 	};
 }
 

@@ -4,7 +4,7 @@
 		isFusedOffset,
 		presetOffset,
 		W4D_SNAP,
-		worth4DotSummary,
+		worth4DotPercept,
 		type Eye,
 		type Offset,
 		type Worth4DotState
@@ -45,7 +45,7 @@
 	const draggable = $derived(Boolean(onMove) && (fused || reading.response === 'Diplopia'));
 	const white = $derived(reading.white?.trim().toLowerCase());
 	const fusedFill = $derived(white === 'red' ? RED : white === 'green' ? GREEN : MIXED);
-	const summary = $derived(worth4DotSummary(reading, redEye));
+	const percept = $derived(worth4DotPercept(reading, redEye));
 
 	let svg = $state<SVGSVGElement | null>(null);
 	let drag = $state<{ x: number; y: number; from: Offset } | null>(null);
@@ -120,9 +120,7 @@
 	viewBox="-3 -2.7 6 5.4"
 	class="block w-full touch-none select-none {drag ? 'dragging' : ''} {className}"
 	role={onMove ? 'group' : 'img'}
-	aria-label={onMove
-		? 'Worth 4 Dot, patient view'
-		: `Worth 4 Dot, patient view: ${summary.title}, ${summary.dots}`}
+	aria-label={onMove ? 'Worth 4 Dot, patient view' : `Worth 4 Dot, patient view: ${percept}`}
 	onpointerdown={handlePointerDown}
 	onpointermove={handlePointerMove}
 	onpointerup={() => (drag = null)}

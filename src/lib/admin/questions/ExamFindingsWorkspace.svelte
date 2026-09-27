@@ -99,7 +99,8 @@
 			title: source.title,
 			size: source.size,
 			values: { ...source.values },
-			note: source.note
+			note: source.note,
+			hideInterpretation: source.hideInterpretation
 		});
 		commit();
 		void focusBox(index + 1, true);
@@ -462,7 +463,7 @@
 							<span class="block h-2.5 w-2/3 {BONE}"></span>
 						</div>
 					{/if}
-					<ExamFindings {findings} {compact} onOpen={openInEditor} />
+					<ExamFindings {findings} {compact} reveal={false} onOpen={openInEditor} />
 					{#if emptyCount}
 						<p class="text-center text-xs text-base-content/45">
 							{emptyCount} empty {emptyCount === 1 ? 'box is' : 'boxes are'} hidden from students.

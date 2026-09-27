@@ -13,8 +13,15 @@
 	let {
 		view,
 		compact = false,
+		reveal = true,
 		class: className = ''
-	}: { view: ExamFindingView; compact?: boolean; class?: string } = $props();
+	}: {
+		view: ExamFindingView;
+		compact?: boolean;
+		// False keeps interpretations hidden on boxes that quiz the pattern.
+		reveal?: boolean;
+		class?: string;
+	} = $props();
 
 	const style = $derived(EXAM_GROUP_STYLE[view.group]);
 	const uid = $props.id();
@@ -169,10 +176,12 @@
 						<figure class="min-w-0">
 							<figcaption class="mb-1 text-[0.7rem] text-base-content/50">{row.label}</figcaption>
 							<Worth4DotDiagram reading={row} redEye={section.redEye} class="max-w-44 rounded-lg" />
-							<p class="mt-1.5 font-medium leading-snug">{summary.title}</p>
-							<p class="text-[0.7rem] leading-snug text-base-content/55">
-								{[summary.dots, summary.detail].filter(Boolean).join(' · ')}
-							</p>
+							{#if reveal || !view.hideInterpretation}
+								<p class="mt-1.5 font-medium leading-snug">{summary.title}</p>
+								<p class="text-[0.7rem] leading-snug text-base-content/55">
+									{[summary.dots, summary.detail].filter(Boolean).join(' · ')}
+								</p>
+							{/if}
 						</figure>
 					{/each}
 				</div>

@@ -122,3 +122,29 @@ export function worth4DotSummary(state: Worth4DotState, redEye: Eye) {
 		detail: undefined
 	};
 }
+
+// What the patient reports, without the diagnosis, for quiz questions and screen readers.
+export function worth4DotPercept(state: Worth4DotState, redEye: Eye) {
+	if (state.response === 'Fusion') {
+		const white = state.white?.trim().toLowerCase();
+		const bottom =
+			white === 'red' || white === 'green'
+				? white
+				: white === 'alternates'
+					? 'alternating red and green'
+					: 'mixed';
+		return `4 dots: red above, green left and right, ${bottom} below`;
+	}
+	if (state.response === 'Alternating suppression')
+		return 'Alternates between 2 red dots and 3 green dots';
+	if (state.response === 'Diplopia') {
+		const offset = state.offset ?? presetOffset('uncrossed', redEye);
+		const shifts = [
+			Math.abs(offset.x) < AXIS_THRESHOLD ? '' : offset.x > 0 ? 'right' : 'left',
+			Math.abs(offset.y) < AXIS_THRESHOLD ? '' : offset.y > 0 ? 'down' : 'up'
+		].filter(Boolean);
+		return shifts.length ? `5 dots: 2 red shifted ${shifts.join(' and ')} from 3 green` : '5 dots';
+	}
+	const suppressed = state.response === 'Suppression OD' ? 'OD' : 'OS';
+	return suppressed === redEye ? '3 green dots' : '2 red dots';
+}

@@ -7,11 +7,14 @@
 		findings,
 		compact = false,
 		class: className = '',
+		reveal = true,
 		onOpen
 	}: {
 		findings?: ExamFinding[];
 		compact?: boolean;
 		class?: string;
+		// Pass false while the question is unanswered so pattern quizzes don't give the answer away.
+		reveal?: boolean;
 		// Makes each box a button (the curator preview opens it in the editor).
 		onOpen?: (index: number) => void;
 	} = $props();
@@ -51,7 +54,12 @@
 						? 'rounded-2xl transition-shadow hover:ring-2 hover:ring-primary/25'
 						: ''}"
 				>
-					<ExamFindingCard {view} {compact} class="h-full {onOpen ? 'pointer-events-none' : ''}" />
+					<ExamFindingCard
+						{view}
+						{compact}
+						{reveal}
+						class="h-full {onOpen ? 'pointer-events-none' : ''}"
+					/>
 					{#if onOpen}
 						<button
 							type="button"

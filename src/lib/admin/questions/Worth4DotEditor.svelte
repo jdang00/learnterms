@@ -94,7 +94,27 @@
 	}
 </script>
 
-<div class="@container">
+<div class="@container space-y-2">
+	<label
+		class="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-base-300/70 bg-base-100 px-3 py-2"
+	>
+		<input
+			type="checkbox"
+			class="toggle toggle-primary toggle-sm mt-0.5"
+			checked={Boolean(finding.hideInterpretation)}
+			onchange={(event) => {
+				finding.hideInterpretation = event.currentTarget.checked || undefined;
+				onChange();
+			}}
+			{disabled}
+		/>
+		<span class="min-w-0 text-xs leading-snug">
+			<span class="font-medium">Quiz on the pattern</span>
+			<span class="block text-base-content/55">
+				Students see only the dots until they answer; the interpretation shows with the solution.
+			</span>
+		</span>
+	</label>
 	<div class="grid grid-cols-1 gap-3 @lg:grid-cols-2">
 		{#each section.rows as row (row.key)}
 			{@const current = readRow(row.key)}
