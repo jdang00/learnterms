@@ -17,6 +17,7 @@
 		purpose = 'context',
 		pdfResource,
 		onDone,
+		onChangeDocument,
 		initialSource,
 		onSourceReloaded,
 		selectedPageNumbers = $bindable<number[]>([]),
@@ -27,6 +28,7 @@
 		purpose?: 'context' | 'citation';
 		pdfResource?: SourcePdfResource;
 		onDone?: () => void;
+		onChangeDocument?: () => void;
 		initialSource: SourcePreviewBatch;
 		onSourceReloaded: (result: SourcePreviewBatch) => void;
 		selectedPageNumbers?: number[];
@@ -209,6 +211,16 @@
 						Tap a thumbnail to preview it, or its circle to select it.
 					</p>
 				</div>
+				{#if onChangeDocument}
+					<button
+						type="button"
+						class="btn btn-ghost btn-sm"
+						onclick={() => {
+							open = false;
+							onChangeDocument();
+						}}>Change document</button
+					>
+				{/if}
 				<button
 					type="button"
 					class="btn btn-ghost btn-circle btn-sm"

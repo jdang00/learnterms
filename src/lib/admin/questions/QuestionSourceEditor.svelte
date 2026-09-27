@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { FileText, Plus, X } from 'lucide-svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
@@ -71,6 +71,11 @@
 	let loading = $state(false);
 	let error = $state('');
 	let request = 0;
+	const recentDocumentKey = $derived(`manual-source-document:${moduleId}`);
+	let recentDocumentId = $state<Id<'contentLib'> | null>(null);
+	onMount(() => {
+		recentDocumentId = sessionStorage.getItem(recentDocumentKey) as Id<'contentLib'> | null;
+	});
 	onDestroy(() => {
 		request++;
 		previews.clear();
@@ -78,7 +83,7 @@
 		pdfs.clear();
 	});
 
-	async function chooseDocument(id: Id<'contentLib'>, title: string) {
+	async function chooseDocument(id: Id<'contentLib'>, title: string, showBrowserOnFailure = false) {
 		const version = ++request;
 		loading = true;
 		error = '';
@@ -95,11 +100,15 @@
 			documentTitle = title;
 			pages = source?.sourceDocumentId === id ? [...source.sourcePageNumbers] : [];
 			preview = result;
+			recentDocumentId = id;
+			sessionStorage.setItem(recentDocumentKey, id);
 			documentDialog?.close();
 			pagesOpen = true;
 		} catch (cause) {
-			if (version === request)
+			if (version === request) {
 				error = cause instanceof Error ? cause.message : 'Could not load source pages.';
+				if (showBrowserOnFailure) documentDialog?.showModal();
+			}
 		} finally {
 			if (version === request) loading = false;
 		}
@@ -108,6 +117,28 @@
 		request++;
 		loading = false;
 		documentDialog?.close();
+	}
+	function openSource() {
+		error = '';
+		warmPdfRenderer();
+		const recentDocument = documents.data?.find(
+			(doc) =>
+				doc._id === recentDocumentId &&
+				doc.metadata?.storageProvider === 'r2' &&
+				(doc.metadata?.ingestionStatus === 'indexed' ||
+					doc.metadata?.ingestionStatus === 'mapped') &&
+				Boolean(doc.metadata?.ragEntryId)
+		);
+		if (recentDocument) {
+			void chooseDocument(recentDocument._id, recentDocument.title, true);
+		} else {
+			documentDialog?.showModal();
+		}
+	}
+	async function changeDocument() {
+		pagesOpen = false;
+		await tick();
+		documentDialog?.showModal();
 	}
 	function applyPages() {
 		if (!documentId) return;
@@ -128,9 +159,12 @@
 			class="btn btn-ghost btn-xs gap-1 rounded-full"
 			disabled={disabled || !module.data?.cohortId || loading}
 			onclick={() => {
-				error = '';
-				warmPdfRenderer();
-				documentDialog?.showModal();
+				if (source) {
+					warmPdfRenderer();
+					documentDialog?.showModal();
+				} else {
+					openSource();
+				}
 			}}
 		>
 			<Plus size={12} />{source ? 'Change document' : 'Add source'}
@@ -195,7 +229,7 @@
 			{#if module.data?.cohortId}
 				<RagDocumentBrowser
 					cohortId={module.data.cohortId}
-					selectedDocumentId={source?.sourceDocumentId}
+					selectedDocumentId={source?.sourceDocumentId ?? recentDocumentId}
 					onSelect={(doc) => chooseDocument(doc._id, doc.title)}
 					onIntent={warmDocument}
 				/>
@@ -221,6 +255,7 @@
 			bind:open={pagesOpen}
 			purpose="citation"
 			onDone={applyPages}
+			onChangeDocument={changeDocument}
 		/>
 	{/key}
 {/if}
