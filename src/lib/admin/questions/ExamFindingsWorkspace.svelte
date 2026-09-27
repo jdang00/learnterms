@@ -129,11 +129,13 @@
 		void focusBox(index);
 	}
 
-	// Wide layouts get the full row while editing so inputs stay usable.
+	// Wide layouts and dot diagrams get the full row while editing so inputs stay usable.
 	function editsWide(finding: ExamFinding, test: ExamTest) {
 		if (finding.size) return finding.size === 'full';
 		return test.layout.some(
-			(section) => section.kind === 'grid' && section.columns.length > WIDE_GRID_COLUMNS
+			(section) =>
+				section.kind === 'grid' &&
+				(section.display === 'worth4dot' || section.columns.length > WIDE_GRID_COLUMNS)
 		);
 	}
 

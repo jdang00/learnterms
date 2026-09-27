@@ -4,6 +4,8 @@
 // - a Test is a titled box that uses a layout
 // Tests that record the same findings share a layout, so renaming or adding one is a single line.
 
+import { W4D_LENSES, W4D_RESPONSES, W4D_WHITE } from './worth4dot';
+
 export type ExamField = {
 	key: string;
 	label: string;
@@ -25,7 +27,8 @@ export type ExamField = {
 		| 'check'
 		| 'coverDeviation'
 		| 'phoria'
-		| 'coverCorrection';
+		| 'coverCorrection'
+		| 'offset';
 	min?: number;
 	max?: number;
 	decimals?: number;
@@ -52,8 +55,16 @@ export type ExamRow = {
 	columns?: string[];
 };
 
+// `display` swaps a grid's table for a bespoke diagram while keeping its storage and validation.
 export type ExamSection =
-	| { kind: 'grid'; key?: string; label?: string; rows: ExamRow[]; columns: ExamField[] }
+	| {
+			kind: 'grid';
+			key?: string;
+			label?: string;
+			rows: ExamRow[];
+			columns: ExamField[];
+			display?: 'worth4dot';
+	  }
 	| { kind: 'fields'; key?: string; label?: string; fields: ExamField[] }
 	| { kind: 'note'; key: string; label: string; sample?: string; normal?: string };
 
@@ -329,6 +340,39 @@ export const EXAM_LAYOUTS = {
 			normalField('wirt', 'Wirt circles', '9', { input: 'integer', min: 0, max: 9, suffix: '/ 9' }),
 			normalField('picture', 'Stereo picture', 'Seen', { choices: ['Not seen'] }),
 			field('other', 'Other', { wide: true })
+		])
+	],
+	worth4Dot: [
+		{
+			kind: 'grid',
+			display: 'worth4dot',
+			rows: rows([
+				['distance', 'Distance'],
+				['near', 'Near']
+			]),
+			columns: [
+				field('response', 'Response', {
+					sample: 'Diplopia',
+					normal: 'Fusion',
+					choices: [...W4D_RESPONSES]
+				}),
+				field('white', 'White dot', { normal: 'Mixed', choices: [...W4D_WHITE] }),
+				field('offset', 'Red image', { input: 'offset', sample: '1.6,0' })
+			]
+		},
+		fields([
+			field('lenses', 'Goggles', {
+				wide: true,
+				sample: W4D_LENSES[0],
+				default: W4D_LENSES[0],
+				choices: [...W4D_LENSES]
+			}),
+			field('correction', 'Correction', {
+				sample: 'With correction',
+				choices: ['With correction', 'Without correction']
+			}),
+			field('lighting', 'Room lights', { sample: 'On', choices: ['On', 'Dim'] }),
+			field('breakpoint', 'Breakpoint', { sample: '1 m' })
 		])
 	],
 	visuoscopy: [
@@ -613,6 +657,7 @@ export const EXAM_TESTS: ExamTest[] = [
 	test('npc', 'NPC', 'binocular', 'npc'),
 	test('stereo', 'Stereo', 'binocular', 'stereo'),
 	test('visuoscopy', 'Visuoscopy/Eccentric Fixation', 'binocular', 'visuoscopy'),
+	test('worth4Dot', 'Worth 4 Dot', 'binocular', 'worth4Dot'),
 	test('habitualRx', 'Habitual Rx', 'refraction', 'spectacleRx'),
 	test('autorefraction', 'Autorefraction', 'refraction', 'autorefraction'),
 	test('retinoscopy', 'Retinoscopy', 'refraction', 'retinoscopy'),

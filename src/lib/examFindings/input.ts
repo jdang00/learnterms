@@ -1,4 +1,5 @@
 import type { ExamField, ExamRow } from './catalog';
+import { formatOffset, parseOffset } from './worth4dot';
 
 export function effectiveField(field: ExamField, row?: ExamRow | null): ExamField {
 	return row
@@ -169,6 +170,10 @@ export function formatExamValue(raw: string, field: ExamField): string {
 		return /^(cf|hm|lp|nlp)$/i.test(value) ? value.toUpperCase() : value;
 	}
 	if (field.input === 'time') return formatTime(value);
+	if (field.input === 'offset') {
+		const offset = parseOffset(value);
+		return offset ? formatOffset(offset) : '';
+	}
 	if (field.input === 'bp') {
 		const match = value.match(/^(\d{2,3})\s*[-/ ]\s*(\d{2,3})$/);
 		return match ? `${Number(match[1])}/${Number(match[2])}` : value;

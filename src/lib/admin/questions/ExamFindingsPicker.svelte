@@ -68,6 +68,8 @@
 	function describe(section: ExamSection) {
 		if (section.kind === 'note') return section.label;
 		if (section.kind === 'fields') return section.fields.map((f) => f.label).join(' · ');
+		if (section.display === 'worth4dot')
+			return `${section.rows.map((r) => r.label).join(' / ')} dot diagrams you can drag`;
 		return `${section.rows.map((r) => r.label).join(' / ')} × ${section.columns.map((c) => c.label).join(', ')}`;
 	}
 

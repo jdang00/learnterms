@@ -56,6 +56,7 @@
 		toggleCoverCorrection
 	} from '$lib/examFindings/input';
 	import { EXAM_GROUP_STYLE } from '$lib/components/exam-findings/groups';
+	import Worth4DotEditor from './Worth4DotEditor.svelte';
 	import { followAnchor } from '$lib/utils/anchoredPopover';
 
 	let {
@@ -669,7 +670,9 @@
 
 	<div class="flex-1 space-y-3 px-3 py-2.5">
 		{#each test.layout as section, sectionIndex (sectionIndex)}
-			{#if section.kind === 'grid'}
+			{#if section.kind === 'grid' && section.display === 'worth4dot'}
+				<Worth4DotEditor {finding} {section} {onChange} {disabled} />
+			{:else if section.kind === 'grid'}
 				<div class="-mx-1.5 overflow-x-auto">
 					<table class="w-full border-separate border-spacing-x-1.5 border-spacing-y-1 text-left">
 						<thead>

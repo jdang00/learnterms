@@ -12,6 +12,7 @@ import {
 	type ExamFindingSize
 } from './findings';
 import { displayAffix, effectiveField } from './input';
+import { parseOffset, parseResponse, redEyeFor, type Eye, type Worth4DotState } from './worth4dot';
 
 // Wide fields hold words ("trace NS"), so they render in sans; short ones are measurements.
 export type ExamCell = { value: string; prefix?: string; suffix?: string; wide?: boolean };
@@ -33,7 +34,13 @@ export type ExamSectionView =
 			rows: Array<{ label: string; cells: Array<ExamCell | null> }>;
 	  }
 	| { kind: 'fields'; label?: string; items: Array<ExamCell & { label: string }> }
-	| { kind: 'note'; label: string; value: string };
+	| { kind: 'note'; label: string; value: string }
+	| {
+			kind: 'worth4dot';
+			label?: string;
+			redEye: Eye;
+			rows: Array<Worth4DotState & { label: string }>;
+	  };
 
 export type ExamFindingView = {
 	title: string;
@@ -69,6 +76,24 @@ export function buildExamFindingView(finding: ExamFinding): ExamFindingView | nu
 			return items.length ? [{ kind: 'fields', label: section.label, items }] : [];
 		}
 		const value = (row: string, column: string) => read(sectionValueKey(section, row, column));
+		if (section.display === 'worth4dot') {
+			const rows = section.rows.flatMap((row) => {
+				const response = parseResponse(value(row.key, 'response'));
+				return response
+					? [
+							{
+								label: row.label,
+								response,
+								white: value(row.key, 'white') || undefined,
+								offset: parseOffset(value(row.key, 'offset'))
+							}
+						]
+					: [];
+			});
+			return rows.length
+				? [{ kind: 'worth4dot', label: section.label, redEye: redEyeFor(read('lenses')), rows }]
+				: [];
+		}
 		const columns = section.columns.filter((column) =>
 			section.rows.some((row) => value(row.key, column.key))
 		);
@@ -111,7 +136,7 @@ function autoSize(sections: ExamSectionView[], note?: string): ExamFindingSize {
 	)
 		return 'full';
 	const fitsSmall = (section: ExamSectionView) => {
-		if (section.kind === 'note') return false;
+		if (section.kind === 'note' || section.kind === 'worth4dot') return false;
 		if (section.kind === 'fields')
 			return (
 				section.items.length <= SMALL_FIELD_COUNT &&
