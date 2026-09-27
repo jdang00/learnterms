@@ -5,6 +5,9 @@ export function effectiveField(field: ExamField, row?: ExamRow | null): ExamFiel
 		? {
 				...field,
 				input: row.input ?? field.input,
+				min: row.min ?? field.min,
+				max: row.max ?? field.max,
+				suffix: row.suffix ?? field.suffix,
 				normal: row.normal ?? field.normal,
 				choices: [...(field.choices ?? []), ...(row.choices ?? [])]
 			}

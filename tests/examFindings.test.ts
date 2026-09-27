@@ -279,6 +279,56 @@ test('phorias record distance and near amounts with RevEHR lateral and vertical 
 	});
 });
 
+test('visuoscopy records RevEHR location, prism amount, stability, and comments for each eye', () => {
+	const visuoscopy = testById('visuoscopy');
+	const grid = visuoscopy.layout[0];
+	if (grid.kind !== 'grid') throw new Error('expected visuoscopy grid');
+	expect(grid.columns.map((column) => column.label)).toEqual(['OD', 'OS']);
+	expect(grid.rows.map((row) => row.label)).toEqual(['Location', 'Amount (psm diop)', 'Stability']);
+	expect(fieldChoices(grid.columns[0], grid.rows[0])).toEqual([
+		'Central',
+		'Nasal',
+		'Temporal',
+		'Superior',
+		'Inferior'
+	]);
+	expect(fieldChoices(grid.columns[1], grid.rows[2])).toEqual(['Steady', 'Unsteady']);
+	expect(formatExamValue('-2', effectiveField(grid.columns[0], grid.rows[1]))).toBe('0');
+	expect(formatExamValue('1000', effectiveField(grid.columns[0], grid.rows[1]))).toBe('999');
+	expect(mirrorPairs(visuoscopy)).toContainEqual(['amount.od', 'amount.os']);
+	expect(normalExamValues(visuoscopy)).toMatchObject({
+		'location.od': 'Central',
+		'location.os': 'Central',
+		'stability.od': 'Steady',
+		'stability.os': 'Steady'
+	});
+	expect(normalExamValues(visuoscopy)['amount.od']).toBeUndefined();
+	const view = buildExamFindingView({
+		test: 'visuoscopy',
+		values: {
+			'location.od': 'Temporal',
+			'amount.od': '2',
+			'stability.os': 'Unsteady',
+			comments: 'Fixation drifts.'
+		}
+	});
+	const visibleGrid = view?.sections[0];
+	if (visibleGrid?.kind !== 'grid') throw new Error('expected visible visuoscopy grid');
+	expect(visibleGrid.rows.map((row) => row.label)).toEqual([
+		'Location',
+		'Amount (psm diop)',
+		'Stability'
+	]);
+	expect(visibleGrid.rows[0].cells[0]).toMatchObject({ value: 'Temporal' });
+	expect(visibleGrid.rows[1].cells[0]).toMatchObject({ value: '2', suffix: 'Δ' });
+	expect(visibleGrid.rows[2].cells[1]).toMatchObject({ value: 'Unsteady' });
+	expect(view?.sections[1]).toMatchObject({
+		kind: 'note',
+		label: 'Comments',
+		value: 'Fixation drifts.'
+	});
+});
+
 test('prism amount and direction stay separately editable and save as one finding', () => {
 	expect(prismParts('1.5Δ BI')).toEqual({ magnitude: '1.5', direction: 'BI' });
 	expect(combinePrism('2', 'BO')).toBe('2Δ BO');

@@ -43,6 +43,9 @@ export type ExamRow = {
 	sample?: string;
 	normal?: string;
 	input?: ExamField['input'];
+	min?: number;
+	max?: number;
+	suffix?: string;
 	choices?: string[];
 	columns?: string[];
 };
@@ -326,6 +329,38 @@ export const EXAM_LAYOUTS = {
 			field('other', 'Other', { wide: true })
 		])
 	],
+	visuoscopy: [
+		{
+			kind: 'grid',
+			rows: [
+				{
+					key: 'location',
+					label: 'Location',
+					sample: 'Central',
+					normal: 'Central',
+					choices: ['Nasal', 'Temporal', 'Superior', 'Inferior']
+				},
+				{
+					key: 'amount',
+					label: 'Amount (psm diop)',
+					input: 'number',
+					min: 0,
+					max: 999,
+					suffix: 'Δ',
+					sample: '2'
+				},
+				{
+					key: 'stability',
+					label: 'Stability',
+					sample: 'Steady',
+					normal: 'Steady',
+					choices: ['Unsteady']
+				}
+			],
+			columns: [field('od', 'OD'), field('os', 'OS')]
+		},
+		note('comments', 'Comments')
+	],
 	autorefraction: [
 		eyeGrid([sphere, cyl, axis]),
 		fields([
@@ -575,6 +610,7 @@ export const EXAM_TESTS: ExamTest[] = [
 	test('accommodation', 'Accommodation / near add', 'binocular', 'accommodation'),
 	test('npc', 'NPC', 'binocular', 'npc'),
 	test('stereo', 'Stereo', 'binocular', 'stereo'),
+	test('visuoscopy', 'Visuoscopy/Eccentric Fixation', 'binocular', 'visuoscopy'),
 	test('habitualRx', 'Habitual Rx', 'refraction', 'spectacleRx'),
 	test('autorefraction', 'Autorefraction', 'refraction', 'autorefraction'),
 	test('retinoscopy', 'Retinoscopy', 'refraction', 'retinoscopy'),

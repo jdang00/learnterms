@@ -6,7 +6,7 @@ import {
 	type ExamTestGroup
 } from './catalog';
 import { examFindingTitle, hasRecordedValues, type ExamFinding } from './findings';
-import { displayAffix } from './input';
+import { displayAffix, effectiveField } from './input';
 
 // Wide fields hold words ("trace NS"), so they render in sans; short ones are measurements.
 export type ExamCell = { value: string; prefix?: string; suffix?: string; wide?: boolean };
@@ -66,7 +66,7 @@ export function buildExamFindingView(finding: ExamFinding): ExamFindingView | nu
 					// Columns a row doesn't record (Sphere on an OU VA row) stay blank, not "–".
 					if (!rowHasColumn(row, column)) return { value: '' };
 					const text = value(row.key, column.key);
-					return text ? cell(column, text) : null;
+					return text ? cell(effectiveField(column, row), text) : null;
 				})
 			}));
 		return rows.length ? [{ kind: 'grid', label: section.label, columns, rows }] : [];
