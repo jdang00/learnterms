@@ -70,7 +70,13 @@ export type ExamSection =
 
 export type ExamLayout = ExamSection[];
 
-export type ExamTestGroup = 'entrance' | 'binocular' | 'refraction' | 'health' | 'general';
+export type ExamTestGroup =
+	| 'entrance'
+	| 'binocular'
+	| 'oculomotor'
+	| 'refraction'
+	| 'health'
+	| 'general';
 
 export type ExamTest = {
 	id: string;
@@ -82,6 +88,7 @@ export type ExamTest = {
 export const EXAM_TEST_GROUPS: Record<ExamTestGroup, string> = {
 	entrance: 'Entrance',
 	binocular: 'Binocular vision',
+	oculomotor: 'Oculomotor',
 	refraction: 'Refraction',
 	health: 'Ocular health',
 	general: 'Vitals & notes'
@@ -182,6 +189,8 @@ const method = (sample: string, normal?: string, choices?: string[]) =>
 		default: normal,
 		choices: choices ? [sample, ...choices] : undefined
 	});
+const nsucoScore = (key: string, label: string) =>
+	field(key, label, { input: 'integer', min: 1, max: 5, sample: '4' });
 const resultWithLimitation = (normal: string) => [
 	eyeGrid([
 		normalField('result', 'Result', normal, { input: 'check' }),
@@ -323,6 +332,39 @@ export const EXAM_LAYOUTS = {
 			field('distance', 'Test distance', { sample: '40 cm' })
 		])
 	],
+	accommodativeFacility: [
+		eyeGrid(
+			[
+				field('rate', 'Rate', { input: 'number', min: 0, suffix: 'cpm', sample: '12' }),
+				field('difficulty', 'Difficulty', {
+					sample: 'Minus',
+					normal: 'None',
+					choices: ['Plus', 'Minus', 'Both']
+				})
+			],
+			[OD, OS, OU]
+		),
+		fields([
+			field('lenses', 'Flippers', {
+				sample: '±2.00',
+				default: '±2.00',
+				choices: ['±2.00', '±1.50', '±1.00']
+			}),
+			field('target', 'Target', { wide: true, sample: '20/30 @ 40 cm' })
+		])
+	],
+	acaRatio: [
+		fields([
+			field('calculated', 'Calculated', {
+				input: 'number',
+				min: 0,
+				suffix: 'Δ/D',
+				sample: '5.2'
+			}),
+			field('gradient', 'Gradient', { input: 'number', min: 0, suffix: 'Δ/D', sample: '4' }),
+			field('lens', 'Gradient lens', { input: 'power', sample: '-1.00' })
+		])
+	],
 	npc: [
 		fields([
 			normalField('npc', 'NPC', 'To nose', { input: 'check' }),
@@ -406,6 +448,42 @@ export const EXAM_LAYOUTS = {
 			columns: [field('od', 'OD'), field('os', 'OS')]
 		},
 		note('comments', 'Comments')
+	],
+	nsuco: [
+		{
+			kind: 'grid',
+			rows: rows([
+				['saccades', 'Saccades'],
+				['pursuits', 'Pursuits']
+			]),
+			columns: [
+				nsucoScore('ability', 'Ability'),
+				nsucoScore('accuracy', 'Accuracy'),
+				nsucoScore('head', 'Head'),
+				nsucoScore('body', 'Body')
+			]
+		}
+	],
+	dem: [
+		{
+			kind: 'grid',
+			rows: rows([
+				['vertical', 'Vertical time'],
+				['horizontal', 'Adj. horizontal time'],
+				['errors', 'Errors'],
+				['ratio', 'Ratio']
+			]),
+			columns: [
+				field('result', 'Result', { sample: '45 s' }),
+				field('percentile', '%ile', { input: 'integer', min: 0, max: 100, sample: '35' })
+			]
+		},
+		fields([
+			field('type', 'Type', {
+				sample: 'Type I',
+				choices: ['Type I', 'Type II', 'Type III', 'Type IV']
+			})
+		])
 	],
 	autorefraction: [
 		eyeGrid([sphere, cyl, axis]),
@@ -654,10 +732,14 @@ export const EXAM_TESTS: ExamTest[] = [
 	test('phorias', 'Phorias', 'binocular', 'phorias'),
 	test('vergences', 'Vergences', 'binocular', 'vergences'),
 	test('accommodation', 'Accommodation / near add', 'binocular', 'accommodation'),
+	test('accommodativeFacility', 'Accommodative facility', 'binocular', 'accommodativeFacility'),
+	test('acaRatio', 'AC/A ratio', 'binocular', 'acaRatio'),
 	test('npc', 'NPC', 'binocular', 'npc'),
 	test('stereo', 'Stereo', 'binocular', 'stereo'),
 	test('visuoscopy', 'Visuoscopy/Eccentric Fixation', 'binocular', 'visuoscopy'),
 	test('worth4Dot', 'Worth 4 Dot', 'binocular', 'worth4Dot'),
+	test('nsuco', 'NSUCO oculomotor', 'oculomotor', 'nsuco'),
+	test('dem', 'DEM', 'oculomotor', 'dem'),
 	test('habitualRx', 'Habitual Rx', 'refraction', 'spectacleRx'),
 	test('autorefraction', 'Autorefraction', 'refraction', 'autorefraction'),
 	test('retinoscopy', 'Retinoscopy', 'refraction', 'retinoscopy'),

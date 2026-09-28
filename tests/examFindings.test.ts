@@ -383,3 +383,45 @@ test('the Now button records local time with an explicit period', () => {
 	const time = { key: 'time', label: 'Time', input: 'time' } as const;
 	expect(formatExamValue(currentExamTime(new Date(2026, 8, 26, 16, 45)), time)).toBe('4:45 PM');
 });
+
+test('vision therapy boxes record facility, AC/A, NSUCO scores, and DEM results', () => {
+	const facility = testById('accommodativeFacility');
+	expect(
+		facility.layout[0].kind === 'grid' && facility.layout[0].rows.map((row) => row.label)
+	).toEqual(['OD', 'OS', 'OU']);
+	expect(defaultExamValues(facility)).toEqual({ lenses: '±2.00' });
+	expect(mirrorPairs(facility)).toContainEqual(['od.rate', 'os.rate']);
+	expect(normalExamValues(facility)['ou.difficulty']).toBe('None');
+
+	const nsuco = testById('nsuco');
+	const grid = nsuco.layout[0];
+	if (grid.kind !== 'grid') throw new Error('expected NSUCO grid');
+	expect(formatExamValue('3/5', grid.columns[0])).toBe('3');
+	expect(formatExamValue('9', grid.columns[0])).toBe('5');
+	expect(formatExamValue('0', grid.columns[0])).toBe('1');
+
+	expect(
+		normalizeExamFindings([
+			{ test: 'acaRatio', values: { gradient: '2 Δ/D', lens: '-1' } },
+			{
+				test: 'dem',
+				values: { 'vertical.result': '52 s', 'vertical.percentile': '40', type: 'Type II' }
+			}
+		])
+	).toEqual([
+		{ test: 'acaRatio', values: { gradient: '2', lens: '-1.00' } },
+		{
+			test: 'dem',
+			values: { 'vertical.result': '52 s', 'vertical.percentile': '40', type: 'Type II' }
+		}
+	]);
+	const view = buildExamFindingView({
+		test: 'nsuco',
+		values: { 'saccades.ability': '3', 'saccades.accuracy': '3' }
+	});
+	expect(view?.group).toBe('oculomotor');
+	const visible = view?.sections[0];
+	if (visible?.kind !== 'grid') throw new Error('expected visible NSUCO grid');
+	expect(visible.rows.map((row) => row.label)).toEqual(['Saccades']);
+	expect(visible.columns.map((column) => column.label)).toEqual(['Ability', 'Accuracy']);
+});
