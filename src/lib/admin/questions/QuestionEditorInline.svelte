@@ -41,7 +41,18 @@
 	import type { FunctionArgs, FunctionReturnType } from 'convex/server';
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
-	import { QUESTION_TYPES } from '$lib/types';
+	import { DISPLAY_QUESTION_TYPES, QUESTION_TYPES } from '$lib/types';
+	import {
+		countBlanks,
+		expectedAnswerCount,
+		inferQuestionType,
+		INLINE_ANSWER,
+		parsePastedQuestion,
+		plainTextToHtml,
+		splitInlineAnswers,
+		type ParsedQuestion,
+		type TypeSuggestion
+	} from '$lib/utils/questionAuthoring';
 	import { onMount } from 'svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import type { Readable } from 'svelte/store';
@@ -229,7 +240,8 @@
 			editorProps: {
 				attributes: {
 					class: 'prose prose-sm max-w-none focus:outline-hidden min-h-[3rem] p-3 tiptap-content'
-				}
+				},
+				handlePaste: (_view, event) => handleStemPaste(event)
 			}
 		});
 
@@ -245,7 +257,10 @@
 		});
 
 		window.addEventListener('keydown', handleKeyboardSave);
-		return () => window.removeEventListener('keydown', handleKeyboardSave);
+		return () => {
+			window.removeEventListener('keydown', handleKeyboardSave);
+			clearTimeout(suggestionTimer);
+		};
 	});
 
 	const stemToolbar = createToolbarCommands(() => $editor);
@@ -312,7 +327,13 @@
 
 	function selectQuestionType(value: string) {
 		closeTypeMenu();
+		typeLocked = true;
+		autoTyped = null;
 		if (value === questionType) return;
+		applyType(value);
+	}
+
+	function applyType(value: string) {
 		questionType = value;
 		handleTypeChange();
 		onChange();
@@ -366,7 +387,11 @@
 				saveError = null;
 				isRationaleError = false;
 				questionStem = $editor.getHTML();
+				stemText = $editor.getText();
 				onChange();
+				queueMicrotask(convertInlineAnswers);
+				clearTimeout(suggestionTimer);
+				suggestionTimer = setTimeout(refreshTypeSuggestion, 400);
 			};
 			$editor.on('update', updateStem);
 			return () => $editor.off('update', updateStem);
@@ -796,6 +821,172 @@
 	// Matching editor state
 	let matchingPrompts: string[] = $state(['', '']);
 	let matchingAnswers: string[] = $state(['', '']);
+
+	// Stem-aware typing: follow the stem's type while the answers are untouched, then only suggest.
+	let stemText = $state('');
+	let typeLocked = $state(false);
+	let autoTyped = $state<TypeSuggestion | null>(null);
+	let typeSuggestion = $state<TypeSuggestion | null>(null);
+	let dismissedSuggestion = $state<string | null>(null);
+	let suggestionTimer: ReturnType<typeof setTimeout> | undefined;
+
+	const answersPristine = $derived.by(() => {
+		if (questionType === QUESTION_TYPES.FREE_RESPONSE) return true;
+		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK)
+			return fitbAnswers.every((row) => !row.value.trim());
+		if (questionType === QUESTION_TYPES.MATCHING)
+			return [...matchingPrompts, ...matchingAnswers].every((text) => !text.trim());
+		if (questionType === QUESTION_TYPES.TRUE_FALSE) return correctAnswers.length === 0;
+		return correctAnswers.length === 0 && options.every((option) => !option.text.trim());
+	});
+
+	const visibleSuggestion = $derived(
+		typeSuggestion &&
+			typeSuggestion.type !== questionType &&
+			typeSuggestion.type !== dismissedSuggestion &&
+			// A blank in a stem with options is a normal multiple choice question.
+			!(
+				typeSuggestion.type === QUESTION_TYPES.FILL_IN_THE_BLANK &&
+				questionType === QUESTION_TYPES.MULTIPLE_CHOICE
+			)
+			? typeSuggestion
+			: null
+	);
+	const showAutoTyped = $derived(
+		autoTyped !== null && autoTyped.type === questionType && answersPristine
+	);
+
+	const stemHint = $derived.by(() => {
+		if (questionType === QUESTION_TYPES.FILL_IN_THE_BLANK && countBlanks(stemText) > 1)
+			return 'Students get one answer box, so use one blank.';
+		const expected = expectedAnswerCount(stemText);
+		const marked = correctAnswers.length;
+		if (
+			questionType === QUESTION_TYPES.MULTIPLE_CHOICE &&
+			expected &&
+			marked &&
+			marked !== expected
+		)
+			return `The stem asks for ${expected} answers, but ${marked} ${marked === 1 ? 'is' : 'are'} marked correct.`;
+		return null;
+	});
+
+	function refreshTypeSuggestion() {
+		const suggestion = inferQuestionType(stemText);
+		if (typeLocked || !answersPristine) {
+			typeSuggestion = suggestion;
+			return;
+		}
+		typeSuggestion = null;
+		const followed = suggestion?.type === QUESTION_TYPES.MULTIPLE_CHOICE ? null : suggestion;
+		if (suggestion && suggestion.type !== questionType) {
+			applyType(suggestion.type);
+			autoTyped = followed;
+		} else if (suggestion) {
+			if (autoTyped) autoTyped = followed;
+		} else if (autoTyped) {
+			applyType(QUESTION_TYPES.MULTIPLE_CHOICE);
+			autoTyped = null;
+		}
+	}
+
+	function acceptSuggestion(suggestion: TypeSuggestion) {
+		typeLocked = true;
+		typeSuggestion = null;
+		applyType(suggestion.type);
+	}
+
+	function undoAutoType() {
+		typeLocked = true;
+		autoTyped = null;
+		applyType(QUESTION_TYPES.MULTIPLE_CHOICE);
+	}
+
+	function addFitbAnswers(answers: string[]) {
+		const filled = fitbAnswers.filter((row) => row.value.trim());
+		const known = new Set(filled.map((row) => row.value.trim().toLowerCase()));
+		const added = answers
+			.filter((answer) => !known.has(answer.toLowerCase()))
+			.map((value) => ({
+				value,
+				mode: 'exact' as const,
+				flags: { ignorePunct: false, normalizeWs: false }
+			}));
+		if (filled.length + added.length === 0) return;
+		fitbAnswers = [...filled, ...added];
+		onChange();
+	}
+
+	// `{{cornea|the cornea}}` in the stem becomes a blank plus accepted answers.
+	function convertInlineAnswers() {
+		if (!$editor) return;
+		if (questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK && (typeLocked || !answersPristine))
+			return;
+		const found: Array<{ from: number; to: number; answers: string[] }> = [];
+		$editor.state.doc.descendants((node, pos) => {
+			if (found.length) return false;
+			const match = node.isText ? node.text?.match(INLINE_ANSWER) : null;
+			if (match?.index !== undefined) {
+				const from = pos + match.index;
+				found.push({ from, to: from + match[0].length, answers: splitInlineAnswers(match[1]) });
+			}
+			return !node.isText;
+		});
+		const [inline] = found;
+		if (!inline) return;
+		if (questionType !== QUESTION_TYPES.FILL_IN_THE_BLANK) {
+			applyType(QUESTION_TYPES.FILL_IN_THE_BLANK);
+			autoTyped = { type: QUESTION_TYPES.FILL_IN_THE_BLANK, reason: 'Answer typed in {{ }}' };
+		}
+		$editor.chain().insertContentAt({ from: inline.from, to: inline.to }, '___').run();
+		addFitbAnswers(inline.answers);
+	}
+
+	function handleStemPaste(event: ClipboardEvent): boolean {
+		const text = event.clipboardData?.getData('text/plain');
+		if (!text || !$editor?.isEmpty || !answersPristine) return false;
+		const parsed = parsePastedQuestion(text);
+		if (!parsed) return false;
+		applyParsedQuestion(parsed);
+		return true;
+	}
+
+	function applyParsedQuestion(parsed: ParsedQuestion) {
+		typeLocked = true;
+		autoTyped = null;
+		typeSuggestion = null;
+		applyType(parsed.type);
+		const filled: string[] = [];
+		if (parsed.type === QUESTION_TYPES.MULTIPLE_CHOICE && parsed.options.length) {
+			options = parsed.options.map((text) => ({ text }));
+			filled.push(`${parsed.options.length} options`);
+		}
+		if (parsed.correct.length) {
+			correctAnswers = parsed.correct.map(String);
+			filled.push('the answer');
+		}
+		if (parsed.fitbAnswers.length) {
+			addFitbAnswers(parsed.fitbAnswers);
+			filled.push('the answer');
+		}
+		if (parsed.pairs.length) {
+			matchingPrompts = parsed.pairs.map((pair) => pair.prompt);
+			matchingAnswers = parsed.pairs.map((pair) => pair.answer);
+			filled.push(`${parsed.pairs.length} pairs`);
+		}
+		if (parsed.rationale && $rationaleEditor && !getRationalePlainText(questionRationale)) {
+			$rationaleEditor.commands.setContent(plainTextToHtml(parsed.rationale));
+			questionRationale = $rationaleEditor.getHTML();
+			filled.push('the rationale');
+		}
+		$editor.commands.setContent(plainTextToHtml(parsed.stem));
+		questionStem = $editor.getHTML();
+		stemText = $editor.getText();
+		const label = DISPLAY_QUESTION_TYPES[parsed.type];
+		toastStore.success(
+			filled.length ? `${label}: filled in ${filled.join(', ')}` : `Pasted as ${label}`
+		);
+	}
 	const editorResetKey = $derived(
 		mode === 'add' ? `add:${addSessionVersion}` : `edit:${editingQuestion?._id ?? 'none'}`
 	);
@@ -823,6 +1014,11 @@
 			values: { ...finding.values }
 		}));
 		questionStem = nextStem;
+		stemText = getRationalePlainText(nextStem);
+		typeLocked = mode === 'edit';
+		autoTyped = null;
+		typeSuggestion = null;
+		dismissedSuggestion = null;
 		questionRationale = nextRationale;
 		questionStatus = getInitialQuestionStatus();
 		questionType = getInitialQuestionType();
@@ -1386,6 +1582,42 @@
 						<EditorContent editor={$editor} />
 					{/if}
 				</div>
+				{#if visibleSuggestion}
+					{@const suggestion = visibleSuggestion}
+					<div class="flex flex-wrap items-center gap-2 px-1 text-xs text-base-content/70">
+						<Sparkles size={12} class="text-primary" />
+						<span>
+							Looks like <span class="font-semibold">{DISPLAY_QUESTION_TYPES[suggestion.type]}</span
+							>
+							<span class="text-base-content/50">· {suggestion.reason}</span>
+						</span>
+						<button
+							type="button"
+							class="btn btn-xs btn-soft btn-primary rounded-full"
+							onclick={() => acceptSuggestion(suggestion)}>Switch</button
+						>
+						<button
+							type="button"
+							class="btn btn-xs btn-ghost rounded-full"
+							onclick={() => (dismissedSuggestion = suggestion.type)}>Dismiss</button
+						>
+					</div>
+				{:else if showAutoTyped && autoTyped}
+					<div class="flex flex-wrap items-center gap-2 px-1 text-xs text-base-content/70">
+						<Sparkles size={12} class="text-primary" />
+						<span>
+							Switched to <span class="font-semibold">{DISPLAY_QUESTION_TYPES[autoTyped.type]}</span
+							>
+							<span class="text-base-content/50">· {autoTyped.reason}</span>
+						</span>
+						<button type="button" class="btn btn-xs btn-ghost rounded-full" onclick={undoAutoType}
+							>Keep Multiple Choice</button
+						>
+					</div>
+				{/if}
+				{#if stemHint}
+					<p class="px-1 text-xs text-warning">{stemHint}</p>
+				{/if}
 			</div>
 
 			<div class="divider my-2 opacity-50"></div>
@@ -1969,10 +2201,6 @@
 							/>
 						</label>
 						{#if uploadError}<p class="text-sm text-error" role="alert">{uploadError}</p>{/if}
-						<p class="text-xs text-base-content/50">
-							Images appear in the quiz attachments viewer. Choose when each image is revealed. Save
-							the question to keep new images.
-						</p>
 					</div>
 				</div>
 			</div>
