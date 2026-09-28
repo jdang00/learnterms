@@ -164,6 +164,27 @@ body {
 	margin-top: 0.75rem;
 }
 
+/* Quiz stems render inside a highlight wrapper; multi-part prompts read as a lighter numbered list. */
+.stem-text > ul,
+.stem-text > ol {
+	margin-left: 1.25em;
+	font-size: 0.875em;
+	font-weight: 400;
+}
+
+.stem-text > ul {
+	list-style-type: disc;
+}
+
+.stem-text > ol {
+	list-style-type: decimal;
+}
+
+.stem-text > * + *,
+.stem-text li + li {
+	margin-top: 0.375rem;
+}
+
 .tiptap-content a {
 	font-weight: 600;
 	text-decoration: underline;

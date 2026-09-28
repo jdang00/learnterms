@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ExamFinding, ExamFindingSize } from '$lib/examFindings/findings';
-	import { buildExamFindingView } from '$lib/examFindings/view';
+	import { buildExamFindingView, laneSpan, packLanes } from '$lib/examFindings/view';
 	import ExamFindingCard from './ExamFindingCard.svelte';
 
 	let {
@@ -19,17 +19,11 @@
 		onOpen?: (index: number) => void;
 	} = $props();
 
-	// Boxes wrap by container width. Small boxes are fixed square-ish tiles; half and full boxes
-	// grow to take whatever room is left in their row.
+	// Before the container is measured (server render), boxes wrap in rows.
 	const BASIS: Record<ExamFindingSize, string> = {
 		small: 'grow-0 self-start basis-full @xs:basis-[calc((100%-var(--gap))/2)] @xl:basis-48',
 		half: 'grow basis-full @2xl:basis-[calc((100%-var(--gap))/2)]',
 		full: 'grow basis-full'
-	};
-	const COMPACT_BASIS: Record<ExamFindingSize, string> = {
-		small: '@xl:basis-40',
-		half: '@4xl:basis-[calc((100%-2*var(--gap))/3)]',
-		full: ''
 	};
 
 	const views = $derived(
@@ -38,37 +32,75 @@
 			return view ? [{ view, index }] : [];
 		})
 	);
+
+	const gap = $derived(compact ? 8 : 12);
+	let width = $state(0);
+	let heights = $state<number[]>([]);
+	// Lanes are at least 10rem (9rem compact) wide, so small boxes pair up even on phones.
+	const lanes = $derived(
+		width
+			? Math.max(
+					1,
+					Math.min(compact ? 6 : 4, Math.floor((width + gap) / ((compact ? 144 : 160) + gap)))
+				)
+			: 0
+	);
+	const spans = $derived(views.map(({ view }) => laneSpan(view.size, lanes)));
+	// Boxes are placed once every height is known; until then they flow as a plain grid.
+	const places = $derived(
+		lanes && views.every((_, i) => heights[i] > 0)
+			? packLanes(
+					spans.map((span, i) => ({ span, height: Math.ceil(heights[i]) + gap })),
+					lanes
+				)
+			: null
+	);
+
+	function boxStyle(i: number) {
+		if (!lanes) return undefined;
+		const place = places?.[i];
+		return place
+			? `grid-column: ${place.lane + 1} / span ${spans[i]}; grid-row: ${place.top + 1} / span ${Math.ceil(heights[i]) + gap};`
+			: `grid-column: span ${spans[i]};`;
+	}
 </script>
 
 {#if views.length}
 	<div class="@container my-4 {className}">
 		<section
 			aria-label="Exam findings"
-			class="flex flex-wrap gap-(--gap) text-sm {compact ? '[--gap:0.5rem]' : '[--gap:0.75rem]'}"
+			bind:clientWidth={width}
+			class="text-sm {compact ? '[--gap:0.5rem]' : '[--gap:0.75rem]'} {lanes
+				? 'grid items-start gap-x-(--gap)'
+				: 'flex flex-wrap gap-(--gap)'}"
+			style={lanes
+				? `grid-template-columns: repeat(${lanes}, minmax(0, 1fr)); ${places ? 'grid-auto-rows: 1px; margin-bottom: calc(-1 * var(--gap));' : 'row-gap: var(--gap);'}`
+				: undefined}
 		>
-			{#each views as { view, index } (index)}
-				<div
-					class="relative min-w-0 {BASIS[view.size]} {compact
-						? COMPACT_BASIS[view.size]
-						: ''} {onOpen
-						? 'rounded-2xl transition-shadow hover:ring-2 hover:ring-primary/25'
-						: ''}"
-				>
-					<ExamFindingCard
-						{view}
-						{compact}
-						{reveal}
-						class="h-full {onOpen ? 'pointer-events-none' : ''}"
-					/>
-					{#if onOpen}
-						<button
-							type="button"
-							class="absolute inset-0 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-							aria-label="Edit {view.title}"
-							title="Edit {view.title}"
-							onclick={() => onOpen(index)}
-						></button>
-					{/if}
+			{#each views as { view, index }, i (index)}
+				<div class="min-w-0 {lanes ? '' : BASIS[view.size]}" style={boxStyle(i)}>
+					<div
+						bind:clientHeight={heights[i]}
+						class="relative {lanes ? '' : 'h-full'} {onOpen
+							? 'rounded-2xl transition-shadow hover:ring-2 hover:ring-primary/25'
+							: ''}"
+					>
+						<ExamFindingCard
+							{view}
+							{compact}
+							{reveal}
+							class="{lanes ? '' : 'h-full'} {onOpen ? 'pointer-events-none' : ''}"
+						/>
+						{#if onOpen}
+							<button
+								type="button"
+								class="absolute inset-0 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+								aria-label="Edit {view.title}"
+								title="Edit {view.title}"
+								onclick={() => onOpen(index)}
+							></button>
+						{/if}
+					</div>
 				</div>
 			{/each}
 		</section>

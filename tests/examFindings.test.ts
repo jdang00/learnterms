@@ -24,7 +24,7 @@ import {
 	prismParts,
 	toggleCoverCorrection
 } from '../src/lib/examFindings/input';
-import { buildExamFindingView } from '../src/lib/examFindings/view';
+import { buildExamFindingView, laneSpan, packLanes } from '../src/lib/examFindings/view';
 
 test('test ids are unique and every layout has unique, storable keys', () => {
 	expect(new Set(EXAM_TESTS.map((entry) => entry.id)).size).toBe(EXAM_TESTS.length);
@@ -424,4 +424,43 @@ test('vision therapy boxes record facility, AC/A, NSUCO scores, and DEM results'
 	if (visible?.kind !== 'grid') throw new Error('expected visible NSUCO grid');
 	expect(visible.rows.map((row) => row.label)).toEqual(['Saccades']);
 	expect(visible.columns.map((column) => column.label)).toEqual(['Ability', 'Accuracy']);
+});
+
+test('lanes pack boxes in order and let short boxes fill the space beside tall ones', () => {
+	expect([1, 2, 4].map((lanes) => laneSpan('half', lanes))).toEqual([1, 2, 2]);
+	expect(laneSpan('full', 3)).toBe(3);
+	expect(laneSpan('small', 4)).toBe(1);
+	// Cover test (half, tall), AC/A (small), vergences (half), NPC (small): NPC takes the top-right
+	// spot beside AC/A instead of waiting below the vergences.
+	expect(
+		packLanes(
+			[
+				{ span: 2, height: 230 },
+				{ span: 1, height: 160 },
+				{ span: 2, height: 230 },
+				{ span: 1, height: 115 }
+			],
+			4
+		)
+	).toEqual([
+		{ lane: 0, top: 0 },
+		{ lane: 2, top: 0 },
+		{ lane: 2, top: 160 },
+		{ lane: 3, top: 0 }
+	]);
+	// A full box waits for every lane to clear, and wide spans shrink to the lanes available.
+	expect(
+		packLanes(
+			[
+				{ span: 1, height: 100 },
+				{ span: 4, height: 50 },
+				{ span: 3, height: 40 }
+			],
+			2
+		)
+	).toEqual([
+		{ lane: 0, top: 0 },
+		{ lane: 0, top: 100 },
+		{ lane: 0, top: 150 }
+	]);
 });

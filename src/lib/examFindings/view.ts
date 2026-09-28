@@ -123,6 +123,42 @@ export function buildExamFindingView(finding: ExamFinding): ExamFindingView | nu
 	};
 }
 
+// Boxes sit in equal lanes: small takes one, half two, full the whole row.
+export function laneSpan(size: ExamFindingSize, lanes: number) {
+	return size === 'small' ? 1 : size === 'half' ? Math.min(2, lanes) : lanes;
+}
+
+export type LanePlacement = { lane: number; top: number };
+
+// Places boxes in order, each at the highest spot its lanes are free, so short boxes fill the
+// space beside tall ones instead of leaving a row-height gap.
+export function packLanes(
+	boxes: Array<{ span: number; height: number }>,
+	lanes: number
+): LanePlacement[] {
+	const placed: Array<LanePlacement & { span: number; bottom: number }> = [];
+	const fits = (lane: number, span: number, top: number, bottom: number) =>
+		placed.every(
+			(box) =>
+				box.lane + box.span <= lane ||
+				lane + span <= box.lane ||
+				box.bottom <= top ||
+				bottom <= box.top
+		);
+	return boxes.map(({ span, height }) => {
+		const width = Math.min(Math.max(span, 1), lanes);
+		const tops = [...new Set([0, ...placed.map((box) => box.bottom)])].sort((a, b) => a - b);
+		for (const top of tops)
+			for (let lane = 0; lane + width <= lanes; lane++)
+				if (fits(lane, width, top, top + height)) {
+					placed.push({ lane, top, span: width, bottom: top + height });
+					return { lane, top };
+				}
+		// Below every placed box always fits, so the loop above always returns.
+		throw new Error('packLanes: no free spot');
+	});
+}
+
 const cellText = (cell: ExamCell | null) =>
 	cell ? `${cell.prefix ?? ''}${cell.value}${cell.suffix ?? ''}` : '';
 
