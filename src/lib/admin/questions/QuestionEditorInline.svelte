@@ -1676,7 +1676,7 @@
 								Accepted Answers
 							</div>
 							<button
-								class="btn btn-xs btn-ghost gap-1"
+								class="btn btn-xs btn-ghost rounded-full gap-1"
 								onclick={generateAIOptions}
 								title="Create source-grounded questions in Question Studio"
 							>
@@ -1703,7 +1703,7 @@
 												</span>
 												{#if fitbAnswers.length > 1}
 													<button
-														class="btn btn-ghost btn-xs text-error ml-auto sm:hidden"
+														class="btn btn-ghost btn-xs btn-circle text-error ml-auto sm:hidden"
 														onclick={() => removeFitbRow(index)}
 													>
 														<X size={14} />
@@ -1712,7 +1712,7 @@
 											</div>
 											<input
 												type="text"
-												class="input input-bordered input-sm w-full font-medium"
+												class="input input-bordered input-sm w-full rounded-full font-medium"
 												placeholder="Answer text"
 												bind:value={row.value}
 												oninput={onChange}
@@ -1720,7 +1720,7 @@
 										</div>
 										<div class="flex flex-wrap items-center gap-2 w-full sm:w-auto pt-6">
 											<select
-												class="select select-bordered select-sm"
+												class="select select-bordered select-sm rounded-full"
 												value={row.mode}
 												onchange={(e) => updateFitbMode(index, e.currentTarget.value as FitbMode)}
 											>
@@ -1752,7 +1752,7 @@
 											</div>
 											{#if fitbAnswers.length > 1}
 												<button
-													class="btn btn-ghost btn-sm btn-square text-error hidden sm:flex"
+													class="btn btn-ghost btn-sm btn-circle text-error hidden sm:flex"
 													onclick={() => removeFitbRow(index)}
 												>
 													<X size={16} />
@@ -1766,7 +1766,7 @@
 								{/each}
 							</div>
 							<div class="bg-base-200/50 p-2 border-t border-base-300 flex justify-center">
-								<button class="btn btn-xs btn-ghost gap-1" onclick={addFitbRow}>
+								<button class="btn btn-xs btn-ghost rounded-full gap-1" onclick={addFitbRow}>
 									<Plus size={14} /> Add Alternative
 								</button>
 							</div>
