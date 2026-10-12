@@ -1856,7 +1856,7 @@
 						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
 							<div class="flex justify-center sm:justify-start">
 								<button
-									class="btn btn-sm btn-outline gap-2 w-full sm:w-auto"
+									class="btn btn-sm btn-outline gap-2 w-full rounded-full sm:w-auto"
 									onclick={addMatchingPrompt}
 								>
 									<Plus size={14} /> Add Prompt
@@ -1864,7 +1864,7 @@
 							</div>
 							<div class="flex justify-center sm:justify-end">
 								<button
-									class="btn btn-sm btn-outline gap-2 w-full sm:w-auto"
+									class="btn btn-sm btn-outline gap-2 w-full rounded-full sm:w-auto"
 									onclick={addMatchingAnswer}
 								>
 									<Plus size={14} /> Add Answer

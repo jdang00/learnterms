@@ -30,10 +30,10 @@
 				: 'We couldn’t load this page. Please try again, or contact us if the problem continues.'}
 		</p>
 		<div class="mt-8 flex flex-wrap justify-center gap-3">
-			<a href={resolve('/')} class="btn btn-primary">Back to home</a>
+			<a href={resolve('/')} class="btn btn-primary rounded-full">Back to home</a>
 			<a
 				href={resolve('/contact')}
-				class="btn btn-outline border-base-content/25 bg-base-100/50 backdrop-blur-sm"
+				class="btn btn-outline rounded-full border-base-content/25 bg-base-100/50 backdrop-blur-sm"
 				>Contact support</a
 			>
 		</div>
