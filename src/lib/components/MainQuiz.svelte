@@ -26,6 +26,7 @@
 	import QuestionMediaStrip from '$lib/components/QuestionMediaStrip.svelte';
 	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
 	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
+	import ModuleEmpty from '$lib/components/ModuleEmpty.svelte';
 	import { Flag, BookmarkCheck, ArrowDownNarrowWide, Pencil } from 'lucide-svelte';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { isConvexAuthError } from '$lib/utils/errorHandling';
@@ -294,5 +295,12 @@
 		{#key clerk.user?.id}<CalculatorTool storageKey={clerk.user?.id ?? 'guest'} />{/key}
 	</div>
 {:else}
-	<p>No questions available.</p>
+	<ModuleEmpty
+		title={module.data?.title ?? 'Study module'}
+		emoji={module.data?.emoji || '📘'}
+		classId={data.classId}
+		moduleId={data.moduleId}
+		{canEdit}
+		unpublished={module.data?.questionCount ?? 0}
+	/>
 {/if}
