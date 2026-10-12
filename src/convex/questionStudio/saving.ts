@@ -3,6 +3,7 @@ import { internal } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import { mutation } from '../_generated/server';
 import { applyQuestionCreationDeltaAndEvaluateBadges } from '../badgeEngine';
+import { adjustModuleQuestionCount } from '../moduleStats';
 import { assertSaveAccess, getActor } from './authorization';
 import { candidateToQuestionInsert } from './candidates';
 import { scoreDuplicateRisk } from './duplicates';
@@ -222,9 +223,7 @@ export const saveSelectedCandidates = mutation({
 		}
 
 		if (insertedIds.length > 0) {
-			await ctx.db.patch(args.moduleId, {
-				questionCount: Math.max(0, (module.questionCount ?? 0) + insertedIds.length)
-			});
+			await adjustModuleQuestionCount(ctx, args.moduleId, insertedIds.length, insertedIds.length);
 			const actor = await ctx.db
 				.query('users')
 				.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))

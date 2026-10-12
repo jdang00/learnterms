@@ -1,5 +1,5 @@
 import { query, mutation } from './_generated/server';
-import { hasInteraction } from './moduleStats';
+import { hasInteraction, publishedQuestionCount } from './moduleStats';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
@@ -702,7 +702,7 @@ export const getClassQuizBuilderData = query({
 			args.classId,
 			modules.map((m) => m._id)
 		);
-		const questionCountByModuleId = new Map(modules.map((m) => [m._id, m.questionCount ?? 0]));
+		const questionCountByModuleId = new Map(modules.map((m) => [m._id, publishedQuestionCount(m)]));
 
 		const tagCollectionsWithCounts = tagCollections.map((tag) => ({
 			...tag,
@@ -725,7 +725,7 @@ export const getClassQuizBuilderData = query({
 				emoji: m.emoji,
 				order: m.order,
 				description: m.description,
-				questionCount: m.questionCount ?? 0,
+				questionCount: publishedQuestionCount(m),
 				tags: tagsByModuleId.get(m._id) ?? []
 			})),
 			tagCollections: tagCollectionsWithCounts,

@@ -2,7 +2,7 @@ import { v } from 'convex/values';
 import { authQuery } from './authQueries';
 import type { Doc, Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
-import { hasInteraction } from './moduleStats';
+import { hasInteraction, publishedQuestionCount } from './moduleStats';
 import { polar } from './polar';
 import { requireCohortStaff, requireUserReadById } from './access';
 
@@ -223,7 +223,7 @@ export const getCohortProgressStats = authQuery({
 
 			totalModules += modules.length;
 			for (const module of modules) {
-				totalQuestions += module.questionCount ?? 0;
+				totalQuestions += publishedQuestionCount(module);
 			}
 		}
 
@@ -343,7 +343,7 @@ async function loadModuleActivity(
 
 		for (const module of classModules) {
 			const entry = totals.get(module._id);
-			const totalQuestions = module.questionCount ?? 0;
+			const totalQuestions = publishedQuestionCount(module);
 			const possibleInteractions = totalQuestions * totalStudents;
 			const questionsInteracted = entry?.interacted ?? 0;
 			const questionsMastered = entry?.mastered ?? 0;
@@ -695,7 +695,7 @@ export const getUserModuleStats = authQuery({
 					}
 
 					// Use stored questionCount instead of fetching all questions
-					const totalQuestions = module.questionCount ?? 0;
+					const totalQuestions = publishedQuestionCount(module);
 					const progressPercentage =
 						totalQuestions > 0 ? Math.round((interacted / totalQuestions) * 100) : 0;
 

@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { query } from './_generated/server';
 import type { Doc } from './_generated/dataModel';
 import { requireCurrentUser } from './access';
+import { publishedQuestionCount } from './moduleStats';
 
 const MAX_CLASSES = 100;
 const MAX_MODULES_PER_CLASS = 300;
@@ -94,7 +95,7 @@ export const getMine = query({
 
 					const modules = published.map((moduleDoc) => {
 						const row = stats.get(moduleDoc._id);
-						const total = moduleDoc.questionCount ?? 0;
+						const total = publishedQuestionCount(moduleDoc);
 						const answered = Math.min(total, row?.questionsInteracted ?? 0);
 						if (row?.lastActivityAt && answered > 0) {
 							allRecent.push(recentFor(classDoc, moduleDoc, total, answered, row.lastActivityAt));

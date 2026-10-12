@@ -4,6 +4,7 @@ import { v } from 'convex/values';
 import type { Id } from './_generated/dataModel';
 import { getRationale } from '../lib/utils/rationale';
 import { userDisplayName } from '../lib/userDisplayName';
+import { countPublishedQuestions, publishedQuestionCount } from './moduleStats';
 
 /**
  * Get stats about questions and userProgress for migration planning (paginated).
@@ -75,6 +76,45 @@ export const findClassByName = internalQuery({
 			id: c._id,
 			name: c.name
 		}));
+	}
+});
+
+/**
+ * Backfill publishedQuestionCount on modules: the count students see, which leaves out drafts.
+ * Run via CLI: bunx convex run migrations:backfillPublishedQuestionCounts
+ *
+ * Schedules itself in batches until every module is done.
+ */
+export const backfillPublishedQuestionCounts = internalMutation({
+	args: {
+		batchSize: v.optional(v.number()),
+		cursor: v.optional(v.string())
+	},
+	handler: async (ctx, args) => {
+		const {
+			page: modules,
+			isDone,
+			continueCursor
+		} = await ctx.db
+			.query('module')
+			.paginate({ cursor: args.cursor ?? null, numItems: args.batchSize ?? 10 });
+
+		let updated = 0;
+		for (const module of modules) {
+			const count = await countPublishedQuestions(ctx, module._id);
+			if (module.publishedQuestionCount !== count) {
+				await ctx.db.patch(module._id, { publishedQuestionCount: count });
+				updated++;
+			}
+		}
+
+		if (!isDone) {
+			await ctx.scheduler.runAfter(0, internal.migrations.backfillPublishedQuestionCounts, {
+				batchSize: args.batchSize,
+				cursor: continueCursor
+			});
+		}
+		return { done: isDone, processed: modules.length, updated };
 	}
 });
 
@@ -386,7 +426,7 @@ export const backfillCohortStats = internalMutation({
 			totalModules += modules.length;
 
 			for (const module of modules) {
-				totalQuestions += module.questionCount ?? 0;
+				totalQuestions += publishedQuestionCount(module);
 			}
 		}
 
@@ -488,7 +528,7 @@ export const backfillUserProgressStats = internalMutation({
 				.collect();
 
 			for (const module of modules) {
-				totalQuestionsInCohort += module.questionCount ?? 0;
+				totalQuestionsInCohort += publishedQuestionCount(module);
 			}
 		}
 
@@ -670,7 +710,7 @@ export const backfillAllCohortsStats = internalMutation({
 				totalModules += modules.length;
 
 				for (const module of modules) {
-					totalQuestions += module.questionCount ?? 0;
+					totalQuestions += publishedQuestionCount(module);
 				}
 			}
 

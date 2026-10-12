@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { internalMutation } from './_generated/server';
-import type { MutationCtx } from './_generated/server';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import { internal } from './_generated/api';
 
@@ -10,6 +10,39 @@ export function hasInteraction(
 	return (
 		record.attempts > 0 || record.selectedOptions.length > 0 || record.eliminatedOptions.length > 0
 	);
+}
+
+// Students only see published questions. Staff counts use questionCount, which includes drafts.
+export function publishedQuestionCount(
+	module: Pick<Doc<'module'>, 'questionCount' | 'publishedQuestionCount'>
+) {
+	return module.publishedQuestionCount ?? module.questionCount ?? 0;
+}
+
+export async function countPublishedQuestions(ctx: QueryCtx, moduleId: Id<'module'>) {
+	const questions = await ctx.db
+		.query('question')
+		.withIndex('by_moduleId', (q) => q.eq('moduleId', moduleId))
+		.collect();
+	return questions.filter((q) => !q.deletedAt && q.status === 'published').length;
+}
+
+// Call after the question writes: a module without a published count yet gets an exact recount.
+export async function adjustModuleQuestionCount(
+	ctx: MutationCtx,
+	moduleId: Id<'module'>,
+	delta: number,
+	publishedDelta: number
+): Promise<void> {
+	const module = await ctx.db.get(moduleId);
+	if (!module) return;
+	await ctx.db.patch(moduleId, {
+		questionCount: Math.max(0, (module.questionCount ?? 0) + delta),
+		publishedQuestionCount:
+			module.publishedQuestionCount === undefined
+				? await countPublishedQuestions(ctx, moduleId)
+				: Math.max(0, module.publishedQuestionCount + publishedDelta)
+	});
 }
 
 export async function applyModuleStatsDelta(

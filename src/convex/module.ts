@@ -8,6 +8,7 @@ import {
 import { internal } from './_generated/api';
 import { authQuery, authAdminMutation } from './authQueries';
 import { internalMutation } from './_generated/server';
+import { publishedQuestionCount } from './moduleStats';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx, QueryCtx } from './_generated/server';
@@ -81,7 +82,7 @@ export const getClassModules = authQuery({
 		// Include questionCount for user-facing display
 		const modulesWithCounts = modules.map((module) => ({
 			...module,
-			questionCount: module.questionCount ?? 0
+			questionCount: publishedQuestionCount(module)
 		}));
 
 		const sorted = modulesWithCounts.sort((a, b) => a.order - b.order);
@@ -489,7 +490,7 @@ export const searchModulesByCohort = authQuery({
 					classCode: classItem.code,
 					emoji: moduleItem.emoji,
 					status: moduleItem.status,
-					questionCount: moduleItem.questionCount ?? 0,
+					questionCount: publishedQuestionCount(moduleItem),
 					order: moduleItem.order,
 					classOrder: classItem.order,
 					score

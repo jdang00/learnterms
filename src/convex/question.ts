@@ -13,7 +13,7 @@ import {
 	shuffleCorrectAnswer
 } from './questionStudio/presentation';
 import { internalMutation } from './_generated/server';
-import { shiftQuestionStats } from './moduleStats';
+import { adjustModuleQuestionCount, shiftQuestionStats } from './moduleStats';
 import { authCuratorMutation } from './authQueries';
 import { v } from 'convex/values';
 import { manualQuestionSource } from './schema';
@@ -166,18 +166,7 @@ async function checkModuleCapacity(
 	}
 }
 
-async function adjustModuleQuestionCount(
-	ctx: MutationCtx,
-	moduleId: Id<'module'>,
-	delta: number
-): Promise<void> {
-	const module = await ctx.db.get(moduleId);
-	if (!module) return;
-	const currentCount = module.questionCount ?? 0;
-	await ctx.db.patch(moduleId, {
-		questionCount: Math.max(0, currentCount + delta)
-	});
-}
+const publishedUnits = (status: string) => (status === 'published' ? 1 : 0);
 
 async function applyQuestionCreationBadgesForActor(
 	ctx: MutationCtx,
@@ -662,7 +651,12 @@ export const insertQuestion = authCuratorMutation({
 			searchText
 		});
 		await attachQuestionImages(ctx, id, images ?? []);
-		await adjustModuleQuestionCount(ctx, args.moduleId, 1);
+		await adjustModuleQuestionCount(
+			ctx,
+			args.moduleId,
+			1,
+			publishedUnits(args.status.toLowerCase())
+		);
 		await applyQuestionCreationBadgesForActor(ctx, args.moduleId, 1);
 		return id;
 	}
@@ -688,7 +682,12 @@ export const deleteQuestion = authCuratorMutation({
 		await ctx.scheduler.runAfter(0, internal.questionNotes.deleteForQuestion, {
 			questionId: args.questionId
 		});
-		await adjustModuleQuestionCount(ctx, args.moduleId, -1);
+		await adjustModuleQuestionCount(
+			ctx,
+			args.moduleId,
+			-1,
+			-publishedUnits(questionToDelete.status)
+		);
 		return { deleted: true };
 	}
 });
@@ -701,6 +700,7 @@ export const bulkDeleteQuestions = authCuratorMutation({
 	handler: async (ctx, args) => {
 		await requireModuleAccess(ctx, args.moduleId, true);
 		let deletedCount = 0;
+		let deletedPublished = 0;
 		const errors = [];
 
 		for (const questionId of args.questionIds) {
@@ -721,13 +721,14 @@ export const bulkDeleteQuestions = authCuratorMutation({
 				await ctx.scheduler.runAfter(0, internal.stemHighlights.deleteForQuestion, { questionId });
 				await ctx.scheduler.runAfter(0, internal.questionNotes.deleteForQuestion, { questionId });
 				deletedCount++;
+				deletedPublished += publishedUnits(questionToDelete.status);
 			} catch (error) {
 				errors.push(`Failed to delete question ${questionId}: ${error}`);
 			}
 		}
 
 		if (deletedCount > 0) {
-			await adjustModuleQuestionCount(ctx, args.moduleId, -deletedCount);
+			await adjustModuleQuestionCount(ctx, args.moduleId, -deletedCount, -deletedPublished);
 		}
 
 		return {
@@ -752,6 +753,7 @@ async function updateQuestionStatuses(
 	await requireModuleAccess(ctx, args.moduleId);
 	let updatedCount = 0;
 	let skippedCount = 0;
+	let publishedDelta = 0;
 	const errors: string[] = [];
 
 	for (const questionId of args.questionIds) {
@@ -797,6 +799,7 @@ async function updateQuestionStatuses(
 				updatedAt: Date.now(),
 				searchText
 			});
+			publishedDelta += publishedUnits(args.status) - publishedUnits(question.status);
 
 			if (args.status === 'published' && question.metadata.generation?.jobId)
 				await ctx.scheduler.runAfter(0, internal.aiTelemetry.capture, {
@@ -813,6 +816,8 @@ async function updateQuestionStatuses(
 			errors.push(`Failed to update question ${questionId}: ${error}`);
 		}
 	}
+
+	if (publishedDelta) await adjustModuleQuestionCount(ctx, args.moduleId, 0, publishedDelta);
 
 	return {
 		updatedCount,
@@ -968,6 +973,9 @@ export const updateQuestion = authCuratorMutation({
 		});
 
 		await attachQuestionImages(ctx, args.questionId, args.images ?? []);
+		const publishedDelta =
+			publishedUnits(args.status.toLowerCase()) - publishedUnits(questionToUpdate.status);
+		if (publishedDelta) await adjustModuleQuestionCount(ctx, args.moduleId, 0, publishedDelta);
 		if (questionToUpdate.metadata.generation?.jobId)
 			await ctx.scheduler.runAfter(0, internal.aiTelemetry.capture, {
 				event:
@@ -1057,7 +1065,7 @@ export const createQuestion = authCuratorMutation({
 			searchText,
 			...(createdBy && { createdBy })
 		});
-		await adjustModuleQuestionCount(ctx, args.moduleId, 1);
+		await adjustModuleQuestionCount(ctx, args.moduleId, 1, publishedUnits(args.status));
 		await applyQuestionCreationBadgesForActor(ctx, args.moduleId, 1);
 		return id;
 	}
@@ -1144,7 +1152,12 @@ export const bulkInsertQuestions = authCuratorMutation({
 		}
 
 		if (insertedIds.length > 0) {
-			await adjustModuleQuestionCount(ctx, moduleId, insertedIds.length);
+			await adjustModuleQuestionCount(
+				ctx,
+				moduleId,
+				insertedIds.length,
+				questions.filter((q) => publishedUnits(q.status.toLowerCase())).length
+			);
 			await applyQuestionCreationBadgesForActor(ctx, moduleId, insertedIds.length);
 		}
 
@@ -1215,6 +1228,7 @@ export const moveQuestionsToModule = authCuratorMutation({
 		const errors: string[] = [];
 		const movedQuestions: Array<{ _id: Id<'question'>; moduleId: Id<'module'> }> = [];
 		let moved = 0;
+		let movedPublished = 0;
 
 		for (const qid of args.questionIds) {
 			const q = await ctx.db.get(qid);
@@ -1233,6 +1247,7 @@ export const moveQuestionsToModule = authCuratorMutation({
 			});
 			movedQuestions.push({ _id: qid, moduleId: q.moduleId });
 			moved += 1;
+			movedPublished += publishedUnits(q.status);
 			nextOrder += 1;
 		}
 
@@ -1254,8 +1269,8 @@ export const moveQuestionsToModule = authCuratorMutation({
 
 		// Adjust question counts for both modules
 		if (moved > 0) {
-			await adjustModuleQuestionCount(ctx, args.sourceModuleId, -moved);
-			await adjustModuleQuestionCount(ctx, args.targetModuleId, moved);
+			await adjustModuleQuestionCount(ctx, args.sourceModuleId, -moved, -movedPublished);
+			await adjustModuleQuestionCount(ctx, args.targetModuleId, moved, movedPublished);
 		}
 
 		return { moved, errors, success: errors.length === 0 };
@@ -1323,7 +1338,7 @@ export const duplicateQuestion = authCuratorMutation({
 			})
 		});
 
-		await adjustModuleQuestionCount(ctx, original.moduleId, 1);
+		await adjustModuleQuestionCount(ctx, original.moduleId, 1, publishedUnits(original.status));
 		await applyQuestionCreationBadgesForActor(ctx, original.moduleId, 1);
 		return id;
 	}
@@ -1396,7 +1411,12 @@ export const duplicateQuestionMany = authCuratorMutation({
 		}
 
 		if (insertedIds.length > 0) {
-			await adjustModuleQuestionCount(ctx, original.moduleId, insertedIds.length);
+			await adjustModuleQuestionCount(
+				ctx,
+				original.moduleId,
+				insertedIds.length,
+				insertedIds.length * publishedUnits(original.status)
+			);
 			await applyQuestionCreationBadgesForActor(ctx, original.moduleId, insertedIds.length);
 		}
 

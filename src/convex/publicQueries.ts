@@ -1,5 +1,6 @@
 import { query } from './_generated/server';
 import { v } from 'convex/values';
+import { publishedQuestionCount } from './moduleStats';
 
 /**
  * Public (no-auth) query for module metadata.
@@ -20,7 +21,7 @@ export const getModuleMetadata = query({
 			title: module.title,
 			emoji: module.emoji ?? null,
 			description: module.description,
-			questionCount: module.questionCount ?? 0,
+			questionCount: publishedQuestionCount(module),
 			className: classDoc?.name ?? null,
 			classCode: classDoc?.code ?? null
 		};

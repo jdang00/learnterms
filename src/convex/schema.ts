@@ -289,7 +289,8 @@ export default defineSchema({
 		order: v.number(),
 		description: v.string(),
 		status: v.string(),
-		questionCount: v.optional(v.number())
+		questionCount: v.optional(v.number()),
+		publishedQuestionCount: v.optional(v.number())
 	})
 		.index('by_classId', ['classId'])
 		.index('by_cohortId', ['cohortId'])
