@@ -6,7 +6,7 @@
 	import { QuizState } from './states.svelte';
 	import MainQuiz from '$lib/components/MainQuiz.svelte';
 	import ModuleCompletion from '$lib/components/ModuleCompletion.svelte';
-	import Sheet from '$lib/components/Sheet.svelte';
+	import ResetProgressSheet from '$lib/components/ResetProgressSheet.svelte';
 	import { onMount, tick, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { resolve } from '$app/paths';
@@ -396,36 +396,18 @@
 		}
 	}
 
-	let removeHighlights = $state(false);
-	let resetting = $state(false);
-	let resetError = $state('');
-	$effect(() => {
-		if (!qs.isResetModalOpen) {
-			removeHighlights = false;
-			resetError = '';
-		}
-	});
-	async function handleResetModalConfirm() {
-		if (!userId || !data.moduleId || !client || resetting) return;
-		resetting = true;
-		resetError = '';
-		try {
-			++loadGeneration;
-			await qs.reset(userId, data.moduleId as Id<'module'>, client, removeHighlights);
-			returnToQuiz();
-			attempts.clear();
-			attemptRequests.clear();
-			const first = qs.getCurrentFilteredQuestion();
-			if (first) await loadProgress(first._id);
-			hasHydratedFlags = false;
-			qs.completionMilestone = '';
-			qs.cancelCompletion();
-			qs.isResetModalOpen = false;
-		} catch {
-			resetError = 'Could not reset your questions. Please try again.';
-		} finally {
-			resetting = false;
-		}
+	async function handleResetModalConfirm(removeHighlights: boolean) {
+		if (!userId || !data.moduleId || !client) throw new Error('Module not ready');
+		++loadGeneration;
+		await qs.reset(userId, data.moduleId as Id<'module'>, client, removeHighlights);
+		returnToQuiz();
+		attempts.clear();
+		attemptRequests.clear();
+		const first = qs.getCurrentFilteredQuestion();
+		if (first) await loadProgress(first._id);
+		hasHydratedFlags = false;
+		qs.completionMilestone = '';
+		qs.cancelCompletion();
 	}
 
 	onMount(() => {
@@ -531,42 +513,14 @@
 		</div>
 	</div>
 
-	<Sheet bind:open={qs.isResetModalOpen} title="Reset module?">
-		<p class="text-base-content/80">
-			Start another run with blank answers. This clears your current results, flags, and saved
-			answers. Your mastery and past study activity are kept.
-		</p>
-		<label class="my-5 flex items-center justify-between gap-4">
-			<span
-				><span class="block font-medium">Remove highlights</span><span
-					class="text-sm text-base-content/60">Also erase your stem highlights in this module.</span
-				></span
-			>
-			<input
-				type="checkbox"
-				role="switch"
-				aria-label="Remove highlights"
-				class="toggle toggle-warning"
-				bind:checked={removeHighlights}
-				disabled={resetting}
-			/>
-		</label>
-		{#if resetError}<p class="text-error mb-3" role="alert">{resetError}</p>{/if}
-		{#snippet footer()}
-			<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-				<button
-					class="btn btn-outline min-h-11 rounded-full"
-					onclick={() => (qs.isResetModalOpen = false)}
-				>
-					Cancel
-				</button>
-				<button
-					class="btn btn-error min-h-11 rounded-full"
-					disabled={resetting}
-					onclick={() => handleResetModalConfirm()}
-					>{resetting ? 'Resetting…' : 'Reset module'}</button
-				>
-			</div>
-		{/snippet}
-	</Sheet>
+	<ResetProgressSheet
+		bind:open={qs.isResetModalOpen}
+		title="Reset module?"
+		confirmLabel="Reset module"
+		highlightsNote="Also erase your stem highlights in this module."
+		onconfirm={handleResetModalConfirm}
+	>
+		Start another run with blank answers. This clears your current results, flags, and saved
+		answers. Your mastery and past study activity are kept.
+	</ResetProgressSheet>
 {/if}

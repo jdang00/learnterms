@@ -11,6 +11,7 @@
 		ShieldCheckIcon,
 		UserRoundPenIcon,
 		ClipboardCheck,
+		RotateCcw,
 		ArrowRight as ArrowRightIcon
 	} from 'lucide-svelte';
 	import { page } from '$app/state';
@@ -22,6 +23,8 @@
 	import { classColor, summarizeClassProgress } from '$lib/utils/classProgress';
 	import Sidebar from '../../lib/components/Sidebar.svelte';
 	import ClassList from '../../lib/components/ClassList.svelte';
+	import ClampedText from '../../lib/components/ClampedText.svelte';
+	import ResetProgressSheet from '../../lib/components/ResetProgressSheet.svelte';
 	import type { ClassWithSemester } from '../../lib/types';
 	import { useClerkContext } from 'svelte-clerk/client';
 	const client = useConvexClient();
@@ -145,6 +148,19 @@
 		const source = Array.isArray(modules.data) ? modules.data : [];
 		return [...source].sort((a, b) => a.order - b.order);
 	});
+
+	let resetOpen = $state(false);
+
+	async function resetAllModules(removeHighlights: boolean) {
+		if (!userData) throw new Error('User unavailable');
+		for (const module of sortedModules) {
+			await client.mutation(api.userProgress.clearUserProgressForModule, {
+				userId: userData._id,
+				moduleId: module._id,
+				removeHighlights
+			});
+		}
+	}
 
 	function selectClass(classItem: ClassWithSemester | null) {
 		if (!classItem) return;
@@ -418,7 +434,7 @@
 				/>
 			{:else if currentView === 'modules' && selectedClass}
 				<div in:fade={{ duration: 400, easing: cubicOut }} class="w-full">
-					<div class="mb-5 flex flex-wrap items-center gap-x-3 gap-y-3">
+					<header class="mb-4 flex flex-wrap items-center gap-3">
 						<button
 							onclick={goBackToClasses}
 							class="btn btn-ghost btn-circle size-11 -ms-2 sm:btn-sm sm:size-8 sm:ms-0"
@@ -426,32 +442,53 @@
 						>
 							<ArrowLeft size={16} />
 						</button>
-						<ColorMark color={classColor(selectedClass)} class="size-8 text-base-content" />
+						<ColorMark
+							color={classColor(selectedClass)}
+							class="size-8 shrink-0 text-base-content"
+						/>
 						<div class="min-w-0 flex-1">
 							<p class="font-mono text-xs text-base-content/55">{selectedClass.code}</p>
 							<h2 class="text-xl leading-snug font-semibold text-balance text-base-content">
 								{selectedClass.name}
 							</h2>
-							{#if selectedClass.description}
-								<p class="mt-1 max-w-3xl text-sm leading-relaxed text-base-content/65">
-									{selectedClass.description}
-								</p>
-							{/if}
-							{#if selectedSummary && selectedSummary.modules > 0}
-								<p class="mt-1 text-xs text-base-content/60 tabular-nums">
-									{selectedSummary.started} of {selectedSummary.modules}
-									{selectedSummary.modules === 1 ? 'module' : 'modules'} started
-									{#if selectedSummary.mastered}· {selectedSummary.mastered} mastered{/if}
-								</p>
-							{/if}
 						</div>
 						<a
 							href={resolve('/classes/[classId]/tests/new', { classId: selectedClass._id })}
-							class="btn btn-primary btn-soft btn-sm min-h-11 w-full rounded-full sm:min-h-8 sm:w-auto"
+							class="btn btn-primary btn-soft btn-sm order-last min-h-11 w-full rounded-full sm:order-none sm:min-h-8 sm:w-auto"
 						>
 							<ClipboardCheck size={16} /> Test yourself
 						</a>
-					</div>
+						{#if selectedClass.description}
+							<div class="w-full">
+								{#key selectedClass.description}
+									<ClampedText
+										text={selectedClass.description}
+										class="max-w-3xl text-sm leading-relaxed text-base-content/65"
+									/>
+								{/key}
+							</div>
+						{/if}
+					</header>
+
+					{#if sortedModules.length > 0 || selectedSummary?.modules}
+						<div class="mb-2 flex min-h-11 items-center justify-between gap-3 sm:min-h-8">
+							<p class="text-xs text-base-content/60 tabular-nums">
+								{#if selectedSummary?.modules}
+									{selectedSummary.started} of {selectedSummary.modules}
+									{selectedSummary.modules === 1 ? 'module' : 'modules'} started
+									{#if selectedSummary.mastered}· {selectedSummary.mastered} mastered{/if}
+								{/if}
+							</p>
+							{#if sortedModules.length > 0}
+								<button
+									onclick={() => (resetOpen = true)}
+									class="btn btn-ghost btn-sm min-h-11 rounded-full text-base-content/60 sm:min-h-8"
+								>
+									<RotateCcw size={14} /> Reset all
+								</button>
+							{/if}
+						</div>
+					{/if}
 
 					{#if modules.isLoading}
 						<div class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
@@ -500,6 +537,17 @@
 							{/each}
 						</ol>
 					{/if}
+
+					<ResetProgressSheet
+						bind:open={resetOpen}
+						title="Reset all modules?"
+						confirmLabel="Reset all modules"
+						highlightsNote="Also erase your stem highlights in this class."
+						onconfirm={resetAllModules}
+					>
+						Start every module in {selectedClass.name} over with blank answers. This clears your current
+						results, flags, and saved answers. Your mastery and past study activity are kept.
+					</ResetProgressSheet>
 				</div>
 			{/if}
 		</div>
