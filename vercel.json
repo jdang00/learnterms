@@ -62,16 +62,6 @@
 			"has": [
 				{
 					"type": "host",
-					"value": "app.learnterms.com"
-				}
-			],
-			"destination": "/dashboard/:path*"
-		},
-		{
-			"source": "/:path*",
-			"has": [
-				{
-					"type": "host",
 					"value": "admin.learnterms.com"
 				}
 			],
