@@ -11,7 +11,7 @@
 </script>
 
 <Sonner
-	theme={$theme}
+	theme={theme.current}
 	position="bottom-right"
 	class="toaster group"
 	style="--normal-bg: var(--popover); --normal-text: var(--popover-foreground); --normal-border: var(--line); --border-radius: 1rem;"

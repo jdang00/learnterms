@@ -46,7 +46,7 @@ export default defineConfig({
 				test: {
 					name: 'state',
 					environment: 'node',
-					include: ['tests/moduleCompletion.state.spec.ts']
+					include: ['tests/*.state.spec.ts']
 				}
 			}
 		]

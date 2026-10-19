@@ -9,7 +9,7 @@
 	import Keyboard from '@lucide/svelte/icons/keyboard';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { Command } from 'bits-ui';
-	import { isDark, theme } from '$lib/theme.svelte';
+	import { theme } from '$lib/theme.svelte';
 	import { modifierKeyLabel } from '$lib/utils/platform';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Badge } from '$lib/components/ui/badge';
@@ -417,7 +417,7 @@
 
 					<PowerBarSettingsSection
 						{searchQuery}
-						isDarkMode={$isDark}
+						isDarkMode={theme.isDark}
 						{autoNextEnabled}
 						{optionsShuffleEnabled}
 						onSetTheme={(mode) => theme.set(mode)}
