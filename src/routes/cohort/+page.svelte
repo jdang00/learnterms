@@ -84,7 +84,7 @@
 		});
 	});
 
-	const currentUserId = $derived(data.userData?._id);
+	const currentUserId = $derived(data.userData.data?._id);
 	const selectedMember = $derived(
 		boardQuery.data?.members.find((member) => member.userId === selectedMemberId) ?? null
 	);
@@ -127,8 +127,8 @@
 				<div>
 					<h1 class="title-page">{cohort.name}</h1>
 					<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground/70">
-						{#if data.userData?.schoolName}
-							<span>{data.userData.schoolName}</span>
+						{#if data.userData.data?.schoolName}
+							<span>{data.userData.data.schoolName}</span>
 						{/if}
 						{#if cohort.startYear && cohort.endYear}
 							<span>{cohort.startYear}–{cohort.endYear}</span>

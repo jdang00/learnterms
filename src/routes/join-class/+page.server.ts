@@ -2,8 +2,8 @@ import { isRedirect, redirect } from '@sveltejs/kit';
 import { userDisplayName } from '$lib/userDisplayName';
 import type { PageServerLoad } from './$types';
 import { clerkClient } from 'svelte-clerk/server';
+import { convexLoad } from 'convex-svelte/sveltekit';
 import { authenticatedConvexClient } from '$lib/server/convex';
-import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import { api } from '../../convex/_generated/api';
 
 const seo = {
@@ -13,25 +13,23 @@ const seo = {
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (!PUBLIC_CONVEX_URL) {
-		throw new Error('PUBLIC_CONVEX_URL is not configured');
-	}
-
 	const { userId } = locals.auth();
 	if (!userId) {
 		return { seo };
 	}
 
 	try {
-		const client = await authenticatedConvexClient(locals);
-		const user = await clerkClient.users.getUser(userId);
-		const userData = await client.query(api.users.getUserById, { id: user.id });
-		if (userData?.cohortId && userData.role !== 'dev') redirect(307, '/classes');
+		const client = authenticatedConvexClient(locals);
+		const [user, userData] = await Promise.all([
+			clerkClient.users.getUser(userId),
+			convexLoad(api.users.getUserById, { id: userId }, { keepAlive: false })
+		]);
+		if (userData.data?.cohortId && userData.data.role !== 'dev') redirect(307, '/classes');
 		const primaryEmail = user.emailAddresses?.find(
 			(email) => email.id === user.primaryEmailAddressId
 		)?.emailAddress;
 
-		if (userData === null) {
+		if (userData.data === null) {
 			await client.mutation(api.users.addUser, {
 				clerkUserId: user.id,
 				name: userDisplayName(user),

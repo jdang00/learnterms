@@ -1,31 +1,29 @@
 import { userDisplayName } from '$lib/userDisplayName';
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
+import { isRedirect, redirect } from '@sveltejs/kit';
 import { clerkClient } from 'svelte-clerk/server';
+import { convexLoad } from 'convex-svelte/sveltekit';
 import { authenticatedConvexClient } from '$lib/server/convex';
-import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import { api } from '../../convex/_generated/api';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (!PUBLIC_CONVEX_URL) {
-		throw new Error('PUBLIC_CONVEX_URL is not configured');
-	}
-
 	const { userId } = locals.auth();
 	if (!userId) {
 		return redirect(307, '/sign-in');
 	}
 
 	try {
-		const client = await authenticatedConvexClient(locals);
-		const user = await clerkClient.users.getUser(userId);
-		const userData = await client.query(api.users.getUserById, { id: user.id });
+		const client = authenticatedConvexClient(locals);
+		const [user, userData] = await Promise.all([
+			clerkClient.users.getUser(userId),
+			convexLoad(api.users.getUserById, { id: userId })
+		]);
 
 		const primaryEmail = user.emailAddresses?.find(
 			(email) => email.id === user.primaryEmailAddressId
 		)?.emailAddress;
 
-		if (userData === null) {
+		if (userData.data === null) {
 			await client.mutation(api.users.addUser, {
 				clerkUserId: user.id,
 				name: userDisplayName(user),
@@ -41,7 +39,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			return redirect(307, '/join-class');
 		}
 
-		if (!userData?.cohortId) {
+		if (!userData.data?.cohortId) {
 			return redirect(307, '/join-class');
 		}
 
@@ -65,6 +63,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			}
 		};
 	} catch (error) {
+		if (isRedirect(error)) throw error;
 		console.error('Failed to load cohort info page data:', error);
 		throw error;
 	}

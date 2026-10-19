@@ -1,54 +1,28 @@
 import type { PageServerLoad } from './$types';
-import { clerkClient } from 'svelte-clerk/server';
-import { authenticatedConvexClient } from '$lib/server/convex';
+import { convexLoad } from 'convex-svelte/sveltekit';
 import { api } from '../../convex/_generated/api';
+
+const seo = {
+	title: 'Pricing — LearnTerms',
+	description:
+		'Explore LearnTerms access for students and subscription options for curators building class-aligned question banks.'
+};
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const { userId } = locals.auth();
 
-	const seo = {
-		title: 'Pricing — LearnTerms',
-		description:
-			'Explore LearnTerms access for students and subscription options for curators building class-aligned question banks.'
-	};
-
 	// Not logged in - show pricing page (they can browse)
 	if (!userId) {
-		return {
-			isAuthenticated: false,
-			isCuratorOrAdmin: false,
-			role: null,
-			plan: null,
-			seo
-		};
+		return { isAuthenticated: false, account: null, seo };
 	}
 
 	try {
-		const client = await authenticatedConvexClient(locals);
-		const user = await clerkClient.users.getUser(userId);
-		const userData = await client.query(api.polar.getUserWithSubscriptionByClerkId, {
-			clerkUserId: user.id
+		const account = await convexLoad(api.polar.getUserWithSubscriptionByClerkId, {
+			clerkUserId: userId
 		});
-
-		const role = userData?.role;
-		const isCuratorOrAdmin = role === 'dev' || role === 'admin' || role === 'curator';
-		const plan = userData?.isPro ? 'pro' : 'free';
-
-		return {
-			isAuthenticated: true,
-			isCuratorOrAdmin,
-			role: role || 'student',
-			plan: plan,
-			seo
-		};
+		return { isAuthenticated: true, account, seo };
 	} catch (error) {
 		console.error('Failed to load pricing page data:', error);
-		return {
-			isAuthenticated: true,
-			isCuratorOrAdmin: false,
-			role: 'student',
-			plan: null,
-			seo
-		};
+		return { isAuthenticated: true, account: null, seo };
 	}
 };

@@ -13,6 +13,8 @@
 
 	let { data }: { data: PageData } = $props();
 
+	const userName = $derived(data.account?.data?.firstName || data.account?.data?.name || 'there');
+
 	// Reactively poll subscription status - Convex queries auto-update
 	const subscriptionQuery = useQuery(api.polar.getCurrentUserWithSubscription, {});
 
@@ -74,7 +76,7 @@
 			{#if isSyncing}
 				Setting up your account...
 			{:else}
-				Welcome to Pro, {data.userName}!
+				Welcome to Pro, {userName}!
 			{/if}
 		</h1>
 

@@ -57,7 +57,7 @@
 	} from '$lib/admin/progress/utils';
 
 	let { data }: { data: PageData } = $props();
-	const user = $derived(data.userData);
+	const user = $derived(data.userData.data);
 	const cohortId = $derived(user?.cohortId as Id<'cohort'> | undefined);
 	const client = useConvexClient();
 	const views = [

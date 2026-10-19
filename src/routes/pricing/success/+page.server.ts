@@ -1,7 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { clerkClient } from 'svelte-clerk/server';
-import { authenticatedConvexClient } from '$lib/server/convex';
+import { convexLoad } from 'convex-svelte/sveltekit';
 import { api } from '../../../convex/_generated/api';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -13,21 +12,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	try {
-		const client = await authenticatedConvexClient(locals);
-		const user = await clerkClient.users.getUser(userId);
-		const userData = await client.query(api.polar.getUserWithSubscriptionByClerkId, {
-			clerkUserId: user.id
+		const account = await convexLoad(api.polar.getUserWithSubscriptionByClerkId, {
+			clerkUserId: userId
 		});
-
-		return {
-			userName: userData?.firstName || userData?.name || 'there',
-			plan: userData?.isPro ? 'pro' : 'free'
-		};
+		return { account };
 	} catch (error) {
 		console.error('Failed to load success page data:', error);
-		return {
-			userName: 'there',
-			plan: null
-		};
+		return { account: null };
 	}
 };

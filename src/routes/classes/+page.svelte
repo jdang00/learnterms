@@ -38,7 +38,7 @@
 	const user = $derived(ctx.user);
 
 	let { data }: { data: PageData } = $props();
-	const userData = $derived(data.userData);
+	const userData = $derived(data.userData.data);
 	function hasUserDisplayNames(
 		value: unknown
 	): value is { schoolName?: string | null; cohortName?: string | null } {
