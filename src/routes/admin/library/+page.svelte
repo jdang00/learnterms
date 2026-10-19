@@ -43,30 +43,20 @@
 		stripStandaloneTableHeadings,
 		styleTag
 	} from '../../../lib/admin/content-library/contentLibraryPreview';
-	import { useQuery, useConvexClient } from 'convex-svelte';
+	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
-	import type { Doc, Id } from '../../../convex/_generated/dataModel';
-	import { useClerkContext } from 'svelte-clerk';
-	import { browser } from '$app/environment';
+	import type { Doc } from '../../../convex/_generated/dataModel';
 	import { resolve } from '$app/paths';
 	import { tick } from 'svelte';
 	import { Marked, Renderer } from 'marked';
 	import 'katex/dist/katex.min.css';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 
+	let { data } = $props();
+
 	const client = useConvexClient();
-	const clerk = useClerkContext();
-	const clerkUser = $derived(clerk.user);
-
-	const userDataQuery = useQuery(api.users.getUserById, () =>
-		browser && clerkUser ? { id: clerkUser.id } : 'skip'
-	);
-
-	const documents = useQuery(api.contentLib.getR2DocumentsByCohort, () =>
-		browser && userDataQuery.data?.cohortId
-			? { cohortId: userDataQuery.data.cohortId as Id<'cohort'> }
-			: 'skip'
-	);
+	const userDataQuery = $derived(data.userData);
+	const documents = $derived(data.documents);
 
 	let isAddModalOpen = $state(false);
 	let isDeleteModalOpen = $state(false);

@@ -43,20 +43,24 @@ export const load: PageServerLoad = async ({ locals }) => {
 			return redirect(307, '/join-class');
 		}
 
-		await client.mutation(api.users.syncUserFromClerk, {
-			clerkUserId: user.id,
-			name: user.fullName?.trim() || undefined,
-			firstName: user.firstName || undefined,
-			lastName: user.lastName || undefined,
-			email: primaryEmail || undefined,
-			username: user.username || undefined,
-			imageUrl: user.imageUrl || undefined,
-			lastSignInAt: user.lastSignInAt || undefined,
-			lastActiveAt: user.lastActiveAt || undefined
-		});
+		const [board] = await Promise.all([
+			convexLoad(api.badges.getCohortBadgeBoard, {}),
+			client.mutation(api.users.syncUserFromClerk, {
+				clerkUserId: user.id,
+				name: user.fullName?.trim() || undefined,
+				firstName: user.firstName || undefined,
+				lastName: user.lastName || undefined,
+				email: primaryEmail || undefined,
+				username: user.username || undefined,
+				imageUrl: user.imageUrl || undefined,
+				lastSignInAt: user.lastSignInAt || undefined,
+				lastActiveAt: user.lastActiveAt || undefined
+			})
+		]);
 
 		return {
 			userData,
+			board,
 			seo: {
 				title: 'Class Activity — LearnTerms',
 				description: 'See how your class is progressing on LearnTerms.'

@@ -32,6 +32,7 @@ export const load: PageServerLoad = async ({
 			isPublicView: true as const,
 			moduleInfo: undefined,
 			module: undefined,
+			learning: undefined,
 			moduleId,
 			convexID: undefined,
 			classId: params.classId,
@@ -70,10 +71,11 @@ export const load: PageServerLoad = async ({
 	}
 
 	try {
-		const [module, moduleInfo, convexID] = await Promise.all([
+		const [module, moduleInfo, convexID, learning] = await Promise.all([
 			convexLoad(api.questions.read.getQuestionsByModule, { id: moduleId }),
 			convexLoad(api.module.getModuleById, { id: moduleId }),
-			convexLoad(api.users.getUserById, { id: userId })
+			convexLoad(api.users.getUserById, { id: userId }),
+			convexLoad(api.studyProgress.getForModule, { moduleId })
 		]);
 		if (!moduleInfo.data || moduleInfo.data.classId !== params.classId) redirect(307, '/classes');
 
@@ -83,6 +85,7 @@ export const load: PageServerLoad = async ({
 			module,
 			moduleId,
 			convexID,
+			learning,
 			classId: params.classId,
 			seo: {
 				title: `${moduleInfo.data.title} — LearnTerms`,

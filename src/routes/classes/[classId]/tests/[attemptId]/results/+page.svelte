@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { useQuery } from 'convex-svelte';
-	import { api } from '../../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../../convex/_generated/dataModel';
 	import ResultsSummary from '$lib/tests/ResultsSummary.svelte';
 	import ReviewSidebar from '$lib/tests/ReviewSidebar.svelte';
@@ -18,14 +16,12 @@
 	import * as Alert from '$lib/components/ui/alert';
 	import { LoadingState } from '$lib/components/ui/spinner';
 
+	let { data } = $props();
+
 	const classId = $derived(page.params.classId as Id<'class'>);
-	const attemptId = $derived(page.params.attemptId as Id<'quizAttempts'>);
+	const resultsQuery = $derived(data.results);
 
-	const resultsQuery = useQuery(api.tests.results.getAttemptResults, () =>
-		attemptId ? { attemptId } : 'skip'
-	);
-
-	const review = new ReviewState(() => resultsQuery.data ?? undefined);
+	const review = new ReviewState(() => resultsQuery?.data ?? undefined);
 	let hideSidebar = $state(false);
 
 	$effect(() => {
@@ -34,13 +30,13 @@
 </script>
 
 <div class="flex flex-col h-[calc(100dvh-4rem)]" transition:fade={{ duration: 200 }}>
-	{#if resultsQuery.isLoading}
+	{#if resultsQuery?.isLoading}
 		<LoadingState label="Loading your results…" class="flex-1 text-base" />
-	{:else if resultsQuery.error}
+	{:else if !resultsQuery || resultsQuery.error}
 		<div class="flex-1 flex items-center justify-center p-4">
 			<Alert.Root tone="error" class="max-w-md">
 				<CircleAlert />
-				<Alert.Title>{resultsQuery.error.toString()}</Alert.Title>
+				<Alert.Title>{data.loadError ?? resultsQuery?.error?.toString()}</Alert.Title>
 			</Alert.Root>
 		</div>
 	{:else if resultsQuery.data}

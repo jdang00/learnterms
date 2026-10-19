@@ -2,7 +2,7 @@
 	import { LoadingState } from '$lib/components/ui/spinner';
 	import type { PageData } from './$types';
 	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
-	import { useQuery, useConvexClient } from 'convex-svelte';
+	import { useConvexClient } from 'convex-svelte';
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
@@ -19,7 +19,6 @@
 	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
 	import ExportModuleModal from '$lib/admin/catalog/ExportModuleModal.svelte';
 	import TagManager from '$lib/admin/catalog/TagManager.svelte';
-	import { useClerkContext } from 'svelte-clerk';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
@@ -28,27 +27,19 @@
 	let { data }: { data: PageData } = $props();
 	const classId: Id<'class'> = $derived(data.classId as Id<'class'>);
 
-	const modules = useQuery(api.module.getAdminModulesWithQuestionCounts, () => ({
-		classId
-	}));
-
-	const classInfo = useQuery(api.class.getClassById, () => ({ id: classId }));
+	const modules = $derived(data.modules);
+	const classInfo = $derived(data.classInfo);
 
 	const client = useConvexClient();
 
-	const clerk = useClerkContext();
-	const clerkUser = $derived(clerk.user);
-
-	const userDataQuery = useQuery(api.users.getUserById, () =>
-		clerkUser ? { id: clerkUser.id } : 'skip'
-	);
+	const userDataQuery = $derived(data.userData);
 	const admin = $derived(
 		userDataQuery.data?.role === 'admin' || userDataQuery.data?.role === 'dev'
 	);
 	const userData = $derived(userDataQuery.data ?? null);
 
 	// Check Pro status for export gating
-	const subscriptionQuery = useQuery(api.polar.getCurrentUserWithSubscription, {});
+	const subscriptionQuery = $derived(data.subscription);
 	const isPro = $derived(
 		subscriptionQuery.data?.isPro ||
 			subscriptionQuery.data?.subscription?.status === 'active' ||
@@ -330,7 +321,7 @@
 		<div class="flex items-center justify-center p-8">
 			<div class="text-error-ink">Failed to load: {modules.error.toString()}</div>
 		</div>
-	{:else if modules.data.length === 0}
+	{:else if !modules.data?.length}
 		<div class="flex items-center justify-center p-8">
 			<div class="text-center">
 				<div class="text-4xl mb-4">📚</div>

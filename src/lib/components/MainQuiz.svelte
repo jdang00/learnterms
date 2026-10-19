@@ -20,7 +20,7 @@
 		setDockPreferences
 	} from '$lib/components/quiz-dock/dockPreferences.svelte';
 	import QuizMobileHeader from '$lib/components/QuizMobileHeader.svelte';
-	import { useQuery } from 'convex-svelte';
+	import { useAuth, useQuery } from 'convex-svelte';
 	import { untrack } from 'svelte';
 	import { api } from '../../convex/_generated/api';
 	import ResultBanner from '$lib/components/ResultBanner.svelte';
@@ -62,9 +62,8 @@
 		questionType: currentlySelected?.type
 	}));
 	const clerk = useClerkContext();
-	const userDataQuery = useQuery(api.users.getUserById, () =>
-		clerk.user ? { id: clerk.user.id } : 'skip'
-	);
+	// The page's server load already subscribes to the viewer's user row.
+	const userDataQuery = $derived(data.convexID);
 	$effect(() => {
 		qs.saveHighlightPreference = (enabled: boolean) =>
 			client.mutation(api.stemHighlights.setEnabled, { enabled });
@@ -73,14 +72,14 @@
 		};
 	});
 	$effect(() => {
-		if (userDataQuery.data && !qs.highlightModeSaving) {
+		if (userDataQuery?.data && !qs.highlightModeSaving) {
 			qs.highlightEnabled = userDataQuery.data.stemHighlightEnabled ?? false;
 		}
 	});
 	const canEdit = $derived(
-		userDataQuery.data?.role === 'dev' ||
-			userDataQuery.data?.role === 'admin' ||
-			userDataQuery.data?.role === 'curator'
+		userDataQuery?.data?.role === 'dev' ||
+			userDataQuery?.data?.role === 'admin' ||
+			userDataQuery?.data?.role === 'curator'
 	);
 
 	const quizCommands = setQuizCommands(
@@ -104,7 +103,10 @@
 	dockPreferences.connect({
 		save: (layout) => client.mutation(api.quizDock.saveLayout, { layout })
 	});
-	const dockLayoutQuery = useQuery(api.quizDock.getLayout, () => (clerk.user ? {} : 'skip'));
+	const convexAuth = useAuth();
+	const dockLayoutQuery = useQuery(api.quizDock.getLayout, () =>
+		convexAuth.isAuthenticated ? {} : 'skip'
+	);
 	$effect(() => dockPreferences.load());
 	$effect(() => {
 		const remote = dockLayoutQuery.data;
