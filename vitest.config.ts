@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config';
-import { transformWithEsbuild } from 'vite';
+import { transformWithOxc } from 'vite';
 import { compile, compileModule } from 'svelte/compiler';
 import { fileURLToPath } from 'node:url';
 
@@ -36,7 +36,7 @@ export default defineConfig({
 								return compile(code, { filename: id, generate: 'server' }).js;
 							}
 							if (/\.svelte\.[jt]s$/.test(id)) {
-								const js = await transformWithEsbuild(code, id, { loader: 'ts' });
+								const js = await transformWithOxc(code, id, { lang: 'ts' });
 								return compileModule(js.code, { filename: id, generate: 'server' }).js;
 							}
 						}
@@ -57,7 +57,7 @@ export default defineConfig({
 						name: 'svelte-state-test',
 						async transform(code, id) {
 							if (!id.endsWith('.svelte.ts')) return;
-							const js = await transformWithEsbuild(code, id, { loader: 'ts' });
+							const js = await transformWithOxc(code, id, { lang: 'ts' });
 							return compileModule(js.code, { filename: id, generate: 'client' }).js;
 						}
 					}
