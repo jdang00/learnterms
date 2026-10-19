@@ -97,7 +97,7 @@
 							'md'
 								? 'py-2.5'
 								: 'py-2'} {selected
-								? 'bg-primary text-primary-foreground data-selected:ring-2 data-selected:ring-primary/40 data-selected:ring-offset-1 data-selected:ring-offset-popover'
+								? 'bg-primary text-primary-foreground data-selected:ring-2 data-selected:ring-primary/40 data-selected:ring-offset-1 data-selected:ring-offset-menu'
 								: 'text-foreground data-selected:bg-muted'}"
 						>
 							<span class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">

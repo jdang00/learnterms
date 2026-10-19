@@ -7,6 +7,7 @@
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { Button } from '$lib/components/ui/button';
+	import * as HoverCard from '$lib/components/ui/hover-card';
 
 	interface Props {
 		source?: {
@@ -21,7 +22,6 @@
 	let { source, editing = false, onRemovePage }: Props = $props();
 	const client = useConvexClient();
 	let opening = $state<number | null>(null);
-	let active = $state<number | null>(null);
 	let error = $state('');
 	// One question cites one document, so the title is the same across its citations.
 	// noteFile is usually the uploaded filename, so drop the extension for display.
@@ -68,13 +68,10 @@
 			};
 		});
 	});
-	const activeGroup = $derived(groups.find((group) => group.start === active));
-	const previewId = $props.id();
 
 	$effect(() => {
 		void source;
 		error = '';
-		active = null;
 	});
 
 	async function openSource(pageNumber: number) {
@@ -107,69 +104,59 @@
 			<span class="break-words">{title || 'Sources'}</span>
 		</p>
 
-		<div
-			role="group"
-			aria-label="Source pages"
-			class="relative flex flex-wrap gap-2"
-			onmouseleave={() => (active = null)}
-		>
-			{#if activeGroup}
-				<div class="absolute inset-x-0 top-full z-30 pt-2">
-					<div
-						id={previewId}
-						role="tooltip"
-						data-surface="popover"
-						class="surface-sm p-3 text-left shadow-lg"
-					>
-						<p class="text-xs font-semibold text-foreground">
-							{title || 'Source'} · <span class="font-mono">{activeGroup.label}</span>
-						</p>
-						{#if activeGroup.pages.some((page) => page.quote)}
-							<div
-								class="mt-2 max-h-48 space-y-2 overflow-y-auto text-xs leading-relaxed text-foreground/75"
-							>
-								{#each activeGroup.pages.filter((page) => page.quote) as page (page.pageNumber)}
-									<p class="whitespace-pre-line">
-										{#if activeGroup.pages.length > 1}<span class="font-mono text-foreground/50"
-												>p. {page.pageNumber}</span
-											><br />{/if}{page.quote}
-									</p>
-								{/each}
-							</div>
-						{/if}
-						<p class="mt-2 text-[11px] text-foreground/50">
-							Click the page chip to open the PDF{activeGroup.start === activeGroup.end
-								? ''
-								: ` at p. ${activeGroup.start}`}.
-						</p>
-					</div>
-				</div>
-			{/if}
+		<div role="group" aria-label="Source pages" class="flex flex-wrap gap-2">
 			{#each groups as group (group.start)}
 				<div class="flex items-center gap-0.5">
-					<Button
-						variant="ghost"
-						tone="neutral"
-						size="xs"
-						class="gap-1.5 border-border font-mono font-normal"
-						disabled={opening !== null}
-						aria-label={group.start === group.end
-							? `Open ${title || 'source PDF'} at page ${group.start} in a new tab`
-							: `Open ${title || 'source PDF'} at page ${group.start} (cites pages ${group.start}–${group.end}) in a new tab`}
-						onclick={() => openSource(group.start)}
-						onmouseenter={() => (active = group.start)}
-						aria-describedby={active === group.start ? previewId : undefined}
-						onkeydown={(event) => {
-							if (event.key === 'Escape') active = null;
-						}}
-						onfocus={() => (active = group.start)}
-						onblur={() => (active = null)}
-					>
-						{#if opening === group.start}<Spinner class="size-3" />{:else}<FileText
-								size={12}
-							/>{/if}
-						{group.label}<ExternalLink size={11} />
-					</Button>
+					<HoverCard.Root openDelay={80} closeDelay={120}>
+						<HoverCard.Trigger>
+							{#snippet child({ props })}
+								<Button
+									{...props}
+									variant="ghost"
+									tone="neutral"
+									size="xs"
+									class="gap-1.5 border-border font-mono font-normal"
+									disabled={opening !== null}
+									aria-label={group.start === group.end
+										? `Open ${title || 'source PDF'} at page ${group.start} in a new tab`
+										: `Open ${title || 'source PDF'} at page ${group.start} (cites pages ${group.start}–${group.end}) in a new tab`}
+									onclick={() => openSource(group.start)}
+								>
+									{#if opening === group.start}<Spinner class="size-3" />{:else}<FileText
+											size={12}
+										/>{/if}
+									{group.label}<ExternalLink size={11} />
+								</Button>
+							{/snippet}
+						</HoverCard.Trigger>
+						<HoverCard.Content
+							align="start"
+							collisionPadding={12}
+							class="w-96 max-w-[calc(100vw-1.5rem)] p-3 text-left"
+						>
+							<p class="text-xs font-semibold text-foreground">
+								{title || 'Source'} · <span class="font-mono">{group.label}</span>
+							</p>
+							{#if group.pages.some((page) => page.quote)}
+								<div
+									class="mt-2 max-h-48 space-y-2 overflow-y-auto text-xs leading-relaxed text-foreground/75"
+								>
+									{#each group.pages.filter((page) => page.quote) as page (page.pageNumber)}
+										<p class="whitespace-pre-line">
+											{#if group.pages.length > 1}<span class="font-mono text-foreground/50"
+													>p. {page.pageNumber}</span
+												><br />{/if}{page.quote}
+										</p>
+									{/each}
+								</div>
+							{/if}
+							<p class="mt-2 text-[11px] text-foreground/50">
+								Click the page chip to open the PDF{group.start === group.end
+									? ''
+									: ` at p. ${group.start}`}.
+							</p>
+						</HoverCard.Content>
+					</HoverCard.Root>
 					{#if onRemovePage}
 						<Button
 							variant="ghost"
