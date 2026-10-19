@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import { isRedirect, redirect } from '@sveltejs/kit';
 import { convexLoad, createConvexHttpClient } from 'convex-svelte/sveltekit';
 import { api } from '../../../../../convex/_generated/api';
-import { PUBLIC_CONVEX_URL } from '$env/static/public';
+import { PUBLIC_CONVEX_URL } from '$app/env/public';
 import type { Id } from '../../../../../convex/_generated/dataModel';
 import { rateLimit } from '#lib/server/rateLimit.js';
 

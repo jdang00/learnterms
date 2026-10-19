@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { getPostHog } from './posthogClient';
 
 type SubmissionSource = 'button' | 'keyboard' | 'mobile';

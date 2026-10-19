@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { SelectField } from '#lib/components/ui/select/index.js';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { onMount, tick } from 'svelte';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import Trash2 from '@lucide/svelte/icons/trash-2';

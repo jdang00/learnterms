@@ -1,4 +1,4 @@
-import { PUBLIC_CONVEX_URL } from '$env/static/public';
+import { PUBLIC_CONVEX_URL } from '$app/env/public';
 import { decodeConvexLoad, encodeConvexLoad, initConvex } from 'convex-svelte/sveltekit';
 import type { Transport } from '@sveltejs/kit';
 

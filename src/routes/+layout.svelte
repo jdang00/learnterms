@@ -3,7 +3,7 @@
 	import '@fontsource-variable/geist-mono';
 	import { getRouteSeo, SITE_ORIGIN } from '#lib/seo.js';
 	import { ClerkProvider } from 'svelte-clerk';
-	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
+	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$app/env/public';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import NavBar from '#lib/components/NavBar.svelte';
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
@@ -18,7 +18,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { browser, dev } from '$app/environment';
+	import { browser, dev } from '$app/env';
 	import { trackKeyboardInset } from '#lib/utils/keyboardInset.js';
 	import { trackPreviousPath } from '#lib/utils/backNavigation.js';
 

@@ -1,4 +1,4 @@
-import { dev } from '$app/environment';
+import { dev } from '$app/env';
 import { getRouteSeo, SITE_ORIGIN } from '#lib/seo.js';
 import { withClerkHandler } from 'svelte-clerk/server';
 import type { Handle } from '@sveltejs/kit';
