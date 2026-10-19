@@ -1,9 +1,7 @@
 import { defineConfig } from 'vitest/config';
-import { transformWithEsbuild } from 'vite';
+import { transformWithOxc } from 'vite';
 import { compile, compileModule } from 'svelte/compiler';
 import { fileURLToPath } from 'node:url';
-
-const $lib = fileURLToPath(new URL('./src/lib', import.meta.url));
 
 export default defineConfig({
 	test: {
@@ -18,7 +16,6 @@ export default defineConfig({
 			{
 				resolve: {
 					alias: {
-						$lib,
 						'svelte-clerk/server': fileURLToPath(
 							new URL('./node_modules/svelte-clerk/dist/server/index.js', import.meta.url)
 						),
@@ -36,7 +33,7 @@ export default defineConfig({
 								return compile(code, { filename: id, generate: 'server' }).js;
 							}
 							if (/\.svelte\.[jt]s$/.test(id)) {
-								const js = await transformWithEsbuild(code, id, { loader: 'ts' });
+								const js = await transformWithOxc(code, id, { lang: 'ts' });
 								return compileModule(js.code, { filename: id, generate: 'server' }).js;
 							}
 						}
@@ -50,14 +47,13 @@ export default defineConfig({
 				}
 			},
 			{
-				resolve: { alias: { $lib } },
 				// Compiles .svelte.ts rune modules so their state classes can run outside a component.
 				plugins: [
 					{
 						name: 'svelte-state-test',
 						async transform(code, id) {
 							if (!id.endsWith('.svelte.ts')) return;
-							const js = await transformWithEsbuild(code, id, { loader: 'ts' });
+							const js = await transformWithOxc(code, id, { lang: 'ts' });
 							return compileModule(js.code, { filename: id, generate: 'client' }).js;
 						}
 					}

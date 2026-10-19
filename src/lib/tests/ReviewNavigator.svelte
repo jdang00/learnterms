@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { isUnansweredItem } from './results';
 	import type { ReviewState } from './review.svelte';
 

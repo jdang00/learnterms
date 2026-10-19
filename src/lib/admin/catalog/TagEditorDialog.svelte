@@ -32,12 +32,12 @@
 	import Check from '@lucide/svelte/icons/check';
 	import Pipette from '@lucide/svelte/icons/pipette';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import { Button } from '$lib/components/ui/button';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { getErrorText } from '$lib/utils/errorHandling';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { getErrorText } from '#lib/utils/errorHandling.js';
 	import { toast } from 'svelte-sonner';
 
 	let {

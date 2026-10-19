@@ -7,9 +7,9 @@
 	import X from '@lucide/svelte/icons/x';
 	import { resolve } from '$app/paths';
 	import { fade } from 'svelte/transition';
-	import ShimmerText from '$lib/components/ShimmerText.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Kbd } from '$lib/components/ui/kbd';
+	import ShimmerText from '#lib/components/ShimmerText.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
 	import QuestionStudioCandidateCard from './QuestionStudioCandidateCard.svelte';
 	import QuestionStudioCandidateInspector from './QuestionStudioCandidateInspector.svelte';
 	import QuestionStudioSlotRow from './QuestionStudioSlotRow.svelte';

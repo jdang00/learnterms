@@ -4,7 +4,7 @@ import Glasses from '@lucide/svelte/icons/glasses';
 import Microscope from '@lucide/svelte/icons/microscope';
 import MoveHorizontal from '@lucide/svelte/icons/move-horizontal';
 import ScanEye from '@lucide/svelte/icons/scan-eye';
-import type { ExamTestGroup } from '$lib/examFindings/catalog';
+import type { ExamTestGroup } from '#lib/examFindings/catalog.js';
 
 // Same tinted badges as the quiz dock, one hue per group.
 export const EXAM_GROUP_STYLE: Record<ExamTestGroup, { icon: typeof Eye; badge: string }> = {

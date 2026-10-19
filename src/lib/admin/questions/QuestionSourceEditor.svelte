@@ -6,14 +6,14 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
-	import QuestionSources from '$lib/components/QuestionSources.svelte';
+	import QuestionSources from '#lib/components/QuestionSources.svelte';
 	import RagDocumentBrowser from '../source/RagDocumentBrowser.svelte';
 	import QuestionStudioPagePicker from '../question-studio/QuestionStudioPagePicker.svelte';
 	import type { SourcePreviewBatch } from '../source/sourceContext';
 	import { createSourcePreviewCache } from '../source/sourcePreviewCache';
 	import { createSourcePdf, warmPdfRenderer, type SourcePdfResource } from '../source/sourcePdf';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 
 	type Source = NonNullable<Doc<'question'>['metadata']['source']>;
 	let {

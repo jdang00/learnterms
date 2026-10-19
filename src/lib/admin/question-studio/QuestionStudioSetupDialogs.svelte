@@ -8,9 +8,9 @@
 	import type { SourceMode } from '../../../convex/questionStudio/pageSelection';
 	import type { QuestionType, TopicMapItem } from './questionStudioTypes';
 	import { questionTypes, questionTypeDefinitions } from './questionStudioTypes';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
 	interface Props {
 		topicsOpen?: boolean;
 		mixOpen?: boolean;

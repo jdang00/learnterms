@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { provideStudyToolContext } from '$lib/analytics/studyToolContext';
-	import QuestionNotesTool from '$lib/components/question-notes/QuestionNotesTool.svelte';
-	import CalculatorTool from '$lib/components/calculator/CalculatorTool.svelte';
-	import { sidePanel } from '$lib/components/side-panel/state.svelte';
+	import { provideStudyToolContext } from '#lib/analytics/studyToolContext.js';
+	import QuestionNotesTool from '#lib/components/question-notes/QuestionNotesTool.svelte';
+	import CalculatorTool from '#lib/components/calculator/CalculatorTool.svelte';
+	import { sidePanel } from '#lib/components/side-panel/state.svelte.js';
 	import { useClerkContext } from 'svelte-clerk/client';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -11,17 +11,21 @@
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../convex/_generated/dataModel';
-	import MobileStudyBar from '$lib/components/MobileStudyBar.svelte';
-	import QuestionNavigatorSheet from '$lib/components/QuestionNavigatorSheet.svelte';
-	import AttemptSidebar from '$lib/tests/AttemptSidebar.svelte';
-	import AttemptNavigator from '$lib/tests/AttemptNavigator.svelte';
-	import AttemptQuestion from '$lib/tests/AttemptQuestion.svelte';
-	import AttemptDock from '$lib/tests/AttemptDock.svelte';
-	import AttemptToolsSheet from '$lib/tests/AttemptToolsSheet.svelte';
-	import AttemptSubmitSheet from '$lib/tests/AttemptSubmitSheet.svelte';
-	import { AttemptRunnerState, syncStatusIcon, syncStatusLabel } from '$lib/tests/attempt.svelte';
-	import { cameFrom } from '$lib/utils/backNavigation';
-	import { formatClock } from '$lib/utils/format';
+	import MobileStudyBar from '#lib/components/MobileStudyBar.svelte';
+	import QuestionNavigatorSheet from '#lib/components/QuestionNavigatorSheet.svelte';
+	import AttemptSidebar from '#lib/tests/AttemptSidebar.svelte';
+	import AttemptNavigator from '#lib/tests/AttemptNavigator.svelte';
+	import AttemptQuestion from '#lib/tests/AttemptQuestion.svelte';
+	import AttemptDock from '#lib/tests/AttemptDock.svelte';
+	import AttemptToolsSheet from '#lib/tests/AttemptToolsSheet.svelte';
+	import AttemptSubmitSheet from '#lib/tests/AttemptSubmitSheet.svelte';
+	import {
+		AttemptRunnerState,
+		syncStatusIcon,
+		syncStatusLabel
+	} from '#lib/tests/attempt.svelte.js';
+	import { cameFrom } from '#lib/utils/backNavigation.js';
+	import { formatClock } from '#lib/utils/format.js';
 	import { slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
@@ -33,10 +37,10 @@
 	import Calculator from '@lucide/svelte/icons/calculator';
 	import StickyNote from '@lucide/svelte/icons/sticky-note';
 	import ToolCase from '@lucide/svelte/icons/tool-case';
-	import { Button } from '$lib/components/ui/button';
-	import * as Alert from '$lib/components/ui/alert';
-	import * as Card from '$lib/components/ui/card';
-	import { LoadingState } from '$lib/components/ui/spinner';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
 
 	let { data } = $props();
 

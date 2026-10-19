@@ -1,9 +1,9 @@
 <script lang="ts">
 	import './markdown-preview.css';
 	import X from '@lucide/svelte/icons/x';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 
 	let {
 		html,

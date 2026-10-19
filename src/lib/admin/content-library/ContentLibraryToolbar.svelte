@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SegmentedControl } from '$lib/components/ui/segmented-control';
+	import { SegmentedControl } from '#lib/components/ui/segmented-control/index.js';
 	import ArrowDownUp from '@lucide/svelte/icons/arrow-down-up';
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -8,10 +8,10 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import Search from '@lucide/svelte/icons/search';
 	import X from '@lucide/svelte/icons/x';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as InputGroup from '$lib/components/ui/input-group';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
 	import { sortOptions, type SortKey, type ViewMode } from './contentLibrary';
 
 	let {

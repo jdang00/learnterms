@@ -3,10 +3,10 @@
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { Command } from 'bits-ui';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import * as InputGroup from '$lib/components/ui/input-group';
-	import * as Popover from '$lib/components/ui/popover';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import * as Popover from '#lib/components/ui/popover/index.js';
 
 	interface Option {
 		value: string;

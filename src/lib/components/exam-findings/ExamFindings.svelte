@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { ExamFinding, ExamFindingSize } from '$lib/examFindings/findings';
-	import { buildExamFindingView, laneSpan, packLanes } from '$lib/examFindings/view';
+	import type { ExamFinding, ExamFindingSize } from '#lib/examFindings/findings.js';
+	import { buildExamFindingView, laneSpan, packLanes } from '#lib/examFindings/view.js';
 	import ExamFindingCard from './ExamFindingCard.svelte';
 
 	let {

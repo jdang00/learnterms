@@ -1,4 +1,4 @@
-import { responseText, responseWordCount, MAX_RESPONSE_WORDS } from '$lib/utils/freeResponse';
+import { responseText, responseWordCount, MAX_RESPONSE_WORDS } from '#lib/utils/freeResponse.js';
 import { getContext, setContext } from 'svelte';
 import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -24,9 +24,9 @@ import Shuffle from '@lucide/svelte/icons/shuffle';
 import SkipForward from '@lucide/svelte/icons/skip-forward';
 import Timer from '@lucide/svelte/icons/timer';
 import type { Doc, Id } from '../../../convex/_generated/dataModel';
-import { QUESTION_TYPES } from '$lib/utils/questionType';
-import { captureStudyTool } from '$lib/analytics/studyTools';
-import { captureQuestionAnswered } from '$lib/analytics/questionAnswered';
+import { QUESTION_TYPES } from '#lib/utils/questionType.js';
+import { captureStudyTool } from '#lib/analytics/studyTools.js';
+import { captureQuestionAnswered } from '#lib/analytics/questionAnswered.js';
 import { clampTextScale, formatDuration, nextTextScale } from './format';
 import type {
 	CommandSource,

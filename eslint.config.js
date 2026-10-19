@@ -143,11 +143,11 @@ export default ts.config(
 							name: 'convex/browser',
 							importNames: ['ConvexHttpClient'],
 							message:
-								'Use useQuery/convexLoad from convex-svelte; ConvexHttpClient belongs in server loads, hooks or $lib/server.'
+								'Use useQuery/convexLoad from convex-svelte; ConvexHttpClient belongs in server loads, hooks or #lib/server.'
 						},
 						{
 							name: 'convex-svelte/sveltekit/server',
-							message: 'Server-only; use it from hooks, server loads or $lib/server.'
+							message: 'Server-only; use it from hooks, server loads or #lib/server.'
 						}
 					]
 				}

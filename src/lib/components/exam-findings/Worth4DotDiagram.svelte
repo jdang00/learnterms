@@ -8,7 +8,7 @@
 		type Eye,
 		type Offset,
 		type Worth4DotState
-	} from '$lib/examFindings/worth4dot';
+	} from '#lib/examFindings/worth4dot.js';
 
 	let {
 		reading,

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import PartyPopper from '@lucide/svelte/icons/party-popper';
 	import Rocket from '@lucide/svelte/icons/rocket';
@@ -7,7 +7,7 @@
 	import { Confetti } from 'svelte-confetti';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	let { data }: { data: PageData } = $props();
 

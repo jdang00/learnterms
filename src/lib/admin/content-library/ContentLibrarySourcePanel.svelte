@@ -3,8 +3,8 @@
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import type { Doc } from '../../../convex/_generated/dataModel';
 	import { fileKind } from './contentLibrary';
-	import { Button } from '$lib/components/ui/button';
-	import { LoadingState } from '$lib/components/ui/spinner';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
 
 	let {
 		document,

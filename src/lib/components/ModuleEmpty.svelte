@@ -3,8 +3,8 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { cameFrom } from '$lib/utils/backNavigation';
-	import { Button } from '$lib/components/ui/button';
+	import { cameFrom } from '#lib/utils/backNavigation.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	// The quiz with nothing in it: the navigator rail stays, holding open slots instead of questions.
 	let {

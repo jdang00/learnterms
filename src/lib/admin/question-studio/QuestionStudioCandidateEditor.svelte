@@ -1,12 +1,12 @@
 <script lang="ts">
-	import QuestionSources from '$lib/components/QuestionSources.svelte';
+	import QuestionSources from '#lib/components/QuestionSources.svelte';
 	import { untrack } from 'svelte';
 	import QuestionRichTextEditor from '../questions/QuestionRichTextEditor.svelte';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { CandidateQuestion } from './questionStudioTypes';
-	import { Button } from '$lib/components/ui/button';
-	import * as RadioGroup from '$lib/components/ui/radio-group';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as RadioGroup from '#lib/components/ui/radio-group/index.js';
 
 	interface Props {
 		candidate: CandidateQuestion;

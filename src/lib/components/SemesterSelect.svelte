@@ -1,7 +1,7 @@
 <script lang="ts">
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
-	import { SelectField } from '$lib/components/ui/select';
-	import { cn } from '$lib/utils.js';
+	import { SelectField } from '#lib/components/ui/select/index.js';
+	import { cn } from '#lib/utils.js';
 
 	// The one semester picker for the whole app. Values are semester names unless `by="id"`.
 	let {

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { captureStudyTool } from '$lib/analytics/studyTools';
-	import { useStudyToolContext } from '$lib/analytics/studyToolContext';
-	import type { StudyToolDetails } from '$lib/analytics/studyToolEvents';
+	import { captureStudyTool } from '#lib/analytics/studyTools.js';
+	import { useStudyToolContext } from '#lib/analytics/studyToolContext.js';
+	import type { StudyToolDetails } from '#lib/analytics/studyToolEvents.js';
 	import { onMount, untrack } from 'svelte';
 	import { Editor, Extension } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
@@ -13,14 +13,14 @@
 	import ListOrdered from '@lucide/svelte/icons/list-ordered';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import Redo2 from '@lucide/svelte/icons/redo-2';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import {
 		EMPTY_NOTE,
 		NOTE_LIMIT,
 		normalizeNote,
 		type NoteSnapshot,
 		type NoteSaveResult
-	} from '$lib/question-notes/document';
+	} from '#lib/question-notes/document.js';
 
 	let {
 		snapshot,

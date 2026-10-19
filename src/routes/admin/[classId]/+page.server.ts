@@ -1,4 +1,4 @@
-import { requireConvexSession } from '$lib/server/convex';
+import { requireConvexSession } from '#lib/server/convex.js';
 import { convexLoad } from 'convex-svelte/sveltekit';
 import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';

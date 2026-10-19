@@ -1,46 +1,49 @@
 <script lang="ts">
-	import { LoadingState } from '$lib/components/ui/spinner';
-	import { provideStudyToolContext } from '$lib/analytics/studyToolContext';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
+	import { provideStudyToolContext } from '#lib/analytics/studyToolContext.js';
 	import QuestionNotesTool from './question-notes/QuestionNotesTool.svelte';
 	import CalculatorTool from './calculator/CalculatorTool.svelte';
 	import HighlightedStem from './HighlightedStem.svelte';
-	import QuizSideBar from '$lib/components/QuizSideBar.svelte';
-	import QuizNavigation from '$lib/components/QuizNavigation.svelte';
-	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
-	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
+	import QuizSideBar from '#lib/components/QuizSideBar.svelte';
+	import QuizNavigation from '#lib/components/QuizNavigation.svelte';
+	import AnswerOptions from '#lib/components/AnswerOptions.svelte';
+	import FillInTheBlank from '#lib/components/FillInTheBlank.svelte';
 	import FreeResponse from './FreeResponse.svelte';
-	import Matching from '$lib/components/Matching.svelte';
-	import QuizDock from '$lib/components/quiz-dock/QuizDock.svelte';
-	import MobileQuizDock from '$lib/components/quiz-dock/MobileQuizDock.svelte';
-	import QuizShortcuts from '$lib/components/quiz-dock/QuizShortcuts.svelte';
-	import { createQuizCommands, setQuizCommands } from '$lib/components/quiz-dock/commands.svelte';
-	import DockCustomizer from '$lib/components/quiz-dock/DockCustomizer.svelte';
+	import Matching from '#lib/components/Matching.svelte';
+	import QuizDock from '#lib/components/quiz-dock/QuizDock.svelte';
+	import MobileQuizDock from '#lib/components/quiz-dock/MobileQuizDock.svelte';
+	import QuizShortcuts from '#lib/components/quiz-dock/QuizShortcuts.svelte';
+	import {
+		createQuizCommands,
+		setQuizCommands
+	} from '#lib/components/quiz-dock/commands.svelte.js';
+	import DockCustomizer from '#lib/components/quiz-dock/DockCustomizer.svelte';
 	import {
 		DockPreferences,
 		setDockPreferences
-	} from '$lib/components/quiz-dock/dockPreferences.svelte';
-	import QuizMobileHeader from '$lib/components/QuizMobileHeader.svelte';
+	} from '#lib/components/quiz-dock/dockPreferences.svelte.js';
+	import QuizMobileHeader from '#lib/components/QuizMobileHeader.svelte';
 	import { useAuth, useQuery } from 'convex-svelte';
 	import { untrack } from 'svelte';
 	import { api } from '../../convex/_generated/api';
-	import ResultBanner from '$lib/components/ResultBanner.svelte';
-	import QuestionMediaStrip from '$lib/components/QuestionMediaStrip.svelte';
-	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
-	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
-	import ModuleEmpty from '$lib/components/ModuleEmpty.svelte';
+	import ResultBanner from '#lib/components/ResultBanner.svelte';
+	import QuestionMediaStrip from '#lib/components/QuestionMediaStrip.svelte';
+	import ExamFindings from '#lib/components/exam-findings/ExamFindings.svelte';
+	import ErrorDisplay from '#lib/components/ErrorDisplay.svelte';
+	import ModuleEmpty from '#lib/components/ModuleEmpty.svelte';
 	import Flag from '@lucide/svelte/icons/flag';
 	import BookmarkCheck from '@lucide/svelte/icons/bookmark-check';
 	import ArrowDownNarrowWide from '@lucide/svelte/icons/arrow-down-narrow-wide';
 	import Pencil from '@lucide/svelte/icons/pencil';
-	import { QUESTION_TYPES } from '$lib/utils/questionType';
-	import { isConvexAuthError } from '$lib/utils/errorHandling';
+	import { QUESTION_TYPES } from '#lib/utils/questionType.js';
+	import { isConvexAuthError } from '#lib/utils/errorHandling.js';
 	import { slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import { useClerkContext } from 'svelte-clerk/client';
 	import { resolve } from '$app/paths';
-	import { Button } from '$lib/components/ui/button';
-	import * as Alert from '$lib/components/ui/alert';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
 
 	let {
 		qs,
@@ -94,7 +97,7 @@
 			canEdit: () => canEdit,
 			editHref: () =>
 				canEdit && currentlySelected
-					? resolve(`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`)
+					? resolve(`admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`)
 					: null
 		})
 	);
@@ -220,7 +223,7 @@
 								shape="circle"
 								class="m-1"
 								href={resolve(
-									`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`
+									`admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`
 								)}
 								target="_blank"
 								rel="noopener noreferrer"

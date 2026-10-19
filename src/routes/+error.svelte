@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { asset, resolve } from '$app/paths';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 </script>
 
 <section
@@ -9,7 +9,7 @@
 >
 	{#if page.status === 404}
 		<img
-			src={asset('/images/404-lobby.webp')}
+			src={asset('images/404-lobby.webp')}
 			alt=""
 			aria-hidden="true"
 			width="1536"

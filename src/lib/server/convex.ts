@@ -1,5 +1,5 @@
 import { createConvexHttpClient } from 'convex-svelte/sveltekit';
-import { PUBLIC_CONVEX_URL } from '$env/static/public';
+import { PUBLIC_CONVEX_URL } from '$app/env/public';
 import { redirect } from '@sveltejs/kit';
 
 /** Redirect signed-out visitors before a load reads Convex with the request's token. */

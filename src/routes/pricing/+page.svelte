@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -8,10 +8,10 @@
 	import Minus from '@lucide/svelte/icons/minus';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
-	import PublicPage from '$lib/components/landing/PublicPage.svelte';
-	import PublicCta from '$lib/components/landing/PublicCta.svelte';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
+	import PublicPage from '#lib/components/landing/PublicPage.svelte';
+	import PublicCta from '#lib/components/landing/PublicCta.svelte';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	let { data }: { data: PageData } = $props();
 

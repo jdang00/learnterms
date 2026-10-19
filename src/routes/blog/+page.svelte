@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import { blogPosts } from '$lib/content/blog';
-	import PublicPage from '$lib/components/landing/PublicPage.svelte';
+	import { blogPosts } from '#lib/content/blog.js';
+	import PublicPage from '#lib/components/landing/PublicPage.svelte';
 </script>
 
 <PublicPage

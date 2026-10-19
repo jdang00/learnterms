@@ -10,13 +10,13 @@
 	import Info from '@lucide/svelte/icons/info';
 	import StudentStatsContent from './StudentStatsContent.svelte';
 	import type { LucideIcon } from '@lucide/svelte';
-	import * as Alert from '$lib/components/ui/alert';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { LoadingState } from '$lib/components/ui/spinner';
-	import { Tip } from '$lib/components/ui/tooltip';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
+	import { Tip } from '#lib/components/ui/tooltip/index.js';
 
 	let {
 		isOpen,

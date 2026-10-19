@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Separator } from '$lib/components/ui/separator';
+	import { Separator } from '#lib/components/ui/separator/index.js';
 	import ExamFindingsWorkspace from './ExamFindingsWorkspace.svelte';
 	import EditorHeader from './editor/EditorHeader.svelte';
 	import TypeStatusBar from './editor/TypeStatusBar.svelte';
@@ -16,22 +16,22 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id } from '../../../convex/_generated/dataModel';
-	import { DISPLAY_QUESTION_TYPES, QUESTION_TYPES } from '$lib/types';
+	import { DISPLAY_QUESTION_TYPES, QUESTION_TYPES } from '#lib/types.js';
 	import {
 		INLINE_ANSWER,
 		parsePastedQuestion,
 		plainTextToHtml,
 		splitInlineAnswers,
 		type ParsedQuestion
-	} from '$lib/utils/questionAuthoring';
+	} from '#lib/utils/questionAuthoring.js';
 	import { onMount } from 'svelte';
-	import { toastStore } from '$lib/stores/toast.svelte';
+	import { toastStore } from '#lib/stores/toast.svelte.js';
 	import type { Readable } from 'svelte/store';
 	import type { Editor, EditorContent } from 'svelte-tiptap';
-	import { loadEditorExtensions } from '$lib/config/tiptap';
+	import { loadEditorExtensions } from '#lib/config/tiptap.js';
 	import { useClerkContext } from 'svelte-clerk';
-	import { getRationalePlainText } from '$lib/utils/rationale';
-	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
+	import { getRationalePlainText } from '#lib/utils/rationale.js';
+	import { useQuestionMedia } from '#lib/utils/useQuestionMedia.svelte.js';
 
 	let {
 		moduleId,

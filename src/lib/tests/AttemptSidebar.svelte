@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { RadialProgress } from '$lib/components/ui/radial-progress';
-	import { Button } from '$lib/components/ui/button';
-	import * as Card from '$lib/components/ui/card';
-	import { Progress } from '$lib/components/ui/progress';
-	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
-	import { formatClock } from '$lib/utils/format';
+	import { RadialProgress } from '#lib/components/ui/radial-progress/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import { Progress } from '#lib/components/ui/progress/index.js';
+	import QuestionAttachmentsSidebar from '#lib/components/QuestionAttachmentsSidebar.svelte';
+	import { formatClock } from '#lib/utils/format.js';
 	import PanelRight from '@lucide/svelte/icons/panel-right';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import Clock from '@lucide/svelte/icons/clock';

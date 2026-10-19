@@ -10,11 +10,11 @@
 	import { resolve } from '$app/paths';
 	import { api } from '../../convex/_generated/api';
 	import type { CohortInfo } from '../../lib/types';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 
 	import { fade, fly } from 'svelte/transition';
 	const client = useConvexClient();

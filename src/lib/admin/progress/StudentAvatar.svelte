@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Avatar from '$lib/components/ui/avatar';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
 
 	let {
 		name,

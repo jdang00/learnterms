@@ -1,5 +1,5 @@
 <script lang="ts">
-	import LegalPage from '$lib/components/legal/LegalPage.svelte';
+	import LegalPage from '#lib/components/legal/LegalPage.svelte';
 	import { resolve } from '$app/paths';
 </script>
 

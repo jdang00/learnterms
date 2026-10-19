@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Progress } from '$lib/components/ui/progress';
+	import { Progress } from '#lib/components/ui/progress/index.js';
 	import Braces from '@lucide/svelte/icons/braces';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Database from '@lucide/svelte/icons/database';
@@ -9,8 +9,8 @@
 	import Search from '@lucide/svelte/icons/search';
 	import Wrench from '@lucide/svelte/icons/wrench';
 	import { fade, slide } from 'svelte/transition';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import {
 		type DevToolResult,
 		type ToolRun,

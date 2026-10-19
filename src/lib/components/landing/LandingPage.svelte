@@ -1,5 +1,5 @@
 <script lang="ts">
-	import HeroGlow from '$lib/components/landing/HeroGlow.svelte';
+	import HeroGlow from '#lib/components/landing/HeroGlow.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BrainCircuit from '@lucide/svelte/icons/brain-circuit';
 	import Flag from '@lucide/svelte/icons/flag';
@@ -13,17 +13,17 @@
 	import Image from '@lucide/svelte/icons/image';
 	import ZoomIn from '@lucide/svelte/icons/zoom-in';
 	import Users from '@lucide/svelte/icons/users';
-	import QuizPreviewReplica from '$lib/components/landing/QuizPreviewReplica.svelte';
-	import ReviewsShowcase from '$lib/components/landing/ReviewsShowcase.svelte';
-	import BrandLogo from '$lib/components/BrandLogo.svelte';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { Kbd } from '$lib/components/ui/kbd';
-	import { Switch } from '$lib/components/ui/switch';
+	import QuizPreviewReplica from '#lib/components/landing/QuizPreviewReplica.svelte';
+	import ReviewsShowcase from '#lib/components/landing/ReviewsShowcase.svelte';
+	import BrandLogo from '#lib/components/BrandLogo.svelte';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { resolve } from '$app/paths';
-	import { reveal } from '$lib/actions/reveal';
+	import { reveal } from '#lib/actions/reveal.js';
 	import {
 		adminSteps,
 		aiSteps,
@@ -32,7 +32,7 @@
 		keyOptions,
 		keySequence,
 		studentSteps
-	} from '$lib/content/landing';
+	} from '#lib/content/landing.js';
 
 	// Flag & filter demo state
 	let showFlaggedOnly = $state(false);

@@ -12,8 +12,8 @@
 	import QuoteIcon from '@lucide/svelte/icons/quote';
 	import ListIcon from '@lucide/svelte/icons/list';
 	import ListOrderedIcon from '@lucide/svelte/icons/list-ordered';
-	import { loadEditorExtensions } from '$lib/config/tiptap';
-	import { Button } from '$lib/components/ui/button';
+	import { loadEditorExtensions } from '#lib/config/tiptap.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	let {
 		value = $bindable(''),
 		label,

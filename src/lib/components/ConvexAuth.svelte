@@ -2,7 +2,7 @@
 	import { setupAuth } from 'convex-svelte';
 	import { untrack, type Snippet } from 'svelte';
 	import { useClerkContext } from 'svelte-clerk/client';
-	import { clerkConvexAuthProvider } from '$lib/convexAuthProvider';
+	import { clerkConvexAuthProvider } from '#lib/convexAuthProvider.js';
 
 	// Wraps the app so every descendant can read Convex's auth state with `useAuth()`.
 	let { initialToken, children }: { initialToken: string | null; children?: Snippet } = $props();

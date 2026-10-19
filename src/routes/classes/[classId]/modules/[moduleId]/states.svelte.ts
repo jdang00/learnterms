@@ -1,10 +1,10 @@
-import { responseText, type FreeResponseGrade } from '$lib/utils/freeResponse';
-import { answerStatus, evaluateMatching, summarizeModule } from '$lib/utils/moduleCompletion';
+import { responseText, type FreeResponseGrade } from '#lib/utils/freeResponse.js';
+import { answerStatus, evaluateMatching, summarizeModule } from '#lib/utils/moduleCompletion.js';
 import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
 import type { ConvexClient } from 'convex/browser';
 
-import type { StudyEvidence } from '$lib/utils/studyMastery';
+import type { StudyEvidence } from '#lib/utils/studyMastery.js';
 
 type QuestionOption = { id: string; text: string };
 type PendingSnapshot = {

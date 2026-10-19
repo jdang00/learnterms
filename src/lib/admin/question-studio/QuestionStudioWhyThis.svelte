@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
-	import { getPostHog } from '$lib/analytics/posthogClient';
-	import { Button } from '$lib/components/ui/button';
+	import { getPostHog } from '#lib/analytics/posthogClient.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { questionTypeLabel } from './questionStudioTypes';
 	import type { CandidateQuestion } from './questionStudioTypes';
 	import type { CandidateReview } from './questionStudioRun';

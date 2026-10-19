@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { DOCK_ISLAND_CLASS, dockGlass } from '$lib/components/quiz-dock/dockStyles';
-	import { Button } from '$lib/components/ui/button';
+	import { DOCK_ISLAND_CLASS, dockGlass } from '#lib/components/quiz-dock/dockStyles.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BarChart3 from '@lucide/svelte/icons/bar-chart-3';

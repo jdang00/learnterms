@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import ReleaseOne from '$lib/components/blog/ReleaseOne.svelte';
-	import Lens from '$lib/components/blog/Lens.svelte';
-	import VersionTwoBeta from '$lib/components/blog/VersionTwoBeta.svelte';
-	import VersionTwo from '$lib/components/blog/VersionTwo.svelte';
-	import VersionThree from '$lib/components/blog/VersionThree.svelte';
-	import PublicBackdrop from '$lib/components/landing/PublicBackdrop.svelte';
+	import ReleaseOne from '#lib/components/blog/ReleaseOne.svelte';
+	import Lens from '#lib/components/blog/Lens.svelte';
+	import VersionTwoBeta from '#lib/components/blog/VersionTwoBeta.svelte';
+	import VersionTwo from '#lib/components/blog/VersionTwo.svelte';
+	import VersionThree from '#lib/components/blog/VersionThree.svelte';
+	import PublicBackdrop from '#lib/components/landing/PublicBackdrop.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

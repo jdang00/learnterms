@@ -5,7 +5,7 @@
 	import CircleAlertIcon from '@lucide/svelte/icons/circle-alert';
 	import InfoIcon from '@lucide/svelte/icons/info';
 	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
-	import { theme } from '$lib/theme.svelte';
+	import { theme } from '#lib/theme.svelte.js';
 
 	let { ...restProps }: SonnerProps = $props();
 </script>

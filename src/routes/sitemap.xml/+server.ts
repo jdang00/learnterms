@@ -1,4 +1,4 @@
-import { publicPaths, SITE_ORIGIN } from '$lib/seo';
+import { publicPaths, SITE_ORIGIN } from '#lib/seo.js';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = () =>

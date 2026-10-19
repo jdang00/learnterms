@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import PublicPage from '$lib/components/landing/PublicPage.svelte';
+	import PublicPage from '#lib/components/landing/PublicPage.svelte';
 </script>
 
 <svelte:head>

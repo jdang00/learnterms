@@ -2,9 +2,9 @@
 	import { useAuth, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import { page } from '$app/stores';
-	import { base } from '$app/paths';
+	import { page } from '$app/state';
 	import type { QuickLinkPath } from './power-bar/types';
+	import { resolveQuickLink } from './power-bar/quickLinks.js';
 
 	const convexAuth = useAuth();
 	const quickLinksQuery = useQuery(api.cohort.getCurrentUserQuickLinks, () =>
@@ -38,9 +38,8 @@
 		finalActions = quickLinksQuery.data ?? [];
 	});
 
-	const currentPath = $derived($page.url.pathname);
+	const currentPath = $derived(page.url.pathname);
 	const isExternalLink = (href: QuickLinkPath) => href.startsWith('http');
-	const resolveInternalHref = (href: string) => `${base}${href}`;
 </script>
 
 {#if variant === 'chips'}
@@ -51,9 +50,9 @@
 		>
 			{#each finalActions as action (action.title)}
 				{#if action.href && !isExternalLink(action.href)}
-					<!-- eslint-disable svelte/no-navigation-without-resolve -- base-prefixed by resolveInternalHref -->
+					<!-- eslint-disable svelte/no-navigation-without-resolve -- resolved by resolveQuickLink -->
 					<a
-						href={resolveInternalHref(action.href)}
+						href={resolveQuickLink(action.href)}
 						class="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-medium active:bg-muted"
 						onclick={action.onClick}
 					>
@@ -115,9 +114,9 @@
 								/>
 							</button>
 						{:else}
-							<!-- eslint-disable svelte/no-navigation-without-resolve -- base-prefixed by resolveInternalHref -->
+							<!-- eslint-disable svelte/no-navigation-without-resolve -- resolved by resolveQuickLink -->
 							<a
-								href={resolveInternalHref(action.href)}
+								href={resolveQuickLink(action.href)}
 								class="sidebar-link group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200"
 								class:sidebar-link--active={isActive}
 								onclick={action.onClick}

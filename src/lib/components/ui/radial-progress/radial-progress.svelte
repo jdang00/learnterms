@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 	import { toneVars, type Tone } from '../tone.js';
 
 	// A ring that fills clockwise in the tone, with its label in the middle. Size with `size-*`.

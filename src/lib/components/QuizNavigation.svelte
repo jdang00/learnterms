@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	let { questions, handleSelect, currentlySelected, qs } = $props();
 
 	let reactiveInteractedQuestions = $derived(qs?.liveInteractedQuestions || []);

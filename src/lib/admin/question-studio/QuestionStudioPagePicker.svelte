@@ -13,8 +13,8 @@
 	import QuestionStudioContextMeter from './QuestionStudioContextMeter.svelte';
 	import type { SourcePreviewBatch } from '../source/sourceContext';
 	import { formatPageSelection, parsePageSelection, sourcePageBatch } from './pagePickerSelection';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
 
 	let {
 		documentId,

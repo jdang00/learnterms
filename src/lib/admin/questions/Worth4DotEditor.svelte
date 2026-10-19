@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { sectionValueKey, type ExamSection } from '$lib/examFindings/catalog';
-	import type { ExamFinding } from '$lib/examFindings/findings';
+	import { sectionValueKey, type ExamSection } from '#lib/examFindings/catalog.js';
+	import type { ExamFinding } from '#lib/examFindings/findings.js';
 	import {
 		W4D_WHITE,
 		diplopiaPattern,
@@ -13,10 +13,10 @@
 		type DiplopiaPreset,
 		type Offset,
 		type W4dResponse
-	} from '$lib/examFindings/worth4dot';
-	import Worth4DotDiagram from '$lib/components/exam-findings/Worth4DotDiagram.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Switch } from '$lib/components/ui/switch';
+	} from '#lib/examFindings/worth4dot.js';
+	import Worth4DotDiagram from '#lib/components/exam-findings/Worth4DotDiagram.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
 
 	let {
 		finding,

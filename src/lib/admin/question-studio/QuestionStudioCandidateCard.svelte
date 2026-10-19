@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Check from '@lucide/svelte/icons/check';
-	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
 	import { questionTypeLabel } from './questionStudioTypes';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	import type { CandidateQuestion } from './questionStudioTypes';
 	import { candidateConcern } from './questionStudioRun';
 	import type { CandidateReview } from './questionStudioRun';

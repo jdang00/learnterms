@@ -1,12 +1,12 @@
 <script lang="ts">
-	import QuestionSources from '$lib/components/QuestionSources.svelte';
-	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
-	import { Badge } from '$lib/components/ui/badge';
-	import * as Card from '$lib/components/ui/card';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { formatClock } from '$lib/utils/format';
-	import { getRationale, hasRationale } from '$lib/utils/rationale';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import QuestionSources from '#lib/components/QuestionSources.svelte';
+	import ExamFindings from '#lib/components/exam-findings/ExamFindings.svelte';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { formatClock } from '#lib/utils/format.js';
+	import { getRationale, hasRationale } from '#lib/utils/rationale.js';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	import Clock from '@lucide/svelte/icons/clock';
 	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
 	import XCircle from '@lucide/svelte/icons/x-circle';

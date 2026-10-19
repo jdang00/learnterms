@@ -1,4 +1,4 @@
-import type { StudyToolDetails } from '$lib/analytics/studyToolEvents';
+import type { StudyToolDetails } from '#lib/analytics/studyToolEvents.js';
 
 export type SidePanelId = 'calculator' | 'notes';
 

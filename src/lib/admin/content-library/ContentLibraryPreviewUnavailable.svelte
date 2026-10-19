@@ -4,7 +4,7 @@
 	import Copy from '@lucide/svelte/icons/copy';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	interface Props {
 		title: string;

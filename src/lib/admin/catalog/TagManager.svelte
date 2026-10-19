@@ -5,12 +5,12 @@
 	import Info from '@lucide/svelte/icons/info';
 	import Plus from '@lucide/svelte/icons/plus';
 	import TagsIcon from '@lucide/svelte/icons/tags';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import * as Empty from '$lib/components/ui/empty';
-	import { LoadingState } from '$lib/components/ui/spinner';
-	import { Tip } from '$lib/components/ui/tooltip';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
+	import { Tip } from '#lib/components/ui/tooltip/index.js';
 	import TagEditorDialog, { type TagSummary, type TaggableModule } from './TagEditorDialog.svelte';
 
 	let { classId, modules = [] }: { classId: Id<'class'>; modules?: TaggableModule[] } = $props();

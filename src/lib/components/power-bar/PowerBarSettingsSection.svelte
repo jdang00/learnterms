@@ -3,9 +3,9 @@
 	import Sun from '@lucide/svelte/icons/sun';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Settings2 from '@lucide/svelte/icons/settings-2';
-	import { Button } from '$lib/components/ui/button';
-	import * as ButtonGroup from '$lib/components/ui/button-group';
-	import { Switch } from '$lib/components/ui/switch';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as ButtonGroup from '#lib/components/ui/button-group/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
 	import { Command } from 'bits-ui';
 	import { POWER_HEADING_CLASS } from './styles';
 

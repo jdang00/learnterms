@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { fade } from 'svelte/transition';
 	import ColorMark from './ColorMark.svelte';
@@ -11,7 +11,7 @@
 		moduleState,
 		summarizeClassProgress,
 		type ClassOverview
-	} from '$lib/utils/classProgress';
+	} from '#lib/utils/classProgress.js';
 
 	interface Props {
 		classItem: ClassWithSemester;

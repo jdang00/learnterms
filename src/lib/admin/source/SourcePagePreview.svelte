@@ -8,8 +8,8 @@
 		isLocalArtifactLink,
 		type LatexRenderer
 	} from '../content-library/contentLibraryPreview';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
-	import { LoadingState } from '$lib/components/ui/spinner';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
 	import 'katex/dist/katex.min.css';
 	let { text }: { text: string } = $props();
 	const renderer = new Renderer();

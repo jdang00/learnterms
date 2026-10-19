@@ -1,9 +1,9 @@
 <script lang="ts">
 	import StickyNote from '@lucide/svelte/icons/sticky-note';
 	import { untrack } from 'svelte';
-	import { getQuizCommands } from '$lib/components/quiz-dock/commands.svelte';
-	import SidePanel from '$lib/components/side-panel/SidePanel.svelte';
-	import { sidePanel } from '$lib/components/side-panel/state.svelte';
+	import { getQuizCommands } from '#lib/components/quiz-dock/commands.svelte.js';
+	import SidePanel from '#lib/components/side-panel/SidePanel.svelte';
+	import { sidePanel } from '#lib/components/side-panel/state.svelte.js';
 	import type { Id } from '../../../convex/_generated/dataModel';
 	import type QuestionNotesPanel from './QuestionNotesPanel.svelte';
 	let { questionId, userKey }: { questionId: Id<'question'>; userKey: string } = $props();

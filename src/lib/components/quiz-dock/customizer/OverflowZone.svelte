@@ -4,7 +4,7 @@
 	import { backOut, cubicOut } from 'svelte/easing';
 	import ArrowUpWideNarrow from '@lucide/svelte/icons/arrow-up-wide-narrow';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { MOTION } from './constants';
 	import type { DockCustomizerState } from './dockCustomizer.svelte';
 

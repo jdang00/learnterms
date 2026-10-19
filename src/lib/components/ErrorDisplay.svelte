@@ -1,7 +1,7 @@
 <script lang="ts">
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import { isConvexAuthError } from '$lib/utils/errorHandling';
-	import { Button } from '$lib/components/ui/button';
+	import { isConvexAuthError } from '#lib/utils/errorHandling.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	let { error, showReload = false, size = 'normal', class: className = '' } = $props();
 

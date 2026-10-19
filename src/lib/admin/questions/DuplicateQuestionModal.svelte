@@ -11,11 +11,11 @@
 		itemName?: string;
 	} = $props();
 
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Field from '$lib/components/ui/field';
-	import * as Alert from '$lib/components/ui/alert';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as Field from '#lib/components/ui/field/index.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
 
 	let count = $state(1);
 	function dec() {

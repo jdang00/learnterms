@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { questionTypeLabel } from './questionStudioTypes';
 	import type { PlannedSlot } from './questionStudioRun';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 
 	interface Props {
 		slot: PlannedSlot;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SegmentedControl } from '$lib/components/ui/segmented-control';
+	import { SegmentedControl } from '#lib/components/ui/segmented-control/index.js';
 	import ModuleEmojiSuggestion from './ModuleEmojiSuggestion.svelte';
 	let { isAddModalOpen, closeAddModal, classId } = $props();
 
@@ -10,18 +10,18 @@
 	import CheckCircle from '@lucide/svelte/icons/check-circle';
 	import Archive from '@lucide/svelte/icons/archive';
 	import FileText from '@lucide/svelte/icons/file-text';
-	import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
+	import { isSingleEmoji, sanitizeEmoji } from '#lib/utils/emoji.js';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id } from '../../../convex/_generated/dataModel';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Button } from '$lib/components/ui/button';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { LoadingState } from '$lib/components/ui/spinner';
-	import { Textarea } from '$lib/components/ui/textarea';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
 
 	const client = useConvexClient();
 

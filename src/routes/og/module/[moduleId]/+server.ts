@@ -1,10 +1,10 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { ConvexHttpClient } from 'convex/browser';
-import { PUBLIC_CONVEX_URL } from '$env/static/public';
+import { PUBLIC_CONVEX_URL } from '$app/env/public';
 import { api } from '../../../../convex/_generated/api';
 import type { Id } from '../../../../convex/_generated/dataModel';
 import { createElement as h } from 'react';
-import { ogText, ogTitle, renderOgCard } from '$lib/server/ogCard';
+import { ogText, ogTitle, renderOgCard } from '#lib/server/ogCard.js';
 
 export const GET: RequestHandler = async ({ params, getClientAddress, fetch }) => {
 	const ip = getClientAddress();

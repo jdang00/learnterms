@@ -8,11 +8,11 @@
 	import Filter from '@lucide/svelte/icons/filter';
 	import Send from '@lucide/svelte/icons/send';
 	import Archive from '@lucide/svelte/icons/archive';
-	import type { StatusFilter } from '$lib/types';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as InputGroup from '$lib/components/ui/input-group';
+	import type { StatusFilter } from '#lib/types.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
 
 	type SortMode = 'order' | 'created_desc';
 

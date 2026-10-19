@@ -3,8 +3,8 @@
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Layers from '@lucide/svelte/icons/layers';
 	import Brain from '@lucide/svelte/icons/brain';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 
 	let { isOpen, onClose }: { isOpen: boolean; onClose: () => void } = $props();
 </script>

@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { createElement as h } from 'react';
-import { og, ogText, ogTitle, renderOgCard } from '$lib/server/ogCard';
+import { og, ogText, ogTitle, renderOgCard } from '#lib/server/ogCard.js';
 
 export const GET: RequestHandler = ({ fetch }) =>
 	renderOgCard(fetch, {

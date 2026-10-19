@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { base } from '$app/paths';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import { Command } from 'bits-ui';
 	import { POWER_HEADING_CLASS, POWER_ITEM_CLASS } from './styles';
 	import type { QuickLinkItem } from './types';
+	import { resolveQuickLink } from './quickLinks.js';
 
 	interface Props {
 		quickLinks?: QuickLinkItem[];
@@ -13,7 +13,6 @@
 
 	let { quickLinks = [], searchQuery = '', onNavigate }: Props = $props();
 	const isExternalLink = (href: QuickLinkItem['href']) => href.startsWith('http');
-	const resolveInternalHref = (href: string) => `${base}${href}`;
 	const filteredQuickLinks = $derived.by(() => {
 		const query = searchQuery.trim().toLowerCase();
 		if (!query) return quickLinks;
@@ -52,10 +51,10 @@
 						<ExternalLink size={13} class="shrink-0 text-foreground/30" />
 					</Command.Item>
 				{:else}
-					<!-- eslint-disable svelte/no-navigation-without-resolve -- base-prefixed by resolveInternalHref -->
+					<!-- eslint-disable svelte/no-navigation-without-resolve -- resolved by resolveQuickLink -->
 					<Command.LinkItem
 						value="link:{link.href}"
-						href={resolveInternalHref(link.href)}
+						href={resolveQuickLink(link.href)}
 						class={POWER_ITEM_CLASS}
 						onSelect={() => onNavigate?.()}
 					>

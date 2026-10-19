@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { questionTypeLabel } from './questionStudioTypes';
 	import type { TopicMapItem } from './questionStudioTypes';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	interface Props {
 		detailTopic?: TopicMapItem | null;

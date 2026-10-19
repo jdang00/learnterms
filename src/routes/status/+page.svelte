@@ -1,6 +1,6 @@
 <script lang="ts">
-	import PublicPage from '$lib/components/landing/PublicPage.svelte';
-	import { Badge } from '$lib/components/ui/badge';
+	import PublicPage from '#lib/components/landing/PublicPage.svelte';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 </script>
 
 <PublicPage title="Status" lede="All systems operational.">

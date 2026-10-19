@@ -3,10 +3,10 @@
 	import Trophy from '@lucide/svelte/icons/trophy';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import { scale } from 'svelte/transition';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { Tween, prefersReducedMotion } from 'svelte/motion';
-	import type { ModuleSummary } from '$lib/utils/moduleCompletion';
+	import type { ModuleSummary } from '#lib/utils/moduleCompletion.js';
 
 	let {
 		summary,

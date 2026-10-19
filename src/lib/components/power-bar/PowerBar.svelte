@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { base, resolve } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
@@ -9,17 +9,18 @@
 	import Keyboard from '@lucide/svelte/icons/keyboard';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { Command } from 'bits-ui';
-	import { theme } from '$lib/theme.svelte';
-	import { modifierKeyLabel } from '$lib/utils/platform';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { Kbd } from '$lib/components/ui/kbd';
+	import { theme } from '#lib/theme.svelte.js';
+	import { modifierKeyLabel } from '#lib/utils/platform.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
 	import PowerBarCohortSearchSection from './PowerBarCohortSearchSection.svelte';
 	import PowerBarCohortSection from './PowerBarCohortSection.svelte';
 	import PowerBarQuickLinksSection from './PowerBarQuickLinksSection.svelte';
 	import PowerBarSettingsSection from './PowerBarSettingsSection.svelte';
 	import { POWER_HEADING_CLASS, POWER_NOTE_CLASS } from './styles';
+	import { resolveQuickLink } from './quickLinks.js';
 	import type {
 		CohortClassSearchItem,
 		CohortItem,
@@ -119,7 +120,7 @@
 	function goToLink(href: string) {
 		if (typeof window === 'undefined') return;
 		isOpen = false;
-		window.location.assign(href.startsWith('http') ? href : `${base}${href}`);
+		window.location.assign(href.startsWith('http') ? href : resolveQuickLink(href));
 	}
 
 	async function goToClass(classId: string) {

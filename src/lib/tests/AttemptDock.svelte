@@ -3,8 +3,8 @@
 		DOCK_ISLAND_CLASS,
 		DOCK_PHONE_BAR_CLASS,
 		dockGlass
-	} from '$lib/components/quiz-dock/dockStyles';
-	import { Button } from '$lib/components/ui/button';
+	} from '#lib/components/quiz-dock/dockStyles.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import Flag from '@lucide/svelte/icons/flag';
 	import Save from '@lucide/svelte/icons/save';
 	import Send from '@lucide/svelte/icons/send';

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { acceptanceLevels } from '$lib/utils/freeResponse';
-	import AcceptanceMeter from '$lib/components/AcceptanceMeter.svelte';
-	import QuestionSources from '$lib/components/QuestionSources.svelte';
-	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
+	import { acceptanceLevels } from '#lib/utils/freeResponse.js';
+	import AcceptanceMeter from '#lib/components/AcceptanceMeter.svelte';
+	import QuestionSources from '#lib/components/QuestionSources.svelte';
+	import ExamFindings from '#lib/components/exam-findings/ExamFindings.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Copy from '@lucide/svelte/icons/copy';
@@ -11,15 +11,15 @@
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import Check from '@lucide/svelte/icons/check';
 	import Target from '@lucide/svelte/icons/target';
-	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
-	import { getRationale, hasRationale } from '$lib/utils/rationale';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { convertToDisplayFormat } from '#lib/utils/questionType.js';
+	import { getRationale, hasRationale } from '#lib/utils/rationale.js';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	import type { Doc } from '../../../convex/_generated/dataModel';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import * as Card from '$lib/components/ui/card';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
 
 	type QuestionItem = Doc<'question'>;
 	type MediaItem = {

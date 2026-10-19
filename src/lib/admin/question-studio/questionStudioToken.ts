@@ -1,5 +1,5 @@
-import { buttonVariants } from '$lib/components/ui/button';
-import { cn } from '$lib/utils.js';
+import { buttonVariants } from '#lib/components/ui/button/index.js';
+import { cn } from '#lib/utils.js';
 
 // The setup sentence's pickers use the same rounded chips as the rest of admin.
 // Unfilled chips are dashed so they read as blanks to fill in.

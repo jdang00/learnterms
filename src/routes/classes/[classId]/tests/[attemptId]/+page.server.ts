@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { convexLoad } from 'convex-svelte/sveltekit';
-import { requireConvexSession } from '$lib/server/convex';
-import { getErrorText } from '$lib/utils/errorHandling';
+import { requireConvexSession } from '#lib/server/convex.js';
+import { getErrorText } from '#lib/utils/errorHandling.js';
 import { api } from '../../../../../convex/_generated/api';
 import type { Id } from '../../../../../convex/_generated/dataModel';
 

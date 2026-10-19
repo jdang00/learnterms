@@ -1,5 +1,5 @@
 <script lang="ts">
-	import campus from '$lib/assets/blog/nsu-optometry-campus.png';
+	import campus from '#lib/assets/blog/nsu-optometry-campus.png';
 </script>
 
 <p>

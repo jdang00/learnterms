@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Id } from '../../convex/_generated/dataModel';
-	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
+	import { useQuestionMedia } from '#lib/utils/useQuestionMedia.svelte.js';
 	import ImageViewer from './ImageViewer.svelte';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 
 	// Phones and tablets have no attachments sidebar, so images sit right under the stem.
 	let {

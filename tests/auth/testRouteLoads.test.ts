@@ -2,7 +2,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 const convexLoad = vi.hoisted(() => vi.fn());
 
-vi.mock('$env/static/public', () => ({ PUBLIC_CONVEX_URL: 'https://example.convex.cloud' }));
+vi.mock('$app/env/public', () => ({ PUBLIC_CONVEX_URL: 'https://example.convex.cloud' }));
 vi.mock('convex-svelte/sveltekit', () => ({ convexLoad, createConvexHttpClient: vi.fn() }));
 
 import { load as attempt } from '../../src/routes/classes/[classId]/tests/[attemptId]/+page.server';

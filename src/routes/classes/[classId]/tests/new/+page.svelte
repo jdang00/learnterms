@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { SelectField } from '$lib/components/ui/select';
+	import { SelectField } from '#lib/components/ui/select/index.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../convex/_generated/dataModel';
-	import { getErrorText } from '$lib/utils/errorHandling';
+	import { getErrorText } from '#lib/utils/errorHandling.js';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Clock from '@lucide/svelte/icons/clock';
@@ -17,15 +17,15 @@
 	import Play from '@lucide/svelte/icons/play';
 	import History from '@lucide/svelte/icons/history';
 	import Tags from '@lucide/svelte/icons/tags';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import * as Card from '$lib/components/ui/card';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { Switch } from '$lib/components/ui/switch';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
 
 	type SourceFilter = 'all' | 'flagged' | 'incomplete';
 	type QuestionTypeKey = 'multiple_choice' | 'fill_in_the_blank' | 'matching';

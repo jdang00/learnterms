@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { LoadingState } from '$lib/components/ui/spinner';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
 	import type { PageData } from './$types';
 	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
 	import { useConvexClient } from 'convex-svelte';
@@ -13,16 +13,16 @@
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Download from '@lucide/svelte/icons/download';
 	import { resolve } from '$app/paths';
-	import { exportModuleQuestions, type ExportableQuestion } from '$lib/utils/questionExport';
-	import EditModuleModal from '$lib/admin/catalog/EditModuleModal.svelte';
-	import AddModuleModal from '$lib/admin/catalog/AddModuleModal.svelte';
-	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
-	import ExportModuleModal from '$lib/admin/catalog/ExportModuleModal.svelte';
-	import TagManager from '$lib/admin/catalog/TagManager.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as HoverCard from '$lib/components/ui/hover-card';
+	import { exportModuleQuestions, type ExportableQuestion } from '#lib/utils/questionExport.js';
+	import EditModuleModal from '#lib/admin/catalog/EditModuleModal.svelte';
+	import AddModuleModal from '#lib/admin/catalog/AddModuleModal.svelte';
+	import DeleteConfirmationModal from '#lib/admin/DeleteConfirmationModal.svelte';
+	import ExportModuleModal from '#lib/admin/catalog/ExportModuleModal.svelte';
+	import TagManager from '#lib/admin/catalog/TagManager.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import * as HoverCard from '#lib/components/ui/hover-card/index.js';
 
 	let { data }: { data: PageData } = $props();
 	const classId: Id<'class'> = $derived(data.classId as Id<'class'>);
