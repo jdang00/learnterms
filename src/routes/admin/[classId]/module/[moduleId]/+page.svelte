@@ -89,7 +89,7 @@
 			null;
 	});
 
-	const moduleInfo = useQuery(api.module.getModuleById, () => ({ id: moduleId as Id<'module'> }));
+	const moduleInfo = $derived(data.moduleInfo);
 
 	const mediaQuery = useQuestionMedia(
 		() => curationState.selectedQuestionId as Id<'question'> | null

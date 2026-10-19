@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
-import { ConvexHttpClient } from 'convex/browser';
+import { isRedirect, redirect } from '@sveltejs/kit';
+import { convexLoad, createConvexHttpClient } from 'convex-svelte/sveltekit';
 import { api } from '../../../../../convex/_generated/api';
 import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import type { Id } from '../../../../../convex/_generated/dataModel';
@@ -13,14 +13,11 @@ export const load: PageServerLoad = async ({
 	getClientAddress,
 	setHeaders
 }) => {
-	if (!PUBLIC_CONVEX_URL) {
-		throw new Error('PUBLIC_CONVEX_URL is not configured');
-	}
-
 	const auth = locals.auth();
 	const userId = auth.userId;
 	const moduleId = params.moduleId as Id<'module'>;
 	const origin = url.origin;
+
 	// Unauthenticated path: serve minimal SEO metadata for all unauthenticated requests
 	// (enables OG previews on any platform, not just known crawlers)
 	if (!userId) {
@@ -29,7 +26,6 @@ export const load: PageServerLoad = async ({
 		if (!ok) {
 			return redirect(307, '/sign-in');
 		}
-
 		setHeaders({ 'Cache-Control': 'public, max-age=300' });
 
 		const fallbackSeo = {
@@ -46,23 +42,17 @@ export const load: PageServerLoad = async ({
 			}
 		};
 
-		const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
+		// A one-shot public read: nothing on the signed-out page subscribes to it.
+		const client = createConvexHttpClient({ url: PUBLIC_CONVEX_URL });
 		try {
 			const metadata = await client.query(api.publicQueries.getModuleMetadata, {
 				id: moduleId
 			});
-
 			if (!metadata) {
 				return fallbackSeo;
 			}
-
 			return {
-				isPublicView: true,
-				moduleInfo: undefined,
-				module: undefined,
-				moduleId,
-				convexID: undefined,
-				classId: params.classId,
+				...fallbackSeo,
 				seo: {
 					title: `${metadata.title} — LearnTerms`,
 					description: metadata.description,
@@ -75,46 +65,33 @@ export const load: PageServerLoad = async ({
 		}
 	}
 
-	const token = await auth.getToken({ template: 'convex' });
-
-	if (!token) {
+	if (!locals.convexToken) {
 		return redirect(307, '/sign-in');
 	}
 
-	const client = new ConvexHttpClient(PUBLIC_CONVEX_URL);
-	client.setAuth(token);
-
 	try {
-		const module = await client.query(api.question.getQuestionsByModule, {
-			id: moduleId
-		});
-
-		const moduleInfo = await client.query(api.module.getModuleById, {
-			id: moduleId
-		});
-
-		if (!moduleInfo || moduleInfo.classId !== params.classId) redirect(307, '/classes');
-
-		const convexID = await client.query(api.users.getUserById, {
-			id: userId
-		});
+		const [module, moduleInfo, convexID] = await Promise.all([
+			convexLoad(api.question.getQuestionsByModule, { id: moduleId }),
+			convexLoad(api.module.getModuleById, { id: moduleId }),
+			convexLoad(api.users.getUserById, { id: userId })
+		]);
+		if (!moduleInfo.data || moduleInfo.data.classId !== params.classId) redirect(307, '/classes');
 
 		return {
-			isPublicView: false,
+			isPublicView: false as const,
 			moduleInfo,
 			module,
 			moduleId,
 			convexID,
 			classId: params.classId,
-			seo: moduleInfo
-				? {
-						title: `${moduleInfo.title} — LearnTerms`,
-						description: moduleInfo.description,
-						image: `${origin}/og/module/${moduleId}`
-					}
-				: undefined
+			seo: {
+				title: `${moduleInfo.data.title} — LearnTerms`,
+				description: moduleInfo.data.description,
+				image: `${origin}/og/module/${moduleId}`
+			}
 		};
 	} catch (error) {
+		if (isRedirect(error)) throw error;
 		console.error('Failed to load module page data:', error);
 		redirect(307, '/classes');
 	}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SignedIn, SignedOut, UserButton } from 'svelte-clerk';
+	import { Show, UserButton } from 'svelte-clerk';
 	import { useClerkContext } from 'svelte-clerk/client';
 	import ThemeToggle from './ThemeToggle.svelte';
 	import BrandLogo from './BrandLogo.svelte';
@@ -169,12 +169,12 @@
 			{/if}
 
 			<div class="self-center">
-				<SignedIn>
+				<Show when="signed-in">
 					<div class="mt-1">
 						<UserButton afterSignOutUrl="/" />
 					</div>
-				</SignedIn>
-				<SignedOut>
+				</Show>
+				<Show when="signed-out">
 					<div class="flex items-center gap-1">
 						<Button variant="ghost" tone="neutral" size="sm" href={resolve('/sign-in')}
 							>Sign in</Button
@@ -183,7 +183,7 @@
 							>Get started</Button
 						>
 					</div>
-				</SignedOut>
+				</Show>
 			</div>
 		</div>
 	</div>

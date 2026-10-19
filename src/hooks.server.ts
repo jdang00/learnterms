@@ -5,7 +5,25 @@ import type { Handle } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { authenticatedConvexClient } from '$lib/server/convex';
+import { withServerConvexToken } from 'convex-svelte/sveltekit/server';
+import { convexLoadHydration } from 'convex-svelte/sveltekit/server/hydration';
 import { api } from './convex/_generated/api';
+
+// Fetch the signed-in user's Convex token once per request and keep it in scope for
+// `convexLoad()` and `createConvexHttpClient()` during server rendering.
+const convexAuth: Handle = async ({ event, resolve }) => {
+	let token: string | undefined;
+	const auth = event.locals.auth();
+	if (auth.userId) {
+		try {
+			token = (await auth.getToken({ template: 'convex' })) ?? undefined;
+		} catch {
+			// Clerk token fetch can fail during outages; the request continues unauthenticated.
+		}
+	}
+	event.locals.convexToken = token;
+	return withServerConvexToken(token, () => resolve(event));
+};
 const protectAdmin: Handle = async ({ event, resolve }) => {
 	const url = new URL(event.request.url);
 	if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) {
@@ -13,7 +31,7 @@ const protectAdmin: Handle = async ({ event, resolve }) => {
 		if (!userId) throw redirect(307, '/sign-in');
 
 		try {
-			const client = await authenticatedConvexClient(event.locals);
+			const client = authenticatedConvexClient(event.locals);
 			const userData = await client.query(api.users.getUserById, { id: userId });
 			const role = userData?.role;
 			if (!(role === 'dev' || role === 'admin' || role === 'curator')) throw redirect(307, '/');
@@ -69,4 +87,10 @@ const siteHygiene: Handle = async ({ event, resolve }) => {
 	});
 };
 
-export const handle = sequence(siteHygiene, withClerkHandler(), protectAdmin);
+export const handle = sequence(
+	siteHygiene,
+	withClerkHandler(),
+	convexAuth,
+	convexLoadHydration,
+	protectAdmin
+);

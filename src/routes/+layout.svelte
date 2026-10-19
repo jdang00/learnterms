@@ -12,7 +12,7 @@
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
 	import { setupConvex } from 'convex-svelte';
-	import ConvexClerkBridge from '$lib/components/ConvexClerkBridge.svelte';
+	import ConvexAuth from '$lib/components/ConvexAuth.svelte';
 	import { theme, clerkTheme } from '$lib/theme.svelte';
 	import { getPostHog } from '$lib/analytics/posthogClient';
 	import { onMount } from 'svelte';
@@ -124,7 +124,7 @@
 	publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}
 	appearance={{ baseTheme: $clerkTheme }}
 >
-	<ConvexClerkBridge initialToken={data?.token ?? null} />
+	<ConvexAuth initialToken={data?.token ?? null} />
 	<PostHogIdentify />
 	<Tooltip.Provider>
 		<div class="flex min-h-screen flex-col">

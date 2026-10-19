@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { useQuery, useConvexClient } from 'convex-svelte';
+	import type { DetachedQueryResult } from 'convex-svelte/sveltekit';
 	import type { PageData } from './$types';
 	import { api } from '../../../../../convex/_generated/api.js';
 	import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
@@ -22,7 +23,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const userId = $derived(data.convexID?._id as Id<'users'> | undefined);
+	const userId = $derived(data.convexID?.data?._id as Id<'users'> | undefined);
 	const moduleId = $derived(data.moduleId as Id<'module'>);
 
 	const client = useConvexClient();
@@ -253,17 +254,13 @@
 		await client.mutation(api.studyProgress.reveal, { attemptId: await getAttempt(questionId) });
 	};
 
-	// Official convex-svelte pattern for SSR hydration with live updates
-	const questions = useQuery(
-		api.question.getQuestionsByModule,
-		() => ({ id: moduleId }),
-		() => ({ initialData: data.module })
+	// The server load already opened these as live subscriptions; the public view has none.
+	const pending = { data: undefined, isLoading: true, error: undefined, isStale: false } as const;
+	const questions = $derived(
+		(data.module ?? pending) as DetachedQueryResult<typeof api.question.getQuestionsByModule>
 	);
-
-	const module = useQuery(
-		api.module.getModuleById,
-		() => ({ id: moduleId }),
-		() => ({ initialData: data.moduleInfo })
+	const module = $derived(
+		(data.moduleInfo ?? pending) as DetachedQueryResult<typeof api.module.getModuleById>
 	);
 
 	// Derive stable question IDs from questions data

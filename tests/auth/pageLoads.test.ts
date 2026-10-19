@@ -5,11 +5,13 @@ const mocks = vi.hoisted(() => ({
 	getUser: vi.fn(),
 	query: vi.fn(),
 	mutation: vi.fn(),
+	convexLoad: vi.fn(),
 	authenticatedConvexClient: vi.fn()
 }));
 
 vi.mock('svelte-clerk/server', () => ({ clerkClient: { users: { getUser: mocks.getUser } } }));
 vi.mock('$env/static/public', () => ({ PUBLIC_CONVEX_URL: 'https://example.convex.cloud' }));
+vi.mock('convex-svelte/sveltekit', () => ({ convexLoad: mocks.convexLoad }));
 vi.mock('$lib/server/convex', () => ({
 	authenticatedConvexClient: mocks.authenticatedConvexClient
 }));
@@ -19,7 +21,10 @@ import { load as cohort } from '../../src/routes/cohort/+page.server';
 import { load as joinClass } from '../../src/routes/join-class/+page.server';
 import { POST as joinClassPost } from '../../src/routes/api/join-class/+server';
 
-const event = { locals: { auth: () => ({ userId: 'user_test' }) } };
+const event = { locals: { auth: () => ({ userId: 'user_test' }), convexToken: 'token_test' } };
+
+/** The server load reads `convexLoad()` results through `.data`, like the page does. */
+const loaded = (data: unknown) => ({ data, isLoading: false, error: undefined, isStale: false });
 
 beforeEach(() => {
 	vi.resetAllMocks();
@@ -33,8 +38,9 @@ beforeEach(() => {
 		emailAddresses: [{ id: 'primary', emailAddress: 'student@example.com' }]
 	});
 	mocks.query.mockResolvedValue(null);
+	mocks.convexLoad.mockResolvedValue(loaded(null));
 	mocks.mutation.mockResolvedValue('new_user');
-	mocks.authenticatedConvexClient.mockImplementation(async () => ({
+	mocks.authenticatedConvexClient.mockImplementation(() => ({
 		query: mocks.query,
 		mutation: mocks.mutation
 	}));
@@ -57,8 +63,8 @@ describe.each([
 
 	test('keeps an existing cohort member on the requested page', async () => {
 		const userData = { clerkUserId: 'user_test', name: 'Student', cohortId: 'cohort_test' };
-		mocks.query.mockResolvedValue(userData);
-		await expect(load(event as never)).resolves.toMatchObject({ userData });
+		mocks.convexLoad.mockResolvedValue(loaded(userData));
+		await expect(load(event as never)).resolves.toMatchObject({ userData: { data: userData } });
 		expect(mocks.mutation).toHaveBeenCalledTimes(1);
 		expect(mocks.mutation.mock.calls[0][1].name).toBeUndefined();
 	});
@@ -72,7 +78,9 @@ describe.each([
 			primaryEmailAddressId: 'primary',
 			emailAddresses: [{ id: 'primary', emailAddress: 'student@example.com' }]
 		});
-		mocks.query.mockResolvedValue({ clerkUserId: 'user_test', cohortId: 'cohort_test' });
+		mocks.convexLoad.mockResolvedValue(
+			loaded({ clerkUserId: 'user_test', cohortId: 'cohort_test' })
+		);
 		await load(event as never);
 		expect(mocks.mutation.mock.calls[0][1]).toMatchObject({
 			name: 'Jane Doe',
@@ -93,7 +101,7 @@ test('join class uses the same name fallback', async () => {
 test.each([undefined, 'admin', 'curator'])(
 	'join class redirects enrolled %s users',
 	async (role) => {
-		mocks.query.mockResolvedValue({ cohortId: 'cohort_test', role });
+		mocks.convexLoad.mockResolvedValue(loaded({ cohortId: 'cohort_test', role }));
 		await expect(joinClass(event as never)).rejects.toMatchObject({
 			status: 307,
 			location: '/classes'
@@ -103,7 +111,7 @@ test.each([undefined, 'admin', 'curator'])(
 );
 
 test('developers can still open join class after enrollment', async () => {
-	mocks.query.mockResolvedValue({ cohortId: 'cohort_test', role: 'dev' });
+	mocks.convexLoad.mockResolvedValue(loaded({ cohortId: 'cohort_test', role: 'dev' }));
 	await expect(joinClass(event as never)).resolves.toHaveProperty('seo');
 });
 
@@ -160,7 +168,9 @@ test('join request requires a session and valid input', async () => {
 });
 
 test('join request reports a missing server token as an expired session', async () => {
-	mocks.authenticatedConvexClient.mockImplementation(async () => redirect(307, '/sign-in'));
+	mocks.authenticatedConvexClient.mockImplementation(() => {
+		throw redirect(307, '/sign-in');
+	});
 	const response = await joinClassPost(
 		joinRequest({ cohortId: 'cohort_test', code: 'nsuoco2030' }) as never
 	);

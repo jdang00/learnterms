@@ -13,6 +13,8 @@ declare global {
 		}
 		// Define the Locals interface with session and user details
 		interface Locals {
+			// The current user's Convex JWT, set per request in hooks.server.ts.
+			convexToken?: string;
 			session?: {
 				id: string;
 				claims?: {

@@ -26,7 +26,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	try {
-		const client = await authenticatedConvexClient(locals);
+		const client = authenticatedConvexClient(locals);
 		const userData = await client.query(api.users.getUserById, { id: userId });
 		if (!userData) {
 			const user = await clerkClient.users.getUser(userId);

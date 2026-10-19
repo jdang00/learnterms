@@ -29,7 +29,7 @@
 	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
-	const userData = $derived(data.userData);
+	const userData = $derived(data.userData.data);
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
 

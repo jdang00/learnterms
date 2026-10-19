@@ -17,12 +17,15 @@
 
 	const client = useConvexClient();
 
+	const role = $derived(data.account?.data?.role);
+	const isCuratorOrAdmin = $derived(role === 'dev' || role === 'admin' || role === 'curator');
+
 	// Get available products from Polar (always fetch for display)
 	const productsQuery = useQuery(api.polar.listAllProducts, {});
 
 	// Get current subscription if authenticated curator/admin
 	const subscriptionQuery = useQuery(api.polar.getCurrentUserWithSubscription, () =>
-		data.isCuratorOrAdmin ? {} : 'skip'
+		isCuratorOrAdmin ? {} : 'skip'
 	);
 
 	// Find semester and annual pro products
@@ -250,7 +253,7 @@
 
 		<PublicCta />
 	</PublicPage>
-{:else if !data.isCuratorOrAdmin}
+{:else if !isCuratorOrAdmin}
 	<PublicPage
 		title="You’re all set"
 		lede="LearnTerms is completely free for students. You have full access to your cohort’s study materials, practice questions, and progress tracking."
