@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { useQuery, useConvexClient } from 'convex-svelte';
+	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BookOpen from '@lucide/svelte/icons/book-open';
@@ -20,20 +20,17 @@
 	const role = $derived(data.account?.data?.role);
 	const isCuratorOrAdmin = $derived(role === 'dev' || role === 'admin' || role === 'curator');
 
-	// Get available products from Polar (always fetch for display)
-	const productsQuery = useQuery(api.polar.listAllProducts, {});
+	const productsQuery = $derived(data.products);
 
-	// Get current subscription if authenticated curator/admin
-	const subscriptionQuery = useQuery(api.polar.getCurrentUserWithSubscription, () =>
-		isCuratorOrAdmin ? {} : 'skip'
-	);
+	// The account row carries the viewer's subscription; only curators and admins can buy Pro.
+	const subscriptionQuery = $derived(isCuratorOrAdmin ? data.account : null);
 
 	// Find semester and annual pro products
 	const proSemester = $derived(
-		productsQuery.data?.find((p: { name?: string }) => p.name?.toLowerCase().includes('semester'))
+		productsQuery?.data?.find((p: { name?: string }) => p.name?.toLowerCase().includes('semester'))
 	);
 	const proAnnual = $derived(
-		productsQuery.data?.find((p: { name?: string }) => p.name?.toLowerCase().includes('annual'))
+		productsQuery?.data?.find((p: { name?: string }) => p.name?.toLowerCase().includes('annual'))
 	);
 
 	let isCheckoutLoading = $state(false);
@@ -43,9 +40,9 @@
 
 	// Determine pro status from subscription query only
 	const isPro = $derived(
-		subscriptionQuery.data?.isPro ||
-			subscriptionQuery.data?.subscription?.status === 'active' ||
-			subscriptionQuery.data?.subscription?.status === 'trialing'
+		subscriptionQuery?.data?.isPro ||
+			subscriptionQuery?.data?.subscription?.status === 'active' ||
+			subscriptionQuery?.data?.subscription?.status === 'trialing'
 	);
 
 	// Format price from cents
@@ -219,7 +216,7 @@
 					<Badge tone="primary" variant="solid" size="sm">For curators</Badge>
 				</div>
 				<p class="mt-1 text-sm text-foreground/65">Generate questions from your course sources.</p>
-				{#if productsQuery.isLoading}
+				{#if productsQuery?.isLoading}
 					<Skeleton class="mt-5 h-12 w-28 rounded-lg" />
 				{:else}
 					{@render priceTag(semesterPrice, 'per 6 months')}
@@ -279,7 +276,7 @@
 {:else if isPro}
 	<PublicPage
 		title="You’re on Curator Pro"
-		lede={subscriptionQuery.data?.subscription?.currentPeriodEnd
+		lede={subscriptionQuery?.data?.subscription?.currentPeriodEnd
 			? `Your subscription renews on ${new Date(
 					subscriptionQuery.data.subscription.currentPeriodEnd
 				).toLocaleDateString()}.`
@@ -372,7 +369,7 @@
 				<p class="mt-1 text-sm text-foreground/65">
 					Create and organize your cohort’s study material.
 				</p>
-				{#if productsQuery.isLoading}
+				{#if productsQuery?.isLoading}
 					<Skeleton class="mt-5 h-12 w-28 rounded-lg" />
 				{:else if currentProduct}
 					{@render priceTag(
@@ -383,7 +380,7 @@
 					{@render priceTag('$15', 'per 6 months')}
 				{/if}
 				<div class="mt-6 flex-1">{@render featureList(proFeatures)}</div>
-				{#if subscriptionQuery.isLoading}
+				{#if subscriptionQuery?.isLoading}
 					<Button class="mt-8" loading aria-label="Loading plan" />
 				{:else}
 					<Button

@@ -25,6 +25,8 @@
 	import { useClerkContext } from 'svelte-clerk';
 	import { onMount } from 'svelte';
 
+	let { data } = $props();
+
 	const client = useConvexClient();
 	const clerk = useClerkContext();
 	const clerkUser = $derived(clerk.user);
@@ -127,15 +129,9 @@
 		}
 	}
 
-	const convexUser = useQuery(api.users.getUserById, () =>
-		clerkUser ? { id: clerkUser.id } : 'skip'
-	);
-
-	const semesters = useQuery(api.semester.getAllSemesters, () => (clerkUser ? {} : 'skip'));
-
-	const classes = useQuery(api.class.getUserClasses, () =>
-		convexUser.data?.cohortId ? { id: convexUser.data.cohortId as Id<'cohort'> } : 'skip'
-	);
+	const convexUser = $derived(data.convexUser);
+	const semesters = $derived(data.semesters);
+	const classes = $derived(data.classes);
 
 	const modules = useQuery(api.module.getClassModules, () =>
 		selectedClass ? { id: selectedClass._id } : 'skip'
@@ -150,9 +146,7 @@
 			: 'skip'
 	);
 
-	const currentGenerationJob = useQuery(api.questionStudio.jobs.getCurrentGenerationJob, () =>
-		clerkUser ? {} : 'skip'
-	);
+	const currentGenerationJob = $derived(data.currentGenerationJob);
 
 	const activeJob = useQuery(api.questionStudio.jobs.getGenerationJob, () =>
 		activeJobId ? { jobId: activeJobId } : 'skip'

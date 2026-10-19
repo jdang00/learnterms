@@ -117,9 +117,7 @@
 	const hourStart = $derived(Math.floor(now / HOUR_MS) * HOUR_MS);
 	const since = $derived(hourStart - WINDOW_DAYS * DAY_MS);
 	const wantsActivity = $derived(view === 'overview' || view === 'students');
-	const studentsQuery = useQuery(api.progress.getStudentsWithProgress, () =>
-		cohortId ? { cohortId, includeSubscription: false } : 'skip'
-	);
+	const studentsQuery = $derived(data.students);
 	// Only the current hour is reactive; earlier history is a closed window fetched once per hour.
 	const liveQuery = useQuery(
 		api.progress.getCohortLiveActivity,

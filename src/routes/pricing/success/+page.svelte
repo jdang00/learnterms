@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { Spinner } from '$lib/components/ui/spinner';
-	import { useQuery } from 'convex-svelte';
-	import { api } from '../../../convex/_generated/api';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import PartyPopper from '@lucide/svelte/icons/party-popper';
 	import Rocket from '@lucide/svelte/icons/rocket';
@@ -15,18 +13,18 @@
 
 	const userName = $derived(data.account?.data?.firstName || data.account?.data?.name || 'there');
 
-	// Reactively poll subscription status - Convex queries auto-update
-	const subscriptionQuery = useQuery(api.polar.getCurrentUserWithSubscription, {});
+	// The account row carries the subscription and stays live, so the page flips once Polar syncs.
+	const subscriptionQuery = $derived(data.account);
 
 	// Check subscription status reactively
 	const isPro = $derived(
-		subscriptionQuery.data?.isPro ||
-			subscriptionQuery.data?.subscription?.status === 'active' ||
-			subscriptionQuery.data?.subscription?.status === 'trialing'
+		subscriptionQuery?.data?.isPro ||
+			subscriptionQuery?.data?.subscription?.status === 'active' ||
+			subscriptionQuery?.data?.subscription?.status === 'trialing'
 	);
 
 	// Loading state based on query and pro status
-	const isSyncing = $derived(subscriptionQuery.isLoading || (!isPro && !subscriptionQuery.data));
+	const isSyncing = $derived(!isPro && !subscriptionQuery?.data);
 	const syncComplete = $derived(isPro);
 </script>
 

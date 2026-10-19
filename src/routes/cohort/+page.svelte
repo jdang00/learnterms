@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { SegmentedControl } from '$lib/components/ui/segmented-control';
 	import type { PageData } from './$types';
-	import { useQuery } from 'convex-svelte';
 	import { resolve } from '$app/paths';
-	import { api } from '../../convex/_generated/api';
 	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import HelpCircle from '@lucide/svelte/icons/help-circle';
@@ -22,7 +20,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const boardQuery = useQuery(api.badges.getCohortBadgeBoard, {});
+	const boardQuery = $derived(data.board);
 	let searchQuery = $state('');
 	let sortMode = $state<'leaderboard' | 'az'>('leaderboard');
 	let selectedMemberId = $state<string | null>(null);

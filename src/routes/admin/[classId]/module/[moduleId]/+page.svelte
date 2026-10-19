@@ -26,7 +26,6 @@
 	import QuestionDetailView from '$lib/admin/questions/QuestionDetailView.svelte';
 	import AttachmentViewerModal from '$lib/admin/questions/AttachmentViewerModal.svelte';
 	import ModuleLimitModal from '$lib/admin/questions/ModuleLimitModal.svelte';
-	import { useClerkContext } from 'svelte-clerk';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -102,10 +101,7 @@
 	);
 
 	// Auth
-	const clerk = useClerkContext();
-	const userDataQuery = useQuery(api.users.getUserById, () =>
-		clerk.user ? { id: clerk.user.id } : 'skip'
-	);
+	const userDataQuery = $derived(data.userData);
 	const dev = $derived(userDataQuery.data?.role === 'dev');
 	const admin = $derived(userDataQuery.data?.role === 'admin');
 	const canEdit = $derived(

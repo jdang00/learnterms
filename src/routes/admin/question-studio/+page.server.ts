@@ -1,15 +1,16 @@
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
-import { PUBLIC_CONVEX_URL } from '$env/static/public';
+import { convexLoad } from 'convex-svelte/sveltekit';
+import { requireConvexSession } from '$lib/server/convex';
+import { api } from '../../../convex/_generated/api';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (!PUBLIC_CONVEX_URL) {
-		throw new Error('PUBLIC_CONVEX_URL is not configured');
-	}
-	const { userId } = locals.auth();
-
-	if (!userId) {
-		return redirect(307, '/sign-in');
-	}
-	return { userData: null, cohortLib: undefined };
+	const userId = requireConvexSession(locals);
+	const [convexUser, semesters, currentGenerationJob] = await Promise.all([
+		convexLoad(api.users.getUserById, { id: userId }),
+		convexLoad(api.semester.getAllSemesters, {}),
+		convexLoad(api.questionStudio.jobs.getCurrentGenerationJob, {})
+	]);
+	const cohortId = convexUser.data?.cohortId;
+	const classes = await convexLoad(api.class.getUserClasses, cohortId ? { id: cohortId } : 'skip');
+	return { convexUser, semesters, currentGenerationJob, classes };
 };

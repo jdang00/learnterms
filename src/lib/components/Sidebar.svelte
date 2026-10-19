@@ -1,16 +1,14 @@
 <script lang="ts">
-	import { useClerkContext } from 'svelte-clerk/client';
-	import { useQuery } from 'convex-svelte';
+	import { useAuth, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
 	import type { QuickLinkPath } from './power-bar/types';
 
-	const ctx = useClerkContext();
-	const clerkUser = $derived(ctx.user);
+	const convexAuth = useAuth();
 	const quickLinksQuery = useQuery(api.cohort.getCurrentUserQuickLinks, () =>
-		clerkUser ? {} : 'skip'
+		convexAuth.isAuthenticated ? {} : 'skip'
 	);
 
 	interface QuickAction {

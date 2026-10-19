@@ -10,8 +10,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 		return redirect(307, '/sign-in');
 	}
 	try {
-		const userData = await convexLoad(api.users.getUserById, { id: userId });
-		return { userData };
+		const [userData, semesters] = await Promise.all([
+			convexLoad(api.users.getUserById, { id: userId }),
+			convexLoad(api.semester.getAllSemesters, {})
+		]);
+		const cohortId = userData.data?.cohortId;
+		const classes = await convexLoad(
+			api.class.getUserClasses,
+			cohortId ? { id: cohortId } : 'skip'
+		);
+		return { userData, semesters, classes };
 	} catch (error) {
 		console.error('Failed to load admin page data:', error);
 		throw error;

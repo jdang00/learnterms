@@ -80,13 +80,8 @@
 		return () => ro.disconnect();
 	});
 
-	const classesQuery = useQuery(api.class.getUserClasses, () =>
-		userData?.cohortId ? { id: userData.cohortId as Id<'cohort'> } : 'skip'
-	);
-
-	const featureAnnouncementQuery = useQuery(api.featureAnnouncements.getCurrentForViewer, () =>
-		userData?.cohortId ? {} : 'skip'
-	);
+	const classesQuery = $derived(data.classes);
+	const featureAnnouncementQuery = $derived(data.featureAnnouncement);
 
 	const classes = $derived({
 		data: classesQuery.data || [],
@@ -119,9 +114,7 @@
 	type ModuleWithTags = Doc<'module'> & { tags?: TagSummary[] };
 
 	// One rollup-backed query feeds the class cards, the module list, and the resume strip.
-	const overviewQuery = useQuery(api.studyOverview.getMine, () =>
-		userData?.cohortId ? {} : 'skip'
-	);
+	const overviewQuery = $derived(data.overview);
 	const progressByClass = $derived(
 		new Map((overviewQuery.data?.classes ?? []).map((item) => [item.classId as string, item]))
 	);

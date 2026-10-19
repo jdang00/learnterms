@@ -289,8 +289,8 @@
 		error: moduleProgressQuery.error
 	});
 
-	const learningQuery = useQuery(api.studyProgress.getForModule, () =>
-		userId ? { moduleId } : 'skip'
+	const learningQuery = $derived(
+		(data.learning ?? pending) as DetachedQueryResult<typeof api.studyProgress.getForModule>
 	);
 	$effect(() => {
 		const evidence = learningQuery.data;

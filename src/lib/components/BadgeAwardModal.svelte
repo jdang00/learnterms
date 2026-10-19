@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { useConvexClient, useQuery } from 'convex-svelte';
-	import { useClerkContext } from 'svelte-clerk/client';
+	import { useAuth, useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { Confetti } from 'svelte-confetti';
@@ -10,12 +9,11 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 
-	const ctx = useClerkContext();
-	const user = $derived(ctx.user);
+	const convexAuth = useAuth();
 	const client = useConvexClient();
 
 	const unseenAwardQuery = useQuery(api.badges.getNextUnseenBadgeAwardForViewer, () =>
-		user ? {} : 'skip'
+		convexAuth.isAuthenticated ? {} : 'skip'
 	);
 
 	let hiddenAwardIds = $state<string[]>([]);

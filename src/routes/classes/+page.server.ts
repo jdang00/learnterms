@@ -41,8 +41,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 			return redirect(307, '/join-class');
 		} else if (userData.data?.cohortId === undefined) {
 			return redirect(307, '/join-class');
-		} else {
-			await client.mutation(api.users.syncUserFromClerk, {
+		}
+
+		const [classes, featureAnnouncement, overview] = await Promise.all([
+			convexLoad(api.class.getUserClasses, { id: userData.data.cohortId }),
+			convexLoad(api.featureAnnouncements.getCurrentForViewer, {}),
+			convexLoad(api.studyOverview.getMine, {}),
+			client.mutation(api.users.syncUserFromClerk, {
 				clerkUserId: user.id,
 				name: user.fullName?.trim() || undefined,
 				firstName: user.firstName || undefined,
@@ -52,11 +57,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 				imageUrl: user.imageUrl || undefined,
 				lastSignInAt: user.lastSignInAt || undefined,
 				lastActiveAt: user.lastActiveAt || undefined
-			});
-		}
+			})
+		]);
 
 		return {
 			userData,
+			classes,
+			featureAnnouncement,
+			overview,
 			seo: {
 				title: 'My Classes — LearnTerms',
 				description: 'View and manage your classes on LearnTerms.'

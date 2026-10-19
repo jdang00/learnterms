@@ -35,6 +35,8 @@
 		'matching'
 	];
 
+	let { data } = $props();
+
 	const client = useConvexClient();
 
 	const classId = $derived(page.params.classId as Id<'class'>);
@@ -66,9 +68,7 @@
 	let starting = $state(false);
 	let createError = $state<string | null>(null);
 
-	const builderQuery = useQuery(api.tests.builder.getClassQuizBuilderData, () =>
-		classId ? { classId } : 'skip'
-	);
+	const builderQuery = $derived(data.builder);
 
 	let summaryDebounceHandle: number | null = null;
 	let debouncedSelectedModuleIds = $state<Id<'module'>[]>([]);
@@ -114,17 +114,15 @@
 			: 'skip'
 	);
 
-	const attemptsQuery = useQuery(api.tests.results.getUserAttemptsForClass, () =>
-		classId ? { classId } : 'skip'
-	);
+	const attemptsQuery = $derived(data.attempts);
 
-	const maxQuestions = $derived(builderQuery.data?.limits?.maxQuestionsPerAttempt ?? 100);
+	const maxQuestions = $derived(builderQuery?.data?.limits?.maxQuestionsPerAttempt ?? 100);
 	const totalEligible = $derived(summaryQuery.data?.totalEligible ?? 0);
 	const effectiveQuestionCount = $derived(
 		totalEligible > 0 ? Math.max(1, Math.min(questionCount, totalEligible, maxQuestions)) : 0
 	);
 	const matchedTagModuleIds = $derived.by(() => {
-		const tags = builderQuery.data?.tagCollections ?? [];
+		const tags = builderQuery?.data?.tagCollections ?? [];
 		const moduleIds: Id<'module'>[] = [];
 		for (const tag of tags) {
 			if (!selectedTagCollectionIds.includes(tag._id)) continue;
@@ -136,7 +134,7 @@
 	});
 
 	function moduleIdsForTagCollectionIds(tagIds: Id<'tags'>[]): Id<'module'>[] {
-		const tags = builderQuery.data?.tagCollections ?? [];
+		const tags = builderQuery?.data?.tagCollections ?? [];
 		const moduleIds: Id<'module'>[] = [];
 		for (const tag of tags) {
 			if (!tagIds.includes(tag._id)) continue;
@@ -296,7 +294,7 @@
 				</div>
 			</div>
 
-			{#if builderQuery.isLoading}
+			{#if builderQuery?.isLoading}
 				<Card.Root>
 					<Card.Content>
 						<Skeleton class="h-6 w-56" />
@@ -304,10 +302,10 @@
 						<Skeleton class="mt-1 h-4 w-5/6" />
 					</Card.Content>
 				</Card.Root>
-			{:else if builderQuery.error}
+			{:else if !builderQuery || builderQuery.error}
 				<Alert.Root tone="error">
 					<CircleAlert />
-					<Alert.Title>{builderQuery.error.toString()}</Alert.Title>
+					<Alert.Title>{data.loadError ?? builderQuery?.error?.toString()}</Alert.Title>
 				</Alert.Root>
 			{:else if builderQuery.data}
 				<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -330,7 +328,7 @@
 												size="xs"
 												onclick={() => {
 													createError = null;
-													selectedModuleIds = (builderQuery.data.modules ?? []).map((m) => m._id);
+													selectedModuleIds = (builderQuery?.data?.modules ?? []).map((m) => m._id);
 												}}
 											>
 												Select All
@@ -621,7 +619,7 @@
 									class="w-full group shadow-lg hover:shadow-xl transition-all duration-200 max-xl:hidden"
 									onclick={startTest}
 									disabled={starting ||
-										builderQuery.isLoading ||
+										builderQuery?.isLoading ||
 										selectedModuleIds.length === 0 ||
 										totalEligible === 0}
 								>
@@ -679,7 +677,7 @@
 								{/if}
 
 								<!-- Recent Attempts (collapsed) -->
-								{#if !attemptsQuery.isLoading && attemptsQuery.data && attemptsQuery.data.length > 0}
+								{#if attemptsQuery?.data && attemptsQuery.data.length > 0}
 									<div class="border-t border-border pt-3">
 										<details class="group">
 											<summary
@@ -744,7 +742,7 @@
 		</div>
 	</div>
 
-	{#if builderQuery.data}
+	{#if builderQuery?.data}
 		<!-- Below xl the summary column lands under the form, so Start stays pinned here. -->
 		<div
 			class="flex shrink-0 items-center gap-3 border-t border-border bg-background px-4 pt-3 xl:hidden"
@@ -764,7 +762,7 @@
 				class="shrink-0 gap-2 px-6"
 				onclick={startTest}
 				disabled={starting ||
-					builderQuery.isLoading ||
+					builderQuery?.isLoading ||
 					selectedModuleIds.length === 0 ||
 					totalEligible === 0}
 			>

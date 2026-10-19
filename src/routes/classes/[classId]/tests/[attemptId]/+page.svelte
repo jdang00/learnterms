@@ -8,7 +8,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { useConvexClient, useQuery } from 'convex-svelte';
+	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../convex/_generated/dataModel';
 	import MobileStudyBar from '$lib/components/MobileStudyBar.svelte';
@@ -38,14 +38,14 @@
 	import * as Card from '$lib/components/ui/card';
 	import { LoadingState } from '$lib/components/ui/spinner';
 
+	let { data } = $props();
+
 	const client = useConvexClient();
 	const clerk = useClerkContext();
 	const classId = $derived(page.params.classId as Id<'class'>);
 	const attemptId = $derived(page.params.attemptId as Id<'quizAttempts'>);
 
-	const runnerQuery = useQuery(api.tests.attempts.getAttemptRunnerBundle, () =>
-		attemptId ? { attemptId } : 'skip'
-	);
+	const runnerQuery = $derived(data.runner);
 
 	const runner = new AttemptRunnerState(
 		{
@@ -53,7 +53,7 @@
 			submit: (args) => client.mutation(api.tests.attempts.submitAttempt, args),
 			heartbeat: (args) => client.mutation(api.tests.attempts.heartbeatAttempt, args)
 		},
-		{ bundle: () => runnerQuery.data ?? undefined, attemptId: () => attemptId }
+		{ bundle: () => runnerQuery?.data ?? undefined, attemptId: () => attemptId }
 	);
 
 	let hideSidebar = $state(false);
@@ -174,13 +174,13 @@
 </script>
 
 <div class="flex flex-col h-dvh lg:h-[calc(100dvh-4rem)]">
-	{#if runnerQuery.isLoading}
+	{#if runnerQuery?.isLoading}
 		<LoadingState label="Loading your test…" class="flex-1 text-base" />
-	{:else if runnerQuery.error}
+	{:else if !runnerQuery || runnerQuery.error}
 		<div class="flex-1 flex items-center justify-center p-4">
 			<Alert.Root tone="error" class="max-w-md">
 				<CircleAlert />
-				<Alert.Title>{runnerQuery.error.toString()}</Alert.Title>
+				<Alert.Title>{data.loadError ?? runnerQuery?.error?.toString()}</Alert.Title>
 			</Alert.Root>
 		</div>
 	{:else if runnerQuery.data}
