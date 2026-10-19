@@ -1,10 +1,9 @@
 import { v } from 'convex/values';
-import { action, internalMutation, internalQuery, mutation } from './_generated/server';
+import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
-import type { MutationCtx, QueryCtx } from './_generated/server';
 import { authAdminMutation, authAdminQuery, authQuery } from './authQueries';
-import { requireSelfIdentity, requireCurrentUser } from './access';
+import { optionalCurrentUser, requireIdentity, requireSelfIdentity } from './access';
 
 const quickLinkValidator = v.object({
 	title: v.string(),
@@ -20,11 +19,6 @@ type QuickLink = {
 	href: string;
 	icon: string;
 	hidden?: boolean;
-};
-
-type AuthedCtx = {
-	db: QueryCtx['db'] | MutationCtx['db'];
-	identity: { subject: string };
 };
 
 const PRIVILEGED_QUICK_LINKS: QuickLink[] = [
@@ -77,13 +71,6 @@ const DEFAULT_COHORT_QUICK_LINKS: QuickLink[] = [
 		icon: '🏥'
 	}
 ];
-
-async function getCurrentUser(ctx: AuthedCtx) {
-	return await ctx.db
-		.query('users')
-		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
-		.first();
-}
 
 function cloneQuickLinks(links: QuickLink[]) {
 	return links.map((link) => ({ ...link }));
@@ -209,7 +196,7 @@ export const createCohort = authAdminMutation({
 		classCode: v.optional(v.string())
 	},
 	handler: async (ctx, args) => {
-		const caller = await requireCurrentUser(ctx);
+		const caller = ctx.user;
 		const school = await ctx.db.get(args.schoolId);
 		if (!school || school.deletedAt) throw new Error('School not found');
 		if (caller.role !== 'dev') {
@@ -234,16 +221,18 @@ export const deleteCohort = authAdminMutation({
 		cohortId: v.id('cohort')
 	},
 	handler: async (ctx, args) => {
-		assertCanManageCohort(await requireCurrentUser(ctx), args.cohortId);
+		assertCanManageCohort(ctx.user, args.cohortId);
 		await ctx.db.delete(args.cohortId);
 		return { deleted: true };
 	}
 });
 
-export const getCurrentUserQuickLinks = authQuery({
+// Tolerates signed-in users who have not onboarded yet: the nav calls this.
+export const getCurrentUserQuickLinks = query({
 	args: {},
 	handler: async (ctx) => {
-		const user = await getCurrentUser(ctx);
+		await requireIdentity(ctx);
+		const user = await optionalCurrentUser(ctx);
 		if (!user) return [];
 
 		const links: QuickLink[] =
@@ -265,8 +254,7 @@ export const getQuickLinksForCohortAdmin = authAdminQuery({
 		cohortId: v.id('cohort')
 	},
 	handler: async (ctx, args) => {
-		const user = await getCurrentUser(ctx);
-		assertCanManageCohort(user, args.cohortId);
+		assertCanManageCohort(ctx.user, args.cohortId);
 
 		const cohort = await ctx.db.get(args.cohortId);
 		if (!cohort || cohort.deletedAt) throw new Error('Cohort not found');
@@ -285,8 +273,7 @@ export const updateQuickLinksForCohort = authAdminMutation({
 		quickLinks: v.array(quickLinkValidator)
 	},
 	handler: async (ctx, args) => {
-		const user = await getCurrentUser(ctx);
-		assertCanManageCohort(user, args.cohortId);
+		assertCanManageCohort(ctx.user, args.cohortId);
 
 		const cohort = await ctx.db.get(args.cohortId);
 		if (!cohort || cohort.deletedAt) throw new Error('Cohort not found');
@@ -303,13 +290,7 @@ export const updateQuickLinksForCohort = authAdminMutation({
 export const listCohortsWithSchools = authQuery({
 	args: {},
 	handler: async (ctx) => {
-		// Get user's role from Convex database
-		const user = await ctx.db
-			.query('users')
-			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
-			.first();
-
-		if (!user || user.role !== 'dev') throw new Error('Unauthorized');
+		if (ctx.user.role !== 'dev') throw new Error('Unauthorized');
 
 		const cohorts = await ctx.db.query('cohort').collect();
 		const result = await Promise.all(

@@ -1,93 +1,56 @@
-import { query, mutation } from './_generated/server';
-import { customQuery, customMutation } from 'convex-helpers/server/customFunctions';
-import { v } from 'convex/values';
+import { mutation, query } from './_generated/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
-import { requireCurrentUser } from './access';
+import type { Doc } from './_generated/dataModel';
+import { customCtx, customMutation, customQuery } from 'convex-helpers/server/customFunctions';
+import { v } from 'convex/values';
+import { findUserByClerkId, requireIdentity } from './access';
 
-async function getUserRole(ctx: QueryCtx | MutationCtx) {
-	const identity = await ctx.auth.getUserIdentity();
-	if (!identity) return { identity: null, role: undefined };
-	const user = await ctx.db
-		.query('users')
-		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
-		.first();
-	return { identity, role: user && !user.deletedAt ? user.role : undefined };
+type Role = NonNullable<Doc<'users'>['role']>;
+
+/** Loads the caller once; every wrapped handler reads `ctx.user` and `ctx.identity`. */
+async function loadCaller(ctx: QueryCtx | MutationCtx) {
+	const identity = await requireIdentity(ctx);
+	const user = await findUserByClerkId(ctx, identity.subject);
+	if (!user) throw new Error('Unauthorized');
+	return { identity, user };
 }
 
-export const authQuery = customQuery(query, {
-	args: {},
-	input: async (ctx) => {
-		const identity = await ctx.auth.getUserIdentity();
-		if (!identity) throw new Error('Unauthorized');
-		return { ctx: { db: ctx.db, identity }, args: {} };
-	}
-});
+function callerWithRole(roles: readonly Role[]) {
+	return customCtx(async (ctx: QueryCtx | MutationCtx) => {
+		const caller = await loadCaller(ctx);
+		if (!caller.user.role || !roles.includes(caller.user.role)) throw new Error('Unauthorized');
+		return caller;
+	});
+}
 
-export const authAdminQuery = customQuery(query, {
-	args: {},
-	input: async (ctx) => {
-		const { identity, role } = await getUserRole(ctx);
-		if (!identity || !(role === 'dev' || role === 'admin')) throw new Error('Unauthorized');
-		return { ctx: { db: ctx.db, identity }, args: {} };
-	}
-});
+const ADMIN: readonly Role[] = ['dev', 'admin'];
+const CURATOR: readonly Role[] = ['dev', 'admin', 'curator'];
+const DEV: readonly Role[] = ['dev'];
 
-export const authAdminMutation = customMutation(mutation, {
-	args: {},
-	input: async (ctx) => {
-		const { identity, role } = await getUserRole(ctx);
-		if (!identity || !(role === 'dev' || role === 'admin')) throw new Error('Unauthorized');
-		return { ctx: { db: ctx.db, identity }, args: {} };
-	}
-});
+export const authQuery = customQuery(query, customCtx(loadCaller));
+export const authMutation = customMutation(mutation, customCtx(loadCaller));
+export const authAdminQuery = customQuery(query, callerWithRole(ADMIN));
+export const authAdminMutation = customMutation(mutation, callerWithRole(ADMIN));
+export const authCuratorQuery = customQuery(query, callerWithRole(CURATOR));
+export const authCuratorMutation = customMutation(mutation, callerWithRole(CURATOR));
+export const authDevQuery = customQuery(query, callerWithRole(DEV));
+export const authDevMutation = customMutation(mutation, callerWithRole(DEV));
 
-export const authDevQuery = customQuery(query, {
-	args: {},
-	input: async (ctx) => {
-		const { identity, role } = await getUserRole(ctx);
-		if (!identity || role !== 'dev') throw new Error('Unauthorized');
-		return { ctx: { db: ctx.db, identity }, args: {} };
-	}
-});
-
-export const authDevMutation = customMutation(mutation, {
-	args: {},
-	input: async (ctx) => {
-		const { identity, role } = await getUserRole(ctx);
-		if (!identity || role !== 'dev') throw new Error('Unauthorized');
-		return { ctx: { db: ctx.db, identity }, args: {} };
-	}
-});
-
-export const authCuratorMutation = customMutation(mutation, {
-	args: {},
-	input: async (ctx) => {
-		const { identity, role } = await getUserRole(ctx);
-		if (!identity || !(role === 'dev' || role === 'admin' || role === 'curator'))
-			throw new Error('Unauthorized');
-		return { ctx: { db: ctx.db, identity }, args: {} };
-	}
-});
-
-export const joinCohort = mutation({
+export const joinCohort = authAdminMutation({
 	args: {
 		clerkUserId: v.string(),
 		cohortId: v.id('cohort')
 	},
 	handler: async (ctx, args) => {
-		const { role } = await getUserRole(ctx);
-		if (!(role === 'dev' || role === 'admin')) throw new Error('Unauthorized');
-
 		const user = await ctx.db
 			.query('users')
 			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', args.clerkUserId))
 			.first();
-
 		if (!user) {
 			throw new Error('User not found');
 		}
 
-		const caller = await requireCurrentUser(ctx);
+		const caller = ctx.user;
 		const cohort = await ctx.db.get(args.cohortId);
 		if (!cohort || cohort.deletedAt || user.deletedAt) throw new Error('Cohort or user not found');
 		if (
@@ -108,24 +71,12 @@ export const joinCohort = mutation({
 	}
 });
 
-export const switchCohort = mutation({
+export const switchCohort = authDevMutation({
 	args: {
 		cohortId: v.id('cohort')
 	},
 	handler: async (ctx, args) => {
-		const { identity, role } = await getUserRole(ctx);
-		if (!identity || role !== 'dev') throw new Error('Unauthorized');
-
-		const user = await ctx.db
-			.query('users')
-			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
-			.first();
-
-		if (!user) {
-			throw new Error('User not found');
-		}
-
-		await ctx.db.patch(user._id, {
+		await ctx.db.patch(ctx.user._id, {
 			cohortId: args.cohortId,
 			updatedAt: Date.now()
 		});

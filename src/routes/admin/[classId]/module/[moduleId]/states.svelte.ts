@@ -333,7 +333,7 @@ export class QuestionCurationState {
 	async confirmQuestionDelete() {
 		if (!this.questionToDelete || !this.client) return;
 		try {
-			await this.client.mutation(api.question.deleteQuestion, {
+			await this.client.mutation(api.questions.write.deleteQuestion, {
 				questionId: this.questionToDelete._id as Id<'question'>,
 				moduleId: this.moduleId as Id<'module'>
 			});
@@ -367,7 +367,7 @@ export class QuestionCurationState {
 	async confirmBulkDelete() {
 		if (this.selectedQuestions.size === 0 || !this.client) return;
 		try {
-			const result = await this.client.mutation(api.question.bulkDeleteQuestions, {
+			const result = await this.client.mutation(api.questions.bulk.bulkDeleteQuestions, {
 				questionIds: Array.from(this.selectedQuestions) as Id<'question'>[],
 				moduleId: this.moduleId as Id<'module'>
 			});
@@ -413,7 +413,7 @@ export class QuestionCurationState {
 		const copy = statusCopy[status];
 
 		try {
-			const result = await this.client.mutation(api.question.bulkUpdateQuestionStatus, {
+			const result = await this.client.mutation(api.questions.bulk.bulkUpdateQuestionStatus, {
 				questionIds: Array.from(this.selectedQuestions) as Id<'question'>[],
 				moduleId: this.moduleId as Id<'module'>,
 				status
@@ -496,7 +496,7 @@ export class QuestionCurationState {
 	async confirmDuplicateModal(count: number) {
 		if (!this.duplicateTarget || !this.client) return;
 		try {
-			const result = await this.client.mutation(api.question.duplicateQuestionMany, {
+			const result = await this.client.mutation(api.questions.duplicate.duplicateQuestionMany, {
 				questionId: this.duplicateTarget._id as Id<'question'>,
 				count
 			});
@@ -521,7 +521,7 @@ export class QuestionCurationState {
 	async quickDuplicate(questionId: string) {
 		if (!this.client) return;
 		try {
-			const result = await this.client.mutation(api.question.duplicateQuestion, {
+			const result = await this.client.mutation(api.questions.duplicate.duplicateQuestion, {
 				questionId: questionId as Id<'question'>
 			});
 			if (result) {
@@ -632,7 +632,7 @@ export class QuestionCurationState {
 		this.questionList = updatedList;
 
 		try {
-			await this.client.mutation(api.question.updateQuestionOrder, {
+			await this.client.mutation(api.questions.order.updateQuestionOrder, {
 				questionId: moved._id,
 				newOrder: targetIndex,
 				moduleId: this.moduleId as Id<'module'>

@@ -1,5 +1,4 @@
 import {
-	requireCurrentUser,
 	requireClassAccess,
 	requireModuleAccess,
 	requireClassStaff,
@@ -7,7 +6,6 @@ import {
 } from './access';
 import { internal } from './_generated/api';
 import { authQuery, authAdminMutation } from './authQueries';
-import { internalMutation } from './_generated/server';
 import { publishedQuestionCount } from './moduleStats';
 import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
@@ -72,7 +70,7 @@ export const getClassModules = authQuery({
 	// Enter class ID
 	args: { id: v.id('class') },
 	handler: async (ctx, args) => {
-		await requireClassAccess(ctx, await requireCurrentUser(ctx), args.id);
+		await requireClassAccess(ctx, ctx.user, args.id);
 		const modules = await ctx.db
 			.query('module')
 			.withIndex('by_classId', (q) => q.eq('classId', args.id))
@@ -388,7 +386,7 @@ export const updateModule = authAdminMutation({
 export const getAllModules = authQuery({
 	args: {},
 	handler: async (ctx) => {
-		if ((await requireCurrentUser(ctx)).role !== 'dev') throw new Error('Unauthorized');
+		if (ctx.user.role !== 'dev') throw new Error('Unauthorized');
 		const modules = await ctx.db.query('module').collect();
 		return modules;
 	}
@@ -555,63 +553,5 @@ export const searchModulesByCohort = authQuery({
 				status: item.status,
 				questionCount: item.questionCount
 			}));
-	}
-});
-
-/**
- * Backfill module.cohortId from each module's class.cohortId.
- * Run via CLI: bunx convex run module:backfillModuleCohortIds
- */
-export const backfillModuleCohortIds = internalMutation({
-	args: {},
-	handler: async (ctx) => {
-		const modules = await ctx.db.query('module').collect();
-		let updated = 0;
-		let skipped = 0;
-
-		for (const moduleItem of modules) {
-			const classItem = await ctx.db.get(moduleItem.classId);
-			if (!classItem) {
-				skipped += 1;
-				continue;
-			}
-			if (moduleItem.cohortId !== classItem.cohortId) {
-				await ctx.db.patch(moduleItem._id, { cohortId: classItem.cohortId });
-				updated += 1;
-			}
-		}
-
-		return {
-			totalModules: modules.length,
-			updated,
-			skippedMissingClass: skipped
-		};
-	}
-});
-
-/**
- * Backfill questionCount for all modules.
- * Run via CLI: bunx convex run module:backfillQuestionCounts
- */
-export const backfillQuestionCounts = internalMutation({
-	args: {},
-	handler: async (ctx) => {
-		const modules = await ctx.db.query('module').collect();
-		let updated = 0;
-
-		for (const module of modules) {
-			const questions = await ctx.db
-				.query('question')
-				.withIndex('by_moduleId', (q) => q.eq('moduleId', module._id))
-				.collect();
-
-			const count = questions.length;
-			if (module.questionCount !== count) {
-				await ctx.db.patch(module._id, { questionCount: count });
-				updated++;
-			}
-		}
-
-		return { totalModules: modules.length, updated };
 	}
 });

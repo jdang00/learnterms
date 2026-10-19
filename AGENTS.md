@@ -11,26 +11,27 @@ Use **Bun only**. Never use `npm`, `npx`, `yarn` or `pnpm`. Treat any older `npm
 - `bun run check` runs svelte-check. `bun run lint` runs prettier and eslint. `bun run format` fixes formatting.
 - `bun run test` runs `bun test` for `tests/*.test.ts`, then Vitest for Convex, auth and state tests (`vitest.config.ts` projects).
 - `bunx convex run <module>:<fn> '<json args>'`. Add `--prod` for production.
-- Migrations live in `src/convex/migrations.ts` (e.g. `bunx convex run migrations:backfillAllFlagCounts`).
+- Migrations and backfills live in `src/convex/migrations/` by domain (`questions`, `modules`, `attempts`, `progressStats`, `users`, `lookups`). Run one with its folder path, e.g. `bunx convex run migrations/questions:backfillFlagCounts`. Paginated backfills schedule their own next page; pass `{"continueAutomatically": false}` to step manually. `scripts/BACKFILL_README.md` lists the production stats sequence.
 
 ## Where things live
 
 | Area                            | Location                                                                                                                                     |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Student study flow              | `src/routes/classes/[classId]/modules/[moduleId]` (`states.svelte.ts` holds quiz state), shared quiz UI in `src/lib/components`              |
-| Practice tests                  | `src/routes/classes/[classId]/tests`, backend `src/convex/customQuiz.ts`                                                                     |
+| Practice tests                  | `src/routes/classes/[classId]/tests`, backend `src/convex/tests/{builder,attempts,results}.ts` (`scoring.ts` is pure grading)                |
 | Quiz dock and tools             | `src/lib/components/quiz-dock`, `src/lib/components/side-panel`, `src/lib/components/question-notes`                                         |
 | Admin/curator UI                | `src/routes/admin/*`, components grouped under `src/lib/admin/{catalog,questions,question-studio,content-library,source,progress,workbench}` |
 | Question Studio (AI generation) | UI `src/lib/admin/question-studio`, backend `src/convex/questionStudio/*` (jobs, workers, review, saving)                                    |
 | Documents, RAG and OCR          | `src/convex/ragKnowledge/*` (Node actions), `documentIngestion*.ts`, `datalab.ts`, `r2Documents.ts`                                          |
 | Progress and stats              | `src/convex/progress.ts`, `userProgress.ts`, `studyProgress.ts`, `moduleStats.ts` (rollups, `hasInteraction`)                                |
+| Questions (backend)             | `src/convex/questions/{read,write,bulk,order,duplicate,search}.ts`; `options.ts` (pure id/answer normalization) and `shared.ts` (helpers)    |
 | Badges                          | `src/convex/badges.ts`, `badgeEngine.ts`                                                                                                     |
 | Schema                          | `src/convex/schema.ts`                                                                                                                       |
 | Plans, benchmarks and history   | `dev/` (`dev/archive/` holds finished plans; hidden from search via `.ignore`)                                                               |
 
 ## Conventions (reuse these; don't re-implement them)
 
-- **Convex auth:** use the helpers in `src/convex/access.ts` (`requireCurrentUser`, `requireClassAccess`, `requireModuleAccess`, `requireCohortAccess`, `requireCohortStaff`, `requireClassStaff`, …) or the role-gated wrappers in `src/convex/authQueries.ts` (`authQuery`, `authAdminQuery`, `authAdminMutation`, `authCuratorMutation`, `authDevQuery`). Never write another users-by-`clerkUserId` lookup. `dev` bypasses cohort boundaries; everyone else is scoped to their cohort. Add a case to `convex-tests/security.test.ts` for any new public function.
+- **Convex auth:** use the helpers in `src/convex/access.ts` (`requireCurrentUser`, `requireClassAccess`, `requireModuleAccess`, `requireCohortAccess`, `requireCohortStaff`, `requireClassStaff`, …) or the role-gated wrappers in `src/convex/authQueries.ts` (`authQuery`, `authMutation`, `authAdminQuery`, `authAdminMutation`, `authCuratorQuery`, `authCuratorMutation`, `authDevQuery`, `authDevMutation`). A wrapped handler gets the caller as `ctx.user` (plus `ctx.identity`); pass `ctx.user` to the access helpers instead of calling `requireCurrentUser` again. Never write another users-by-`clerkUserId` lookup (`findUserByClerkId` and `optionalCurrentUser` in `access.ts` cover the rare pre-onboarding case). `dev` bypasses cohort boundaries; everyone else is scoped to their cohort. Add a case to `convex-tests/security.test.ts` for any new public function.
 - **Convex function paths:** call functions through their real module path (`api.questionStudio.jobs.createGenerationJob`). Don't add barrel files that re-export Convex functions: every export registers a second public endpoint.
 - **AI models:** every model ID lives in `src/convex/aiModels.ts` (`TEXT_MODEL`, `OPENROUTER_TEXT_MODEL`, `EMBEDDING_MODEL`). The Datalab OCR model stays in `datalab.ts`.
 - **Rendering HTML:** question stems, options and rationales are rich HTML. Always render them with `{@html sanitizeHtml(x)}` (`$lib/utils/sanitizeHtml`), and put `<!-- eslint-disable-next-line svelte/no-at-html-tags -->` on the line above.

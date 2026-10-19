@@ -80,7 +80,7 @@
 	};
 
 	type AttemptRunnerBundle = NonNullable<
-		FunctionReturnType<typeof api.customQuiz.getAttemptRunnerBundle>
+		FunctionReturnType<typeof api.tests.attempts.getAttemptRunnerBundle>
 	>;
 	type AttemptRunnerItem = AttemptRunnerBundle['items'][number];
 
@@ -89,7 +89,7 @@
 	const classId = $derived(page.params.classId as Id<'class'>);
 	const attemptId = $derived(page.params.attemptId as Id<'quizAttempts'>);
 
-	const runnerQuery = useQuery(api.customQuiz.getAttemptRunnerBundle, () =>
+	const runnerQuery = useQuery(api.tests.attempts.getAttemptRunnerBundle, () =>
 		attemptId ? { attemptId } : 'skip'
 	);
 
@@ -519,7 +519,7 @@
 				);
 
 			if (changes.length > 0 || force) {
-				await client.mutation(api.customQuiz.patchAttemptResponses, {
+				await client.mutation(api.tests.attempts.patchAttemptResponses, {
 					attemptId,
 					elapsedMs: elapsedMsLocal,
 					changes
@@ -638,7 +638,7 @@
 		isSubmitting = true;
 		try {
 			await flushSync(true);
-			await client.mutation(api.customQuiz.submitAttempt, {
+			await client.mutation(api.tests.attempts.submitAttempt, {
 				attemptId,
 				elapsedMs: elapsedMsLocal
 			});
@@ -808,7 +808,7 @@
 				void flushSync();
 			}
 			void client
-				.mutation(api.customQuiz.heartbeatAttempt, {
+				.mutation(api.tests.attempts.heartbeatAttempt, {
 					attemptId,
 					elapsedMs: elapsedMsLocal
 				})

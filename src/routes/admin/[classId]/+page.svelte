@@ -243,7 +243,7 @@
 
 		try {
 			// Fetch questions for this module
-			const questions = await client.query(api.question.getQuestionsByModuleAdmin, {
+			const questions = await client.query(api.questions.read.getQuestionsByModuleAdmin, {
 				id: exportModuleItem._id as Id<'module'>
 			});
 

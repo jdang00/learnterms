@@ -1,9 +1,4 @@
-import {
-	requireCurrentUser,
-	requireClassAccess,
-	requireCohortAccess,
-	requireCohortStaff
-} from './access';
+import { requireClassAccess, requireCohortAccess, requireCohortStaff } from './access';
 import { internal } from './_generated/api';
 import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
@@ -45,7 +40,7 @@ export const getUserClasses = authQuery({
 export const getClassById = authQuery({
 	args: { id: v.id('class') },
 	handler: async (ctx, args) => {
-		await requireClassAccess(ctx, await requireCurrentUser(ctx), args.id);
+		await requireClassAccess(ctx, ctx.user, args.id);
 		return await ctx.db.get(args.id);
 	}
 });
@@ -53,7 +48,7 @@ export const getClassById = authQuery({
 export const getAllClasses = authQuery({
 	args: {},
 	handler: async (ctx) => {
-		if ((await requireCurrentUser(ctx)).role !== 'dev') throw new Error('Unauthorized');
+		if (ctx.user.role !== 'dev') throw new Error('Unauthorized');
 		const classes = await ctx.db.query('class').collect();
 		return classes.sort((a, b) => a.order - b.order);
 	}
@@ -62,7 +57,7 @@ export const getAllClasses = authQuery({
 export const getClassContentCounts = authQuery({
 	args: { classId: v.id('class') },
 	handler: async (ctx, args) => {
-		await requireClassAccess(ctx, await requireCurrentUser(ctx), args.classId);
+		await requireClassAccess(ctx, ctx.user, args.classId);
 		const modules = await ctx.db
 			.query('module')
 			.withIndex('by_classId', (q) => q.eq('classId', args.classId))

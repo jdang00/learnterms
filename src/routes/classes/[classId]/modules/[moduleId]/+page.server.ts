@@ -71,7 +71,7 @@ export const load: PageServerLoad = async ({
 
 	try {
 		const [module, moduleInfo, convexID] = await Promise.all([
-			convexLoad(api.question.getQuestionsByModule, { id: moduleId }),
+			convexLoad(api.questions.read.getQuestionsByModule, { id: moduleId }),
 			convexLoad(api.module.getModuleById, { id: moduleId }),
 			convexLoad(api.users.getUserById, { id: userId })
 		]);

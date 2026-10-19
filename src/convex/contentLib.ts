@@ -1,17 +1,13 @@
-import { mutation } from './_generated/server';
 import { v } from 'convex/values';
-import { authQuery } from './authQueries';
+import { authCuratorMutation, authQuery } from './authQueries';
 
 export const getR2DocumentsByCohort = authQuery({
 	args: {
 		cohortId: v.id('cohort')
 	},
 	handler: async (ctx, args) => {
-		const user = await ctx.db
-			.query('users')
-			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
-			.first();
-		if (!user || (user.role !== 'dev' && user.cohortId !== args.cohortId)) {
+		const user = ctx.user;
+		if (user.role !== 'dev' && user.cohortId !== args.cohortId) {
 			throw new Error('Unauthorized for this cohort');
 		}
 
@@ -32,14 +28,7 @@ export const getR2DocumentsByCohort = authQuery({
 export const getIndexedR2DocumentsForRagTester = authQuery({
 	args: {},
 	handler: async (ctx) => {
-		const identity = await ctx.auth.getUserIdentity();
-		if (!identity) throw new Error('Not authenticated');
-
-		const user = await ctx.db
-			.query('users')
-			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
-			.first();
-		if (!user) throw new Error('User not found');
+		const user = ctx.user;
 
 		const docs = await ctx.db
 			.query('contentLib')
@@ -58,7 +47,7 @@ export const getIndexedR2DocumentsForRagTester = authQuery({
 	}
 });
 
-export const insertR2Document = mutation({
+export const insertR2Document = authCuratorMutation({
 	args: {
 		title: v.string(),
 		description: v.optional(v.string()),
@@ -72,17 +61,7 @@ export const insertR2Document = mutation({
 		})
 	},
 	handler: async (ctx, args) => {
-		const identity = await ctx.auth.getUserIdentity();
-		if (!identity) throw new Error('Not authenticated');
-
-		const user = await ctx.db
-			.query('users')
-			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
-			.first();
-		if (!user) throw new Error('User not found');
-		if (user.role !== 'dev' && user.role !== 'admin' && user.role !== 'curator') {
-			throw new Error('Unauthorized');
-		}
+		const user = ctx.user;
 		if (user.role !== 'dev' && user.cohortId !== args.cohortId) {
 			throw new Error('Unauthorized for this cohort');
 		}
@@ -101,23 +80,13 @@ export const insertR2Document = mutation({
 	}
 });
 
-export const renameDocument = mutation({
+export const renameDocument = authCuratorMutation({
 	args: {
 		documentId: v.id('contentLib'),
 		title: v.string()
 	},
 	handler: async (ctx, args) => {
-		const identity = await ctx.auth.getUserIdentity();
-		if (!identity) throw new Error('Not authenticated');
-
-		const user = await ctx.db
-			.query('users')
-			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
-			.first();
-		if (!user) throw new Error('User not found');
-		if (user.role !== 'dev' && user.role !== 'admin' && user.role !== 'curator') {
-			throw new Error('Unauthorized');
-		}
+		const user = ctx.user;
 
 		const document = await ctx.db.get(args.documentId);
 		if (!document || document.deletedAt) throw new Error('Document not found');

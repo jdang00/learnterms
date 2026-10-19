@@ -71,7 +71,7 @@ test('save uses server candidates, publishes questions and rejects replay', asyn
 	expect(question?.metadata.generation?.sourceCitations?.[0].quote).toBe(
 		'Two plus two equals four.'
 	);
-	await owner.mutation(api.question.updateQuestion, {
+	await owner.mutation(api.questions.write.updateQuestion, {
 		questionId: question!._id,
 		moduleId: ids.moduleId,
 		type: question!.type,
@@ -227,7 +227,7 @@ test('publishing older all-A AI drafts balances keys, preserves IDs and blocks s
 		}
 		return result;
 	});
-	const result = await owner.mutation(api.question.bulkUpdateQuestionStatus, {
+	const result = await owner.mutation(api.questions.bulk.bulkUpdateQuestionStatus, {
 		moduleId: ids.moduleId,
 		questionIds,
 		status: 'published'
@@ -248,7 +248,7 @@ test('publishing older all-A AI drafts balances keys, preserves IDs and blocks s
 			rationale: 'According to the PDF, two pairs make four.'
 		})
 	);
-	const rejected = await owner.mutation(api.question.bulkUpdateQuestionStatus, {
+	const rejected = await owner.mutation(api.questions.bulk.bulkUpdateQuestionStatus, {
 		moduleId: ids.moduleId,
 		questionIds: [questionIds[0]],
 		status: 'published'

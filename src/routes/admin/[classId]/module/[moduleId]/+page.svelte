@@ -52,7 +52,7 @@
 	type QuestionMediaItem = FunctionReturnType<typeof api.questionMedia.getByQuestionId>[number];
 
 	// Queries
-	const moduleQuestions = useQuery(api.question.searchQuestionsByModuleAdmin, () => ({
+	const moduleQuestions = useQuery(api.questions.search.searchQuestionsByModuleAdmin, () => ({
 		id: moduleId as Id<'module'>,
 		query: curationState.search,
 		sort: curationState.sortMode

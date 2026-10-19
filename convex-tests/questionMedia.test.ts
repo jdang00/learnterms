@@ -183,7 +183,7 @@ test('rejects unsupported MIME types, zero/oversized images, spoofed file conten
 test('question save attaches verified images atomically and retains legacy URLs in mixed quiz reads', async () => {
 	const { t, owner, questionArgs, readyUpload } = await fixture();
 	const uploadId = await readyUpload();
-	const questionId = await owner.mutation(api.question.insertQuestion, {
+	const questionId = await owner.mutation(api.questions.write.insertQuestion, {
 		...questionArgs,
 		images: [{ uploadId, altText: 'Fundus photograph', caption: 'Right eye', showOnSolution: true }]
 	});
@@ -211,7 +211,7 @@ test('question save attaches verified images atomically and retains legacy URLs 
 	expect((await t.run((ctx) => ctx.db.get(media[0]._id)))?.url).toBe('');
 	expect((await t.run((ctx) => ctx.db.get(uploadId)))?.status).toBe('attached');
 	const { aiGenerated, order, metadata, updatedAt, ...editArgs } = questionArgs;
-	await owner.mutation(api.question.updateQuestion, {
+	await owner.mutation(api.questions.write.updateQuestion, {
 		...editArgs,
 		questionId,
 		images: [{ uploadId, altText: 'Fundus photograph' }]
@@ -225,7 +225,7 @@ test('question save attaches verified images atomically and retains legacy URLs 
 test('cross-cohort reads, updates and deletes are denied for R2 and legacy media', async () => {
 	const { t, owner, questionArgs, readyUpload } = await fixture();
 	const uploadId = await readyUpload();
-	const questionId = await owner.mutation(api.question.insertQuestion, {
+	const questionId = await owner.mutation(api.questions.write.insertQuestion, {
 		...questionArgs,
 		images: [{ uploadId, altText: 'Image' }]
 	});
@@ -258,7 +258,7 @@ test('invalid attachment rolls back question creation and cannot be attached in 
 	const { t, owner, questionArgs, beginArgs, otherModuleId, readyUpload } = await fixture();
 	const pending = await owner.mutation(api.questionMediaUploads.begin, beginArgs);
 	await expect(
-		owner.mutation(api.question.insertQuestion, {
+		owner.mutation(api.questions.write.insertQuestion, {
 			...questionArgs,
 			images: [{ uploadId: pending.uploadId, altText: '' }]
 		})
@@ -266,14 +266,14 @@ test('invalid attachment rolls back question creation and cannot be attached in 
 	expect(await t.run((ctx) => ctx.db.query('question').collect())).toHaveLength(0);
 	const uploadId = await readyUpload();
 	await expect(
-		owner.mutation(api.question.insertQuestion, {
+		owner.mutation(api.questions.write.insertQuestion, {
 			...questionArgs,
 			moduleId: otherModuleId,
 			images: [{ uploadId, altText: '' }]
 		})
 	).rejects.toThrow('different module');
 	await expect(
-		t.withIdentity({ subject: 'other' }).mutation(api.question.insertQuestion, {
+		t.withIdentity({ subject: 'other' }).mutation(api.questions.write.insertQuestion, {
 			...questionArgs,
 			images: [{ uploadId, altText: '' }]
 		})
@@ -286,7 +286,7 @@ test('expired and canceled uploads cannot be attached; cleanup preserves attache
 	const abandoned = await readyUpload();
 	await owner.mutation(api.questionMediaUploads.discard, { uploadId: abandoned });
 	await expect(
-		owner.mutation(api.question.insertQuestion, {
+		owner.mutation(api.questions.write.insertQuestion, {
 			...questionArgs,
 			images: [{ uploadId: abandoned, altText: '' }]
 		})
@@ -294,13 +294,13 @@ test('expired and canceled uploads cannot be attached; cleanup preserves attache
 	const expired = await readyUpload();
 	await t.run((ctx) => ctx.db.patch(expired, { expiresAt: Date.now() - 1 }));
 	await expect(
-		owner.mutation(api.question.insertQuestion, {
+		owner.mutation(api.questions.write.insertQuestion, {
 			...questionArgs,
 			images: [{ uploadId: expired, altText: '' }]
 		})
 	).rejects.toThrow('expired');
 	const attached = await readyUpload();
-	await owner.mutation(api.question.insertQuestion, {
+	await owner.mutation(api.questions.write.insertQuestion, {
 		...questionArgs,
 		images: [{ uploadId: attached, altText: 'Image' }]
 	});

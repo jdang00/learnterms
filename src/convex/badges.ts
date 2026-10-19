@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { authAdminMutation, authAdminQuery, authQuery } from './authQueries';
-import { internalMutation, mutation } from './_generated/server';
+import { internalMutation, mutation, query } from './_generated/server';
+import { optionalCurrentUser, requireIdentity } from './access';
 import type { Doc, Id } from './_generated/dataModel';
 import type { DatabaseReader, DatabaseWriter } from './_generated/server';
 
@@ -351,11 +352,7 @@ async function getVisibleBadgesForViewer(ctx: { db: DatabaseReader }, viewer: Do
 export const listBadgeCatalogForViewer = authQuery({
 	args: {},
 	handler: async (ctx) => {
-		const viewer = await ctx.db
-			.query('users')
-			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
-			.first();
-		if (!viewer) throw new Error('User not found');
+		const viewer = ctx.user;
 		const role = viewer.role ?? 'student';
 		if (!(role === 'dev' || role === 'admin')) {
 			throw new Error('Unauthorized');
@@ -421,14 +418,12 @@ export const listBadgeCatalogForViewer = authQuery({
 	}
 });
 
-export const getNextUnseenBadgeAwardForViewer = authQuery({
+// Tolerates signed-in users who have not onboarded yet: the root layout calls this.
+export const getNextUnseenBadgeAwardForViewer = query({
 	args: {},
 	handler: async (ctx) => {
-		const viewer = await ctx.db
-			.query('users')
-			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
-			.first();
-
+		await requireIdentity(ctx);
+		const viewer = await optionalCurrentUser(ctx);
 		if (!viewer) return null;
 
 		const unseenAwards = await ctx.db
@@ -504,12 +499,7 @@ export const markBadgeAwardSeen = mutation({
 export const getCohortBadgeBoard = authQuery({
 	args: {},
 	handler: async (ctx) => {
-		const viewer = await ctx.db
-			.query('users')
-			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
-			.first();
-
-		if (!viewer) throw new Error('User not found');
+		const viewer = ctx.user;
 		if (!viewer.cohortId) throw new Error('You must be assigned to a cohort');
 
 		const cohort = await ctx.db.get(viewer.cohortId);

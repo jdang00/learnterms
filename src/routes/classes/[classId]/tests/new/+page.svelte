@@ -66,7 +66,7 @@
 	let starting = $state(false);
 	let createError = $state<string | null>(null);
 
-	const builderQuery = useQuery(api.customQuiz.getClassQuizBuilderData, () =>
+	const builderQuery = useQuery(api.tests.builder.getClassQuizBuilderData, () =>
 		classId ? { classId } : 'skip'
 	);
 
@@ -103,7 +103,7 @@
 		};
 	});
 
-	const summaryQuery = useQuery(api.customQuiz.getEligibleQuestionPoolSummary, () =>
+	const summaryQuery = useQuery(api.tests.builder.getEligibleQuestionPoolSummary, () =>
 		classId && debouncedSelectedModuleIds.length > 0
 			? {
 					classId,
@@ -114,7 +114,7 @@
 			: 'skip'
 	);
 
-	const attemptsQuery = useQuery(api.customQuiz.getUserAttemptsForClass, () =>
+	const attemptsQuery = useQuery(api.tests.results.getUserAttemptsForClass, () =>
 		classId ? { classId } : 'skip'
 	);
 
@@ -223,7 +223,7 @@
 
 		starting = true;
 		try {
-			const result = await client.mutation(api.customQuiz.createCustomQuizAttempt, {
+			const result = await client.mutation(api.tests.builder.createCustomQuizAttempt, {
 				classId,
 				moduleIds: selectedModuleIds,
 				questionCount: effectiveQuestionCount,

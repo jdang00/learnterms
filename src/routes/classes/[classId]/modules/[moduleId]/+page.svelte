@@ -257,7 +257,7 @@
 	// The server load already opened these as live subscriptions; the public view has none.
 	const pending = { data: undefined, isLoading: true, error: undefined, isStale: false } as const;
 	const questions = $derived(
-		(data.module ?? pending) as DetachedQueryResult<typeof api.question.getQuestionsByModule>
+		(data.module ?? pending) as DetachedQueryResult<typeof api.questions.read.getQuestionsByModule>
 	);
 	const module = $derived(
 		(data.moduleInfo ?? pending) as DetachedQueryResult<typeof api.module.getModuleById>

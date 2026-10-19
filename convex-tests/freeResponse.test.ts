@@ -7,7 +7,7 @@ import { responseText, responseWordCount } from '../src/lib/utils/freeResponse';
 async function fixture() {
 	const f = await setup();
 	rateLimiter.register(f.t);
-	const questionId = await f.owner.mutation(api.question.insertQuestion, {
+	const questionId = await f.owner.mutation(api.questions.write.insertQuestion, {
 		moduleId: f.ids.moduleId,
 		type: 'free_response',
 		stem: 'Explain evaporation.',
