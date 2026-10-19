@@ -12,7 +12,7 @@
 	import PostHogIdentify from '#lib/components/PostHogIdentify.svelte';
 	import { setupConvex } from 'convex-svelte';
 	import ConvexAuth from '#lib/components/ConvexAuth.svelte';
-	import { theme, clerkTheme } from '#lib/theme.svelte.js';
+	import { theme } from '#lib/theme.svelte.js';
 	import { getPostHog } from '#lib/analytics/posthogClient.js';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
@@ -115,7 +115,11 @@
 	<meta name="twitter:image" content={seo.image} />
 </svelte:head>
 
-<ClerkProvider publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY} appearance={{ theme: $clerkTheme }}>
+<ClerkProvider
+	publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}
+	afterSignOutUrl="/"
+	appearance={{ theme: theme.clerkTheme }}
+>
 	<ConvexAuth initialToken={data?.token ?? null}>
 		<PostHogIdentify />
 		<Tooltip.Provider>

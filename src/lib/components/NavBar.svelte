@@ -174,7 +174,7 @@
 			<div class="self-center">
 				<Show when="signed-in">
 					<div class="mt-1">
-						<UserButton afterSignOutUrl="/" />
+						<UserButton />
 					</div>
 				</Show>
 				<Show when="signed-out">
