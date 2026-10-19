@@ -2,7 +2,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import MessageSquare from '@lucide/svelte/icons/message-square';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import { EditorContent, type Editor } from 'svelte-tiptap';
+	import type { Editor, EditorContent } from 'svelte-tiptap';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { DISPLAY_QUESTION_TYPES } from '$lib/types';
 	import type { ToolbarItem } from './toolbar';
 	import type { QuestionEditorState } from './questionEditor.svelte';
@@ -10,8 +11,14 @@
 	let {
 		form,
 		editor,
+		Content,
 		menuItems
-	}: { form: QuestionEditorState; editor: Editor | undefined; menuItems: ToolbarItem[] } = $props();
+	}: {
+		form: QuestionEditorState;
+		editor: Editor | undefined;
+		Content: typeof EditorContent | undefined;
+		menuItems: ToolbarItem[];
+	} = $props();
 </script>
 
 <div class="space-y-2">
@@ -25,7 +32,7 @@
 	<div
 		class="surface overflow-hidden shadow-xs group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all"
 	>
-		{#if editor}
+		{#if editor && Content}
 			<div
 				class="bg-muted/50 border-b border-border p-1 flex gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
 			>
@@ -43,7 +50,9 @@
 					</Button>
 				{/each}
 			</div>
-			<EditorContent {editor} />
+			<Content {editor} />
+		{:else}
+			<Skeleton class="m-3 h-12 rounded-lg" />
 		{/if}
 	</div>
 	{#if form.visibleSuggestion}
