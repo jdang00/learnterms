@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { base, resolve } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
@@ -20,6 +20,7 @@
 	import PowerBarQuickLinksSection from './PowerBarQuickLinksSection.svelte';
 	import PowerBarSettingsSection from './PowerBarSettingsSection.svelte';
 	import { POWER_HEADING_CLASS, POWER_NOTE_CLASS } from './styles';
+	import { resolveQuickLink } from './quickLinks.js';
 	import type {
 		CohortClassSearchItem,
 		CohortItem,
@@ -119,7 +120,7 @@
 	function goToLink(href: string) {
 		if (typeof window === 'undefined') return;
 		isOpen = false;
-		window.location.assign(href.startsWith('http') ? href : `${base}${href}`);
+		window.location.assign(href.startsWith('http') ? href : resolveQuickLink(href));
 	}
 
 	async function goToClass(classId: string) {

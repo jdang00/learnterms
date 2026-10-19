@@ -97,7 +97,7 @@
 			canEdit: () => canEdit,
 			editHref: () =>
 				canEdit && currentlySelected
-					? resolve(`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`)
+					? resolve(`admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`)
 					: null
 		})
 	);
@@ -223,7 +223,7 @@
 								shape="circle"
 								class="m-1"
 								href={resolve(
-									`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`
+									`admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`
 								)}
 								target="_blank"
 								rel="noopener noreferrer"

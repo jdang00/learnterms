@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { Marp } from '@marp-team/marp-core';
 import type { RequestHandler } from './$types';
 import { buildMarpDeckMarkdown } from '#lib/admin/content-library/contentLibraryPreview.js';
@@ -41,5 +41,5 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (markdown.length > MAX_MARKDOWN_CHARS) error(413, 'Markdown is too large to render');
 	const deck = buildMarpDeckMarkdown({ title, markdown, pages: parsePages(pages) });
 	const rendered = marp.render(deck);
-	return json({ html: sanitizeDeckHtml(rendered.html), css: rendered.css });
+	return Response.json({ html: sanitizeDeckHtml(rendered.html), css: rendered.css });
 };

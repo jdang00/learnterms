@@ -9,7 +9,7 @@
 >
 	{#if page.status === 404}
 		<img
-			src={asset('/images/404-lobby.webp')}
+			src={asset('images/404-lobby.webp')}
 			alt=""
 			aria-hidden="true"
 			width="1536"

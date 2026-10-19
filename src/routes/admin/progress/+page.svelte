@@ -9,7 +9,7 @@
 	import { onMount } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
-	import { pushState } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ArrowDownRight from '@lucide/svelte/icons/arrow-down-right';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -96,14 +96,14 @@
 	});
 	function navigate(values: Record<string, string | null>) {
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local, non-reactive
-		const url = new URL(page.url);
+		const url = new URL(page.url.href);
 		url.search = params.toString();
 		for (const [key, value] of Object.entries(values)) {
 			if (value) url.searchParams.set(key, value);
 			else url.searchParams.delete(key);
 		}
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- URL derived from page.url
-		pushState(url, { ...page.state, progressSearch: url.search });
+		void goto(url, { shallow: true, state: { ...page.state, progressSearch: url.search } });
 	}
 	function showStudents(nextFilter = 'all') {
 		search = '';

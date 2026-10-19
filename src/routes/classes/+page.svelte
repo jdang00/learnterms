@@ -15,7 +15,8 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import ArrowRightIcon from '@lucide/svelte/icons/arrow-right';
 	import { page } from '$app/state';
-	import { goto, pushState, replaceState } from '$app/navigation';
+	import { goto } from '$app/navigation';
+	import { setPageState } from '#lib/utils/backNavigation.js';
 	import { resolve } from '$app/paths';
 	import FeatureSpotlight from '../../lib/components/FeatureSpotlight.svelte';
 	import ModuleRow from '../../lib/components/ModuleRow.svelte';
@@ -162,7 +163,7 @@
 
 	function selectClass(classItem: ClassWithSemester | null) {
 		if (!classItem) return;
-		pushState('', { ...page.state, classId: classItem._id, classOpenedInPlace: true });
+		void setPageState({ ...page.state, classId: classItem._id, classOpenedInPlace: true });
 	}
 
 	async function goBackToClasses() {
@@ -171,10 +172,13 @@
 			return;
 		}
 		if (page.url.searchParams.has('classId')) {
-			await goto(resolve('/classes'), { replaceState: true });
+			await goto(resolve('/classes'), { replace: true });
 			return;
 		}
-		replaceState('', { ...page.state, classId: undefined, classOpenedInPlace: undefined });
+		await setPageState(
+			{ ...page.state, classId: undefined, classOpenedInPlace: undefined },
+			{ replace: true }
+		);
 	}
 
 	const featureCtaHref = $derived(
@@ -186,13 +190,13 @@
 	function featureHref(item: {
 		title: string;
 		href?: string;
-	}): '/cohort' | '/classes' | `/classes/${string}/tests/new` {
-		if (item.href === '/cohort') return '/cohort';
+	}): 'cohort' | 'classes' | `classes/${string}/tests/new` {
+		if (item.href === '/cohort') return 'cohort';
 		if (item.title === 'Build your own test') {
 			const classId = selectedClass?._id ?? firstClassId;
-			return classId ? `/classes/${classId}/tests/new` : '/classes';
+			return classId ? `classes/${classId}/tests/new` : 'classes';
 		}
-		return '/classes';
+		return 'classes';
 	}
 
 	async function dismissFeatureSpotlight() {
@@ -557,7 +561,7 @@
 		saving={featureSpotlightAcknowledging}
 		error={featureSpotlightError}
 		showCta={featureCtaHref !== page.url.pathname}
-		canOpen={(item) => featureHref(item) !== page.url.pathname}
+		canOpen={(item) => resolve(featureHref(item)) !== page.url.pathname}
 		ondismiss={dismissFeatureSpotlight}
 		onopenfeature={async (item) => {
 			await dismissFeatureSpotlight();

@@ -16,7 +16,7 @@
 	import type { AngleMode } from '#lib/calculator/engine.js';
 	import { FORMULAS, type Formula } from '#lib/calculator/formulas.js';
 	import { fillFormula, numberToLatex } from '#lib/calculator/format.js';
-	import { base } from '$app/paths';
+	import { copiedAsset } from '#lib/utils/copiedAsset.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 
@@ -132,7 +132,7 @@
 		void import('mathlive')
 			.then(({ MathfieldElement, convertLatexToMarkup }) => {
 				if (disposed) return;
-				MathfieldElement.fontsDirectory = `${base}/mathlive/fonts`;
+				MathfieldElement.fontsDirectory = copiedAsset('mathlive/fonts');
 				MathfieldElement.soundsDirectory = null;
 				const mf = new MathfieldElement();
 				mf.mathVirtualKeyboardPolicy = 'manual';

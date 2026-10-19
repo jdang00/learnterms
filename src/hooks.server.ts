@@ -1,9 +1,8 @@
 import { dev } from '$app/env';
 import { getRouteSeo, SITE_ORIGIN } from '#lib/seo.js';
 import { withClerkHandler } from 'svelte-clerk/server';
-import type { Handle } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
-import { sequence } from '@sveltejs/kit/hooks';
+import { sequence, type Handle } from '@sveltejs/kit/hooks';
 import { authenticatedConvexClient } from '#lib/server/convex.js';
 import { withServerConvexToken } from 'convex-svelte/sveltekit/server';
 import { convexLoadHydration } from 'convex-svelte/sveltekit/server/hydration';

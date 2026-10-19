@@ -286,10 +286,7 @@ export class QuestionCurationState {
 			if (url.searchParams.has('edit')) {
 				url.searchParams.delete('edit');
 				// eslint-disable-next-line svelte/no-navigation-without-resolve -- pathname comes from the current URL after removing only the edit query param.
-				await goto(url.pathname, {
-					replaceState: true,
-					noScroll: true
-				});
+				await goto(url.pathname, { replace: true, reset: false });
 			}
 		} catch {
 			// Ignore URL cleanup failures; the editor state is reset below.
