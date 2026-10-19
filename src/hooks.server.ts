@@ -25,17 +25,6 @@ const protectAdmin: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-const protectClasses: Handle = async ({ event, resolve }) => {
-	const url = new URL(event.request.url);
-	if (url.pathname === '/classes' || url.pathname.startsWith('/classes/')) {
-		const { userId } = event.locals.auth();
-		if (!userId) {
-			return resolve(event);
-		}
-	}
-	return resolve(event);
-};
-
 const siteHygiene: Handle = async ({ event, resolve }) => {
 	if (!dev && event.url.hostname === 'www.learnterms.com') {
 		const canonicalUrl = new URL(event.url);
@@ -80,4 +69,4 @@ const siteHygiene: Handle = async ({ event, resolve }) => {
 	});
 };
 
-export const handle = sequence(siteHygiene, withClerkHandler(), protectClasses, protectAdmin);
+export const handle = sequence(siteHygiene, withClerkHandler(), protectAdmin);

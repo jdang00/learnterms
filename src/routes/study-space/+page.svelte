@@ -227,13 +227,11 @@ TODO: Review pressure-volume loops before exam...`;
 	];
 
 	let questions: MockQuestion[] = $state(
-		mockQuestionsSeed.map(
-			(question): MockQuestion => ({
-				...question,
-				selectedOptions: [],
-				eliminatedOptions: []
-			})
-		)
+		mockQuestionsSeed.map((question): MockQuestion => ({
+			...question,
+			selectedOptions: [],
+			eliminatedOptions: []
+		}))
 	);
 
 	const currentQuestion = $derived(questions[currentQuestionIndex]);

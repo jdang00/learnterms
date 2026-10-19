@@ -1,14 +1,21 @@
 <script lang="ts">
-	let { isDeleteModalOpen, onCancel, onConfirm, itemName, itemType, questionCount, moduleCount } =
-		$props<{
-			isDeleteModalOpen: boolean;
-			onCancel: () => void;
-			onConfirm: () => void;
-			itemName?: string;
-			itemType: 'class' | 'module' | 'question' | 'document' | 'chunk';
-			questionCount?: number;
-			moduleCount?: number;
-		}>();
+	let {
+		isDeleteModalOpen,
+		onCancel,
+		onConfirm,
+		itemName,
+		itemType,
+		questionCount,
+		moduleCount
+	}: {
+		isDeleteModalOpen: boolean;
+		onCancel: () => void;
+		onConfirm: () => void;
+		itemName?: string;
+		itemType: 'class' | 'module' | 'question' | 'document' | 'chunk';
+		questionCount?: number;
+		moduleCount?: number;
+	} = $props();
 
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 </script>

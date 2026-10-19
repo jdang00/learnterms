@@ -32,12 +32,7 @@ export type CoreCommandId =
 // navigation: moves between questions · session: changes the whole module run
 // insight: read-only feedback · preference: a sticky study setting
 export type CommandScope =
-	| 'answer'
-	| 'question'
-	| 'navigation'
-	| 'insight'
-	| 'session'
-	| 'preference';
+	'answer' | 'question' | 'navigation' | 'insight' | 'session' | 'preference';
 
 export type CommandTone =
 	| 'neutral'

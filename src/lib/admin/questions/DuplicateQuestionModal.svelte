@@ -1,10 +1,15 @@
 <script lang="ts">
-	let { isOpen, onCancel, onConfirm, itemName } = $props<{
+	let {
+		isOpen,
+		onCancel,
+		onConfirm,
+		itemName
+	}: {
 		isOpen: boolean;
 		onCancel: () => void;
 		onConfirm: (count: number) => void;
 		itemName?: string;
-	}>();
+	} = $props();
 
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';

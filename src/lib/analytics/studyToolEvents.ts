@@ -9,10 +9,7 @@ export type StudyToolContext = {
 	questionType?: string;
 };
 export type StudyToolEvent =
-	| 'study_tool_opened'
-	| 'study_tool_closed'
-	| 'study_tool_question_viewed'
-	| 'study_tool_used';
+	'study_tool_opened' | 'study_tool_closed' | 'study_tool_question_viewed' | 'study_tool_used';
 export type StudyToolDetails = {
 	action?:
 		| 'mode_changed'

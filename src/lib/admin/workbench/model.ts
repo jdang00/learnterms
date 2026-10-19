@@ -4,10 +4,7 @@ import Map from '@lucide/svelte/icons/map';
 import Database from '@lucide/svelte/icons/database';
 export type Pane = 'tools' | 'rag';
 export type ToolId =
-	| 'searchSourceChunks'
-	| 'getSourcePages'
-	| 'getTopicCoverageMap'
-	| 'getAllowedSourceText';
+	'searchSourceChunks' | 'getSourcePages' | 'getTopicCoverageMap' | 'getAllowedSourceText';
 
 export type Citation = {
 	citationId: string;

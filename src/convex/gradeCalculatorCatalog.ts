@@ -29,14 +29,7 @@ export type SeedCourseEntry = {
 	name: string;
 	shortLabel?: string;
 	category:
-		| 'assignment'
-		| 'quiz'
-		| 'exam'
-		| 'project'
-		| 'lab'
-		| 'attendance'
-		| 'participation'
-		| 'custom';
+		'assignment' | 'quiz' | 'exam' | 'project' | 'lab' | 'attendance' | 'participation' | 'custom';
 	inputType: 'points' | 'percentage' | 'attendance' | 'pass_fail' | 'letter';
 	contributionType?: 'standard' | 'bonus';
 	aggregation: 'single' | 'set' | 'running_total';

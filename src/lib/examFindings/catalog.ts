@@ -71,12 +71,7 @@ export type ExamSection =
 export type ExamLayout = ExamSection[];
 
 export type ExamTestGroup =
-	| 'entrance'
-	| 'binocular'
-	| 'oculomotor'
-	| 'refraction'
-	| 'health'
-	| 'general';
+	'entrance' | 'binocular' | 'oculomotor' | 'refraction' | 'health' | 'general';
 
 export type ExamTest = {
 	id: string;

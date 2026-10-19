@@ -130,8 +130,8 @@ export function evidenceForObjective(
 	const selected: EvidenceChunk[] = [];
 	let length = 0;
 	// Include a best excerpt from each page before filling the rest by relevance.
-	const firstPerPage = [...new Set(ranked.map((c) => c.pageNumber))].map(
-		(p) => ranked.find((c) => c.pageNumber === p)!
+	const firstPerPage = [...new Set(ranked.map((c) => c.pageNumber))].map((p) =>
+		ranked.find((c) => c.pageNumber === p)!
 	);
 	for (const chunk of [...firstPerPage, ...ranked]) {
 		if (

@@ -8,7 +8,7 @@ LearnTerms is a free, open-source study tool built to make mastering complex top
 
 - **Svelte** - We use Svelte because it aligns with our functional first, performance oriented philosophy of developing software. Svelte framework ships minimal JavaScript to the front end and its syntax and coding style to implement reactivity is a joy to write.
 - **TailwindCSS** - Modern web devs use TailwindCSS. It provides CSS utility classes and a decent default look while giving fine grain control over everything else.
-- **DaisyUI** - LearnTerms ships features first. To help with this, a good looking component library that plays nice with TailwindCSS is essential. We also take heavy advantage of the color system for themes.
+- **shadcn-svelte** - Accessible primitives (bits-ui) styled on our own brand tokens, so every screen shares one look without a heavy component framework.
 - **Convex** - A modern, reactive database that simplifies data management and enables real-time features.
 - **Vercel** - Vercel hosts LearnTerms and works with GitHub to deploy the site with every new push. It runs CI/CD, analytics, manages our domains, and serves our AI infrastructure via the AI SDK.
 

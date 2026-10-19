@@ -269,9 +269,10 @@ export const generateCandidateWorker = internalAction({
 					)
 				],
 				sourceCitations: draft.evidence.map((e) => {
-					const citation = omit(slot.evidence.find((c) => c.citationId === e.citationId)!, [
-						'text'
-					]);
+					const citation = omit(
+						slot.evidence.find((c) => c.citationId === e.citationId)!,
+						['text']
+					);
 					return { ...citation, quote: e.quote };
 				}),
 				duplicateRisk: 'low',

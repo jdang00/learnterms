@@ -5,7 +5,10 @@ import type { Doc } from '../src/convex/_generated/dataModel';
 const configure = (qs: QuizState) => {
 	qs.submitAnswer = async (questionId, answers) => {
 		const isCorrect =
-			answerStatus(qs.questions.find((q) => q._id === questionId)!, answers) === 'correct';
+			answerStatus(
+				qs.questions.find((q) => q._id === questionId)!,
+				answers
+			) === 'correct';
 		return {
 			isCorrect,
 			evidence: {
