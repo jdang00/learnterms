@@ -7,7 +7,7 @@ A study platform for health-professions cohorts. It uses SvelteKit 2 with Svelte
 Use **Bun only**. Never use `npm`, `npx`, `yarn` or `pnpm`. Treat any older `npm`/`npx` mentions as stale.
 
 - `bun run dev` starts SvelteKit. `bun run dev:convex` starts Convex.
-- `bun run verify` runs **check, lint and test**. Run it before calling work done; CI runs it on every PR.
+- `bun run verify` runs **check, lint and test**. Run it before calling work done; CI runs it on every PR. `bun run verify:fast` skips tests; `bun run test:unit`, `test:convex` and `test:state` run one suite.
 - `bun run check` runs svelte-check. `bun run lint` runs prettier and eslint. `bun run format` fixes formatting.
 - `bun run test` runs `bun test` for `tests/*.test.ts`, then Vitest for Convex, auth and state tests (`vitest.config.ts` projects).
 - `bunx convex run <module>:<fn> '<json args>'`. Add `--prod` for production.
@@ -28,6 +28,14 @@ Use **Bun only**. Never use `npm`, `npx`, `yarn` or `pnpm`. Treat any older `npm
 | Badges                          | `src/convex/badges.ts`, `badgeEngine.ts`                                                                                                     |
 | Schema                          | `src/convex/schema.ts`                                                                                                                       |
 | Plans, benchmarks and history   | `dev/` (`dev/archive/` holds finished plans; hidden from search via `.ignore`)                                                               |
+
+## Task recipes
+
+- **Add a Convex function:** put it in the domain folder (`questions/`, `tests/`, `questionStudio/`, …), define it with a wrapper from `authQueries.ts` (`authQuery`, `authMutation`, `authCuratorQuery`, `authCuratorMutation`, `authAdminMutation`, `authDevQuery`…) so `ctx.user` is loaded once, add validators for every arg, use `withIndex` (never `.filter` on a table scan, bound reads with `.take`), add a case to `convex-tests/security.test.ts`, then run `bunx convex codegen`. ESLint rejects raw `query`/`mutation` imports in new files.
+- **Add a page:** `+page.server.ts` loads live data with `convexLoad` from `convex-svelte/sveltekit` (the token comes from `hooks.server.ts`); the page reads `data.<name>.data`. Use `useQuery` only for client-driven args, and `useMutation`/`useAction` for writes. `ConvexHttpClient` is server-only (`$lib/server`, hooks, server loads).
+- **Add UI:** compose `$lib/components/ui` primitives on brand tokens; check `/design-system` in dev. Extract state into a `*.svelte.ts` class once a component passes a few hundred lines. `tests/fileSize.test.ts` fails when a file grows past 600 lines or an allowlisted file grows at all; shrink the file, then `bun scripts/file-size-budget.ts --write`.
+- **Add an AI step:** model IDs in `aiModels.ts`; rate limits and the agent in `questionStudio/runtime.ts`; durable multi-step jobs use `@convex-dev/workflow` (see `documentIngestion.ts`); record usage through `aiTelemetry`.
+- **Run a backfill:** `bunx convex run migrations/<domain>:<fn> '{}'` (see `scripts/BACKFILL_README.md`); paginated backfills schedule their next page themselves.
 
 ## Conventions (reuse these; don't re-implement them)
 
