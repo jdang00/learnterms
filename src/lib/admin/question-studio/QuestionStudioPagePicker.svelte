@@ -11,6 +11,8 @@
 	import QuestionStudioContextMeter from './QuestionStudioContextMeter.svelte';
 	import type { SourcePreviewBatch } from '../source/sourceContext';
 	import { formatPageSelection, parsePageSelection, sourcePageBatch } from './pagePickerSelection';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 
 	let {
 		documentId,
@@ -186,7 +188,7 @@
 </script>
 
 {#if error && !open}
-	<p class="mt-3 text-xs text-error" role="alert">
+	<p class="mt-3 text-xs text-error-ink" role="alert">
 		{error}
 		<button class="underline" onclick={() => load(documentId, 0, requestVersion)}>
 			Reload pages
@@ -196,60 +198,66 @@
 
 <dialog
 	bind:this={dialog}
-	class="page-dialog bg-base-100 text-base-content"
+	class="page-dialog bg-background text-foreground"
 	aria-labelledby="page-picker-title"
 	onclose={() => (open = false)}
 >
 	{#if open}
 		<div class="picker-shell">
-			<header class="flex items-center gap-3 border-b border-base-300 px-5 py-4">
+			<header class="flex items-center gap-3 border-b border-border px-5 py-4">
 				<div class="min-w-0 flex-1">
 					<h2 id="page-picker-title" class="text-lg font-semibold tracking-tight">
 						{purpose === 'citation' ? 'Choose pages to cite' : 'Choose your pages'}
 					</h2>
-					<p class="mt-0.5 text-xs text-base-content/55">
+					<p class="mt-0.5 text-xs text-foreground/55">
 						Tap a thumbnail to preview it, or its circle to select it.
 					</p>
 				</div>
 				{#if onChangeDocument}
-					<button
-						type="button"
-						class="btn btn-ghost btn-sm"
+					<Button
+						variant="ghost"
+						tone="neutral"
+						size="sm"
 						onclick={() => {
 							open = false;
 							onChangeDocument();
-						}}>Change document</button
+						}}>Change document</Button
 					>
 				{/if}
-				<button
-					type="button"
-					class="btn btn-ghost btn-circle btn-sm"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					shape="circle"
+					size="sm"
 					aria-label="Close page picker"
-					onclick={() => (open = false)}><X size={18} /></button
+					onclick={() => (open = false)}><X size={18} /></Button
 				>
 			</header>
-			<div class="picker-toolbar border-b border-base-300 px-5 py-3">
+			<div class="picker-toolbar border-b border-border px-5 py-3">
 				<div class="flex flex-wrap items-center gap-2">
-					<button
-						type="button"
-						class="btn btn-outline btn-xs rounded-full"
+					<Button
+						variant="outline"
+						tone="neutral"
+						size="xs"
 						disabled={sourceIndexedAt === undefined}
-						onclick={() => (selectedPageNumbers = [...pageNumbers])}>Select all</button
+						onclick={() => (selectedPageNumbers = [...pageNumbers])}>Select all</Button
 					>
-					<button
-						type="button"
-						class="btn btn-ghost btn-xs rounded-full"
+					<Button
+						variant="ghost"
+						tone="neutral"
+						size="xs"
 						disabled={!selectedPageNumbers.length}
-						onclick={() => (selectedPageNumbers = [])}>Clear</button
+						onclick={() => (selectedPageNumbers = [])}>Clear</Button
 					>
-					<button
-						type="button"
-						class="btn btn-xs rounded-full {selectedOnly ? 'btn-primary' : 'btn-ghost'}"
+					<Button
+						variant={selectedOnly ? 'solid' : 'ghost'}
+						tone={selectedOnly ? 'primary' : 'neutral'}
+						size="xs"
 						aria-pressed={selectedOnly}
 						onclick={() => (selectedOnly = !selectedOnly)}
 						>Selected only{selectedPageNumbers.length
 							? ` (${selectedPageNumbers.length})`
-							: ''}</button
+							: ''}</Button
 					>
 				</div>
 				<form
@@ -259,26 +267,30 @@
 						addRange();
 					}}
 				>
-					<input
-						class="input input-sm min-w-0 flex-1 rounded-lg"
+					<Input
+						class="h-8 min-w-0 flex-1 px-3 text-sm"
 						aria-label="Page numbers or ranges"
 						placeholder="Pages: 1–12, 24, 38–45"
 						bind:value={range}
 					/>
-					<button class="btn btn-sm rounded-lg" disabled={sourceIndexedAt === undefined}
-						>Add pages</button
+					<Button
+						type="submit"
+						variant="soft"
+						tone="neutral"
+						size="sm"
+						disabled={sourceIndexedAt === undefined}>Add pages</Button
 					>
 				</form>
 			</div>
-			{#if rangeError}<p class="px-5 py-2 text-xs text-error" role="alert">{rangeError}</p>{/if}
-			{#if error}<p class="px-5 py-2 text-xs text-error" role="alert">
+			{#if rangeError}<p class="px-5 py-2 text-xs text-error-ink" role="alert">{rangeError}</p>{/if}
+			{#if error}<p class="px-5 py-2 text-xs text-error-ink" role="alert">
 					{error}
 					<button class="underline" onclick={() => load(documentId, 0, requestVersion)}
 						><RotateCcw size={12} class="inline" /> Reload pages</button
 					>
 				</p>{/if}
 			{#if pdfError}<p
-					class="border-b border-base-300 px-5 py-2 text-xs text-base-content/60"
+					class="border-b border-border px-5 py-2 text-xs text-foreground/60"
 					role="status"
 				>
 					{pdfError}
@@ -321,27 +333,26 @@
 					track
 				/>
 			{/if}
-			<footer class="flex items-center gap-3 border-t border-base-300 px-5 py-4">
+			<footer class="flex items-center gap-3 border-t border-border px-5 py-4">
 				<div class="min-w-0 flex-1" aria-live="polite">
 					<p class="text-sm font-semibold">
 						{selectedPageNumbers.length}
 						{selectedPageNumbers.length === 1 ? 'page' : 'pages'}
 						{purpose === 'citation' ? 'to cite' : 'in context'}
 					</p>
-					<p class="truncate text-xs text-base-content/50" title={selectionSummary}>
+					<p class="truncate text-xs text-foreground/50" title={selectionSummary}>
 						{selectionSummary ||
 							(purpose === 'citation'
 								? 'Select pages that support your rationale.'
 								: 'Select the pages you want questions from.')}
 					</p>
 				</div>
-				<button
-					type="button"
-					class="btn btn-primary rounded-full px-7"
+				<Button
+					class="px-7"
 					onclick={() => {
 						onDone?.();
 						open = false;
-					}}>{purpose === 'citation' ? 'Use pages' : 'Done'}<Check size={16} /></button
+					}}>{purpose === 'citation' ? 'Use pages' : 'Done'}<Check size={16} /></Button
 				>
 			</footer>
 		</div>
@@ -356,7 +367,7 @@
 		max-height: none;
 		padding: 0;
 		margin: auto;
-		border: 1px solid var(--color-base-300);
+		border: 1px solid var(--muted-strong);
 		border-radius: 20px;
 		box-shadow: 0 24px 100px #0004;
 		overflow: hidden;

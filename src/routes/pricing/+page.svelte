@@ -6,6 +6,8 @@
 	import { resolve } from '$app/paths';
 	import PublicPage from '$lib/components/landing/PublicPage.svelte';
 	import PublicCta from '$lib/components/landing/PublicCta.svelte';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
 
 	let { data }: { data: PageData } = $props();
 
@@ -154,14 +156,14 @@
 {#snippet priceTag(amount: string, period: string)}
 	<p class="mt-5 flex items-baseline gap-1.5">
 		<span class="text-4xl font-extrabold">{amount}</span>
-		<span class="text-sm text-base-content/60">{period}</span>
+		<span class="text-sm text-foreground/60">{period}</span>
 	</p>
 {/snippet}
 
 {#snippet faqSection()}
 	<section class="mx-auto mt-20 max-w-3xl" aria-labelledby="faq-title">
 		<h2 id="faq-title" class="text-2xl font-bold sm:text-3xl">Questions</h2>
-		<div class="mt-6 divide-y divide-base-content/10 border-y border-base-content/10">
+		<div class="mt-6 divide-y divide-foreground/10 border-y border-foreground/10">
 			{#each faqs as faq (faq.q)}
 				<details class="group py-1">
 					<summary
@@ -169,11 +171,11 @@
 					>
 						{faq.q}
 						<span
-							class="text-xl leading-none text-base-content/40 transition-transform group-open:rotate-45"
+							class="text-xl leading-none text-foreground/40 transition-transform group-open:rotate-45"
 							aria-hidden="true">+</span
 						>
 					</summary>
-					<p class="pb-5 text-sm leading-relaxed text-base-content/70">{faq.a}</p>
+					<p class="pb-5 text-sm leading-relaxed text-foreground/70">{faq.a}</p>
 				</details>
 			{/each}
 		</div>
@@ -188,47 +190,43 @@
 		<section class="grid gap-4 lg:grid-cols-3" aria-label="Plans">
 			<div class="panel-graph flex flex-col p-6">
 				<h2 class="text-lg font-semibold">Student</h2>
-				<p class="mt-1 text-sm text-base-content/65">Study your cohort’s question bank.</p>
+				<p class="mt-1 text-sm text-foreground/65">Study your cohort’s question bank.</p>
 				{@render priceTag('$0', 'always')}
 				<div class="mt-6 flex-1">{@render featureList(studentFeatures)}</div>
-				<a href={resolve('/sign-up')} class="btn btn-primary mt-8 rounded-full">
-					Create a free account
-				</a>
+				<Button href={resolve('/sign-up')} class="mt-8">Create a free account</Button>
 			</div>
 
 			<div class="panel-graph flex flex-col p-6">
 				<h2 class="text-lg font-semibold">Curator</h2>
-				<p class="mt-1 text-sm text-base-content/65">Build content for your cohort.</p>
+				<p class="mt-1 text-sm text-foreground/65">Build content for your cohort.</p>
 				{@render priceTag('$0', 'forever')}
 				<div class="mt-6 flex-1">{@render featureList(curatorFeatures)}</div>
-				<a href={resolve('/contact')} class="btn btn-ghost mt-8 rounded-full border-base-300">
-					Ask about curating
-				</a>
+				<Button href={resolve('/contact')} variant="ghost" tone="neutral" class="mt-8 border-border"
+					>Ask about curating</Button
+				>
 			</div>
 
 			<div class="panel-graph pro-plan flex flex-col p-6">
 				<div class="flex items-center justify-between gap-2">
 					<h2 class="text-lg font-semibold">Curator Pro</h2>
-					<span class="badge badge-primary badge-sm rounded-full">For curators</span>
+					<Badge tone="primary" variant="solid" size="sm">For curators</Badge>
 				</div>
-				<p class="mt-1 text-sm text-base-content/65">
-					Generate questions from your course sources.
-				</p>
+				<p class="mt-1 text-sm text-foreground/65">Generate questions from your course sources.</p>
 				{#if productsQuery.isLoading}
-					<div class="mt-5 h-12 w-28 animate-pulse rounded-lg bg-base-200"></div>
+					<div class="mt-5 h-12 w-28 animate-pulse rounded-lg bg-muted"></div>
 				{:else}
 					{@render priceTag(semesterPrice, 'per 6 months')}
 				{/if}
 				{#if proAnnual}
-					<p class="mt-1 text-xs text-base-content/55">
+					<p class="mt-1 text-xs text-foreground/55">
 						or {formatPrice(proAnnual.prices?.[0]?.priceAmount)} per year
 					</p>
 				{/if}
 				<div class="mt-6 flex-1">{@render featureList(proFeatures)}</div>
-				<a href={resolve('/sign-up')} class="btn btn-primary mt-8 rounded-full">
+				<Button href={resolve('/sign-up')} class="mt-8">
 					Get started
 					<ArrowRight size={16} />
-				</a>
+				</Button>
 			</div>
 		</section>
 
@@ -236,9 +234,9 @@
 			<h2 id="how-title" class="text-2xl font-bold sm:text-3xl">How LearnTerms works</h2>
 			<ol class="mt-6 grid gap-8 md:grid-cols-3">
 				{#each steps as step (step.title)}
-					<li class="border-t border-base-content/15 pt-5">
+					<li class="border-t border-foreground/15 pt-5">
 						<h3 class="text-lg font-semibold">{step.title}</h3>
-						<p class="mt-2 text-sm leading-relaxed text-base-content/70">{step.detail}</p>
+						<p class="mt-2 text-sm leading-relaxed text-foreground/70">{step.detail}</p>
 					</li>
 				{/each}
 			</ol>
@@ -255,18 +253,18 @@
 		width="narrow"
 	>
 		{#snippet actions()}
-			<a href={resolve('/classes')} class="btn btn-primary rounded-full px-6">
+			<Button href={resolve('/classes')} class="px-6">
 				<BookOpen size={18} />
 				Continue studying
-			</a>
+			</Button>
 		{/snippet}
 
 		<div class="panel-graph p-6">
 			<h2 class="font-semibold">What you get as a student</h2>
 			<div class="mt-4">{@render featureList(studentFeatures)}</div>
 		</div>
-		<p class="mt-6 text-sm leading-relaxed text-base-content/65">
-			Pro subscriptions are for <span class="font-medium text-base-content">question curators</span>
+		<p class="mt-6 text-sm leading-relaxed text-foreground/65">
+			Pro subscriptions are for <span class="font-medium text-foreground">question curators</span>
 			who create and manage content for their cohorts. If you’re interested in becoming a curator, talk
 			to your program admin.
 		</p>
@@ -282,13 +280,18 @@
 		width="narrow"
 	>
 		{#snippet actions()}
-			<a href={resolve('/admin/question-studio')} class="btn btn-primary rounded-full px-6">
+			<Button href={resolve('/admin/question-studio')} class="px-6">
 				Open Question Studio
 				<ArrowRight size={16} />
-			</a>
-			<button class="btn btn-ghost rounded-full border-base-300" onclick={handleManageSubscription}>
+			</Button>
+			<Button
+				variant="ghost"
+				tone="neutral"
+				class="border-border"
+				onclick={handleManageSubscription}
+			>
 				Manage subscription
-			</button>
+			</Button>
 		{/snippet}
 
 		<div class="panel-graph p-6">
@@ -296,19 +299,19 @@
 			<dl class="mt-5 grid gap-5 sm:grid-cols-2">
 				<div>
 					<dt class="font-medium">AI generations</dt>
-					<dd class="text-sm text-base-content/60">Curator beta; usage limits apply</dd>
+					<dd class="text-sm text-foreground/60">Curator beta; usage limits apply</dd>
 				</div>
 				<div>
 					<dt class="font-medium">RAG indexing</dt>
-					<dd class="text-sm text-base-content/60">Document ingestion</dd>
+					<dd class="text-sm text-foreground/60">Document ingestion</dd>
 				</div>
 				<div>
 					<dt class="font-medium">Export questions</dt>
-					<dd class="text-sm text-base-content/60">TXT, CSV, JSON</dd>
+					<dd class="text-sm text-foreground/60">TXT, CSV, JSON</dd>
 				</div>
 				<div>
 					<dt class="font-medium">Source review</dt>
-					<dd class="text-sm text-base-content/60">Inspect evidence before publishing</dd>
+					<dd class="text-sm text-foreground/60">Inspect evidence before publishing</dd>
 				</div>
 			</dl>
 		</div>
@@ -316,12 +319,12 @@
 {:else}
 	<PublicPage title="Curator plans" lede="Scale your content creation with Pro.">
 		{#if proSemester && proAnnual}
-			<div class="mb-8 inline-flex rounded-full border border-base-300 bg-base-100 p-1">
+			<div class="mb-8 inline-flex rounded-full border border-border bg-background p-1">
 				<button
 					class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors {selectedInterval ===
 					'semester'
-						? 'bg-base-content text-base-100'
-						: 'text-base-content/70 hover:text-base-content'}"
+						? 'bg-foreground text-background'
+						: 'text-foreground/70 hover:text-foreground'}"
 					aria-pressed={selectedInterval === 'semester'}
 					onclick={() => (selectedInterval = 'semester')}
 				>
@@ -330,12 +333,12 @@
 				<button
 					class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors {selectedInterval ===
 					'annual'
-						? 'bg-base-content text-base-100'
-						: 'text-base-content/70 hover:text-base-content'}"
+						? 'bg-foreground text-background'
+						: 'text-foreground/70 hover:text-foreground'}"
 					aria-pressed={selectedInterval === 'annual'}
 					onclick={() => (selectedInterval = 'annual')}
 				>
-					Annual <span class="ml-1 text-xs font-semibold text-success">Best value</span>
+					Annual <span class="ml-1 text-xs font-semibold text-success-ink">Best value</span>
 				</button>
 			</div>
 		{/if}
@@ -344,14 +347,12 @@
 			<div class="panel-graph flex flex-col p-6">
 				<div class="flex items-center justify-between gap-2">
 					<h2 class="text-lg font-semibold">Curator</h2>
-					<span class="badge badge-outline badge-sm rounded-full">Current</span>
+					<Badge variant="outline" tone="neutral" size="sm">Current</Badge>
 				</div>
-				<p class="mt-1 text-sm text-base-content/65">
-					Get started creating content for your cohort.
-				</p>
+				<p class="mt-1 text-sm text-foreground/65">Get started creating content for your cohort.</p>
 				{@render priceTag('$0', 'forever')}
 				<div class="mt-6 flex-1">{@render featureList(curatorFeatures)}</div>
-				<p class="mt-6 flex items-center gap-2 text-sm text-base-content/50">
+				<p class="mt-6 flex items-center gap-2 text-sm text-foreground/50">
 					<Minus size={14} /> No question exports
 				</p>
 			</div>
@@ -359,13 +360,13 @@
 			<div class="panel-graph pro-plan flex flex-col p-6">
 				<div class="flex items-center justify-between gap-2">
 					<h2 class="text-lg font-semibold">Curator Pro</h2>
-					<span class="badge badge-primary badge-sm rounded-full">Pro</span>
+					<Badge tone="primary" variant="solid" size="sm">Pro</Badge>
 				</div>
-				<p class="mt-1 text-sm text-base-content/65">
+				<p class="mt-1 text-sm text-foreground/65">
 					Create and organize your cohort’s study material.
 				</p>
 				{#if productsQuery.isLoading}
-					<div class="mt-5 h-12 w-28 animate-pulse rounded-lg bg-base-200"></div>
+					<div class="mt-5 h-12 w-28 animate-pulse rounded-lg bg-muted"></div>
 				{:else if currentProduct}
 					{@render priceTag(
 						formatPrice(currentProduct.prices?.[0]?.priceAmount),
@@ -376,12 +377,12 @@
 				{/if}
 				<div class="mt-6 flex-1">{@render featureList(proFeatures)}</div>
 				{#if subscriptionQuery.isLoading}
-					<button class="btn btn-primary mt-8 rounded-full" disabled>
+					<Button class="mt-8" disabled>
 						<Loader2 size={18} class="animate-spin" />
-					</button>
+					</Button>
 				{:else}
-					<button
-						class="btn btn-primary mt-8 rounded-full"
+					<Button
+						class="mt-8"
 						onclick={handleUpgrade}
 						disabled={isCheckoutLoading || !currentProduct}
 					>
@@ -391,7 +392,7 @@
 						{:else}
 							Upgrade to Pro
 						{/if}
-					</button>
+					</Button>
 				{/if}
 			</div>
 		</div>
@@ -402,9 +403,9 @@
 
 <style>
 	.pro-plan {
-		border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
+		border-color: color-mix(in oklab, var(--primary) 55%, transparent);
 		box-shadow:
-			0 0 0 1px color-mix(in oklab, var(--color-primary) 25%, transparent),
-			0 18px 40px -24px color-mix(in oklab, var(--color-primary) 45%, transparent);
+			0 0 0 1px color-mix(in oklab, var(--primary) 25%, transparent),
+			0 18px 40px -24px color-mix(in oklab, var(--primary) 45%, transparent);
 	}
 </style>

@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { questionTypeLabel } from './questionStudioTypes';
 	import type { TopicMapItem } from './questionStudioTypes';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		detailTopic?: TopicMapItem | null;
@@ -10,42 +13,44 @@
 </script>
 
 {#if detailTopic}
-	<div class="modal modal-open">
-		<div class="modal-box max-w-lg rounded-2xl">
+	{@const topic = detailTopic}
+	<Dialog.Root
+		open
+		onOpenChange={(open) => {
+			if (!open) detailTopic = null;
+		}}
+	>
+		<Dialog.Content showCloseButton={false} class="gap-0 rounded-2xl sm:max-w-lg">
 			<div class="mb-4 flex items-start justify-between gap-3">
-				<h3 class="text-base font-semibold">{detailTopic.title}</h3>
+				<Dialog.Title class="text-base leading-normal font-semibold">{topic.title}</Dialog.Title>
 				<div class="flex shrink-0 gap-1.5">
-					<span class="badge badge-ghost badge-sm">Pages {detailTopic.pageNumbers.join(', ')}</span>
-					<span class="badge badge-outline badge-sm">
-						up to {detailTopic.estimatedQuestionCapacity}
-					</span>
+					<Badge>Pages {topic.pageNumbers.join(', ')}</Badge>
+					<Badge variant="outline">
+						up to {topic.estimatedQuestionCapacity}
+					</Badge>
 				</div>
 			</div>
-			<p class="text-sm leading-relaxed text-base-content/70">{detailTopic.summary}</p>
-			<p class="mt-3 text-xs text-base-content/60">
-				{detailTopic.suggestedTypes
-					? `Suggested types: ${detailTopic.suggestedTypes.map(questionTypeLabel).join(', ')}`
+			<p class="text-sm leading-relaxed text-foreground/70">{topic.summary}</p>
+			<p class="mt-3 text-xs text-foreground/60">
+				{topic.suggestedTypes
+					? `Suggested types: ${topic.suggestedTypes.map(questionTypeLabel).join(', ')}`
 					: 'Question type suitability is checked during drafting and review.'}
 			</p>
-			{#if detailTopic.keyTerms.length > 0}
+			{#if topic.keyTerms.length > 0}
 				<div class="mt-4">
-					<p class="mb-1.5 text-xs font-medium text-base-content/50">Key terms</p>
+					<p class="mb-1.5 text-xs font-medium text-foreground/50">Key terms</p>
 					<div class="flex flex-wrap gap-1.5">
-						{#each detailTopic.keyTerms as term (term)}
-							<span class="badge badge-ghost badge-sm">{term}</span>
+						{#each topic.keyTerms as term (term)}
+							<Badge>{term}</Badge>
 						{/each}
 					</div>
 				</div>
 			{/if}
-			<div class="modal-action">
-				<button type="button" class="btn btn-sm" onclick={() => (detailTopic = null)}>Close</button>
-			</div>
-		</div>
-		<button
-			type="button"
-			class="modal-backdrop bg-black/50"
-			aria-label="Close topic details"
-			onclick={() => (detailTopic = null)}
-		></button>
-	</div>
+			<Dialog.Footer class="mt-6">
+				<Button size="sm" variant="soft" tone="neutral" onclick={() => (detailTopic = null)}
+					>Close</Button
+				>
+			</Dialog.Footer>
+		</Dialog.Content>
+	</Dialog.Root>
 {/if}

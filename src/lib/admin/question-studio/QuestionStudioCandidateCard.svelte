@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Check } from 'lucide-svelte';
+	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { questionTypeLabel } from './questionStudioTypes';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import type { CandidateQuestion } from './questionStudioTypes';
@@ -49,7 +50,7 @@
 	class="cursor-pointer rounded-2xl px-3 py-2.5 transition-all
 		{isActive
 		? 'border border-primary/30 bg-primary/8 hover:bg-primary/12'
-		: 'border border-base-300/60 bg-base-100 hover:border-base-300 hover:bg-base-200/40'}
+		: 'border border-border/60 bg-background hover:border-border hover:bg-muted/40'}
 		{isSaved ? 'opacity-70' : ''}"
 	onclick={onSelect}
 	onkeydown={(e) => e.key === 'Enter' && onSelect()}
@@ -63,43 +64,40 @@
 				<Check size={12} />
 			</span>
 		{:else}
-			<input
-				type="checkbox"
-				class="checkbox checkbox-sm checkbox-primary mt-0.5 shrink-0"
+			<Checkbox
+				class="mt-0.5 size-4"
 				aria-label="Select question to save"
 				checked={isIncluded}
-				onclick={(e) => {
-					e.stopPropagation();
-					onToggleInclude();
-				}}
+				onclick={(e) => e.stopPropagation()}
+				onCheckedChange={() => onToggleInclude()}
 			/>
 		{/if}
 		<div class="min-w-0 flex-1">
-			<div class="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-base-content/45">
+			<div class="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-foreground/45">
 				<span>{questionTypeLabel(candidate.questionType)}</span>
 				{#if candidate.topicTitle}
-					<span class="min-w-0 max-w-[12rem] truncate text-base-content/60">
+					<span class="min-w-0 max-w-[12rem] truncate text-foreground/60">
 						{candidate.topicTitle}
 					</span>
 				{/if}
 				{#if pageLabel}
-					<span class="font-mono text-base-content/35">{pageLabel}</span>
+					<span class="font-mono text-foreground/35">{pageLabel}</span>
 				{/if}
 				{#if review}
-					<span class="uppercase tracking-wide text-base-content/35" title={verdictTitle}>
+					<span class="uppercase tracking-wide text-foreground/35" title={verdictTitle}>
 						{verdictShort}
 					</span>
 				{/if}
 				{#if concern && !isSaved}
 					<span
 						title={concern}
-						class="rounded-full bg-warning px-2 py-px font-medium text-warning-content"
+						class="rounded-full bg-warning px-2 py-px font-medium text-warning-foreground"
 					>
 						Check this
 					</span>
 				{/if}
 			</div>
-			<p class="line-clamp-2 text-sm leading-snug text-base-content tiptap-content-inline">
+			<p class="line-clamp-2 text-sm leading-snug text-foreground tiptap-content-inline">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html sanitizeHtml(candidate.stem)}
 			</p>

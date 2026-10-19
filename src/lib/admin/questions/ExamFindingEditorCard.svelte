@@ -58,6 +58,15 @@
 	import { EXAM_GROUP_STYLE } from '$lib/components/exam-findings/groups';
 	import Worth4DotEditor from './Worth4DotEditor.svelte';
 	import { followAnchor } from '$lib/utils/anchoredPopover';
+	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { Input } from '$lib/components/ui/input';
+	import * as InputGroup from '$lib/components/ui/input-group';
+	import { Kbd } from '$lib/components/ui/kbd';
+	import { SelectField } from '$lib/components/ui/select';
+	import { Textarea } from '$lib/components/ui/textarea';
+	import { Tip } from '$lib/components/ui/tooltip';
 
 	let {
 		finding,
@@ -108,7 +117,7 @@
 	const notePreview = $derived(
 		note ? (note.length > 240 ? `${note.slice(0, 240)}…` : note) : 'Add note'
 	);
-	let notesDialog = $state<HTMLDialogElement | null>(null);
+	let notesOpen = $state(false);
 	let cardElement = $state<HTMLElement | null>(null);
 	let notesInput = $state<HTMLTextAreaElement | null>(null);
 	let noteDraft = $state('');
@@ -140,10 +149,12 @@
 		onChange();
 	}
 
-	async function openNotes() {
+	function openNotes() {
 		noteDraft = finding.note ?? '';
-		notesDialog?.showModal();
-		await tick();
+		notesOpen = true;
+	}
+
+	function focusNotes() {
 		notesInput?.focus();
 		notesInput?.setSelectionRange(noteDraft.length, noteDraft.length);
 	}
@@ -154,7 +165,7 @@
 			finding.note = next;
 			onChange();
 		}
-		notesDialog?.close();
+		notesOpen = false;
 	}
 
 	function handleMenuToggle(event: Event) {
@@ -246,16 +257,15 @@
 		<div class="flex min-h-8 flex-wrap items-center gap-x-4 gap-y-1">
 			{#each COVER_CORRECTION_CHOICES as choice (choice)}
 				<label class="flex cursor-pointer items-center gap-1.5 text-xs whitespace-nowrap">
-					<input
+					<Checkbox
 						data-value-input
-						type="checkbox"
-						class="checkbox checkbox-primary checkbox-xs rounded-sm"
+						class="size-3.5 rounded-sm"
 						checked={coverCorrectionValues(finding.values[key] ?? '').includes(choice)}
-						onchange={(event) => {
+						onCheckedChange={(checked) => {
 							finding.values[key] = toggleCoverCorrection(
 								finding.values[key] ?? '',
 								choice,
-								event.currentTarget.checked
+								checked === true
 							);
 							onChange();
 						}}
@@ -266,8 +276,8 @@
 			{/each}
 		</div>
 		{#if finding.values[key] && !coverCorrectionValues(finding.values[key]).length}
-			<input
-				class="input input-sm mt-1 w-full rounded-full border-base-300"
+			<Input
+				class="mt-1 h-8 px-3 text-sm"
 				aria-label="Other correction condition"
 				maxlength={MAX_VALUE_LENGTH}
 				bind:value={finding.values[key]}
@@ -277,11 +287,11 @@
 		{/if}
 	{:else if column.input === 'coverDeviation' || column.input === 'phoria'}
 		<div class="flex min-w-40 items-center gap-1">
-			<input
+			<Input
 				id="{uid}-{key}"
 				data-value-input
 				type="text"
-				class="input input-sm h-8 min-w-0 flex-1 rounded-full border-base-300 px-2.5 font-mono tabular-nums"
+				class="h-8 min-w-0 flex-1 px-2.5 font-mono text-sm tabular-nums"
 				aria-label={`${label} prism diopters`}
 				placeholder="Δ"
 				inputmode="decimal"
@@ -300,36 +310,37 @@
 				onkeydown={advanceOnEnter}
 				{disabled}
 			/>
-			<select
-				class="select select-sm h-8 w-24 shrink-0 rounded-full border-base-300 bg-base-100 px-2 text-xs"
+			<SelectField
+				size="sm"
+				class="w-24 shrink-0 text-xs"
 				aria-label={`${label} direction`}
 				value={deviationParts(finding.values[key] ?? '', column.input).direction}
-				onchange={(event) => {
+				onValueChange={(next) => {
 					finding.values[key] = combineDeviation(
 						deviationParts(finding.values[key] ?? '', column.input).magnitude,
-						event.currentTarget.value,
+						next,
 						column.input
 					);
 					onChange();
 				}}
 				{disabled}
-			>
-				<option value="">Direction</option>
-				{#each choices as choice (choice)}<option value={choice}>{choice}</option>{/each}
-			</select>
+				options={[
+					{ value: '', label: 'Direction' },
+					...choices.map((choice) => ({ value: choice, label: choice }))
+				]}
+			/>
 		</div>
 	{:else if column.input === 'check'}
 		<label
-			class="flex h-8 min-w-28 items-center gap-2 rounded-full border border-base-300 bg-base-100 px-3 text-xs"
+			class="flex h-8 min-w-28 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs"
 		>
-			<input
+			<Checkbox
 				id="{uid}-{key}"
 				data-value-input
-				type="checkbox"
-				class="checkbox checkbox-primary checkbox-xs"
+				class="size-3.5"
 				checked={finding.values[key] === column.normal}
-				onchange={(event) => {
-					finding.values[key] = event.currentTarget.checked ? (column.normal ?? choices[0]) : '';
+				onCheckedChange={(checked) => {
+					finding.values[key] = checked === true ? (column.normal ?? choices[0]) : '';
 					onChange();
 				}}
 				aria-label={`${label}: ${column.normal ?? choices[0]}`}
@@ -338,8 +349,8 @@
 			<span class="truncate">{column.normal ?? choices[0]}</span>
 		</label>
 		{#if finding.values[key] && finding.values[key] !== column.normal}
-			<input
-				class="input input-sm mt-1 w-full rounded-full border-base-300"
+			<Input
+				class="mt-1 h-8 px-3 text-sm"
 				aria-label={`${label} other finding`}
 				maxlength={MAX_VALUE_LENGTH}
 				bind:value={finding.values[key]}
@@ -349,11 +360,11 @@
 		{/if}
 	{:else if column.input === 'prism'}
 		<div class="flex min-w-32 items-center gap-1">
-			<input
+			<Input
 				id="{uid}-{key}"
 				data-value-input
 				type="text"
-				class="input input-sm h-8 min-w-0 flex-1 rounded-full border-base-300 px-2.5 font-mono tabular-nums"
+				class="h-8 min-w-0 flex-1 px-2.5 font-mono text-sm tabular-nums"
 				aria-label={`${label} amount in prism diopters`}
 				placeholder="Δ"
 				inputmode="decimal"
@@ -370,56 +381,51 @@
 				onkeydown={advanceOnEnter}
 				{disabled}
 			/>
-			<select
-				class="select select-sm h-8 w-16 shrink-0 rounded-full border-base-300 bg-base-100 px-1.5 text-xs"
+			<SelectField
+				size="sm"
+				class="w-16 shrink-0 text-xs"
 				aria-label={`${label} direction`}
 				value={prismParts(finding.values[key] ?? '').direction}
-				onchange={(event) => {
-					finding.values[key] = combinePrism(
-						prismParts(finding.values[key] ?? '').magnitude,
-						event.currentTarget.value
-					);
+				onValueChange={(next) => {
+					finding.values[key] = combinePrism(prismParts(finding.values[key] ?? '').magnitude, next);
 					onChange();
 				}}
 				disabled={disabled ||
 					!/^\d+(?:\.\d+)?$/.test(prismParts(finding.values[key] ?? '').magnitude)}
-			>
-				<option value="">Dir.</option>
-				{#each column.choices ?? [] as direction (direction)}<option value={direction}
-						>{direction}</option
-					>{/each}
-			</select>
+				options={[
+					{ value: '', label: 'Dir.' },
+					...(column.choices ?? []).map((direction) => ({ value: direction, label: direction }))
+				]}
+			/>
 		</div>
 	{:else if choices.length && (column.input === undefined || column.input === 'acuity')}
 		<div class="min-w-28 {column.wide ? '' : 'max-w-40'}">
 			<div class="flex items-center gap-1">
 				{#if column.prefix && displayAffix(column, finding.values[key] ?? '')}<span
-						class="font-mono text-xs text-base-content/40">{column.prefix}</span
+						class="font-mono text-xs text-foreground/40">{column.prefix}</span
 					>{/if}
-				<select
+				<SelectField
+					size="sm"
+					class="w-full text-xs {flashed.has(key) ? 'bg-success/15' : ''}"
 					id="{uid}-{key}"
 					data-value-input
-					class="select select-sm h-8 w-full rounded-full border-base-300 bg-base-100 text-xs focus:border-primary {flashed.has(
-						key
-					)
-						? 'bg-success/15'
-						: ''}"
 					aria-label={label}
 					value={isCustom(key, choices) ? '__custom__' : (finding.values[key] ?? '')}
-					onchange={(event) => chooseValue(key, event.currentTarget.value)}
+					onValueChange={(next) => chooseValue(key, next)}
 					{disabled}
-				>
-					<option value="">Select…</option>
-					{#each choices as choice (choice)}<option value={choice}>{choice}</option>{/each}
-					<option value="__custom__">Other / type…</option>
-				</select>
+					options={[
+						{ value: '', label: 'Select…' },
+						...choices.map((choice) => ({ value: choice, label: choice })),
+						{ value: '__custom__', label: 'Other / type…' }
+					]}
+				/>
 			</div>
 			{#if isCustom(key, choices)}
-				<input
+				<Input
 					id="{uid}-{key}-custom"
 					data-value-input
 					type="text"
-					class="input input-sm mt-1 h-8 w-full rounded-full border-base-300 px-3"
+					class="mt-1 h-8 px-3 text-sm"
 					aria-label={`${label} custom value`}
 					placeholder="Type a finding"
 					maxlength={MAX_VALUE_LENGTH}
@@ -432,21 +438,23 @@
 			{/if}
 		</div>
 	{:else}
-		<label
-			class="input input-sm h-8 w-full gap-1 rounded-full border-base-300 px-3 transition-colors duration-500 focus-within:border-primary {flashed.has(
+		<InputGroup.Root
+			class="h-8 gap-1 px-3 transition-colors duration-500 focus-within:border-primary {flashed.has(
 				key
 			)
 				? 'bg-success/15'
-				: 'bg-base-100'} {column.wide ? 'min-w-28' : 'min-w-[4.5rem] max-w-40'}"
+				: 'bg-background'} {column.wide ? 'min-w-28' : 'min-w-[4.5rem] max-w-40'}"
 		>
-			{#if column.prefix && displayAffix(column, finding.values[key] ?? '')}<span
-					class="-mr-0.5 font-mono text-xs text-base-content/40">{column.prefix}</span
-				>{/if}
-			<input
+			{#if column.prefix && displayAffix(column, finding.values[key] ?? '')}
+				<InputGroup.Addon class="px-0 font-mono text-xs text-foreground/40"
+					>{column.prefix}</InputGroup.Addon
+				>
+			{/if}
+			<InputGroup.Input
 				id="{uid}-{key}"
 				data-value-input
 				type="text"
-				class="min-w-0 placeholder:text-base-content/25 {column.wide
+				class="h-full min-w-0 px-0 text-sm placeholder:text-foreground/25 {column.wide
 					? ''
 					: 'font-mono tabular-nums'}"
 				aria-label={label}
@@ -461,13 +469,15 @@
 				onkeydown={advanceOnEnter}
 				{disabled}
 			/>
-			{#if column.suffix && displayAffix(column, finding.values[key] ?? '')}<span
-					class="shrink-0 text-[0.68rem] text-base-content/45">{column.suffix}</span
-				>{/if}
+			{#if column.suffix && displayAffix(column, finding.values[key] ?? '')}
+				<InputGroup.Addon align="inline-end" class="px-0 text-[0.68rem] text-foreground/45"
+					>{column.suffix}</InputGroup.Addon
+				>
+			{/if}
 			{#if column.input === 'time'}
-				<button
-					type="button"
-					class="btn btn-ghost btn-xs btn-circle -mr-2 shrink-0 text-base-content/55 hover:text-primary"
+				<InputGroup.Button
+					size="icon-xs"
+					class="-mr-2 text-foreground/55 hover:text-primary"
 					title="Record the current time"
 					aria-label={`${label}: record the current time`}
 					onclick={() => {
@@ -475,10 +485,10 @@
 						flash([key]);
 						onChange();
 					}}
-					{disabled}><Clock size={13} /></button
+					{disabled}><Clock size={13} /></InputGroup.Button
 				>
 			{/if}
-		</label>
+		</InputGroup.Root>
 	{/if}
 {/snippet}
 
@@ -489,42 +499,50 @@
 	{
 		off = false,
 		pressed,
-		tone = '',
+		tone = 'neutral',
 		dot = false
-	}: { off?: boolean; pressed?: boolean; tone?: string; dot?: boolean }
+	}: {
+		off?: boolean;
+		pressed?: boolean;
+		tone?: 'neutral' | 'success' | 'info' | 'warning';
+		dot?: boolean;
+	}
 )}
-	<button
-		type="button"
-		class="btn btn-circle btn-xs tooltip tooltip-bottom relative size-7 shrink-0 border-base-300 bg-base-100 shadow-none before:max-w-64 before:whitespace-pre-line before:text-left hover:bg-base-200 disabled:bg-base-100 {pressed
-			? `bg-base-200 ${tone}`
-			: tone
-				? `${tone} opacity-80 hover:opacity-100`
-				: 'text-base-content/60 hover:text-base-content'}"
-		data-tip={label}
-		aria-label={label}
-		aria-pressed={pressed}
-		{onclick}
-		disabled={disabled || off}
-	>
-		<Icon size={14} />
-		{#if dot}<span
-				class="absolute right-1.5 top-1 size-1.5 rounded-full bg-warning ring-2 ring-base-100"
-			></span>{/if}
-	</button>
+	<Tip {label} side="bottom" class="max-w-64 text-left whitespace-pre-line">
+		{#snippet child({ props })}
+			<Button
+				{...props}
+				variant="ghost"
+				{tone}
+				shape="circle"
+				size="xs"
+				class="relative size-7 shrink-0"
+				aria-label={label}
+				aria-pressed={pressed}
+				{onclick}
+				disabled={disabled || off}
+			>
+				<Icon size={14} />
+				{#if dot}<span
+						class="absolute right-1.5 top-1 size-1.5 rounded-full bg-warning ring-2 ring-background"
+					></span>{/if}
+			</Button>
+		{/snippet}
+	</Tip>
 {/snippet}
 
 <article
 	bind:this={cardElement}
-	class="@container flex h-full flex-col rounded-2xl border bg-base-100 shadow-xs transition-colors focus-within:border-primary/40 {empty
-		? 'border-dashed border-base-content/25'
-		: 'border-base-300'}"
+	class="@container flex h-full flex-col rounded-2xl border bg-background shadow-xs transition-colors focus-within:border-primary/40 {empty
+		? 'border-dashed border-foreground/25'
+		: 'border-border'}"
 >
 	<header
-		class="flex items-center gap-1 rounded-t-2xl border-b border-base-200 bg-base-200/40 py-1 pl-1 pr-1.5"
+		class="flex items-center gap-1 rounded-t-2xl border-b border-muted bg-muted/40 py-1 pl-1 pr-1.5"
 	>
 		<button
 			type="button"
-			class="grid size-7 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-base-content/35 transition-colors hover:bg-base-content/5 hover:text-base-content/70 focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing"
+			class="grid size-7 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-foreground/35 transition-colors hover:bg-foreground/5 hover:text-foreground/70 focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing"
 			aria-label="Reorder {finding.title || test.title}: drag, or use the arrow keys"
 			onpointerdown={onHandlePointerDown}
 			onkeydown={handleHandleKeydown}
@@ -537,7 +555,7 @@
 		</span>
 		<input
 			type="text"
-			class="min-w-0 flex-1 rounded-full bg-transparent px-2.5 py-1 text-sm font-semibold outline-none transition-colors placeholder:text-base-content hover:bg-base-100/70 focus:bg-base-100 focus:ring-1 focus:ring-primary/40"
+			class="min-w-0 flex-1 rounded-full bg-transparent px-2.5 py-1 text-sm font-semibold outline-none transition-colors placeholder:text-foreground hover:bg-background/70 focus:bg-background focus:ring-1 focus:ring-primary/40"
 			placeholder={test.title}
 			aria-label="Box title"
 			maxlength="80"
@@ -547,7 +565,7 @@
 		/>
 		{#if empty}
 			<span
-				class="hidden shrink-0 items-center gap-1 text-[0.68rem] text-base-content/45 @md:flex"
+				class="hidden shrink-0 items-center gap-1 text-[0.68rem] text-foreground/45 @md:flex"
 				title="Boxes without findings stay hidden from students"
 			>
 				<EyeOff size={11} /> Hidden
@@ -560,35 +578,42 @@
 			aria-label="{finding.title || test.title} tools"
 		>
 			{@render tool(StickyNote, notePreview, openNotes, {
-				tone: note ? 'text-warning' : '',
+				tone: note ? 'warning' : 'neutral',
 				dot: Boolean(note)
 			})}
-			<button
-				bind:this={menuButton}
-				type="button"
-				class="btn btn-circle btn-xs tooltip tooltip-bottom size-7 shrink-0 border-base-300 bg-base-100 text-base-content/60 shadow-none hover:bg-base-200 hover:text-base-content"
-				data-tip="More"
-				aria-label="More box options"
-				aria-haspopup="menu"
-				popovertarget="{uid}-menu"
-			>
-				<Ellipsis size={14} />
-			</button>
+			<Tip label="More" side="bottom">
+				{#snippet child({ props })}
+					<Button
+						{...props}
+						bind:ref={menuButton}
+						variant="ghost"
+						tone="neutral"
+						shape="circle"
+						size="xs"
+						class="size-7 shrink-0"
+						aria-label="More box options"
+						aria-haspopup="menu"
+						popovertarget="{uid}-menu"
+					>
+						<Ellipsis size={14} />
+					</Button>
+				{/snippet}
+			</Tip>
 			<div
 				bind:this={menuPopover}
 				id="{uid}-menu"
 				popover="auto"
 				ontoggle={handleMenuToggle}
 				style="visibility: hidden"
-				class="dropdown-content fixed inset-auto m-0 w-64 rounded-2xl border border-base-300 bg-base-100 p-1.5 text-base-content shadow-xl"
+				class="fixed inset-auto m-0 w-64 rounded-2xl border border-border bg-background p-1.5 text-foreground shadow-xl"
 			>
 				<p
-					class="px-2 pb-1 pt-1 text-[0.65rem] font-semibold uppercase tracking-wider text-base-content/40"
+					class="px-2 pb-1 pt-1 text-[0.65rem] font-semibold uppercase tracking-wider text-foreground/40"
 				>
 					Width
 				</p>
 				<div
-					class="mb-1 grid grid-cols-4 gap-1 rounded-full bg-base-200/70 p-1"
+					class="mb-1 grid grid-cols-4 gap-1 rounded-full bg-muted/70 p-1"
 					role="radiogroup"
 					aria-label="Box width"
 				>
@@ -599,8 +624,8 @@
 							role="radio"
 							aria-checked={active}
 							class="flex items-center justify-center gap-1 rounded-full py-1 text-[0.7rem] font-medium transition-colors {active
-								? 'bg-base-100 shadow-xs ring-1 ring-base-300'
-								: 'text-base-content/55 hover:text-base-content'}"
+								? 'bg-background shadow-xs ring-1 ring-border'
+								: 'text-foreground/55 hover:text-foreground'}"
 							onclick={() => setSize(option.value)}
 						>
 							<option.icon size={12} />
@@ -608,11 +633,12 @@
 						</button>
 					{/each}
 				</div>
-				<ul class="menu menu-sm w-full p-0">
+				<ul class="w-full">
 					<li>
 						<button
 							type="button"
 							disabled={index === 0}
+							class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
 							onclick={() => {
 								closeMenu();
 								onMove(-1);
@@ -623,6 +649,7 @@
 						<button
 							type="button"
 							disabled={index === total - 1}
+							class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
 							onclick={() => {
 								closeMenu();
 								onMove(1);
@@ -633,6 +660,7 @@
 						<button
 							type="button"
 							disabled={!canDuplicate}
+							class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
 							onclick={() => {
 								closeMenu();
 								onDuplicate();
@@ -642,7 +670,7 @@
 					<li>
 						<button
 							type="button"
-							class="text-error"
+							class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm text-error-ink hover:bg-muted"
 							onclick={() => {
 								closeMenu();
 								onRemove();
@@ -658,12 +686,12 @@
 				fillNormal,
 				{
 					off: !hasNormals,
-					tone: 'text-success'
+					tone: 'success'
 				}
 			)}
 			{@render tool(Equal, canMirror ? 'OS = OD' : 'No OD/OS rows to copy', copyOdToOs, {
 				off: !canMirror,
-				tone: 'text-info'
+				tone: 'info'
 			})}
 		</div>
 	</header>
@@ -676,7 +704,7 @@
 				<div class="-mx-1.5 overflow-x-auto">
 					<table class="w-full border-separate border-spacing-x-1.5 border-spacing-y-1 text-left">
 						<thead>
-							<tr class="text-[0.7rem] text-base-content/50">
+							<tr class="text-[0.7rem] text-foreground/50">
 								<th class="w-px whitespace-nowrap"
 									>{#if section.label}{section.label}{:else}<span class="sr-only">Row</span
 										>{/if}</th
@@ -692,11 +720,11 @@
 									<th scope="row" class="pr-1 whitespace-nowrap">
 										{#if isTag(row.label)}
 											<span
-												class="inline-block rounded-md bg-base-200 px-1.5 py-0.5 font-mono text-[0.68rem] font-semibold text-base-content/70"
+												class="inline-block rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.68rem] font-semibold text-foreground/70"
 												>{row.label}</span
 											>
 										{:else}
-											<span class="text-xs font-medium text-base-content/70">{row.label}</span>
+											<span class="text-xs font-medium text-foreground/70">{row.label}</span>
 										{/if}
 									</th>
 									{#each section.columns as column (column.key)}
@@ -729,8 +757,8 @@
 								class={test.id === 'coverTest'
 									? field.key === 'correction'
 										? 'invisible text-xs'
-										: 'text-xs font-medium text-base-content/70'
-									: 'mb-0.5 block truncate px-0.5 text-[0.7rem] text-base-content/50'}
+										: 'text-xs font-medium text-foreground/70'
+									: 'mb-0.5 block truncate px-0.5 text-[0.7rem] text-foreground/50'}
 								>{field.label}</span
 							>
 							{@render valueInput(
@@ -745,59 +773,61 @@
 				</div>
 			{:else}
 				<label class="block">
-					<span class="mb-0.5 block px-0.5 text-[0.7rem] text-base-content/50">{section.label}</span
-					>
-					<textarea
-						class="textarea textarea-sm w-full rounded-2xl border-base-300 px-3 transition-colors duration-500 focus:border-primary {flashed.has(
+					<span class="mb-0.5 block px-0.5 text-[0.7rem] text-foreground/50">{section.label}</span>
+					<Textarea
+						class="min-h-0 px-3 py-2 text-sm transition-colors duration-500 focus:border-primary {flashed.has(
 							section.key
 						)
 							? 'bg-success/15'
 							: ''}"
-						rows="2"
+						rows={2}
 						maxlength={MAX_VALUE_LENGTH}
 						placeholder={section.normal ?? section.sample}
 						bind:value={finding.values[section.key]}
 						oninput={onChange}
 						{disabled}
-					></textarea>
+					/>
 				</label>
 			{/if}
 		{/each}
 	</div>
 </article>
 
-<dialog
-	bind:this={notesDialog}
-	class="modal modal-bottom sm:modal-middle"
-	aria-labelledby="{uid}-note-title"
->
-	<div
-		class="modal-box w-full max-w-xl rounded-t-[2rem] border border-base-300 p-0 shadow-2xl sm:rounded-[1.75rem]"
+<Dialog.Root bind:open={notesOpen}>
+	<Dialog.Content
+		class="top-auto bottom-0 max-w-none translate-y-0 gap-0 rounded-t-[2rem] border-border p-0 shadow-2xl sm:top-1/2 sm:bottom-auto sm:max-w-xl sm:-translate-y-1/2 sm:rounded-[1.75rem]"
+		showCloseButton={false}
+		onOpenAutoFocus={(event) => {
+			event.preventDefault();
+			focusNotes();
+		}}
 	>
-		<header class="flex items-center gap-3 border-b border-base-200 px-5 py-4">
+		<header class="flex items-center gap-3 border-b border-muted px-5 py-4">
 			<span class="grid size-9 shrink-0 place-items-center rounded-full bg-warning/15 text-warning">
 				<StickyNote size={16} />
 			</span>
 			<div class="min-w-0 flex-1">
-				<h3 id="{uid}-note-title" class="font-semibold tracking-tight">
+				<Dialog.Title id="{uid}-note-title" class="leading-normal font-semibold tracking-tight">
 					{note ? 'Edit note' : 'Add note'}
-				</h3>
-				<p class="truncate text-xs text-base-content/55">
+				</Dialog.Title>
+				<p class="truncate text-xs text-foreground/55">
 					{finding.title || test.title} · students open this note from the box header
 				</p>
 			</div>
-			<button
-				type="button"
-				class="btn btn-ghost btn-sm btn-circle"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				shape="circle"
+				size="sm"
 				aria-label="Close"
-				onclick={() => notesDialog?.close()}><X size={16} /></button
+				onclick={() => (notesOpen = false)}><X size={16} /></Button
 			>
 		</header>
 		<div class="px-5 pb-2 pt-4">
-			<textarea
-				bind:this={notesInput}
+			<Textarea
+				bind:ref={notesInput}
 				bind:value={noteDraft}
-				class="textarea h-40 w-full resize-y rounded-2xl border-base-300 px-4 py-3 text-sm leading-relaxed focus:border-primary"
+				class="h-40 resize-y px-4 py-3 text-sm leading-relaxed focus:border-primary"
 				maxlength={MAX_NOTE_LENGTH}
 				placeholder="e.g., Patient squinting during testing; recheck after dilation."
 				aria-label="Note"
@@ -807,37 +837,28 @@
 						saveNote();
 					}
 				}}
-			></textarea>
-			<div class="mt-1 flex items-center justify-between px-1 text-xs text-base-content/45">
-				<span class="hidden sm:inline"
-					><kbd class="kbd kbd-xs">⌘</kbd> <kbd class="kbd kbd-xs">Enter</kbd> to save</span
-				>
+			/>
+			<div class="mt-1 flex items-center justify-between px-1 text-xs text-foreground/45">
+				<span class="hidden sm:inline"><Kbd>⌘</Kbd> <Kbd>Enter</Kbd> to save</span>
 				<span class="ml-auto tabular-nums"
 					>{noteDraft.length.toLocaleString()} of {MAX_NOTE_LENGTH.toLocaleString()} characters</span
 				>
 			</div>
 		</div>
-		<footer class="flex items-center gap-2 border-t border-base-200 px-5 py-3">
+		<footer class="flex items-center gap-2 border-t border-muted px-5 py-3">
 			{#if note}
-				<button
-					type="button"
-					class="btn btn-ghost btn-sm gap-1.5 rounded-full text-error"
-					onclick={() => saveNote('')}><Trash2 size={14} /> Delete note</button
+				<Button variant="ghost" tone="error" size="sm" class="gap-1.5" onclick={() => saveNote('')}
+					><Trash2 size={14} /> Delete note</Button
 				>
 			{/if}
-			<button
-				type="button"
-				class="btn btn-ghost btn-sm ml-auto rounded-full"
-				onclick={() => notesDialog?.close()}>Cancel</button
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				class="ml-auto"
+				onclick={() => (notesOpen = false)}>Cancel</Button
 			>
-			<button
-				type="button"
-				class="btn btn-primary btn-sm rounded-full px-5"
-				onclick={() => saveNote()}>Save</button
-			>
+			<Button size="sm" class="px-5" onclick={() => saveNote()}>Save</Button>
 		</footer>
-	</div>
-	<form method="dialog" class="modal-backdrop bg-black/35 backdrop-blur-[3px]">
-		<button aria-label="Close note">close</button>
-	</form>
-</dialog>
+	</Dialog.Content>
+</Dialog.Root>

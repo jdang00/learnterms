@@ -14,7 +14,7 @@
 	const correctArc = Tween.of(() => correct, motion);
 	const filledArc = Tween.of(() => correct + review, motion);
 	const background = $derived(
-		`conic-gradient(var(--color-success) 0 ${correctArc.current}%, color-mix(in oklab, var(--color-error) 70%, transparent) 0 ${filledArc.current}%, color-mix(in oklab, var(--color-base-content) 12%, transparent) 0)`
+		`conic-gradient(var(--success) 0 ${correctArc.current}%, color-mix(in oklab, var(--error) 70%, transparent) 0 ${filledArc.current}%, color-mix(in oklab, var(--foreground) 12%, transparent) 0)`
 	);
 </script>
 
@@ -27,6 +27,6 @@
 	aria-valuemax={100}
 	aria-valuenow={label}
 >
-	<span class="absolute inset-[3px] rounded-full bg-base-100"></span>
+	<span class="absolute inset-[3px] rounded-full bg-background"></span>
 	<span class="relative">{label}%</span>
 </span>

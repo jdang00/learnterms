@@ -3,6 +3,7 @@
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		source?: {
@@ -97,8 +98,8 @@
 </script>
 
 {#if source?.sourceDocumentId && pages.length}
-	<div class="mt-3 border-t border-base-300 pt-3">
-		<p class="mb-2 flex items-start gap-1.5 text-xs font-medium text-base-content/60">
+	<div class="mt-3 border-t border-border pt-3">
+		<p class="mb-2 flex items-start gap-1.5 text-xs font-medium text-foreground/60">
 			<FileText size={12} class="mt-0.5 shrink-0" />
 			<span class="break-words">{title || 'Sources'}</span>
 		</p>
@@ -114,25 +115,25 @@
 					<div
 						id={previewId}
 						role="tooltip"
-						class="rounded-xl border border-base-300 bg-base-100 p-3 text-left shadow-lg"
+						class="rounded-xl border border-border bg-background p-3 text-left shadow-lg"
 					>
-						<p class="text-xs font-semibold text-base-content">
+						<p class="text-xs font-semibold text-foreground">
 							{title || 'Source'} · <span class="font-mono">{activeGroup.label}</span>
 						</p>
 						{#if activeGroup.pages.some((page) => page.quote)}
 							<div
-								class="mt-2 max-h-48 space-y-2 overflow-y-auto text-xs leading-relaxed text-base-content/75"
+								class="mt-2 max-h-48 space-y-2 overflow-y-auto text-xs leading-relaxed text-foreground/75"
 							>
 								{#each activeGroup.pages.filter((page) => page.quote) as page (page.pageNumber)}
 									<p class="whitespace-pre-line">
-										{#if activeGroup.pages.length > 1}<span class="font-mono text-base-content/50"
+										{#if activeGroup.pages.length > 1}<span class="font-mono text-foreground/50"
 												>p. {page.pageNumber}</span
 											><br />{/if}{page.quote}
 									</p>
 								{/each}
 							</div>
 						{/if}
-						<p class="mt-2 text-[11px] text-base-content/50">
+						<p class="mt-2 text-[11px] text-foreground/50">
 							Click the page chip to open the PDF{activeGroup.start === activeGroup.end
 								? ''
 								: ` at p. ${activeGroup.start}`}.
@@ -142,9 +143,11 @@
 			{/if}
 			{#each groups as group (group.start)}
 				<div class="flex items-center gap-0.5">
-					<button
-						type="button"
-						class="btn btn-ghost btn-xs gap-1.5 rounded-full border border-base-300 font-mono font-normal"
+					<Button
+						variant="ghost"
+						tone="neutral"
+						size="xs"
+						class="gap-1.5 border-border font-mono font-normal"
 						disabled={opening !== null}
 						aria-label={group.start === group.end
 							? `Open ${title || 'source PDF'} at page ${group.start} in a new tab`
@@ -163,22 +166,24 @@
 								class="animate-spin"
 							/>{:else}<FileText size={12} />{/if}
 						{group.label}<ExternalLink size={11} />
-					</button>
+					</Button>
 					{#if onRemovePage}
-						<button
-							type="button"
-							class="btn btn-ghost btn-xs btn-circle"
+						<Button
+							variant="ghost"
+							tone="neutral"
+							size="xs"
+							shape="circle"
 							aria-label={`Remove source page ${group.start}`}
-							onclick={() => onRemovePage?.(group.start)}><X size={11} /></button
+							onclick={() => onRemovePage?.(group.start)}><X size={11} /></Button
 						>
 					{/if}
 				</div>
 			{/each}
 		</div>
 
-		{#if editing}<p class="mt-2 text-xs text-base-content/50">
+		{#if editing}<p class="mt-2 text-xs text-foreground/50">
 				Source links stay attached when you save. Check that they still support your edits.
 			</p>{/if}
-		{#if error}<p class="mt-2 text-xs text-error" role="alert">{error}</p>{/if}
+		{#if error}<p class="mt-2 text-xs text-error-ink" role="alert">{error}</p>{/if}
 	</div>
 {/if}

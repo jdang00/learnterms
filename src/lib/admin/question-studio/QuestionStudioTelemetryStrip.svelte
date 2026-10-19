@@ -60,12 +60,12 @@
 </script>
 
 <dl
-	class="divide-y divide-base-300 overflow-hidden rounded-xl border border-base-300 bg-base-100"
+	class="divide-y divide-border overflow-hidden rounded-xl border border-border bg-background"
 	aria-label="Run telemetry"
 >
 	{#each items as item (item.label)}
 		<div class="flex items-center justify-between gap-3 px-3 py-2">
-			<dt class="text-xs text-base-content/55">{item.label}</dt>
+			<dt class="text-xs text-foreground/55">{item.label}</dt>
 			<dd class="min-w-0 text-right">
 				<span
 					class="text-xs font-semibold tabular-nums {item.tone === 'error'
@@ -75,7 +75,7 @@
 							: ''}">{item.value}</span
 				>
 				{#if item.note}
-					<span class="ml-2 text-[11px] text-base-content/45">{item.note}</span>
+					<span class="ml-2 text-[11px] text-foreground/45">{item.note}</span>
 				{/if}
 			</dd>
 		</div>

@@ -23,50 +23,50 @@
 
 <section class="space-y-2">
 	<div class="px-3 pt-1">
-		<p class="text-[11px] font-medium uppercase tracking-wider text-base-content/35">Quick Links</p>
+		<p class="text-[11px] font-medium uppercase tracking-wider text-foreground/35">Quick Links</p>
 	</div>
 
 	{#if filteredQuickLinks.length === 0}
 		{#if !searchQuery.trim()}
-			<p class="px-3 py-4 text-sm text-base-content/45">No quick links available</p>
+			<p class="px-3 py-4 text-sm text-foreground/45">No quick links available</p>
 		{/if}
 	{:else}
 		{#each filteredQuickLinks as link (link.href)}
 			{#if isExternalLink(link.href)}
 				<button
 					type="button"
-					class="group flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-left transition-colors duration-100 hover:bg-base-200/60"
+					class="group flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-left transition-colors duration-100 hover:bg-muted/60"
 					onclick={() => {
 						window.open(link.href, '_blank', 'noreferrer');
 						onNavigate?.();
 					}}
 					data-power-item="true"
 				>
-					<span class="flex h-7 w-7 items-center justify-center rounded-lg bg-base-200 text-sm">
+					<span class="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm">
 						{link.icon}
 					</span>
 					<span class="min-w-0 flex-1">
 						<span class="block truncate text-[13px] font-semibold leading-snug">{link.title}</span>
-						<span class="block truncate text-[11px] text-base-content/50">{link.description}</span>
+						<span class="block truncate text-[11px] text-foreground/50">{link.description}</span>
 					</span>
-					<ExternalLink size={13} class="shrink-0 text-base-content/30" />
+					<ExternalLink size={13} class="shrink-0 text-foreground/30" />
 				</button>
 			{:else}
 				<!-- eslint-disable svelte/no-navigation-without-resolve -- base-prefixed by resolveInternalHref -->
 				<a
 					href={resolveInternalHref(link.href)}
-					class="group flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-left transition-colors duration-100 hover:bg-base-200/60"
+					class="group flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-left transition-colors duration-100 hover:bg-muted/60"
 					onclick={() => onNavigate?.()}
 					data-power-item="true"
 				>
-					<span class="flex h-7 w-7 items-center justify-center rounded-lg bg-base-200 text-sm">
+					<span class="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm">
 						{link.icon}
 					</span>
 					<span class="min-w-0 flex-1">
 						<span class="block truncate text-[13px] font-semibold leading-snug">{link.title}</span>
-						<span class="block truncate text-[11px] text-base-content/50">{link.description}</span>
+						<span class="block truncate text-[11px] text-foreground/50">{link.description}</span>
 					</span>
-					<ExternalLink size={13} class="shrink-0 text-base-content/30" />
+					<ExternalLink size={13} class="shrink-0 text-foreground/30" />
 				</a>
 				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			{/if}

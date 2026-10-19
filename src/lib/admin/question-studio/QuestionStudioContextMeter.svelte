@@ -33,10 +33,10 @@
 
 {#if !error}
 	<section
-		class="text-xs {compact ? 'border-t border-base-300 px-4 py-2.5' : 'mt-4'}"
+		class="text-xs {compact ? 'border-t border-border px-4 py-2.5' : 'mt-4'}"
 		aria-label="Source the agent will read"
 	>
-		<p class="flex flex-wrap items-center gap-1.5 text-base-content/55" aria-live="polite">
+		<p class="flex flex-wrap items-center gap-1.5 text-foreground/55" aria-live="polite">
 			<span>
 				{#if known}
 					The agent will read {size.pageCount}
@@ -51,7 +51,7 @@
 				href="https://docs.learnterms.com/docs/admin/source-context"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="inline-flex items-center gap-1 text-base-content/45 underline-offset-2 hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-primary"
+				class="inline-flex items-center gap-1 text-foreground/45 underline-offset-2 hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-primary"
 			>
 				<CircleHelp size={13} />
 				How much should I give it?
@@ -98,25 +98,25 @@
 		margin: 7px 0 2px;
 		border-radius: 99px;
 		overflow: hidden;
-		background: var(--color-base-300);
+		background: var(--muted-strong);
 	}
 	.target-band {
 		position: absolute;
 		inset-block: 0;
 		left: 15%;
 		width: 35%;
-		background: color-mix(in oklab, var(--color-primary) 15%, var(--color-base-200));
-		border-inline: 1px solid color-mix(in oklab, var(--color-primary) 35%, transparent);
+		background: color-mix(in oklab, var(--primary) 15%, var(--muted));
+		border-inline: 1px solid color-mix(in oklab, var(--primary) 35%, transparent);
 	}
 	.context-fill {
 		position: relative;
 		height: 100%;
 		border-radius: inherit;
-		background: var(--color-primary);
+		background: var(--primary);
 		transition: width 160ms ease;
 	}
 	.context-fill.broad {
-		background: var(--color-warning);
+		background: var(--warning);
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.context-fill {

@@ -1,6 +1,10 @@
 <script lang="ts">
+	import * as Alert from '$lib/components/ui/alert';
+	import { Button } from '$lib/components/ui/button';
+	import { Spinner } from '$lib/components/ui/spinner';
 	import {
 		ExternalLink,
+		FileUp,
 		Maximize2,
 		Minimize2,
 		Pencil,
@@ -9,6 +13,8 @@
 		X
 	} from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
+	import * as FileDropZone from '$lib/components/ui/file-drop-zone';
+	import { toastStore } from '$lib/stores/toast.svelte';
 	import AddDocumentModal from '../../../lib/admin/content-library/AddDocumentModal.svelte';
 	import ContentLibraryExplorer from '../../../lib/admin/content-library/ContentLibraryExplorer.svelte';
 	import ContentLibraryHeader from '../../../lib/admin/content-library/ContentLibraryHeader.svelte';
@@ -188,12 +194,21 @@
 		}
 	}
 
+	let droppedFiles = $state<File[]>([]);
+
 	function openAddModal() {
 		isAddModalOpen = true;
 	}
 
 	function closeAddModal() {
 		isAddModalOpen = false;
+		droppedFiles = [];
+	}
+
+	// Files dropped anywhere on the library open the upload panel with them already queued.
+	async function handlePageDrop(files: File[]) {
+		droppedFiles = files;
+		isAddModalOpen = true;
 	}
 
 	function openDeleteModal(document: Doc<'contentLib'>) {
@@ -455,7 +470,7 @@
 	}}
 />
 
-<div class="min-h-screen bg-base-200/30">
+<div class="min-h-screen bg-muted/30">
 	<div
 		class="mx-auto p-4 transition-all duration-200 sm:p-6 {isDrawerOpen
 			? 'max-w-none lg:pr-[calc(62vw+2.5rem)] xl:pr-[calc(68vw+2.5rem)]'
@@ -473,9 +488,9 @@
 		/>
 
 		{#if error && !isDrawerOpen}
-			<div class="alert alert-error mb-4 rounded-2xl text-sm">
-				<span>{error}</span>
-			</div>
+			<Alert.Root tone="error" class="mb-4 rounded-2xl"
+				><Alert.Description>{error}</Alert.Description></Alert.Root
+			>
 		{/if}
 
 		<ContentLibraryExplorer
@@ -496,31 +511,34 @@
 	{@const kind = fileKind(selectedDocument)}
 	{@const pages = formatPages(selectedDocument.metadata?.pageCount)}
 	<aside
-		class="fixed inset-y-0 right-0 z-50 flex flex-col border-l border-base-300 bg-base-100 {isPanelFullscreen
+		class="fixed inset-y-0 right-0 z-50 flex flex-col border-l border-border bg-background {isPanelFullscreen
 			? 'w-full'
 			: 'w-full lg:w-[62vw] xl:w-[68vw]'}"
 		transition:fade={{ duration: 120 }}
 	>
 		<!-- Detail header -->
-		<div class="flex items-start gap-3 border-b border-base-300 p-4">
+		<div class="flex items-start gap-3 border-b border-border p-4">
 			<div class="rounded-xl p-3 {kind.tint} {kind.accent}">
 				<kind.icon size={22} strokeWidth={1.5} />
 			</div>
 			<div class="min-w-0 flex-1">
 				<h2 class="truncate text-base font-semibold leading-tight">{selectedDocument.title}</h2>
-				<div class="mt-1.5 flex items-center gap-1.5 text-xs text-base-content/60">
+				<div class="mt-1.5 flex items-center gap-1.5 text-xs text-foreground/60">
 					<span class="font-medium">{kind.label}</span>
-					<span class="text-base-content/30">·</span>
+					<span class="text-foreground/30">·</span>
 					<span>{formatBytes(selectedDocument.metadata?.sizeBytes)}</span>
 					{#if pages}
-						<span class="text-base-content/30">·</span>
+						<span class="text-foreground/30">·</span>
 						<span>{pages}</span>
 					{/if}
 				</div>
 			</div>
 			<div class="flex shrink-0 items-center gap-1">
-				<button
-					class="btn btn-ghost btn-sm btn-circle"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape="circle"
 					onclick={() => (isPanelFullscreen = !isPanelFullscreen)}
 					aria-label={isPanelFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
 					title={isPanelFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
@@ -530,21 +548,28 @@
 					{:else}
 						<Maximize2 size={16} />
 					{/if}
-				</button>
-				<button class="btn btn-ghost btn-sm btn-circle" onclick={closeDrawer} aria-label="Close">
+				</Button>
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape="circle"
+					onclick={closeDrawer}
+					aria-label="Close"
+				>
 					<X size={16} />
-				</button>
+				</Button>
 			</div>
 		</div>
 
 		<!-- Tabs + actions (one line) -->
-		<div class="flex items-center gap-2 border-b border-base-300 px-4 py-2.5">
-			<div class="inline-flex rounded-full bg-base-200 p-1">
+		<div class="flex items-center gap-2 border-b border-border px-4 py-2.5">
+			<div class="inline-flex rounded-full bg-muted p-1">
 				<button
 					class="rounded-full px-4 py-1.5 text-xs font-medium transition-colors {drawerTab ===
 					'preview'
-						? 'bg-base-100 text-base-content shadow-sm'
-						: 'text-base-content/60 hover:text-base-content'}"
+						? 'bg-background text-foreground shadow-sm'
+						: 'text-foreground/60 hover:text-foreground'}"
 					onclick={() => (drawerTab = 'preview')}
 				>
 					Preview
@@ -552,8 +577,8 @@
 				<button
 					class="rounded-full px-4 py-1.5 text-xs font-medium transition-colors {drawerTab ===
 					'source'
-						? 'bg-base-100 text-base-content shadow-sm'
-						: 'text-base-content/60 hover:text-base-content'}"
+						? 'bg-background text-foreground shadow-sm'
+						: 'text-foreground/60 hover:text-foreground'}"
 					onclick={() => (drawerTab = 'source')}
 				>
 					Source
@@ -561,70 +586,80 @@
 				<button
 					class="rounded-full px-4 py-1.5 text-xs font-medium transition-colors {drawerTab ===
 					'properties'
-						? 'bg-base-100 text-base-content shadow-sm'
-						: 'text-base-content/60 hover:text-base-content'}"
+						? 'bg-background text-foreground shadow-sm'
+						: 'text-foreground/60 hover:text-foreground'}"
 					onclick={() => (drawerTab = 'properties')}
 				>
 					Properties
 				</button>
 			</div>
 			<div class="flex-1"></div>
-			<button
-				class="btn btn-ghost btn-sm gap-2 rounded-full"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				class="gap-2"
 				onclick={() => openRenameModal(selectedDocument!)}
 			>
 				<Pencil size={14} />
 				<span class="hidden sm:inline">Rename</span>
-			</button>
+			</Button>
 			{#if viewUrl}
-				<button
+				<Button
 					type="button"
-					class="btn btn-primary btn-sm gap-2 rounded-full"
+					size="sm"
+					class="gap-2"
 					onclick={() => window.open(viewUrl, '_blank', 'noreferrer')}
 				>
 					<ExternalLink size={14} />
 					<span class="hidden sm:inline">Open</span>
-				</button>
+				</Button>
 			{/if}
-			<button
-				class="btn btn-ghost btn-sm gap-2 rounded-full text-error hover:bg-error/10"
+			<Button
+				variant="ghost"
+				tone="error"
+				size="sm"
+				class="gap-2"
 				onclick={() => openDeleteModal(selectedDocument!)}
 				disabled={isDeleting}
 			>
 				<Trash2 size={14} />
 				<span class="hidden sm:inline">Remove</span>
-			</button>
+			</Button>
 		</div>
 
 		<!-- Tab body -->
 		<div class="flex-1 overflow-y-auto p-4">
 			{#if error}
-				<div class="alert alert-error mb-3 rounded-xl text-sm">
-					<span>{error}</span>
-				</div>
+				<Alert.Root tone="error" class="mb-3 rounded-xl"
+					><Alert.Description>{error}</Alert.Description></Alert.Root
+				>
 			{/if}
 
 			{#if drawerTab === 'preview'}
-				<div class="h-full overflow-hidden rounded-2xl border border-base-300 bg-base-200/40">
-					<div class="flex items-center gap-2 border-b border-base-300 bg-base-100 px-4 py-2">
-						<span class="text-xs font-medium text-base-content/60">
+				<div class="h-full overflow-hidden rounded-2xl border border-border bg-muted/40">
+					<div class="flex items-center gap-2 border-b border-border bg-background px-4 py-2">
+						<span class="text-xs font-medium text-foreground/60">
 							{isDeckMode ? 'Slide deck preview' : 'Markdown preview'}
 						</span>
 						<div class="flex-1"></div>
-						<button
-							class="btn btn-ghost btn-xs gap-1.5 rounded-full"
+						<Button
+							variant="ghost"
+							tone="neutral"
+							size="xs"
+							class="gap-1.5"
 							onclick={toggleDeckMode}
 							disabled={isMarkdownLoading || isDeckLoading}
 						>
 							<Presentation size={13} />
 							{isDeckMode ? 'View as notes' : 'View as slide deck'}
-						</button>
+						</Button>
 					</div>
 					{#if isDeckMode}
 						{#if isDeckLoading}
 							<div class="flex h-full min-h-72 flex-col items-center justify-center gap-3">
-								<span class="loading loading-spinner loading-lg text-primary"></span>
-								<p class="text-sm text-base-content/60">Building slide deck preview...</p>
+								<Spinner class="size-6 text-primary" />
+								<p class="text-sm text-foreground/60">Building slide deck preview...</p>
 							</div>
 						{:else if deckPreviewError}
 							<ContentLibraryPreviewUnavailable
@@ -653,8 +688,8 @@
 						{/if}
 					{:else if isMarkdownLoading}
 						<div class="flex h-full min-h-72 flex-col items-center justify-center gap-3">
-							<span class="loading loading-spinner loading-lg text-primary"></span>
-							<p class="text-sm text-base-content/60">Generating markdown preview...</p>
+							<Spinner class="size-6 text-primary" />
+							<p class="text-sm text-foreground/60">Generating markdown preview...</p>
 						</div>
 					{:else if markdownPreviewError}
 						<ContentLibraryPreviewUnavailable
@@ -664,10 +699,10 @@
 							onRetry={() => selectedDocument && loadMarkdownPreview(selectedDocument)}
 						/>
 					{:else if markdownPreviewHtml}
-						<div class="preview-scroll h-full min-h-[60vh] overflow-y-auto bg-base-100">
+						<div class="preview-scroll h-full min-h-[60vh] overflow-y-auto bg-background">
 							{#if markdownPreviewTruncated}
 								<div
-									class="border-b border-base-300 bg-warning/10 px-5 py-2 text-xs text-warning-content"
+									class="border-b border-border bg-warning/10 px-5 py-2 text-xs text-warning-foreground"
 								>
 									Preview clipped for speed.
 								</div>
@@ -712,9 +747,34 @@
 	}}
 />
 
+<FileDropZone.Root
+	accept=".pdf,application/pdf"
+	disabled={isAddModalOpen || !userDataQuery.data?.cohortId}
+	onUpload={handlePageDrop}
+	onFileRejected={({ file }) => toastStore.error(`${file.name}: only PDF files are supported.`)}
+>
+	<FileDropZone.DragOverlay disabled={isAddModalOpen || !userDataQuery.data?.cohortId}>
+		<div
+			class="pointer-events-none absolute inset-4 rounded-[2rem] border-2 border-dashed border-primary/60"
+		></div>
+		<div class="flex flex-col items-center gap-4 text-center">
+			<div
+				class="flex size-16 animate-bounce items-center justify-center rounded-3xl bg-primary text-primary-foreground motion-reduce:animate-none"
+			>
+				<FileUp size={28} />
+			</div>
+			<div>
+				<p class="text-xl font-semibold">Drop PDFs to add them to the library</p>
+				<p class="mt-1 text-sm text-muted-foreground">Up to 150 pages and 30 MB each</p>
+			</div>
+		</div>
+	</FileDropZone.DragOverlay>
+</FileDropZone.Root>
+
 <AddDocumentModal
 	{isAddModalOpen}
 	{closeAddModal}
+	incomingFiles={droppedFiles}
 	userData={userDataQuery.data}
 	onUploaded={() => {
 		selectedDocumentId = '';
@@ -747,10 +807,10 @@
 		background:
 			radial-gradient(
 				120% 80% at 50% 0%,
-				color-mix(in oklab, var(--color-base-300) 55%, transparent),
+				color-mix(in oklab, var(--muted-strong) 55%, transparent),
 				transparent 70%
 			),
-			color-mix(in oklab, var(--color-base-300) 80%, var(--color-base-200));
+			color-mix(in oklab, var(--muted-strong) 80%, var(--muted));
 	}
 
 	.deck-preview-inner :global(.marpit) {
@@ -940,10 +1000,10 @@
 		justify-content: center;
 		width: 1.7rem;
 		height: 1.7rem;
-		border: 1px solid color-mix(in oklab, var(--color-primary) 22%, transparent);
+		border: 1px solid color-mix(in oklab, var(--primary) 22%, transparent);
 		border-radius: 0.5rem;
-		background: color-mix(in oklab, var(--color-primary) 7%, Canvas);
-		color: color-mix(in oklab, var(--color-primary) 80%, currentColor);
+		background: color-mix(in oklab, var(--primary) 7%, Canvas);
+		color: color-mix(in oklab, var(--primary) 80%, currentColor);
 		cursor: pointer;
 		transition:
 			background 0.15s ease,
@@ -952,9 +1012,9 @@
 	}
 
 	.markdown-preview :global(.table-fullscreen:hover) {
-		background: color-mix(in oklab, var(--color-primary) 14%, Canvas);
-		color: var(--color-primary);
-		border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
+		background: color-mix(in oklab, var(--primary) 14%, Canvas);
+		color: var(--primary);
+		border-color: color-mix(in oklab, var(--primary) 40%, transparent);
 	}
 
 	.markdown-preview :global(.table-fullscreen-icon) {
@@ -1072,10 +1132,10 @@
 		justify-content: center;
 		width: 1.7rem;
 		height: 1.7rem;
-		border: 1px solid color-mix(in oklab, var(--color-primary) 22%, transparent);
+		border: 1px solid color-mix(in oklab, var(--primary) 22%, transparent);
 		border-radius: 0.5rem;
-		background: color-mix(in oklab, var(--color-primary) 7%, Canvas);
-		color: color-mix(in oklab, var(--color-primary) 80%, currentColor);
+		background: color-mix(in oklab, var(--primary) 7%, Canvas);
+		color: color-mix(in oklab, var(--primary) 80%, currentColor);
 		cursor: pointer;
 		transition:
 			background 0.15s ease,
@@ -1084,9 +1144,9 @@
 	}
 
 	.markdown-preview :global(.math-copy:hover) {
-		background: color-mix(in oklab, var(--color-primary) 14%, Canvas);
-		color: var(--color-primary);
-		border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
+		background: color-mix(in oklab, var(--primary) 14%, Canvas);
+		color: var(--primary);
+		border-color: color-mix(in oklab, var(--primary) 40%, transparent);
 	}
 
 	.markdown-preview :global(.math-copy-icon) {

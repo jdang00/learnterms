@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Progress } from '$lib/components/ui/progress';
 	import { scale } from 'svelte/transition';
 	import { backOut } from 'svelte/easing';
 	import type { QuizCommand } from './types';
@@ -15,22 +16,18 @@
 
 <Icon
 	size={14}
-	class="shrink-0 transition-colors {lit ? TONE_TEXT[command.tone] : 'text-base-content/40'}"
+	class="shrink-0 transition-colors {lit ? TONE_TEXT[command.tone] : 'text-foreground/40'}"
 	fill={command.active && lit ? 'currentColor' : 'none'}
 />
 {#if command.kind === 'meter'}
-	<progress
-		class="progress progress-success h-1.5 w-12 bg-base-content/10"
-		value={command.value?.() ?? 0}
-		max="100"
-	></progress>
+	<Progress value={command.value?.() ?? 0} tone="success" class="h-1.5 w-12" />
 {/if}
 {#key label}
 	<span
-		class="font-semibold text-base-content"
+		class="font-semibold text-foreground"
 		in:scale={{ start: 0.6, duration: 240, easing: backOut }}>{label}</span
 	>
 {/key}
 {#if caption}
-	<span class="text-xs font-normal text-base-content/55">{caption}</span>
+	<span class="text-xs font-normal text-foreground/55">{caption}</span>
 {/if}

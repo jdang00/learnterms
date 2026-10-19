@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SelectField } from '$lib/components/ui/select';
 	import type { PageData } from './$types';
 	import type { Id } from '../../../convex/_generated/dataModel';
 	import { useQuery, useConvexClient } from 'convex-svelte';
@@ -33,6 +34,14 @@
 	import ActivityBars from '$lib/admin/progress/ActivityBars.svelte';
 	import StudyHeatmap from '$lib/admin/progress/StudyHeatmap.svelte';
 	import LiveFeed from '$lib/admin/progress/LiveFeed.svelte';
+	import * as Alert from '$lib/components/ui/alert';
+	import * as Card from '$lib/components/ui/card';
+	import * as InputGroup from '$lib/components/ui/input-group';
+	import * as Table from '$lib/components/ui/table';
+	import * as Tabs from '$lib/components/ui/tabs';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import {
 		DAY_MS,
 		HOUR_MS,
@@ -249,6 +258,7 @@
 		new Map(students.map((student) => [student._id as string, student]))
 	);
 	const ready = $derived(!!studentsQuery.data);
+	// utils.ts still names the engagement dots as DaisyUI status-* classes.
 
 	const engagementCounts = $derived.by(() => {
 		const counts: Record<Engagement, number> = {
@@ -353,24 +363,25 @@
 							: (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0) || a.name.localeCompare(b.name)
 			)
 	);
-	const selectedStudent = $derived(students.find((s) => s._id === selectedStudentId) ?? null);
 	async function updateRole(userId: Id<'users'>, role: 'dev' | 'admin' | 'curator' | null) {
 		await client.mutation(api.users.updateUserRole, { userId, role });
 	}
 	function openStudent(id: Id<'users'>) {
 		selectedStudentId = id;
 	}
+	const selectedStudent = $derived(students.find((s) => s._id === selectedStudentId) ?? null);
 </script>
 
 {#snippet delta(change: number | null)}
 	{#if change !== null}
-		<span
-			class="badge badge-soft badge-xs gap-0.5 tabular-nums {change >= 0
-				? 'badge-success'
-				: 'badge-error'}"
+		<Badge
+			variant="soft"
+			tone={change >= 0 ? 'success' : 'error'}
+			size="xs"
+			class="gap-0.5 tabular-nums"
 			>{#if change >= 0}<ArrowUpRight size={11} />{:else}<ArrowDownRight size={11} />{/if}{Math.abs(
 				change
-			)}%</span
+			)}%</Badge
 		>
 	{/if}
 {/snippet}
@@ -378,18 +389,25 @@
 {#snippet cardHeader(title: string, subtitle: string)}
 	<div class="min-w-0">
 		<h2 class="text-base font-semibold">{title}</h2>
-		<p class="text-xs text-base-content/55">{subtitle}</p>
+		<p class="text-xs text-foreground/55">{subtitle}</p>
 	</div>
 {/snippet}
 
-<div class="progress-workspace mx-auto max-w-7xl px-4 pt-6 pb-24 text-base-content sm:px-8">
+<div class="progress-workspace mx-auto max-w-7xl px-4 pt-6 pb-24 text-foreground sm:px-8">
 	<header class="flex flex-wrap items-end justify-between gap-4">
 		<div class="flex min-w-0 items-center gap-3">
-			<a class="btn btn-ghost btn-circle btn-sm" href={resolve('/admin')} aria-label="Back to admin"
-				><ArrowLeft size={18} /></a
+			<Button
+				href={resolve('/admin')}
+				variant="ghost"
+				tone="neutral"
+				shape="circle"
+				size="sm"
+				aria-label="Back to admin"
 			>
+				<ArrowLeft size={18} />
+			</Button>
 			<div class="min-w-0">
-				<p class="text-xs text-base-content/55">{user?.schoolName}</p>
+				<p class="text-xs text-foreground/55">{user?.schoolName}</p>
 				<h1 class="truncate font-display text-2xl font-bold">
 					{user?.cohortName ?? 'Class progress'}
 				</h1>
@@ -398,186 +416,184 @@
 	</header>
 
 	<nav
-		class="tabs tabs-box mt-5 rounded-full w-fit max-w-full flex-nowrap overflow-x-auto"
+		class="mt-5 flex w-fit max-w-full flex-nowrap gap-1 overflow-x-auto rounded-full bg-muted p-1"
 		aria-label="Progress views"
 	>
-		{#each views as item (item.id)}<button
-				class="tab gap-2 rounded-full {view === item.id ? 'tab-active' : ''}"
+		{#each views as item (item.id)}<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				class="shrink-0 gap-2 aria-pressed:bg-background aria-pressed:shadow-xs"
 				aria-pressed={view === item.id}
 				onclick={() => navigate({ view: item.id === 'overview' ? null : item.id, filter: null })}
-				><item.icon size={15} />{item.label}</button
+				><item.icon size={15} />{item.label}</Button
 			>{/each}
 	</nav>
 
 	{#if !cohortId}
-		<div class="alert alert-warning mt-6">No cohort is assigned to your account.</div>
+		<Alert.Root tone="warning" class="mt-6">
+			<Alert.Description>No cohort is assigned to your account.</Alert.Description>
+		</Alert.Root>
 	{:else}
-		{#if !connected && everConnected}<div class="alert alert-warning alert-soft mt-5" role="status">
-				Connection interrupted. Numbers may be out of date until it reconnects.
-			</div>{/if}
-		{#if studentsQuery.error || liveQuery.error || historyError}<div
-				class="alert alert-error alert-soft mt-5"
+		{#if !connected && everConnected}<Alert.Root tone="warning" class="mt-5" role="status">
+				<Alert.Description>
+					Connection interrupted. Numbers may be out of date until it reconnects.
+				</Alert.Description>
+			</Alert.Root>{/if}
+		{#if studentsQuery.error || liveQuery.error || historyError}<Alert.Root
+				tone="error"
+				class="mt-5"
 				role="alert"
 			>
-				Some insights could not load. {studentsQuery.error?.message ??
-					liveQuery.error?.message ??
-					historyError}
-			</div>{/if}
+				<Alert.Description>
+					Some insights could not load. {studentsQuery.error?.message ??
+						liveQuery.error?.message ??
+						historyError}
+				</Alert.Description>
+			</Alert.Root>{/if}
 
 		<div class="mt-6">
 			{#if view === 'overview'}
 				<section class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Key metrics">
 					<button
-						class="card card-border col-span-2 bg-base-100 p-4 text-left transition hover:border-success lg:col-span-1"
+						class="col-span-2 rounded-3xl border border-border bg-background p-4 text-left transition hover:border-success lg:col-span-1"
 						onclick={() => showStudents('live')}
 					>
-						<span class="flex items-center justify-between text-xs text-base-content/60"
+						<span class="flex items-center justify-between text-xs text-foreground/60"
 							>Studying now <Radio size={15} class="text-success" /></span
 						>
-						{#if !ready}<span class="skeleton mt-3 h-8 w-16"></span>{:else}
+						{#if !ready}<Skeleton class="mt-3 h-8 w-16" />{:else}
 							<span class="mt-2 flex items-end justify-between gap-2">
-								<span class="text-3xl font-semibold tabular-nums text-success"
+								<span class="text-3xl font-semibold tabular-nums text-success-ink"
 									>{studyingNow.length}</span
 								>
 								{#if studyingNow.length}
-									<span class="avatar-group -space-x-3">
+									<span class="flex -space-x-3">
 										{#each studyingNow.slice(0, 4) as student (student._id)}
 											<StudentAvatar name={student.name} imageUrl={student.imageUrl} size="xs" />
 										{/each}
 									</span>
 								{/if}
 							</span>
-							<span class="mt-1 block text-xs text-base-content/50"
+							<span class="mt-1 block text-xs text-foreground/50"
 								>{activeToday} active today · last 15 minutes</span
 							>
 						{/if}
 					</button>
 					<button
-						class="card card-border bg-base-100 p-4 text-left transition hover:border-primary"
+						class="rounded-3xl border border-border bg-background p-4 text-left transition hover:border-primary"
 						onclick={() => showStudents('active')}
 					>
-						<span class="flex items-center justify-between text-xs text-base-content/60"
+						<span class="flex items-center justify-between text-xs text-foreground/60"
 							>Active this week <Users size={15} class="text-primary" /></span
 						>
-						{#if !ready}<span class="skeleton mt-3 h-8 w-16"></span>{:else}
+						{#if !ready}<Skeleton class="mt-3 h-8 w-16" />{:else}
 							<span class="mt-2 flex items-baseline gap-2">
 								<span class="text-3xl font-semibold tabular-nums">{activeWeek}</span>
-								<span class="text-sm text-base-content/45">/ {students.length}</span>
+								<span class="text-sm text-foreground/45">/ {students.length}</span>
 							</span>
-							<span class="mt-1 flex items-center gap-1.5 text-xs text-base-content/50"
+							<span class="mt-1 flex items-center gap-1.5 text-xs text-foreground/50"
 								>{percent(activeWeek, students.length)}% of cohort {@render delta(
 									weekSplit.learnersChange
 								)}</span
 							>
 						{/if}
 					</button>
-					<div class="card card-border bg-base-100 p-4">
-						<span class="flex items-center justify-between text-xs text-base-content/60"
+					<Card.Root class="gap-0 bg-background p-4">
+						<span class="flex items-center justify-between text-xs text-foreground/60"
 							>Questions tried · 7d <TrendingUp size={15} class="text-primary" /></span
 						>
-						{#if !live}<span class="skeleton mt-3 h-8 w-16"></span>{:else}
+						{#if !live}<Skeleton class="mt-3 h-8 w-16" />{:else}
 							<span class="mt-2 block text-3xl font-semibold tabular-nums"
 								>{compactNumber(weekSplit.tries)}{live.truncated ? '+' : ''}</span
 							>
-							<span class="mt-1 flex items-center gap-1.5 text-xs text-base-content/50"
+							<span class="mt-1 flex items-center gap-1.5 text-xs text-foreground/50"
 								>First attempts {@render delta(weekSplit.triesChange)}</span
 							>
 						{/if}
-					</div>
-					<div class="card card-border bg-base-100 p-4">
-						<span class="flex items-center justify-between text-xs text-base-content/60"
+					</Card.Root>
+					<Card.Root class="gap-0 bg-background p-4">
+						<span class="flex items-center justify-between text-xs text-foreground/60"
 							>Practice tests · 14d <ClipboardCheck size={15} class="text-primary" /></span
 						>
-						{#if !live}<span class="skeleton mt-3 h-8 w-16"></span>{:else}
+						{#if !live}<Skeleton class="mt-3 h-8 w-16" />{:else}
 							<span class="mt-2 flex items-baseline gap-2">
 								<span class="text-3xl font-semibold tabular-nums">{live.quizzes.submitted}</span>
-								<span class="text-sm text-base-content/45">finished</span>
+								<span class="text-sm text-foreground/45">finished</span>
 							</span>
-							<span class="mt-1 block text-xs text-base-content/50"
+							<span class="mt-1 block text-xs text-foreground/50"
 								>{live.quizzes.averageScore !== null
 									? `Average score ${live.quizzes.averageScore}%`
 									: `${live.quizzes.started} started`}</span
 							>
 						{/if}
-					</div>
+					</Card.Root>
 				</section>
 
 				<div class="mt-4 grid gap-4 lg:grid-cols-3">
-					<section class="card card-border bg-base-100 p-5 lg:col-span-2">
+					<Card.Root class="gap-0 bg-background p-5 lg:col-span-2">
 						<div class="flex flex-wrap items-start justify-between gap-3">
 							{@render cardHeader('Study activity', 'Last 14 days, by local day')}
-							<div
-								class="tabs tabs-box tabs-xs rounded-full"
-								role="tablist"
-								aria-label="Chart metric"
+							<Tabs.Root
+								value={chartMetric}
+								onValueChange={(v) => (chartMetric = v as 'tries' | 'students')}
 							>
-								<button
-									role="tab"
-									class="tab rounded-full {chartMetric === 'tries' ? 'tab-active' : ''}"
-									aria-selected={chartMetric === 'tries'}
-									onclick={() => (chartMetric = 'tries')}>Questions</button
-								>
-								<button
-									role="tab"
-									class="tab rounded-full {chartMetric === 'students' ? 'tab-active' : ''}"
-									aria-selected={chartMetric === 'students'}
-									onclick={() => (chartMetric = 'students')}>Students</button
-								>
-							</div>
+								<Tabs.List aria-label="Chart metric">
+									<Tabs.Trigger value="tries">Questions</Tabs.Trigger>
+									<Tabs.Trigger value="students">Students</Tabs.Trigger>
+								</Tabs.List>
+							</Tabs.Root>
 						</div>
 						<div class="mt-4">
-							{#if !live}<div class="skeleton h-52"></div>{:else}<ActivityBars
+							{#if !live}<Skeleton class="h-52" />{:else}<ActivityBars
 									{days}
 									metric={chartMetric}
 								/>{/if}
 						</div>
-					</section>
+					</Card.Root>
 
-					<section class="card card-border flex flex-col overflow-hidden bg-base-100 lg:row-span-2">
-						<header
-							class="flex items-center justify-between gap-3 border-b border-base-200 p-5 pb-4"
-						>
+					<Card.Root class="flex flex-col gap-0 overflow-hidden bg-background py-0 lg:row-span-2">
+						<header class="flex items-center justify-between gap-3 border-b border-muted p-5 pb-4">
 							{@render cardHeader('Live activity', 'Updates as students study')}
 						</header>
 						<div class="max-h-[34rem] min-h-0 flex-1 overflow-y-auto lg:max-h-none lg:basis-0">
 							{#if !live || !ready}
 								<div class="space-y-3 p-5">
-									{#each [1, 2, 3, 4, 5] as row (row)}<div class="skeleton h-12"></div>{/each}
+									{#each [1, 2, 3, 4, 5] as row (row)}<Skeleton class="h-12" />{/each}
 								</div>
 							{:else}
 								<LiveFeed sessions={live.sessions} {studentsById} {now} onStudent={openStudent} />
 							{/if}
 						</div>
-					</section>
+					</Card.Root>
 
-					<section class="card card-border bg-base-100 p-5 lg:col-span-2">
+					<Card.Root class="gap-0 bg-background p-5 lg:col-span-2">
 						{@render cardHeader(
 							'When your cohort studies',
 							'Questions tried by weekday and hour, last 14 days'
 						)}
 						<div class="mt-4">
-							{#if !live}<div class="skeleton h-44"></div>{:else}<StudyHeatmap
-									cells={heatmap}
-								/>{/if}
+							{#if !live}<Skeleton class="h-44" />{:else}<StudyHeatmap cells={heatmap} />{/if}
 						</div>
-					</section>
+					</Card.Root>
 				</div>
 
 				<div class="mt-4 grid gap-4 lg:grid-cols-3">
-					<section class="card card-border bg-base-100 p-5">
+					<Card.Root class="gap-0 bg-background p-5">
 						{@render cardHeader('Engagement', 'Where every student is right now')}
-						{#if !ready}<div class="skeleton mt-4 h-40"></div>{:else}
+						{#if !ready}<Skeleton class="mt-4 h-40" />{:else}
 							<ul class="mt-3 -mx-2">
 								{#each engagementOrder as id (id)}
 									<li>
 										<button
-											class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm hover:bg-base-200"
+											class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm hover:bg-muted"
 											onclick={() => showStudents(id)}
 										>
-											<span class="status {engagementMeta[id].dot}"></span>
+											<span class="inline-block size-2 rounded-full {engagementMeta[id].dot}"
+											></span>
 											<span class="min-w-0 flex-1">
 												<span class="block font-medium">{engagementMeta[id].label}</span>
-												<span class="block text-xs text-base-content/50"
+												<span class="block text-xs text-foreground/50"
 													>{engagementMeta[id].hint}</span
 												>
 											</span>
@@ -587,77 +603,83 @@
 								{/each}
 							</ul>
 						{/if}
-					</section>
+					</Card.Root>
 
-					<section class="card card-border bg-base-100 p-5">
+					<Card.Root class="gap-0 bg-background p-5">
 						<div class="flex items-start justify-between gap-3">
 							{@render cardHeader('Worth a check-in', 'Studied recently, quiet for over a week')}
 							{#if engagementCounts.cooling > checkIns.length}
-								<button
-									class="btn btn-ghost btn-xs shrink-0 rounded-full"
+								<Button
+									variant="ghost"
+									tone="neutral"
+									size="xs"
+									class="shrink-0"
 									onclick={() => showStudents('cooling')}
-									>All {engagementCounts.cooling} <ChevronRight size={13} /></button
+									>All {engagementCounts.cooling} <ChevronRight size={13} /></Button
 								>
 							{/if}
 						</div>
-						{#if !ready}<div class="skeleton mt-4 h-40"></div>{:else}
+						{#if !ready}<Skeleton class="mt-4 h-40" />{:else}
 							<ul class="mt-3 -mx-2">
 								{#each checkIns as student (student._id)}
 									<li>
 										<button
-											class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-base-200"
+											class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-muted"
 											onclick={() => openStudent(student._id)}
 										>
 											<StudentAvatar name={student.name} imageUrl={student.imageUrl} size="sm" />
 											<span class="min-w-0 flex-1">
 												<span class="block truncate text-sm font-medium">{student.name}</span>
-												<span class="block text-xs text-base-content/50"
+												<span class="block text-xs text-foreground/50"
 													>{student.questionsInteracted} questions tried so far</span
 												>
 											</span>
-											<span class="text-xs whitespace-nowrap text-warning"
+											<span class="text-xs whitespace-nowrap text-warning-ink"
 												>{relativeTime(student.lastActivityAt, now)}</span
 											>
 										</button>
 									</li>
 								{:else}
-									<li class="px-2 py-10 text-center text-sm text-base-content/55">
+									<li class="px-2 py-10 text-center text-sm text-foreground/55">
 										Nobody has drifted off. Everyone who started is still active.
 									</li>
 								{/each}
 							</ul>
 						{/if}
-					</section>
+					</Card.Root>
 
-					<section class="card card-border bg-base-100 p-5">
+					<Card.Root class="gap-0 bg-background p-5">
 						<div class="flex items-start justify-between gap-3">
 							{@render cardHeader('Most active this week', 'By questions tried in the last 7 days')}
 							{#if onStreak.length}
-								<button
-									class="badge badge-soft badge-warning badge-sm shrink-0 gap-1"
+								<Button
+									variant="soft"
+									tone="warning"
+									size="xs"
+									class="shrink-0 gap-1"
 									onclick={() => showStudents('streak')}
-									><Flame size={12} />{onStreak.length} on streaks</button
+									><Flame size={12} />{onStreak.length} on streaks</Button
 								>
 							{/if}
 						</div>
-						{#if !live || !ready}<div class="skeleton mt-4 h-40"></div>{:else}
+						{#if !live || !ready}<Skeleton class="mt-4 h-40" />{:else}
 							<ol class="mt-3 -mx-2">
 								{#each topLearners as student, i (student._id)}
 									<li>
 										<button
-											class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-base-200"
+											class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-muted"
 											onclick={() => openStudent(student._id)}
 										>
-											<span class="w-4 text-xs tabular-nums text-base-content/40">{i + 1}</span>
+											<span class="w-4 text-xs tabular-nums text-foreground/40">{i + 1}</span>
 											<StudentAvatar name={student.name} imageUrl={student.imageUrl} size="sm" />
 											<span class="min-w-0 flex-1">
 												<span class="block truncate text-sm font-medium">{student.name}</span>
-												<span class="block text-xs text-base-content/50"
+												<span class="block text-xs text-foreground/50"
 													>{relativeTime(student.lastActivityAt, now)}</span
 												>
 											</span>
 											{#if student.streak >= 2}<span
-													class="flex items-center gap-0.5 text-xs font-medium text-warning tabular-nums"
+													class="flex items-center gap-0.5 text-xs font-medium text-warning-ink tabular-nums"
 													title="{student.streak}-day streak"
 													><Flame size={13} />{student.streak}</span
 												>{/if}
@@ -665,89 +687,89 @@
 										</button>
 									</li>
 								{:else}
-									<li class="px-2 py-10 text-center text-sm text-base-content/55">
+									<li class="px-2 py-10 text-center text-sm text-foreground/55">
 										No study sessions this week yet.
 									</li>
 								{/each}
 							</ol>
 						{/if}
-					</section>
+					</Card.Root>
 				</div>
 
 				<div class="mt-4 grid gap-4 lg:grid-cols-2">
-					<section class="card card-border overflow-hidden bg-base-100">
+					<Card.Root class="gap-0 overflow-hidden bg-background py-0">
 						<header class="p-5 pb-3">
 							{@render cardHeader('Trending modules', 'Most students studying in the last 14 days')}
 						</header>
-						{#if !live}<div class="skeleton m-5 mt-0 h-40"></div>{:else}
+						{#if !live}<Skeleton class="m-5 mt-0 h-40" />{:else}
 							{#each live.modules as module (module.moduleId)}
 								<button
-									class="group flex w-full items-center gap-3 border-t border-base-200 px-5 py-3 text-left hover:bg-base-200/60"
+									class="group flex w-full items-center gap-3 border-t border-muted px-5 py-3 text-left hover:bg-muted/60"
 									onclick={() => showModule(module.classId, module.moduleId)}
 								>
 									<span
-										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-base-200 text-lg"
+										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-lg"
 										>{module.emoji ?? '📚'}</span
 									>
 									<span class="min-w-0 flex-1">
-										<span class="block truncate text-sm font-medium group-hover:text-primary"
+										<span class="block truncate text-sm font-medium group-hover:text-primary-ink"
 											>{module.title}</span
 										>
-										<span class="block truncate text-[11px] text-base-content/50"
+										<span class="block truncate text-[11px] text-foreground/50"
 											>{module.className}</span
 										>
 									</span>
 									<span class="w-20 text-right text-xs leading-tight">
 										<span class="block font-semibold tabular-nums">{module.students} students</span>
-										<span class="text-base-content/50 tabular-nums">{module.tries} tries</span>
+										<span class="text-foreground/50 tabular-nums">{module.tries} tries</span>
 									</span>
 								</button>
 							{:else}
-								<p class="border-t border-base-200 p-8 text-center text-sm text-base-content/55">
+								<p class="border-t border-muted p-8 text-center text-sm text-foreground/55">
 									No module activity in the last two weeks.
 								</p>
 							{/each}
 						{/if}
-					</section>
+					</Card.Root>
 
-					<section class="card card-border overflow-hidden bg-base-100">
+					<Card.Root class="gap-0 overflow-hidden bg-background py-0">
 						<header class="p-5 pb-3">
 							{@render cardHeader(
 								'Flagged by students',
 								'Questions students marked for another look'
 							)}
 						</header>
-						{#if flaggedQuery.error}<div class="alert alert-error alert-soft m-5 mt-0" role="alert">
-								Flagged questions could not load.
-							</div>{:else if !flaggedQuery.data}<div class="skeleton m-5 mt-0 h-40"></div>{:else}
+						{#if flaggedQuery.error}<Alert.Root tone="error" class="m-5 mt-0" role="alert">
+								<Alert.Description>Flagged questions could not load.</Alert.Description>
+							</Alert.Root>{:else if !flaggedQuery.data}<Skeleton class="m-5 mt-0 h-40" />{:else}
 							{#each flaggedQuery.data as question (question._id)}
 								<button
-									class="group flex w-full items-center gap-3 border-t border-base-200 px-5 py-3 text-left hover:bg-base-200/60"
+									class="group flex w-full items-center gap-3 border-t border-muted px-5 py-3 text-left hover:bg-muted/60"
 									onclick={() => showModule(question.classId, question.moduleId)}
 								>
-									<span class="badge badge-soft badge-warning badge-sm shrink-0 gap-1 tabular-nums"
-										><Flag size={11} />{question.flagCount}</span
+									<Badge variant="soft" tone="warning" size="sm" class="shrink-0 gap-1 tabular-nums"
+										><Flag size={11} />{question.flagCount}</Badge
 									>
 									<span class="min-w-0 flex-1">
-										<span class="line-clamp-1 text-sm group-hover:text-primary"
+										<span class="line-clamp-1 text-sm group-hover:text-primary-ink"
 											>{plainText(question.stem)}</span
 										>
-										<span class="block truncate text-[11px] text-base-content/50"
+										<span class="block truncate text-[11px] text-foreground/50"
 											>{question.moduleTitle} · {question.className}</span
 										>
 									</span>
-									<ChevronRight size={15} class="shrink-0 text-base-content/35" />
+									<ChevronRight size={15} class="shrink-0 text-foreground/35" />
 								</button>
 							{:else}
-								<p class="border-t border-base-200 p-8 text-center text-sm text-base-content/55">
+								<p class="border-t border-muted p-8 text-center text-sm text-foreground/55">
 									No flagged questions right now.
 								</p>
 							{/each}
 						{/if}
-					</section>
+					</Card.Root>
 				</div>
 
-				<details class="mt-4 px-1 text-xs text-base-content/55">
+				<details class="mt-4 px-1 text-xs text-foreground/55">
 					<summary class="flex cursor-pointer list-none items-center gap-2"
 						><CircleHelp size={14} />How these numbers work</summary
 					>
@@ -772,8 +794,8 @@
 			{:else if view === 'studio'}
 				<CuratorGenerationRuns {cohortId} />
 			{:else}
-				<section class="card card-border overflow-hidden bg-base-100">
-					<div class="border-b border-base-200 p-5">
+				<Card.Root class="gap-0 overflow-hidden bg-background py-0">
+					<div class="border-b border-muted p-5">
 						<div class="flex flex-wrap items-center justify-between gap-3">
 							{@render cardHeader(
 								'Students',
@@ -782,121 +804,148 @@
 									: 'Loading students…'
 							)}
 							<div class="flex w-full flex-wrap gap-2 sm:w-auto">
-								<label class="input input-sm min-w-0 flex-1 rounded-full sm:w-60"
-									><Search size={15} class="text-base-content/50" /><input
+								<InputGroup.Root class="min-w-0 flex-1 rounded-full sm:w-60">
+									<InputGroup.Addon
+										><Search size={15} class="text-foreground/50" /></InputGroup.Addon
+									>
+									<InputGroup.Input
 										type="search"
 										placeholder="Name, email, or username…"
 										aria-label="Search students"
+										class="h-8 px-3 text-sm"
 										bind:value={search}
-									/></label
-								><select
-									class="select select-sm w-44 rounded-full"
+									/>
+								</InputGroup.Root>
+								<SelectField
+									size="sm"
+									class="w-52"
 									aria-label="Sort students"
-									bind:value={sort}
-									><option value="recent">Recently active</option><option value="week"
-										>Most active this week</option
-									><option value="tried">Most questions tried</option><option value="name"
-										>Name A–Z</option
-									></select
-								>
+									value={sort}
+									onValueChange={(v) => (sort = v as typeof sort)}
+									options={[
+										{ value: 'recent', label: 'Recently active' },
+										{ value: 'week', label: 'Most active this week' },
+										{ value: 'tried', label: 'Most questions tried' },
+										{ value: 'name', label: 'Name A–Z' }
+									]}
+								/>
 							</div>
 						</div>
 						<div class="mt-4 flex flex-wrap gap-1.5" aria-label="Student filters">
-							{#each filters as option (option.id)}<button
-									class="btn btn-xs rounded-full {filter === option.id
-										? 'btn-primary'
-										: 'btn-ghost bg-base-200'}"
+							{#each filters as option (option.id)}<Button
+									variant={filter === option.id ? 'solid' : 'ghost'}
+									tone={filter === option.id ? 'primary' : 'neutral'}
+									size="xs"
+									class={filter === option.id ? '' : 'bg-muted'}
 									aria-pressed={filter === option.id}
 									onclick={() => navigate({ filter: option.id === 'all' ? null : option.id })}
 									>{#if option.id in engagementMeta}<span
-											class="status status-xs {engagementMeta[option.id as Engagement].dot}"
+											class="inline-block size-1.5 rounded-full {engagementMeta[
+												option.id as Engagement
+											].dot}"
 										></span>{/if}{option.label}<span class="opacity-60 tabular-nums"
 										>{option.count}</span
-									></button
+									></Button
 								>{/each}
 						</div>
 					</div>
 					{#if studentsQuery.isLoading}<div class="space-y-2 p-5">
-							{#each [1, 2, 3, 4, 5] as row (row)}<div class="skeleton h-12"></div>{/each}
+							{#each [1, 2, 3, 4, 5] as row (row)}<Skeleton class="h-12" />{/each}
 						</div>{:else if !filteredStudents.length}<div class="p-12 text-center">
-							<Search size={26} class="mx-auto mb-3 text-base-content/40" />
+							<Search size={26} class="mx-auto mb-3 text-foreground/40" />
 							<h3 class="font-semibold">
 								{students.length ? 'No students in this view' : 'Your cohort is empty'}
 							</h3>
-							<p class="mt-1 text-sm text-base-content/60">
+							<p class="mt-1 text-sm text-foreground/60">
 								{students.length
 									? 'Try another filter or clear your search.'
 									: 'Students will appear here when they join.'}
 							</p>
-							{#if students.length}<button
-									class="btn btn-outline btn-sm mt-4 rounded-full"
-									onclick={() => showStudents()}>Show all students</button
+							{#if students.length}<Button
+									variant="outline"
+									tone="neutral"
+									size="sm"
+									class="mt-4"
+									onclick={() => showStudents()}>Show all students</Button
 								>{/if}
-						</div>{:else}<div class="overflow-x-auto">
-							<table class="table table-sm">
-								<thead
-									><tr class="text-[11px] text-base-content/50"
-										><th class="pl-5">Student</th><th>Status</th><th class="text-right"
-											>This week</th
-										><th class="text-right">All time</th><th class="text-right">Streak</th><th
-											>Last active</th
-										><th><span class="sr-only">Details</span></th></tr
-									></thead
-								><tbody
-									>{#each filteredStudents as student (student._id)}
-										{@const meta = engagementMeta[student.engagement]}
-										<tr
-											class="cursor-pointer hover:bg-base-200/50"
-											onclick={() => openStudent(student._id)}
-											><td class="py-2.5 pl-5"
-												><span class="flex items-center gap-3"
-													><span class="relative"
-														><StudentAvatar
-															name={student.name}
-															imageUrl={student.imageUrl}
-															size="sm"
-														/>{#if student.engagement === 'live'}<span
-																class="status status-success absolute -right-0.5 -bottom-0.5 ring-2 ring-base-100"
-															></span>{/if}</span
-													><span class="min-w-0"
-														><span class="block font-medium">{student.name}</span><span
-															class="block max-w-56 truncate text-xs text-base-content/50"
-															>{student.email ?? student.username ?? 'Student'}</span
-														></span
-													>{#if student.role}<span class="badge badge-ghost badge-xs capitalize"
-															>{student.role}</span
-														>{/if}</span
-												></td
-											><td
-												><span class="flex items-center gap-2 whitespace-nowrap text-xs"
-													><span class="status {meta.dot}"></span>{meta.label}</span
-												></td
-											><td class="text-right tabular-nums"
-												>{student.weekTries ? student.weekTries : '—'}</td
-											><td class="text-right text-base-content/60 tabular-nums"
-												>{student.statsAvailable ? student.questionsInteracted : '—'}</td
-											><td class="text-right"
-												>{#if student.streak >= 2}<span
-														class="inline-flex items-center gap-0.5 text-xs font-medium text-warning tabular-nums"
-														><Flame size={13} />{student.streak}d</span
-													>{:else}<span class="text-base-content/35">—</span>{/if}</td
-											><td class="whitespace-nowrap text-xs text-base-content/60"
-												>{relativeTime(student.lastActivityAt, now)}</td
-											><td class="pr-4"
-												><button
-													class="btn btn-ghost btn-xs btn-circle"
-													aria-label="View progress for {student.name}"
-													onclick={(event) => {
-														event.stopPropagation();
-														openStudent(student._id);
-													}}><ChevronRight size={15} /></button
-												></td
-											></tr
-										>{/each}</tbody
-								>
-							</table>
-						</div>{/if}
-				</section>
+						</div>{:else}<Table.Root class="text-xs">
+							<Table.Header>
+								<Table.Row class="text-[11px] text-foreground/50">
+									<Table.Head class="pl-5">Student</Table.Head>
+									<Table.Head>Status</Table.Head>
+									<Table.Head class="text-right">This week</Table.Head>
+									<Table.Head class="text-right">All time</Table.Head>
+									<Table.Head class="text-right">Streak</Table.Head>
+									<Table.Head>Last active</Table.Head>
+									<Table.Head><span class="sr-only">Details</span></Table.Head>
+								</Table.Row>
+							</Table.Header>
+							<Table.Body>
+								{#each filteredStudents as student (student._id)}
+									{@const meta = engagementMeta[student.engagement]}
+									<Table.Row
+										class="cursor-pointer hover:bg-muted/50"
+										onclick={() => openStudent(student._id)}
+									>
+										<Table.Cell class="py-2.5 pl-5">
+											<span class="flex items-center gap-3">
+												<span class="relative"
+													><StudentAvatar
+														name={student.name}
+														imageUrl={student.imageUrl}
+														size="sm"
+													/>{#if student.engagement === 'live'}<span
+															class="absolute -right-0.5 -bottom-0.5 inline-block size-2 rounded-full bg-success ring-2 ring-background"
+														></span>{/if}</span
+												>
+												<span class="min-w-0"
+													><span class="block font-medium">{student.name}</span><span
+														class="block max-w-56 truncate text-xs text-foreground/50"
+														>{student.email ?? student.username ?? 'Student'}</span
+													></span
+												>{#if student.role}<Badge size="xs" class="capitalize">{student.role}</Badge
+													>{/if}
+											</span>
+										</Table.Cell>
+										<Table.Cell>
+											<span class="flex items-center gap-2 whitespace-nowrap text-xs"
+												><span class="inline-block size-2 rounded-full {meta.dot}"
+												></span>{meta.label}</span
+											>
+										</Table.Cell>
+										<Table.Cell class="text-right tabular-nums"
+											>{student.weekTries ? student.weekTries : '—'}</Table.Cell
+										>
+										<Table.Cell class="text-right text-foreground/60 tabular-nums"
+											>{student.statsAvailable ? student.questionsInteracted : '—'}</Table.Cell
+										>
+										<Table.Cell class="text-right">
+											{#if student.streak >= 2}<span
+													class="inline-flex items-center gap-0.5 text-xs font-medium text-warning-ink tabular-nums"
+													><Flame size={13} />{student.streak}d</span
+												>{:else}<span class="text-foreground/35">—</span>{/if}
+										</Table.Cell>
+										<Table.Cell class="whitespace-nowrap text-xs text-foreground/60"
+											>{relativeTime(student.lastActivityAt, now)}</Table.Cell
+										>
+										<Table.Cell class="pr-4">
+											<Button
+												variant="ghost"
+												tone="neutral"
+												size="xs"
+												shape="circle"
+												aria-label="View progress for {student.name}"
+												onclick={(event) => {
+													event.stopPropagation();
+													openStudent(student._id);
+												}}><ChevronRight size={15} /></Button
+											>
+										</Table.Cell>
+									</Table.Row>
+								{/each}
+							</Table.Body>
+						</Table.Root>{/if}
+				</Card.Root>
 			{/if}
 		</div>
 	{/if}
@@ -920,7 +969,7 @@
 	.progress-workspace :global(button:focus-visible),
 	.progress-workspace :global(summary:focus-visible),
 	.progress-workspace :global(a:focus-visible) {
-		outline: 2px solid var(--color-primary);
+		outline: 2px solid var(--primary);
 		outline-offset: 2px;
 	}
 	@media (prefers-reduced-motion: reduce) {

@@ -5,6 +5,13 @@
 	import { X, Shield, PenTool, User, Zap, Info } from 'lucide-svelte';
 	import StudentStatsContent from './StudentStatsContent.svelte';
 	import type { ComponentType } from 'svelte';
+	import * as Alert from '$lib/components/ui/alert';
+	import * as Avatar from '$lib/components/ui/avatar';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import { Spinner } from '$lib/components/ui/spinner';
+	import { Tip } from '$lib/components/ui/tooltip';
 
 	let {
 		isOpen,
@@ -38,13 +45,6 @@
 		updateRole?: (userId: Id<'users'>, role: 'dev' | 'admin' | 'curator' | null) => Promise<void>;
 	} = $props();
 
-	let dialog: HTMLDialogElement;
-	$effect(() => {
-		if (!dialog) return;
-		if (isOpen && !dialog.open) dialog.showModal();
-		else if (!isOpen && dialog.open) dialog.close();
-	});
-
 	// Check if viewing own profile
 	const isOwnProfile = $derived(student?.clerkUserId === currentUserClerkId);
 
@@ -61,8 +61,8 @@
 			value: 'dev' | 'admin' | 'curator' | null;
 			label: string;
 			icon: ComponentType;
-			color: string;
-		}> = [{ value: null, label: 'Student', icon: User, color: 'ghost' }];
+			color: 'neutral' | 'info' | 'primary';
+		}> = [{ value: null, label: 'Student', icon: User, color: 'neutral' }];
 
 		if (currentUserRole === 'dev') {
 			roles.push({ value: 'curator', label: 'Curator', icon: PenTool, color: 'info' });
@@ -90,87 +90,86 @@
 	});
 </script>
 
-<dialog
-	bind:this={dialog}
-	class="modal max-w-full p-4"
-	aria-label="Student progress"
-	oncancel={onClose}
+<Dialog.Root
+	open={isOpen}
+	onOpenChange={(open) => {
+		if (!open) onClose();
+	}}
 >
-	<div class="modal-box max-w-4xl max-h-[90vh] rounded-2xl flex flex-col">
+	<Dialog.Content
+		class="flex max-h-[90dvh] flex-col gap-0 overflow-y-auto sm:max-w-4xl"
+		aria-label="Student progress"
+		showCloseButton={false}
+	>
 		<!-- Header -->
-		<div class="flex items-start justify-between mb-4">
+		<div class="mb-4 flex items-start justify-between">
 			<div class="flex items-center gap-4">
 				{#if student?.imageUrl}
-					<div class="avatar">
-						<div
-							class="w-16 h-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2"
-						>
-							<img src={student.imageUrl} alt={student.name} />
-						</div>
-					</div>
+					<Avatar.Root class="size-16 ring-3 ring-primary ring-offset-background ring-offset-2">
+						<Avatar.Image src={student.imageUrl} alt={student.name} />
+					</Avatar.Root>
 				{:else}
-					<div class="avatar placeholder">
-						<div
-							class="bg-neutral text-neutral-content w-16 h-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2"
-						>
-							<span class="text-xl">
-								{student?.name
-									.split(' ')
-									.map((n) => n[0])
-									.join('')
-									.slice(0, 2)
-									.toUpperCase() ?? '?'}
-							</span>
-						</div>
-					</div>
+					<Avatar.Root class="size-16 ring-3 ring-primary ring-offset-background ring-offset-2">
+						<Avatar.Fallback class="bg-neutral text-xl text-neutral-foreground">
+							{student?.name
+								.split(' ')
+								.map((n) => n[0])
+								.join('')
+								.slice(0, 2)
+								.toUpperCase() ?? '?'}
+						</Avatar.Fallback>
+					</Avatar.Root>
 				{/if}
 				<div>
 					<div class="flex items-center gap-2">
 						<h3 class="text-xl font-bold">{student?.name ?? 'Student'}</h3>
 						{#if student?.role === 'dev'}
-							<div class="tooltip tooltip-bottom" data-tip="Developer: Full system access">
-								<div class="badge badge-warning badge-sm gap-1 cursor-help">
+							<Tip label="Developer: Full system access" side="bottom">
+								<Badge variant="solid" tone="warning" size="sm" class="cursor-help gap-1">
 									<Shield size={14} /> dev
-								</div>
-							</div>
+								</Badge>
+							</Tip>
 						{:else if student?.role === 'admin'}
-							<div class="tooltip tooltip-bottom" data-tip="Admin: Manage cohort & users">
-								<div class="badge badge-primary badge-sm gap-1 cursor-help">
+							<Tip label="Admin: Manage cohort & users" side="bottom">
+								<Badge variant="solid" tone="primary" size="sm" class="cursor-help gap-1">
 									<Shield size={14} /> admin
-								</div>
-							</div>
+								</Badge>
+							</Tip>
 						{:else if student?.role === 'curator'}
-							<div class="tooltip tooltip-bottom" data-tip="Curator: Create & edit content">
-								<div class="badge badge-info badge-sm gap-1 cursor-help">
+							<Tip label="Curator: Create & edit content" side="bottom">
+								<Badge variant="solid" tone="info" size="sm" class="cursor-help gap-1">
 									<PenTool size={14} /> curator
-								</div>
-							</div>
+								</Badge>
+							</Tip>
 						{/if}
 						{#if isPro}
-							<div class="tooltip tooltip-bottom" data-tip="Pro Plan: Active subscription">
-								<div class="badge badge-secondary badge-sm gap-1 cursor-help">
+							<Tip label="Pro Plan: Active subscription" side="bottom">
+								<Badge variant="solid" tone="secondary" size="sm" class="cursor-help gap-1">
 									<Zap size={14} /> pro
-								</div>
-							</div>
+								</Badge>
+							</Tip>
 						{/if}
 					</div>
 					{#if student?.email}
-						<p class="text-sm text-base-content/60">{student.email}</p>
+						<p class="text-sm text-foreground/60">{student.email}</p>
 					{/if}
 				</div>
 			</div>
-			<button
-				class="btn btn-sm btn-circle btn-ghost"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				shape="circle"
 				aria-label="Close student details"
 				onclick={onClose}
 			>
 				<X size={16} />
-			</button>
+			</Button>
 		</div>
 
 		<!-- Role Management (Only if editable and not own profile) -->
 		{#if canEditRole && student && !isOwnProfile && updateRole}
-			<div class="bg-base-200/50 rounded-2xl p-6 mb-6">
+			<div class="bg-muted/50 rounded-2xl p-6 mb-6">
 				<div class="flex items-center gap-2 mb-4">
 					<Shield size={18} class="text-primary" />
 					<h4 class="font-bold">Account Management</h4>
@@ -178,31 +177,29 @@
 
 				<div class="space-y-3">
 					<div class="flex items-center justify-between">
-						<span class="text-sm font-medium text-base-content/70">Access Level</span>
+						<span class="text-sm font-medium text-foreground/70">Access Level</span>
 					</div>
 
 					{#if student.role === 'dev'}
-						<div class="alert alert-warning py-2 rounded-xl text-xs flex items-center gap-2">
+						<Alert.Root tone="warning" class="rounded-xl py-2 text-xs">
 							<Info size={14} />
-							<span>Dev roles are managed via the CLI for security.</span>
-						</div>
+							<Alert.Description>Dev roles are managed via the CLI for security.</Alert.Description>
+						</Alert.Root>
 					{:else}
 						<div class="flex w-full gap-2">
 							{#each availableRoles as roleOption (roleOption.value ?? 'student')}
-								<button
-									class="btn btn-sm rounded-full flex-1 gap-2"
-									class:btn-active={(student.role ?? null) === roleOption.value}
-									class:btn-primary={(student.role ?? null) === roleOption.value &&
-										roleOption.value === 'admin'}
-									class:btn-info={(student.role ?? null) === roleOption.value &&
-										roleOption.value === 'curator'}
-									class:btn-neutral={(student.role ?? null) === roleOption.value &&
-										roleOption.value === null}
+								{@const selected = (student.role ?? null) === roleOption.value}
+								<Button
+									variant={selected ? 'solid' : 'soft'}
+									tone={selected ? roleOption.color : 'neutral'}
+									size="sm"
+									class="flex-1 gap-2"
+									aria-pressed={selected}
 									onclick={() => updateRole(student._id, roleOption.value)}
 								>
 									<roleOption.icon size={16} />
 									{roleOption.label}
-								</button>
+								</Button>
 							{/each}
 						</div>
 					{/if}
@@ -215,16 +212,13 @@
 			<StudentStatsContent userId={student._id} {cohortId} />
 		{:else}
 			<div class="flex items-center justify-center py-8">
-				<span class="loading loading-spinner loading-lg"></span>
+				<Spinner class="size-6" />
 			</div>
 		{/if}
 
 		<!-- Footer -->
-		<div class="modal-action mt-4">
-			<button class="btn rounded-full" onclick={onClose}>Close</button>
-		</div>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button onclick={onClose}>close</button>
-	</form>
-</dialog>
+		<Dialog.Footer class="mt-4">
+			<Button variant="soft" tone="neutral" onclick={onClose}>Close</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>

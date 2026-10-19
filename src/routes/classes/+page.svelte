@@ -27,6 +27,11 @@
 	import ResetProgressSheet from '../../lib/components/ResetProgressSheet.svelte';
 	import type { ClassWithSemester } from '../../lib/types';
 	import { useClerkContext } from 'svelte-clerk/client';
+	import * as Alert from '$lib/components/ui/alert';
+	import * as Avatar from '$lib/components/ui/avatar';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	const client = useConvexClient();
 	const ctx = useClerkContext();
 	const name = $derived(ctx.user?.firstName);
@@ -231,52 +236,51 @@
 	<div class="mb-6 flex flex-col gap-2 sm:mb-8">
 		{#if user === undefined}
 			<div class="flex flex-row gap-5 items-center">
-				<div class="skeleton h-14 w-14 rounded-full shrink-0 hidden xl:block"></div>
+				<Skeleton class="h-14 w-14 rounded-full shrink-0 hidden xl:block" />
 				<div class="space-y-2">
-					<div class="skeleton h-7 w-56"></div>
-					<div class="skeleton h-4 w-72"></div>
+					<Skeleton class="h-7 w-56" />
+					<Skeleton class="h-4 w-72" />
 				</div>
 			</div>
 		{:else if user === null}
-			<h1 class="font-display text-2xl font-bold text-base-content">Welcome, Guest!</h1>
-			<p class="text-base-content/60 text-sm">Here's your learning dashboard.</p>
+			<h1 class="font-display text-2xl font-bold text-foreground">Welcome, Guest!</h1>
+			<p class="text-foreground/60 text-sm">Here's your learning dashboard.</p>
 		{:else}
 			<div class="flex flex-row gap-5 items-center">
-				<div class="avatar hidden xl:block">
-					<div
-						class="ring-primary ring-offset-base-100 w-14 rounded-full ring-3 ring-offset-2 transition-shadow duration-300 hover:shadow-md hover:shadow-primary/10"
-					>
-						<img src={user.imageUrl} alt="user profile" />
-					</div>
-				</div>
+				<Avatar.Root
+					class="hidden size-14 ring-3 ring-primary ring-offset-2 ring-offset-background transition-shadow duration-300 hover:shadow-md hover:shadow-primary/10 xl:flex"
+				>
+					<Avatar.Image src={user.imageUrl} alt="user profile" />
+					<Avatar.Fallback />
+				</Avatar.Root>
 
 				<div>
-					<h1 class="font-display text-2xl font-bold text-base-content mb-1">
+					<h1 class="font-display text-2xl font-bold text-foreground mb-1">
 						Hi, {name}!
 					</h1>
 					{#if userData === null}
-						<div class="skeleton h-4 w-72 rounded-full"></div>
+						<Skeleton class="h-4 w-72 rounded-full" />
 					{:else}
-						<p class="text-base-content/60 text-sm">{userSchoolName}</p>
+						<p class="text-foreground/60 text-sm">{userSchoolName}</p>
 						{#if userData && !classes.isLoading}
 							<div class="flex flex-wrap gap-1.5 mt-2">
-								<div class="badge badge-primary rounded-full badge-soft">
+								<Badge tone="primary">
 									{userCohortName}
-								</div>
+								</Badge>
 								{#if dev}
-									<div class="badge badge-error rounded-full badge-soft">
+									<Badge tone="error">
 										<ShieldCheckIcon size={14} /> Dev
-									</div>
+									</Badge>
 								{/if}
 								{#if admin}
-									<div class="badge badge-secondary rounded-full badge-soft">
+									<Badge tone="secondary">
 										<ShieldCheckIcon size={14} /> Admin
-									</div>
+									</Badge>
 								{/if}
 								{#if curator}
-									<div class="badge badge-accent rounded-full badge-soft">
+									<Badge tone="accent">
 										<UserRoundPenIcon size={14} /> Curator
-									</div>
+									</Badge>
 								{/if}
 							</div>
 						{/if}
@@ -295,18 +299,18 @@
 
 				{#if recentModulesLoading}
 					<div class="mb-8">
-						<div class="mb-3 h-6 w-32 skeleton rounded-full"></div>
+						<Skeleton class="mb-3 h-6 w-32 rounded-full" />
 						<div class="overflow-x-auto pb-1">
 							<div class="flex min-w-max gap-2">
 								{#each Array(3), i (i)}
 									<div
-										class="rounded-xl border border-base-300 bg-base-100 px-3 py-2.5 animate-pulse min-w-[19rem]"
+										class="rounded-xl border border-border bg-background px-3 py-2.5 animate-pulse min-w-[19rem]"
 									>
 										<div class="flex items-center gap-3">
-											<div class="skeleton h-5 w-5 rounded-sm"></div>
-											<div class="skeleton h-3.5 w-32"></div>
-											<div class="skeleton h-3.5 w-14"></div>
-											<div class="skeleton h-1.5 w-16 rounded-full"></div>
+											<Skeleton class="h-5 w-5 rounded-sm" />
+											<Skeleton class="h-3.5 w-32" />
+											<Skeleton class="h-3.5 w-14" />
+											<Skeleton class="h-1.5 w-16 rounded-full" />
 										</div>
 									</div>
 								{/each}
@@ -314,9 +318,10 @@
 						</div>
 					</div>
 				{:else if recentModulesError}
-					<div class="alert alert-error mb-8 rounded-2xl shadow-xs border border-error/20">
-						<span>Failed to load recent modules: {recentModulesError.toString()}</span>
-					</div>
+					<Alert.Root tone="error" class="mb-8 rounded-2xl shadow-xs">
+						<Alert.Title>Failed to load recent modules: {recentModulesError.toString()}</Alert.Title
+						>
+					</Alert.Root>
 				{:else if recentModules.length > 0}
 					{@const resume = recentModules[0]}
 					<a
@@ -329,10 +334,10 @@
 					>
 						<span class="text-4xl leading-none">{resume.moduleEmoji || '📘'}</span>
 						<span class="min-w-0 flex-1">
-							<span class="block text-xs font-medium text-primary">Continue studying</span>
+							<span class="block text-xs font-medium text-primary-ink">Continue studying</span>
 							<span class="block truncate font-semibold">{resume.moduleTitle}</span>
-							<span class="mt-2 flex items-center gap-2 text-xs text-base-content/60">
-								<span class="h-1.5 flex-1 overflow-hidden rounded-full bg-base-300/70">
+							<span class="mt-2 flex items-center gap-2 text-xs text-foreground/60">
+								<span class="h-1.5 flex-1 overflow-hidden rounded-full bg-muted-strong/70">
 									<span
 										class="block h-full rounded-full bg-success"
 										style="width: {resume.progress}%;"
@@ -342,7 +347,7 @@
 							</span>
 						</span>
 						<span
-							class="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-content"
+							class="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"
 							aria-hidden="true"
 						>
 							<ArrowRightIcon size={20} />
@@ -354,7 +359,7 @@
 					>
 						<div class="flex items-center justify-between mb-3">
 							<div class="flex items-center gap-2">
-								<h3 class="text-sm font-semibold text-base-content/70">
+								<h3 class="text-sm font-semibold text-foreground/70">
 									<span class="sm:hidden">Also recent</span>
 									<span class="max-sm:hidden">Pick up where you left off</span>
 								</h3>
@@ -362,7 +367,7 @@
 							{#if canScrollRight}
 								<button
 									onclick={scrollRight}
-									class="flex items-center gap-0.5 text-xs text-base-content/40 hover:text-primary transition-colors duration-150"
+									class="flex items-center gap-0.5 text-xs text-foreground/40 hover:text-primary-ink transition-colors duration-150"
 								>
 									<span>More</span>
 									<ChevronRight size={14} />
@@ -382,7 +387,7 @@
 												classId: recentModule.classId,
 												moduleId: recentModule.moduleId
 											})}
-											class="group flex min-h-12 items-center gap-2.5 rounded-xl bg-base-100 border border-base-300 pl-3 pr-4 py-2 transition-colors duration-150 hover:border-primary/40 active:bg-base-200 {index ===
+											class="group flex min-h-12 items-center gap-2.5 rounded-xl bg-background border border-border pl-3 pr-4 py-2 transition-colors duration-150 hover:border-primary/40 active:bg-muted {index ===
 											0
 												? 'max-sm:hidden'
 												: ''}"
@@ -392,21 +397,21 @@
 											>
 											<div class="min-w-0 flex flex-col gap-0.5">
 												<span
-													class="font-medium text-xs text-base-content truncate max-w-40 leading-tight group-hover:text-primary transition-colors duration-150"
+													class="font-medium text-xs text-foreground truncate max-w-40 leading-tight group-hover:text-primary-ink transition-colors duration-150"
 												>
 													{recentModule.moduleTitle}
 												</span>
 												<span
-													class="flex items-center gap-1.5 text-[11px] text-base-content/45 leading-tight"
+													class="flex items-center gap-1.5 text-[11px] text-foreground/45 leading-tight"
 												>
 													<span>{recentModule.classCode}</span>
-													<span class="inline-block w-0.5 h-0.5 rounded-full bg-base-content/25"
+													<span class="inline-block w-0.5 h-0.5 rounded-full bg-foreground/25"
 													></span>
 													<span>{recentModule.progress}%</span>
 												</span>
 											</div>
 											<div class="ml-1 shrink-0 w-10">
-												<div class="h-1.5 rounded-full bg-base-300/60 overflow-hidden">
+												<div class="h-1.5 rounded-full bg-muted-strong/60 overflow-hidden">
 													<div
 														class="h-full rounded-full bg-success"
 														style="width: {recentModule.progress}%;"
@@ -419,7 +424,7 @@
 							</div>
 							{#if canScrollRight}
 								<div
-									class="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-base-200/80 to-transparent rounded-r-xl"
+									class="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted/80 to-transparent rounded-r-xl"
 								></div>
 							{/if}
 						</div>
@@ -435,35 +440,38 @@
 			{:else if currentView === 'modules' && selectedClass}
 				<div in:fade={{ duration: 400, easing: cubicOut }} class="w-full">
 					<header class="mb-4 flex flex-wrap items-center gap-3">
-						<button
-							onclick={goBackToClasses}
-							class="btn btn-ghost btn-circle size-11 -ms-2 sm:btn-sm sm:size-8 sm:ms-0"
+						<Button
+							variant="ghost"
+							tone="neutral"
+							shape="circle"
+							class="-ms-2 size-11 sm:ms-0 sm:size-8"
 							aria-label="Back to classes"
+							onclick={goBackToClasses}
 						>
 							<ArrowLeft size={16} />
-						</button>
-						<ColorMark
-							color={classColor(selectedClass)}
-							class="size-8 shrink-0 text-base-content"
-						/>
+						</Button>
+						<ColorMark color={classColor(selectedClass)} class="size-8 shrink-0 text-foreground" />
 						<div class="min-w-0 flex-1">
-							<p class="font-mono text-xs text-base-content/55">{selectedClass.code}</p>
-							<h2 class="text-xl leading-snug font-semibold text-balance text-base-content">
+							<p class="font-mono text-xs text-foreground/55">{selectedClass.code}</p>
+							<h2 class="text-xl leading-snug font-semibold text-balance text-foreground">
 								{selectedClass.name}
 							</h2>
 						</div>
-						<a
+						<Button
 							href={resolve('/classes/[classId]/tests/new', { classId: selectedClass._id })}
-							class="btn btn-primary btn-soft btn-sm order-last min-h-11 w-full rounded-full sm:order-none sm:min-h-8 sm:w-auto"
+							variant="soft"
+							tone="primary"
+							size="sm"
+							class="order-last min-h-11 w-full sm:order-none sm:min-h-8 sm:w-auto"
 						>
 							<ClipboardCheck size={16} /> Test yourself
-						</a>
+						</Button>
 						{#if selectedClass.description}
 							<div class="w-full">
 								{#key selectedClass.description}
 									<ClampedText
 										text={selectedClass.description}
-										class="max-w-3xl text-sm leading-relaxed text-base-content/65"
+										class="max-w-3xl text-sm leading-relaxed text-foreground/65"
 									/>
 								{/key}
 							</div>
@@ -472,7 +480,7 @@
 
 					{#if sortedModules.length > 0 || selectedSummary?.modules}
 						<div class="mb-2 flex min-h-11 items-center justify-between gap-3 sm:min-h-8">
-							<p class="text-xs text-base-content/60 tabular-nums">
+							<p class="text-xs text-foreground/60 tabular-nums">
 								{#if selectedSummary?.modules}
 									{selectedSummary.started} of {selectedSummary.modules}
 									{selectedSummary.modules === 1 ? 'module' : 'modules'} started
@@ -480,49 +488,52 @@
 								{/if}
 							</p>
 							{#if sortedModules.length > 0}
-								<button
+								<Button
+									variant="ghost"
+									tone="neutral"
+									size="sm"
+									class="min-h-11 text-foreground/60 sm:min-h-8"
 									onclick={() => (resetOpen = true)}
-									class="btn btn-ghost btn-sm min-h-11 rounded-full text-base-content/60 sm:min-h-8"
 								>
 									<RotateCcw size={14} /> Reset all
-								</button>
+								</Button>
 							{/if}
 						</div>
 					{/if}
 
 					{#if modules.isLoading}
-						<div class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
+						<div class="overflow-hidden rounded-2xl border border-border bg-background">
 							{#each Array(5), index (index)}
 								<div
-									class="flex items-center gap-4 border-b border-base-300 px-4 py-4 last:border-b-0"
+									class="flex items-center gap-4 border-b border-border px-4 py-4 last:border-b-0"
 								>
-									<div class="skeleton h-3 w-5"></div>
-									<div class="skeleton size-7 rounded-lg"></div>
+									<Skeleton class="h-3 w-5" />
+									<Skeleton class="size-7 rounded-lg" />
 									<div class="flex-1 space-y-2">
-										<div class="skeleton h-4 w-1/2"></div>
-										<div class="skeleton h-3 w-24"></div>
+										<Skeleton class="h-4 w-1/2" />
+										<Skeleton class="h-3 w-24" />
 									</div>
-									<div class="skeleton hidden h-1.5 w-28 rounded-full md:block"></div>
+									<Skeleton class="hidden h-1.5 w-28 rounded-full md:block" />
 								</div>
 							{/each}
 						</div>
 					{:else if modules.error}
-						<div class="alert alert-error rounded-2xl shadow-xs border border-error/20">
-							<span>Failed to load modules: {modules.error.toString()}</span>
-						</div>
+						<Alert.Root tone="error" class="rounded-2xl shadow-xs">
+							<Alert.Title>Failed to load modules: {modules.error.toString()}</Alert.Title>
+						</Alert.Root>
 					{:else if !modules.data || modules.data.length === 0}
-						<div class="rounded-2xl bg-base-100 shadow-xs border border-base-300 p-8">
+						<div class="rounded-2xl bg-background shadow-xs border border-border p-8">
 							<div class="text-center py-8">
 								<div class="text-5xl mb-4">📚</div>
-								<h3 class="text-lg font-semibold mb-2 text-base-content">No modules yet</h3>
-								<p class="text-base-content/60 text-sm">
+								<h3 class="text-lg font-semibold mb-2 text-foreground">No modules yet</h3>
+								<p class="text-foreground/60 text-sm">
 									Modules will appear here once they are added to this class.
 								</p>
 							</div>
 						</div>
 					{:else}
 						<ol
-							class="divide-y divide-base-300 overflow-hidden rounded-2xl border border-base-300 bg-base-100"
+							class="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-background"
 							aria-label="Modules in {selectedClass.name}"
 						>
 							{#each sortedModules as module, i (module._id)}

@@ -33,8 +33,8 @@
 		mastered: 'bg-emerald-800 text-white',
 		correct: 'bg-success/20 text-success',
 		incorrect: 'bg-error/20 text-error',
-		answered: 'bg-accent/20 text-base-content',
-		unanswered: 'bg-base-200 text-base-content/70'
+		answered: 'bg-accent/20 text-foreground',
+		unanswered: 'bg-muted text-foreground/70'
 	};
 	const LEGEND: Record<NavigatorStatus, string> = {
 		mastered: 'Mastered',
@@ -84,7 +84,7 @@
 						class="relative grid h-11 w-full place-items-center rounded-xl text-sm font-semibold tabular-nums transition-transform active:scale-95 {CELL[
 							item.status
 						]} {index === currentIndex
-							? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100'
+							? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
 							: ''}"
 						aria-current={index === currentIndex}
 						aria-label="Question {index + 1}, {LEGEND[item.status].toLowerCase()}{item.flagged
@@ -95,7 +95,7 @@
 						{index + 1}
 						{#if item.flagged}
 							<span
-								class="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-warning ring-2 ring-base-100"
+								class="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-warning ring-2 ring-background"
 								aria-hidden="true"
 							></span>
 						{/if}
@@ -104,14 +104,11 @@
 			{/each}
 		</ol>
 	{:else}
-		<p class="py-6 text-center text-sm text-base-content/60">No questions match this filter.</p>
+		<p class="py-6 text-center text-sm text-foreground/60">No questions match this filter.</p>
 	{/if}
 
 	{#if present.length > 1 || anyFlagged}
-		<ul
-			class="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-base-content/60"
-			aria-hidden="true"
-		>
+		<ul class="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-foreground/60" aria-hidden="true">
 			{#each present as status (status)}
 				<li class="flex items-center gap-1.5">
 					<span class="size-3 rounded-[4px] {CELL[status]}"></span>{LEGEND[status]}

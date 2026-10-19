@@ -3,6 +3,7 @@
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import { getPostHog } from '$lib/analytics/posthogClient';
+	import { Button } from '$lib/components/ui/button';
 	import { questionTypeLabel } from './questionStudioTypes';
 	import type { CandidateQuestion } from './questionStudioTypes';
 	import type { CandidateReview } from './questionStudioRun';
@@ -88,18 +89,20 @@
 	}
 </script>
 
-<section class="border-t border-base-300 {compact ? 'pt-4' : 'pt-6'}">
+<section class="border-t border-border {compact ? 'pt-4' : 'pt-6'}">
 	<h3 class="mb-2 text-sm font-semibold">Why this question</h3>
-	<div class="space-y-2 text-sm leading-relaxed text-base-content/70">
+	<div class="space-y-2 text-sm leading-relaxed text-foreground/70">
 		<p>{intent}</p>
 		{#if checks}<p>{checks}</p>{/if}
 		<div class="flex flex-wrap items-center gap-1.5">
 			{#if citations.length}
 				<span>From</span>
 				{#each citations as citation, citationIndex (`${citation.citationId}:${citationIndex}`)}
-					<button
-						type="button"
-						class="btn btn-ghost btn-xs gap-1 rounded-full border border-base-300 font-normal"
+					<Button
+						variant="outline"
+						tone="neutral"
+						size="xs"
+						class="gap-1 font-normal"
 						title={citation.quote || `Open the document at page ${citation.pageNumber}`}
 						disabled={openingCitationId !== null}
 						onclick={() => openEvidence(citation.citationId, citation.pageNumber)}
@@ -110,14 +113,14 @@
 							<FileText size={11} />
 						{/if}
 						page {citation.pageNumber}
-					</button>
+					</Button>
 				{/each}
 			{:else}
-				<span class="text-base-content/45">No page reference was attached.</span>
+				<span class="text-foreground/45">No page reference was attached.</span>
 			{/if}
 		</div>
 		{#if evidenceError}
-			<p class="text-xs text-error" role="alert">{evidenceError}</p>
+			<p class="text-xs text-error-ink" role="alert">{evidenceError}</p>
 		{/if}
 	</div>
 </section>

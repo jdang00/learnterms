@@ -1,7 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { untrack } from 'svelte';
+	import { Dialog } from 'bits-ui';
 	import { X } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
 	import { sheetDrag } from '$lib/utils/sheetDrag';
+	import { cn } from '$lib/utils.js';
 
 	// A bottom sheet on phones (drag the handle down to dismiss, up to expand when allowed)
 	// and a centered dialog from sm up unless `desktop` says otherwise.
@@ -31,22 +35,22 @@
 		children: Snippet;
 	} = $props();
 
-	const uid = $props.id();
-	let dialog: HTMLDialogElement;
 	let offset = $state(0);
 	let dragging = $state(false);
+	let wasOpen = false;
 
+	// Fire onclose for every close, whether the user dismissed it or the parent set open = false.
 	$effect(() => {
-		if (open && !dialog.open) dialog.showModal();
-		else if (!open && dialog.open) dialog.close();
+		const isOpen = open;
+		untrack(() => {
+			if (wasOpen && !isOpen) {
+				offset = 0;
+				expanded = false;
+				onclose?.();
+			}
+			wasOpen = isOpen;
+		});
 	});
-
-	function handleClose() {
-		offset = 0;
-		expanded = false;
-		if (open) open = false;
-		onclose?.();
-	}
 
 	const isPhone = () => desktop === 'bottom' || !matchMedia('(min-width: 640px)').matches;
 
@@ -68,65 +72,77 @@
 			}
 		}
 	};
+
+	const centered = $derived(desktop === 'center');
 </script>
 
-<dialog
-	bind:this={dialog}
-	class="modal modal-bottom {desktop === 'center' ? 'sm:modal-middle' : ''}"
-	aria-labelledby="{uid}-title"
-	aria-describedby={description ? `${uid}-description` : undefined}
-	onclose={handleClose}
->
-	<div
-		class="modal-box flex flex-col overflow-hidden p-0 rounded-t-3xl {desktop === 'center'
-			? 'sm:rounded-2xl'
-			: ''} {width} {expanded
-			? 'h-[92dvh] max-h-[92dvh]'
-			: expandable
-				? 'max-h-[60dvh]'
-				: 'max-h-[85dvh]'}"
-		style:translate={offset ? `0 ${offset}px` : undefined}
-		style:transition={dragging ? 'none' : 'translate 200ms ease-out, height 200ms ease-out'}
-	>
-		<header class="shrink-0 px-5 pt-2" use:sheetDrag={drag}>
-			<div
-				class="mx-auto mb-1 h-1.5 w-10 rounded-full bg-base-300 {desktop === 'center'
-					? 'sm:hidden'
-					: ''}"
-				aria-hidden="true"
-			></div>
-			<div class="flex min-h-11 items-center justify-between gap-2">
-				<div class="min-w-0">
-					<h2 id="{uid}-title" class="truncate text-lg font-semibold">{title}</h2>
-					{#if description}
-						<p id="{uid}-description" class="text-sm text-base-content/60">{description}</p>
-					{/if}
+<Dialog.Root bind:open>
+	<Dialog.Portal>
+		<Dialog.Overlay
+			class="fixed inset-0 z-50 bg-black/40 duration-200 supports-backdrop-filter:backdrop-blur-[2px] data-closed:animate-out data-closed:fade-out-0 data-open:animate-in data-open:fade-in-0"
+		/>
+		<Dialog.Content
+			class={cn(
+				'fixed inset-x-0 bottom-0 z-50 mx-auto flex w-full flex-col overflow-hidden rounded-t-3xl border border-b-0 border-border bg-popover text-popover-foreground shadow-2xl shadow-black/15 outline-none',
+				'duration-200 data-closed:animate-out data-closed:slide-out-to-bottom data-open:animate-in data-open:slide-in-from-bottom',
+				centered &&
+					'sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 sm:rounded-3xl sm:border-b sm:data-closed:fade-out-0 sm:data-closed:slide-out-to-bottom-4 sm:data-closed:zoom-out-95 sm:data-open:fade-in-0 sm:data-open:slide-in-from-bottom-4 sm:data-open:zoom-in-95',
+				width,
+				expanded ? 'h-[92dvh] max-h-[92dvh]' : expandable ? 'max-h-[60dvh]' : 'max-h-[85dvh]'
+			)}
+			style="{offset ? `translate: 0 ${offset}px;` : ''} transition: {dragging
+				? 'none'
+				: 'translate 200ms ease-out, height 200ms ease-out'};"
+		>
+			<header class="shrink-0 px-5 pt-2" use:sheetDrag={drag}>
+				<div
+					class={cn(
+						'mx-auto mb-1 h-1.5 w-10 rounded-full bg-muted-strong',
+						centered && 'sm:hidden'
+					)}
+					aria-hidden="true"
+				></div>
+				<div class="flex min-h-11 items-center justify-between gap-2">
+					<div class="min-w-0">
+						<Dialog.Title class="truncate text-lg font-semibold">{title}</Dialog.Title>
+						{#if description}
+							<Dialog.Description class="text-sm text-muted-foreground">
+								{description}
+							</Dialog.Description>
+						{/if}
+					</div>
+					<div class="flex shrink-0 items-center gap-1">
+						{@render actions?.()}
+						<Dialog.Close>
+							{#snippet child({ props })}
+								<Button
+									{...props}
+									variant="ghost"
+									tone="neutral"
+									shape="circle"
+									class="-me-2 size-11"
+									aria-label="Close {title}"
+								>
+									<X size={18} />
+								</Button>
+							{/snippet}
+						</Dialog.Close>
+					</div>
 				</div>
-				<div class="flex shrink-0 items-center gap-1">
-					{@render actions?.()}
-					<form method="dialog">
-						<button class="btn btn-ghost btn-circle size-11 -me-2" aria-label="Close {title}">
-							<X size={18} />
-						</button>
-					</form>
-				</div>
+			</header>
+			<div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4">
+				{@render children()}
 			</div>
-		</header>
-		<div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4">
-			{@render children()}
-		</div>
-		{#if footer}
-			<footer
-				class="shrink-0 border-t border-base-300 px-5 pt-3"
-				style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));"
-			>
-				{@render footer()}
-			</footer>
-		{:else}
-			<div class="shrink-0" style="height: env(safe-area-inset-bottom, 0px);"></div>
-		{/if}
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button tabindex="-1" aria-label="Close {title}">close</button>
-	</form>
-</dialog>
+			{#if footer}
+				<footer
+					class="shrink-0 border-t border-border px-5 pt-3"
+					style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));"
+				>
+					{@render footer()}
+				</footer>
+			{:else}
+				<div class="shrink-0" style="height: env(safe-area-inset-bottom, 0px);"></div>
+			{/if}
+		</Dialog.Content>
+	</Dialog.Portal>
+</Dialog.Root>

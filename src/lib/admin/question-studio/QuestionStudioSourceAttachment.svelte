@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { ChevronDown, FileText, Paperclip, X } from 'lucide-svelte';
-	import { tokenClass } from './questionStudioToken';
 	import RagDocumentBrowser from '../source/RagDocumentBrowser.svelte';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '$lib/components/ui/button';
+	import { Alert } from '$lib/components/ui/alert';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import type { Id } from '../../../convex/_generated/dataModel';
 
 	interface Props {
@@ -37,25 +40,30 @@
 	});
 </script>
 
-<button
-	type="button"
-	class={tokenClass(Boolean(selectedDocumentId))}
+<Button
+	variant={selectedDocumentId ? 'soft' : 'dash'}
+	tone="neutral"
+	size="lg"
+	class="mx-1.5 max-w-full gap-2 px-5 align-middle font-medium"
 	disabled={!cohortId || cohortLoading}
 	title={selectedDocumentId ? 'Change document' : undefined}
 	onclick={() => (open = true)}
 >
 	{#if selectedDocumentId}
-		<FileText size={16} class="shrink-0 text-base-content/60" />
+		<FileText size={16} class="shrink-0 text-foreground/60" />
 	{:else}
 		<Paperclip size={16} class="shrink-0" />
 	{/if}
 	<span class="truncate">{selectedDocumentId ? attachedTitle : 'a document'}</span>
 	<ChevronDown size={15} class="shrink-0 opacity-60" />
-</button>
+</Button>
 
-<dialog class="modal" class:modal-open={open}>
-	<div class="modal-box flex h-[72vh] max-w-2xl flex-col overflow-hidden rounded-2xl p-0">
-		<div class="flex shrink-0 items-center justify-between border-b border-base-300 px-4 py-3">
+<Dialog.Root bind:open>
+	<Dialog.Content
+		showCloseButton={false}
+		class="flex h-[72vh] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-2xl"
+	>
+		<div class="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
 			<div class="flex items-center gap-2">
 				<span
 					class="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary"
@@ -63,50 +71,44 @@
 					<Paperclip size={16} />
 				</span>
 				<div>
-					<h3 class="text-sm font-semibold">
+					<Dialog.Title class="text-sm font-semibold">
 						{selectedDocumentId ? 'Change document' : 'Choose a document'}
-					</h3>
-					<p class="text-xs text-base-content/50">
+					</Dialog.Title>
+					<Dialog.Description class="text-xs text-foreground/50">
 						The agent writes only from what's in this document.
-					</p>
+					</Dialog.Description>
 				</div>
 			</div>
 			<div class="flex items-center gap-1">
 				{#if selectedDocumentId}
-					<button type="button" class="btn btn-ghost btn-sm rounded-full" onclick={detach}>
-						Remove document
-					</button>
+					<Button variant="ghost" tone="neutral" size="sm" onclick={detach}>Remove document</Button>
 				{/if}
-				<button
-					type="button"
-					class="btn btn-ghost btn-sm btn-circle"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape="circle"
 					aria-label="Close"
 					onclick={() => (open = false)}
 				>
 					<X size={16} />
-				</button>
+				</Button>
 			</div>
 		</div>
 		<div class="min-h-0 flex-1 overflow-hidden">
 			{#if cohortLoading}
 				<div class="space-y-2 p-4">
 					{#each Array.from({ length: 5 }, (_, i) => i) as i (i)}
-						<div class="skeleton h-16 w-full rounded-2xl"></div>
+						<Skeleton class="h-16 w-full rounded-2xl" />
 					{/each}
 				</div>
 			{:else if !cohortId}
 				<div class="p-4">
-					<div class="alert alert-warning rounded-2xl text-sm">No cohort assigned</div>
+					<Alert tone="warning" class="rounded-2xl text-sm">No cohort assigned</Alert>
 				</div>
 			{:else}
 				<RagDocumentBrowser {cohortId} bind:selectedDocumentId bind:selectedSourceSummary />
 			{/if}
 		</div>
-	</div>
-	<button
-		type="button"
-		class="modal-backdrop bg-black/40"
-		aria-label="Close"
-		onclick={() => (open = false)}
-	></button>
-</dialog>
+	</Dialog.Content>
+</Dialog.Root>

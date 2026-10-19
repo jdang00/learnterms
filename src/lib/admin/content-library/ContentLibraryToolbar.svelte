@@ -9,6 +9,10 @@
 		Search,
 		X
 	} from 'lucide-svelte';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as InputGroup from '$lib/components/ui/input-group';
 	import { sortOptions, type SortKey, type ViewMode } from './contentLibrary';
 
 	let {
@@ -31,63 +35,67 @@
 </script>
 
 <div
-	class="mb-5 flex flex-wrap items-center gap-2 rounded-2xl border border-base-300 bg-base-100 p-2.5"
+	class="mb-5 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-background p-2.5"
 >
-	<label class="input input-sm input-bordered flex w-full items-center gap-2 rounded-full sm:w-72">
-		<Search size={14} class="text-base-content/50" />
-		<input class="grow" placeholder="Search files..." bind:value={searchTerm} />
+	<InputGroup.Root class="h-8 w-full sm:w-72">
+		<InputGroup.Addon>
+			<Search size={14} class="text-foreground/50" />
+		</InputGroup.Addon>
+		<InputGroup.Input
+			class="h-8 px-3 text-sm"
+			placeholder="Search files..."
+			bind:value={searchTerm}
+		/>
 		{#if searchTerm}
 			<button
-				class="text-base-content/40 hover:text-base-content"
+				class="me-2 text-foreground/40 hover:text-foreground"
 				onclick={() => (searchTerm = '')}
 				aria-label="Clear search"
 			>
 				<X size={14} />
 			</button>
 		{/if}
-	</label>
+	</InputGroup.Root>
 
 	{#if searchTerm && filteredCount !== totalDocs}
-		<span class="badge badge-ghost badge-sm gap-1.5">
+		<Badge class="gap-1.5">
 			{filteredCount} of {totalDocs}
-		</span>
+		</Badge>
 	{/if}
 
 	<div class="flex-1"></div>
 
-	<div class="dropdown dropdown-end">
-		<div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-1.5 rounded-full font-normal">
-			<ArrowDownUp size={14} class="text-base-content/60" />
-			<span class="hidden text-xs sm:inline">{sortLabel}</span>
-			<ChevronDown size={13} class="text-base-content/50" />
-		</div>
-		<ul
-			class="dropdown-content menu z-30 mt-2 w-52 rounded-xl border border-base-300 bg-base-100 p-1.5 shadow-lg"
-		>
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger>
+			{#snippet child({ props })}
+				<Button {...props} variant="ghost" tone="neutral" size="sm" class="gap-1.5 font-normal">
+					<ArrowDownUp size={14} class="text-foreground/60" />
+					<span class="hidden text-xs sm:inline">{sortLabel}</span>
+					<ChevronDown size={13} class="text-foreground/50" />
+				</Button>
+			{/snippet}
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content align="end" class="w-52">
 			{#each sortOptions as option (option.key)}
-				<li>
-					<button
-						class="flex items-center justify-between rounded-lg text-sm {sortKey === option.key
-							? 'bg-primary/10 text-primary'
-							: ''}"
-						onclick={() => {
-							sortKey = option.key;
-							if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-						}}
-					>
-						{option.label}
-						{#if sortKey === option.key}<Check size={14} />{/if}
-					</button>
-				</li>
+				<DropdownMenu.Item
+					class="justify-between {sortKey === option.key ? 'bg-primary/10 text-primary' : ''}"
+					onSelect={() => {
+						sortKey = option.key;
+						if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+					}}
+				>
+					{option.label}
+					{#if sortKey === option.key}<Check size={14} />{/if}
+				</DropdownMenu.Item>
 			{/each}
-		</ul>
-	</div>
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
 
-	<div class="inline-flex items-center rounded-full bg-base-200 p-1">
+	<div class="inline-flex items-center rounded-full bg-muted p-1">
 		<button
 			class="rounded-full p-1.5 transition-colors {viewMode === 'grid'
-				? 'bg-base-100 text-base-content shadow-sm'
-				: 'text-base-content/50 hover:text-base-content'}"
+				? 'bg-background text-foreground shadow-sm'
+				: 'text-foreground/50 hover:text-foreground'}"
 			onclick={() => (viewMode = 'grid')}
 			aria-label="Grid view"
 			title="Grid view"
@@ -96,8 +104,8 @@
 		</button>
 		<button
 			class="rounded-full p-1.5 transition-colors {viewMode === 'list'
-				? 'bg-base-100 text-base-content shadow-sm'
-				: 'text-base-content/50 hover:text-base-content'}"
+				? 'bg-background text-foreground shadow-sm'
+				: 'text-foreground/50 hover:text-foreground'}"
 			onclick={() => (viewMode = 'list')}
 			aria-label="List view"
 			title="List view"
@@ -106,12 +114,8 @@
 		</button>
 	</div>
 
-	<button
-		class="btn btn-primary btn-sm gap-2 rounded-full"
-		onclick={onAdd}
-		aria-label="Upload PDFs"
-	>
+	<Button size="sm" class="gap-2" onclick={onAdd} aria-label="Upload PDFs">
 		<Plus size={15} />
 		<span class="hidden sm:inline">Upload PDFs</span>
-	</button>
+	</Button>
 </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Eye, EyeOff, GripVertical, Plus, TriangleAlert } from 'lucide-svelte';
 	import type { QuickLinkItem } from '$lib/components/power-bar/types';
+	import { Button } from '$lib/components/ui/button';
 	type LinkCategory = 'visible' | 'hidden';
 	let {
 		draftLinks = $bindable(),
@@ -52,9 +53,9 @@
 </script>
 
 <!-- Master: list rail -->
-<div class="flex min-h-0 flex-col border-b border-base-300 md:border-b-0 md:border-r">
+<div class="flex min-h-0 flex-col border-b border-border md:border-b-0 md:border-r">
 	<div class="px-4 pt-4 pb-2">
-		<span class="text-[11px] font-semibold uppercase tracking-wider text-base-content/45">
+		<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/45">
 			{draftLinks.length} of 12
 		</span>
 	</div>
@@ -78,10 +79,10 @@
 			}}
 		>
 			<div class="mb-1 flex items-center justify-between px-2">
-				<span class="text-[11px] font-semibold uppercase tracking-wider text-base-content/45">
+				<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/45">
 					Shown
 				</span>
-				<span class="text-[10px] text-base-content/35">{visibleLinks.length}</span>
+				<span class="text-[10px] text-foreground/35">{visibleLinks.length}</span>
 			</div>
 			<div class="space-y-1">
 				{#each visibleLinks as item (item.index)}
@@ -121,16 +122,16 @@
 						class="group flex w-full cursor-pointer items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition-all duration-150
 											{index === selectedIndex
 							? 'border-primary/40 bg-primary/10 shadow-xs'
-							: 'border-transparent hover:bg-base-200/70'}
+							: 'border-transparent hover:bg-muted/70'}
 											{dragOverIndex === index && dragIndex !== index ? 'border-primary/60 border-dashed' : ''}
 											{dragIndex === index ? 'opacity-40' : ''}"
 					>
 						<GripVertical
 							size={15}
-							class="shrink-0 cursor-grab text-base-content/25 transition group-hover:text-base-content/45"
+							class="shrink-0 cursor-grab text-foreground/25 transition group-hover:text-foreground/45"
 						/>
 						<span
-							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-200 text-base"
+							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-base"
 						>
 							{link.icon || '🔗'}
 						</span>
@@ -144,8 +145,12 @@
 								<TriangleAlert size={14} />
 							</span>
 						{/if}
-						<button
-							class="btn btn-ghost btn-xs btn-circle shrink-0 opacity-0 transition group-hover:opacity-100"
+						<Button
+							variant="ghost"
+							tone="neutral"
+							size="xs"
+							shape="circle"
+							class="shrink-0 opacity-0 transition group-hover:opacity-100"
 							onclick={(event) => {
 								event.stopPropagation();
 								setLinkHidden(index, true);
@@ -153,7 +158,7 @@
 							aria-label="Hide link"
 						>
 							<EyeOff size={14} />
-						</button>
+						</Button>
 					</div>
 				{/each}
 			</div>
@@ -162,7 +167,7 @@
 		<div
 			role="list"
 			aria-label="Hidden quick links"
-			class="mt-3 rounded-2xl border border-base-300/60 bg-base-200/35 p-1 transition
+			class="mt-3 rounded-2xl border border-border/60 bg-muted/35 p-1 transition
 								{dragOverCategory === 'hidden' ? 'border-primary/50 bg-primary/5' : ''}"
 			ondragover={(event) => {
 				event.preventDefault();
@@ -177,14 +182,14 @@
 			}}
 		>
 			<div class="mb-1 flex items-center justify-between px-2">
-				<span class="text-[11px] font-semibold uppercase tracking-wider text-base-content/45">
+				<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/45">
 					Hidden
 				</span>
-				<span class="text-[10px] text-base-content/35">{hiddenLinks.length}</span>
+				<span class="text-[10px] text-foreground/35">{hiddenLinks.length}</span>
 			</div>
 			{#if hiddenLinks.length === 0}
 				<div
-					class="rounded-xl border border-dashed border-base-300 px-3 py-4 text-center text-xs text-base-content/40"
+					class="rounded-xl border border-dashed border-border px-3 py-4 text-center text-xs text-foreground/40"
 				>
 					Drag links here to hide them.
 				</div>
@@ -227,16 +232,16 @@
 							class="group flex w-full cursor-pointer items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left opacity-80 transition-all duration-150
 												{index === selectedIndex
 								? 'border-primary/40 bg-primary/10 shadow-xs opacity-100'
-								: 'border-transparent hover:bg-base-100/70 hover:opacity-100'}
+								: 'border-transparent hover:bg-background/70 hover:opacity-100'}
 												{dragOverIndex === index && dragIndex !== index ? 'border-primary/60 border-dashed' : ''}
 												{dragIndex === index ? 'opacity-40' : ''}"
 						>
 							<GripVertical
 								size={15}
-								class="shrink-0 cursor-grab text-base-content/25 transition group-hover:text-base-content/45"
+								class="shrink-0 cursor-grab text-foreground/25 transition group-hover:text-foreground/45"
 							/>
 							<span
-								class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-300 text-base grayscale"
+								class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted-strong text-base grayscale"
 							>
 								{link.icon || '🔗'}
 							</span>
@@ -250,8 +255,12 @@
 									<TriangleAlert size={14} />
 								</span>
 							{/if}
-							<button
-								class="btn btn-ghost btn-xs btn-circle shrink-0 opacity-0 transition group-hover:opacity-100"
+							<Button
+								variant="ghost"
+								tone="neutral"
+								size="xs"
+								shape="circle"
+								class="shrink-0 opacity-0 transition group-hover:opacity-100"
 								onclick={(event) => {
 									event.stopPropagation();
 									setLinkHidden(index, false);
@@ -259,7 +268,7 @@
 								aria-label="Show link"
 							>
 								<Eye size={14} />
-							</button>
+							</Button>
 						</div>
 					{/each}
 				</div>
@@ -267,14 +276,18 @@
 		</div>
 	</div>
 
-	<div class="border-t border-base-300 p-2">
-		<button
-			class="btn btn-ghost btn-sm w-full justify-start gap-2 rounded-xl"
+	<div class="border-t border-border p-2">
+		<Button
+			variant="ghost"
+			tone="neutral"
+			size="sm"
+			shape="rect"
+			class="w-full justify-start gap-2"
 			onclick={addLink}
 			disabled={draftLinks.length >= 12}
 		>
 			<Plus size={16} />
 			<span>Add quick link</span>
-		</button>
+		</Button>
 	</div>
 </div>

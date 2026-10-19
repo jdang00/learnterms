@@ -27,6 +27,9 @@
 		ArrowRight,
 		CircleDot
 	} from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Textarea } from '$lib/components/ui/textarea';
 
 	type ChatMessage = {
 		role: 'assistant' | 'user';
@@ -374,18 +377,21 @@ TODO: Review pressure-volume loops before exam...`;
 	<div class="relative z-10 flex flex-col h-[calc(100dvh-4rem)] overflow-hidden">
 		<!-- Top Bar -->
 		<div
-			class="flex items-center justify-between px-4 py-2.5 border-b border-base-300/50 bg-base-100/80 backdrop-blur-xl"
+			class="flex items-center justify-between px-4 py-2.5 border-b border-border/50 bg-background/80 backdrop-blur-xl"
 			in:fade={{ duration: 400 }}
 		>
 			<div class="flex items-center gap-3">
-				<a
+				<Button
 					href={resolve('/classes')}
-					class="btn btn-sm btn-ghost rounded-full hover:bg-base-200/80"
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					class="hover:bg-muted/80"
 					aria-label="Back to classes"
 				>
 					<ArrowLeft size={16} />
-				</a>
-				<div class="h-5 w-px bg-base-300"></div>
+				</Button>
+				<div class="h-5 w-px bg-muted-strong"></div>
 				<div class="flex items-center gap-2.5">
 					<div
 						class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center"
@@ -393,38 +399,46 @@ TODO: Review pressure-volume loops before exam...`;
 						<span class="text-sm">❤️</span>
 					</div>
 					<div>
-						<h1 class="font-display text-sm font-semibold text-base-content leading-tight">
+						<h1 class="font-display text-sm font-semibold text-foreground leading-tight">
 							Cardiovascular System
 						</h1>
-						<p class="text-[11px] text-base-content/45">
-							BIO 301 · 5 sources · Last studied 2h ago
-						</p>
+						<p class="text-[11px] text-foreground/45">BIO 301 · 5 sources · Last studied 2h ago</p>
 					</div>
 				</div>
 			</div>
 
 			<div class="flex items-center gap-1.5">
-				<button
-					class="btn btn-sm btn-ghost rounded-full gap-1.5 text-base-content/60 hover:text-base-content"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					class="text-foreground/60 hover:text-foreground"
 					onclick={() => (leftPanelOpen = !leftPanelOpen)}
 					aria-label="Toggle left panel"
 				>
 					<PanelLeftClose size={15} />
-				</button>
-				<button
-					class="btn btn-sm btn-ghost rounded-full gap-1.5 text-base-content/60 hover:text-base-content"
+				</Button>
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					class="text-foreground/60 hover:text-foreground"
 					onclick={() => (rightPanelOpen = !rightPanelOpen)}
 					aria-label="Toggle right panel"
 				>
 					<PanelRightClose size={15} />
-				</button>
-				<div class="h-5 w-px bg-base-300 mx-1"></div>
-				<button
-					class="btn btn-sm btn-ghost btn-circle text-base-content/50"
+				</Button>
+				<div class="h-5 w-px bg-muted-strong mx-1"></div>
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape="circle"
+					class="text-foreground/50"
 					aria-label="Open settings"
 				>
 					<Settings size={15} />
-				</button>
+				</Button>
 			</div>
 		</div>
 
@@ -433,14 +447,14 @@ TODO: Review pressure-volume loops before exam...`;
 			<!-- LEFT PANEL: Sources & Notes -->
 			{#if leftPanelOpen}
 				<div
-					class="w-72 xl:w-80 border-r border-base-300/50 bg-base-100/60 backdrop-blur-xl flex flex-col shrink-0 overflow-hidden"
+					class="w-72 xl:w-80 border-r border-border/50 bg-background/60 backdrop-blur-xl flex flex-col shrink-0 overflow-hidden"
 					in:fly={{ x: -20, duration: 300, easing: cubicOut }}
 				>
 					<!-- Panel tabs -->
-					<div class="flex border-b border-base-300/50">
+					<div class="flex border-b border-border/50">
 						<button
 							class="flex-1 px-4 py-2.5 text-xs font-medium transition-colors duration-150 relative
-								{activeTab === 'sources' ? 'text-primary' : 'text-base-content/50 hover:text-base-content/80'}"
+								{activeTab === 'sources' ? 'text-primary-ink' : 'text-foreground/50 hover:text-foreground/80'}"
 							onclick={() => (activeTab = 'sources')}
 						>
 							Sources
@@ -450,7 +464,7 @@ TODO: Review pressure-volume loops before exam...`;
 						</button>
 						<button
 							class="flex-1 px-4 py-2.5 text-xs font-medium transition-colors duration-150 relative
-								{activeTab === 'notes' ? 'text-primary' : 'text-base-content/50 hover:text-base-content/80'}"
+								{activeTab === 'notes' ? 'text-primary-ink' : 'text-foreground/50 hover:text-foreground/80'}"
 							onclick={() => (activeTab = 'notes')}
 						>
 							My Notes
@@ -464,24 +478,22 @@ TODO: Review pressure-volume loops before exam...`;
 						<!-- Add sources area -->
 						<div class="p-3">
 							<button
-								class="group w-full flex items-center gap-3 rounded-xl border-2 border-dashed border-base-300 hover:border-primary/40 p-3 transition-all duration-200 hover:bg-primary/5"
+								class="group w-full flex items-center gap-3 rounded-xl border-2 border-dashed border-border hover:border-primary/40 p-3 transition-all duration-200 hover:bg-primary/5"
 								aria-label="Add source"
 							>
 								<div
-									class="w-9 h-9 rounded-lg bg-base-200 group-hover:bg-primary/15 flex items-center justify-center transition-all duration-200"
+									class="w-9 h-9 rounded-lg bg-muted group-hover:bg-primary/15 flex items-center justify-center transition-all duration-200"
 								>
 									<Plus
 										size={16}
-										class="text-base-content/40 group-hover:text-primary transition-colors"
+										class="text-foreground/40 group-hover:text-primary transition-colors"
 									/>
 								</div>
 								<div class="text-left">
-									<div
-										class="text-xs font-medium text-base-content/70 group-hover:text-base-content"
-									>
+									<div class="text-xs font-medium text-foreground/70 group-hover:text-foreground">
 										Add source
 									</div>
-									<div class="text-[10px] text-base-content/40">
+									<div class="text-[10px] text-foreground/40">
 										PDF, notes, slides, or paste text
 									</div>
 								</div>
@@ -495,7 +507,7 @@ TODO: Review pressure-volume loops before exam...`;
 									class="group w-full text-left rounded-xl p-2.5 transition-all duration-150
 										{selectedSource === source.id
 										? 'bg-primary/10 border border-primary/25'
-										: 'hover:bg-base-200/80 border border-transparent'}"
+										: 'hover:bg-muted/80 border border-transparent'}"
 									onclick={() => (selectedSource = selectedSource === source.id ? null : source.id)}
 									style="animation: sourceReveal 0.35s cubic-bezier(.16,1,.3,1) {i * 60 +
 										100}ms both;"
@@ -503,19 +515,18 @@ TODO: Review pressure-volume loops before exam...`;
 									<div class="flex items-start gap-2.5">
 										<span class="text-lg leading-none mt-0.5 shrink-0">{source.icon}</span>
 										<div class="flex-1 min-w-0">
-											<div class="text-xs font-medium text-base-content truncate leading-tight">
+											<div class="text-xs font-medium text-foreground truncate leading-tight">
 												{source.name}
 											</div>
 											<div class="flex items-center gap-1.5 mt-1">
-												<span
-													class="badge badge-xs badge-ghost rounded-full text-[10px] uppercase tracking-wider"
-													>{source.type}</span
+												<Badge size="xs" class="text-[10px] uppercase tracking-wider"
+													>{source.type}</Badge
 												>
-												<span class="text-[10px] text-base-content/35">{source.pages} pages</span>
+												<span class="text-[10px] text-foreground/35">{source.pages} pages</span>
 											</div>
 										</div>
 										<div class="opacity-0 group-hover:opacity-100 transition-opacity">
-											<MoreHorizontal size={14} class="text-base-content/30" />
+											<MoreHorizontal size={14} class="text-foreground/30" />
 										</div>
 									</div>
 								</button>
@@ -523,13 +534,13 @@ TODO: Review pressure-volume loops before exam...`;
 						</div>
 
 						<!-- Source count -->
-						<div class="p-3 border-t border-base-300/50">
+						<div class="p-3 border-t border-border/50">
 							<div class="flex items-center justify-between">
-								<span class="text-[11px] text-base-content/40"
+								<span class="text-[11px] text-foreground/40"
 									>{mockSources.length} sources loaded</span
 								>
 								<button
-									class="text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
+									class="text-[11px] text-primary-ink hover:text-primary-ink/80 font-medium transition-colors"
 								>
 									Manage
 								</button>
@@ -538,17 +549,17 @@ TODO: Review pressure-volume loops before exam...`;
 					{:else}
 						<!-- Notes tab -->
 						<div class="flex-1 p-3">
-							<div class="rounded-xl bg-base-200/50 border border-base-300/50 p-4 h-full">
+							<div class="rounded-xl bg-muted/50 border border-border/50 p-4 h-full">
 								<div class="flex items-center gap-2 mb-3">
-									<NotebookPen size={14} class="text-base-content/50" />
-									<span class="text-xs font-medium text-base-content/60">Quick Notes</span>
+									<NotebookPen size={14} class="text-foreground/50" />
+									<span class="text-xs font-medium text-foreground/60">Quick Notes</span>
 								</div>
-								<textarea
+								<Textarea
 									bind:value={quickNotes}
-									class="textarea min-h-[12rem] w-full resize-none border-0 bg-transparent px-0 text-xs leading-relaxed text-base-content/60 focus:outline-hidden"
+									class="min-h-[12rem] resize-none border-0 bg-transparent px-0 py-2 text-xs leading-relaxed text-foreground/60 field-sizing-fixed shadow-none focus-visible:ring-0"
 									placeholder="Capture quick study notes here..."
 									aria-label="Quick notes"
-								></textarea>
+								/>
 							</div>
 						</div>
 					{/if}
@@ -557,7 +568,7 @@ TODO: Review pressure-volume loops before exam...`;
 
 			<!-- CENTER: Chat / AI Assistant -->
 			<div
-				class="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-base-100/40 to-base-200/30 backdrop-blur-xs"
+				class="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-background/40 to-muted/30 backdrop-blur-xs"
 			>
 				<!-- Chat messages -->
 				<div class="flex-1 overflow-y-auto px-4 sm:px-8 lg:px-16 py-6">
@@ -579,8 +590,8 @@ TODO: Review pressure-volume loops before exam...`;
 								<div class="flex-1 max-w-[85%] {message.role === 'user' ? 'ml-auto' : ''}">
 									<div
 										class="rounded-2xl px-4 py-3 {message.role === 'user'
-											? 'bg-primary text-primary-content rounded-br-md'
-											: 'bg-base-100 border border-base-300/60 shadow-xs rounded-bl-md'}"
+											? 'bg-primary text-primary-foreground rounded-br-md'
+											: 'bg-background border border-border/60 shadow-xs rounded-bl-md'}"
 									>
 										<div
 											class="text-sm leading-relaxed whitespace-pre-line {message.role ===
@@ -603,23 +614,21 @@ TODO: Review pressure-volume loops before exam...`;
 										</div>
 
 										{#if message.role === 'assistant' && message.sources}
-											<div class="mt-3 pt-2.5 border-t border-base-300/40">
+											<div class="mt-3 pt-2.5 border-t border-border/40">
 												<div class="flex items-center gap-1.5 flex-wrap">
 													<span
-														class="text-[10px] text-base-content/35 uppercase tracking-wider font-medium"
+														class="text-[10px] text-foreground/35 uppercase tracking-wider font-medium"
 														>Sources:</span
 													>
 													{#each message.sources as src, i (`${src}-${i}`)}
-														<span class="badge badge-xs badge-ghost rounded-full text-[10px]"
-															>{src}</span
-														>
+														<Badge size="xs" class="text-[10px]">{src}</Badge>
 													{/each}
 												</div>
 											</div>
 										{/if}
 									</div>
 									<div class="mt-1 px-1 {message.role === 'user' ? 'text-right' : ''}">
-										<span class="text-[10px] text-base-content/30">{message.timestamp}</span>
+										<span class="text-[10px] text-foreground/30">{message.timestamp}</span>
 									</div>
 								</div>
 							</div>
@@ -630,18 +639,17 @@ TODO: Review pressure-volume loops before exam...`;
 							class="flex flex-col gap-2 mt-4"
 							style="animation: chatReveal 0.4s cubic-bezier(.16,1,.3,1) 600ms both;"
 						>
-							<span
-								class="text-[10px] text-base-content/35 uppercase tracking-wider font-medium px-1"
+							<span class="text-[10px] text-foreground/35 uppercase tracking-wider font-medium px-1"
 								>Suggested</span
 							>
 							<div class="flex flex-wrap gap-2">
 								{#each ['Explain pressure-volume loops', 'Quiz me on cardiac drugs', 'Compare systolic vs diastolic failure', 'Summarize Ch. 12 key points'] as suggestion (suggestion)}
 									<button
-										class="group flex items-center gap-1.5 rounded-full border border-base-300/60 bg-base-100/80 px-3.5 py-1.5 text-xs text-base-content/60 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all duration-200"
+										class="group flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 px-3.5 py-1.5 text-xs text-foreground/60 hover:border-primary/40 hover:text-primary-ink hover:bg-primary/5 transition-all duration-200"
 									>
 										<Zap
 											size={11}
-											class="text-base-content/30 group-hover:text-primary transition-colors"
+											class="text-foreground/30 group-hover:text-primary transition-colors"
 										/>
 										{suggestion}
 									</button>
@@ -653,44 +661,46 @@ TODO: Review pressure-volume loops before exam...`;
 
 				<!-- Input area -->
 				<div
-					class="border-t border-base-300/40 bg-base-100/70 backdrop-blur-xl px-4 sm:px-8 lg:px-16 py-4"
+					class="border-t border-border/40 bg-background/70 backdrop-blur-xl px-4 sm:px-8 lg:px-16 py-4"
 				>
 					<div class="max-w-2xl mx-auto">
 						<div
-							class="flex items-end gap-2 rounded-2xl bg-base-100 border border-base-300/60 shadow-xs p-2 focus-within:border-primary/40 focus-within:shadow-md transition-all duration-200"
+							class="flex items-end gap-2 rounded-2xl bg-background border border-border/60 shadow-xs p-2 focus-within:border-primary/40 focus-within:shadow-md transition-all duration-200"
 						>
-							<button
-								class="btn btn-sm btn-ghost btn-circle text-base-content/40 shrink-0 self-end"
-								aria-label="Add attachment"
+							<Button
+								variant="ghost"
+								tone="neutral"
+								size="sm"
+								shape="circle"
+								class="shrink-0 self-end text-foreground/40"
+								aria-label="Add attachment"><Plus size={16} /></Button
 							>
-								<Plus size={16} />
-							</button>
 							<div class="flex-1 min-h-[36px] max-h-32 overflow-y-auto">
 								<input
 									type="text"
 									bind:value={chatInput}
 									placeholder="Ask anything about your sources..."
-									class="w-full bg-transparent text-sm text-base-content placeholder:text-base-content/35 outline-hidden py-1.5 px-1"
+									class="w-full bg-transparent text-sm text-foreground placeholder:text-foreground/35 outline-hidden py-1.5 px-1"
 								/>
 							</div>
 							<div class="flex items-center gap-1 shrink-0 self-end">
-								<button
-									class="btn btn-sm btn-ghost btn-circle text-base-content/40"
-									aria-label="Start voice input"
+								<Button
+									variant="ghost"
+									tone="neutral"
+									size="sm"
+									shape="circle"
+									class="text-foreground/40"
+									aria-label="Start voice input"><Mic size={15} /></Button
 								>
-									<Mic size={15} />
-								</button>
-								<button
-									class="btn btn-sm btn-primary rounded-full px-3 gap-1 {chatInput.trim()
-										? ''
-										: 'btn-disabled opacity-40'}"
-									aria-label="Send message"
+								<Button
+									size="sm"
+									class="gap-1 px-3"
+									disabled={!chatInput.trim()}
+									aria-label="Send message"><Send size={13} /></Button
 								>
-									<Send size={13} />
-								</button>
 							</div>
 						</div>
-						<p class="text-[10px] text-base-content/30 text-center mt-2">
+						<p class="text-[10px] text-foreground/30 text-center mt-2">
 							AI responses are generated from your uploaded sources. Always verify important
 							information.
 						</p>
@@ -701,73 +711,75 @@ TODO: Review pressure-volume loops before exam...`;
 			<!-- RIGHT PANEL: Question Practice -->
 			{#if rightPanelOpen}
 				<div
-					class="w-80 xl:w-[22rem] border-l border-base-300/50 bg-base-100/60 backdrop-blur-xl flex flex-col shrink-0 overflow-hidden"
+					class="w-80 xl:w-[22rem] border-l border-border/50 bg-background/60 backdrop-blur-xl flex flex-col shrink-0 overflow-hidden"
 					in:fly={{ x: 20, duration: 300, easing: cubicOut }}
 				>
 					<!-- Panel header -->
-					<div class="flex items-center justify-between px-3.5 py-2.5 border-b border-base-300/50">
+					<div class="flex items-center justify-between px-3.5 py-2.5 border-b border-border/50">
 						<div class="flex items-center gap-2">
 							<div class="w-6 h-6 rounded-lg bg-primary/15 flex items-center justify-center">
 								<CircleDot size={12} class="text-primary" />
 							</div>
-							<span class="text-xs font-semibold text-base-content">Practice</span>
-							<span class="badge badge-xs badge-primary badge-soft rounded-full"
-								>{questions.length} Qs</span
-							>
+							<span class="text-xs font-semibold text-foreground">Practice</span>
+							<Badge tone="primary" size="xs">{questions.length} Qs</Badge>
 						</div>
 						<div class="flex items-center gap-1">
-							<button
-								class="btn btn-xs btn-ghost btn-circle text-base-content/40"
+							<Button
+								variant="ghost"
+								tone="neutral"
+								size="xs"
+								shape="circle"
+								class="text-foreground/40"
 								title="Shuffle"
-								aria-label="Shuffle questions"
+								aria-label="Shuffle questions"><Shuffle size={12} /></Button
 							>
-								<Shuffle size={12} />
-							</button>
-							<button
-								class="btn btn-xs btn-ghost btn-circle text-base-content/40"
+							<Button
+								variant="ghost"
+								tone="neutral"
+								size="xs"
+								shape="circle"
+								class="text-foreground/40"
 								title="Reset"
-								aria-label="Reset progress"
+								aria-label="Reset progress"><RotateCcw size={12} /></Button
 							>
-								<RotateCcw size={12} />
-							</button>
 						</div>
 					</div>
 
 					<!-- Question dots navigation -->
-					<div class="px-3.5 py-2 border-b border-base-300/30">
+					<div class="px-3.5 py-2 border-b border-border/30">
 						<div class="flex items-center gap-1">
 							{#each questions as q, i (q.id)}
 								<button
 									class="question-dot group relative flex-1 h-7 flex items-center justify-center rounded-lg text-[10px] font-semibold transition-all duration-200
 										{i === currentQuestionIndex
-										? 'bg-primary text-primary-content shadow-xs shadow-primary/25'
+										? 'bg-primary text-primary-foreground shadow-xs shadow-primary/25'
 										: q.interacted
-											? 'bg-success/15 text-success hover:bg-success/25'
-											: 'bg-base-200/80 text-base-content/40 hover:bg-base-300/80 hover:text-base-content/60'}"
+											? 'bg-success/15 text-success-ink hover:bg-success/25'
+											: 'bg-muted/80 text-foreground/40 hover:bg-muted-strong/80 hover:text-foreground/60'}"
 									onclick={() => goToQuestion(i)}
 									style="animation: dotReveal 0.25s cubic-bezier(.16,1,.3,1) {i * 40 + 100}ms both;"
 								>
 									{i + 1}
 									{#if q.flagged}
 										<div
-											class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-warning border border-base-100"
+											class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-warning border border-background"
 										></div>
 									{/if}
 								</button>
 							{/each}
 						</div>
 						<div class="flex items-center justify-between mt-1.5">
-							<span class="text-[10px] text-base-content/35"
+							<span class="text-[10px] text-foreground/35"
 								>{interactedCount}/{questions.length} touched</span
 							>
 							<div class="flex items-center gap-1.5">
-								<div class="h-1 w-12 rounded-full bg-base-300/60 overflow-hidden">
+								<div class="h-1 w-12 rounded-full bg-muted-strong/60 overflow-hidden">
 									<div
 										class="h-full rounded-full bg-success transition-all duration-500"
 										style="width: {progressPercent}%;"
 									></div>
 								</div>
-								<span class="text-[10px] font-medium text-success">{progressPercent}%</span>
+								<span class="text-[10px] font-medium text-success-ink">{progressPercent}%</span>
 							</div>
 						</div>
 					</div>
@@ -778,15 +790,13 @@ TODO: Review pressure-volume loops before exam...`;
 							<div style="animation: questionSlideIn 0.3s cubic-bezier(.16,1,.3,1) both;">
 								<!-- Context pill -->
 								<div class="flex items-center gap-1.5 mb-3">
-									<span
-										class="badge badge-xs badge-ghost rounded-full text-[9px] uppercase tracking-widest"
+									<Badge size="xs" class="text-[9px] uppercase tracking-widest"
+										>From: {currentQuestion.source}</Badge
 									>
-										From: {currentQuestion.source}
-									</span>
 								</div>
 
 								<!-- Stem -->
-								<p class="text-[13px] font-medium text-base-content leading-snug mb-4">
+								<p class="text-[13px] font-medium text-foreground leading-snug mb-4">
 									{currentQuestion.stem}
 								</p>
 
@@ -803,14 +813,14 @@ TODO: Review pressure-volume loops before exam...`;
 												type="button"
 												class="option-btn w-full text-left rounded-xl px-3 py-2.5 text-xs leading-snug transition-all duration-150 border
 														{state === 'selected'
-													? 'bg-primary/10 border-primary/40 text-base-content font-medium'
+													? 'bg-primary/10 border-primary/40 text-foreground font-medium'
 													: state === 'eliminated'
-														? 'bg-base-200/50 border-base-300/30 text-base-content/25 line-through'
+														? 'bg-muted/50 border-border/30 text-foreground/25 line-through'
 														: state === 'correct'
-															? 'bg-success/10 border-success/40 text-success font-medium'
+															? 'bg-success/10 border-success/40 text-success-ink font-medium'
 															: state === 'incorrect'
-																? 'bg-error/10 border-error/40 text-error font-medium'
-																: 'bg-base-100 border-base-300/50 text-base-content/80 hover:border-primary/30 hover:bg-primary/5'}"
+																? 'bg-error/10 border-error/40 text-error-ink font-medium'
+																: 'bg-background border-border/50 text-foreground/80 hover:border-primary/30 hover:bg-primary/5'}"
 												onclick={() => toggleOption(option.id)}
 												oncontextmenu={(e) => {
 													e.preventDefault();
@@ -821,14 +831,14 @@ TODO: Review pressure-volume loops before exam...`;
 													<span
 														class="shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold mt-px
 														{state === 'selected'
-															? 'bg-primary text-primary-content'
+															? 'bg-primary text-primary-foreground'
 															: state === 'correct'
-																? 'bg-success text-success-content'
+																? 'bg-success text-success-foreground'
 																: state === 'incorrect'
-																	? 'bg-error text-error-content'
+																	? 'bg-error text-error-foreground'
 																	: state === 'eliminated'
-																		? 'bg-base-300/50 text-base-content/20'
-																		: 'bg-base-200/80 text-base-content/50 group-hover:bg-primary/15 group-hover:text-primary'}
+																		? 'bg-muted-strong/50 text-foreground/20'
+																		: 'bg-muted/80 text-foreground/50 group-hover:bg-primary/15 group-hover:text-primary'}
 														transition-all duration-150"
 													>
 														{#if state === 'correct'}
@@ -847,8 +857,8 @@ TODO: Review pressure-volume loops before exam...`;
 											{#if !checkResult && state !== 'eliminated'}
 												<button
 													type="button"
-													class="absolute top-1/2 right-1.5 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-md border border-base-300/60
-															bg-base-100/90 text-base-content/45 shadow-xs transition-all duration-150 hover:border-warning/40 hover:bg-warning/10 hover:text-warning
+													class="absolute top-1/2 right-1.5 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-md border border-border/60
+															bg-background/90 text-foreground/45 shadow-xs transition-all duration-150 hover:border-warning/40 hover:bg-warning/10 hover:text-warning
 															focus-visible:border-warning/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/30"
 													onclick={() => toggleElimination(option.id)}
 													aria-label={`Eliminate option ${String.fromCharCode(65 + i)}`}
@@ -865,8 +875,8 @@ TODO: Review pressure-volume loops before exam...`;
 									<div
 										class="mt-3 rounded-xl px-3 py-2 text-xs font-semibold flex items-center gap-2
 											{checkResult === 'correct'
-											? 'bg-success/10 text-success border border-success/20'
-											: 'bg-error/10 text-error border border-error/20'}"
+											? 'bg-success/10 text-success-ink border border-success/20'
+											: 'bg-error/10 text-error-ink border border-error/20'}"
 										style="animation: resultPop 0.3s cubic-bezier(.34,1.56,.64,1) both;"
 									>
 										{#if checkResult === 'correct'}
@@ -882,17 +892,17 @@ TODO: Review pressure-volume loops before exam...`;
 								<!-- Rationale -->
 								{#if showRationale || checkResult === 'correct'}
 									<div
-										class="mt-3 rounded-xl bg-base-200/50 border border-base-300/40 p-3"
+										class="mt-3 rounded-xl bg-muted/50 border border-border/40 p-3"
 										style="animation: rationaleReveal 0.4s cubic-bezier(.16,1,.3,1) 0.15s both;"
 									>
 										<div class="flex items-center gap-1.5 mb-1.5">
-											<Eye size={11} class="text-base-content/40" />
+											<Eye size={11} class="text-foreground/40" />
 											<span
-												class="text-[10px] font-semibold text-base-content/50 uppercase tracking-wider"
+												class="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider"
 												>Rationale</span
 											>
 										</div>
-										<p class="text-[11px] text-base-content/65 leading-relaxed">
+										<p class="text-[11px] text-foreground/65 leading-relaxed">
 											{currentQuestion.rationale}
 										</p>
 									</div>
@@ -902,20 +912,29 @@ TODO: Review pressure-volume loops before exam...`;
 					</div>
 
 					<!-- Bottom action bar -->
-					<div class="px-3.5 py-2.5 border-t border-base-300/40 bg-base-100/80 backdrop-blur-xs">
+					<div class="px-3.5 py-2.5 border-t border-border/40 bg-background/80 backdrop-blur-xs">
 						<div class="flex items-center gap-1.5">
-							<button
-								class="btn btn-xs btn-ghost rounded-lg gap-1 text-base-content/50 hover:text-warning
-									{isFlagged ? 'text-warning bg-warning/10' : ''}"
+							<Button
+								variant="ghost"
+								tone="neutral"
+								size="xs"
+								shape="rect"
+								class="gap-1 text-foreground/50 hover:text-warning {isFlagged
+									? 'text-warning bg-warning/10'
+									: ''}"
 								onclick={toggleFlagged}
 								title="Flag question"
 								aria-label="Toggle flag"
 							>
 								<Flag size={12} class={isFlagged ? 'fill-warning' : ''} />
-							</button>
+							</Button>
 
-							<button
-								class="btn btn-xs btn-ghost rounded-lg gap-1 text-base-content/50"
+							<Button
+								variant="ghost"
+								tone="neutral"
+								size="xs"
+								shape="rect"
+								class="gap-1 text-foreground/50"
 								onclick={() => (showRationale = !showRationale)}
 								title="Toggle rationale"
 								aria-label="Toggle rationale"
@@ -925,50 +944,59 @@ TODO: Review pressure-volume loops before exam...`;
 								{:else}
 									<Eye size={12} />
 								{/if}
-							</button>
+							</Button>
 
 							<div class="flex-1"></div>
 
 							<div class="flex items-center gap-1">
-								<button
-									class="btn btn-xs btn-ghost btn-circle text-base-content/40 {currentQuestionIndex ===
-									0
-										? 'btn-disabled opacity-30'
-										: ''}"
+								<Button
+									variant="ghost"
+									tone="neutral"
+									size="xs"
+									shape="circle"
+									class="text-foreground/40"
+									disabled={currentQuestionIndex === 0}
 									onclick={prevQuestion}
 									aria-label="Previous question"
 								>
 									<ChevronLeft size={14} />
-								</button>
+								</Button>
 
 								{#if checkResult === 'correct' && currentQuestionIndex < questions.length - 1}
-									<button
-										class="btn btn-xs btn-primary rounded-lg px-3 font-semibold gap-1"
+									<Button
+										size="xs"
+										shape="rect"
+										class="gap-1 px-3 font-semibold"
 										onclick={nextQuestion}
 									>
 										Next
 										<ArrowRight size={11} />
-									</button>
+									</Button>
 								{:else}
-									<button
-										class="btn btn-xs btn-primary btn-soft rounded-lg px-3 font-semibold
-												{selectedOptions.length === 0 ? 'btn-disabled opacity-40' : ''}"
+									<Button
+										variant="soft"
+										size="xs"
+										shape="rect"
+										class="px-3 font-semibold"
+										disabled={selectedOptions.length === 0}
 										onclick={checkAnswer}
 									>
 										Check
-									</button>
+									</Button>
 								{/if}
 
-								<button
-									class="btn btn-xs btn-ghost btn-circle text-base-content/40 {currentQuestionIndex ===
-									questions.length - 1
-										? 'btn-disabled opacity-30'
-										: ''}"
+								<Button
+									variant="ghost"
+									tone="neutral"
+									size="xs"
+									shape="circle"
+									class="text-foreground/40"
+									disabled={currentQuestionIndex === questions.length - 1}
 									onclick={nextQuestion}
 									aria-label="Next question"
 								>
 									<ChevronRight size={14} />
-								</button>
+								</Button>
 							</div>
 						</div>
 					</div>
@@ -995,8 +1023,7 @@ TODO: Review pressure-volume loops before exam...`;
 		pointer-events: none;
 	}
 
-	:global([data-theme='dark']) .ambient-bg,
-	:global([data-theme='dracula']) .ambient-bg {
+	:global([data-theme='dark']) .ambient-bg {
 		background:
 			radial-gradient(ellipse at 10% 20%, oklch(0.3 0.06 280 / 0.2) 0%, transparent 50%),
 			radial-gradient(ellipse at 85% 80%, oklch(0.3 0.05 200 / 0.15) 0%, transparent 45%),

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { Minus, Plus } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 
 	interface Props {
 		value: number;
@@ -29,21 +31,24 @@
 </script>
 
 <div class="flex items-center {isLarge ? 'gap-1.5' : 'gap-1'}">
-	<button
-		type="button"
-		class="btn btn-ghost rounded-full p-0 {isLarge ? 'btn-sm h-10 w-10' : 'btn-xs h-7 w-7'}"
+	<Button
+		variant="ghost"
+		tone="neutral"
+		shape="circle"
+		size={isLarge ? 'md' : 'xs'}
+		class={isLarge ? 'h-10 w-10' : 'h-7 w-7'}
 		aria-label="Fewer {ariaLabel}"
 		disabled={disabled || value <= min}
 		onclick={() => onChange(Math.max(min, value - 1))}
 	>
 		<Minus size={isLarge ? 16 : 13} />
-	</button>
+	</Button>
 
-	<input
+	<Input
 		type="text"
 		inputmode="numeric"
 		autocomplete="off"
-		class="input input-bordered rounded-xl px-1 text-center tabular-nums {isLarge
+		class="rounded-xl px-1 text-center tabular-nums {isLarge
 			? 'h-11 w-[4.5rem] text-2xl font-semibold'
 			: 'h-8 w-12 text-sm font-semibold'}"
 		aria-label="Number of {ariaLabel}"
@@ -67,13 +72,16 @@
 		}}
 	/>
 
-	<button
-		type="button"
-		class="btn btn-ghost rounded-full p-0 {isLarge ? 'btn-sm h-10 w-10' : 'btn-xs h-7 w-7'}"
+	<Button
+		variant="ghost"
+		tone="neutral"
+		shape="circle"
+		size={isLarge ? 'md' : 'xs'}
+		class={isLarge ? 'h-10 w-10' : 'h-7 w-7'}
 		aria-label="More {ariaLabel}"
 		disabled={disabled || value >= max}
 		onclick={() => onChange(Math.min(max, value + 1))}
 	>
 		<Plus size={isLarge ? 16 : 13} />
-	</button>
+	</Button>
 </div>

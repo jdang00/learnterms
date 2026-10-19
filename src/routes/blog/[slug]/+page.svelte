@@ -61,7 +61,7 @@
 <div class="relative isolate overflow-hidden">
 	<PublicBackdrop />
 	<article id="main-content" class="mx-auto max-w-3xl px-5 pt-14 pb-24 sm:px-8 sm:pt-20">
-		<nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-base-content/65">
+		<nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-foreground/65">
 			<a href={resolve('/')} class="hover:text-primary">Home</a>
 			<span aria-hidden="true">/</span>
 			<a href={resolve('/blog')} class="inline-flex items-center gap-1 hover:text-primary"
@@ -74,12 +74,12 @@
 			<h1 class="text-balance font-display text-4xl font-bold leading-tight sm:text-5xl">
 				{data.post.title}
 			</h1>
-			<p class="mt-4 text-sm text-base-content/60">
+			<p class="mt-4 text-sm text-foreground/60">
 				Justin Dang · <time datetime={data.post.date}>{data.post.displayDate}</time>
 			</p>
 		</header>
 		{#if data.post.archived}<p
-				class="my-7 border-l-2 border-base-300 pl-4 text-sm leading-relaxed text-base-content/60"
+				class="my-7 border-l-2 border-border pl-4 text-sm leading-relaxed text-foreground/60"
 			>
 				Archived post. Features, plans, and performance claims describe the original release.
 			</p>{/if}
@@ -89,7 +89,7 @@
 			<Article />
 		</div>
 		{#if data.post.archiveNote}<p
-				class="mt-10 border-t border-base-300 pt-5 text-xs leading-relaxed text-base-content/55"
+				class="mt-10 border-t border-border pt-5 text-xs leading-relaxed text-foreground/55"
 			>
 				Archive note: {data.post.archiveNote}
 			</p>{/if}

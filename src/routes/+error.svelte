@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { asset, resolve } from '$app/paths';
+	import { Button } from '$lib/components/ui/button';
 </script>
 
 <section
@@ -20,21 +21,22 @@
 	{/if}
 
 	<div class="error-content relative mx-auto w-full max-w-xl">
-		<p class="error-code font-semibold tracking-tight text-base-content/35">{page.status}</p>
-		<h1 class="mt-2 font-display text-4xl font-bold text-base-content sm:text-5xl">
+		<p class="error-code font-semibold tracking-tight text-foreground/35">{page.status}</p>
+		<h1 class="mt-2 font-display text-4xl font-bold text-foreground sm:text-5xl">
 			{page.status === 404 ? 'Page not found' : 'Something went wrong'}
 		</h1>
-		<p class="mx-auto mt-5 max-w-sm text-base leading-relaxed text-base-content/75 sm:text-lg">
+		<p class="mx-auto mt-5 max-w-sm text-base leading-relaxed text-foreground/75 sm:text-lg">
 			{page.status === 404
 				? 'Take a breath. You’re just a little off course. Let’s find your way back.'
 				: 'We couldn’t load this page. Please try again, or contact us if the problem continues.'}
 		</p>
 		<div class="mt-8 flex flex-wrap justify-center gap-3">
-			<a href={resolve('/')} class="btn btn-primary rounded-full">Back to home</a>
-			<a
+			<Button href={resolve('/')}>Back to home</Button>
+			<Button
 				href={resolve('/contact')}
-				class="btn btn-outline rounded-full border-base-content/25 bg-base-100/50 backdrop-blur-sm"
-				>Contact support</a
+				variant="outline"
+				tone="neutral"
+				class="border-foreground/25 bg-background/50 backdrop-blur-sm">Contact support</Button
 			>
 		</div>
 	</div>
@@ -54,16 +56,16 @@
 		background:
 			radial-gradient(
 				ellipse at 50% 48%,
-				var(--color-base-100) 0%,
-				color-mix(in oklab, var(--color-base-100) 93%, transparent) 22%,
-				color-mix(in oklab, var(--color-base-100) 48%, transparent) 48%,
+				var(--background) 0%,
+				color-mix(in oklab, var(--background) 93%, transparent) 22%,
+				color-mix(in oklab, var(--background) 48%, transparent) 48%,
 				transparent 76%
 			),
 			linear-gradient(
 				to bottom,
-				color-mix(in oklab, var(--color-base-100) 22%, transparent),
-				color-mix(in oklab, var(--color-base-100) 12%, transparent) 65%,
-				var(--color-base-100)
+				color-mix(in oklab, var(--background) 22%, transparent),
+				color-mix(in oklab, var(--background) 12%, transparent) 65%,
+				var(--background)
 			);
 	}
 
@@ -86,11 +88,11 @@
 			background:
 				radial-gradient(
 					ellipse at 50% 48%,
-					color-mix(in oklab, var(--color-base-100) 97%, transparent) 8%,
-					color-mix(in oklab, var(--color-base-100) 88%, transparent) 30%,
-					color-mix(in oklab, var(--color-base-100) 20%, transparent) 72%
+					color-mix(in oklab, var(--background) 97%, transparent) 8%,
+					color-mix(in oklab, var(--background) 88%, transparent) 30%,
+					color-mix(in oklab, var(--background) 20%, transparent) 72%
 				),
-				linear-gradient(to bottom, transparent 65%, var(--color-base-100));
+				linear-gradient(to bottom, transparent 65%, var(--background));
 		}
 	}
 </style>

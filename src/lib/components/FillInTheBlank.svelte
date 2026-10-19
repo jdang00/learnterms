@@ -3,6 +3,9 @@
 	import HighlightedStem from './HighlightedStem.svelte';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { Eye } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import * as Card from '$lib/components/ui/card';
 	import { tick } from 'svelte';
 	import { getQuizCommands } from './quiz-dock/commands.svelte';
 	type Option = { id: string; text: string };
@@ -18,7 +21,7 @@
 		belowStem = undefined as Snippet | undefined
 	} = $props();
 	let inputText: string = $state('');
-	let inputEl: HTMLInputElement | null = null;
+	let inputEl = $state<HTMLInputElement | null>(null);
 	const quizCommands = getQuizCommands();
 
 	const correctRaw = $derived(() => {
@@ -108,7 +111,7 @@
 	</div>
 	{#if belowStem}<div class="w-full">{@render belowStem()}</div>{/if}
 	<div class="flex w-full max-w-sm items-center mt-4 mb-6">
-		<input
+		<Input
 			type="text"
 			placeholder="Type here"
 			enterkeyhint="done"
@@ -116,7 +119,7 @@
 			autocapitalize="off"
 			autocorrect="off"
 			spellcheck="false"
-			class="input input-bordered min-w-0 flex-1 rounded-full"
+			class="flex-1"
 			value={inputText}
 			oninput={(e) => {
 				inputText = (e.target as HTMLInputElement).value;
@@ -135,20 +138,20 @@
 				}
 			}}
 			disabled={qs.showSolution}
-			bind:this={inputEl}
+			bind:ref={inputEl}
 		/>
-		<button
-			class="btn btn-primary ms-2 rounded-full"
+		<Button
+			class="ms-2"
 			onclick={() => handleEnter('button')}
-			disabled={qs.showSolution || !inputText.trim()}>{submitOnly ? 'Save' : 'Enter'}</button
+			disabled={qs.showSolution || !inputText.trim()}>{submitOnly ? 'Save' : 'Enter'}</Button
 		>
 	</div>
 
 	{#if showAnswerPanel}
-		<div
-			class="card bg-base-100 w-72 sm:w-80 shadow-md mt-6 border border-base-content/10 rounded-2xl"
+		<Card.Root
+			class="mt-6 w-72 gap-0 rounded-2xl border-foreground/10 bg-background shadow-md sm:w-80"
 		>
-			<div class="card-body">
+			<Card.Content class="gap-2">
 				<h3 class="text-lg font-semibold mb-2 {qs.showSolution ? '' : 'blur-xs'}">
 					{displayAnswer()}
 				</h3>
@@ -163,19 +166,20 @@
 					</div>
 				{/if}
 				{#if allowSolution}
-					<button
-						class="btn rounded-full"
+					<Button
+						variant="soft"
+						tone="neutral"
 						onclick={handleToggleSolution}
 						aria-label="toggle rationale"
 					>
 						<Eye />
-					</button>
+					</Button>
 				{/if}
-			</div>
-		</div>
+			</Card.Content>
+		</Card.Root>
 	{/if}
 
 	{#if showRevealHint}
-		<p class="text-sm text-base-content/70 mt-6">Press tab to reveal term.</p>
+		<p class="text-sm text-foreground/70 mt-6">Press tab to reveal term.</p>
 	{/if}
 </div>

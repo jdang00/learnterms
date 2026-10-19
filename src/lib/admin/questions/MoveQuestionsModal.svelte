@@ -1,13 +1,16 @@
 <script lang="ts">
 	let { isOpen, onClose, sourceModuleId, selectedQuestionIds } = $props();
 
-	import { X } from 'lucide-svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id } from '../../../convex/_generated/dataModel';
 	import { useClerkContext } from 'svelte-clerk/client';
 	import ModuleLimitModal from './ModuleLimitModal.svelte';
 	import { getErrorText } from '$lib/utils/errorHandling';
+	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Field from '$lib/components/ui/field';
+	import { SelectField } from '$lib/components/ui/select';
 
 	const client = useConvexClient();
 	const clerk = useClerkContext();
@@ -28,9 +31,35 @@
 	let isSubmitting = $state(false);
 	let isLimitModalOpen = $state(false);
 
+	const classPlaceholder = $derived(
+		userDataQuery.isLoading || !userDataQuery.data?.cohortId
+			? 'Loading user data…'
+			: classes.isLoading
+				? 'Loading classes…'
+				: classes.error
+					? 'Error loading classes'
+					: !classes.data?.length
+						? 'No classes available'
+						: 'Select class…'
+	);
+
 	// Get modules for selected class - using skip pattern at top level
 	const modules = useQuery(api.module.getAdminModulesWithQuestionCounts, () =>
 		selectedClassId ? { classId: selectedClassId as Id<'class'> } : 'skip'
+	);
+
+	const modulePlaceholder = $derived(
+		userDataQuery.isLoading || !userDataQuery.data?.cohortId
+			? 'Loading user data…'
+			: !selectedClassId
+				? 'Select a class first'
+				: modules.isLoading
+					? 'Loading modules…'
+					: modules.error
+						? 'Error loading modules'
+						: !modules.data?.length
+							? 'No modules available'
+							: 'Select module…'
 	);
 
 	function resetSelections() {
@@ -62,114 +91,66 @@
 	}
 </script>
 
-<dialog class="modal p-8" class:modal-open={isOpen}>
-	<div class="modal-box w-full max-w-2xl rounded-2xl border border-base-300 shadow-2xl">
-		<form method="dialog">
-			<button
-				class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4"
-				onclick={() => onClose(false)}
-				aria-label="Close"
-			>
-				<X size={18} />
-			</button>
-		</form>
-
-		<div class="mb-6">
-			<h3 class="text-2xl font-extrabold tracking-tight">Move Questions</h3>
-			<p class="text-base-content/70 mt-1">Select a destination class and module.</p>
-		</div>
+<Dialog.Root
+	open={isOpen}
+	onOpenChange={(o) => {
+		if (!o) onClose(false);
+	}}
+>
+	<Dialog.Content class="sm:max-w-2xl">
+		<Dialog.Header>
+			<Dialog.Title class="text-2xl font-extrabold tracking-tight">Move Questions</Dialog.Title>
+			<Dialog.Description>Select a destination class and module.</Dialog.Description>
+		</Dialog.Header>
 
 		<div class="space-y-4">
-			<div class="form-control">
-				<label class="label" for="class-select"
-					><span class="label-text font-medium">Class</span></label
-				>
-				<select
+			<Field.Field>
+				<Field.Label for="class-select">Class</Field.Label>
+				<SelectField
 					id="class-select"
-					class="select select-bordered rounded-full w-full"
-					bind:value={selectedClassId}
-				>
-					<option value={null}>Select class…</option>
-					{#if userDataQuery.isLoading || !userDataQuery.data?.cohortId}
-						<option disabled>Loading user data…</option>
-					{:else if classes.isLoading}
-						<option disabled>Loading classes…</option>
-					{:else if classes.error}
-						<option disabled>Error loading classes</option>
-					{:else if !classes.data || classes.data.length === 0}
-						<option disabled>No classes available</option>
-					{:else}
-						{#each classes.data as c (c._id)}
-							<option value={c._id}>{c.name}</option>
-						{/each}
-					{/if}
-				</select>
-			</div>
+					value={selectedClassId ?? ''}
+					onValueChange={(v) => (selectedClassId = (v || null) as Id<'class'> | null)}
+					placeholder={classPlaceholder}
+					disabled={!classes.data?.length}
+					options={(classes.data ?? []).map((c) => ({ value: c._id, label: c.name }))}
+				/>
+			</Field.Field>
 
-			<div class="form-control">
-				<label class="label" for="module-select"
-					><span class="label-text font-medium">Module</span></label
-				>
-				<select
+			<Field.Field>
+				<Field.Label for="module-select">Module</Field.Label>
+				<SelectField
 					id="module-select"
-					class="select select-bordered rounded-full w-full"
-					bind:value={selectedModuleId}
-					disabled={!selectedClassId || userDataQuery.isLoading || !userDataQuery.data?.cohortId}
-				>
-					<option
-						value={null}
-						disabled={!selectedClassId || userDataQuery.isLoading || !userDataQuery.data?.cohortId}
-					>
-						{#if userDataQuery.isLoading || !userDataQuery.data?.cohortId}
-							Loading user data…
-						{:else if !selectedClassId}
-							Select a class first
-						{:else}
-							Select module…
-						{/if}
-					</option>
-					{#if !selectedClassId}
-						<option disabled>Select a class first</option>
-					{:else if modules.isLoading}
-						<option disabled>Loading modules…</option>
-					{:else if modules.error}
-						<option disabled>Error loading modules</option>
-					{:else if !modules.data || modules.data.length === 0}
-						<option disabled>No modules available</option>
-					{:else}
-						{#each modules.data ?? [] as m (m._id)}
-							<option value={m._id}>{m.title} ({m.questionCount})</option>
-						{/each}
-					{/if}
-				</select>
-			</div>
-		</div>
-
-		<div class="modal-action mt-6">
-			<form method="dialog" class="flex gap-3">
-				<button
-					class="btn btn-ghost rounded-full"
-					onclick={() => onClose(false)}
-					disabled={isSubmitting}>Cancel</button
-				>
-				<button
-					class="btn btn-primary rounded-full"
-					onclick={handleConfirm}
-					disabled={isSubmitting ||
-						!selectedModuleId ||
+					value={selectedModuleId ?? ''}
+					onValueChange={(v) => (selectedModuleId = (v || null) as Id<'module'> | null)}
+					placeholder={modulePlaceholder}
+					disabled={!selectedClassId ||
 						userDataQuery.isLoading ||
-						!userDataQuery.data?.cohortId}
-				>
-					{#if isSubmitting}
-						<span class="loading loading-spinner loading-sm"></span>
-						<span>Moving…</span>
-					{:else}
-						<span>Move</span>
-					{/if}
-				</button>
-			</form>
+						!userDataQuery.data?.cohortId ||
+						!modules.data?.length}
+					options={(modules.data ?? []).map((m) => ({
+						value: m._id,
+						label: `${m.title} (${m.questionCount})`
+					}))}
+				/>
+			</Field.Field>
 		</div>
-	</div>
 
-	<ModuleLimitModal isOpen={isLimitModalOpen} onClose={() => (isLimitModalOpen = false)} />
-</dialog>
+		<Dialog.Footer>
+			<Button variant="ghost" tone="neutral" onclick={() => onClose(false)} disabled={isSubmitting}
+				>Cancel</Button
+			>
+			<Button
+				onclick={handleConfirm}
+				loading={isSubmitting}
+				disabled={isSubmitting ||
+					!selectedModuleId ||
+					userDataQuery.isLoading ||
+					!userDataQuery.data?.cohortId}
+			>
+				{isSubmitting ? 'Moving…' : 'Move'}
+			</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
+
+<ModuleLimitModal isOpen={isLimitModalOpen} onClose={() => (isLimitModalOpen = false)} />

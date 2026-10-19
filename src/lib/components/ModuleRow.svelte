@@ -27,33 +27,32 @@
 	const stage = $derived(progress ? moduleState(progress) : null);
 	const pct = (n: number) => (total ? (n / total) * 100 : 0);
 	const statusTone = {
-		empty: 'text-base-content/40',
-		new: 'text-base-content/45',
-		started: 'text-base-content/70',
-		answered: 'text-base-content/70',
-		mastered:
-			'font-medium text-[color-mix(in_oklab,var(--color-success)_60%,var(--color-base-content))]'
+		empty: 'text-foreground/40',
+		new: 'text-foreground/45',
+		started: 'text-foreground/70',
+		answered: 'text-foreground/70',
+		mastered: 'font-medium text-[color-mix(in_oklab,var(--success)_60%,var(--foreground))]'
 	} as const;
 </script>
 
 <a
 	href={resolve('/classes/[classId]/modules/[moduleId]', { classId, moduleId: module._id })}
-	class="group flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-base-200/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary active:bg-base-200 sm:gap-4"
+	class="group flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary active:bg-muted sm:gap-4"
 >
-	<span class="hidden w-6 shrink-0 font-mono text-xs text-base-content/40 tabular-nums sm:block"
+	<span class="hidden w-6 shrink-0 font-mono text-xs text-foreground/40 tabular-nums sm:block"
 		>{String(position).padStart(2, '0')}</span
 	>
 	<span class="shrink-0 text-2xl leading-none">{module.emoji || '📘'}</span>
 	<span class="min-w-0 flex-1">
 		<span
-			class="block text-[0.95rem] leading-snug font-semibold text-base-content line-clamp-2 sm:truncate"
+			class="block text-[0.95rem] leading-snug font-semibold text-foreground line-clamp-2 sm:truncate"
 			>{module.title}</span
 		>
-		<span class="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-base-content/55">
+		<span class="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-foreground/55">
 			<span class="tabular-nums">{total} {total === 1 ? 'question' : 'questions'}</span>
 			{#if progress?.flagged}
 				<span
-					class="inline-flex items-center gap-1 text-[color-mix(in_oklab,var(--color-warning)_70%,var(--color-base-content))] tabular-nums"
+					class="inline-flex items-center gap-1 text-[color-mix(in_oklab,var(--warning)_70%,var(--foreground))] tabular-nums"
 				>
 					<Flag size={11} />
 					{progress.flagged} flagged
@@ -76,7 +75,7 @@
 
 	{#if progress && stage !== 'empty'}
 		<span
-			class="hidden h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-base-content/10 md:flex"
+			class="hidden h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-foreground/10 md:flex"
 			aria-hidden="true"
 		>
 			<span class="h-full bg-emerald-800" style:width="{pct(progress.mastered)}%"></span>
@@ -91,6 +90,6 @@
 	{/if}
 	<ChevronRight
 		size={18}
-		class="shrink-0 text-base-content/30 transition-transform group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
+		class="shrink-0 text-foreground/30 transition-transform group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
 	/>
 </a>

@@ -4,6 +4,7 @@
 
 <script lang="ts">
 	import { ChevronLeft, ChevronRight, X } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	// Full-screen image viewer: pinch or double-tap to zoom, drag to pan, swipe to page.
 	let {
@@ -176,24 +177,35 @@
 					{#if images.length > 1}{index + 1} of {images.length}{/if}
 				</span>
 				<form method="dialog" class="pointer-events-auto">
-					<button class="btn btn-circle btn-ghost size-11 text-white" aria-label="Close image">
+					<Button
+						type="submit"
+						variant="ghost"
+						tone="neutral"
+						shape="circle"
+						class="size-11 text-white hover:text-white"
+						aria-label="Close image"
+					>
 						<X size={22} />
-					</button>
+					</Button>
 				</form>
 			</div>
 
 			{#if images.length > 1}
-				<button
-					type="button"
-					class="btn btn-circle btn-ghost absolute left-2 top-1/2 hidden size-11 -translate-y-1/2 text-white sm:flex"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					shape="circle"
+					class="absolute left-2 top-1/2 hidden size-11 -translate-y-1/2 text-white hover:text-white sm:flex"
 					aria-label="Previous image"
-					onclick={() => go(-1)}><ChevronLeft size={24} /></button
+					onclick={() => go(-1)}><ChevronLeft size={24} /></Button
 				>
-				<button
-					type="button"
-					class="btn btn-circle btn-ghost absolute right-2 top-1/2 hidden size-11 -translate-y-1/2 text-white sm:flex"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					shape="circle"
+					class="absolute right-2 top-1/2 hidden size-11 -translate-y-1/2 text-white hover:text-white sm:flex"
 					aria-label="Next image"
-					onclick={() => go(1)}><ChevronRight size={24} /></button
+					onclick={() => go(1)}><ChevronRight size={24} /></Button
 				>
 			{/if}
 

@@ -14,6 +14,9 @@
 
 	let { isOpen, attachment, onClose }: Props = $props();
 
+	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
+
 	let zoom = $state(1);
 	let panX = $state(0);
 	let panY = $state(0);
@@ -87,21 +90,19 @@
 	}
 </script>
 
-<dialog class="modal max-w-full p-4" class:modal-open={isOpen}>
-	<div class="modal-box max-w-4xl w-full h-[90vh] rounded-2xl">
-		<form method="dialog">
-			<button
-				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-10"
-				onclick={handleClose}>✕</button
-			>
-		</form>
-
+<Dialog.Root
+	open={isOpen}
+	onOpenChange={(o) => {
+		if (!o) handleClose();
+	}}
+>
+	<Dialog.Content class="h-[90vh] sm:max-w-4xl">
 		{#if attachment}
 			<div class="flex flex-col h-full">
-				<h3 class="font-bold text-lg mb-4">{attachment.altText}</h3>
+				<Dialog.Title class="text-lg font-bold mb-4">{attachment.altText}</Dialog.Title>
 
 				<div
-					class="flex-1 relative overflow-hidden bg-base-200 rounded-2xl"
+					class="flex-1 relative overflow-hidden bg-muted rounded-2xl"
 					onmousedown={handleMouseDown}
 					onmousemove={handleMouseMove}
 					onmouseup={handleMouseUp}
@@ -141,14 +142,16 @@
 				</div>
 
 				{#if attachment.caption}
-					<div class="mt-4 p-3 bg-base-200 rounded-2xl">
-						<p class="text-sm text-base-content/70">{attachment.caption}</p>
+					<div class="mt-4 p-3 bg-muted rounded-2xl">
+						<p class="text-sm text-foreground/70">{attachment.caption}</p>
 					</div>
 				{/if}
 
 				<div class="flex justify-center gap-2 mt-4">
-					<button
-						class="btn btn-sm btn-outline rounded-full"
+					<Button
+						size="sm"
+						variant="outline"
+						tone="neutral"
 						onclick={handleZoomOut}
 						aria-label="Zoom out"
 					>
@@ -160,9 +163,11 @@
 								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
 							/>
 						</svg>
-					</button>
-					<button
-						class="btn btn-sm btn-outline rounded-full"
+					</Button>
+					<Button
+						size="sm"
+						variant="outline"
+						tone="neutral"
 						onclick={handleFitToScreen}
 						aria-label="Fit to screen"
 					>
@@ -174,9 +179,11 @@
 								d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
 							/>
 						</svg>
-					</button>
-					<button
-						class="btn btn-sm btn-outline rounded-full"
+					</Button>
+					<Button
+						size="sm"
+						variant="outline"
+						tone="neutral"
 						onclick={handleZoomIn}
 						aria-label="Zoom in"
 					>
@@ -188,12 +195,9 @@
 								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
 							/>
 						</svg>
-					</button>
+					</Button>
 				</div>
 			</div>
 		{/if}
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button onclick={handleClose}>close</button>
-	</form>
-</dialog>
+	</Dialog.Content>
+</Dialog.Root>

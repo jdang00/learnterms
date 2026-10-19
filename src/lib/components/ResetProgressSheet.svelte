@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import Sheet from './Sheet.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Switch } from '$lib/components/ui/switch';
 
 	let {
 		open = $bindable(false),
@@ -45,30 +47,28 @@
 		error = '';
 	}}
 >
-	<p class="text-base-content/80">{@render children()}</p>
+	<p class="text-foreground/80">{@render children()}</p>
 	<label class="my-5 flex items-center justify-between gap-4">
 		<span
 			><span class="block font-medium">Remove highlights</span><span
-				class="text-sm text-base-content/60">{highlightsNote}</span
+				class="text-sm text-foreground/60">{highlightsNote}</span
 			></span
 		>
-		<input
-			type="checkbox"
-			role="switch"
+		<Switch
 			aria-label="Remove highlights"
-			class="toggle toggle-warning"
+			class="data-checked:bg-warning"
 			bind:checked={removeHighlights}
 			disabled={resetting}
 		/>
 	</label>
-	{#if error}<p class="text-error mb-3" role="alert">{error}</p>{/if}
+	{#if error}<p class="text-error-ink mb-3" role="alert">{error}</p>{/if}
 	{#snippet footer()}
 		<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-			<button class="btn btn-outline min-h-11 rounded-full" onclick={() => (open = false)}>
+			<Button variant="outline" tone="neutral" class="min-h-11" onclick={() => (open = false)}>
 				Cancel
-			</button>
-			<button class="btn btn-error min-h-11 rounded-full" disabled={resetting} onclick={confirm}
-				>{resetting ? 'Resetting…' : confirmLabel}</button
+			</Button>
+			<Button tone="error" class="min-h-11" disabled={resetting} onclick={confirm}
+				>{resetting ? 'Resetting…' : confirmLabel}</Button
 			>
 		</div>
 	{/snippet}

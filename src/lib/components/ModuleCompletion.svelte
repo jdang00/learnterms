@@ -15,6 +15,7 @@
 		Trophy,
 		X
 	} from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
 	import type { AnswerStatus, ModuleSummary } from '$lib/utils/moduleCompletion';
 
 	let {
@@ -135,18 +136,18 @@
 		},
 		correct: {
 			label: 'Correct',
-			cell: 'bg-success/75 text-success-content border-success/40',
-			chip: 'bg-success/15 text-success'
+			cell: 'bg-success/75 text-success-foreground border-success/40',
+			chip: 'bg-success/15 text-success-ink'
 		},
 		incorrect: {
 			label: 'Needs review',
-			cell: 'bg-error/75 text-error-content border-error/40',
-			chip: 'bg-error/15 text-error'
+			cell: 'bg-error/75 text-error-foreground border-error/40',
+			chip: 'bg-error/15 text-error-ink'
 		},
 		unanswered: {
 			label: 'Unanswered',
-			cell: 'bg-base-100 text-base-content/55 border-base-300 border-dashed',
-			chip: 'bg-base-200 text-base-content/65'
+			cell: 'bg-background text-foreground/55 border-border border-dashed',
+			chip: 'bg-muted text-foreground/65'
 		}
 	};
 
@@ -182,8 +183,8 @@
 			key: 'unanswered',
 			label: 'Unanswered',
 			icon: CircleDashed,
-			tone: 'text-base-content/50',
-			active: 'border-base-content/30 bg-base-200 ring-base-content/10'
+			tone: 'text-foreground/50',
+			active: 'border-foreground/30 bg-muted ring-foreground/10'
 		},
 		{
 			key: 'flagged',
@@ -236,40 +237,37 @@
 				duration={3600}
 				amount={level === 3 ? 180 : level === 2 ? 130 : 90}
 				fallDistance="100vh"
-				colorArray={[
-					'var(--color-success)',
-					'var(--color-primary)',
-					'var(--color-warning)',
-					'var(--color-secondary)'
-				]}
+				colorArray={['var(--success)', 'var(--primary)', 'var(--warning)', 'var(--secondary)']}
 			/>
 		</div>
 	{/key}
 {/if}
 
 <section
-	class="h-full overflow-y-auto bg-base-100 px-4 py-6 sm:px-8 sm:py-10"
+	class="h-full overflow-y-auto bg-background px-4 py-6 sm:px-8 sm:py-10"
 	aria-label="Module progress overview"
 >
 	<div
 		class="mx-auto max-w-3xl"
 		in:fly={{ y: reduced ? 0 : 14, duration: reduced ? 0 : 400, easing: cubicOut }}
 	>
-		<button
-			type="button"
-			class="group btn btn-ghost btn-sm -ms-3 gap-1 rounded-full transition-all hover:gap-2"
+		<Button
+			variant="ghost"
+			tone="neutral"
+			size="sm"
+			class="group -ms-3 gap-1 transition-all hover:gap-2"
 			onclick={onback}
 		>
 			<ArrowLeft
 				size={16}
 				class="transition-transform group-hover:-translate-x-0.5 motion-reduce:transition-none"
 			/> Back to questions
-		</button>
+		</Button>
 
 		<div
-			class="relative mt-4 overflow-hidden rounded-3xl border bg-base-100 p-5 shadow-xs sm:p-7 {summary.isMastered
+			class="relative mt-4 overflow-hidden rounded-3xl border bg-background p-5 shadow-xs sm:p-7 {summary.isMastered
 				? 'border-emerald-600/30'
-				: 'border-base-300'}"
+				: 'border-border'}"
 		>
 			<div
 				class="pointer-events-none absolute inset-0"
@@ -292,17 +290,13 @@
 									x={[-1.6, 1.6]}
 									y={[-1.2, 1.6]}
 									duration={1800}
-									colorArray={[
-										'var(--color-success)',
-										'var(--color-primary)',
-										'var(--color-warning)'
-									]}
+									colorArray={['var(--success)', 'var(--primary)', 'var(--warning)']}
 								/>
 							</div>
 						{/key}
 					{/if}
 					<svg viewBox="0 0 120 120" class="size-full -rotate-90" aria-hidden="true">
-						<circle cx="60" cy="60" r="52" fill="none" stroke-width="11" class="stroke-base-200" />
+						<circle cx="60" cy="60" r="52" fill="none" stroke-width="11" class="stroke-muted" />
 						{#each ringSegments as segment (segment.cls)}
 							<circle
 								cx="60"
@@ -327,10 +321,10 @@
 							</span>
 						{/if}
 						<span class="text-4xl font-semibold tracking-tight tabular-nums"
-							>{Math.round(arcs.checked.current)}<span class="text-xl text-base-content/45">%</span
+							>{Math.round(arcs.checked.current)}<span class="text-xl text-foreground/45">%</span
 							></span
 						>
-						<span class="text-xs text-base-content/60">checked</span>
+						<span class="text-xs text-foreground/60">checked</span>
 					</div>
 				</div>
 
@@ -355,15 +349,16 @@
 											? 'Module complete'
 											: 'Your progress'}
 							</h1>
-							<p class="mt-0.5 truncate text-sm text-base-content/55">{title}</p>
+							<p class="mt-0.5 truncate text-sm text-foreground/55">{title}</p>
 						</div>
 					</div>
-					<p class="mt-4 text-pretty text-base-content/75">{subline}</p>
+					<p class="mt-4 text-pretty text-foreground/75">{subline}</p>
 
 					<div class="mt-5 flex flex-wrap gap-2">
 						{#if nextReview}
-							<button
-								class="group btn btn-primary btn-sm gap-1 rounded-full px-4 shadow-sm shadow-primary/25 transition-all hover:gap-2"
+							<Button
+								size="sm"
+								class="group gap-1 px-4 shadow-sm shadow-primary/25 transition-all hover:gap-2"
 								onclick={() => onreview(nextReview.questionId)}
 							>
 								Review {remaining} remaining
@@ -371,10 +366,10 @@
 									size={15}
 									class="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
 								/>
-							</button>
+							</Button>
 						{/if}
-						<button class="btn btn-ghost btn-sm gap-1.5 rounded-full px-4" onclick={onresume}
-							><RotateCcw size={14} /> Review all</button
+						<Button variant="ghost" tone="neutral" size="sm" class="gap-1.5 px-4" onclick={onresume}
+							><RotateCcw size={14} /> Review all</Button
 						>
 					</div>
 				</div>
@@ -383,14 +378,12 @@
 
 		{#if saveError}
 			<div
-				class="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-error/10 px-4 py-3 text-sm text-error"
+				class="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-error/10 px-4 py-3 text-sm text-error-ink"
 				role="alert"
 				transition:slide={{ duration: reduced ? 0 : 200 }}
 			>
 				<span>{saveError}</span>
-				<button class="btn btn-error btn-soft btn-xs rounded-full" onclick={onretry}
-					>Try saving again</button
-				>
+				<Button variant="soft" tone="error" size="xs" onclick={onretry}>Try saving again</Button>
 			</div>
 		{/if}
 
@@ -405,7 +398,7 @@
 					type="button"
 					class="group rounded-2xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none motion-reduce:hover:translate-y-0 {active
 						? `ring-4 ${tile.active}`
-						: 'border-base-300 bg-base-100 hover:border-base-content/20'}"
+						: 'border-border bg-background hover:border-foreground/20'}"
 					aria-pressed={active}
 					onclick={() => (filter = active ? 'all' : tile.key)}
 					in:fly={{
@@ -420,29 +413,29 @@
 							size={16}
 							class="{tile.tone} transition-transform group-hover:scale-110 motion-reduce:transition-none"
 						/>
-						{#if active}<span class="text-[11px] text-base-content/50">Showing</span>{/if}
+						{#if active}<span class="text-[11px] text-foreground/50">Showing</span>{/if}
 					</span>
 					<span class="mt-2 block text-2xl font-semibold tabular-nums"
 						>{Math.round(countUp[tile.key].current)}</span
 					>
-					<span class="block text-xs text-base-content/60">{tile.label}</span>
+					<span class="block text-xs text-foreground/60">{tile.label}</span>
 				</button>
 			{/each}
 		</div>
 
-		<div class="mt-5 rounded-3xl border border-base-300 bg-base-100 p-5 shadow-xs sm:p-6">
+		<div class="mt-5 rounded-3xl border border-border bg-background p-5 shadow-xs sm:p-6">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<h2 class="font-semibold">
-					Questions{#if filter !== 'all'}<span class="font-normal text-base-content/55"
+					Questions{#if filter !== 'all'}<span class="font-normal text-foreground/55"
 							>: {filter === 'flagged' ? 'flagged' : statusStyle[filter].label.toLowerCase()}</span
 						>{/if}
 				</h2>
 				{#if filter !== 'all'}
-					<button
-						class="btn btn-ghost btn-xs rounded-full"
-						onclick={() => (filter = 'all')}
-						in:scale={{ duration: reduced ? 0 : 150, start: 0.8 }}>Show all {summary.total}</button
-					>
+					<span class="inline-flex" in:scale={{ duration: reduced ? 0 : 150, start: 0.8 }}>
+						<Button variant="ghost" tone="neutral" size="xs" onclick={() => (filter = 'all')}
+							>Show all {summary.total}</Button
+						>
+					</span>
 				{/if}
 			</div>
 
@@ -463,9 +456,9 @@
 							easing: backOut
 						}}
 						class="relative aspect-square rounded-full border text-xs font-semibold tabular-nums transition-all hover:-translate-y-0.5 hover:scale-110 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none {result.flagged
-							? 'bg-warning text-warning-content border-warning'
+							? 'bg-warning text-warning-foreground border-warning'
 							: statusStyle[result.status].cell} {selected
-							? 'scale-110 ring-2 ring-base-content/70 ring-offset-2 ring-offset-base-100'
+							? 'scale-110 ring-2 ring-foreground/70 ring-offset-2 ring-offset-background'
 							: ''}"
 						aria-label={label}
 						title={label}
@@ -475,18 +468,18 @@
 						{number}
 						{#if result.status !== 'mastered' && result.cleanRecallCount === 1}
 							<span
-								class="absolute -bottom-0.5 left-1/2 h-1 w-3 -translate-x-1/2 rounded-full bg-emerald-600 ring-2 ring-base-100"
+								class="absolute -bottom-0.5 left-1/2 h-1 w-3 -translate-x-1/2 rounded-full bg-emerald-600 ring-2 ring-background"
 							></span>
 						{/if}
 					</button>
 				{:else}
-					<p class="col-span-full py-4 text-center text-sm text-base-content/55">
+					<p class="col-span-full py-4 text-center text-sm text-foreground/55">
 						{emptyText[filter]}
 					</p>
 				{/each}
 			</div>
 
-			<p class="mt-4 text-xs text-base-content/50">
+			<p class="mt-4 text-xs text-foreground/50">
 				Mastery builds automatically when you answer from memory across completed module runs at
 				least 30 minutes apart. Reset the module when you want to study it again; your mastery is
 				kept. Flags are reminders and don't affect mastery.
@@ -495,7 +488,7 @@
 			{#if selectedResult}
 				{@const style = statusStyle[selectedResult.status]}
 				<div
-					class="mt-5 rounded-2xl border border-base-300 bg-base-200/40 p-4 text-sm"
+					class="mt-5 rounded-2xl border border-border bg-muted/40 p-4 text-sm"
 					aria-label="Question mastery details"
 					transition:slide={{ duration: reduced ? 0 : 220, easing: cubicOut }}
 				>
@@ -506,23 +499,23 @@
 								>{style.label}</span
 							>
 							{#if selectedResult.flagged}<span
-									class="inline-flex items-center gap-1 rounded-full bg-warning px-2 py-0.5 text-xs text-warning-content"
+									class="inline-flex items-center gap-1 rounded-full bg-warning px-2 py-0.5 text-xs text-warning-foreground"
 									><Flag size={10} fill="currentColor" /> Flagged</span
 								>{/if}
 						</div>
-						<span class="flex items-center gap-1.5 text-xs text-base-content/60">
+						<span class="flex items-center gap-1.5 text-xs text-foreground/60">
 							{#each [0, 1] as step (step)}
 								<span
 									class="h-1.5 w-6 rounded-full transition-colors duration-500 {step <
 									selectedResult.cleanRecallCount
 										? 'bg-emerald-600'
-										: 'bg-base-300'}"
+										: 'bg-muted-strong'}"
 								></span>
 							{/each}
 							{selectedResult.cleanRecallCount} of 2 completed runs
 						</span>
 					</div>
-					<ul class="mt-3 space-y-1 text-base-content/70">
+					<ul class="mt-3 space-y-1 text-foreground/70">
 						{#if selectedResult.isMastered}
 							<li>Mastered across two completed module runs, at least 30 minutes apart.</li>
 						{:else}
@@ -549,9 +542,11 @@
 							</li>{/if}
 					</ul>
 					<div class="mt-4 flex flex-wrap gap-2">
-						<button
-							class="btn btn-ghost btn-sm rounded-full"
-							onclick={() => onreview(selectedResult.questionId)}>Review question</button
+						<Button
+							variant="ghost"
+							tone="neutral"
+							size="sm"
+							onclick={() => onreview(selectedResult.questionId)}>Review question</Button
 						>
 					</div>
 				</div>
@@ -560,9 +555,12 @@
 
 		{#if summary.isComplete}
 			<div class="mt-6 flex justify-center">
-				<button
-					class="btn btn-ghost btn-sm gap-1.5 rounded-full text-base-content/55 hover:text-error"
-					onclick={onreset}><RotateCcw size={14} /> Reset module progress</button
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					class="gap-1.5 text-foreground/55 hover:text-error-ink"
+					onclick={onreset}><RotateCcw size={14} /> Reset module progress</Button
 				>
 			</div>
 		{/if}
@@ -575,7 +573,7 @@
 	}
 	@keyframes ring-glow {
 		50% {
-			filter: drop-shadow(0 0 18px color-mix(in oklab, var(--color-success) 55%, transparent));
+			filter: drop-shadow(0 0 18px color-mix(in oklab, var(--success) 55%, transparent));
 		}
 	}
 	:global(.trophy-wiggle) {

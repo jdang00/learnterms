@@ -2,6 +2,7 @@
 	import { ArrowLeft, Check, RotateCcw, TriangleAlert } from 'lucide-svelte';
 	import { resolve } from '$app/paths';
 	import ShimmerText from '$lib/components/ShimmerText.svelte';
+	import { Button } from '$lib/components/ui/button';
 	import { formatPageSelection } from './pagePickerSelection';
 	import { plannedSlots, runHeadline, runPhase } from './questionStudioRun';
 	import type { AgentJob } from './questionStudioRun';
@@ -68,18 +69,25 @@
 
 <svelte:window onkeydown={(event) => event.key === 'Escape' && (confirmingNewRun = false)} />
 
-<div class="shrink-0 border-b border-base-300 bg-base-100">
+<div class="shrink-0 border-b border-border bg-background">
 	<div class="flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 sm:px-4">
-		<a class="btn btn-ghost btn-sm btn-circle" href={resolve('/admin')} aria-label="Back to admin">
+		<Button
+			href={resolve('/admin')}
+			variant="ghost"
+			tone="neutral"
+			size="sm"
+			shape="circle"
+			aria-label="Back to admin"
+		>
 			<ArrowLeft size={16} />
-		</a>
+		</Button>
 
 		<div class="min-w-0 leading-tight">
 			<p class="truncate text-sm font-medium">
-				{className}<span class="mx-1.5 text-base-content/25">/</span>{moduleTitle}
+				{className}<span class="mx-1.5 text-foreground/25">/</span>{moduleTitle}
 			</p>
 			{#if sourceTitle}
-				<p class="truncate text-xs text-base-content/50">
+				<p class="truncate text-xs text-foreground/50">
 					From {sourceTitle}{scope ? `, ${scope}` : ''}{mix ? `, ${mix}` : ''}
 				</p>
 			{/if}
@@ -95,7 +103,7 @@
 				<span class="truncate text-sm font-medium">{headline}</span>
 			{:else if phase === 'failed'}
 				<TriangleAlert size={14} class="shrink-0 text-error" />
-				<span class="truncate text-sm font-medium text-error">{headline}</span>
+				<span class="truncate text-sm font-medium text-error-ink">{headline}</span>
 			{:else}
 				<span class="relative flex h-2 w-2 shrink-0">
 					<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60"
@@ -107,10 +115,10 @@
 
 			{#if canStartNewRun}
 				<div class="relative">
-					<button class="btn btn-sm gap-1.5 rounded-full" onclick={requestNewRun}>
+					<Button variant="soft" tone="neutral" size="sm" class="gap-1.5" onclick={requestNewRun}>
 						<RotateCcw size={13} />
 						<span class="hidden sm:inline">New run</span>
-					</button>
+					</Button>
 					{#if confirmingNewRun}
 						<div
 							class="fixed inset-0 z-30"
@@ -118,7 +126,7 @@
 							role="none"
 						></div>
 						<div
-							class="absolute right-0 top-full z-40 mt-1.5 w-72 rounded-2xl border border-base-300 bg-base-100 p-4 shadow-lg"
+							class="absolute right-0 top-full z-40 mt-1.5 w-72 rounded-2xl border border-border bg-background p-4 shadow-lg"
 							role="alertdialog"
 							aria-label="Discard unsaved drafts"
 						>
@@ -127,21 +135,26 @@
 								a new run discards {unsavedCount === 1 ? 'it' : 'them'}.
 							</p>
 							<div class="mt-3 flex gap-1.5">
-								<button
-									class="btn btn-ghost btn-sm flex-1 rounded-full"
+								<Button
+									variant="ghost"
+									tone="neutral"
+									size="sm"
+									class="flex-1"
 									onclick={() => (confirmingNewRun = false)}
 								>
 									Keep reviewing
-								</button>
-								<button
-									class="btn btn-error btn-sm flex-1 rounded-full"
+								</Button>
+								<Button
+									tone="error"
+									size="sm"
+									class="flex-1"
 									onclick={() => {
 										confirmingNewRun = false;
 										onStartNewRun();
 									}}
 								>
 									Discard
-								</button>
+								</Button>
 							</div>
 						</div>
 					{/if}
@@ -151,7 +164,7 @@
 	</div>
 
 	{#if working}
-		<div class="h-0.5 w-full bg-base-200">
+		<div class="h-0.5 w-full bg-muted">
 			<div
 				class="h-full bg-primary transition-[width] duration-500 ease-out"
 				style="width: {Math.round(progress * 100)}%"

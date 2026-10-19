@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { ArrowLeft, Sparkles } from 'lucide-svelte';
 	import { resolve } from '$app/paths';
+	import { Button } from '$lib/components/ui/button';
 </script>
 
 <header class="mb-4 flex items-center gap-4">
-	<a class="btn btn-ghost btn-sm gap-2 rounded-full" href={resolve('/admin')}>
+	<Button href={resolve('/admin')} variant="ghost" tone="neutral" size="sm" class="gap-2">
 		<ArrowLeft size={16} />
 		<span class="hidden sm:inline">Back</span>
-	</a>
-	<div class="h-6 w-px bg-base-300"></div>
+	</Button>
+	<div class="h-6 w-px bg-muted-strong"></div>
 	<div class="flex items-center gap-3">
 		<div class="hidden rounded-xl bg-primary/10 p-2 text-primary sm:flex">
 			<Sparkles size={18} />

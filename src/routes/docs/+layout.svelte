@@ -2,6 +2,8 @@
 	import { resolve } from '$app/paths';
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
+	import { Button } from '$lib/components/ui/button';
+	import { Separator } from '$lib/components/ui/separator';
 	import DocsMenu from '$lib/docs/DocsMenu.svelte';
 	import DocsBreadcrumbs from '$lib/docs/DocsBreadcrumbs.svelte';
 	import { docsNav } from '$lib/docs/nav';
@@ -29,26 +31,40 @@
 				{@render children?.()}
 			</article>
 
-			<div class="divider my-10"></div>
+			<Separator class="my-10" />
 
 			<nav class="mt-10 flex items-center justify-between">
 				{#if prevItem}
-					<a rel="prev" href={resolve(prevItem.path)} class="btn btn-outline py-8">
+					<Button
+						rel="prev"
+						href={resolve(prevItem.path)}
+						variant="outline"
+						tone="neutral"
+						shape="rect"
+						class="h-auto py-8"
+					>
 						<div class="flex flex-col gap-1">
-							<p class="text-xs text-base-content/70 self-start">Previous</p>
-							<p class="text-base-content/90">← {prevItem.title}</p>
+							<p class="text-xs text-foreground/70 self-start">Previous</p>
+							<p class="text-foreground/90">← {prevItem.title}</p>
 						</div>
-					</a>
+					</Button>
 				{:else}
 					<span></span>
 				{/if}
 				{#if nextItem}
-					<a rel="next" href={resolve(nextItem.path)} class="btn btn-outline py-8">
+					<Button
+						rel="next"
+						href={resolve(nextItem.path)}
+						variant="outline"
+						tone="neutral"
+						shape="rect"
+						class="h-auto py-8"
+					>
 						<div class="flex flex-col gap-1">
-							<p class="text-xs text-base-content/70 self-start">Next</p>
-							<p class="text-base-content/90">{nextItem.title} →</p>
+							<p class="text-xs text-foreground/70 self-start">Next</p>
+							<p class="text-foreground/90">{nextItem.title} →</p>
 						</div>
-					</a>
+					</Button>
 				{/if}
 			</nav>
 		</div>

@@ -4,6 +4,7 @@
 	import QuestionStudioWhyThis from './QuestionStudioWhyThis.svelte';
 	import { candidateConcern } from './questionStudioRun';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { Button } from '$lib/components/ui/button';
 	import type { CandidateQuestion } from './questionStudioTypes';
 	import type { CandidateReview } from './questionStudioRun';
 
@@ -53,26 +54,27 @@
 
 <div class="flex h-full w-full flex-col overflow-hidden">
 	<!-- Header -->
-	<div class="flex shrink-0 items-center justify-between gap-2 border-b border-base-300 p-4">
+	<div class="flex shrink-0 items-center justify-between gap-2 border-b border-border p-4">
 		<span class="whitespace-nowrap text-sm font-medium">
 			Question #{index + 1}
-			<span class="ml-1.5 text-xs font-normal text-base-content/45">of {total}</span>
+			<span class="ml-1.5 text-xs font-normal text-foreground/45">of {total}</span>
 		</span>
 		<div class="flex items-center gap-1">
 			{#if editing}
-				<span class="mr-1 text-xs font-medium text-primary">Editing draft</span>
+				<span class="mr-1 text-xs font-medium text-primary-ink">Editing draft</span>
 			{:else if isSaved}
 				<span
-					class="mr-1 flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1.5 text-xs font-medium text-success"
+					class="mr-1 flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1.5 text-xs font-medium text-success-ink"
 				>
 					<Check size={13} />
 					Saved
 				</span>
 			{:else}
-				<button
-					class="btn btn-sm gap-1.5 rounded-full {isIncluded
-						? 'btn-ghost border border-base-300'
-						: 'btn-primary'}"
+				<Button
+					size="sm"
+					class="gap-1.5"
+					variant={isIncluded ? 'outline' : 'solid'}
+					tone={isIncluded ? 'neutral' : 'primary'}
 					onclick={onToggleInclude}
 				>
 					{#if isIncluded}
@@ -82,48 +84,60 @@
 						<Plus size={14} />
 						Select
 					{/if}
-				</button>
+				</Button>
 			{/if}
 
 			{#if canEdit && candidate.metadata.jobId && !editing}
-				<button
-					class="btn btn-ghost btn-sm btn-circle"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape="circle"
 					aria-label="Edit this draft"
 					title="Edit this draft"
 					onclick={() => setEditing(true)}
 				>
 					<Pencil size={15} />
-				</button>
+				</Button>
 			{/if}
 
-			<span class="mx-1 h-5 w-px bg-base-300"></span>
-			<button
-				class="btn btn-ghost btn-sm btn-circle"
+			<span class="mx-1 h-5 w-px bg-muted-strong"></span>
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				shape="circle"
 				aria-label="Previous question"
 				disabled={editing || index <= 0}
 				onclick={onPrev}
 			>
 				<ChevronLeft size={16} />
-			</button>
-			<button
-				class="btn btn-ghost btn-sm btn-circle"
+			</Button>
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				shape="circle"
 				aria-label="Next question"
 				disabled={editing || index >= total - 1}
 				onclick={onNext}
 			>
 				<ChevronRight size={16} />
-			</button>
+			</Button>
 			{#if onClose}
-				<span class="mx-1 h-5 w-px bg-base-300"></span>
-				<button
-					class="btn btn-ghost btn-sm btn-circle"
+				<span class="mx-1 h-5 w-px bg-muted-strong"></span>
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape="circle"
 					aria-label="Close question"
 					title="Close"
 					disabled={editing}
 					onclick={onClose}
 				>
 					<X size={16} />
-				</button>
+				</Button>
 			{/if}
 		</div>
 	</div>
@@ -139,7 +153,7 @@
 		<!-- Content -->
 		<div class="min-h-0 flex-1 overflow-y-auto {isMobile ? 'p-4' : 'p-6 pb-12'}">
 			{#if candidate.metadata.curatorEditedAt}
-				<p class="mb-6 rounded-2xl bg-base-200 px-4 py-3 text-sm text-base-content/70">
+				<p class="mb-6 rounded-2xl bg-muted px-4 py-3 text-sm text-foreground/70">
 					You edited this draft. The notes below describe the original.
 				</p>
 			{/if}
@@ -158,7 +172,7 @@
 				<div
 					class="{isMobile
 						? 'text-base'
-						: 'text-lg'} font-medium leading-relaxed text-base-content tiptap-content"
+						: 'text-lg'} font-medium leading-relaxed text-foreground tiptap-content"
 				>
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					{@html sanitizeHtml(candidate.stem)}
@@ -176,14 +190,14 @@
 								? 'border p-1.5'
 								: 'border-2 p-2'} {correct
 								? 'border-success bg-success/5'
-								: 'border-base-300 bg-base-200'}"
+								: 'border-border bg-muted'}"
 						>
 							<span
 								class="flex shrink-0 items-center justify-center rounded-full border {isMobile
 									? 'ms-2 h-4 w-4'
 									: 'ms-3 h-5 w-5'} {correct
-									? 'border-success bg-success text-success-content'
-									: 'border-base-300'}"
+									? 'border-success bg-success text-success-foreground'
+									: 'border-border'}"
 							>
 								{#if correct}<Check size={isMobile ? 10 : 12} />{/if}
 							</span>
@@ -200,7 +214,7 @@
 							</span>
 							{#if correct}
 								<span
-									class="shrink-0 text-xs font-medium text-success {isMobile ? 'mr-3' : 'mr-4'}"
+									class="shrink-0 text-xs font-medium text-success-ink {isMobile ? 'mr-3' : 'mr-4'}"
 								>
 									{isMobile ? '✓' : '✓ Correct'}
 								</span>
@@ -213,9 +227,9 @@
 			<!-- Rationale -->
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
 				<h3 class="text-sm font-semibold {isMobile ? 'mb-2' : 'mb-3'}">Rationale</h3>
-				<div class="rounded-2xl border border-base-300 bg-base-200/30 {isMobile ? 'p-3' : 'p-4'}">
+				<div class="rounded-2xl border border-border bg-muted/30 {isMobile ? 'p-3' : 'p-4'}">
 					<div
-						class="prose prose-sm max-w-none tiptap-content text-sm leading-relaxed text-base-content/80"
+						class="prose prose-sm max-w-none tiptap-content text-sm leading-relaxed text-foreground/80"
 					>
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html sanitizeHtml(candidate.rationale)}

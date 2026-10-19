@@ -3,6 +3,8 @@
 	import { Sparkles } from 'lucide-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
+	import { Button } from '$lib/components/ui/button';
+	import { Spinner } from '$lib/components/ui/spinner';
 
 	let {
 		title,
@@ -67,19 +69,21 @@
 {#if eligible}
 	<div class="mt-2 min-h-7" aria-live="polite">
 		{#if loading}
-			<span class="inline-flex items-center gap-1.5 text-xs text-base-content/50"
-				><span class="loading loading-spinner loading-xs"></span>Finding an emoji…</span
+			<span class="inline-flex items-center gap-1.5 text-xs text-foreground/50"
+				><Spinner class="size-3" />Finding an emoji…</span
 			>
 		{:else if suggestion}
-			<button
-				type="button"
-				class="btn btn-ghost btn-sm gap-2 rounded-full text-secondary"
+			<Button
+				variant="ghost"
+				tone="secondary"
+				size="sm"
+				class="gap-2"
 				{disabled}
 				onclick={() => onselect(suggestion!)}
 				aria-label={`Use suggested emoji ${suggestion}`}
 			>
 				<Sparkles size={14} /><span class="text-lg">{suggestion}</span><span>Use suggestion</span>
-			</button>
+			</Button>
 		{/if}
 	</div>
 {/if}

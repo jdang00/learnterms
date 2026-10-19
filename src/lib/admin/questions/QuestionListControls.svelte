@@ -11,6 +11,10 @@
 		Archive
 	} from 'lucide-svelte';
 	import type { StatusFilter } from '$lib/types';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as InputGroup from '$lib/components/ui/input-group';
 
 	type SortMode = 'order' | 'created_desc';
 
@@ -81,445 +85,459 @@
 {#if isMobile}
 	<!-- Mobile/tablet layout (horizontal bar) -->
 	<div class="space-y-3">
-		<label
-			class="input input-sm input-bordered rounded-full flex items-center gap-2 w-full sm:w-64"
-		>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				viewBox="0 0 16 16"
-				fill="currentColor"
-				class="w-4 h-4 opacity-70"
-			>
-				<path
-					fill-rule="evenodd"
-					d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-					clip-rule="evenodd"
-				/>
-			</svg>
-			<input
+		<InputGroup.Root class="h-8 w-full sm:w-64">
+			<InputGroup.Addon>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 16 16"
+					fill="currentColor"
+					class="w-4 h-4 opacity-70"
+				>
+					<path
+						fill-rule="evenodd"
+						d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+						clip-rule="evenodd"
+					/>
+				</svg>
+			</InputGroup.Addon>
+			<InputGroup.Input
 				type="text"
-				class="grow"
+				class="text-sm"
 				placeholder="Search..."
 				value={searchInput}
 				oninput={(e) => onSearchChange((e.target as HTMLInputElement).value)}
 			/>
 			{#if searchInput}
-				<button class="btn btn-ghost btn-xs" onclick={onSearchClear}>×</button>
+				<InputGroup.Addon align="inline-end">
+					<InputGroup.Button onclick={onSearchClear}>×</InputGroup.Button>
+				</InputGroup.Addon>
 			{/if}
-		</label>
+		</InputGroup.Root>
 
 		<div class="flex flex-wrap items-center gap-2">
 			{#if canEdit && totalCount > 0}
-				<button
-					class="btn btn-sm btn-ghost rounded-full px-2"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					class="px-2"
 					onclick={() => (selectedCount === totalCount ? onDeselectAll() : onSelectAll())}
 				>
 					{selectedCount === totalCount ? 'Deselect all' : 'Select all'}
-				</button>
+				</Button>
 			{/if}
 
-			<div class="dropdown">
-				<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-1">
-					{sortMode === 'order' ? 'Order' : 'Recent'}
-					<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"
-						></path>
-					</svg>
-				</div>
-				<ul
-					class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-40 p-1 shadow-lg border border-base-300"
-				>
-					<li>
-						<button
-							class="text-sm"
-							class:active={sortMode === 'order'}
-							onclick={() => onSortChange('order')}>By Order</button
-						>
-					</li>
-					<li>
-						<button
-							class="text-sm"
-							class:active={sortMode === 'created_desc'}
-							onclick={() => onSortChange('created_desc')}>Recent First</button
-						>
-					</li>
-				</ul>
-			</div>
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<Button {...props} variant="ghost" tone="neutral" size="sm" class="gap-1">
+							{sortMode === 'order' ? 'Order' : 'Recent'}
+							<svg class="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M19 9l-7 7-7-7"
+								></path>
+							</svg>
+						</Button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="start" class="w-40">
+					<DropdownMenu.Item
+						class={sortMode === 'order' ? 'bg-muted font-semibold' : undefined}
+						onSelect={() => onSortChange('order')}>By Order</DropdownMenu.Item
+					>
+					<DropdownMenu.Item
+						class={sortMode === 'created_desc' ? 'bg-muted font-semibold' : undefined}
+						onSelect={() => onSortChange('created_desc')}>Recent First</DropdownMenu.Item
+					>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 
-			<div class="dropdown">
-				<div
-					tabindex="0"
-					role="button"
-					class="btn btn-sm btn-ghost gap-1 {statusFilter !== 'all' ? 'text-primary' : ''}"
-				>
-					<Filter size={14} />
-					<span class="text-xs">{statusFilterLabel}</span>
-					<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"
-						></path>
-					</svg>
-				</div>
-				<ul
-					class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-40 p-1 shadow-lg border border-base-300"
-				>
-					<li>
-						<button
-							class="text-sm"
-							class:active={statusFilter === 'all'}
-							onclick={() => onStatusFilterChange('all')}>All</button
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<Button
+							{...props}
+							variant="ghost"
+							tone="neutral"
+							size="sm"
+							class="gap-1 {statusFilter !== 'all' ? 'text-primary-ink' : ''}"
 						>
-					</li>
-					<li>
-						<button
-							class="text-sm"
-							class:active={statusFilter === 'published'}
-							onclick={() => onStatusFilterChange('published')}>Published</button
-						>
-					</li>
-					<li>
-						<button
-							class="text-sm"
-							class:active={statusFilter === 'draft'}
-							onclick={() => onStatusFilterChange('draft')}>Drafts</button
-						>
-					</li>
-					<li>
-						<button
-							class="text-sm"
-							class:active={statusFilter === 'archived'}
-							onclick={() => onStatusFilterChange('archived')}>Archived</button
-						>
-					</li>
-				</ul>
-			</div>
+							<Filter size={14} />
+							<span class="text-xs">{statusFilterLabel}</span>
+							<svg class="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M19 9l-7 7-7-7"
+								></path>
+							</svg>
+						</Button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="start" class="w-40">
+					<DropdownMenu.Item
+						class={statusFilter === 'all' ? 'bg-muted font-semibold' : undefined}
+						onSelect={() => onStatusFilterChange('all')}>All</DropdownMenu.Item
+					>
+					<DropdownMenu.Item
+						class={statusFilter === 'published' ? 'bg-muted font-semibold' : undefined}
+						onSelect={() => onStatusFilterChange('published')}>Published</DropdownMenu.Item
+					>
+					<DropdownMenu.Item
+						class={statusFilter === 'draft' ? 'bg-muted font-semibold' : undefined}
+						onSelect={() => onStatusFilterChange('draft')}>Drafts</DropdownMenu.Item
+					>
+					<DropdownMenu.Item
+						class={statusFilter === 'archived' ? 'bg-muted font-semibold' : undefined}
+						onSelect={() => onStatusFilterChange('archived')}>Archived</DropdownMenu.Item
+					>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 
 			{#if canEdit}
-				<div class="dropdown">
-					<div
-						tabindex="0"
-						role="button"
-						class="btn btn-sm btn-ghost gap-1"
-						title="New Question Status"
-					>
-						{#if defaultStatus === 'published'}
-							<CheckCircle size={14} class="text-success" />
-						{:else}
-							<FileText size={14} class="text-info" />
-						{/if}
-						<span class="hidden sm:inline text-xs"
-							>{defaultStatus === 'published' ? 'Auto-publish' : 'Save as draft'}</span
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								variant="ghost"
+								tone="neutral"
+								size="sm"
+								class="gap-1"
+								title="New Question Status"
+							>
+								{#if defaultStatus === 'published'}
+									<CheckCircle size={14} class="text-success" />
+								{:else}
+									<FileText size={14} class="text-info" />
+								{/if}
+								<span class="hidden sm:inline text-xs"
+									>{defaultStatus === 'published' ? 'Auto-publish' : 'Save as draft'}</span
+								>
+								<svg class="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M19 9l-7 7-7-7"
+									></path>
+								</svg>
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="start" class="w-48">
+						<DropdownMenu.Label class="text-xs">New questions are saved as:</DropdownMenu.Label>
+						<DropdownMenu.Item
+							class={defaultStatus === 'published' ? 'bg-muted font-semibold' : undefined}
+							onSelect={() => onDefaultStatusChange('published')}
 						>
-						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M19 9l-7 7-7-7"
-							></path>
-						</svg>
-					</div>
-					<ul
-						class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-48 p-1 shadow-lg border border-base-300"
-					>
-						<li class="menu-title text-xs px-2 pt-1 pb-1">New questions are saved as:</li>
-						<li>
-							<button
-								class="text-sm"
-								class:active={defaultStatus === 'published'}
-								onclick={() => onDefaultStatusChange('published')}
-							>
-								<CheckCircle size={14} class="text-success" /> Published
-							</button>
-						</li>
-						<li>
-							<button
-								class="text-sm"
-								class:active={defaultStatus === 'draft'}
-								onclick={() => onDefaultStatusChange('draft')}
-							>
-								<FileText size={14} class="text-info" /> Draft
-							</button>
-						</li>
-					</ul>
-				</div>
+							<CheckCircle size={14} class="text-success" /> Published
+						</DropdownMenu.Item>
+						<DropdownMenu.Item
+							class={defaultStatus === 'draft' ? 'bg-muted font-semibold' : undefined}
+							onSelect={() => onDefaultStatusChange('draft')}
+						>
+							<FileText size={14} class="text-info" /> Draft
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
 			{/if}
 
 			<div class="flex-1"></div>
 
 			{#if isAdmin}
-				<button
-					class="btn btn-sm rounded-full gap-1 {reorderMode ? 'btn-primary' : 'btn-ghost'}"
+				<Button
+					size="sm"
+					variant={reorderMode ? 'solid' : 'ghost'}
+					tone={reorderMode ? 'primary' : 'neutral'}
+					class="gap-1"
 					onclick={onReorderToggle}
 					aria-label={reorderMode ? 'Finish reordering' : 'Reorder questions'}
 					title={reorderMode ? 'Finish reordering' : 'Reorder questions'}
 				>
 					<GripVertical size={14} />
 					<span class="hidden sm:inline">{reorderMode ? 'Done' : 'Reorder'}</span>
-				</button>
+				</Button>
 			{/if}
 		</div>
 
 		{#if canEdit && selectedCount > 0}
-			<div class="flex flex-wrap items-center justify-start gap-1 border-t border-base-300 pt-2">
-				<span class="badge badge-neutral badge-sm mr-1 rounded-full">{selectedCount} selected</span>
-				<button class="btn btn-xs btn-ghost rounded-full gap-1" onclick={onPublishSelected}>
+			<div class="flex flex-wrap items-center justify-start gap-1 border-t border-border pt-2">
+				<Badge variant="solid" tone="neutral" size="sm" class="mr-1">{selectedCount} selected</Badge
+				>
+				<Button size="xs" variant="ghost" tone="neutral" class="gap-1" onclick={onPublishSelected}>
 					<Send size={14} />
 					<span>Publish</span>
-				</button>
-				<button class="btn btn-xs btn-ghost rounded-full gap-1" onclick={onDraftSelected}>
+				</Button>
+				<Button size="xs" variant="ghost" tone="neutral" class="gap-1" onclick={onDraftSelected}>
 					<FileText size={14} />
 					<span>Draft</span>
-				</button>
-				<button class="btn btn-xs btn-ghost rounded-full gap-1" onclick={onArchiveSelected}>
+				</Button>
+				<Button size="xs" variant="ghost" tone="neutral" class="gap-1" onclick={onArchiveSelected}>
 					<Archive size={14} />
 					<span>Archive</span>
-				</button>
-				<button class="btn btn-xs btn-ghost rounded-full gap-1" onclick={onMoveSelected}>
+				</Button>
+				<Button size="xs" variant="ghost" tone="neutral" class="gap-1" onclick={onMoveSelected}>
 					<ArrowRightLeft size={14} />
 					<span>Move</span>
-				</button>
-				<button
-					class="btn btn-xs btn-ghost rounded-full text-error gap-1"
-					onclick={onDeleteSelected}
-				>
+				</Button>
+				<Button size="xs" variant="ghost" tone="error" class="gap-1" onclick={onDeleteSelected}>
 					<Trash2 size={14} />
 					<span>Delete</span>
-				</button>
-				<button class="btn btn-xs btn-ghost rounded-full" onclick={onDeselectAll}>Clear</button>
+				</Button>
+				<Button size="xs" variant="ghost" tone="neutral" onclick={onDeselectAll}>Clear</Button>
 			</div>
 		{/if}
 	</div>
 {:else}
 	<!-- Desktop layout (sidebar header) -->
 	<div class="space-y-3">
-		<label class="input input-sm input-bordered rounded-full flex items-center gap-2 w-full">
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				viewBox="0 0 16 16"
-				fill="currentColor"
-				class="w-4 h-4 opacity-70"
-			>
-				<path
-					fill-rule="evenodd"
-					d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-					clip-rule="evenodd"
-				/>
-			</svg>
-			<input
+		<InputGroup.Root class="h-8 w-full">
+			<InputGroup.Addon>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 16 16"
+					fill="currentColor"
+					class="w-4 h-4 opacity-70"
+				>
+					<path
+						fill-rule="evenodd"
+						d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+						clip-rule="evenodd"
+					/>
+				</svg>
+			</InputGroup.Addon>
+			<InputGroup.Input
 				type="text"
-				class="grow text-sm"
+				class="text-sm"
 				placeholder="Search..."
 				value={searchInput}
 				oninput={(e) => onSearchChange((e.target as HTMLInputElement).value)}
 			/>
 			{#if searchInput}
-				<button class="btn btn-ghost btn-xs btn-circle" onclick={onSearchClear}>×</button>
+				<InputGroup.Addon align="inline-end">
+					<InputGroup.Button size="icon-xs" onclick={onSearchClear}>×</InputGroup.Button>
+				</InputGroup.Addon>
 			{/if}
-		</label>
+		</InputGroup.Root>
 
 		<div class="flex flex-wrap items-center gap-2">
 			{#if canEdit && totalCount > 0}
-				<button
-					class="btn btn-sm btn-ghost rounded-full px-2"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					class="px-2"
 					onclick={() => (selectedCount === totalCount ? onDeselectAll() : onSelectAll())}
 				>
 					{selectedCount === totalCount ? 'Deselect all' : 'Select all'}
-				</button>
+				</Button>
 			{/if}
 
-			<div class="flex items-center rounded-full border border-base-300 p-0.5 gap-0.5">
-				<div class="dropdown">
-					<div
-						tabindex="0"
-						role="button"
-						class="btn btn-sm btn-ghost rounded-full gap-1 px-3 border-0"
-					>
-						{sortMode === 'order' ? 'Order' : 'Recent'}
-						<svg class="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M19 9l-7 7-7-7"
-							></path>
-						</svg>
-					</div>
-					<ul
-						class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-40 p-1 shadow-lg border border-base-300"
-					>
-						<li>
-							<button
-								class="text-sm rounded-xl"
-								class:active={sortMode === 'order'}
-								onclick={() => onSortChange('order')}>By Order</button
-							>
-						</li>
-						<li>
-							<button
-								class="text-sm rounded-xl"
-								class:active={sortMode === 'created_desc'}
-								onclick={() => onSortChange('created_desc')}>Recent First</button
-							>
-						</li>
-					</ul>
-				</div>
+			<div class="flex items-center rounded-full border border-border p-0.5 gap-0.5">
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Button {...props} variant="ghost" tone="neutral" size="sm" class="gap-1 px-3">
+								{sortMode === 'order' ? 'Order' : 'Recent'}
+								<svg
+									class="size-3 opacity-50"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M19 9l-7 7-7-7"
+									></path>
+								</svg>
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="start" class="w-40">
+						<DropdownMenu.Item
+							class={sortMode === 'order' ? 'bg-muted font-semibold' : undefined}
+							onSelect={() => onSortChange('order')}>By Order</DropdownMenu.Item
+						>
+						<DropdownMenu.Item
+							class={sortMode === 'created_desc' ? 'bg-muted font-semibold' : undefined}
+							onSelect={() => onSortChange('created_desc')}>Recent First</DropdownMenu.Item
+						>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
 
-				<div class="w-px h-4 bg-base-300"></div>
+				<div class="w-px h-4 bg-muted-strong"></div>
 
-				<div class="dropdown">
-					<div
-						tabindex="0"
-						role="button"
-						class="btn btn-sm btn-ghost rounded-full gap-1 px-3 border-0 {statusFilter !== 'all'
-							? 'text-primary'
-							: ''}"
-					>
-						<Filter size={14} />
-						{statusFilterLabel}
-					</div>
-					<ul
-						class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-40 p-1 shadow-lg border border-base-300"
-					>
-						<li>
-							<button
-								class="text-sm rounded-xl"
-								class:active={statusFilter === 'all'}
-								onclick={() => onStatusFilterChange('all')}>All</button
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								variant="ghost"
+								tone="neutral"
+								size="sm"
+								class="gap-1 px-3 {statusFilter !== 'all' ? 'text-primary-ink' : ''}"
 							>
-						</li>
-						<li>
-							<button
-								class="text-sm rounded-xl"
-								class:active={statusFilter === 'published'}
-								onclick={() => onStatusFilterChange('published')}>Published</button
-							>
-						</li>
-						<li>
-							<button
-								class="text-sm rounded-xl"
-								class:active={statusFilter === 'draft'}
-								onclick={() => onStatusFilterChange('draft')}>Drafts</button
-							>
-						</li>
-						<li>
-							<button
-								class="text-sm rounded-xl"
-								class:active={statusFilter === 'archived'}
-								onclick={() => onStatusFilterChange('archived')}>Archived</button
-							>
-						</li>
-					</ul>
-				</div>
+								<Filter size={14} />
+								{statusFilterLabel}
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="start" class="w-40">
+						<DropdownMenu.Item
+							class={statusFilter === 'all' ? 'bg-muted font-semibold' : undefined}
+							onSelect={() => onStatusFilterChange('all')}>All</DropdownMenu.Item
+						>
+						<DropdownMenu.Item
+							class={statusFilter === 'published' ? 'bg-muted font-semibold' : undefined}
+							onSelect={() => onStatusFilterChange('published')}>Published</DropdownMenu.Item
+						>
+						<DropdownMenu.Item
+							class={statusFilter === 'draft' ? 'bg-muted font-semibold' : undefined}
+							onSelect={() => onStatusFilterChange('draft')}>Drafts</DropdownMenu.Item
+						>
+						<DropdownMenu.Item
+							class={statusFilter === 'archived' ? 'bg-muted font-semibold' : undefined}
+							onSelect={() => onStatusFilterChange('archived')}>Archived</DropdownMenu.Item
+						>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
 			</div>
 
 			{#if canEdit}
-				<div class="w-px h-5 bg-base-300"></div>
-				<div class="dropdown">
-					<div
-						tabindex="0"
-						role="button"
-						class="btn btn-sm btn-ghost rounded-full gap-1 px-3"
-						title="New questions save as: {defaultStatus}"
-					>
-						{#if defaultStatus === 'published'}
-							<CheckCircle size={14} class="text-success" />
-						{:else}
-							<FileText size={14} class="text-info" />
-						{/if}
-						{defaultStatus === 'published' ? 'Published' : 'Draft'}
-					</div>
-					<ul
-						class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-48 p-1 shadow-lg border border-base-300"
-					>
-						<li class="menu-title text-[10px] px-3 pt-1.5 pb-1 uppercase tracking-wider opacity-50">
+				<div class="w-px h-5 bg-muted-strong"></div>
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								variant="ghost"
+								tone="neutral"
+								size="sm"
+								class="gap-1 px-3"
+								title="New questions save as: {defaultStatus}"
+							>
+								{#if defaultStatus === 'published'}
+									<CheckCircle size={14} class="text-success" />
+								{:else}
+									<FileText size={14} class="text-info" />
+								{/if}
+								{defaultStatus === 'published' ? 'Published' : 'Draft'}
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="start" class="w-48">
+						<DropdownMenu.Label class="text-[10px] uppercase tracking-wider opacity-50">
 							New questions save as
-						</li>
-						<li>
-							<button
-								class="text-sm rounded-xl"
-								class:active={defaultStatus === 'published'}
-								onclick={() => onDefaultStatusChange('published')}
-							>
-								<CheckCircle size={14} class="text-success" /> Published
-							</button>
-						</li>
-						<li>
-							<button
-								class="text-sm rounded-xl"
-								class:active={defaultStatus === 'draft'}
-								onclick={() => onDefaultStatusChange('draft')}
-							>
-								<FileText size={14} class="text-info" /> Draft
-							</button>
-						</li>
-					</ul>
-				</div>
+						</DropdownMenu.Label>
+						<DropdownMenu.Item
+							class={defaultStatus === 'published' ? 'bg-muted font-semibold' : undefined}
+							onSelect={() => onDefaultStatusChange('published')}
+						>
+							<CheckCircle size={14} class="text-success" /> Published
+						</DropdownMenu.Item>
+						<DropdownMenu.Item
+							class={defaultStatus === 'draft' ? 'bg-muted font-semibold' : undefined}
+							onSelect={() => onDefaultStatusChange('draft')}
+						>
+							<FileText size={14} class="text-info" /> Draft
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
 			{/if}
 
 			<div class="flex-1"></div>
 
 			{#if isAdmin}
-				<button
-					class="btn btn-sm rounded-full gap-1 {reorderMode ? 'btn-primary' : 'btn-ghost'}"
+				<Button
+					size="sm"
+					variant={reorderMode ? 'solid' : 'ghost'}
+					tone={reorderMode ? 'primary' : 'neutral'}
+					class="gap-1"
 					onclick={onReorderToggle}
 				>
 					<GripVertical size={14} />
 					{reorderMode ? 'Done' : 'Reorder'}
-				</button>
+				</Button>
 			{/if}
 		</div>
 
 		{#if canEdit && selectedCount > 0}
-			<div class="flex flex-wrap items-center justify-start gap-1 border-t border-base-300 pt-2">
-				<span class="badge badge-neutral badge-sm mr-1 rounded-full">{selectedCount} selected</span>
-				<button
-					class="btn btn-xs btn-ghost rounded-full gap-1"
+			<div class="flex flex-wrap items-center justify-start gap-1 border-t border-border pt-2">
+				<Badge variant="solid" tone="neutral" size="sm" class="mr-1">{selectedCount} selected</Badge
+				>
+				<Button
+					size="xs"
+					variant="ghost"
+					tone="neutral"
+					class="gap-1"
 					onclick={onPublishSelected}
 					title="Publish selected"
 				>
 					<Send size={14} />
 					Publish
-				</button>
-				<button
-					class="btn btn-xs btn-ghost rounded-full gap-1"
+				</Button>
+				<Button
+					size="xs"
+					variant="ghost"
+					tone="neutral"
+					class="gap-1"
 					onclick={onDraftSelected}
 					title="Save selected as drafts"
 				>
 					<FileText size={14} />
 					Draft
-				</button>
-				<button
-					class="btn btn-xs btn-ghost rounded-full gap-1"
+				</Button>
+				<Button
+					size="xs"
+					variant="ghost"
+					tone="neutral"
+					class="gap-1"
 					onclick={onArchiveSelected}
 					title="Archive selected"
 				>
 					<Archive size={14} />
 					Archive
-				</button>
-				<button
-					class="btn btn-xs btn-ghost rounded-full gap-1"
+				</Button>
+				<Button
+					size="xs"
+					variant="ghost"
+					tone="neutral"
+					class="gap-1"
 					onclick={onMoveSelected}
 					title="Move selected"
 				>
 					<ArrowRightLeft size={14} />
 					Move
-				</button>
-				<button
-					class="btn btn-xs btn-ghost rounded-full text-error gap-1"
+				</Button>
+				<Button
+					size="xs"
+					variant="ghost"
+					tone="error"
+					class="gap-1"
 					onclick={onDeleteSelected}
 					title="Delete selected"
 				>
 					<Trash2 size={14} />
 					Delete
-				</button>
-				<button
-					class="btn btn-xs btn-ghost rounded-full gap-1"
+				</Button>
+				<Button
+					size="xs"
+					variant="ghost"
+					tone="neutral"
+					class="gap-1"
 					onclick={onDeselectAll}
 					title="Clear selection"
 				>
 					<X size={14} />
 					Clear
-				</button>
+				</Button>
 			</div>
 		{/if}
 	</div>

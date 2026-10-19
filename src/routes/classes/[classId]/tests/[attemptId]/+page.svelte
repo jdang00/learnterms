@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { dockGlass } from '$lib/components/quiz-dock/dockStyles';
+	import { RadialProgress } from '$lib/components/ui/radial-progress';
 	import { formatClock } from '$lib/utils/format';
 	import { provideStudyToolContext } from '$lib/analytics/studyToolContext';
 	import QuestionNotesTool from '$lib/components/question-notes/QuestionNotesTool.svelte';
@@ -32,6 +34,7 @@
 	import {
 		PanelRight,
 		ChevronLeft,
+		CircleAlert,
 		Clock,
 		Flag,
 		CheckCircle2,
@@ -47,6 +50,11 @@
 		Eraser,
 		ToolCase
 	} from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import * as Alert from '$lib/components/ui/alert';
+	import * as Card from '$lib/components/ui/card';
+	import { Progress } from '$lib/components/ui/progress';
+	import { Spinner } from '$lib/components/ui/spinner';
 
 	type LocalResponse = {
 		selectedOptions: string[];
@@ -109,7 +117,7 @@
 	const dirtyItemIds: Record<string, true> = {};
 	let syncInFlight = false;
 	let syncRequestedWhileInFlight = false;
-	let questionButtons = $state<HTMLButtonElement[]>([]);
+	let questionButtons = $state<HTMLElement[]>([]);
 
 	function cacheKey(id: string) {
 		return `lt:testAttempt:${id}`;
@@ -661,15 +669,15 @@
 	function syncStatusIcon(status: string) {
 		switch (status) {
 			case 'synced':
-				return 'text-success';
+				return 'text-success-ink';
 			case 'syncing':
-				return 'text-info';
+				return 'text-info-ink';
 			case 'offline':
-				return 'text-warning';
+				return 'text-warning-ink';
 			case 'error':
-				return 'text-error';
+				return 'text-error-ink';
 			default:
-				return 'text-base-content/40';
+				return 'text-foreground/40';
 		}
 	}
 
@@ -821,50 +829,54 @@
 	{#if runnerQuery.isLoading}
 		<div class="flex-1 flex items-center justify-center">
 			<div class="text-center">
-				<span class="loading loading-spinner loading-lg text-primary"></span>
-				<p class="text-base-content/60 mt-3">Loading your test...</p>
+				<Spinner class="size-6 text-primary" />
+				<p class="text-foreground/60 mt-3">Loading your test...</p>
 			</div>
 		</div>
 	{:else if runnerQuery.error}
 		<div class="flex-1 flex items-center justify-center p-4">
-			<div class="alert alert-error rounded-2xl max-w-md">
-				<span>{runnerQuery.error.toString()}</span>
-			</div>
+			<Alert.Root tone="error" class="max-w-md">
+				<CircleAlert />
+				<Alert.Title>{runnerQuery.error.toString()}</Alert.Title>
+			</Alert.Root>
 		</div>
 	{:else if runnerQuery.data}
 		{#if runnerQuery.data.attempt.status !== 'in_progress'}
 			<div class="flex-1 flex items-center justify-center p-4">
-				<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs max-w-md w-full">
-					<div class="card-body text-center">
+				<Card.Root class="max-w-md w-full">
+					<Card.Content class="text-center">
 						<CheckCircle2 class="mx-auto text-success mb-2" size={48} />
-						<h1 class="card-title justify-center font-display text-xl">Test Complete</h1>
-						<p class="text-sm text-base-content/60 mt-1">This test has already been submitted.</p>
-						<div class="card-actions justify-center mt-4">
-							<a
-								class="btn btn-primary rounded-full"
+						<h1 class="font-display text-xl font-bold">Test Complete</h1>
+						<p class="text-sm text-foreground/60 mt-1">This test has already been submitted.</p>
+						<div class="mt-4 flex justify-center">
+							<Button
 								href={resolve('/classes/[classId]/tests/[attemptId]/results', {
 									classId,
 									attemptId
 								})}
 							>
 								View Results
-							</a>
+							</Button>
 						</div>
-					</div>
-				</div>
+					</Card.Content>
+				</Card.Root>
 			</div>
 		{:else}
 			<div
-				class="flex flex-col lg:flex-row bg-base-100 h-full overflow-hidden lg:p-4 lg:gap-8 transition-all duration-500 ease-in-out"
+				class="flex flex-col lg:flex-row bg-background h-full overflow-hidden lg:p-4 lg:gap-8 transition-all duration-500 ease-in-out"
 				transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 			>
 				<!-- Sidebar -->
 				<div
-					class="hidden lg:flex lg:flex-col relative overflow-y-auto overflow-x-hidden border border-base-300 rounded-4xl p-3 px-4 transition-all duration-200 ease-out bg-base-100/80 backdrop-blur-md shadow-lg shrink-0 h-full
+					class="hidden lg:flex lg:flex-col relative overflow-y-auto overflow-x-hidden border border-border rounded-4xl p-3 px-4 transition-all duration-200 ease-out bg-background/80 backdrop-blur-md shadow-lg shrink-0 h-full
 					{hideSidebar ? 'w-[72px]' : 'w-[min(22rem,30vw)] xl:w-[min(24rem,28vw)]'}"
 				>
-					<button
-						class="btn btn-ghost btn-square btn-sm rounded-full w-9 h-9 absolute top-6 left-5"
+					<Button
+						variant="ghost"
+						tone="neutral"
+						size="sm"
+						shape="circle"
+						class="absolute top-6 left-5 size-9"
 						onclick={() => (hideSidebar = !hideSidebar)}
 						aria-label="Toggle sidebar"
 					>
@@ -872,54 +884,55 @@
 							size={18}
 							class="transition-transform duration-300 {hideSidebar ? 'rotate-180' : ''}"
 						/>
-					</button>
+					</Button>
 
 					{#if !hideSidebar}
 						<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
-							<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-								<button
-									type="button"
-									class="btn btn-ghost font-bold rounded-full"
+							<h4 class="font-bold text-sm tracking-wide text-secondary-ink -ms-6">
+								<Button
+									variant="ghost"
+									tone="secondary"
+									class="font-bold"
 									onclick={goBackToClasses}
 								>
 									<ChevronLeft size={16} />
 									{runnerQuery.data.attempt.className}
-								</button>
+								</Button>
 							</h4>
 							<h2 class="font-semibold text-2xl mt-2 flex items-start gap-3 min-w-0">
 								<span class="text-2xl shrink-0">📝</span>
 								<span class="break-words hyphens-auto overflow-hidden">Test Mode</span>
 							</h2>
-							<p class="text-base-content/60 mt-2 text-sm">
+							<p class="text-foreground/60 mt-2 text-sm">
 								Answer all questions, then submit to see your score.
 							</p>
 
 							<div class="mt-6">
-								<p class="text-base-content/60 mb-2">
+								<p class="text-foreground/60 mb-2">
 									{answeredCount} of {runnerQuery.data.items.length} answered
 								</p>
-								<progress
-									class="progress progress-primary w-full transition-colors"
+								<Progress
+									class="w-full transition-colors"
 									value={answeredCount}
 									max={runnerQuery.data.items.length}
-								></progress>
+								/>
 							</div>
 
 							<div class="grid grid-cols-2 gap-2 text-sm mt-5">
-								<div class="rounded-xl border border-base-300 p-3">
-									<div class="text-xs text-base-content/50">Answered</div>
+								<div class="rounded-xl border border-border p-3">
+									<div class="text-xs text-foreground/50">Answered</div>
 									<div class="font-bold text-lg">
-										{answeredCount}<span class="text-base-content/40 text-sm font-normal">
+										{answeredCount}<span class="text-foreground/40 text-sm font-normal">
 											/ {runnerQuery.data.items.length}</span
 										>
 									</div>
 								</div>
-								<div class="rounded-xl border border-base-300 p-3">
-									<div class="text-xs text-base-content/50 flex items-center gap-1">
+								<div class="rounded-xl border border-border p-3">
+									<div class="text-xs text-foreground/50 flex items-center gap-1">
 										<Flag size={10} />
 										Flagged
 									</div>
-									<div class="font-bold text-lg {flaggedCount > 0 ? 'text-warning' : ''}">
+									<div class="font-bold text-lg {flaggedCount > 0 ? 'text-warning-ink' : ''}">
 										{flaggedCount}
 									</div>
 								</div>
@@ -927,11 +940,11 @@
 						</div>
 
 						<div class="flex flex-col justify-center m-4">
-							<div class="card bg-base-100 shadow-xl rounded-2xl">
-								<div class="card-body p-4">
+							<Card.Root class="py-0 shadow-xl">
+								<Card.Content class="p-4">
 									<div class="flex items-center gap-2 mb-1">
-										<Clock size={14} class="text-base-content/50" />
-										<span class="text-xs uppercase tracking-wide text-base-content/50">Timer</span>
+										<Clock size={14} class="text-foreground/50" />
+										<span class="text-xs uppercase tracking-wide text-foreground/50">Timer</span>
 									</div>
 									<div class="text-3xl font-bold tabular-nums">
 										{formatClock(elapsedMsLocal)}
@@ -939,16 +952,16 @@
 									{#if remainingMs !== null}
 										<div
 											class="text-sm mt-1 {remainingMs <= 60_000
-												? 'text-error font-semibold animate-pulse'
-												: 'text-base-content/60'}"
+												? 'text-error-ink font-semibold animate-pulse'
+												: 'text-foreground/60'}"
 										>
 											{remainingMs <= 60_000 ? 'Hurry! ' : ''}{formatClock(remainingMs)} remaining
 										</div>
 									{:else}
-										<div class="text-xs mt-1 text-base-content/40">No time limit</div>
+										<div class="text-xs mt-1 text-foreground/40">No time limit</div>
 									{/if}
-								</div>
-							</div>
+								</Card.Content>
+							</Card.Root>
 
 							<div class="flex items-center justify-center gap-2 mt-4 text-xs">
 								{#if syncStatus === 'offline'}
@@ -959,7 +972,7 @@
 								<span class={syncStatusIcon(syncStatus)}>{syncStatusLabel(syncStatus)}</span>
 							</div>
 							{#if syncError}
-								<div class="text-error text-xs text-center mt-1">{syncError}</div>
+								<div class="text-error-ink text-xs text-center mt-1">{syncError}</div>
 							{/if}
 
 							<QuestionAttachmentsSidebar
@@ -973,7 +986,7 @@
 						<div class="mt-16 justify-self-center flex flex-col items-center space-y-4 ms-1">
 							<button
 								type="button"
-								class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
+								class="group flex items-center justify-center font-bold text-secondary-foreground bg-secondary text-center w-full rounded-full transition-colors"
 								onclick={goBackToClasses}
 							>
 								<span class="group-hover:hidden">📝</span>
@@ -985,25 +998,25 @@
 							<div class="text-center">
 								<div class="text-xs font-bold tabular-nums">{formatClock(elapsedMsLocal)}</div>
 								{#if remainingMs !== null}
-									<div class="text-[10px] text-base-content/50 tabular-nums">
+									<div class="text-[10px] text-foreground/50 tabular-nums">
 										{formatClock(remainingMs)}
 									</div>
 								{/if}
 							</div>
 
-							<div
-								class="radial-progress text-primary text-xs bg-base-300"
-								style="--value:{Math.round(
-									(answeredCount / Math.max(1, runnerQuery.data?.items?.length ?? 1)) * 100
-								)}; --size:3rem; --thickness: 3px;"
-								role="progressbar"
+							<RadialProgress
+								value={answeredCount}
+								max={Math.max(1, runnerQuery.data?.items?.length ?? 1)}
+								thickness={3}
+								label="Questions answered"
+								class="text-xs"
 							>
 								{answeredCount}
-							</div>
+							</RadialProgress>
 
-							<div class="border-t border-base-300 w-full my-2"></div>
+							<div class="border-t border-border w-full my-2"></div>
 
-							<div class="flex flex-col items-center text-xs text-base-content/50 gap-1">
+							<div class="flex flex-col items-center text-xs text-foreground/50 gap-1">
 								<Wifi size={12} class={syncStatusIcon(syncStatus)} />
 							</div>
 
@@ -1029,25 +1042,27 @@
 						<span
 							class="flex shrink-0 items-center gap-1 px-2 text-sm font-semibold tabular-nums {remainingMs !==
 								null && remainingMs <= 60_000
-								? 'text-error'
+								? 'text-error-ink'
 								: ''}"
 							role="timer"
 							aria-label={remainingMs !== null ? 'Time remaining' : 'Time elapsed'}
 						>
-							<Clock size={14} class="text-base-content/50" />
+							<Clock size={14} class="text-foreground/50" />
 							{formatClock(remainingMs ?? elapsedMsLocal)}
 						</span>
 					{/snippet}
 					{#snippet tools()}
-						<button
-							type="button"
-							class="btn btn-ghost btn-circle size-11 shrink-0 text-base-content/70"
+						<Button
+							variant="ghost"
+							tone="neutral"
+							shape="circle"
+							class="size-11 shrink-0 text-foreground/70"
 							aria-label="Tools"
 							aria-haspopup="dialog"
 							onclick={() => (toolsOpen = true)}
 						>
 							<ToolCase size={20} />
-						</button>
+						</Button>
 					{/snippet}
 				</MobileStudyBar>
 
@@ -1056,28 +1071,26 @@
 					class="w-full lg:flex-1 lg:min-w-0 flex flex-col max-w-full lg:max-w-none overflow-y-auto overscroll-contain grow min-h-0 h-full px-1 md:px-3 lg:px-0 pb-32 md:pb-36 lg:pb-48 relative"
 				>
 					<div class="hidden justify-end pb-2 lg:flex">
-						{#if clerk.user && currentItem}<button
-								type="button"
-								class="btn btn-sm rounded-full {sidePanel.current === 'notes'
-									? 'btn-soft btn-info'
-									: 'btn-ghost'}"
+						{#if clerk.user && currentItem}<Button
+								size="sm"
+								variant={sidePanel.current === 'notes' ? 'soft' : 'ghost'}
+								tone={sidePanel.current === 'notes' ? 'info' : 'neutral'}
 								aria-pressed={sidePanel.current === 'notes'}
 								onclick={() => sidePanel.toggle('notes')}
-								><StickyNote size={18} /><span class="hidden sm:inline">Notes</span></button
+								><StickyNote size={18} /><span class="hidden sm:inline">Notes</span></Button
 							>{/if}
-						<button
-							type="button"
-							class="btn btn-sm rounded-full {sidePanel.current === 'calculator'
-								? 'btn-soft btn-info'
-								: 'btn-ghost'}"
+						<Button
+							size="sm"
+							variant={sidePanel.current === 'calculator' ? 'soft' : 'ghost'}
+							tone={sidePanel.current === 'calculator' ? 'info' : 'neutral'}
 							aria-pressed={sidePanel.current === 'calculator'}
 							onclick={() => sidePanel.toggle('calculator')}
-							><Calculator size={18} /><span class="hidden sm:inline">Calculator</span></button
+							><Calculator size={18} /><span class="hidden sm:inline">Calculator</span></Button
 						>
 					</div>
 					<!-- Horizontal question navigator (matches QuizNavigation style) -->
 					<div
-						class="hidden lg:flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-4 relative items-center border border-base-300 px-6 py-3 rounded-4xl h-20 min-h-20 max-h-20 flex-none"
+						class="hidden lg:flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-4 relative items-center border border-border px-6 py-3 rounded-4xl h-20 min-h-20 max-h-20 flex-none"
 					>
 						{#each runnerQuery.data.items as item, index (item._id)}
 							{@const r = responses[item._id]}
@@ -1086,24 +1099,24 @@
 									? String(r.textResponse ?? r.selectedOptions[0] ?? '').trim().length > 0
 									: r.selectedOptions.length > 0
 								: false}
-							<div class="indicator">
+							{@const current = index === currentIndex}
+							<div class="relative inline-flex">
 								{#if r?.isFlagged}
 									<span
-										class="indicator-item indicator-start badge badge-warning badge-xs -translate-x-1/4 -translate-y-1/4 z-[1]"
+										class="absolute start-0 top-0 z-[1] inline-block size-2.5 rounded-full bg-warning -translate-x-1/4 -translate-y-1/4"
 									></span>
 								{/if}
-								<button
-									bind:this={questionButtons[index]}
-									class="btn btn-circle btn-md btn-soft {index === currentIndex
-										? 'btn-primary'
-										: answered
-											? 'btn-accent'
-											: 'btn-outline'}"
+								<Button
+									bind:ref={questionButtons[index]}
+									variant={current || answered ? 'soft' : 'outline'}
+									tone={current ? 'primary' : answered ? 'accent' : 'neutral'}
+									shape="circle"
+									size="md"
 									onclick={() => jumpToQuestion(index)}
 									title={`Question ${index + 1}`}
 								>
 									{index + 1}
-								</button>
+								</Button>
 							</div>
 						{/each}
 					</div>
@@ -1118,20 +1131,21 @@
 							ontouchend={swipeEnd}
 						>
 							<div class="hidden md:flex flex-row justify-between items-start mb-1">
-								<div class="text-xs text-base-content/40 font-medium">
+								<div class="text-xs text-foreground/40 font-medium">
 									Question {currentIndex + 1} of {runnerQuery.data.items.length}
 								</div>
 								<div class="flex items-center gap-2">
-									<button
-										class="btn btn-sm btn-circle {currentResponse?.isFlagged
-											? 'btn-warning'
-											: 'btn-warning btn-soft'}"
+									<Button
+										size="sm"
+										shape="circle"
+										tone="warning"
+										variant={currentResponse?.isFlagged ? 'solid' : 'soft'}
 										onclick={() => toggleFlag(currentItem)}
 										aria-label={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
 										title={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
 									>
 										<Flag size={16} />
-									</button>
+									</Button>
 								</div>
 							</div>
 
@@ -1172,7 +1186,7 @@
 								{/if}
 							{:else if isMatching(currentItem.question.type)}
 								<div class="mt-5 space-y-3 ms-2">
-									<div class="text-xs text-base-content/50 font-medium">
+									<div class="text-xs text-foreground/50 font-medium">
 										Match each prompt to one unique answer.
 									</div>
 									{#if currentSharedQuestion}
@@ -1186,11 +1200,11 @@
 								</div>
 							{:else}
 								<div
-									class="text-base-content/60 font-medium text-base sm:text-lg leading-tight my-3 ms-2"
+									class="text-foreground/60 font-medium text-base sm:text-lg leading-tight my-3 ms-2"
 								>
 									Select {currentItem.question.correctAnswerCount ?? 'all that apply'}.
 								</div>
-								<div class="text-xs text-base-content/45 ms-2 mb-2">
+								<div class="text-xs text-foreground/45 ms-2 mb-2">
 									Selected {selectedCountForCurrentItem()}
 									{#if currentItem.question.correctAnswerCount}
 										<span> / {currentItem.question.correctAnswerCount}</span>
@@ -1207,9 +1221,10 @@
 						</div>
 
 						{#if submitError}
-							<div class="alert alert-error rounded-full mx-4 mt-2">
-								<span class="text-sm">{submitError}</span>
-							</div>
+							<Alert.Root tone="error" class="mx-4 mt-2">
+								<CircleAlert />
+								<Alert.Title>{submitError}</Alert.Title>
+							</Alert.Root>
 						{/if}
 					{/if}
 				</div>
@@ -1222,87 +1237,105 @@
 
 			<!-- Fixed bottom action bar (matches QuizDock floating style) -->
 			<div
-				class="items-center gap-2 px-3 sm:px-4 md:px-5 lg:px-6 py-3 sm:py-4 md:py-5 rounded-full backdrop-blur-md border border-base-300 shadow-xl w-auto fixed left-1/2 -translate-x-1/2 bottom-4 z-40 hidden md:inline-flex"
+				class="dock-glass fixed inset-x-0 bottom-5 z-40 mx-auto hidden w-fit items-center gap-2 rounded-full p-2.5 md:inline-flex animate-in fade-in-0 slide-in-from-bottom-6 duration-500 ease-out motion-reduce:animate-none"
 			>
-				<button
-					class="btn btn-sm btn-outline rounded-full"
+				<Button
+					class={dockGlass('outline')}
+					variant="outline"
+					tone="neutral"
 					onclick={() => {
 						if (currentItem) clearAnswer(currentItem);
 					}}
 				>
 					Clear
-				</button>
-				<button
-					class="btn btn-sm btn-circle {currentResponse?.isFlagged
-						? 'btn-warning'
-						: 'btn-warning btn-soft'}"
+				</Button>
+				<Button
+					class={dockGlass(currentResponse?.isFlagged ? 'solid' : 'soft')}
+					shape="circle"
+					tone="warning"
+					variant={currentResponse?.isFlagged ? 'solid' : 'soft'}
 					onclick={() => {
 						if (currentItem) toggleFlag(currentItem);
 					}}
 					aria-label={currentResponse?.isFlagged ? 'Remove flag' : 'Flag for review'}
 				>
 					<Flag size={18} />
-				</button>
-				<button
-					class="btn btn-sm btn-ghost rounded-full"
+				</Button>
+				<Button
+					class={dockGlass('ghost')}
+					variant="ghost"
+					tone="neutral"
 					onclick={() => void flushSync(true)}
 					title="Save progress"
 				>
 					<Save size={16} />
-				</button>
+				</Button>
 
-				<div class="divider divider-horizontal mx-1"></div>
+				<span
+					class="mx-1 h-7 w-px shrink-0 bg-linear-to-b from-transparent via-foreground/18 to-transparent"
+					aria-hidden="true"
+				></span>
 
-				<button
-					class="btn btn-sm btn-outline {currentIndex === 0 ? 'btn-disabled' : ''}"
-					style="border-radius: 9999px 50% 50% 9999px;"
+				<Button
+					class={dockGlass('outline')}
+					variant="outline"
+					tone="neutral"
+					style="border-radius: 9999px 0.3rem 0.3rem 9999px;"
 					onclick={previousQuestion}
 					disabled={currentIndex === 0}
 				>
 					<ArrowLeft size={18} />
-				</button>
-				<button
-					class="btn btn-sm btn-outline {currentIndex === (runnerQuery.data?.items?.length ?? 1) - 1
-						? 'btn-disabled'
-						: ''}"
-					style="border-radius: 50% 9999px 9999px 50%;"
+				</Button>
+				<Button
+					class={dockGlass('outline')}
+					variant="outline"
+					tone="neutral"
+					style="border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: calc(2px - 0.5rem);"
 					onclick={nextQuestion}
 					disabled={currentIndex === (runnerQuery.data?.items?.length ?? 1) - 1}
 				>
 					<ArrowRight size={18} />
-				</button>
+				</Button>
 
-				<div class="divider divider-horizontal mx-1"></div>
+				<span
+					class="mx-1 h-7 w-px shrink-0 bg-linear-to-b from-transparent via-foreground/18 to-transparent"
+					aria-hidden="true"
+				></span>
 
-				<button
-					class="btn btn-sm btn-primary rounded-full gap-1"
+				<Button
+					tone="primary"
+					class="{dockGlass('solid')} gap-1"
 					onclick={() => (showSubmitModal = true)}
 					disabled={isSubmitting}
 				>
 					<Send size={14} />
 					{isSubmitting ? 'Submitting...' : 'Submit'}
-				</button>
+				</Button>
 			</div>
 
 			<!-- Phone dock: same shape as the quiz dock -->
 			<div
-				class="bottom-dock fixed inset-x-0 z-50 border-t border-base-300 bg-base-100/95 backdrop-blur-md md:hidden"
+				class="dock-glass bottom-dock fixed inset-x-0 z-50 rounded-t-[1.75rem] border-b-0 md:hidden"
 			>
 				<div class="flex items-center gap-1 px-2 pt-2" role="toolbar" aria-label="Test controls">
 					<div class="flex min-w-0 flex-1 items-center justify-center gap-1">
-						<button
-							class="btn btn-ghost btn-circle [--size:2.75rem]"
+						<Button
+							variant="ghost"
+							tone="neutral"
+							shape="circle"
+							class="size-11"
 							onclick={() => {
 								if (currentItem) clearAnswer(currentItem);
 							}}
 							aria-label="Clear answer"
 						>
 							<Eraser size={18} />
-						</button>
-						<button
-							class="btn btn-circle [--size:2.75rem] {currentResponse?.isFlagged
-								? 'btn-warning'
-								: 'btn-warning btn-outline'}"
+						</Button>
+						<Button
+							variant={currentResponse?.isFlagged ? 'solid' : 'outline'}
+							tone="warning"
+							shape="circle"
+							class="size-11"
 							onclick={() => {
 								if (currentItem) toggleFlag(currentItem);
 							}}
@@ -1310,38 +1343,42 @@
 							aria-pressed={currentResponse?.isFlagged ?? false}
 						>
 							<Flag size={18} />
-						</button>
-						<button
-							class="btn btn-primary h-11 min-w-28 flex-1 gap-1.5 rounded-full {isLastQuestion
-								? ''
-								: 'btn-soft'}"
+						</Button>
+						<Button
+							variant={isLastQuestion ? 'solid' : 'soft'}
+							tone="primary"
+							class="h-11 min-w-28 flex-1 gap-1.5"
 							onclick={() => (showSubmitModal = true)}
 							disabled={isSubmitting}
 						>
 							<Send size={16} />
 							{isSubmitting ? 'Submitting…' : 'Submit'}
-						</button>
+						</Button>
 					</div>
 					<!-- The same split pill as the desktop dock. -->
 					<div class="ms-1 flex shrink-0 items-center gap-0.5">
-						<button
-							class="btn btn-outline [--size:2.75rem]"
+						<Button
+							variant="outline"
+							tone="neutral"
+							class="size-11"
 							style="border-radius: 9999px 0.3rem 0.3rem 9999px;"
 							onclick={previousQuestion}
 							disabled={currentIndex === 0}
 							aria-label="Previous question"
 						>
 							<ArrowLeft size={18} />
-						</button>
-						<button
-							class="btn btn-outline [--size:2.75rem]"
+						</Button>
+						<Button
+							variant="outline"
+							tone="neutral"
+							class="size-11"
 							style="border-radius: 0.3rem 9999px 9999px 0.3rem;"
 							onclick={nextQuestion}
 							disabled={isLastQuestion}
 							aria-label="Next question"
 						>
 							<ArrowRight size={18} />
-						</button>
+						</Button>
 					</div>
 				</div>
 			</div>
@@ -1362,14 +1399,13 @@
 							{#if syncStatus === 'offline'}<WifiOff size={12} />{:else}<Wifi size={12} />{/if}
 							{syncStatusLabel(syncStatus)}
 						</span>
-						<button
-							type="button"
-							class="btn btn-primary min-h-11 rounded-full px-5"
+						<Button
+							size="lg"
 							onclick={() => {
 								navigatorOpen = false;
 								showSubmitModal = true;
 							}}
-							disabled={isSubmitting}><Send size={16} /> Submit test</button
+							disabled={isSubmitting}><Send size={16} /> Submit test</Button
 						>
 					</div>
 				{/snippet}
@@ -1381,9 +1417,9 @@
 						<li>
 							<button
 								type="button"
-								class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-base-300 text-sm font-medium active:scale-[0.97] {sidePanel.current ===
+								class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-border text-sm font-medium active:scale-[0.97] {sidePanel.current ===
 								'notes'
-									? 'bg-info/12 text-info'
+									? 'bg-info/12 text-info-ink'
 									: ''}"
 								aria-pressed={sidePanel.current === 'notes'}
 								onclick={() => {
@@ -1396,9 +1432,9 @@
 					<li>
 						<button
 							type="button"
-							class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-base-300 text-sm font-medium active:scale-[0.97] {sidePanel.current ===
+							class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-border text-sm font-medium active:scale-[0.97] {sidePanel.current ===
 							'calculator'
-								? 'bg-info/12 text-info'
+								? 'bg-info/12 text-info-ink'
 								: ''}"
 							aria-pressed={sidePanel.current === 'calculator'}
 							onclick={() => {
@@ -1408,33 +1444,35 @@
 						>
 					</li>
 				</ul>
-				<button
-					type="button"
-					class="btn btn-ghost mt-4 min-h-11 w-full rounded-full text-base-content/70"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="lg"
+					class="mt-4 w-full text-foreground/70"
 					onclick={() => void flushSync(true)}
 				>
 					<Save size={16} /> Save progress now
-				</button>
+				</Button>
 			</Sheet>
 
 			<Sheet bind:open={showSubmitModal} title="Submit your test?">
 				<div class="space-y-3">
-					<p class="text-base-content/70">
+					<p class="text-foreground/70">
 						Once submitted, you won't be able to change your answers. You'll be able to review each
 						question with the correct answers and rationales.
 					</p>
 					<div class="grid grid-cols-2 gap-2 text-sm">
-						<div class="rounded-xl border border-base-300 p-3">
-							<div class="text-xs text-base-content/50">Answered</div>
+						<div class="rounded-xl border border-border p-3">
+							<div class="text-xs text-foreground/50">Answered</div>
 							<div class="font-semibold">
 								{answeredCount} / {runnerQuery.data?.items?.length ?? 0}
 							</div>
 						</div>
-						<div class="rounded-xl border border-base-300 p-3">
-							<div class="text-xs text-base-content/50">Unanswered</div>
+						<div class="rounded-xl border border-border p-3">
+							<div class="text-xs text-foreground/50">Unanswered</div>
 							<div
 								class="font-semibold {(runnerQuery.data?.items?.length ?? 0) - answeredCount > 0
-									? 'text-warning'
+									? 'text-warning-ink'
 									: ''}"
 							>
 								{(runnerQuery.data?.items?.length ?? 0) - answeredCount}
@@ -1442,22 +1480,27 @@
 						</div>
 					</div>
 					{#if (runnerQuery.data?.items?.length ?? 0) - answeredCount > 0}
-						<div class="alert alert-warning rounded-xl text-sm">
+						<Alert.Root tone="warning">
 							<Info size={14} />
-							<span>You have unanswered questions. They will be marked as incorrect.</span>
-						</div>
+							<Alert.Title
+								>You have unanswered questions. They will be marked as incorrect.</Alert.Title
+							>
+						</Alert.Root>
 					{/if}
 				</div>
 				{#snippet footer()}
 					<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-						<button
-							class="btn btn-outline min-h-11 rounded-full"
+						<Button
+							variant="outline"
+							tone="neutral"
+							size="lg"
 							onclick={() => (showSubmitModal = false)}
 						>
 							Keep working
-						</button>
-						<button
-							class="btn btn-primary min-h-11 rounded-full gap-1"
+						</Button>
+						<Button
+							size="lg"
+							class="gap-1"
 							onclick={() => {
 								showSubmitModal = false;
 								void submitAttempt(false);
@@ -1466,7 +1509,7 @@
 						>
 							<Send size={14} />
 							{isSubmitting ? 'Submitting…' : 'Submit test'}
-						</button>
+						</Button>
 					</div>
 				{/snippet}
 			</Sheet>

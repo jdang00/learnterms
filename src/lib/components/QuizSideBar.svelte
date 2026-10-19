@@ -10,6 +10,11 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ProgressRing from './ProgressRing.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Kbd } from '$lib/components/ui/kbd';
+	import { Progress } from '$lib/components/ui/progress';
+	import * as Card from '$lib/components/ui/card';
+	import * as Dialog from '$lib/components/ui/dialog';
 
 	let { qs = $bindable(), module, currentlySelected, classId } = $props();
 	let hideSidebar = $state(false);
@@ -37,18 +42,21 @@
 	class="
 	 hidden lg:flex lg:flex-col relative
 	 overflow-y-auto overflow-x-hidden
-	 border border-base-300
+	 border border-border
 	 rounded-4xl
 	 p-3 px-4
 	 transition-all duration-200 ease-out
-	 bg-base-100/80 backdrop-blur-md
+	 bg-background/80 backdrop-blur-md
 	 shrink-0 h-full
 	 {hideSidebar ? 'w-[72px]' : 'w-[min(22rem,30vw)] xl:w-[min(24rem,28vw)]'}
 
 	"
 >
-	<button
-		class="btn btn-ghost btn-square btn-sm rounded-full w-9 h-9 absolute top-6 left-5"
+	<Button
+		variant="ghost"
+		tone="neutral"
+		shape="circle"
+		class="absolute top-6 left-5 size-9"
 		onclick={() => (hideSidebar = !hideSidebar)}
 		aria-label="Toggle sidebar"
 	>
@@ -56,24 +64,20 @@
 			size={18}
 			class="transition-transform duration-300 {hideSidebar ? 'rotate-180' : ''}"
 		/>
-	</button>
+	</Button>
 
 	{#if !hideSidebar}
 		<div class="p-4 md:p-5 lg:p-6 pt-12 mt-8">
-			<h4 class="font-bold text-sm tracking-wide text-secondary -ms-6">
-				<button
-					type="button"
-					class="btn btn-ghost text-secondary font-bold rounded-full"
-					onclick={goToModuleSelection}
-				>
+			<h4 class="font-bold text-sm tracking-wide text-secondary-ink -ms-6">
+				<Button variant="ghost" tone="secondary" class="font-bold" onclick={goToModuleSelection}>
 					<ChevronLeft size={16} /> Back
-				</button>
+				</Button>
 			</h4>
 			<h2 class="mt-2 flex min-w-0 items-start gap-3 text-xl font-semibold leading-tight">
 				<span class="text-2xl shrink-0">{module.data?.emoji || '📘'}</span>
 				<span class="min-w-0 break-normal text-balance">{module.data.title}</span>
 			</h2>
-			<p class="text-base-content/70 mt-2 break-words hyphens-auto">{module.data.description}</p>
+			<p class="text-foreground/70 mt-2 break-words hyphens-auto">{module.data.description}</p>
 
 			<div class="mt-6">
 				{#if qs.getCompletionSummary}
@@ -84,13 +88,13 @@
 						onreset={() => (qs.isResetModalOpen = true)}
 					/>
 				{:else}
-					<p class="mb-2 text-base-content/60">{qs.getProgressPercentage()}% done.</p>
-					<progress
-						class="progress progress-success w-full"
+					<p class="mb-2 text-foreground/60">{qs.getProgressPercentage()}% done.</p>
+					<Progress
+						tone="success"
 						value={qs.getProgressPercentage()}
-						max="100"
+						max={100}
 						aria-label="Module progress"
-					></progress>
+					/>
 				{/if}
 			</div>
 
@@ -107,15 +111,20 @@
 			/>
 
 			{#if hasRationale(currentlySelected)}
-				<div class="card mt-6 rounded-2xl border border-base-300 bg-base-100">
-					<div class="card-body">
+				<Card.Root class="mt-6 gap-0 rounded-2xl border-border bg-background text-base">
+					<Card.Content class="gap-2">
 						<div class="flex flex-row flex-wrap justify-between border-b pb-2">
-							<h2 class="card-title">Rationale</h2>
+							<h2 class="flex items-center gap-2 text-lg font-semibold">Rationale</h2>
 							<div class="flex flex-row">
-								<kbd class="kbd kbd-sm hidden xl:block self-center me-1">tab</kbd>
-								<button class="btn btn-ghost btn-circle" onclick={() => qs.handleSolution()}>
+								<Kbd class="me-1 hidden self-center xl:inline-flex">tab</Kbd>
+								<Button
+									variant="ghost"
+									tone="neutral"
+									shape="circle"
+									onclick={() => qs.handleSolution()}
+								>
 									<Eye />
-								</button>
+								</Button>
 							</div>
 						</div>
 						<div
@@ -130,18 +139,20 @@
 									currentlySelected?.metadata?.generation}
 							/>
 						</div>
-					</div>
-				</div>
+					</Card.Content>
+				</Card.Root>
 			{/if}
 
 			<div class="flex flex-row mt-6 justify-center">
-				<button
-					class="btn btn-soft btn-sm rounded-full"
+				<Button
+					variant="soft"
+					tone="neutral"
+					size="sm"
 					onclick={() => (isSettingsModalOpen = true)}
 				>
 					<Settings size={16} />
 					<span class="ml-1 hidden sm:inline">Settings</span>
-				</button>
+				</Button>
 			</div>
 		</div>
 	{:else}
@@ -149,7 +160,7 @@
 			<div class="flex flex-col items-center space-y-4">
 				<button
 					type="button"
-					class="group flex items-center justify-center font-bold text-secondary-content bg-secondary text-center w-full rounded-full transition-colors"
+					class="group flex items-center justify-center font-bold text-secondary-foreground bg-secondary text-center w-full rounded-full transition-colors"
 					onclick={goToModuleSelection}
 				>
 					<span class="group-hover:hidden">{module.data.order + 1}</span>
@@ -158,9 +169,8 @@
 					>
 				</button>
 
-				<button
-					class="btn btn-circle btn-lg btn-soft btn-primary"
-					onclick={() => (isInfoModalOpen = true)}><Info /></button
+				<Button variant="soft" shape="circle" size="lg" onclick={() => (isInfoModalOpen = true)}
+					><Info /></Button
 				>
 
 				<button
@@ -176,12 +186,15 @@
 						label={ring?.answered ?? qs.getProgressPercentage()}
 					/>
 				</button>
-				<button
-					class="btn btn-circle btn-lg btn-soft"
+				<Button
+					variant="soft"
+					tone="neutral"
+					shape="circle"
+					size="lg"
 					onclick={async () => {
 						if (!qs.showSolution) await qs.handleSolution();
 						if (qs.showSolution) isSolutionModalOpen = true;
-					}}><Eye /></button
+					}}><Eye /></Button
 				>
 
 				<QuestionAttachmentsSidebar
@@ -194,54 +207,53 @@
 				<QuizToolsBar variant="rail" />
 			</div>
 
-			<div class="border-t border-base-300 w-full my-2"></div>
+			<div class="border-t border-border w-full my-2"></div>
 
-			<button
-				class="btn btn-circle btn-lg mt-3 btn-soft"
+			<Button
+				variant="soft"
+				tone="neutral"
+				shape="circle"
+				size="lg"
+				class="mt-3"
 				onclick={() => (isSettingsModalOpen = true)}
 				title="Settings"
 			>
 				<Settings />
-			</button>
+			</Button>
 		</div>
 	{/if}
 </div>
 
-<dialog class="modal max-w-full p-4" class:modal-open={isInfoModalOpen}>
-	<div class="modal-box rounded-2xl">
-		<form method="dialog">
-			<button
-				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-				onclick={() => (isInfoModalOpen = false)}>✕</button
-			>
-		</form>
-		<h3 class="font-bold">Module Information</h3>
-		<p class="py-4"></p>
-		<p class="font-2xl font-semibold">Module {module.data.order + 1}: {module.data.title}</p>
-		<p class="text-base-content/70">{module.data.description}</p>
-		<div class="modal-action">
-			<button class="btn rounded-full" onclick={() => (isInfoModalOpen = false)}>Close</button>
+<Dialog.Root bind:open={isInfoModalOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Module Information</Dialog.Title>
+		</Dialog.Header>
+		<div>
+			<p class="font-2xl font-semibold">Module {module.data.order + 1}: {module.data.title}</p>
+			<p class="text-foreground/70">{module.data.description}</p>
 		</div>
-	</div>
-</dialog>
+		<Dialog.Footer>
+			<Button variant="soft" tone="neutral" onclick={() => (isInfoModalOpen = false)}>Close</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
 
-<dialog class="modal max-w-full p-4" class:modal-open={isSolutionModalOpen}>
-	<div class="modal-box rounded-2xl">
-		<form method="dialog">
-			<button
-				class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-				onclick={() => (isSolutionModalOpen = false)}>✕</button
-			>
-		</form>
-		<h3 class="text-lg font-bold">Rationale</h3>
+<Dialog.Root bind:open={isSolutionModalOpen}>
+	<Dialog.Content class="max-h-[90dvh] overflow-y-auto">
+		<Dialog.Header>
+			<Dialog.Title>Rationale</Dialog.Title>
+		</Dialog.Header>
 		{#if hasRationale(currentlySelected)}
-			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-			<div class="py-4 tiptap-content">{@html sanitizedRationale}</div>
-			<QuestionSources
-				source={currentlySelected?.metadata?.source ?? currentlySelected?.metadata?.generation}
-			/>
+			<div>
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+				<div class="tiptap-content">{@html sanitizedRationale}</div>
+				<QuestionSources
+					source={currentlySelected?.metadata?.source ?? currentlySelected?.metadata?.generation}
+				/>
+			</div>
 		{/if}
-	</div>
-</dialog>
+	</Dialog.Content>
+</Dialog.Root>
 
 <SettingsModal bind:qs bind:isOpen={isSettingsModalOpen} />

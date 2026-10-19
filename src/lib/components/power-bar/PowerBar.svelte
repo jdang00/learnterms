@@ -8,6 +8,10 @@
 	import { Search, Keyboard, Sparkles } from 'lucide-svelte';
 	import { isDark, theme } from '$lib/theme.svelte';
 	import { modifierKeyLabel } from '$lib/utils/platform';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import { Kbd } from '$lib/components/ui/kbd';
 	import PowerBarCohortSearchSection from './PowerBarCohortSearchSection.svelte';
 	import PowerBarCohortSection from './PowerBarCohortSection.svelte';
 	import PowerBarQuickLinksSection from './PowerBarQuickLinksSection.svelte';
@@ -57,7 +61,7 @@
 
 	let searchQuery = $state('');
 	let debouncedSearchQuery = $state('');
-	let dialogRef: HTMLDialogElement | null = null;
+	let dialogRef = $state<HTMLElement | null>(null);
 	let searchInputRef: HTMLInputElement | null = null;
 	let autoNextEnabled = $state(true);
 	let optionsShuffleEnabled = $state(false);
@@ -360,33 +364,33 @@
 	});
 </script>
 
-<dialog
-	class="modal max-w-full items-start p-0 sm:items-center sm:p-4"
-	class:modal-open={isOpen}
-	onkeydown={handleDialogKeydown}
-	bind:this={dialogRef}
->
+<Dialog.Root bind:open={isOpen}>
 	<!-- Phones get a full-screen panel that stops above the keyboard so the results can scroll. -->
-	<div
-		class="modal-box pt-safe flex h-[calc(100dvh-var(--keyboard-inset,0px))] max-h-none w-full max-w-none flex-col overflow-hidden rounded-none p-0 shadow-2xl sm:h-auto sm:max-h-[min(80vh,40rem)] sm:max-w-2xl sm:rounded-2xl sm:border sm:border-base-300 sm:pt-0"
+	<Dialog.Content
+		bind:ref={dialogRef}
+		showCloseButton={false}
+		onkeydown={handleDialogKeydown}
+		class="pt-safe top-0 left-0 flex h-[calc(100dvh-var(--keyboard-inset,0px))] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 shadow-2xl sm:top-1/2 sm:left-1/2 sm:h-auto sm:max-h-[min(80vh,40rem)] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border sm:border-border sm:pt-0"
 	>
-		<div class="flex shrink-0 items-center gap-2.5 border-b border-base-300 px-4">
-			<Search size={15} class="shrink-0 text-base-content/40" />
+		<div class="flex shrink-0 items-center gap-2.5 border-b border-border px-4">
+			<Search size={15} class="shrink-0 text-foreground/40" />
 			<input
 				type="text"
-				class="h-12 w-full bg-transparent text-sm outline-hidden placeholder:text-base-content/40"
+				class="h-12 w-full bg-transparent text-sm outline-hidden placeholder:text-foreground/40"
 				placeholder="Search cohorts, classes, modules, links, settings..."
 				bind:value={searchQuery}
 				bind:this={searchInputRef}
 			/>
-			<kbd class="kbd kbd-xs hidden opacity-40 sm:inline-flex">esc</kbd>
-			<button
-				type="button"
-				class="btn btn-ghost btn-sm -mr-2 shrink-0 sm:hidden"
+			<Kbd class="hidden opacity-40 sm:inline-flex">esc</Kbd>
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				class="-mr-2 shrink-0 sm:hidden"
 				onclick={() => (isOpen = false)}
 			>
 				Cancel
-			</button>
+			</Button>
 		</div>
 
 		<div
@@ -395,7 +399,7 @@
 			{#if searchQuery.trim()}
 				<section class="space-y-2">
 					<div class="px-3 pt-1">
-						<p class="text-[11px] font-medium uppercase tracking-wider text-base-content/35">
+						<p class="text-[11px] font-medium uppercase tracking-wider text-foreground/35">
 							Top Result
 						</p>
 					</div>
@@ -413,16 +417,14 @@
 							</span>
 							<span class="min-w-0 flex-1">
 								<span class="block truncate text-[13px] font-semibold">{topResult.title}</span>
-								<span class="block truncate text-[11px] text-base-content/50"
+								<span class="block truncate text-[11px] text-foreground/50"
 									>{topResult.description}</span
 								>
 							</span>
-							<span class="badge badge-ghost badge-xs rounded-full capitalize"
-								>{topResult.kind}</span
-							>
+							<Badge size="xs" class="capitalize">{topResult.kind}</Badge>
 						</button>
 					{:else}
-						<p class="px-3 py-2 text-sm text-base-content/45">
+						<p class="px-3 py-2 text-sm text-foreground/45">
 							No direct matches yet. Try a cohort, quick link, or setting.
 						</p>
 					{/if}
@@ -464,9 +466,9 @@
 		</div>
 
 		<div
-			class="hidden shrink-0 items-center justify-between border-t border-base-300 px-4 py-2 sm:flex"
+			class="hidden shrink-0 items-center justify-between border-t border-border px-4 py-2 sm:flex"
 		>
-			<div class="flex items-center gap-2 text-[11px] text-base-content/40">
+			<div class="flex items-center gap-2 text-[11px] text-foreground/40">
 				<Keyboard size={12} />
 				<span>{modifierKey} K</span>
 				<span>·</span>
@@ -477,9 +479,5 @@
 				<span>Enter</span>
 			</div>
 		</div>
-	</div>
-
-	<form method="dialog" class="modal-backdrop">
-		<button onclick={() => (isOpen = false)}>close</button>
-	</form>
-</dialog>
+	</Dialog.Content>
+</Dialog.Root>

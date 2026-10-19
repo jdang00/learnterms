@@ -5,6 +5,7 @@
 	import { Confetti } from 'svelte-confetti';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
+	import { Button } from '$lib/components/ui/button';
 
 	let { data }: { data: PageData } = $props();
 
@@ -57,7 +58,7 @@
 						<span
 							class="relative inline-flex rounded-full h-6 w-6 bg-success items-center justify-center"
 						>
-							<Sparkles size={14} class="text-success-content" />
+							<Sparkles size={14} class="text-success-foreground" />
 						</span>
 					</span>
 				</div>
@@ -73,7 +74,7 @@
 			{/if}
 		</h1>
 
-		<p class="text-base-content/70 text-lg mb-8">
+		<p class="text-foreground/70 text-lg mb-8">
 			{#if isSyncing}
 				Just a moment while we activate your subscription.
 			{:else}
@@ -83,14 +84,14 @@
 
 		<!-- What's unlocked -->
 		{#if !isSyncing}
-			<div class="bg-base-200 rounded-xl p-6 mb-8 text-left">
+			<div class="bg-muted rounded-xl p-6 mb-8 text-left">
 				<h3 class="font-semibold mb-4 flex items-center gap-2">
 					<Rocket size={18} class="text-primary" />
 					What you've unlocked
 				</h3>
 				<ul class="space-y-3 text-sm">
 					<li class="flex items-start gap-3">
-						<span class="text-success font-bold">AI</span>
+						<span class="text-success-ink font-bold">AI</span>
 						<span>Question Studio curator beta; usage limits apply</span>
 					</li>
 					<li class="flex items-start gap-3">
@@ -114,11 +115,11 @@
 
 			<!-- CTA -->
 			<div class="flex flex-col sm:flex-row gap-3 justify-center">
-				<a href={resolve('/admin/question-studio')} class="btn btn-primary">
+				<Button href={resolve('/admin/question-studio')}>
 					Open Question Studio
 					<ArrowRight size={18} />
-				</a>
-				<a href={resolve('/admin')} class="btn btn-outline"> Go to Dashboard </a>
+				</Button>
+				<Button href={resolve('/admin')} variant="outline" tone="neutral">Go to Dashboard</Button>
 			</div>
 		{/if}
 	</div>

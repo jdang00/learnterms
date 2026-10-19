@@ -1,5 +1,11 @@
+<script lang="ts">
+	import * as Alert from '$lib/components/ui/alert';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as Table from '$lib/components/ui/table';
+</script>
+
 <h1>LearnTerms Generation Models</h1>
-<p class="text-base-content/70 mt-2">
+<p class="text-foreground/70 mt-2">
 	Understanding LearnTerms' intelligent question generation models and their specialized focus
 	areas.
 </p>
@@ -22,53 +28,60 @@
 
 <h2 class="mt-10">Available Models</h2>
 
-<div class="overflow-x-auto mt-4">
-	<div class="rounded-box border border-base-300 bg-base-100">
-		<table class="table table-lg w-full">
-			<thead>
-				<tr>
-					<th class="text-base">Model</th>
-					<th class="text-base">Focus</th>
-					<th class="text-base">Best For</th>
-					<th class="text-base">Features</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td><code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-general</code></td>
-					<td>General health sciences</td>
-					<td>Mixed content, interdisciplinary topics</td>
-					<td>
+<div class="mt-4">
+	<div class="overflow-hidden rounded-3xl border border-border bg-background">
+		<Table.Root class="text-base">
+			<Table.Header>
+				<Table.Row>
+					<Table.Head class="text-base">Model</Table.Head>
+					<Table.Head class="text-base">Focus</Table.Head>
+					<Table.Head class="text-base">Best For</Table.Head>
+					<Table.Head class="text-base">Features</Table.Head>
+				</Table.Row>
+			</Table.Header>
+			<Table.Body>
+				<Table.Row>
+					<Table.Cell
+						><code class="font-mono bg-muted px-2 py-1 rounded-sm">swift-general</code></Table.Cell
+					>
+					<Table.Cell>General health sciences</Table.Cell>
+					<Table.Cell>Mixed content, interdisciplinary topics</Table.Cell>
+					<Table.Cell>
 						<div class="flex flex-wrap gap-2">
-							<span class="badge badge-outline">Balanced</span>
-							<span class="badge badge-outline">Wide scope</span>
+							<Badge variant="outline">Balanced</Badge>
+							<Badge variant="outline">Wide scope</Badge>
 						</div>
-					</td>
-				</tr>
-				<tr>
-					<td><code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-optometry</code></td>
-					<td>Ocular and vision science</td>
-					<td>Ophthalmology, eye care, vision</td>
-					<td>
+					</Table.Cell>
+				</Table.Row>
+				<Table.Row>
+					<Table.Cell
+						><code class="font-mono bg-muted px-2 py-1 rounded-sm">swift-optometry</code
+						></Table.Cell
+					>
+					<Table.Cell>Ocular and vision science</Table.Cell>
+					<Table.Cell>Ophthalmology, eye care, vision</Table.Cell>
+					<Table.Cell>
 						<div class="flex flex-wrap gap-2">
-							<span class="badge badge-outline">Ocular focus</span>
-							<span class="badge badge-outline">Vision science</span>
+							<Badge variant="outline">Ocular focus</Badge>
+							<Badge variant="outline">Vision science</Badge>
 						</div>
-					</td>
-				</tr>
-				<tr>
-					<td><code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-pharmacy</code></td>
-					<td>Pharmacology and therapeutics</td>
-					<td>Drug mechanisms, patient care</td>
-					<td>
+					</Table.Cell>
+				</Table.Row>
+				<Table.Row>
+					<Table.Cell
+						><code class="font-mono bg-muted px-2 py-1 rounded-sm">swift-pharmacy</code></Table.Cell
+					>
+					<Table.Cell>Pharmacology and therapeutics</Table.Cell>
+					<Table.Cell>Drug mechanisms, patient care</Table.Cell>
+					<Table.Cell>
 						<div class="flex flex-wrap gap-2">
-							<span class="badge badge-outline">Pharmacotherapy</span>
-							<span class="badge badge-outline">Clinical focus</span>
+							<Badge variant="outline">Pharmacotherapy</Badge>
+							<Badge variant="outline">Clinical focus</Badge>
 						</div>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+					</Table.Cell>
+				</Table.Row>
+			</Table.Body>
+		</Table.Root>
 	</div>
 </div>
 
@@ -90,31 +103,29 @@
 <h2 class="mt-10">Model Selection</h2>
 <p>When generating questions, you can choose the model that best fits your current study needs:</p>
 
-<div class="alert alert-info my-6">
-	<div>
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			fill="none"
-			viewBox="0 0 24 24"
-			class="stroke-current shrink-0 w-6 h-6"
-		>
-			<path
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				stroke-width="2"
-				d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-			></path>
-		</svg>
-		<span>
-			<strong>Pro Tip:</strong> Use the model that matches your current course or study focus for the
-			most relevant questions.
-		</span>
-	</div>
-</div>
+<Alert.Root tone="info" class="my-6" role={undefined}>
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		fill="none"
+		viewBox="0 0 24 24"
+		class="stroke-current shrink-0 w-6 h-6"
+	>
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+		></path>
+	</svg>
+	<span>
+		<strong>Pro Tip:</strong> Use the model that matches your current course or study focus for the most
+		relevant questions.
+	</span>
+</Alert.Root>
 
 <h3 class="mt-10">When to Use Each Model</h3>
 
-<h4 class="mt-6"><code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-general</code></h4>
+<h4 class="mt-6"><code class="font-mono bg-muted px-2 py-1 rounded-sm">swift-general</code></h4>
 <ul>
 	<li>General health sciences courses</li>
 	<li>Mixed content or interdisciplinary topics</li>
@@ -122,7 +133,7 @@
 </ul>
 
 <h4 class="mt-6">
-	<code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-optometry</code>
+	<code class="font-mono bg-muted px-2 py-1 rounded-sm">swift-optometry</code>
 </h4>
 <ul>
 	<li>Ophthalmology and vision science</li>
@@ -130,7 +141,7 @@
 	<li>Clinical optometry practice</li>
 </ul>
 
-<h4 class="mt-6"><code class="font-mono bg-base-200 px-2 py-1 rounded-sm">swift-pharmacy</code></h4>
+<h4 class="mt-6"><code class="font-mono bg-muted px-2 py-1 rounded-sm">swift-pharmacy</code></h4>
 <ul>
 	<li>Pharmacology and therapeutics</li>
 	<li>Drug mechanisms and interactions</li>
@@ -173,24 +184,22 @@
 	questions for your learning goals.
 </p>
 
-<div class="alert alert-success my-8">
-	<div>
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			class="stroke-current shrink-0 h-6 w-6"
-			fill="none"
-			viewBox="0 0 24 24"
-		>
-			<path
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				stroke-width="2"
-				d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-			/>
-		</svg>
-		<span>
-			<strong>Ready to get started?</strong> Head to the Question Studio to try out different LearnTerms
-			models with your own content.
-		</span>
-	</div>
-</div>
+<Alert.Root tone="success" class="my-8" role={undefined}>
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		class="stroke-current shrink-0 h-6 w-6"
+		fill="none"
+		viewBox="0 0 24 24"
+	>
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+		/>
+	</svg>
+	<span>
+		<strong>Ready to get started?</strong> Head to the Question Studio to try out different LearnTerms
+		models with your own content.
+	</span>
+</Alert.Root>

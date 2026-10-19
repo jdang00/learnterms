@@ -5,6 +5,8 @@
 	import { useQuery } from 'convex-svelte';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api';
+	import * as InputGroup from '$lib/components/ui/input-group';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 
 	export interface Props {
 		cohortId: Id<'cohort'>;
@@ -71,39 +73,45 @@
 </script>
 
 <div class="flex h-full flex-col">
-	<div class="shrink-0 border-b border-base-300 p-4">
+	<div class="shrink-0 border-b border-border p-4">
 		<div class="mb-3">
 			<h2 class="text-sm font-semibold">Sources</h2>
-			<p class="mt-0.5 text-xs text-base-content/50">
+			<p class="mt-0.5 text-xs text-foreground/50">
 				Choose an indexed or mapped document to use as your source.
 			</p>
 		</div>
 
-		<label class="input input-sm input-bordered flex w-full items-center gap-2 rounded-full">
-			<Search size={14} class="text-base-content/40" />
-			<input class="grow" placeholder="Search sources..." bind:value={searchQuery} />
-		</label>
+		<InputGroup.Root class="h-8 w-full">
+			<InputGroup.Addon>
+				<Search size={14} class="text-foreground/40" />
+			</InputGroup.Addon>
+			<InputGroup.Input
+				class="h-8 px-3 text-sm"
+				placeholder="Search sources..."
+				bind:value={searchQuery}
+			/>
+		</InputGroup.Root>
 	</div>
 
 	<div class="flex-1 overflow-y-auto p-3">
 		{#if docs.isLoading}
 			<div class="space-y-2">
 				{#each Array.from({ length: 5 }, (_, i) => i) as i (i)}
-					<div class="skeleton h-16 w-full rounded-2xl"></div>
+					<Skeleton class="h-16 w-full rounded-2xl" />
 				{/each}
 			</div>
 		{:else if docs.error}
 			<div class="py-8 text-center">
 				<TriangleAlert size={32} class="mx-auto mb-2 text-error/60" />
-				<p class="text-sm text-error">Failed to load sources</p>
+				<p class="text-sm text-error-ink">Failed to load sources</p>
 			</div>
 		{:else if filteredDocs.length === 0}
 			<div class="py-8 text-center">
-				<Layers size={32} class="mx-auto mb-2 text-base-content/20" />
+				<Layers size={32} class="mx-auto mb-2 text-foreground/20" />
 				<p class="text-sm font-medium">
 					{searchQuery ? 'No matching sources' : 'No sources yet'}
 				</p>
-				<p class="mx-auto mt-1 max-w-xs text-xs text-base-content/50">
+				<p class="mx-auto mt-1 max-w-xs text-xs text-foreground/50">
 					Upload and index a PDF in Content Library to select its pages.
 				</p>
 			</div>
@@ -123,7 +131,7 @@
 						onblur={cancelIntent}
 						class="rounded-2xl border transition-colors {selected
 							? 'border-primary bg-primary/5'
-							: 'border-base-300 hover:border-base-content/20 hover:bg-base-200/60'} w-full p-3 text-left"
+							: 'border-border hover:border-foreground/20 hover:bg-muted/60'} w-full p-3 text-left"
 					>
 						<div class="flex items-start gap-3">
 							<div class="rounded-xl bg-primary/10 p-2 text-primary">
@@ -136,7 +144,7 @@
 										<CheckCircle2 size={14} class="shrink-0 text-success" />
 									{/if}
 								</div>
-								<p class="mt-0.5 truncate text-xs text-base-content/50">
+								<p class="mt-0.5 truncate text-xs text-foreground/50">
 									{doc.metadata?.originalFileName ?? 'Uploaded document'} · {doc.metadata
 										?.pageCount ?? '?'} pages · {formatBytes(
 										doc.metadata?.sizeBytes,

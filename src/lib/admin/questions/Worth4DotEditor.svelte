@@ -15,6 +15,8 @@
 		type W4dResponse
 	} from '$lib/examFindings/worth4dot';
 	import Worth4DotDiagram from '$lib/components/exam-findings/Worth4DotDiagram.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Switch } from '$lib/components/ui/switch';
 
 	let {
 		finding,
@@ -41,7 +43,7 @@
 		{ value: 'rHyper', label: 'R hyper' },
 		{ value: 'lHyper', label: 'L hyper' }
 	];
-	const CHIP = 'btn btn-xs h-7 rounded-full px-2.5 font-medium';
+	const CHIP = 'h-7 px-2.5 font-medium';
 
 	const redEye = $derived(redEyeFor(finding.values.lenses));
 	const key = (row: string, column: string) => sectionValueKey(section, row, column);
@@ -96,21 +98,21 @@
 
 <div class="@container space-y-2">
 	<label
-		class="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-base-300/70 bg-base-100 px-3 py-2"
+		class="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-border/70 bg-background px-3 py-2"
 	>
-		<input
-			type="checkbox"
-			class="toggle toggle-primary toggle-sm mt-0.5"
+		<Switch
+			size="sm"
+			class="mt-0.5"
 			checked={Boolean(finding.hideInterpretation)}
-			onchange={(event) => {
-				finding.hideInterpretation = event.currentTarget.checked || undefined;
+			onCheckedChange={(checked) => {
+				finding.hideInterpretation = checked || undefined;
 				onChange();
 			}}
 			{disabled}
 		/>
 		<span class="min-w-0 text-xs leading-snug">
 			<span class="font-medium">Quiz on the pattern</span>
-			<span class="block text-base-content/55">
+			<span class="block text-foreground/55">
 				Students see only the dots until they answer; the interpretation shows with the solution.
 			</span>
 		</span>
@@ -119,11 +121,11 @@
 		{#each section.rows as row (row.key)}
 			{@const current = readRow(row.key)}
 			{@const reading = { ...current, response: current.response ?? ('Fusion' as const) }}
-			<div class="min-w-0 space-y-2 rounded-2xl border border-base-300/70 bg-base-200/30 p-2.5">
+			<div class="min-w-0 space-y-2 rounded-2xl border border-border/70 bg-muted/30 p-2.5">
 				<div class="flex items-center justify-between gap-2">
-					<span class="text-xs font-semibold text-base-content/70">{row.label}</span>
+					<span class="text-xs font-semibold text-foreground/70">{row.label}</span>
 					{#if current.response}
-						<span class="truncate text-[0.7rem] text-base-content/55">
+						<span class="truncate text-[0.7rem] text-foreground/55">
 							{worth4DotSummary(reading, redEye).dots}
 						</span>
 					{/if}
@@ -131,13 +133,16 @@
 				<div class="flex flex-wrap gap-1" role="radiogroup" aria-label="{row.label} response">
 					{#each RESPONSES as option (option.value)}
 						{@const active = current.response === option.value}
-						<button
+						<Button
+							size="xs"
+							variant={active ? 'solid' : 'ghost'}
+							tone={active ? 'primary' : 'neutral'}
 							type="button"
 							role="radio"
 							aria-checked={active}
-							class="{CHIP} {active ? 'btn-primary' : 'btn-ghost border-base-300 bg-base-100'}"
+							class="{CHIP} {active ? '' : 'border-border bg-background'}"
 							onclick={() => chooseResponse(row.key, option.value)}
-							{disabled}>{option.label}</button
+							{disabled}>{option.label}</Button
 						>
 					{/each}
 				</div>
@@ -161,32 +166,38 @@
 					<div class="flex flex-wrap gap-1" aria-label="{row.label} diplopia presets">
 						{#each PRESETS as preset (preset.value)}
 							{@const active = presetActive(current.offset, preset.value)}
-							<button
+							<Button
+								size="xs"
+								variant={active ? 'solid' : 'ghost'}
+								tone={active ? 'secondary' : 'neutral'}
 								type="button"
 								aria-pressed={active}
-								class="{CHIP} {active ? 'btn-secondary' : 'btn-ghost border-base-300 bg-base-100'}"
+								class="{CHIP} {active ? '' : 'border-border bg-background'}"
 								onclick={() =>
 									write(row.key, {
 										response: 'Diplopia',
 										offset: presetOffset(preset.value, redEye)
 									})}
-								{disabled}>{preset.label}</button
+								{disabled}>{preset.label}</Button
 							>
 						{/each}
 					</div>
 				{:else if current.response === 'Fusion'}
 					<div class="flex flex-wrap items-center gap-1" role="radiogroup" aria-label="White dot">
-						<span class="mr-1 text-[0.7rem] text-base-content/50">White dot</span>
+						<span class="mr-1 text-[0.7rem] text-foreground/50">White dot</span>
 						{#each W4D_WHITE as option (option)}
 							{@const active = current.white === option}
-							<button
+							<Button
+								size="xs"
+								variant={active ? 'solid' : 'ghost'}
+								tone={active ? 'secondary' : 'neutral'}
 								type="button"
 								role="radio"
 								aria-checked={active}
-								class="{CHIP} {active ? 'btn-secondary' : 'btn-ghost border-base-300 bg-base-100'}"
+								class="{CHIP} {active ? '' : 'border-border bg-background'}"
 								onclick={() =>
 									write(row.key, { response: 'Fusion', white: active ? undefined : option })}
-								{disabled}>{option}</button
+								{disabled}>{option}</Button
 							>
 						{/each}
 					</div>
@@ -195,7 +206,7 @@
 					{@const summary = worth4DotSummary(reading, redEye)}
 					<p class="text-xs leading-snug">
 						<span class="font-medium">{summary.title}</span>
-						{#if summary.detail}<span class="text-base-content/55"> · {summary.detail}</span>{/if}
+						{#if summary.detail}<span class="text-foreground/55"> · {summary.detail}</span>{/if}
 					</p>
 				{/if}
 			</div>

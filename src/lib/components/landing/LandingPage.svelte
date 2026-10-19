@@ -17,6 +17,10 @@
 	import QuizPreviewReplica from '$lib/components/landing/QuizPreviewReplica.svelte';
 	import ReviewsShowcase from '$lib/components/landing/ReviewsShowcase.svelte';
 	import BrandLogo from '$lib/components/BrandLogo.svelte';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import { Kbd } from '$lib/components/ui/kbd';
+	import { Switch } from '$lib/components/ui/switch';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { resolve } from '$app/paths';
@@ -139,6 +143,7 @@
 			progress: 94,
 			flags: 1,
 			color: 'bg-primary',
+			ink: 'text-primary-ink',
 			recent: '2m ago'
 		},
 		{
@@ -147,6 +152,7 @@
 			progress: 82,
 			flags: 3,
 			color: 'bg-secondary',
+			ink: 'text-secondary-ink',
 			recent: '8m ago'
 		},
 		{
@@ -155,9 +161,18 @@
 			progress: 71,
 			flags: 5,
 			color: 'bg-accent',
+			ink: 'text-accent-ink',
 			recent: '14m ago'
 		},
-		{ initials: 'LT', name: 'Liam T.', progress: 58, flags: 8, color: 'bg-info', recent: '21m ago' }
+		{
+			initials: 'LT',
+			name: 'Liam T.',
+			progress: 58,
+			flags: 8,
+			color: 'bg-info',
+			ink: 'text-info-ink',
+			recent: '21m ago'
+		}
 	];
 	let analyticsVisible = $state(false);
 
@@ -231,32 +246,32 @@
 				>
 					<BrandLogo class="align-baseline" /> is Smarter Studying, Simplified.
 				</h1>
-				<p class="mt-5 max-w-3xl text-lg text-base-content/80 sm:text-xl">
+				<p class="mt-5 max-w-3xl text-lg text-foreground/80 sm:text-xl">
 					LearnTerms gives you a live quiz workspace where answers, flags, and progress sync
 					instantly, so every study session stays focused and uninterrupted.
 				</p>
 				<div class="mt-8 flex">
-					<a href={resolve('/sign-in')} class="btn btn-primary rounded-full px-6">
+					<Button href={resolve('/sign-in')} class="px-6">
 						Start studying
 						<ArrowRight size={18} />
-					</a>
+					</Button>
 				</div>
 			</div>
 		</section>
 
 		<section class="mt-2 grid gap-3 sm:grid-cols-3" aria-label="Explore LearnTerms">
 			<a href={resolve('/features')} class="panel-graph transition-colors hover:border-primary/50">
-				<span class="card-body gap-1 p-5">
+				<span class="flex flex-col gap-1 p-5">
 					<span class="font-semibold">Explore study features</span>
-					<span class="text-sm text-base-content/70"
+					<span class="text-sm text-foreground/70"
 						>Question banks, practice tests, feedback, and progress tools.</span
 					>
 				</span>
 			</a>
 			<a href={resolve('/pricing')} class="panel-graph transition-colors hover:border-primary/50">
-				<span class="card-body gap-1 p-5">
+				<span class="flex flex-col gap-1 p-5">
 					<span class="font-semibold">See access and pricing</span>
-					<span class="text-sm text-base-content/70"
+					<span class="text-sm text-foreground/70"
 						>How students and content curators use LearnTerms.</span
 					>
 				</span>
@@ -265,9 +280,9 @@
 				href="https://docs.learnterms.com/docs"
 				class="panel-graph transition-colors hover:border-primary/50"
 			>
-				<span class="card-body gap-1 p-5">
+				<span class="flex flex-col gap-1 p-5">
 					<span class="font-semibold">Read the documentation</span>
-					<span class="text-sm text-base-content/70"
+					<span class="text-sm text-foreground/70"
 						>Guides for study workflows, cohorts, and course content.</span
 					>
 				</span>
@@ -277,20 +292,22 @@
 		<section class="mt-10" aria-labelledby="quiz-preview-title">
 			<div class="mb-5 max-w-3xl">
 				<h2 id="quiz-preview-title" class="text-2xl font-bold sm:text-3xl">Look familiar?</h2>
-				<p class="mt-2 text-base-content/75">
+				<p class="mt-2 text-foreground/75">
 					Feel at home with the familiar testing tools and workflow you already use. This is your
 					high-speed sandbox to practice with full control, built for healthcare students across
 					programs.
 				</p>
 			</div>
 			<div in:scale={{ duration: 600, delay: 120, easing: cubicOut }}>
-				<div
-					class="mockup-browser relative z-10 overflow-visible border border-base-300 bg-base-100"
-				>
-					<div class="mockup-browser-toolbar">
-						<div class="input border border-base-300">learnterms.com/classes</div>
+				<div class="relative z-10 overflow-visible rounded-3xl border border-border bg-background">
+					<div class="flex items-center px-4 pt-3 pb-2">
+						<div
+							class="flex h-9 w-full items-center rounded-full border border-border bg-background px-4 text-sm text-muted-foreground"
+						>
+							learnterms.com/classes
+						</div>
 					</div>
-					<div class="overflow-visible border-t border-base-300 bg-base-100 pb-10">
+					<div class="overflow-visible border-t border-border bg-background pb-10">
 						<QuizPreviewReplica />
 					</div>
 				</div>
@@ -303,7 +320,7 @@
 				<h2 id="features-title" class="text-3xl font-bold sm:text-4xl">
 					Built for how students actually study
 				</h2>
-				<p class="mt-2 text-base-content/75">
+				<p class="mt-2 text-foreground/75">
 					Equipping students with the practice tools and control that are usually hidden behind
 					proctor-managed testing workflows.
 				</p>
@@ -313,59 +330,59 @@
 				<!-- Flag & filter — interactive mini quiz nav -->
 				<div class="panel-graph p-4 flex flex-col">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
+						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
 							<Flag size={18} />
 						</div>
 					</div>
 					<h3 class="text-xl font-semibold">Flag & filter</h3>
-					<p class="mt-2 text-sm text-base-content/75">
+					<p class="mt-2 text-sm text-foreground/75">
 						Mark what you missed and focus your next pass where it matters most.
 					</p>
 
 					<div
-						class="mt-4 flex flex-1 flex-col rounded-xl border border-base-300/60 bg-base-100/50 overflow-hidden"
+						class="mt-4 flex flex-1 flex-col rounded-xl border border-border/60 bg-background/50 overflow-hidden"
 					>
-						<div class="flex items-center justify-between border-b border-base-300/40 px-3 py-2">
-							<span class="text-[10px] text-base-content/50"
+						<div class="flex items-center justify-between border-b border-border/40 px-3 py-2">
+							<span class="text-[10px] text-foreground/50"
 								>{visibleQuestions.length} of {mockQuestions.length} questions</span
 							>
 							<label class="flex cursor-pointer items-center gap-1.5">
-								<Flag size={10} class={showFlaggedOnly ? 'text-warning' : 'text-base-content/40'} />
-								<span class="text-[10px] font-medium" class:text-warning={showFlaggedOnly}
+								<Flag size={10} class={showFlaggedOnly ? 'text-warning' : 'text-foreground/40'} />
+								<span class="text-[10px] font-medium" class:text-warning-ink={showFlaggedOnly}
 									>Flagged only</span
 								>
-								<input
-									type="checkbox"
-									class="toggle toggle-xs toggle-warning"
-									bind:checked={showFlaggedOnly}
-								/>
+								<Switch size="sm" class="data-checked:bg-warning" bind:checked={showFlaggedOnly} />
 							</label>
 						</div>
 						<div class="flex-1 p-3">
 							<!-- Same buttons as the question strip above each quiz. -->
 							<div class="flex flex-wrap gap-3">
 								{#each visibleQuestions as q (q.id)}
-									<div class="indicator">
+									<div class="relative inline-flex">
 										{#if q.flagged}
-											<span
-												class="indicator-item indicator-start badge badge-warning badge-xs z-[1]"
-											></span>
+											<Badge
+												tone="warning"
+												variant="solid"
+												size="xs"
+												class="absolute -top-1 -left-1 z-[1]"
+											></Badge>
 										{/if}
-										<button
-											class="flag-q-btn btn btn-circle btn-md btn-soft {q.id === flagActiveQ
-												? 'btn-primary'
-												: 'btn-outline'} {q.answered && q.id !== flagActiveQ ? 'btn-accent' : ''}"
+										<Button
+											variant={q.id === flagActiveQ || q.answered ? 'soft' : 'outline'}
+											tone={q.id === flagActiveQ ? 'primary' : q.answered ? 'accent' : 'neutral'}
+											shape="circle"
+											class="flag-q-btn"
 											aria-label="{q.flagged ? 'Unflag' : 'Flag'} question {q.id}"
 											onclick={() => toggleFlag(q.id)}
 										>
 											{q.id}
-										</button>
+										</Button>
 									</div>
 								{/each}
 							</div>
 						</div>
-						<div class="border-t border-base-300/40 px-3 py-1.5">
-							<p class="text-[9px] text-base-content/35 text-center">
+						<div class="border-t border-border/40 px-3 py-1.5">
+							<p class="text-[9px] text-foreground/35 text-center">
 								Click to flag &middot; toggle to filter
 							</p>
 						</div>
@@ -375,43 +392,41 @@
 				<!-- AI generation — animated pipeline demo -->
 				<div class="panel-graph p-4 ai-card min-w-0">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
+						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
 							<BrainCircuit size={18} />
 						</div>
 					</div>
 					<h3 class="text-xl font-semibold">AI-generated or hand-built</h3>
-					<p class="mt-2 text-sm text-base-content/75">
+					<p class="mt-2 text-sm text-foreground/75">
 						Generate questions from source material in seconds, or create them manually — both work
 						in the same workflow.
 					</p>
 
 					<div
-						class="ai-pipeline mt-4 overflow-hidden rounded-xl border border-base-300/60 bg-base-100/50"
+						class="ai-pipeline mt-4 overflow-hidden rounded-xl border border-border/60 bg-background/50"
 					>
 						<!-- Step indicators -->
-						<div
-							class="flex items-center gap-0 border-b border-base-300/40 text-[10px] font-medium"
-						>
+						<div class="flex items-center gap-0 border-b border-border/40 text-[10px] font-medium">
 							<div
 								class="ai-step flex-1 px-3 py-2 text-center transition-all duration-500 {aiSteps[
 									aiStep
 								] === 'parsing'
-									? 'bg-info/10 text-info'
+									? 'bg-info/10 text-info-ink'
 									: aiSteps[aiStep] === 'generating' || aiSteps[aiStep] === 'done'
-										? 'text-base-content/40'
-										: 'text-base-content/30'}"
+										? 'text-foreground/40'
+										: 'text-foreground/30'}"
 							>
 								<FileText size={11} class="mx-auto mb-0.5" />
 								Parse
 							</div>
 							<div
-								class="ai-step flex-1 border-x border-base-300/40 px-3 py-2 text-center transition-all duration-500 {aiSteps[
+								class="ai-step flex-1 border-x border-border/40 px-3 py-2 text-center transition-all duration-500 {aiSteps[
 									aiStep
 								] === 'generating'
-									? 'bg-secondary/10 text-secondary'
+									? 'bg-secondary/10 text-secondary-ink'
 									: aiSteps[aiStep] === 'done'
-										? 'text-base-content/40'
-										: 'text-base-content/30'}"
+										? 'text-foreground/40'
+										: 'text-foreground/30'}"
 							>
 								<Sparkles size={11} class="mx-auto mb-0.5" />
 								Generate
@@ -420,8 +435,8 @@
 								class="ai-step flex-1 px-3 py-2 text-center transition-all duration-500 {aiSteps[
 									aiStep
 								] === 'done'
-									? 'bg-success/10 text-success'
-									: 'text-base-content/30'}"
+									? 'bg-success/10 text-success-ink'
+									: 'text-foreground/30'}"
 							>
 								<Check size={11} class="mx-auto mb-0.5" />
 								Ready
@@ -436,7 +451,7 @@
 										<div
 											class="h-5 w-5 shrink-0 rounded-sm bg-error/15 flex items-center justify-center"
 										>
-											<span class="text-[8px] font-bold text-error">PDF</span>
+											<span class="text-[8px] font-bold text-error-ink">PDF</span>
 										</div>
 										<span class="min-w-0 flex-1 text-[11px] font-medium truncate"
 											>Lecture_06_Lids_and_Adnexa.pdf</span
@@ -465,7 +480,9 @@
 											></div>
 										</div>
 									</div>
-									<p class="text-[10px] text-info/70 mt-1">Extracting content from 23 pages...</p>
+									<p class="text-[10px] text-info-ink/70 mt-1">
+										Extracting content from 23 pages...
+									</p>
 								</div>
 							{:else if aiSteps[aiStep] === 'generating'}
 								<div class="space-y-1" in:fade={{ duration: 300 }}>
@@ -473,7 +490,7 @@
 										class="ai-gen-line flex items-center gap-2 rounded-lg bg-secondary/5 px-2 py-1.5"
 										style="animation-delay: 0s"
 									>
-										<span class="text-[10px] text-secondary/60 font-mono">Q1</span>
+										<span class="text-[10px] text-secondary-ink/60 font-mono">Q1</span>
 										<span class="text-[10px] leading-tight"
 											>Which two findings best support meibomian gland dysfunction?</span
 										>
@@ -482,7 +499,7 @@
 										class="ai-gen-line flex items-center gap-2 rounded-lg bg-secondary/5 px-2 py-1.5"
 										style="animation-delay: 0.2s"
 									>
-										<span class="text-[10px] text-secondary/60 font-mono">Q2</span>
+										<span class="text-[10px] text-secondary-ink/60 font-mono">Q2</span>
 										<span class="text-[10px] leading-tight"
 											>Clear collarettes at the lash base are pathognomonic for:</span
 										>
@@ -491,16 +508,18 @@
 										class="ai-gen-line flex items-center gap-2 rounded-lg bg-secondary/5 px-2 py-1.5"
 										style="animation-delay: 0.4s"
 									>
-										<span class="text-[10px] text-secondary/60 font-mono">Q3</span>
-										<span class="ai-typing text-[10px] text-secondary/50">Generating...</span>
+										<span class="text-[10px] text-secondary-ink/60 font-mono">Q3</span>
+										<span class="ai-typing text-[10px] text-secondary-ink/50">Generating...</span>
 									</div>
 								</div>
 							{:else}
 								<div in:fade={{ duration: 300 }}>
 									<div class="flex items-center justify-between mb-2">
-										<span class="text-[11px] font-semibold text-success">40 questions ready</span>
+										<span class="text-[11px] font-semibold text-success-ink"
+											>40 questions ready</span
+										>
 										<span
-											class="rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-medium text-success"
+											class="rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-medium text-success-ink"
 											>MCQ + Case-based</span
 										>
 									</div>
@@ -515,7 +534,7 @@
 											></div>
 										{/each}
 									</div>
-									<p class="text-[10px] text-base-content/50 mt-2">
+									<p class="text-[10px] text-foreground/50 mt-2">
 										2 flagged for review &middot; 38 published
 									</p>
 								</div>
@@ -527,39 +546,42 @@
 				<!-- Rationale-first questions -->
 				<div class="panel-graph p-4 sm:col-span-2 lg:col-span-1">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
+						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
 							<Eye size={18} />
 						</div>
 					</div>
 					<h3 class="text-xl font-semibold">Rationale-first questions</h3>
-					<p class="mt-2 text-sm text-base-content/75">
+					<p class="mt-2 text-sm text-foreground/75">
 						Every question is built with a rationale baked in — AI-generated or hand-written.
 						Students don't just get answers, they get the why.
 					</p>
 
-					<div class="mt-4 rounded-xl border border-base-300/60 bg-base-100/50 p-3">
-						<p class="text-[11px] font-medium leading-snug text-base-content/80">
+					<div class="mt-4 rounded-xl border border-border/60 bg-background/50 p-3">
+						<p class="text-[11px] font-medium leading-snug text-foreground/80">
 							Clear, cylindrical collarettes wrapping the base of the lashes are pathognomonic for:
 						</p>
-						<p class="mt-1 text-[10px] text-base-content/55">
+						<p class="mt-1 text-[10px] text-foreground/55">
 							<span class="font-semibold">A.</span> Demodex blepharitis
 						</p>
 						<div
-							class="solution-box mt-2.5 rounded-xl border bg-base-100 p-2.5 {solutionRevealed
+							class="solution-box mt-2.5 rounded-xl border bg-background p-2.5 {solutionRevealed
 								? 'border-success/40'
-								: 'border-base-300'}"
+								: 'border-border'}"
 						>
-							<div class="flex items-center justify-between border-b border-base-300 pb-1.5">
+							<div class="flex items-center justify-between border-b border-border pb-1.5">
 								<span class="text-xs font-semibold">Rationale</span>
 								<span class="flex items-center gap-1">
-									<kbd class="kbd kbd-xs">tab</kbd>
-									<button
-										class="btn btn-ghost btn-xs btn-circle"
+									<Kbd>tab</Kbd>
+									<Button
+										variant="ghost"
+										tone="neutral"
+										size="xs"
+										shape="circle"
 										aria-label={solutionRevealed ? 'Hide rationale' : 'Show rationale'}
 										onclick={() => (solutionRevealed = !solutionRevealed)}
 									>
 										{#if solutionRevealed}<EyeOff size={12} />{:else}<Eye size={12} />{/if}
-									</button>
+									</Button>
 								</span>
 							</div>
 							<div
@@ -568,23 +590,23 @@
 									: 'blur-xs select-none'}"
 								aria-hidden={!solutionRevealed}
 							>
-								<p class="text-[10px] leading-relaxed text-base-content/70">
+								<p class="text-[10px] leading-relaxed text-foreground/70">
 									Collarettes are made of mite waste, keratinized cells, and eggs, and are
 									considered pathognomonic for Demodex blepharitis.
 								</p>
-								<div class="mt-1.5 flex items-center gap-1.5 border-t border-base-300 pt-1.5">
-									<FileText size={9} class="text-base-content/50" />
-									<span class="truncate text-[9px] text-base-content/55"
+								<div class="mt-1.5 flex items-center gap-1.5 border-t border-border pt-1.5">
+									<FileText size={9} class="text-foreground/50" />
+									<span class="truncate text-[9px] text-foreground/55"
 										>Lecture 6 – Lids and Adnexa</span
 									>
 									<span
-										class="ml-auto shrink-0 rounded-full border border-base-300 px-1.5 font-mono text-[9px] text-base-content/70"
+										class="ml-auto shrink-0 rounded-full border border-border px-1.5 font-mono text-[9px] text-foreground/70"
 										>p. 12</span
 									>
 								</div>
 							</div>
 						</div>
-						<p class="mt-1.5 text-[9px] text-base-content/40">
+						<p class="mt-1.5 text-[9px] text-foreground/40">
 							Tied to the page it came from. Revealed on demand, or after a correct answer.
 						</p>
 					</div>
@@ -599,27 +621,27 @@
 				<!-- Cohort Analytics -->
 				<div class="panel-graph p-4">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
+						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
 							<BarChart3 size={18} />
 						</div>
 					</div>
 					<h3 class="text-xl font-semibold">Cohort analytics</h3>
-					<p class="mt-2 text-sm text-base-content/75">
+					<p class="mt-2 text-sm text-foreground/75">
 						See who's active, what gets flagged most, and where learners are getting stuck.
 					</p>
 
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
-						class="analytics-demo mt-4 rounded-xl border border-base-300/60 bg-base-100/50 p-3"
+						class="analytics-demo mt-4 rounded-xl border border-border/60 bg-background/50 p-3"
 						use:reveal={{ y: 0 }}
 						onmouseenter={() => (analyticsVisible = true)}
 					>
 						<div class="mb-2.5 flex items-center justify-between">
-							<span class="text-[10px] font-medium text-base-content/50"
+							<span class="text-[10px] font-medium text-foreground/50"
 								>OPT 341 &middot; Ocular Disease I</span
 							>
 							<span
-								class="rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-medium text-success"
+								class="rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-medium text-success-ink"
 								>89% avg</span
 							>
 						</div>
@@ -629,17 +651,13 @@
 									<div
 										class="student-avatar h-5 w-5 shrink-0 rounded-full {student.color}/15 flex items-center justify-center"
 									>
-										<span class="text-[7px] font-bold {student.color.replace('bg-', 'text-')}"
-											>{student.initials}</span
-										>
+										<span class="text-[7px] font-bold {student.ink}">{student.initials}</span>
 									</div>
 									<div class="w-11 shrink-0">
-										<span class="block text-[9px] text-base-content/70 truncate"
-											>{student.name}</span
-										>
-										<span class="block text-[7px] text-base-content/30">{student.recent}</span>
+										<span class="block text-[9px] text-foreground/70 truncate">{student.name}</span>
+										<span class="block text-[7px] text-foreground/30">{student.recent}</span>
 									</div>
-									<div class="flex-1 h-2.5 rounded-full bg-base-200/80 overflow-hidden">
+									<div class="flex-1 h-2.5 rounded-full bg-muted/80 overflow-hidden">
 										<div
 											class="analytics-bar h-full rounded-full {student.color}/50 transition-all duration-700 ease-out"
 											style="width: {analyticsVisible ? student.progress : 0}%{!analyticsVisible
@@ -647,11 +665,11 @@
 												: ''}"
 										></div>
 									</div>
-									<span class="w-7 text-right text-[9px] font-mono font-medium text-base-content/60"
+									<span class="w-7 text-right text-[9px] font-mono font-medium text-foreground/60"
 										>{student.progress}%</span
 									>
 									{#if student.flags > 0}
-										<span class="flex items-center gap-0.5 text-[8px] text-warning/70 w-5">
+										<span class="flex items-center gap-0.5 text-[8px] text-warning-ink/70 w-5">
 											<Flag size={7} />{student.flags}
 										</span>
 									{:else}
@@ -662,12 +680,12 @@
 								</div>
 							{/each}
 						</div>
-						<div class="mt-2 flex items-center justify-between pt-2 border-t border-base-300/30">
+						<div class="mt-2 flex items-center justify-between pt-2 border-t border-border/30">
 							<div class="flex items-center gap-1">
-								<Users size={9} class="text-base-content/40" />
-								<span class="text-[9px] text-base-content/40">32 enrolled</span>
+								<Users size={9} class="text-foreground/40" />
+								<span class="text-[9px] text-foreground/40">32 enrolled</span>
 							</div>
-							<span class="text-[9px] text-base-content/35">Hotspots: Demodex, MGD, chalazion</span>
+							<span class="text-[9px] text-foreground/35">Hotspots: Demodex, MGD, chalazion</span>
 						</div>
 					</div>
 				</div>
@@ -675,22 +693,22 @@
 				<!-- Keyboard shortcuts — mini quiz that reacts -->
 				<div class="panel-graph p-4 flex flex-col">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
+						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
 							<Keyboard size={18} />
 						</div>
 					</div>
 					<h3 class="text-xl font-semibold">Keyboard-first</h3>
-					<p class="mt-2 text-sm text-base-content/75">
+					<p class="mt-2 text-sm text-foreground/75">
 						Number keys to select, Enter to check, arrows to navigate.
 					</p>
 
 					<div
-						class="mt-4 flex flex-1 flex-col rounded-xl border border-base-300/60 bg-base-100/50 overflow-hidden"
+						class="mt-4 flex flex-1 flex-col rounded-xl border border-border/60 bg-background/50 overflow-hidden"
 					>
 						<!-- Mini quiz context — fixed height to prevent layout shift -->
-						<div class="flex-1 border-b border-base-300/40 p-3">
-							<p class="mb-1.5 text-[10px] text-base-content/50">Lids &amp; Adnexa · 2 of 6</p>
-							<p class="mb-2 text-[11px] font-medium leading-tight text-base-content/80">
+						<div class="flex-1 border-b border-border/40 p-3">
+							<p class="mb-1.5 text-[10px] text-foreground/50">Lids &amp; Adnexa · 2 of 6</p>
+							<p class="mb-2 text-[11px] font-medium leading-tight text-foreground/80">
 								Clear collarettes at the lash base are pathognomonic for:
 							</p>
 							<div class="space-y-1">
@@ -700,20 +718,20 @@
 										(i === 0 && (answered || activeAction === 'selected-a')) ||
 										(i === 2 && activeAction === 'selected-c')}
 									<div
-										class="kbd-option flex items-center gap-2 rounded-full border bg-base-200 px-2 py-1 text-[10px] transition-colors duration-300 {i ===
+										class="kbd-option flex items-center gap-2 rounded-full border bg-muted px-2 py-1 text-[10px] transition-colors duration-300 {i ===
 											0 && answered
 											? 'border-success'
-											: 'border-base-300'}"
+											: 'border-border'}"
 									>
 										<span
 											class="grid size-3 shrink-0 place-items-center rounded-[3px] border transition-colors duration-200 {picked
-												? 'border-primary bg-primary text-primary-content'
+												? 'border-primary bg-primary text-primary-foreground'
 												: 'border-primary/60'}"
 											aria-hidden="true"
 										>
 											{#if picked}<Check size={8} strokeWidth={4} />{/if}
 										</span>
-										<span class="min-w-0 text-base-content/75"
+										<span class="min-w-0 text-foreground/75"
 											><span class="mr-1 font-semibold">{String.fromCharCode(65 + i)}.</span
 											>{option}</span
 										>
@@ -724,20 +742,20 @@
 							<div class="mt-1.5 h-5">
 								{#if activeAction === 'flagging'}
 									<div
-										class="flex items-center gap-1 text-[9px] text-warning"
+										class="flex items-center gap-1 text-[9px] text-warning-ink"
 										in:fade={{ duration: 200 }}
 									>
 										<Flag size={9} /> Flagged for review
 									</div>
 								{:else if activeAction === 'solution'}
 									<p
-										class="truncate text-[9px] text-base-content/50 italic"
+										class="truncate text-[9px] text-foreground/50 italic"
 										in:fade={{ duration: 200 }}
 									>
 										Collarettes are made of mite waste, keratinized cells, and eggs...
 									</p>
 								{:else if activeAction === 'checking'}
-									<p class="text-[9px] font-semibold text-success" in:fade={{ duration: 200 }}>
+									<p class="text-[9px] font-semibold text-success-ink" in:fade={{ duration: 200 }}>
 										Correct!
 									</p>
 								{/if}
@@ -747,17 +765,19 @@
 						<div class="flex items-center justify-between px-2 py-2">
 							{#each keySequence as shortcut, i (shortcut.action)}
 								<div class="flex flex-col items-center gap-0.5">
-									<kbd
-										class="kbd text-[10px] leading-none min-w-[1.75rem] text-center transition-all duration-300"
-										class:kbd-active={i === activeKeyIndex}
+									<Kbd
+										class="min-w-[1.75rem] text-center text-[10px] leading-none transition-all duration-300 {i ===
+										activeKeyIndex
+											? 'kbd-active'
+											: ''}"
 									>
 										{shortcut.key}
-									</kbd>
+									</Kbd>
 									<span
 										class="text-[8px] leading-tight transition-colors duration-300 {i ===
 										activeKeyIndex
-											? 'text-secondary'
-											: 'text-base-content/30'}"
+											? 'text-secondary-ink'
+											: 'text-foreground/30'}"
 									>
 										{shortcut.label}
 									</span>
@@ -770,27 +790,27 @@
 				<!-- Rich Attachments & Formatting -->
 				<div class="panel-graph p-4 sm:col-span-2 lg:col-span-1">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2">
+						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
 							<Image size={18} />
 						</div>
 					</div>
 					<h3 class="text-xl font-semibold">Beyond plain text</h3>
-					<p class="mt-2 text-sm text-base-content/75">
+					<p class="mt-2 text-sm text-foreground/75">
 						Rich formatting, media attachments, zoom, and captions so question quality stays high.
 					</p>
 
-					<div class="mt-4 rounded-xl border border-base-300/60 bg-base-100/50 p-3">
+					<div class="mt-4 rounded-xl border border-border/60 bg-background/50 p-3">
 						<!-- Mini rich text toolbar -->
 						<div
-							class="mb-2 flex items-center gap-0.5 rounded-lg border border-base-300/40 bg-base-200/50 px-1.5 py-1"
+							class="mb-2 flex items-center gap-0.5 rounded-lg border border-border/40 bg-muted/50 px-1.5 py-1"
 						>
 							<span class="rich-btn text-[10px] font-bold px-1.5 py-0.5 rounded-sm">B</span>
 							<span class="rich-btn text-[10px] italic px-1.5 py-0.5 rounded-sm">I</span>
 							<span class="rich-btn text-[10px] underline px-1.5 py-0.5 rounded-sm">U</span>
-							<span class="text-base-300/60 mx-0.5">|</span>
+							<span class="text-muted-strong/60 mx-0.5">|</span>
 							<span class="rich-btn text-[10px] px-1.5 py-0.5 rounded-sm">H1</span>
 							<span class="rich-btn text-[10px] px-1.5 py-0.5 rounded-sm">H2</span>
-							<span class="text-base-300/60 mx-0.5">|</span>
+							<span class="text-muted-strong/60 mx-0.5">|</span>
 							<span class="rich-btn px-1.5 py-0.5 rounded-sm"><Image size={9} /></span>
 						</div>
 
@@ -799,7 +819,7 @@
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<div
-								class="attachment-thumb group relative h-16 overflow-hidden rounded-lg border border-base-300/50 bg-base-200/60 cursor-pointer transition-all duration-300"
+								class="attachment-thumb group relative h-16 overflow-hidden rounded-lg border border-border/50 bg-muted/60 cursor-pointer transition-all duration-300"
 								class:attachment-zoomed={attachmentZoomed}
 								onclick={() => (attachmentZoomed = !attachmentZoomed)}
 							>
@@ -809,11 +829,11 @@
 								<div class="absolute inset-0 flex items-center justify-center">
 									<div class="space-y-0.5 text-center">
 										<div
-											class="mx-auto h-6 w-10 rounded-sm border border-base-content/10 bg-base-100/50 flex items-center justify-center"
+											class="mx-auto h-6 w-10 rounded-sm border border-foreground/10 bg-background/50 flex items-center justify-center"
 										>
 											<div class="h-3 w-3 rounded-full bg-primary/20"></div>
 										</div>
-										<span class="text-[7px] text-base-content/40">slit-lamp_collarettes.jpg</span>
+										<span class="text-[7px] text-foreground/40">slit-lamp_collarettes.jpg</span>
 									</div>
 								</div>
 								<div
@@ -824,26 +844,26 @@
 							</div>
 							<div class="space-y-1.5">
 								<div
-									class="attachment-thumb h-[29px] overflow-hidden rounded-lg border border-base-300/50 bg-base-200/60"
+									class="attachment-thumb h-[29px] overflow-hidden rounded-lg border border-border/50 bg-muted/60"
 								>
 									<div
 										class="h-full w-full bg-gradient-to-r from-secondary/8 to-accent/8 flex items-center justify-center"
 									>
-										<span class="text-[7px] text-base-content/40">meibography_lower_lid.png</span>
+										<span class="text-[7px] text-foreground/40">meibography_lower_lid.png</span>
 									</div>
 								</div>
 								<div
-									class="attachment-thumb h-[29px] overflow-hidden rounded-lg border border-base-300/50 bg-base-200/60"
+									class="attachment-thumb h-[29px] overflow-hidden rounded-lg border border-border/50 bg-muted/60"
 								>
 									<div
 										class="h-full w-full bg-gradient-to-r from-info/8 to-primary/8 flex items-center justify-center"
 									>
-										<span class="text-[7px] text-base-content/40">everted_lid_chalazion.jpg</span>
+										<span class="text-[7px] text-foreground/40">everted_lid_chalazion.jpg</span>
 									</div>
 								</div>
 							</div>
 						</div>
-						<p class="mt-1.5 text-[9px] text-base-content/40">
+						<p class="mt-1.5 text-[9px] text-foreground/40">
 							Full zoom &amp; pan viewer — images can be gated behind the rationale reveal
 						</p>
 					</div>
@@ -855,7 +875,7 @@
 		<section class="mt-20" aria-labelledby="workflow-title" use:reveal={{ y: 22 }}>
 			<div class="mb-10 max-w-3xl">
 				<h2 id="workflow-title" class="text-3xl font-bold sm:text-4xl">Two loops, one platform</h2>
-				<p class="mt-3 text-base-content/75">
+				<p class="mt-3 text-foreground/75">
 					Students practice and review. Content teams build and improve. Both happen live without
 					getting in each other's way.
 				</p>
@@ -871,7 +891,7 @@
 								<div class="wf-dot"></div>
 								<div class="wf-content">
 									<h4 class="text-sm font-semibold">{step.title}</h4>
-									<p class="mt-1 text-sm leading-relaxed text-base-content/65">{step.detail}</p>
+									<p class="mt-1 text-sm leading-relaxed text-foreground/65">{step.detail}</p>
 								</div>
 							</div>
 						{/each}
@@ -887,7 +907,7 @@
 								<div class="wf-dot"></div>
 								<div class="wf-content">
 									<h4 class="text-sm font-semibold">{step.title}</h4>
-									<p class="mt-1 text-sm leading-relaxed text-base-content/65">{step.detail}</p>
+									<p class="mt-1 text-sm leading-relaxed text-foreground/65">{step.detail}</p>
 								</div>
 							</div>
 						{/each}
@@ -904,17 +924,17 @@
 		<section class="mt-20 mb-4" use:reveal={{ y: 20 }}>
 			<div class="cta-section text-center py-14 px-6 sm:px-10">
 				<h2 class="text-3xl font-bold sm:text-4xl">Ready to study smarter?</h2>
-				<p class="mx-auto mt-4 max-w-lg text-base-content/70">
+				<p class="mx-auto mt-4 max-w-lg text-foreground/70">
 					Join your class or start your own. Reach out to get your cohort started today.
 				</p>
 				<div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-					<a href={resolve('/sign-in')} class="btn btn-primary btn-lg rounded-full px-8">
+					<Button href={resolve('/sign-in')} size="lg" class="px-8">
 						Start studying
 						<ArrowRight size={18} />
-					</a>
-					<a href={resolve('/contact')} class="btn btn-ghost btn-lg rounded-full px-6">
+					</Button>
+					<Button href={resolve('/contact')} variant="ghost" tone="neutral" size="lg" class="px-6">
 						Sign your school up
-					</a>
+					</Button>
 				</div>
 			</div>
 		</section>
@@ -923,7 +943,7 @@
 
 <style>
 	.hero-title {
-		font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+		font-family: var(--font-brand);
 		font-weight: 600;
 		letter-spacing: -0.03em;
 	}
@@ -948,8 +968,8 @@
 		border-radius: 40% 60% 55% 45%;
 		background: radial-gradient(
 			ellipse at 40% 50%,
-			color-mix(in oklab, var(--color-primary) 48%, transparent),
-			color-mix(in oklab, var(--color-primary) 18%, transparent) 55%,
+			color-mix(in oklab, var(--primary) 48%, transparent),
+			color-mix(in oklab, var(--primary) 18%, transparent) 55%,
 			transparent 100%
 		);
 		filter: blur(64px);
@@ -967,9 +987,9 @@
 		background: linear-gradient(
 			90deg,
 			transparent 5%,
-			color-mix(in oklab, var(--color-secondary) 50%, transparent) 35%,
-			color-mix(in oklab, var(--color-secondary) 60%, transparent) 55%,
-			color-mix(in oklab, var(--color-secondary) 20%, transparent) 85%,
+			color-mix(in oklab, var(--secondary) 50%, transparent) 35%,
+			color-mix(in oklab, var(--secondary) 60%, transparent) 55%,
+			color-mix(in oklab, var(--secondary) 20%, transparent) 85%,
 			transparent
 		);
 		filter: blur(44px);
@@ -987,8 +1007,8 @@
 		border-radius: 30% 70% 55% 45%;
 		background: radial-gradient(
 			ellipse at 55% 45%,
-			color-mix(in oklab, var(--color-accent) 60%, transparent),
-			color-mix(in oklab, var(--color-accent) 22%, transparent) 55%,
+			color-mix(in oklab, var(--accent) 60%, transparent),
+			color-mix(in oklab, var(--accent) 22%, transparent) 55%,
 			transparent 100%
 		);
 		filter: blur(40px);
@@ -1049,11 +1069,11 @@
 	}
 
 	.wf-timeline-student {
-		--wf-accent: var(--color-primary);
+		--wf-accent: var(--primary);
 	}
 
 	.wf-timeline-admin {
-		--wf-accent: var(--color-secondary);
+		--wf-accent: var(--secondary);
 	}
 
 	.wf-step {
@@ -1082,15 +1102,15 @@
 	}
 
 	.cta-section {
-		border-top: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
+		border-top: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
 	}
 
 	.kbd-active {
-		background: color-mix(in oklab, var(--color-secondary) 20%, var(--color-base-200));
-		border-color: var(--color-secondary);
-		color: var(--color-secondary);
+		background: color-mix(in oklab, var(--secondary) 20%, var(--muted));
+		border-color: var(--secondary);
+		color: var(--secondary);
 		transform: translateY(-2px);
-		box-shadow: 0 2px 8px color-mix(in oklab, var(--color-secondary) 25%, transparent);
+		box-shadow: 0 2px 8px color-mix(in oklab, var(--secondary) 25%, transparent);
 	}
 
 	/* AI card animations */
@@ -1191,14 +1211,14 @@
 
 	/* Rich text toolbar buttons */
 	.rich-btn {
-		color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+		color: color-mix(in oklab, var(--foreground) 50%, transparent);
 		cursor: default;
 		transition: all 0.15s;
 	}
 
 	.rich-btn:hover {
-		background: color-mix(in oklab, var(--color-base-content) 8%, transparent);
-		color: var(--color-base-content);
+		background: color-mix(in oklab, var(--foreground) 8%, transparent);
+		color: var(--foreground);
 	}
 
 	/* Attachment hover */
@@ -1208,8 +1228,8 @@
 
 	.attachment-zoomed {
 		transform: scale(1.05);
-		border-color: color-mix(in oklab, var(--color-primary) 40%, transparent) !important;
-		box-shadow: 0 4px 16px color-mix(in oklab, var(--color-primary) 15%, transparent);
+		border-color: color-mix(in oklab, var(--primary) 40%, transparent) !important;
+		box-shadow: 0 4px 16px color-mix(in oklab, var(--primary) 15%, transparent);
 	}
 
 	@media (prefers-reduced-motion: reduce) {

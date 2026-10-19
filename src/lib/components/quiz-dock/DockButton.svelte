@@ -10,13 +10,16 @@
 		type DockShape
 	} from './dockStyles';
 	import ReadoutContent from './ReadoutContent.svelte';
+	import { cn } from '$lib/utils.js';
+	import { mergeProps } from 'bits-ui';
+	import { Tip } from '$lib/components/ui/tooltip';
 
 	let {
 		command,
 		source,
 		display = 'icon',
 		shape = 'auto',
-		iconSize = 18,
+		iconSize = 19,
 		touch = false,
 		class: extraClass = ''
 	}: {
@@ -34,12 +37,15 @@
 	const active = $derived(command.active?.() ?? false);
 	const enabled = $derived(command.enabled?.() ?? true);
 	const shortcut = $derived(shortcutLabelFor(command.id));
-	const title = $derived.by(() => {
-		const text = command.detail?.() ?? label;
-		return shortcut ? `${text} (${shortcut})` : text;
-	});
+	const tip = $derived(command.detail?.() ?? label);
+	// Phones get no hover, so they keep the native title; desktop shows the ink tooltip with its key.
+	const title = $derived(touch ? (shortcut ? `${tip} (${shortcut})` : tip) : undefined);
 	const className = $derived(
-		`${dockButtonClass(command, { display, shape, active })} ${touch ? '[--size:2.75rem]' : ''} ${extraClass}`
+		cn(
+			dockButtonClass(command, { display, shape, active }),
+			touch && (display === 'icon' && shape === 'auto' ? 'size-11' : 'h-11'),
+			extraClass
+		)
 	);
 	const Icon = $derived(active && command.activeIcon ? command.activeIcon : command.icon);
 </script>
@@ -58,32 +64,45 @@
 	>
 		<ReadoutContent {command} />
 	</span>
-{:else if command.href}
-	<!-- eslint-disable svelte/no-navigation-without-resolve -- command hrefs are resolved where the command is created -->
-	<a
-		class={className}
-		style={segmentStyle(shape)}
-		href={command.href()}
-		target="_blank"
-		rel="noopener noreferrer"
-		aria-label={label}
-		{title}
-	>
-		{@render content()}
-	</a>
-	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 {:else}
-	<button
-		type="button"
-		class={className}
-		style={segmentStyle(shape)}
-		disabled={!enabled}
-		aria-label={label}
-		aria-pressed={command.active ? active : undefined}
-		aria-keyshortcuts={ariaShortcutFor(command.id)}
-		{title}
-		onclick={() => command.run(source)}
-	>
-		{@render content()}
-	</button>
+	{#snippet control(props: Record<string, unknown> = {})}
+		{#if command.href}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -- command hrefs are resolved where the command is created -->
+			<a
+				{...props}
+				class={className}
+				style={segmentStyle(shape)}
+				href={command.href()}
+				target="_blank"
+				rel="noopener noreferrer"
+				aria-label={label}
+				{title}
+			>
+				{@render content()}
+			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
+		{:else}
+			<button
+				{...mergeProps(props, { onclick: () => command.run(source) })}
+				type="button"
+				class={className}
+				style={segmentStyle(shape)}
+				disabled={!enabled}
+				aria-label={label}
+				aria-pressed={command.active ? active : undefined}
+				aria-keyshortcuts={ariaShortcutFor(command.id)}
+				{title}
+			>
+				{@render content()}
+			</button>
+		{/if}
+	{/snippet}
+
+	{#if touch}
+		{@render control()}
+	{:else}
+		<Tip label={tip} kbd={shortcut}>
+			{#snippet child({ props })}{@render control(props)}{/snippet}
+		</Tip>
+	{/if}
 {/if}

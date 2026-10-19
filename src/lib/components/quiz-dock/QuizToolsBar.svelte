@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Settings, SlidersHorizontal, ToolCase } from 'lucide-svelte';
 	import Sheet from '$lib/components/Sheet.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Tip } from '$lib/components/ui/tooltip';
 	import { getQuizCommands, isCommandShown } from './commands.svelte';
 	import { getDockPreferences } from './dockPreferences.svelte';
 	import { isPassive, TONE_BADGE, TONE_TEXT } from './dockStyles';
@@ -63,7 +65,7 @@
 	function tileTone(command: QuizCommand, active: boolean) {
 		return active
 			? `${TONE_BADGE[command.tone]} font-semibold ring-1 ring-inset ring-current/25`
-			: 'text-base-content/70 hover:bg-base-100 hover:text-base-content';
+			: 'text-foreground/70 hover:bg-background hover:text-foreground';
 	}
 
 	function titleFor(command: QuizCommand) {
@@ -91,18 +93,18 @@
 			: 'min-h-14 px-1 text-[0.68rem]'}"
 		title={command.detail?.() ?? command.description}
 	>
-		<span class="flex items-center gap-1 text-sm font-semibold text-base-content">
+		<span class="flex items-center gap-1 text-sm font-semibold text-foreground">
 			<Icon
 				size={compact ? 14 : 16}
 				aria-hidden="true"
-				class={lit ? TONE_TEXT[command.tone] : 'text-base-content/40'}
+				class={lit ? TONE_TEXT[command.tone] : 'text-foreground/40'}
 				fill={command.active && lit ? 'currentColor' : 'none'}
 			/>
 			<span class="sr-only">{command.name}:</span>
 			{command.label()}
 		</span>
 		{#if !compact}
-			<span class="font-medium text-base-content/55">{command.caption?.() ?? command.name}</span>
+			<span class="font-medium text-foreground/55">{command.caption?.() ?? command.name}</span>
 		{/if}
 	</span>
 {/snippet}
@@ -141,20 +143,27 @@
 		<div class="mb-1.5 flex items-center justify-between px-1">
 			<h3
 				id="quiz-tools-heading"
-				class="text-[0.7rem] font-semibold uppercase tracking-wider text-base-content/45"
+				class="text-[0.7rem] font-semibold uppercase tracking-wider text-foreground/45"
 			>
 				Tools
 			</h3>
 			{#if preferences}
-				<button
-					type="button"
-					class="btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-base-content"
-					aria-label="Customize tools"
-					title="Customize tools"
-					onclick={customize}
-				>
-					<SlidersHorizontal size={13} />
-				</button>
+				<Tip label="Customize tools">
+					{#snippet child({ props })}
+						<Button
+							{...props}
+							variant="ghost"
+							tone="neutral"
+							size="xs"
+							shape="circle"
+							class="text-foreground/40 hover:text-foreground"
+							aria-label="Customize tools"
+							onclick={customize}
+						>
+							<SlidersHorizontal size={13} />
+						</Button>
+					{/snippet}
+				</Tip>
 			{/if}
 		</div>
 		{#if tools.length}
@@ -163,7 +172,7 @@
 				role="toolbar"
 				aria-label="Exam tools"
 				tabindex="-1"
-				class="grid grid-cols-4 gap-1 rounded-2xl border border-base-300 bg-base-200/50 p-1"
+				class="grid grid-cols-4 gap-1 rounded-2xl border border-border bg-muted/50 p-1"
 				onkeydown={handleToolbarKeydown}
 			>
 				{#each tools as command (command.id)}
@@ -177,7 +186,7 @@
 		{:else if preferences}
 			<button
 				type="button"
-				class="flex h-14 w-full items-center justify-center rounded-2xl border border-dashed border-base-300 text-xs text-base-content/50 hover:border-base-content/25"
+				class="flex h-14 w-full items-center justify-center rounded-2xl border border-dashed border-border text-xs text-foreground/50 hover:border-foreground/25"
 				onclick={customize}
 			>
 				Add study tools
@@ -192,7 +201,7 @@
 			aria-label="Exam tools"
 			aria-orientation="vertical"
 			tabindex="-1"
-			class="flex flex-col items-center gap-1 rounded-2xl border border-base-300 bg-base-200/50 p-1"
+			class="flex flex-col items-center gap-1 rounded-2xl border border-border bg-muted/50 p-1"
 			onkeydown={handleToolbarKeydown}
 		>
 			{#each tools as command (command.id)}
@@ -205,9 +214,11 @@
 		</div>
 	{/if}
 {:else}
-	<button
-		type="button"
-		class="btn btn-ghost btn-circle relative size-11 shrink-0 text-base-content/70"
+	<Button
+		variant="ghost"
+		tone="neutral"
+		shape="circle"
+		class="relative size-11 text-foreground/70"
 		aria-label="Tools"
 		aria-haspopup="dialog"
 		aria-expanded={sheetOpen}
@@ -217,11 +228,11 @@
 		<ToolCase size={20} aria-hidden="true" />
 		{#if anyActive}
 			<span
-				class="absolute right-2 top-2 size-2 rounded-full bg-primary ring-2 ring-base-100"
+				class="absolute right-2 top-2 size-2 rounded-full bg-primary ring-2 ring-background"
 				aria-hidden="true"
 			></span>
 		{/if}
-	</button>
+	</Button>
 
 	<Sheet bind:open={sheetOpen} title="Tools" desktop="bottom" width="sm:max-w-lg sm:mx-auto">
 		{#if tools.length}
@@ -231,13 +242,13 @@
 					{@const Icon = active && command.activeIcon ? command.activeIcon : command.icon}
 					<li>
 						{#if isPassive(command)}
-							<div class="rounded-2xl border border-base-300 bg-base-200/50 py-2">
+							<div class="rounded-2xl border border-border bg-muted/50 py-2">
 								{@render readout(command, false)}
 							</div>
 						{:else}
 							<button
 								type="button"
-								class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-base-300 px-2 text-sm font-medium transition-colors active:scale-[0.97] disabled:opacity-40
+								class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-border px-2 text-sm font-medium transition-colors active:scale-[0.97] disabled:opacity-40
 									{tileTone(command, active)}"
 								aria-pressed={command.active ? active : undefined}
 								disabled={command.enabled?.() === false}
@@ -254,28 +265,30 @@
 				{/each}
 			</ul>
 		{:else}
-			<p class="py-4 text-sm text-base-content/60">
+			<p class="py-4 text-sm text-foreground/60">
 				No tools yet. Add a calculator, notes, or highlighter.
 			</p>
 		{/if}
 		<div class="mt-4 flex gap-2">
 			{#if settings}
-				<button
-					type="button"
-					class="btn btn-ghost min-h-11 flex-1 rounded-full text-base-content/70"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					class="h-11 flex-1 text-foreground/70"
 					onclick={() => run(settings)}
 				>
 					<Settings size={16} /> Settings
-				</button>
+				</Button>
 			{/if}
 			{#if preferences}
-				<button
-					type="button"
-					class="btn btn-ghost min-h-11 flex-1 rounded-full text-base-content/70"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					class="h-11 flex-1 text-foreground/70"
 					onclick={customize}
 				>
 					<SlidersHorizontal size={16} /> Customize tools
-				</button>
+				</Button>
 			{/if}
 		</div>
 	</Sheet>

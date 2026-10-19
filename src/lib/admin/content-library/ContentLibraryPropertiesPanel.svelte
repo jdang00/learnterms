@@ -18,6 +18,8 @@
 	import { fileKind, formatDate } from './contentLibrary';
 	import { formatBytes } from '$lib/utils/format';
 	import { documentPipeline } from './documentPipeline';
+	import { Button } from '$lib/components/ui/button';
+	import { Tip } from '$lib/components/ui/tooltip';
 
 	let {
 		document,
@@ -116,45 +118,43 @@
 </script>
 
 <div class="space-y-3">
-	<div class="rounded-2xl border border-base-300 bg-base-100 p-4">
+	<div class="rounded-2xl border border-border bg-background p-4">
 		<div class="mb-4 flex items-center gap-2">
-			<Sparkles size={13} class="text-base-content/40" />
-			<span class="text-[11px] font-semibold uppercase tracking-wider text-base-content/50">
+			<Sparkles size={13} class="text-foreground/40" />
+			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
 				Processing pipeline
 			</span>
 		</div>
 		<div class="flex items-center">
 			{#each pipeline as step, index (step.label)}
-				<div
-					class="tooltip flex flex-col items-center gap-1.5 {index === 0
-						? 'tooltip-right'
-						: index === pipeline.length - 1
-							? 'tooltip-left'
-							: ''}"
-					data-tip={pipelineTooltip(step)}
+				<Tip
+					label={pipelineTooltip(step)}
+					side={index === 0 ? 'right' : index === pipeline.length - 1 ? 'left' : 'top'}
 				>
-					<div
-						class="flex h-9 w-9 items-center justify-center rounded-full border-2 {step.state ===
-						'done'
-							? 'border-success bg-success/10 text-success'
-							: step.state === 'active'
-								? 'border-info bg-info/10 text-info animate-pulse'
-								: step.state === 'error'
-									? 'border-error bg-error/10 text-error'
-									: 'border-base-300 bg-base-200 text-base-content/40'}"
-					>
-						{#if step.state === 'done'}
-							<Check size={16} />
-						{:else}
-							<step.icon size={15} />
-						{/if}
+					<div class="flex flex-col items-center gap-1.5">
+						<div
+							class="flex h-9 w-9 items-center justify-center rounded-full border-2 {step.state ===
+							'done'
+								? 'border-success bg-success/10 text-success'
+								: step.state === 'active'
+									? 'border-info bg-info/10 text-info animate-pulse'
+									: step.state === 'error'
+										? 'border-error bg-error/10 text-error'
+										: 'border-border bg-muted text-foreground/40'}"
+						>
+							{#if step.state === 'done'}
+								<Check size={16} />
+							{:else}
+								<step.icon size={15} />
+							{/if}
+						</div>
+						<span
+							class="text-[10px] font-medium {step.state === 'idle'
+								? 'text-foreground/40'
+								: 'text-foreground/70'}">{step.label}</span
+						>
 					</div>
-					<span
-						class="text-[10px] font-medium {step.state === 'idle'
-							? 'text-base-content/40'
-							: 'text-base-content/70'}">{step.label}</span
-					>
-				</div>
+				</Tip>
 				{#if index < pipeline.length - 1}
 					<div
 						class="mx-1 mb-5 h-0.5 flex-1 rounded {pipeline[index + 1].state === 'done' ||
@@ -162,39 +162,43 @@
 							? pipeline[index + 1].state === 'error'
 								? 'bg-error/40'
 								: 'bg-success/40'
-							: 'bg-base-300'}"
+							: 'bg-muted-strong'}"
 					></div>
 				{/if}
 			{/each}
 		</div>
 		{#if progress.visible && !progress.complete && !progress.failed}
-			<p role="status" class="mt-4 rounded-xl bg-info/10 p-3 text-sm text-base-content/70">
+			<p role="status" class="mt-4 rounded-xl bg-info/10 p-3 text-sm text-foreground/70">
 				<span class="font-medium">{progress.label}</span>
-				<span class="text-base-content/50"> · Stage {progress.current + 1} of 4</span>
+				<span class="text-foreground/50"> · Stage {progress.current + 1} of 4</span>
 			</p>
 		{/if}
 		{#if document.metadata?.indexError}
-			<div class="mt-4 flex gap-2 rounded-xl bg-error/10 p-3 text-xs text-error">
+			<div class="mt-4 flex gap-2 rounded-xl bg-error/10 p-3 text-xs text-error-ink">
 				<TriangleAlert size={14} class="mt-0.5 shrink-0" />
 				<div>
-					<span class="break-words leading-relaxed">{document.metadata.indexError}</span><button
-						class="btn btn-xs mt-2"
+					<span class="break-words leading-relaxed">{document.metadata.indexError}</span>
+					<Button
+						variant="soft"
+						tone="neutral"
+						size="xs"
+						class="mt-2"
 						disabled={resuming}
-						onclick={resume}>{resuming ? 'Resuming…' : 'Resume processing'}</button
+						onclick={resume}>{resuming ? 'Resuming…' : 'Resume processing'}</Button
 					>{#if resumeError}<p>{resumeError}</p>{/if}
 				</div>
 			</div>
 		{/if}
 	</div>
 
-	<section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
-		<div class="flex items-center gap-2 border-b border-base-200 px-4 py-2.5">
-			<FileText size={13} class="text-base-content/40" />
-			<span class="text-[11px] font-semibold uppercase tracking-wider text-base-content/50">
+	<section class="overflow-hidden rounded-2xl border border-border bg-background">
+		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
+			<FileText size={13} class="text-foreground/40" />
+			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
 				General
 			</span>
 		</div>
-		<div class="divide-y divide-base-200">
+		<div class="divide-y divide-muted">
 			{@render kv('Title', document.title)}
 			{@render kv('Original file', document.metadata?.originalFileName ?? '-')}
 			{@render kv('Format', document.metadata?.mimeType ?? kind.label, true)}
@@ -206,14 +210,14 @@
 		</div>
 	</section>
 
-	<section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
-		<div class="flex items-center gap-2 border-b border-base-200 px-4 py-2.5">
-			<Clock3 size={13} class="text-base-content/40" />
-			<span class="text-[11px] font-semibold uppercase tracking-wider text-base-content/50">
+	<section class="overflow-hidden rounded-2xl border border-border bg-background">
+		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
+			<Clock3 size={13} class="text-foreground/40" />
+			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
 				Activity
 			</span>
 		</div>
-		<div class="divide-y divide-base-200">
+		<div class="divide-y divide-muted">
 			{@render kv('Uploaded', formatDate(document._creationTime))}
 			{@render kv('Updated', formatDate(document.updatedAt))}
 			{@render kv('Indexed', formatDate(document.metadata?.indexedAt))}
@@ -221,14 +225,14 @@
 		</div>
 	</section>
 
-	<section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
-		<div class="flex items-center gap-2 border-b border-base-200 px-4 py-2.5">
-			<Database size={13} class="text-base-content/40" />
-			<span class="text-[11px] font-semibold uppercase tracking-wider text-base-content/50">
+	<section class="overflow-hidden rounded-2xl border border-border bg-background">
+		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
+			<Database size={13} class="text-foreground/40" />
+			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
 				RAG index
 			</span>
 		</div>
-		<div class="divide-y divide-base-200">
+		<div class="divide-y divide-muted">
 			{@render kv('Provider', document.metadata?.extractionProvider ?? '-', true)}
 			{@render kv('Model', document.metadata?.extractionModel ?? '-', true)}
 			{@render copyRow('Namespace', document.metadata?.ragNamespace ?? '-', 'ns')}
@@ -242,14 +246,14 @@
 		</div>
 	</section>
 
-	<section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
-		<div class="flex items-center gap-2 border-b border-base-200 px-4 py-2.5">
-			<HardDrive size={13} class="text-base-content/40" />
-			<span class="text-[11px] font-semibold uppercase tracking-wider text-base-content/50">
+	<section class="overflow-hidden rounded-2xl border border-border bg-background">
+		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
+			<HardDrive size={13} class="text-foreground/40" />
+			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
 				Storage
 			</span>
 		</div>
-		<div class="divide-y divide-base-200">
+		<div class="divide-y divide-muted">
 			{@render kv('Provider', document.metadata?.storageProvider ?? '-', true)}
 			{@render copyRow('R2 key', document.metadata?.r2Key ?? '-', 'r2')}
 			{@render copyRow('Document ID', String(document._id), 'docid')}
@@ -257,20 +261,24 @@
 		</div>
 	</section>
 
-	<details class="group overflow-hidden rounded-2xl border border-base-300 bg-base-100">
+	<details class="group overflow-hidden rounded-2xl border border-border bg-background">
 		<summary
-			class="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-base-content/50 hover:bg-base-200/50"
+			class="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-foreground/50 hover:bg-muted/50"
 		>
-			<Hash size={13} class="text-base-content/40" />
+			<Hash size={13} class="text-foreground/40" />
 			Raw metadata
 			<ChevronDown
 				size={14}
-				class="ml-auto text-base-content/40 transition-transform group-open:rotate-180"
+				class="ml-auto text-foreground/40 transition-transform group-open:rotate-180"
 			/>
 		</summary>
-		<div class="relative border-t border-base-200">
-			<button
-				class="btn btn-ghost btn-xs absolute right-2 top-2 z-10 gap-1.5 rounded-lg"
+		<div class="relative border-t border-muted">
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="xs"
+				shape="rect"
+				class="absolute top-2 right-2 z-10 gap-1.5"
 				onclick={() => onCopy('raw', rawMetadata)}
 			>
 				{#if copiedKey === 'raw'}
@@ -278,9 +286,9 @@
 				{:else}
 					<Copy size={12} /> Copy
 				{/if}
-			</button>
+			</Button>
 			<pre
-				class="overflow-x-auto bg-base-200/50 p-4 text-[11px] leading-relaxed text-base-content/80"><code
+				class="overflow-x-auto bg-muted/50 p-4 text-[11px] leading-relaxed text-foreground/80"><code
 					>{rawMetadata}</code
 				></pre>
 		</div>
@@ -289,32 +297,29 @@
 
 {#snippet kv(label: string, value: string, mono = false)}
 	<div class="flex items-start justify-between gap-4 px-4 py-2.5">
-		<span class="shrink-0 pt-0.5 text-xs text-base-content/50">{label}</span>
+		<span class="shrink-0 pt-0.5 text-xs text-foreground/50">{label}</span>
 		<span
 			class="min-w-0 break-words text-right text-xs {mono
-				? 'font-mono text-base-content/80'
-				: 'font-medium text-base-content/90'}">{value}</span
+				? 'font-mono text-foreground/80'
+				: 'font-medium text-foreground/90'}">{value}</span
 		>
 	</div>
 {/snippet}
 
 {#snippet copyRow(label: string, value: string, key: string)}
 	<div class="group/row flex items-start justify-between gap-3 px-4 py-2.5">
-		<span class="shrink-0 pt-0.5 text-xs text-base-content/50">{label}</span>
+		<span class="shrink-0 pt-0.5 text-xs text-foreground/50">{label}</span>
 		<button
 			class="flex min-w-0 items-center gap-1.5 text-right hover:opacity-100"
 			onclick={() => value !== '-' && onCopy(key, value)}
 			title={value !== '-' ? 'Copy' : ''}
 		>
-			<span class="truncate font-mono text-xs text-base-content/80">{value}</span>
+			<span class="truncate font-mono text-xs text-foreground/80">{value}</span>
 			{#if value !== '-'}
 				{#if copiedKey === key}
 					<Check size={12} class="shrink-0 text-success" />
 				{:else}
-					<Copy
-						size={12}
-						class="shrink-0 text-base-content/30 group-hover/row:text-base-content/60"
-					/>
+					<Copy size={12} class="shrink-0 text-foreground/30 group-hover/row:text-foreground/60" />
 				{/if}
 			{/if}
 		</button>

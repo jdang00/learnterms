@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SelectField } from '$lib/components/ui/select';
 	import {
 		type Pane,
 		type ToolId,
@@ -29,6 +30,10 @@
 	import { api } from '../../../../convex/_generated/api';
 	import type { Id } from '../../../../convex/_generated/dataModel';
 	import { resolve } from '$app/paths';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Spinner } from '$lib/components/ui/spinner';
 
 	const clerk = useClerkContext();
 	const client = useConvexClient();
@@ -197,49 +202,57 @@
 	}
 </script>
 
-<div class="flex min-h-screen flex-col bg-base-100 xl:h-screen xl:overflow-hidden">
+<div class="flex min-h-screen flex-col bg-background xl:h-screen xl:overflow-hidden">
 	<div class="mx-auto flex w-full max-w-[1800px] flex-1 flex-col p-4 sm:p-6 xl:min-h-0">
 		<header class="mb-4 flex shrink-0 flex-wrap items-center gap-3 sm:gap-4">
-			<a class="btn btn-ghost btn-sm gap-2 rounded-full" href={resolve('/admin/question-studio')}>
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				class="gap-2"
+				href={resolve('/admin/question-studio')}
+			>
 				<ArrowLeft size={16} />
 				<span class="hidden sm:inline">Studio</span>
-			</a>
-			<div class="h-6 w-px bg-base-300"></div>
+			</Button>
+			<div class="h-6 w-px bg-muted-strong"></div>
 			<div class="flex min-w-0 items-center gap-3">
 				<div class="hidden rounded-xl bg-primary/10 p-2 text-primary sm:flex">
 					<Wrench size={18} />
 				</div>
 				<div class="min-w-0">
 					<h1 class="font-display text-xl font-semibold leading-tight">Agent Workbench</h1>
-					<p class="truncate text-xs text-base-content/50">
+					<p class="truncate text-xs text-foreground/50">
 						Exercise the agent’s tool surface and inspect exactly what it sees.
 					</p>
 				</div>
 			</div>
-			<div class="ml-auto flex items-center rounded-full border border-base-300 bg-base-200/60 p-1">
-				<button
-					class="btn btn-xs gap-1.5 rounded-full border-0 {activePane === 'tools'
-						? 'btn-primary'
-						: 'btn-ghost text-base-content/60'}"
+			<div class="ml-auto flex items-center rounded-full border border-border bg-muted/60 p-1">
+				<Button
+					size="xs"
+					variant={activePane === 'tools' ? 'solid' : 'ghost'}
+					tone={activePane === 'tools' ? 'primary' : 'neutral'}
+					class="gap-1.5"
 					onclick={() => (activePane = 'tools')}
 				>
 					<Wrench size={13} />
 					Tools
-				</button>
-				<button
-					class="btn btn-xs gap-1.5 rounded-full border-0 {activePane === 'rag'
-						? 'btn-primary'
-						: 'btn-ghost text-base-content/60'}"
+				</Button>
+				<Button
+					size="xs"
+					variant={activePane === 'rag' ? 'solid' : 'ghost'}
+					tone={activePane === 'rag' ? 'primary' : 'neutral'}
+					class="gap-1.5"
 					onclick={() => (activePane = 'rag')}
 				>
 					<MessageSquare size={13} />
 					RAG chat
-				</button>
+				</Button>
 			</div>
 		</header>
 
 		<div
-			class="mb-4 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-base-300 bg-base-100 px-4 py-3 shadow-xs"
+			class="mb-4 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-border bg-background px-4 py-3 shadow-xs"
 		>
 			<div class="flex min-w-0 flex-1 basis-64 items-center gap-2.5">
 				<span
@@ -249,39 +262,38 @@
 				>
 					{#if selectedDocument}<Check size={15} />{:else}<Database size={15} />{/if}
 				</span>
-				<select
-					class="select select-bordered select-sm min-w-0 flex-1 rounded-full"
-					bind:value={selectedDocumentId}
-				>
-					<option value="">Select an indexed document…</option>
-					{#each indexedDocs as doc (doc._id)}
-						<option value={doc._id}>{doc.title}</option>
-					{/each}
-				</select>
+				<SelectField
+					size="sm"
+					class="min-w-0 flex-1"
+					value={selectedDocumentId}
+					onValueChange={(v) => (selectedDocumentId = v as typeof selectedDocumentId)}
+					placeholder="Select an indexed document…"
+					options={indexedDocs.map((doc) => ({ value: doc._id, label: doc.title }))}
+				/>
 			</div>
 
 			{#if docMeta}
 				<div class="flex flex-wrap items-center gap-1.5 text-[11px]" in:fade={{ duration: 150 }}>
 					<span
 						class="rounded-full px-2 py-0.5 font-semibold capitalize {docMeta.status === 'mapped'
-							? 'bg-success/10 text-success'
-							: 'bg-info/10 text-info'}"
+							? 'bg-success/10 text-success-ink'
+							: 'bg-info/10 text-info-ink'}"
 					>
 						{docMeta.status}
 					</span>
 					{#if docMeta.pageCount}
-						<span class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-base-content/60">
+						<span class="rounded-full bg-muted px-2 py-0.5 font-mono text-foreground/60">
 							{docMeta.pageCount} pp
 						</span>
 					{/if}
 					{#if docMeta.sizeBytes}
-						<span class="rounded-full bg-base-200 px-2 py-0.5 font-mono text-base-content/60">
+						<span class="rounded-full bg-muted px-2 py-0.5 font-mono text-foreground/60">
 							{formatBytes(docMeta.sizeBytes)}
 						</span>
 					{/if}
 					{#if docMeta.extractionModel}
 						<span
-							class="hidden rounded-full bg-base-200 px-2 py-0.5 font-mono text-base-content/60 md:inline"
+							class="hidden rounded-full bg-muted px-2 py-0.5 font-mono text-foreground/60 md:inline"
 						>
 							{docMeta.extractionModel}
 						</span>
@@ -291,23 +303,23 @@
 
 			{#if activePane === 'tools'}
 				<div class="flex items-center gap-2">
-					<div class="hidden h-6 w-px bg-base-300 sm:block"></div>
-					<label class="flex items-center gap-1.5 text-[11px] text-base-content/50">
+					<div class="hidden h-6 w-px bg-muted-strong sm:block"></div>
+					<label class="flex items-center gap-1.5 text-[11px] text-foreground/50">
 						pp
-						<input
-							class="input input-bordered input-xs w-12 rounded-full text-center font-mono"
+						<Input
+							class="h-7 w-12 px-2.5 text-center font-mono text-xs"
 							placeholder="1"
 							bind:value={startPageInput}
 						/>
 						–
-						<input
-							class="input input-bordered input-xs w-12 rounded-full text-center font-mono"
+						<Input
+							class="h-7 w-12 px-2.5 text-center font-mono text-xs"
 							placeholder="end"
 							bind:value={endPageInput}
 						/>
 					</label>
-					<input
-						class="input input-bordered input-xs w-36 rounded-full font-mono text-[11px]"
+					<Input
+						class="h-7 w-36 px-2.5 font-mono text-[11px]"
 						placeholder="module id (optional)"
 						bind:value={moduleIdInput}
 					/>
@@ -318,10 +330,10 @@
 		<div class="flex flex-1 flex-col gap-4 xl:grid xl:min-h-0 xl:grid-cols-12">
 			{#if activePane === 'tools'}
 				<section
-					class="flex min-h-[32rem] flex-col rounded-2xl border border-base-300 bg-base-100 shadow-xs xl:col-span-8 xl:min-h-0"
+					class="flex min-h-[32rem] flex-col rounded-2xl border border-border bg-background shadow-xs xl:col-span-8 xl:min-h-0"
 				>
 					<div
-						class="flex shrink-0 items-center gap-1 overflow-x-auto rounded-t-2xl border-b border-base-300 px-3 py-2.5"
+						class="flex shrink-0 items-center gap-1 overflow-x-auto rounded-t-2xl border-b border-border px-3 py-2.5"
 					>
 						{#each toolDefinitions as tool (tool.id)}
 							{@const ToolIcon = tool.icon}
@@ -329,7 +341,7 @@
 								class="flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition {selectedTool ===
 								tool.id
 									? 'bg-primary/10 text-primary'
-									: 'text-base-content/45 hover:bg-base-200 hover:text-base-content/75'}"
+									: 'text-foreground/45 hover:bg-muted hover:text-foreground/75'}"
 								onclick={() => (selectedTool = tool.id)}
 							>
 								<ToolIcon size={14} />
@@ -338,26 +350,26 @@
 						{/each}
 					</div>
 
-					<div class="shrink-0 border-b border-base-300 px-4 py-3">
+					<div class="shrink-0 border-b border-border px-4 py-3">
 						<div class="flex flex-wrap items-end gap-3">
-							<p class="min-w-0 flex-1 basis-52 text-xs leading-relaxed text-base-content/55">
+							<p class="min-w-0 flex-1 basis-52 text-xs leading-relaxed text-foreground/55">
 								{selectedToolDefinition.description}
 							</p>
 
 							{#if selectedTool === 'searchSourceChunks'}
-								<label class="form-control min-w-0 flex-1 basis-56">
-									<span class="label-text mb-1 text-[11px] text-base-content/50">Query</span>
-									<input
-										class="input input-bordered input-sm rounded-full"
+								<label class="flex min-w-0 flex-1 basis-56 flex-col">
+									<span class="mb-1 text-[11px] text-foreground/50">Query</span>
+									<Input
+										class="h-8 px-3 text-sm"
 										placeholder={selectedDocument?.title ?? 'What should the agent look for?'}
 										bind:value={toolQuery}
 										onkeydown={(event) => event.key === 'Enter' && runTool()}
 									/>
 								</label>
-								<label class="form-control w-20">
-									<span class="label-text mb-1 text-[11px] text-base-content/50">Limit</span>
-									<input
-										class="input input-bordered input-sm rounded-full text-center font-mono"
+								<label class="flex w-20 flex-col">
+									<span class="mb-1 text-[11px] text-foreground/50">Limit</span>
+									<Input
+										class="h-8 px-3 text-center font-mono text-sm"
 										type="number"
 										min="1"
 										max="8"
@@ -365,12 +377,10 @@
 									/>
 								</label>
 							{:else if selectedTool === 'getSourcePages'}
-								<label class="form-control min-w-0 flex-1 basis-56">
-									<span class="label-text mb-1 text-[11px] text-base-content/50">
-										Page numbers (max 5)
-									</span>
-									<input
-										class="input input-bordered input-sm rounded-full font-mono"
+								<label class="flex min-w-0 flex-1 basis-56 flex-col">
+									<span class="mb-1 text-[11px] text-foreground/50"> Page numbers (max 5) </span>
+									<Input
+										class="h-8 px-3 font-mono text-sm"
 										placeholder="e.g. 3, 4, 5"
 										bind:value={pageNumbersInput}
 										onkeydown={(event) => event.key === 'Enter' && runTool()}
@@ -378,27 +388,22 @@
 								</label>
 							{/if}
 
-							<button
-								class="btn btn-primary btn-sm gap-2 rounded-full px-5"
-								disabled={!canRunTool}
-								onclick={() => runTool()}
-							>
+							<Button size="sm" class="gap-2 px-5" disabled={!canRunTool} onclick={() => runTool()}>
 								{#if isRunningTool}
-									<span class="loading loading-spinner loading-xs"></span>
+									<Spinner class="size-3" />
 								{:else}
 									<Play size={14} />
 								{/if}
 								Run
-							</button>
+							</Button>
 						</div>
 
 						{#if toolError}
-							<div
-								class="alert alert-error mt-3 rounded-xl py-2 text-sm"
-								in:fade={{ duration: 150 }}
-							>
-								<TriangleAlert size={15} />
-								<span>{toolError}</span>
+							<div class="mt-3" in:fade={{ duration: 150 }}>
+								<Alert.Root tone="error" class="rounded-xl py-2 text-sm">
+									<TriangleAlert size={15} />
+									<Alert.Title>{toolError}</Alert.Title>
+								</Alert.Root>
 							</div>
 						{/if}
 					</div>

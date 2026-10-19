@@ -5,6 +5,8 @@
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { CandidateQuestion } from './questionStudioTypes';
+	import { Button } from '$lib/components/ui/button';
+	import * as RadioGroup from '$lib/components/ui/radio-group';
 
 	interface Props {
 		candidate: CandidateQuestion;
@@ -81,30 +83,30 @@
 			<!-- Options -->
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
 				<div
-					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile
+					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
 						? 'mb-2'
 						: 'mb-3'}"
 				>
 					Options · select the correct answer
 				</div>
-				<div class={isMobile ? 'space-y-2' : 'space-y-3'}>
+				<RadioGroup.Root
+					value={String(answerIndex)}
+					onValueChange={(value) => (answerIndex = Number(value))}
+					name={`answer-${index}`}
+					class={isMobile ? 'gap-2' : 'gap-3'}
+				>
 					{#each optionIndexes as optionIndex (optionIndex)}
 						<div
 							class="flex items-center rounded-full transition-colors {isMobile
 								? 'border p-1.5'
 								: 'border-2 p-2'} {answerIndex === optionIndex
 								? 'border-success bg-success/5'
-								: 'border-base-300 bg-base-100'}"
+								: 'border-border bg-background'}"
 						>
-							<input
-								type="radio"
-								class="radio shrink-0 {isMobile
-									? 'radio-xs ms-2'
-									: 'radio-sm ms-3'} {answerIndex === optionIndex ? 'radio-success' : ''}"
+							<RadioGroup.Item
+								value={String(optionIndex)}
+								class={isMobile ? 'ms-2 size-3.5' : 'ms-3 size-4'}
 								aria-label={`Mark option ${String.fromCharCode(65 + optionIndex)} correct`}
-								name={`answer-${index}`}
-								value={optionIndex}
-								bind:group={answerIndex}
 							/>
 							<span
 								class="my-2 shrink-0 select-none font-semibold {isMobile
@@ -125,13 +127,13 @@
 							/>
 						</div>
 					{/each}
-				</div>
+				</RadioGroup.Root>
 			</div>
 
 			<!-- Rationale -->
 			<div>
 				<div
-					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile
+					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
 						? 'mb-2'
 						: 'mb-3'}"
 				>
@@ -151,10 +153,10 @@
 	</div>
 
 	<!-- Pinned so the way out of the editor is always on screen -->
-	<div class="shrink-0 border-t border-base-300 bg-base-100 {isMobile ? 'px-4 py-3' : 'px-6 py-3'}">
-		{#if error}<p class="mb-2 text-sm text-error" role="alert">{error}</p>{/if}
+	<div class="shrink-0 border-t border-border bg-background {isMobile ? 'px-4 py-3' : 'px-6 py-3'}">
+		{#if error}<p class="mb-2 text-sm text-error-ink" role="alert">{error}</p>{/if}
 		<div class="flex flex-wrap items-center gap-2">
-			<p class="max-w-md text-xs text-base-content/45">
+			<p class="max-w-md text-xs text-foreground/45">
 				{#if valid}
 					Your edits replace the draft text and are not re-checked against the source.
 				{:else}
@@ -163,21 +165,12 @@
 				{/if}
 			</p>
 			<div class="ml-auto flex items-center gap-2">
-				<button
-					type="button"
-					class="btn btn-ghost btn-sm rounded-full"
-					disabled={saving}
-					onclick={onDone}
-				>
+				<Button variant="ghost" tone="neutral" size="sm" disabled={saving} onclick={onDone}>
 					Cancel
-				</button>
-				<button
-					type="submit"
-					class="btn btn-primary btn-sm rounded-full"
-					disabled={!valid || saving}
-				>
+				</Button>
+				<Button type="submit" size="sm" disabled={!valid || saving}>
 					{saving ? 'Applying…' : 'Apply edits'}
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>

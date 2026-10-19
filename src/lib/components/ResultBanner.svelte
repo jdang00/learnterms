@@ -52,8 +52,11 @@
 		out:fade={{ duration: 240 }}
 	>
 		<div
-			class="alert rounded-full shadow-lg px-4 sm:px-6 py-2.5 sm:py-3 max-w-[92vw]
-                {qs.checkResult === 'Correct!' ? 'alert-success' : 'alert-error'}"
+			role="alert"
+			class="max-w-[92vw] rounded-full px-4 py-2.5 shadow-lg sm:px-6 sm:py-3 {qs.checkResult ===
+			'Correct!'
+				? 'bg-success text-success-foreground'
+				: 'bg-error text-error-foreground'}"
 		>
 			<span class="font-extrabold text-base sm:text-lg">{qs.checkResult}</span>
 		</div>

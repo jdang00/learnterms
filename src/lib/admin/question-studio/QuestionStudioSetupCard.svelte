@@ -16,6 +16,10 @@
 	import { questionTypes, questionTypeDefinitions } from './questionStudioTypes';
 	import { formatPageSelection } from './pagePickerSelection';
 	import { tokenClass } from './questionStudioToken';
+	import * as Card from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Textarea } from '$lib/components/ui/textarea';
 
 	interface Props {
 		cohortId?: Id<'cohort'> | null;
@@ -179,195 +183,198 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<div class="card border border-base-300 bg-base-100 shadow-sm" in:fly={{ y: 16, duration: 280 }}>
-	<div class="card-body gap-0 px-7 py-8 sm:px-14 sm:py-10">
-		<div class="flex flex-wrap items-center justify-between gap-3">
-			<h2 class="flex items-center gap-2 text-sm font-medium text-base-content/55">
-				<Sparkles size={15} class="text-primary" />
-				New question run
-			</h2>
-			<div
-				class="flex rounded-full border border-base-300 bg-base-200 p-1"
-				role="group"
-				aria-label="Write from"
-			>
-				{#each ['pages', 'topics'] as const as mode (mode)}
+<div in:fly={{ y: 16, duration: 280 }}>
+	<Card.Root class="gap-0 bg-background py-0 shadow-sm">
+		<Card.Content class="px-7 py-8 sm:px-14 sm:py-10">
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<h2 class="flex items-center gap-2 text-sm font-medium text-foreground/55">
+					<Sparkles size={15} class="text-primary" />
+					New question run
+				</h2>
+				<div
+					class="flex rounded-full border border-border bg-muted p-1"
+					role="group"
+					aria-label="Write from"
+				>
+					{#each ['pages', 'topics'] as const as mode (mode)}
+						<Button
+							variant="ghost"
+							tone="neutral"
+							size="sm"
+							class="text-foreground/60 aria-pressed:bg-background aria-pressed:text-primary-ink aria-pressed:shadow-sm"
+							aria-pressed={sourceMode === mode}
+							onclick={() => onSelectSourceMode(mode)}
+						>
+							{mode === 'pages' ? 'Pages' : 'Topics'}
+						</Button>
+					{/each}
+				</div>
+			</div>
+
+			<div class="setup-sentence mt-8 text-lg text-foreground/80 sm:text-xl">
+				Write
+				<Input
+					type="number"
+					inputmode="numeric"
+					min="1"
+					max={maxQuestions}
+					aria-label="Number of questions"
+					class="count-token mx-1.5 w-20 text-center text-base font-medium"
+					value={totalRequested}
+					disabled={isGenerating}
+					onchange={(event) => setTotalFromInput(event.currentTarget)}
+				/>
+				question{totalRequested === 1 ? '' : 's'} from
+				<QuestionStudioSourceAttachment
+					{cohortId}
+					{cohortLoading}
+					bind:selectedDocumentId
+					bind:selectedSourceSummary
+				/>
+				covering
+				{#if !selectedDocumentId}
+					<button type="button" class={tokenClass(false)} disabled>
+						{#if sourceMode === 'pages'}
+							<Grid2X2 size={16} class="shrink-0" />
+						{:else}
+							<Network size={16} class="shrink-0" />
+						{/if}
+						its {sourceMode === 'pages' ? 'pages' : 'topics'}
+					</button>
+				{:else if sourceMode === 'pages'}
 					<button
 						type="button"
-						class="btn btn-sm rounded-full border-0 {sourceMode === mode
-							? 'bg-base-100 text-primary shadow-sm'
-							: 'btn-ghost text-base-content/60'}"
-						aria-pressed={sourceMode === mode}
-						onclick={() => onSelectSourceMode(mode)}
+						class={tokenClass(selectedPageNumbers.length > 0)}
+						disabled={!sourcePreview}
+						onclick={choosePages}
 					>
-						{mode === 'pages' ? 'Pages' : 'Topics'}
+						<Grid2X2 size={16} class="shrink-0 text-foreground/60" />
+						<span class="max-w-[14rem] truncate">
+							{#if !sourcePreview}
+								pages…
+							{:else if selectedPageNumbers.length}
+								page{selectedPageNumbers.length === 1 ? '' : 's'}
+								{formatPageSelection(selectedPageNumbers)}
+							{:else}
+								pages you choose
+							{/if}
+						</span>
+						<ChevronDown size={15} class="shrink-0 opacity-60" />
 					</button>
-				{/each}
-			</div>
-		</div>
-
-		<div class="setup-sentence mt-8 text-lg text-base-content/80 sm:text-xl">
-			Write
-			<input
-				type="number"
-				inputmode="numeric"
-				min="1"
-				max={maxQuestions}
-				aria-label="Number of questions"
-				class="input count-token mx-1.5 w-20 rounded-full text-center text-base font-medium"
-				value={totalRequested}
-				disabled={isGenerating}
-				onchange={(event) => setTotalFromInput(event.currentTarget)}
-			/>
-			question{totalRequested === 1 ? '' : 's'} from
-			<QuestionStudioSourceAttachment
-				{cohortId}
-				{cohortLoading}
-				bind:selectedDocumentId
-				bind:selectedSourceSummary
-			/>
-			covering
-			{#if !selectedDocumentId}
-				<button type="button" class={tokenClass(false)} disabled>
-					{#if sourceMode === 'pages'}
+				{:else if !hasStudioContext}
+					<button type="button" class={tokenClass(false)} onclick={choosePages}>
 						<Grid2X2 size={16} class="shrink-0" />
-					{:else}
+						pages you choose
+						<ChevronDown size={15} class="shrink-0 opacity-60" />
+					</button>
+				{:else if isTopicMapLoading}
+					<button type="button" class={tokenClass(false)} disabled>
 						<Network size={16} class="shrink-0" />
-					{/if}
-					its {sourceMode === 'pages' ? 'pages' : 'topics'}
-				</button>
-			{:else if sourceMode === 'pages'}
-				<button
-					type="button"
-					class={tokenClass(selectedPageNumbers.length > 0)}
-					disabled={!sourcePreview}
-					onclick={choosePages}
-				>
-					<Grid2X2 size={16} class="shrink-0 text-base-content/60" />
-					<span class="max-w-[14rem] truncate">
-						{#if !sourcePreview}
-							pages…
-						{:else if selectedPageNumbers.length}
-							page{selectedPageNumbers.length === 1 ? '' : 's'}
-							{formatPageSelection(selectedPageNumbers)}
-						{:else}
-							pages you choose
-						{/if}
-					</span>
-					<ChevronDown size={15} class="shrink-0 opacity-60" />
-				</button>
-			{:else if !hasStudioContext}
-				<button type="button" class={tokenClass(false)} onclick={choosePages}>
-					<Grid2X2 size={16} class="shrink-0" />
-					pages you choose
-					<ChevronDown size={15} class="shrink-0 opacity-60" />
-				</button>
-			{:else if isTopicMapLoading}
-				<button type="button" class={tokenClass(false)} disabled>
-					<Network size={16} class="shrink-0" />
-					its topics…
-				</button>
-			{:else if topics.length === 0}
-				<button type="button" class={tokenClass(false)} onclick={choosePages}>
-					<Grid2X2 size={16} class="shrink-0" />
-					pages you choose
-					<ChevronDown size={15} class="shrink-0 opacity-60" />
-				</button>
-			{:else}
-				<button
-					type="button"
-					class={tokenClass(selectedTopics.length > 0)}
-					onclick={() => {
-						topicSearch = '';
-						topicsOpen = true;
-					}}
-				>
-					<Network size={16} class="shrink-0 text-base-content/60" />
-					{allTopicsSelected
-						? `all ${topics.length} topics`
-						: `${selectedTopics.length} of ${topics.length} topics`}
-					<ChevronDown size={15} class="shrink-0 opacity-60" />
-				</button>
-			{/if}
-			and save them to
-			<QuestionStudioDestinationPicker
-				{currentSemester}
-				{semesters}
-				{selectedClass}
-				{selectedModuleId}
-				{selectedModuleTitle}
-				{searchedClasses}
-				{searchedModules}
-				bind:classOpen
-				bind:moduleOpen
-				bind:classSearch
-				bind:moduleSearch
-				{onSelectSemester}
-				{onSelectClass}
-				{onSelectModule}
-			/>.
-		</div>
+						its topics…
+					</button>
+				{:else if topics.length === 0}
+					<button type="button" class={tokenClass(false)} onclick={choosePages}>
+						<Grid2X2 size={16} class="shrink-0" />
+						pages you choose
+						<ChevronDown size={15} class="shrink-0 opacity-60" />
+					</button>
+				{:else}
+					<button
+						type="button"
+						class={tokenClass(selectedTopics.length > 0)}
+						onclick={() => {
+							topicSearch = '';
+							topicsOpen = true;
+						}}
+					>
+						<Network size={16} class="shrink-0 text-foreground/60" />
+						{allTopicsSelected
+							? `all ${topics.length} topics`
+							: `${selectedTopics.length} of ${topics.length} topics`}
+						<ChevronDown size={15} class="shrink-0 opacity-60" />
+					</button>
+				{/if}
+				and save them to
+				<QuestionStudioDestinationPicker
+					{currentSemester}
+					{semesters}
+					{selectedClass}
+					{selectedModuleId}
+					{selectedModuleTitle}
+					{searchedClasses}
+					{searchedModules}
+					bind:classOpen
+					bind:moduleOpen
+					bind:classSearch
+					bind:moduleSearch
+					{onSelectSemester}
+					{onSelectClass}
+					{onSelectModule}
+				/>.
+			</div>
 
-		{#if sourceMode === 'pages' && selectedDocumentId && sourcePreview}
-			{#key selectedDocumentId}
-				<QuestionStudioPagePicker
-					documentId={selectedDocumentId}
-					initialSource={sourcePreview}
-					onSourceReloaded={(result) => (sourcePreview = result)}
-					bind:selectedPageNumbers
-					bind:sourceIndexedAt
-					bind:open={pagesOpen}
+			{#if sourceMode === 'pages' && selectedDocumentId && sourcePreview}
+				{#key selectedDocumentId}
+					<QuestionStudioPagePicker
+						documentId={selectedDocumentId}
+						initialSource={sourcePreview}
+						onSourceReloaded={(result) => (sourcePreview = result)}
+						bind:selectedPageNumbers
+						bind:sourceIndexedAt
+						bind:open={pagesOpen}
+					/>
+				{/key}
+			{/if}
+
+			{#if selectedDocumentId}
+				<QuestionStudioContextMeter
+					pageStats={sourcePreview?.pageCharacterCounts}
+					selectedPageNumbers={contextPageNumbers}
+					loading={!sourcePreview && !sourcePreviewError}
+					error={sourcePreviewError}
 				/>
-			{/key}
-		{/if}
-
-		{#if selectedDocumentId}
-			<QuestionStudioContextMeter
-				pageStats={sourcePreview?.pageCharacterCounts}
-				selectedPageNumbers={contextPageNumbers}
-				loading={!sourcePreview && !sourcePreviewError}
-				error={sourcePreviewError}
-			/>
-		{/if}
-
-		<textarea
-			class="textarea mt-9 w-full resize-none rounded-2xl border-base-300 bg-base-200/40 p-4 text-base leading-relaxed focus:bg-base-100"
-			rows="3"
-			aria-label="Focus notes for the agent"
-			placeholder="Anything to focus on? For example, key definitions and common points of confusion. (Optional)"
-			bind:value={guidanceNotes}
-		></textarea>
-
-		<p class="mt-5 text-sm leading-relaxed text-base-content/50">
-			{#if sourcePreviewError}
-				<span class="text-error">{sourcePreviewError}</span>
-				<button type="button" class="underline" onclick={() => sourceReload++}>Try again</button>
-			{:else}
-				{hint}
 			{/if}
-		</p>
 
-		<div class="mt-7 flex flex-wrap items-center gap-3 border-t border-base-300 pt-7">
-			<button
-				type="button"
-				class="btn gap-2 rounded-full px-4 font-medium"
-				disabled={isGenerating}
-				onclick={() => (mixOpen = true)}
-			>
-				<ListChecks size={16} class="text-base-content/60" />
-				{mixSummary}
-				<ChevronDown size={15} class="opacity-60" />
-			</button>
-			<button
-				class="btn btn-primary ml-auto gap-2 rounded-full px-7"
-				disabled={!canGenerate || isGenerating}
-				onclick={onGenerate}
-			>
-				<Sparkles size={16} />
-				Generate {totalRequested} question{totalRequested === 1 ? '' : 's'}
-			</button>
-		</div>
-	</div>
+			<Textarea
+				class="mt-9 resize-none border-border bg-muted/40 p-4 text-base leading-relaxed focus:bg-background"
+				rows={3}
+				aria-label="Focus notes for the agent"
+				placeholder="Anything to focus on? For example, key definitions and common points of confusion. (Optional)"
+				bind:value={guidanceNotes}
+			/>
+
+			<p class="mt-5 text-sm leading-relaxed text-foreground/50">
+				{#if sourcePreviewError}
+					<span class="text-error-ink">{sourcePreviewError}</span>
+					<button type="button" class="underline" onclick={() => sourceReload++}>Try again</button>
+				{:else}
+					{hint}
+				{/if}
+			</p>
+
+			<div class="mt-7 flex flex-wrap items-center gap-3 border-t border-border pt-7">
+				<Button
+					variant="soft"
+					tone="neutral"
+					class="gap-2 px-4 font-medium"
+					disabled={isGenerating}
+					onclick={() => (mixOpen = true)}
+				>
+					<ListChecks size={16} class="text-foreground/60" />
+					{mixSummary}
+					<ChevronDown size={15} class="opacity-60" />
+				</Button>
+				<Button
+					class="ml-auto gap-2 px-7"
+					disabled={!canGenerate || isGenerating}
+					onclick={onGenerate}
+				>
+					<Sparkles size={16} />
+					Generate {totalRequested} question{totalRequested === 1 ? '' : 's'}
+				</Button>
+			</div>
+		</Card.Content>
+	</Card.Root>
 </div>
 
 <QuestionStudioSetupDialogs
@@ -395,12 +402,12 @@
 		word-spacing: 0.06em;
 		text-wrap: pretty;
 	}
-	.count-token {
+	:global(.count-token) {
 		appearance: textfield;
 		-moz-appearance: textfield;
 	}
-	.count-token::-webkit-inner-spin-button,
-	.count-token::-webkit-outer-spin-button {
+	:global(.count-token)::-webkit-inner-spin-button,
+	:global(.count-token)::-webkit-outer-spin-button {
 		-webkit-appearance: none;
 		margin: 0;
 	}

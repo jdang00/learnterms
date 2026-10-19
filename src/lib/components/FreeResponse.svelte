@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Badge } from '$lib/components/ui/badge';
+	import { Spinner } from '$lib/components/ui/spinner';
 	import QuestionRichTextEditor from '$lib/admin/questions/QuestionRichTextEditor.svelte';
 	import {
 		acceptanceLevels,
@@ -29,7 +31,7 @@
 <div class="mt-5 space-y-3">
 	<div class="flex flex-wrap items-center justify-between gap-2 text-sm">
 		<span class="font-semibold">Your response</span>
-		<span class="text-base-content/60"
+		<span class="text-foreground/60"
 			>{acceptanceLevels[question.freeResponseAcceptance ?? 'lenient'].label} acceptance</span
 		>
 	</div>
@@ -38,39 +40,37 @@
 		label="Your response"
 		disabled={qs.gradingQuestionId === question._id}
 	/>
-	<p class="text-xs text-base-content/60">
+	<p class="text-xs text-foreground/60">
 		Graded on meaning. Formatting does not affect your grade. {words.toLocaleString()} / {MAX_RESPONSE_WORDS.toLocaleString()}
 		words
 	</p>
-	{#if words > MAX_RESPONSE_WORDS}<p role="alert" class="text-sm text-error">
+	{#if words > MAX_RESPONSE_WORDS}<p role="alert" class="text-sm text-error-ink">
 			Shorten your response to 1,500 words before submitting.
 		</p>{/if}
 	{#if qs.gradingQuestionId === question._id}<p
 			role="status"
 			class="flex items-center gap-2 text-sm"
 		>
-			<span class="loading loading-spinner loading-xs"></span> Grading your response…
+			<Spinner class="size-3" /> Grading your response…
 		</p>{/if}
-	{#if qs.gradingErrors[question._id]}<p role="alert" class="text-sm text-error">
+	{#if qs.gradingErrors[question._id]}<p role="alert" class="text-sm text-error-ink">
 			{qs.gradingErrors[question._id]}
 		</p>{/if}
 	{#if currentGrade}
 		<section
 			aria-label="Feedback"
 			aria-live="polite"
-			class="rounded-2xl border border-base-300 p-4 space-y-2"
+			class="rounded-2xl border border-border p-4 space-y-2"
 		>
 			<div class="flex items-center gap-2">
 				<h3 class="font-semibold">Feedback</h3>
-				<span
-					class:badge-success={currentGrade.isCorrect}
-					class:badge-warning={!currentGrade.isCorrect}
-					class="badge badge-sm">{currentGrade.isCorrect ? 'Accepted' : 'Needs revision'}</span
+				<Badge variant="solid" tone={currentGrade.isCorrect ? 'success' : 'warning'}
+					>{currentGrade.isCorrect ? 'Accepted' : 'Needs revision'}</Badge
 				>
 			</div>
 			<p class="whitespace-pre-wrap text-sm">{currentGrade.feedback}</p>
 			<details class="pt-2 text-sm">
-				<summary class="cursor-pointer font-medium text-base-content/70">More</summary>
+				<summary class="cursor-pointer font-medium text-foreground/70">More</summary>
 				<p class="whitespace-pre-wrap mt-2">{currentGrade.comparison}</p>
 			</details>
 		</section>

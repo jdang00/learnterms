@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { tick, type Snippet } from 'svelte';
 	import { Check, ChevronDown } from 'lucide-svelte';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 
 	interface Option {
 		value: string;
@@ -33,15 +36,16 @@
 		header?: Snippet;
 	} = $props();
 	const id = $props.id();
-	let trigger: HTMLButtonElement;
+	let trigger = $state<HTMLElement | null>(null);
 	let panel: HTMLDivElement;
-	let input: HTMLInputElement;
+	let input = $state<HTMLElement | null>(null);
 	let left = $state(0);
 	let top = $state(0);
 	let height = $state(360);
 	let active = $state(-1);
 
 	function position() {
+		if (!trigger) return;
 		const rect = trigger.getBoundingClientRect();
 		const width = Math.min(size === 'md' ? 384 : 352, window.innerWidth - 24);
 		left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12));
@@ -53,7 +57,7 @@
 	function close(restore = false) {
 		open = false;
 		panel?.hidePopover();
-		if (restore) trigger.focus();
+		if (restore) trigger?.focus();
 	}
 	$effect(() => {
 		if (open && !disabled) {
@@ -90,12 +94,14 @@
 </script>
 
 <svelte:window onresize={() => open && position()} onscroll={() => open && position()} />
-<button
-	bind:this={trigger}
-	type="button"
-	class="btn max-w-full min-w-0 gap-2 rounded-full align-middle font-medium {size === 'md'
-		? 'btn-md mx-1.5 px-5 text-base'
-		: 'btn-sm px-4 text-sm'}"
+<Button
+	bind:ref={trigger}
+	variant="soft"
+	tone="neutral"
+	size={size === 'md' ? 'md' : 'sm'}
+	class="max-w-full min-w-0 gap-2 align-middle font-medium {size === 'md'
+		? 'mx-1.5 text-base'
+		: 'px-4 text-sm'}"
 	{disabled}
 	title={label}
 	aria-label={`${placeholder}: ${label}`}
@@ -108,7 +114,7 @@
 		size={14}
 		class="shrink-0"
 	/>
-</button>
+</Button>
 <div
 	bind:this={panel}
 	id={`${id}-panel`}
@@ -116,7 +122,7 @@
 	role="dialog"
 	tabindex="-1"
 	aria-label={placeholder}
-	class="picker-panel rounded-2xl border border-base-300 bg-base-100 p-3 text-sm font-normal leading-normal text-base-content shadow-lg"
+	class="picker-panel rounded-2xl border border-border bg-background p-3 text-sm font-normal leading-normal text-foreground shadow-lg"
 	style:width={`min(${size === 'md' ? 384 : 352}px, calc(100vw - 24px))`}
 	style:left={`${left}px`}
 	style:top={`${top}px`}
@@ -127,8 +133,8 @@
 	onkeydown={keydown}
 >
 	{#if header}<div class="shrink-0">{@render header()}</div>{/if}
-	<input
-		bind:this={input}
+	<Input
+		bind:ref={input}
 		bind:value={search}
 		oninput={() => (active = -1)}
 		role="combobox"
@@ -138,13 +144,13 @@
 		aria-controls={`${id}-list`}
 		aria-activedescendant={active >= 0 ? `${id}-${active}` : undefined}
 		{placeholder}
-		class="input input-sm w-full shrink-0 rounded-full bg-base-100 text-base-content placeholder:text-base-content/70"
+		class="h-8 shrink-0 px-3 text-sm text-foreground placeholder:text-foreground/70"
 	/>
 	<ul
 		id={`${id}-list`}
 		role="listbox"
 		aria-label={placeholder}
-		class="menu menu-sm min-h-0 w-full flex-nowrap gap-1 overflow-y-auto p-0"
+		class="flex min-h-0 w-full flex-col flex-nowrap gap-1 overflow-y-auto p-0"
 	>
 		{#each options as option, index (option.value)}
 			<li role="presentation">
@@ -157,8 +163,8 @@
 						? 'py-2.5 text-sm'
 						: 'py-2 text-sm'} focus-visible:outline-2 focus-visible:outline-primary {value ===
 					option.value
-						? 'bg-primary text-primary-content hover:bg-primary hover:text-primary-content'
-						: 'text-base-content hover:bg-base-200'} {active === index
+						? 'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground'
+						: 'text-foreground hover:bg-muted'} {active === index
 						? 'outline-2 -outline-offset-2 outline-primary'
 						: ''}"
 					onclick={() => choose(option)}
@@ -167,16 +173,15 @@
 						<span class="min-w-0 flex-1 basis-24 whitespace-normal wrap-anywhere"
 							>{option.label}</span
 						>
-						{#if option.detail}<span
-								class="badge badge-xs h-auto min-h-4 shrink-0 whitespace-nowrap border-0 bg-base-200 px-1.5 py-0.5 text-base-content"
-								>{option.detail}</span
+						{#if option.detail}<Badge size="xs" class="bg-muted text-foreground"
+								>{option.detail}</Badge
 							>{/if}
 					</span>
 					{#if value === option.value}<Check size={14} class="shrink-0" />{/if}
 				</button>
 			</li>
 		{:else}<li role="presentation">
-				<p class="px-3 py-2 text-xs text-base-content" role="status">No matches</p>
+				<p class="px-3 py-2 text-xs text-foreground" role="status">No matches</p>
 			</li>{/each}
 	</ul>
 </div>

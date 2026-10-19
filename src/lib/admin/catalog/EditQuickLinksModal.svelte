@@ -17,6 +17,12 @@
 		TriangleAlert,
 		X
 	} from 'lucide-svelte';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Input } from '$lib/components/ui/input';
+	import { Spinner } from '$lib/components/ui/spinner';
 
 	interface Props {
 		isOpen?: boolean;
@@ -172,43 +178,50 @@
 	}
 </script>
 
-<dialog
-	class="modal p-4"
-	class:modal-open={isOpen}
-	onclick={(event) => {
-		if (event.target === event.currentTarget) close();
+<Dialog.Root
+	open={isOpen}
+	onOpenChange={(open) => {
+		if (!open) close();
 	}}
 >
-	<div
-		class="modal-box flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-base-300 p-0 shadow-2xl"
+	<Dialog.Content
+		showCloseButton={false}
+		class="flex max-h-[88vh] max-w-4xl flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl"
 	>
-		<div class="flex items-center justify-between gap-4 border-b border-base-300 px-6 py-4">
+		<div class="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
 			<div class="flex items-center gap-3">
 				<div class="rounded-2xl bg-primary/10 p-2.5 text-primary ring-1 ring-inset ring-primary/15">
 					<Link2 size={20} />
 				</div>
 				<div>
-					<h3 class="text-lg font-bold leading-tight">Quick Links</h3>
-					<p class="text-xs text-base-content/55">
+					<Dialog.Title class="text-lg leading-tight font-bold">Quick Links</Dialog.Title>
+					<Dialog.Description class="text-xs text-foreground/55">
 						Shown to this cohort in the sidebar and command menu
-					</p>
+					</Dialog.Description>
 				</div>
 			</div>
-			<button class="btn btn-ghost btn-sm btn-circle" onclick={close} aria-label="Close">
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				shape="circle"
+				onclick={close}
+				aria-label="Close"
+			>
 				<X size={18} />
-			</button>
+			</Button>
 		</div>
 
 		{#if quickLinksQuery.isLoading}
-			<div class="flex items-center gap-3 px-6 py-16 text-base-content/70">
-				<span class="loading loading-spinner loading-md"></span>
+			<div class="flex items-center gap-3 px-6 py-16 text-foreground/70">
+				<Spinner class="size-5" />
 				<span>Loading quick links…</span>
 			</div>
 		{:else if quickLinksQuery.error}
 			<div class="p-6">
-				<div class="alert alert-error">
-					<span>{quickLinksQuery.error.toString()}</span>
-				</div>
+				<Alert.Root tone="error">
+					<Alert.Title>{quickLinksQuery.error.toString()}</Alert.Title>
+				</Alert.Root>
 			</div>
 		{:else}
 			<div class="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[16rem_1fr]">
@@ -218,25 +231,25 @@
 						<div
 							class="flex h-full min-h-[18rem] flex-col items-center justify-center gap-4 p-8 text-center"
 						>
-							<div class="rounded-2xl bg-base-200 p-4 text-base-content/40">
+							<div class="rounded-2xl bg-muted p-4 text-foreground/40">
 								<Link2 size={28} />
 							</div>
 							<div>
 								<p class="font-semibold">No quick links yet</p>
-								<p class="mt-1 text-sm text-base-content/55">Add your first link to get started.</p>
+								<p class="mt-1 text-sm text-foreground/55">Add your first link to get started.</p>
 							</div>
-							<button class="btn btn-primary btn-sm gap-2 rounded-full" onclick={addLink}>
+							<Button size="sm" class="gap-2" onclick={addLink}>
 								<Plus size={16} />
 								<span>Add quick link</span>
-							</button>
+							</Button>
 						</div>
 					{:else}
 						<div class="space-y-5 p-5">
-							<div class="rounded-2xl border border-base-300 bg-base-200/40 p-3">
-								<div class="rounded-2xl bg-base-100 p-2 shadow-xs ring-1 ring-base-300/60">
+							<div class="rounded-2xl border border-border bg-muted/40 p-3">
+								<div class="rounded-2xl bg-background p-2 shadow-xs ring-1 ring-border/60">
 									<div class="flex w-full items-center gap-3 rounded-full px-3 py-2.5">
 										<span
-											class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-base-200 text-sm"
+											class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-sm"
 										>
 											{selectedLink.icon || '🔗'}
 										</span>
@@ -244,30 +257,28 @@
 											<span class="block truncate text-[13px] font-semibold leading-snug">
 												{selectedLink.title || 'Untitled link'}
 											</span>
-											<span class="block truncate text-[11px] text-base-content/50">
+											<span class="block truncate text-[11px] text-foreground/50">
 												{selectedLink.description || 'No description'}
 											</span>
 										</span>
-										<ExternalLink size={13} class="shrink-0 text-base-content/30" />
+										<ExternalLink size={13} class="shrink-0 text-foreground/30" />
 									</div>
 								</div>
 							</div>
 							<div class="flex items-center justify-between">
 								<div class="flex items-center gap-2">
-									<span class="text-xs font-medium text-base-content/45">
+									<span class="text-xs font-medium text-foreground/45">
 										Editing link {selectedIndex + 1}
 									</span>
-									<span
-										class="badge badge-xs rounded-full {selectedLink.hidden
-											? 'badge-ghost'
-											: 'badge-primary badge-soft'}"
-									>
+									<Badge size="xs" tone={selectedLink.hidden ? 'neutral' : 'primary'}>
 										{selectedLink.hidden ? 'Hidden' : 'Shown'}
-									</span>
+									</Badge>
 								</div>
 								<div class="flex items-center gap-1">
-									<button
-										class="btn btn-ghost btn-xs gap-1 rounded-full"
+									<Button
+										variant="ghost"
+										tone="neutral"
+										size="xs"
 										onclick={() => setLinkHidden(selectedIndex, !selectedLink.hidden)}
 										aria-label={selectedLink.hidden ? 'Show link' : 'Hide link'}
 									>
@@ -278,49 +289,58 @@
 											<EyeOff size={14} />
 											<span>Hide</span>
 										{/if}
-									</button>
-									<button
-										class="btn btn-ghost btn-xs btn-circle"
+									</Button>
+									<Button
+										variant="ghost"
+										tone="neutral"
+										size="xs"
+										shape="circle"
 										onclick={() => reorderLink(selectedIndex, selectedIndex - 1)}
 										disabled={selectedIndex === 0}
 										aria-label="Move up"
 									>
 										<ArrowUp size={15} />
-									</button>
-									<button
-										class="btn btn-ghost btn-xs btn-circle"
+									</Button>
+									<Button
+										variant="ghost"
+										tone="neutral"
+										size="xs"
+										shape="circle"
 										onclick={() => reorderLink(selectedIndex, selectedIndex + 1)}
 										disabled={selectedIndex === draftLinks.length - 1}
 										aria-label="Move down"
 									>
 										<ArrowDown size={15} />
-									</button>
-									<button
-										class="btn btn-ghost btn-xs btn-circle text-error hover:bg-error/10"
+									</Button>
+									<Button
+										variant="ghost"
+										tone="error"
+										size="xs"
+										shape="circle"
 										onclick={() => removeLink(selectedIndex)}
 										aria-label="Delete link"
 									>
 										<Trash2 size={15} />
-									</button>
+									</Button>
 								</div>
 							</div>
 							<div>
 								<div class="mb-1.5 flex items-center justify-between">
-									<span class="text-xs font-medium text-base-content/70">Icon</span>
-									<span class="text-[10px] text-base-content/40">
+									<span class="text-xs font-medium text-foreground/70">Icon</span>
+									<span class="text-[10px] text-foreground/40">
 										{selectedLink.icon.length}/12
 									</span>
 								</div>
 								<div class="flex items-center gap-3">
 									<span
-										class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-base-300 bg-base-200 text-xl"
+										class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-muted text-xl"
 									>
 										{selectedLink.icon || '🔗'}
 									</span>
-									<input
-										class="input input-bordered input-sm flex-1 rounded-xl"
+									<Input
+										class="h-8 flex-1 rounded-xl px-3 text-sm"
 										value={selectedLink.icon}
-										maxlength="12"
+										maxlength={12}
 										placeholder="🔗"
 										oninput={(event) =>
 											updateLink(selectedIndex, 'icon', event.currentTarget.value)}
@@ -329,8 +349,8 @@
 								<div class="mt-2 flex flex-wrap gap-1">
 									{#each EMOJI_SUGGESTIONS as emoji (emoji)}
 										<button
-											class="flex h-8 w-8 items-center justify-center rounded-lg border text-base transition hover:bg-base-200
-												{selectedLink.icon === emoji ? 'border-primary/50 bg-primary/10' : 'border-base-300'}"
+											class="flex h-8 w-8 items-center justify-center rounded-lg border text-base transition hover:bg-muted
+												{selectedLink.icon === emoji ? 'border-primary/50 bg-primary/10' : 'border-border'}"
 											onclick={() => updateLink(selectedIndex, 'icon', emoji)}
 											aria-label={`Use ${emoji}`}
 										>
@@ -341,51 +361,51 @@
 							</div>
 							<div>
 								<div class="mb-1.5 flex items-center justify-between">
-									<span class="text-xs font-medium text-base-content/70">Title</span>
-									<span class="text-[10px] text-base-content/40">
+									<span class="text-xs font-medium text-foreground/70">Title</span>
+									<span class="text-[10px] text-foreground/40">
 										{selectedLink.title.length}/60
 									</span>
 								</div>
-								<input
-									class="input input-bordered input-sm w-full rounded-xl"
+								<Input
+									class="h-8 rounded-xl px-3 text-sm"
 									value={selectedLink.title}
-									maxlength="60"
+									maxlength={60}
 									placeholder="e.g. Course Syllabus"
 									oninput={(event) => updateLink(selectedIndex, 'title', event.currentTarget.value)}
 								/>
 							</div>
 							<div>
 								<div class="mb-1.5 flex items-center justify-between">
-									<span class="text-xs font-medium text-base-content/70">Destination</span>
+									<span class="text-xs font-medium text-foreground/70">Destination</span>
 									{#if selectedLink.href.trim()}
-										<span class="text-[10px] font-medium text-base-content/40">
+										<span class="text-[10px] font-medium text-foreground/40">
 											{isExternalLink(selectedLink.href) ? 'External link' : 'Internal page'}
 										</span>
 									{/if}
 								</div>
-								<input
-									class="input input-bordered input-sm w-full rounded-xl font-mono text-[13px]"
+								<Input
+									class="h-8 rounded-xl px-3 font-mono text-[13px]"
 									value={selectedLink.href}
-									maxlength="240"
+									maxlength={240}
 									placeholder="/classes or https://example.com"
 									oninput={(event) => updateLink(selectedIndex, 'href', event.currentTarget.value)}
 								/>
-								<p class="mt-1 text-[10px] text-base-content/40">
-									Start with <code class="rounded bg-base-200 px-1">/</code> for an internal page or
-									<code class="rounded bg-base-200 px-1">https://</code> for an external site.
+								<p class="mt-1 text-[10px] text-foreground/40">
+									Start with <code class="rounded bg-muted px-1">/</code> for an internal page or
+									<code class="rounded bg-muted px-1">https://</code> for an external site.
 								</p>
 							</div>
 							<div>
 								<div class="mb-1.5 flex items-center justify-between">
-									<span class="text-xs font-medium text-base-content/70">Description</span>
-									<span class="text-[10px] text-base-content/40">
+									<span class="text-xs font-medium text-foreground/70">Description</span>
+									<span class="text-[10px] text-foreground/40">
 										{selectedLink.description.length}/120
 									</span>
 								</div>
-								<input
-									class="input input-bordered input-sm w-full rounded-xl"
+								<Input
+									class="h-8 rounded-xl px-3 text-sm"
 									value={selectedLink.description}
-									maxlength="120"
+									maxlength={120}
 									placeholder="Short note about where this goes"
 									oninput={(event) =>
 										updateLink(selectedIndex, 'description', event.currentTarget.value)}
@@ -396,39 +416,37 @@
 				</div>
 			</div>
 			<div
-				class="flex flex-col gap-3 border-t border-base-300 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between"
+				class="flex flex-col gap-3 border-t border-border px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between"
 			>
 				<div class="flex items-center gap-3">
-					<button class="btn btn-ghost btn-sm gap-2 rounded-full" onclick={resetToDefaults}>
+					<Button variant="ghost" tone="neutral" size="sm" class="gap-2" onclick={resetToDefaults}>
 						<RotateCcw size={14} />
 						<span>Reset to defaults</span>
-					</button>
+					</Button>
 					{#if submitError}
-						<span class="flex items-center gap-1.5 text-xs font-medium text-error">
+						<span class="flex items-center gap-1.5 text-xs font-medium text-error-ink">
 							<TriangleAlert size={13} />
 							{submitError}
 						</span>
 					{:else if validationError}
-						<span class="flex items-center gap-1.5 text-xs font-medium text-warning">
+						<span class="flex items-center gap-1.5 text-xs font-medium text-warning-ink">
 							<TriangleAlert size={13} />
 							{validationError}
 						</span>
 					{/if}
 				</div>
 				<div class="flex items-center justify-end gap-2">
-					<button class="btn btn-ghost btn-sm rounded-full" onclick={close}>Cancel</button>
-					<button
-						class="btn btn-primary btn-sm rounded-full"
+					<Button variant="ghost" tone="neutral" size="sm" onclick={close}>Cancel</Button>
+					<Button
+						size="sm"
+						loading={isSubmitting}
 						onclick={saveQuickLinks}
 						disabled={isSubmitting || Boolean(validationError)}
 					>
-						{#if isSubmitting}
-							<span class="loading loading-spinner loading-xs"></span>
-						{/if}
 						<span>Save changes</span>
-					</button>
+					</Button>
 				</div>
 			</div>
 		{/if}
-	</div>
-</dialog>
+	</Dialog.Content>
+</Dialog.Root>

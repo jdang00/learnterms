@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { BookOpen, Layers } from 'lucide-svelte';
-	import PickerSemesterFilter from '$lib/components/PickerSemesterFilter.svelte';
+	import SemesterSelect from '$lib/components/SemesterSelect.svelte';
 	import SearchablePicker from '$lib/components/SearchablePicker.svelte';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
 	import type { ClassWithSemester } from '$lib/types';
@@ -54,15 +54,16 @@
 	{#snippet icon()}<BookOpen size={16} class="shrink-0" />{/snippet}
 	{#snippet header()}
 		{#if semesters && semesters.length > 1}
-			<PickerSemesterFilter
-				options={semesters.map((s) => ({ value: s.name, label: s.name }))}
+			<SemesterSelect
+				{semesters}
 				value={currentSemester}
-				onSelect={onSelectSemester}
+				class="w-full"
+				onValueChange={onSelectSemester}
 			/>
 		{/if}
 	{/snippet}
 </SearchablePicker>
-<span class="text-base-content/60">/</span>
+<span class="text-foreground/60">/</span>
 <SearchablePicker
 	size="md"
 	label={selectedModuleTitle || 'a module'}

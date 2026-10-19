@@ -1,4 +1,6 @@
 <script lang="ts">
+	import * as Avatar from '$lib/components/ui/avatar';
+
 	let {
 		name,
 		imageUrl,
@@ -13,24 +15,20 @@
 			.slice(0, 2)
 			.toUpperCase()
 	);
-	const sizes = { xs: 'h-7 w-7 text-[10px]', sm: 'h-9 w-9 text-xs', md: 'h-10 w-10 text-sm' };
+	const sizes = { xs: 'size-7', sm: 'size-9', md: 'size-10' };
+	const textSizes = { xs: 'text-[10px]', sm: 'text-xs', md: 'text-sm' };
 </script>
 
-<span class="avatar avatar-placeholder shrink-0">
-	<span
-		class="flex items-center justify-center overflow-hidden rounded-full bg-base-200 font-semibold text-base-content {sizes[
-			size
-		]}"
-	>
-		{#if imageUrl && failedUrl !== imageUrl}
-			<img
-				src={imageUrl}
-				alt=""
-				class="h-full w-full object-cover"
-				onerror={() => (failedUrl = imageUrl)}
-			/>
-		{:else}
-			{initials}
-		{/if}
-	</span>
-</span>
+<Avatar.Root class="shrink-0 {sizes[size]}">
+	{#if imageUrl && failedUrl !== imageUrl}
+		<Avatar.Image
+			src={imageUrl}
+			alt=""
+			class="object-cover"
+			onerror={() => (failedUrl = imageUrl)}
+		/>
+	{/if}
+	<Avatar.Fallback class="font-semibold text-foreground {textSizes[size]}">
+		{initials}
+	</Avatar.Fallback>
+</Avatar.Root>

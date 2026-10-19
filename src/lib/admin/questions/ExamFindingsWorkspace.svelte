@@ -29,6 +29,8 @@
 	import { EXAM_GROUP_STYLE } from '$lib/components/exam-findings/groups';
 	import ExamFindingEditorCard from './ExamFindingEditorCard.svelte';
 	import ExamFindingsPicker from './ExamFindingsPicker.svelte';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
 
 	let {
 		findings = $bindable([]),
@@ -50,8 +52,8 @@
 		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 			? 0
 			: 1;
-	const BONE = 'rounded-full bg-base-content/[0.06]';
-	const CAPTION = 'text-[0.65rem] font-semibold uppercase tracking-wider text-base-content/40';
+	const BONE = 'rounded-full bg-foreground/[0.06]';
+	const CAPTION = 'text-[0.65rem] font-semibold uppercase tracking-wider text-foreground/40';
 
 	let mode = $state<'edit' | 'preview'>('edit');
 	let device = $state<'desktop' | 'phone'>('desktop');
@@ -250,38 +252,42 @@
 	label: string,
 	options: Array<{ active: boolean; label: string; icon: typeof Eye; onclick: () => void }>
 )}
-	<div role="radiogroup" aria-label={label} class="tabs tabs-box tabs-xs shrink-0 rounded-full p-1">
+	<div
+		role="radiogroup"
+		aria-label={label}
+		class="flex shrink-0 items-center gap-0.5 rounded-full bg-muted p-1"
+	>
 		{#each options as option (option.label)}
-			<button
+			<Button
 				role="radio"
-				type="button"
-				class="tab gap-1.5 rounded-full px-3 {option.active ? 'tab-active' : ''}"
+				size="xs"
+				variant={option.active ? 'soft' : 'ghost'}
+				tone={option.active ? 'primary' : 'neutral'}
+				class="gap-1.5 px-3"
 				aria-checked={option.active}
 				onclick={option.onclick}
 			>
 				<option.icon size={13} /> <span class="hidden @2xl:inline">{option.label}</span>
-			</button>
+			</Button>
 		{/each}
 	</div>
 {/snippet}
 
 <div
-	class="@container flex h-full min-h-0 flex-col bg-base-100"
+	class="@container flex h-full min-h-0 flex-col bg-background"
 	in:fade={{ duration: 160 * motion }}
 >
-	<header
-		class="flex flex-wrap items-center gap-x-2.5 gap-y-2 border-b border-base-300 px-4 py-2.5"
-	>
-		<button type="button" class="btn btn-ghost btn-sm gap-1.5 rounded-full pl-2" onclick={onBack}>
+	<header class="flex flex-wrap items-center gap-x-2.5 gap-y-2 border-b border-border px-4 py-2.5">
+		<Button variant="ghost" tone="neutral" size="sm" class="gap-1.5 pl-2" onclick={onBack}>
 			<ArrowLeft size={16} /> Question
-		</button>
-		<span class="hidden h-6 w-px bg-base-300 @md:block"></span>
+		</Button>
+		<span class="hidden h-6 w-px bg-muted-strong @md:block"></span>
 		<div class="min-w-0 flex-1">
 			<div class="flex items-center gap-2">
 				<h3 class="truncate font-semibold tracking-tight">Exam findings</h3>
-				<span class="badge badge-soft badge-info badge-xs">Beta</span>
+				<Badge variant="soft" tone="info" size="xs">Beta</Badge>
 			</div>
-			<p class="truncate text-xs text-base-content/55">
+			<p class="truncate text-xs text-foreground/55">
 				{#if findings.length}
 					<span class="tabular-nums">{findings.length}</span>
 					{findings.length === 1 ? 'box' : 'boxes'}{#if emptyCount}
@@ -299,16 +305,18 @@
 
 		{#if mode === 'edit'}
 			{#if findings.length}
-				<button
-					type="button"
-					class="btn btn-soft btn-success btn-sm shrink-0 gap-1.5 rounded-full"
+				<Button
+					variant="soft"
+					tone="success"
+					size="sm"
+					class="shrink-0 gap-1.5"
 					title="Fill every empty field that has a normal finding"
 					onclick={fillAllNormal}
 					{disabled}
 				>
 					<CheckCheck size={15} />
 					<span class="tabular-nums">{normalNotice || 'All normal'}</span>
-				</button>
+				</Button>
 			{/if}
 		{:else}
 			{@render segmented('Box style', [
@@ -347,31 +355,31 @@
 			])}
 		{/if}
 
-		<button
-			type="button"
-			class="btn btn-primary btn-sm shrink-0 gap-1.5 rounded-full"
+		<Button
+			size="sm"
+			class="shrink-0 gap-1.5"
 			disabled={disabled || full}
 			onclick={() => (pickerOpen = true)}
 		>
 			<Plus size={15} /> Add findings
-		</button>
+		</Button>
 	</header>
 
 	<div class="min-h-0 flex-1 overflow-y-auto p-4">
 		<div
-			class="graph-stage flex min-h-full flex-col rounded-3xl border border-base-300/70 bg-base-200/50 px-3 py-4 @md:px-5"
+			class="graph-stage flex min-h-full flex-col rounded-3xl border border-border/70 bg-muted/50 px-3 py-4 @md:px-5"
 		>
 			{#if findings.length === 0}
 				<button
 					type="button"
-					class="group m-auto flex w-full max-w-md flex-col items-center gap-3 rounded-3xl border-2 border-dashed border-base-300 bg-base-100/70 px-6 py-10 text-center transition-colors hover:border-primary/50 hover:bg-primary/5"
+					class="group m-auto flex w-full max-w-md flex-col items-center gap-3 rounded-3xl border-2 border-dashed border-border bg-background/70 px-6 py-10 text-center transition-colors hover:border-primary/50 hover:bg-primary/5"
 					onclick={() => (pickerOpen = true)}
 					{disabled}
 				>
 					<span class="flex -space-x-2" aria-hidden="true">
 						{#each Object.values(EXAM_GROUP_STYLE) as style, i (i)}
 							<span
-								class="grid size-9 place-items-center rounded-full ring-2 ring-base-100 transition-transform duration-300 group-hover:-translate-y-0.5 {style.badge}"
+								class="grid size-9 place-items-center rounded-full ring-2 ring-background transition-transform duration-300 group-hover:-translate-y-0.5 {style.badge}"
 								style="transition-delay: {i * 40}ms"
 							>
 								<style.icon size={16} />
@@ -379,11 +387,13 @@
 						{/each}
 					</span>
 					<span class="text-base font-semibold">Build the chart students read</span>
-					<span class="max-w-xs text-sm text-base-content/55">
+					<span class="max-w-xs text-sm text-foreground/55">
 						Visual acuity, refraction, slit lamp, IOP and more. One tap fills normal findings; only
 						what you record shows up.
 					</span>
-					<span class="btn btn-primary btn-sm mt-1 gap-1.5 rounded-full">
+					<span
+						class="mt-1 inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3.5 text-sm font-semibold text-primary-foreground shadow-xs"
+					>
 						<Plus size={14} /> Add findings
 					</span>
 				</button>
@@ -434,7 +444,7 @@
 					{#if !full && !drag}
 						<button
 							type="button"
-							class="flex min-h-24 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-base-300 text-sm font-medium text-base-content/50 transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+							class="flex min-h-24 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border text-sm font-medium text-foreground/50 transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
 							onclick={() => (pickerOpen = true)}
 							{disabled}
 						>
@@ -447,10 +457,10 @@
 					Student view · {device === 'phone' ? 'Phone' : 'Desktop'}
 				</p>
 				<div
-					class="@container mx-auto w-full bg-base-100 transition-[max-width,border-radius] duration-300 {device ===
+					class="@container mx-auto w-full bg-background transition-[max-width,border-radius] duration-300 {device ===
 					'phone'
-						? 'max-w-[23rem] rounded-[2rem] border-[3px] border-base-content/10 px-4 pb-6 pt-5'
-						: 'max-w-none rounded-2xl border border-dashed border-base-content/15 p-4 @md:p-5'}"
+						? 'max-w-[23rem] rounded-[2rem] border-[3px] border-foreground/10 px-4 pb-6 pt-5'
+						: 'max-w-none rounded-2xl border border-dashed border-foreground/15 p-4 @md:p-5'}"
 				>
 					{#if hasStem}
 						<div class="tiptap-content line-clamp-3 text-base font-medium leading-snug">
@@ -465,16 +475,16 @@
 					{/if}
 					<ExamFindings {findings} {compact} reveal={false} onOpen={openInEditor} />
 					{#if emptyCount}
-						<p class="text-center text-xs text-base-content/45">
+						<p class="text-center text-xs text-foreground/45">
 							{emptyCount} empty {emptyCount === 1 ? 'box is' : 'boxes are'} hidden from students.
 						</p>
 					{/if}
 					<div class="mt-5 space-y-2" aria-hidden="true">
 						{#each [46, 34] as width (width)}
 							<span
-								class="flex h-9 items-center gap-2.5 rounded-full border border-base-content/10 px-3"
+								class="flex h-9 items-center gap-2.5 rounded-full border border-foreground/10 px-3"
 							>
-								<span class="size-3.5 shrink-0 rounded-full border border-base-content/15"></span>
+								<span class="size-3.5 shrink-0 rounded-full border border-foreground/15"></span>
 								<span class="h-2 {BONE}" style="width: {width}%"></span>
 							</span>
 						{/each}
@@ -492,10 +502,10 @@
 		style="transform: translate3d({drag.x}px, {drag.y}px, 0);"
 	>
 		<div
-			class="flex -translate-x-1/2 -translate-y-1/2 -rotate-3 items-center gap-2 whitespace-nowrap rounded-full border bg-base-100 px-3.5 py-2 text-sm font-medium shadow-2xl {drag.over !==
+			class="flex -translate-x-1/2 -translate-y-1/2 -rotate-3 items-center gap-2 whitespace-nowrap rounded-full border bg-background px-3.5 py-2 text-sm font-medium shadow-2xl {drag.over !==
 			null
 				? 'border-primary/50 ring-4 ring-primary/15'
-				: 'border-base-300'}"
+				: 'border-border'}"
 			in:scale={{ start: 0.7, duration: 180 * motion, easing: backOut }}
 		>
 			{#if style}

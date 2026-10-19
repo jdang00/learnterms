@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Check, ChevronRight, Copy, RotateCcw, TriangleAlert } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		title: string;
@@ -39,21 +40,21 @@
 	</div>
 	<p class="text-sm font-semibold">{title}</p>
 	{#if description}
-		<p class="mt-1.5 max-w-sm text-xs leading-relaxed text-base-content/55">{description}</p>
+		<p class="mt-1.5 max-w-sm text-xs leading-relaxed text-foreground/55">{description}</p>
 	{/if}
 
 	{#if onRetry}
-		<button class="btn btn-primary btn-sm mt-4 gap-1.5 rounded-full" onclick={onRetry}>
+		<Button size="sm" class="mt-4 gap-1.5" onclick={onRetry}>
 			<RotateCcw size={13} />
 			{retryLabel}
-		</button>
+		</Button>
 	{/if}
 
 	{#if errorText}
 		<div class="mt-5 w-full max-w-md text-left">
 			<button
 				type="button"
-				class="flex w-full items-center gap-1.5 rounded-full border border-base-300 bg-base-100 px-3 py-1.5 text-xs font-medium text-base-content/60 transition-colors hover:bg-base-200/60"
+				class="flex w-full items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground/60 transition-colors hover:bg-muted/60"
 				aria-expanded={showLog}
 				onclick={() => (showLog = !showLog)}
 			>
@@ -65,9 +66,11 @@
 			</button>
 			{#if showLog}
 				<div class="relative mt-2">
-					<button
-						type="button"
-						class="btn btn-ghost btn-xs absolute right-1.5 top-1.5 z-10 gap-1 rounded-full"
+					<Button
+						variant="ghost"
+						tone="neutral"
+						size="xs"
+						class="absolute right-1.5 top-1.5 z-10 gap-1"
 						onclick={copyLog}
 					>
 						{#if copied}
@@ -77,9 +80,9 @@
 							<Copy size={12} />
 							Copy
 						{/if}
-					</button>
+					</Button>
 					<pre
-						class="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-base-300 bg-base-200/50 p-3 pr-16 text-left font-mono text-[11px] leading-relaxed text-base-content/70">{errorText}</pre>
+						class="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-border bg-muted/50 p-3 pr-16 text-left font-mono text-[11px] leading-relaxed text-foreground/70">{errorText}</pre>
 				</div>
 			{/if}
 		</div>

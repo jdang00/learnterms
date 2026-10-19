@@ -10,6 +10,8 @@
 	import type { SourcePreviewBatch } from '../source/sourceContext';
 	import { createSourcePreviewCache } from '../source/sourcePreviewCache';
 	import { createSourcePdf, warmPdfRenderer, type SourcePdfResource } from '../source/sourcePdf';
+	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
 
 	type Source = NonNullable<Doc<'question'>['metadata']['source']>;
 	let {
@@ -62,7 +64,7 @@
 		if (revision !== undefined) void previews.get(doc._id, revision).catch(() => {});
 	}
 
-	let documentDialog = $state<HTMLDialogElement>();
+	let documentOpen = $state(false);
 	let documentId = $state<Id<'contentLib'> | null>(null);
 	let documentTitle = $state('');
 	let preview = $state<SourcePreviewBatch | null>(null);
@@ -102,12 +104,12 @@
 			preview = result;
 			recentDocumentId = id;
 			sessionStorage.setItem(recentDocumentKey, id);
-			documentDialog?.close();
+			documentOpen = false;
 			pagesOpen = true;
 		} catch (cause) {
 			if (version === request) {
 				error = cause instanceof Error ? cause.message : 'Could not load source pages.';
-				if (showBrowserOnFailure) documentDialog?.showModal();
+				if (showBrowserOnFailure) documentOpen = true;
 			}
 		} finally {
 			if (version === request) loading = false;
@@ -116,7 +118,7 @@
 	function cancelDocument() {
 		request++;
 		loading = false;
-		documentDialog?.close();
+		documentOpen = false;
 	}
 	function openSource() {
 		error = '';
@@ -132,13 +134,13 @@
 		if (recentDocument) {
 			void chooseDocument(recentDocument._id, recentDocument.title, true);
 		} else {
-			documentDialog?.showModal();
+			documentOpen = true;
 		}
 	}
 	async function changeDocument() {
 		pagesOpen = false;
 		await tick();
-		documentDialog?.showModal();
+		documentOpen = true;
 	}
 	function applyPages() {
 		if (!documentId) return;
@@ -151,47 +153,50 @@
 
 <div class="mt-3">
 	<div class="flex flex-wrap items-center gap-2">
-		<span class="text-xs font-medium text-base-content/60"
-			>Source <span class="font-normal text-base-content/40">(optional)</span></span
+		<span class="text-xs font-medium text-foreground/60"
+			>Source <span class="font-normal text-foreground/40">(optional)</span></span
 		>
-		<button
-			type="button"
-			class="btn btn-ghost btn-xs gap-1 rounded-full"
+		<Button
+			variant="ghost"
+			tone="neutral"
+			size="xs"
 			disabled={disabled || !module.data?.cohortId || loading}
 			onclick={() => {
 				if (source) {
 					warmPdfRenderer();
-					documentDialog?.showModal();
+					documentOpen = true;
 				} else {
 					openSource();
 				}
 			}}
 		>
 			<Plus size={12} />{source ? 'Change document' : 'Add source'}
-		</button>
+		</Button>
 		{#if source}
-			<button
-				type="button"
-				class="btn btn-ghost btn-xs gap-1 rounded-full"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="xs"
 				disabled={disabled || loading}
 				onclick={() => source && chooseDocument(source.sourceDocumentId, source.sourceTitle)}
-				><FileText size={12} />Edit pages</button
+				><FileText size={12} />Edit pages</Button
 			>
-			<button
-				type="button"
-				class="btn btn-ghost btn-xs rounded-full"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="xs"
 				{disabled}
 				onclick={() => {
 					source = undefined;
 					onChange();
-				}}>Remove source</button
+				}}>Remove source</Button
 			>
 		{/if}
 	</div>
-	{#if loading}<p class="mt-2 text-xs text-base-content/50" role="status">
+	{#if loading}<p class="mt-2 text-xs text-foreground/50" role="status">
 			Loading source pages…
 		</p>{/if}
-	{#if error}<p class="mt-2 text-xs text-error" role="alert">{error}</p>{/if}
+	{#if error}<p class="mt-2 text-xs text-error-ink" role="alert">{error}</p>{/if}
 	<QuestionSources
 		{source}
 		onRemovePage={disabled
@@ -205,24 +210,32 @@
 	/>
 </div>
 
-<dialog bind:this={documentDialog} class="modal" oncancel={cancelDocument}>
-	<div
-		class="modal-box flex h-[72vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-base-300 p-0"
+<Dialog.Root
+	open={documentOpen}
+	onOpenChange={(o) => {
+		if (!o) cancelDocument();
+	}}
+>
+	<Dialog.Content
+		class="flex h-[72vh] w-full flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-2xl"
+		showCloseButton={false}
 	>
-		<header class="flex items-center justify-between border-b border-base-300 px-4 py-3">
+		<header class="flex items-center justify-between border-b border-border px-4 py-3">
 			<div>
-				<h3 class="text-sm font-semibold">Choose a source document</h3>
-				<p class="text-xs text-base-content/50">Find the pages that support your rationale.</p>
+				<Dialog.Title class="text-sm font-semibold">Choose a source document</Dialog.Title>
+				<p class="text-xs text-foreground/50">Find the pages that support your rationale.</p>
 			</div>
-			<button
-				type="button"
-				class="btn btn-ghost btn-circle btn-sm"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				shape="circle"
 				aria-label="Close source documents"
-				onclick={cancelDocument}><X size={16} /></button
+				onclick={cancelDocument}><X size={16} /></Button
 			>
 		</header>
-		{#if error}<p class="px-4 py-2 text-xs text-error" role="alert">{error}</p>{/if}
-		{#if loading}<p class="px-4 py-2 text-xs text-base-content/50" role="status">
+		{#if error}<p class="px-4 py-2 text-xs text-error-ink" role="alert">{error}</p>{/if}
+		{#if loading}<p class="px-4 py-2 text-xs text-foreground/50" role="status">
 				Loading source pages…
 			</p>{/if}
 		<div class="min-h-0 flex-1 overflow-hidden">
@@ -235,14 +248,8 @@
 				/>
 			{/if}
 		</div>
-	</div>
-	<button
-		type="button"
-		class="modal-backdrop bg-black/40"
-		aria-label="Close source documents"
-		onclick={cancelDocument}
-	></button>
-</dialog>
+	</Dialog.Content>
+</Dialog.Root>
 
 {#if documentId && preview}
 	{#key documentId}

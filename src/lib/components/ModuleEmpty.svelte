@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { cameFrom } from '$lib/utils/backNavigation';
+	import { Button } from '$lib/components/ui/button';
 
 	// The quiz with nothing in it: the navigator rail stays, holding open slots instead of questions.
 	let {
@@ -30,23 +31,25 @@
 </script>
 
 <section
-	class="h-full overflow-y-auto bg-base-100 px-4 py-6 sm:px-8 sm:py-10"
+	class="h-full overflow-y-auto bg-background px-4 py-6 sm:px-8 sm:py-10"
 	aria-labelledby="module-empty-title"
 >
 	<div class="rise mx-auto max-w-3xl">
-		<button
-			type="button"
-			class="group btn btn-ghost btn-sm -ms-3 gap-1 rounded-full transition-all hover:gap-2"
+		<Button
+			variant="ghost"
+			tone="neutral"
+			size="sm"
+			class="group -ms-3 gap-1 transition-all hover:gap-2"
 			onclick={goToModuleSelection}
 		>
 			<ArrowLeft
 				size={16}
 				class="transition-transform group-hover:-translate-x-0.5 motion-reduce:transition-none"
 			/> Back to modules
-		</button>
+		</Button>
 
 		<div
-			class="mt-4 flex h-20 items-center rounded-4xl border border-base-300 px-5 sm:px-6"
+			class="mt-4 flex h-20 items-center rounded-4xl border border-border px-5 sm:px-6"
 			aria-hidden="true"
 		>
 			<div class="slots flex w-full items-center gap-4 overflow-hidden">
@@ -54,7 +57,7 @@
 					<span
 						class="slot size-10 shrink-0 rounded-full border border-dashed {i === 0
 							? 'border-primary/50 bg-primary/8'
-							: 'border-base-content/25'}"
+							: 'border-foreground/25'}"
 						style:--i={i}
 					></span>
 				{/each}
@@ -68,11 +71,11 @@
 					<h1 id="module-empty-title" class="font-display text-2xl font-semibold sm:text-3xl">
 						No questions yet
 					</h1>
-					<p class="mt-0.5 truncate text-sm text-base-content/55">{title}</p>
+					<p class="mt-0.5 truncate text-sm text-foreground/55">{title}</p>
 				</div>
 			</div>
 
-			<p class="mt-4 max-w-xl text-pretty text-base-content/75">
+			<p class="mt-4 max-w-xl text-pretty text-foreground/75">
 				{#if hasDrafts}
 					{unpublished}
 					{unpublished === 1
@@ -86,16 +89,17 @@
 
 			{#if canEdit}
 				<div class="mt-5">
-					<a
+					<Button
 						href={resolve('/admin/[classId]/module/[moduleId]', { classId, moduleId })}
-						class="group btn btn-primary btn-sm gap-1 rounded-full px-4 shadow-sm shadow-primary/25 transition-all hover:gap-2"
+						size="sm"
+						class="group gap-1 px-4 shadow-sm shadow-primary/25 transition-all hover:gap-2"
 					>
 						{hasDrafts ? 'Review questions' : 'Add questions'}
 						<ArrowRight
 							size={15}
 							class="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
 						/>
-					</a>
+					</Button>
 				</div>
 			{/if}
 		</div>

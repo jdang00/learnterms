@@ -1,5 +1,4 @@
 <script lang="ts">
-	import '@fontsource/space-grotesk/latin-600.css';
 	import { resolve } from '$app/paths';
 	import { Tween, prefersReducedMotion } from 'svelte/motion';
 	import { cubicInOut } from 'svelte/easing';
@@ -69,7 +68,7 @@
 				cx={dot.cx}
 				cy={dot.cy}
 				r={(dot.solid ? 6 : 5) * dot.scale}
-				fill={dot.solid ? 'currentColor' : 'var(--color-base-100)'}
+				fill={dot.solid ? 'currentColor' : 'var(--background)'}
 				stroke={dot.solid ? 'none' : 'currentColor'}
 				stroke-width={3.5 * dot.scale}
 			/>
@@ -113,7 +112,7 @@
 	}
 
 	.active .solid-dot {
-		color: var(--color-secondary);
+		color: var(--secondary);
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -124,7 +123,7 @@
 	}
 
 	.brand-wordmark {
-		font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+		font-family: var(--font-brand);
 		font-weight: 600;
 		letter-spacing: -0.03em;
 		line-height: 1;

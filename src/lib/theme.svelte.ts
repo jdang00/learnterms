@@ -4,7 +4,7 @@ import { browser } from '$app/environment';
 
 export type ThemeMode = 'light' | 'dark';
 
-// Tints the browser chrome (and the installed app's status bar) to match base-100.
+// Tints the browser chrome (and the installed app's status bar) to match the page background.
 const CHROME_COLOR: Record<ThemeMode, string> = { light: '#ffffff', dark: '#1d232a' };
 
 function applyTheme(theme: ThemeMode) {

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { AlertTriangle } from 'lucide-svelte';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Button } from '$lib/components/ui/button';
 	import { fade } from 'svelte/transition';
 	import QuestionStudioCandidateModal from '$lib/admin/question-studio/QuestionStudioCandidateModal.svelte';
 	import QuestionStudioHeader from '$lib/admin/question-studio/QuestionStudioHeader.svelte';
@@ -685,7 +687,7 @@
 </script>
 
 <div
-	class="qs-shell relative isolate flex h-[calc(100vh-4rem)] flex-col overflow-hidden bg-base-100"
+	class="qs-shell relative isolate flex h-[calc(100vh-4rem)] flex-col overflow-hidden bg-background"
 >
 	{#if inRunMode}
 		<QuestionStudioRunBar
@@ -702,19 +704,25 @@
 			onStartNewRun={startNewRun}
 		/>
 
-		<div class="qs-canvas relative min-h-0 flex-1 overflow-hidden bg-base-200">
+		<div class="qs-canvas relative min-h-0 flex-1 overflow-hidden bg-muted">
 			<div class="qs-grid pointer-events-none absolute inset-0"></div>
 			<div class="relative flex h-full min-h-0 flex-col gap-3 p-3 sm:p-4">
 				{#if workflowError}
-					<div class="alert alert-error shrink-0 rounded-2xl text-sm" in:fade={{ duration: 200 }}>
-						<AlertTriangle size={16} />
-						<span>{workflowError}</span>
-						<button
-							class="btn btn-ghost btn-xs ml-auto rounded-full"
-							onclick={() => (workflowError = '')}
-						>
-							Dismiss
-						</button>
+					<div class="shrink-0" in:fade={{ duration: 200 }}>
+						<Alert.Root tone="error" class="rounded-2xl text-sm">
+							<AlertTriangle size={16} />
+							<Alert.Title>{workflowError}</Alert.Title>
+							<Alert.Action>
+								<Button
+									variant="ghost"
+									tone="neutral"
+									size="xs"
+									onclick={() => (workflowError = '')}
+								>
+									Dismiss
+								</Button>
+							</Alert.Action>
+						</Alert.Root>
 					</div>
 				{/if}
 
@@ -749,21 +757,27 @@
 			<QuestionStudioHeader />
 
 			<section
-				class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-xs"
+				class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xs"
 			>
-				<div class="qs-canvas relative min-h-0 flex-1 overflow-y-auto rounded-2xl bg-base-200">
+				<div class="qs-canvas relative min-h-0 flex-1 overflow-y-auto rounded-2xl bg-muted">
 					<div class="qs-grid pointer-events-none absolute inset-0"></div>
 					<div class="relative mx-auto w-full max-w-5xl space-y-3 p-4 sm:p-10">
 						{#if workflowError}
-							<div class="alert alert-error rounded-2xl text-sm" in:fade={{ duration: 200 }}>
-								<AlertTriangle size={16} />
-								<span>{workflowError}</span>
-								<button
-									class="btn btn-ghost btn-xs ml-auto rounded-full"
-									onclick={() => (workflowError = '')}
-								>
-									Dismiss
-								</button>
+							<div in:fade={{ duration: 200 }}>
+								<Alert.Root tone="error" class="rounded-2xl text-sm">
+									<AlertTriangle size={16} />
+									<Alert.Title>{workflowError}</Alert.Title>
+									<Alert.Action>
+										<Button
+											variant="ghost"
+											tone="neutral"
+											size="xs"
+											onclick={() => (workflowError = '')}
+										>
+											Dismiss
+										</Button>
+									</Alert.Action>
+								</Alert.Root>
 							</div>
 						{/if}
 
@@ -838,13 +852,13 @@
 		background:
 			linear-gradient(
 					to right,
-					color-mix(in oklab, var(--color-base-content) 10%, transparent) 1px,
+					color-mix(in oklab, var(--foreground) 10%, transparent) 1px,
 					transparent 1px
 				)
 				0 0 / 38px 38px,
 			linear-gradient(
 					to bottom,
-					color-mix(in oklab, var(--color-base-content) 10%, transparent) 1px,
+					color-mix(in oklab, var(--foreground) 10%, transparent) 1px,
 					transparent 1px
 				)
 				0 0 / 38px 38px;

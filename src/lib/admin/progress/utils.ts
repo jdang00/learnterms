@@ -55,27 +55,27 @@ export const engagementMeta: Record<Engagement, { label: string; hint: string; d
 	live: {
 		label: 'Studying now',
 		hint: 'Active in the last 15 minutes',
-		dot: 'status-success'
+		dot: 'bg-success'
 	},
 	active: {
 		label: 'Active this week',
 		hint: 'Studied in the last 7 days',
-		dot: 'status-primary'
+		dot: 'bg-primary'
 	},
 	cooling: {
 		label: 'Cooling off',
 		hint: 'Last studied 8–30 days ago',
-		dot: 'status-warning'
+		dot: 'bg-warning'
 	},
 	dormant: {
 		label: 'Gone quiet',
 		hint: 'Started, but nothing for 30+ days',
-		dot: 'status-error'
+		dot: 'bg-error'
 	},
 	none: {
 		label: 'Not started',
 		hint: 'No questions tried yet',
-		dot: 'status-neutral'
+		dot: 'bg-neutral'
 	}
 };
 

@@ -6,6 +6,14 @@
 	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
 	import { ArrowLeft, HelpCircle, Search, Trophy, Users } from 'lucide-svelte';
 	import { getBadgeIcon } from '$lib/components/badges/icons';
+	import * as Alert from '$lib/components/ui/alert';
+	import * as Avatar from '$lib/components/ui/avatar';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import * as InputGroup from '$lib/components/ui/input-group';
+	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { Tip } from '$lib/components/ui/tooltip';
 
 	let { data }: { data: PageData } = $props();
 
@@ -78,49 +86,44 @@
 </script>
 
 <main class="mx-auto min-h-screen w-full max-w-7xl px-4 py-10 md:px-8">
-	<a class="btn btn-ghost btn-sm rounded-full mb-4" href={resolve('/classes')}>
+	<Button href={resolve('/classes')} variant="ghost" tone="neutral" size="sm" class="mb-4">
 		<ArrowLeft size={16} />
 		Back to classes
-	</a>
+	</Button>
 
 	{#if boardQuery.isLoading}
 		<div class="space-y-4">
-			<div class="skeleton h-44 w-full rounded-2xl"></div>
+			<Skeleton class="h-44 w-full rounded-2xl" />
 			{#each Array.from({ length: 6 }, (_, i) => i) as i (i)}
-				<div class="skeleton h-16 w-full rounded-xl" style={`--i:${i}`}></div>
+				<Skeleton class="h-16 w-full rounded-xl" style={`--i:${i}`} />
 			{/each}
 		</div>
 	{:else if boardQuery.error}
-		<div class="alert alert-error rounded-2xl">
-			Failed to load class activity: {boardQuery.error.message}
-		</div>
+		<Alert.Root tone="error" class="rounded-2xl">
+			<Alert.Title>Failed to load class activity: {boardQuery.error.message}</Alert.Title>
+		</Alert.Root>
 	{:else if boardQuery.data}
 		{@const cohort = boardQuery.data.cohort}
 		<section
-			class="hero-card relative isolate overflow-hidden rounded-2xl border border-base-300 p-5 md:p-7"
+			class="hero-card relative isolate overflow-hidden rounded-2xl border border-border p-5 md:p-7"
 		>
 			<div class="hero-orb hero-orb-a"></div>
 			<div class="hero-orb hero-orb-b"></div>
 			<div class="hero-shine"></div>
 			<div class="relative z-10 flex items-start gap-4">
-				<div class="avatar mt-1 shrink-0">
-					<div class="hero-avatar w-14 rounded-2xl ring-1 ring-base-300">
-						{#if cohort.picUrl}
-							<img src={cohort.picUrl} alt={cohort.name} />
-						{:else}
-							<div
-								class="flex h-full w-full items-center justify-center bg-base-200 text-base-content/60"
-							>
-								<Users size={20} />
-							</div>
-						{/if}
-					</div>
-				</div>
+				<Avatar.Root
+					class="hero-avatar mt-1 size-14 shrink-0 rounded-2xl ring-1 ring-border after:rounded-[inherit]"
+				>
+					{#if cohort.picUrl}
+						<Avatar.Image src={cohort.picUrl} alt={cohort.name} class="rounded-[inherit]" />
+					{/if}
+					<Avatar.Fallback class="rounded-[inherit] bg-muted text-foreground/60">
+						<Users size={20} />
+					</Avatar.Fallback>
+				</Avatar.Root>
 				<div>
 					<h1 class="font-display text-2xl font-bold md:text-3xl">{cohort.name}</h1>
-					<div
-						class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/70"
-					>
+					<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground/70">
 						{#if data.userData?.schoolName}
 							<span>{data.userData.schoolName}</span>
 						{/if}
@@ -137,51 +140,48 @@
 			</div>
 		</section>
 
-		<section class="member-panel mt-5 rounded-2xl border border-base-300 p-4 md:p-5">
+		<section class="member-panel mt-5 rounded-2xl border border-border p-4 md:p-5">
 			<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 				<h2 class="font-semibold">Your Class</h2>
-				<div class="join w-full max-w-md">
-					<div
-						class="join-item flex w-full items-center gap-2 border border-base-300 bg-base-100 px-3"
-					>
-						<Search size={14} class="text-base-content/50" />
-						<input
-							type="text"
-							class="w-full bg-transparent py-2 text-sm outline-hidden"
-							placeholder="Search classmate..."
-							bind:value={searchQuery}
-						/>
-					</div>
-				</div>
+				<InputGroup.Root class="w-full max-w-md">
+					<InputGroup.Addon>
+						<Search size={14} class="text-foreground/50" />
+					</InputGroup.Addon>
+					<InputGroup.Input
+						type="text"
+						placeholder="Search classmate..."
+						bind:value={searchQuery}
+					/>
+				</InputGroup.Root>
 				<div class="flex flex-wrap gap-2">
-					<button
-						class="btn btn-sm rounded-full"
-						class:btn-primary={sortMode === 'leaderboard'}
-						class:btn-ghost={sortMode !== 'leaderboard'}
+					<Button
+						size="sm"
+						variant={sortMode === 'leaderboard' ? 'solid' : 'ghost'}
+						tone={sortMode === 'leaderboard' ? 'primary' : 'neutral'}
 						onclick={() => (sortMode = 'leaderboard')}
 					>
 						<Trophy size={14} />
 						Leaderboard
-					</button>
-					<button
-						class="btn btn-sm rounded-full"
-						class:btn-primary={sortMode === 'az'}
-						class:btn-ghost={sortMode !== 'az'}
+					</Button>
+					<Button
+						size="sm"
+						variant={sortMode === 'az' ? 'solid' : 'ghost'}
+						tone={sortMode === 'az' ? 'primary' : 'neutral'}
 						onclick={() => (sortMode = 'az')}
 					>
 						A-Z
-					</button>
+					</Button>
 				</div>
 			</div>
 
 			{#if filteredMembers.length === 0}
 				<div
-					class="mt-4 rounded-xl border border-dashed border-base-300 p-5 text-center text-sm text-base-content/60"
+					class="mt-4 rounded-xl border border-dashed border-border p-5 text-center text-sm text-foreground/60"
 				>
 					No matching members.
 				</div>
 			{:else}
-				<div class="mt-4 divide-y divide-base-300">
+				<div class="mt-4 divide-y divide-border">
 					{#each filteredMembers as member (member.userId)}
 						{@const isCurrentUser = currentUserId && member.userId === currentUserId}
 						<button
@@ -190,32 +190,28 @@
 							class:member-row--you={isCurrentUser}
 							onclick={() => (selectedMemberId = member.userId)}
 						>
-							<div class="avatar shrink-0">
-								<div class="h-10 w-10 rounded-full bg-base-200">
-									{#if member.imageUrl}
-										<img src={member.imageUrl} alt={member.name} />
-									{:else}
-										<div
-											class="flex h-full w-full items-center justify-center text-base-content/60"
-										>
-											<Users size={16} />
-										</div>
-									{/if}
-								</div>
-							</div>
+							<Avatar.Root class="size-10 shrink-0 bg-muted">
+								{#if member.imageUrl}
+									<Avatar.Image src={member.imageUrl} alt={member.name} />
+								{:else}
+									<Avatar.Fallback class="text-foreground/60">
+										<Users size={16} />
+									</Avatar.Fallback>
+								{/if}
+							</Avatar.Root>
 
 							<div class="min-w-0 flex-1">
 								<div class="flex items-center gap-2">
 									<p class="truncate font-semibold">{member.name}</p>
 									{#if isCurrentUser}
-										<span class="badge badge-xs badge-primary">You</span>
+										<Badge size="xs" tone="primary">You</Badge>
 									{/if}
 								</div>
-								<p class="text-xs text-base-content/60">
+								<p class="text-xs text-foreground/60">
 									{member.earnedCount}
 									{member.earnedCount === 1 ? 'badge' : 'badges'}
 									{#if member.recentAwards.length > 0}
-										<span class="text-base-content/40">·</span>
+										<span class="text-foreground/40">·</span>
 										Latest: {formatDate(member.recentAwards[0].awardedAt)}
 									{/if}
 								</p>
@@ -224,28 +220,36 @@
 							<div class="flex shrink-0 items-center gap-1.5">
 								{#each member.recentAwards.slice(0, BADGE_SLOT_COUNT) as award (award.awardId)}
 									{@const BadgeIcon = getBadgeIcon(award.iconKey)}
-									<div class="tooltip tooltip-top z-20" data-tip={award.name}>
-										<BadgeShield
-											idBase={`member-${member.userId}-${award.awardId}`}
-											size={36}
-											gradient={award.gradient}
-											iconColor={award.iconColor}
-											icon={BadgeIcon}
-										/>
-									</div>
+									<Tip label={award.name}>
+										{#snippet child({ props })}
+											<div {...props} class="award-tip z-20">
+												<BadgeShield
+													idBase={`member-${member.userId}-${award.awardId}`}
+													size={36}
+													gradient={award.gradient}
+													iconColor={award.iconColor}
+													icon={BadgeIcon}
+												/>
+											</div>
+										{/snippet}
+									</Tip>
 								{/each}
 								{#each Array.from({ length: mysterySlotsFor(member.recentAwards.length) }, (_, mysteryIdx) => mysteryIdx) as mysteryIdx (mysteryIdx)}
-									<div class="tooltip tooltip-top z-20 mystery-badge-wrap" data-tip="?">
-										<div class="mystery-badge">
-											<BadgeShield
-												idBase={`mystery-${member.userId}-${mysteryIdx}`}
-												size={36}
-												gradient={mysteryGradient}
-												iconColor={mysteryIconColor}
-												icon={HelpCircle}
-											/>
-										</div>
-									</div>
+									<Tip label="?">
+										{#snippet child({ props })}
+											<div {...props} class="award-tip z-20 mystery-badge-wrap">
+												<div class="mystery-badge">
+													<BadgeShield
+														idBase={`mystery-${member.userId}-${mysteryIdx}`}
+														size={36}
+														gradient={mysteryGradient}
+														iconColor={mysteryIconColor}
+														icon={HelpCircle}
+													/>
+												</div>
+											</div>
+										{/snippet}
+									</Tip>
 								{/each}
 							</div>
 						</button>
@@ -255,37 +259,35 @@
 		</section>
 
 		{#if selectedMember}
-			<dialog class="modal modal-open">
-				<div
-					class="trophy-modal modal-box max-w-xl overflow-visible rounded-2xl border border-base-300 p-0"
+			<Dialog.Root
+				open
+				onOpenChange={(open) => {
+					if (!open) selectedMemberId = null;
+				}}
+			>
+				<Dialog.Content
+					showCloseButton={false}
+					class="trophy-modal max-w-xl gap-0 overflow-visible rounded-2xl border border-border p-0 sm:max-w-xl"
 				>
-					<button
-						type="button"
-						class="btn btn-circle btn-ghost btn-sm absolute right-3 top-3 z-10"
-						aria-label="Close member details"
+					<Dialog.CornerClose
 						onclick={() => (selectedMemberId = null)}
-					>
-						✕
-					</button>
+						label="Close member details"
+					/>
 
 					<header class="trophy-header relative flex flex-col items-center px-6 pt-10 pb-6">
 						<div class="trophy-halo" aria-hidden="true"></div>
 						<div class="avatar-stage relative">
 							<div class="avatar-glow" aria-hidden="true"></div>
 							<div class="avatar-ring" aria-hidden="true"></div>
-							<div class="avatar relative">
-								<div class="avatar-img h-28 w-28 rounded-full bg-base-200 ring-2 ring-base-100">
-									{#if selectedMember.imageUrl}
-										<img src={selectedMember.imageUrl} alt={selectedMember.name} />
-									{:else}
-										<div
-											class="flex h-full w-full items-center justify-center text-base-content/50"
-										>
-											<Users size={40} />
-										</div>
-									{/if}
-								</div>
-							</div>
+							<Avatar.Root class="avatar-img relative size-28 bg-muted ring-2 ring-background">
+								{#if selectedMember.imageUrl}
+									<Avatar.Image src={selectedMember.imageUrl} alt={selectedMember.name} />
+								{:else}
+									<Avatar.Fallback class="text-foreground/50">
+										<Users size={40} />
+									</Avatar.Fallback>
+								{/if}
+							</Avatar.Root>
 						</div>
 
 						<h3 class="mt-5 text-center text-xl font-semibold leading-tight">
@@ -322,12 +324,12 @@
 
 					{#if selectedMember.awards.length === 0}
 						<div class="px-6 py-12 text-center">
-							<p class="text-sm text-base-content/55">No badges earned yet.</p>
+							<p class="text-sm text-foreground/55">No badges earned yet.</p>
 						</div>
 					{:else}
 						<section class="px-6 pt-6 pb-7">
 							<p
-								class="mb-5 text-[10px] font-medium uppercase tracking-[0.22em] text-base-content/45"
+								class="mb-5 text-[10px] font-medium uppercase tracking-[0.22em] text-foreground/45"
 							>
 								Trophy case
 							</p>
@@ -338,21 +340,25 @@
 										class="trophy-tile flex flex-col items-center text-center"
 										style={`--delay:${Math.min(i, 11) * 45}ms`}
 									>
-										<div class="tooltip tooltip-top" data-tip={award.description}>
-											<BadgeShield
-												idBase={`modal-${selectedMember.userId}-${award.awardId}`}
-												size={60}
-												gradient={award.gradient}
-												iconColor={award.iconColor}
-												icon={AwardIcon}
-											/>
-										</div>
+										<Tip label={award.description} class="max-w-[200px] text-center leading-snug">
+											{#snippet child({ props })}
+												<div {...props}>
+													<BadgeShield
+														idBase={`modal-${selectedMember.userId}-${award.awardId}`}
+														size={60}
+														gradient={award.gradient}
+														iconColor={award.iconColor}
+														icon={AwardIcon}
+													/>
+												</div>
+											{/snippet}
+										</Tip>
 										<p
-											class="mt-2.5 line-clamp-2 text-[11px] font-medium leading-tight text-base-content/85"
+											class="mt-2.5 line-clamp-2 text-[11px] font-medium leading-tight text-foreground/85"
 										>
 											{award.name}
 										</p>
-										<p class="mt-1 text-[10px] tracking-wide text-base-content/45">
+										<p class="mt-1 text-[10px] tracking-wide text-foreground/45">
 											{formatDate(award.awardedAt)}
 										</p>
 									</li>
@@ -360,16 +366,8 @@
 							</ul>
 						</section>
 					{/if}
-				</div>
-				<button
-					type="button"
-					class="modal-backdrop"
-					aria-label="Close member details"
-					onclick={() => (selectedMemberId = null)}
-				>
-					close
-				</button>
-			</dialog>
+				</Dialog.Content>
+			</Dialog.Root>
 		{/if}
 	{/if}
 </main>
@@ -389,15 +387,15 @@
 		background:
 			radial-gradient(
 				ellipse 80% 100% at 8% 0%,
-				color-mix(in oklab, var(--color-primary) 18%, transparent),
+				color-mix(in oklab, var(--primary) 18%, transparent),
 				transparent 55%
 			),
 			radial-gradient(
 				ellipse 60% 90% at 92% 100%,
-				color-mix(in oklab, var(--color-secondary) 14%, transparent),
+				color-mix(in oklab, var(--secondary) 14%, transparent),
 				transparent 50%
 			),
-			var(--color-base-100);
+			var(--background);
 	}
 
 	.hero-card::before {
@@ -407,7 +405,7 @@
 		border-radius: inherit;
 		background: linear-gradient(
 				to right,
-				color-mix(in oklab, var(--color-base-content) 6%, transparent) 1px,
+				color-mix(in oklab, var(--foreground) 6%, transparent) 1px,
 				transparent 1px
 			)
 			0 0 / 28px 28px;
@@ -434,9 +432,9 @@
 	}
 
 	.hero-avatar {
-		background: color-mix(in oklab, var(--color-base-100) 88%, transparent);
+		background: color-mix(in oklab, var(--background) 88%, transparent);
 		box-shadow:
-			0 0 0 1px color-mix(in oklab, var(--color-base-content) 10%, transparent),
+			0 0 0 1px color-mix(in oklab, var(--foreground) 10%, transparent),
 			0 4px 12px color-mix(in oklab, black 10%, transparent);
 	}
 
@@ -453,7 +451,7 @@
 		height: 200px;
 		top: -90px;
 		left: -60px;
-		background: color-mix(in oklab, var(--color-primary) 30%, transparent);
+		background: color-mix(in oklab, var(--primary) 30%, transparent);
 	}
 
 	.hero-orb-b {
@@ -461,11 +459,11 @@
 		height: 160px;
 		right: -40px;
 		bottom: -80px;
-		background: color-mix(in oklab, var(--color-secondary) 24%, transparent);
+		background: color-mix(in oklab, var(--secondary) 24%, transparent);
 	}
 
 	.member-panel {
-		background: var(--color-base-100);
+		background: var(--background);
 	}
 
 	.member-row {
@@ -483,14 +481,14 @@
 		top: 50%;
 		width: 3px;
 		height: 0;
-		background: var(--color-primary);
+		background: var(--primary);
 		border-radius: 999px;
 		transform: translateY(-50%);
 		transition: height 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
 	}
 
 	.member-row:hover {
-		background: color-mix(in oklab, var(--color-base-content) 4%, transparent);
+		background: color-mix(in oklab, var(--foreground) 4%, transparent);
 		transform: translateX(2px);
 	}
 
@@ -498,37 +496,37 @@
 		height: 60%;
 	}
 
-	.member-row :global(.avatar > div) {
+	.member-row :global([data-slot='avatar']) {
 		transition:
 			transform 260ms cubic-bezier(0.2, 0.7, 0.2, 1),
 			box-shadow 260ms ease;
 	}
 
-	.member-row:hover :global(.avatar > div) {
+	.member-row:hover :global([data-slot='avatar']) {
 		transform: scale(1.06);
-		box-shadow: 0 6px 18px color-mix(in oklab, var(--color-primary) 22%, transparent);
+		box-shadow: 0 6px 18px color-mix(in oklab, var(--primary) 22%, transparent);
 	}
 
-	.member-row :global(.tooltip > div) {
+	.member-row :global(.award-tip > div) {
 		transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
 	}
 
-	.member-row:hover :global(.tooltip:nth-child(1) > div) {
+	.member-row:hover :global(.award-tip:nth-child(1) > div) {
 		transform: translateY(-2px) rotate(-3deg);
 	}
-	.member-row:hover :global(.tooltip:nth-child(2) > div) {
+	.member-row:hover :global(.award-tip:nth-child(2) > div) {
 		transform: translateY(-2px) rotate(-1deg);
 	}
-	.member-row:hover :global(.tooltip:nth-child(3) > div) {
+	.member-row:hover :global(.award-tip:nth-child(3) > div) {
 		transform: translateY(-2px) rotate(1deg);
 	}
-	.member-row:hover :global(.tooltip:nth-child(4) > div) {
+	.member-row:hover :global(.award-tip:nth-child(4) > div) {
 		transform: translateY(-2px) rotate(3deg);
 	}
 
 	.member-row--you {
-		border-left: 3px solid var(--color-primary);
-		background: color-mix(in oklab, var(--color-primary) 5%, transparent);
+		border-left: 3px solid var(--primary);
+		background: color-mix(in oklab, var(--primary) 5%, transparent);
 	}
 
 	.member-row--you::after {
@@ -548,10 +546,10 @@
 		background:
 			radial-gradient(
 				ellipse 80% 70% at 50% -10%,
-				color-mix(in oklab, var(--color-primary) 12%, transparent),
+				color-mix(in oklab, var(--primary) 12%, transparent),
 				transparent 60%
 			),
-			var(--color-base-100);
+			var(--background);
 		animation: modalRise 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 	}
 
@@ -573,16 +571,6 @@
 		border-top-right-radius: 1rem;
 	}
 
-	.trophy-tile :global(.tooltip):before {
-		max-width: 200px;
-		width: max-content;
-		white-space: normal;
-		text-align: center;
-		font-size: 11px;
-		line-height: 1.35;
-		padding: 0.4rem 0.6rem;
-	}
-
 	.trophy-halo {
 		position: absolute;
 		left: 50%;
@@ -592,7 +580,7 @@
 		transform: translateX(-50%);
 		background: radial-gradient(
 			circle at center,
-			color-mix(in oklab, var(--color-primary) 22%, transparent),
+			color-mix(in oklab, var(--primary) 22%, transparent),
 			transparent 60%
 		);
 		filter: blur(20px);
@@ -623,9 +611,9 @@
 		border-radius: 999px;
 		background: conic-gradient(
 			from 220deg,
-			color-mix(in oklab, var(--color-primary) 55%, transparent),
-			color-mix(in oklab, var(--color-secondary) 40%, transparent),
-			color-mix(in oklab, var(--color-primary) 55%, transparent)
+			color-mix(in oklab, var(--primary) 55%, transparent),
+			color-mix(in oklab, var(--secondary) 40%, transparent),
+			color-mix(in oklab, var(--primary) 55%, transparent)
 		);
 		filter: blur(18px);
 		opacity: 0.55;
@@ -645,10 +633,10 @@
 		border-radius: 999px;
 		background: conic-gradient(
 			from 0deg,
-			color-mix(in oklab, var(--color-primary) 80%, white),
-			color-mix(in oklab, var(--color-secondary) 70%, white),
+			color-mix(in oklab, var(--primary) 80%, white),
+			color-mix(in oklab, var(--secondary) 70%, white),
 			#fde68a,
-			color-mix(in oklab, var(--color-primary) 80%, white)
+			color-mix(in oklab, var(--primary) 80%, white)
 		);
 		padding: 2px;
 		mask:
@@ -674,15 +662,15 @@
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: color-mix(in oklab, var(--color-base-content) 65%, transparent);
-		background: color-mix(in oklab, var(--color-base-content) 6%, transparent);
-		border: 1px solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
+		color: color-mix(in oklab, var(--foreground) 65%, transparent);
+		background: color-mix(in oklab, var(--foreground) 6%, transparent);
+		border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
 		border-radius: 999px;
 	}
 
 	.role-chip--you {
-		color: var(--color-primary-content);
-		background: var(--color-primary);
+		color: var(--primary-foreground);
+		background: var(--primary);
 		border-color: transparent;
 	}
 
@@ -692,8 +680,8 @@
 	}
 
 	.stat-cell--bordered {
-		border-left: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
-		border-right: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
+		border-left: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+		border-right: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
 	}
 
 	.stat-label {
@@ -701,7 +689,7 @@
 		font-weight: 600;
 		letter-spacing: 0.18em;
 		text-transform: uppercase;
-		color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+		color: color-mix(in oklab, var(--foreground) 50%, transparent);
 	}
 
 	.stat-value {
@@ -710,7 +698,7 @@
 		font-weight: 600;
 		line-height: 1;
 		font-variant-numeric: tabular-nums;
-		color: color-mix(in oklab, var(--color-base-content) 92%, transparent);
+		color: color-mix(in oklab, var(--foreground) 92%, transparent);
 	}
 
 	.stat-value-sm {
@@ -718,13 +706,13 @@
 		font-size: 0.95rem;
 		font-weight: 600;
 		line-height: 1.1;
-		color: color-mix(in oklab, var(--color-base-content) 88%, transparent);
+		color: color-mix(in oklab, var(--foreground) 88%, transparent);
 	}
 
 	.stat-meta {
 		margin-top: 0.2rem;
 		font-size: 10px;
-		color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+		color: color-mix(in oklab, var(--foreground) 45%, transparent);
 	}
 
 	.trophy-divider {
@@ -732,8 +720,8 @@
 		background: linear-gradient(
 			to right,
 			transparent,
-			color-mix(in oklab, var(--color-base-content) 14%, transparent) 20%,
-			color-mix(in oklab, var(--color-base-content) 14%, transparent) 80%,
+			color-mix(in oklab, var(--foreground) 14%, transparent) 20%,
+			color-mix(in oklab, var(--foreground) 14%, transparent) 80%,
 			transparent
 		);
 	}

@@ -3,6 +3,8 @@
 	import { acceptedReviews, objectiveForCandidate } from './questionStudioRun';
 	import type { AgentJob, CandidateReview } from './questionStudioRun';
 	import type { CandidateQuestion } from './questionStudioTypes';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { MediaQuery } from 'svelte/reactivity';
 
 	interface Props {
 		candidates: CandidateQuestion[];
@@ -33,11 +35,26 @@
 	}: Props = $props();
 
 	const keptReviews = $derived(acceptedReviews(reviews));
+	// From lg up the inspector sits inline, so this sheet only opens below that.
+	const isDesktop = new MediaQuery('(min-width: 1024px)');
+	const isOpen = $derived(
+		!isDesktop.current &&
+			selectedCandidateIndex !== null &&
+			Boolean(candidates[selectedCandidateIndex])
+	);
 </script>
 
-{#if selectedCandidateIndex !== null && candidates[selectedCandidateIndex]}
-	<div class="modal modal-open">
-		<div class="modal-box max-h-[90vh] max-w-2xl overflow-hidden rounded-2xl p-0">
+<Dialog.Root
+	open={isOpen}
+	onOpenChange={(open) => {
+		if (!open && !editing) selectedCandidateIndex = null;
+	}}
+>
+	<Dialog.Content
+		class="max-h-[90vh] gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-2xl"
+		showCloseButton={false}
+	>
+		{#if selectedCandidateIndex !== null && candidates[selectedCandidateIndex]}
 			<div class="flex h-[85vh] flex-col">
 				<QuestionStudioCandidateInspector
 					{canEdit}
@@ -58,13 +75,6 @@
 					}}
 				/>
 			</div>
-		</div>
-		<button
-			type="button"
-			class="modal-backdrop bg-black/50"
-			aria-label="Close candidate"
-			disabled={editing}
-			onclick={() => (selectedCandidateIndex = null)}
-		></button>
-	</div>
-{/if}
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ChevronRight, Trophy, RotateCcw } from 'lucide-svelte';
 	import { scale } from 'svelte/transition';
+	import { Button } from '$lib/components/ui/button';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { Tween, prefersReducedMotion } from 'svelte/motion';
 	import type { ModuleSummary } from '$lib/utils/moduleCompletion';
@@ -27,14 +28,14 @@
 		mastered: 'bg-emerald-800',
 		correct: 'bg-success/60',
 		incorrect: 'bg-error/60',
-		unanswered: 'bg-base-content/10'
+		unanswered: 'bg-foreground/10'
 	} as const;
 	const pop = { duration: 260, start: 0.4, easing: backOut };
 </script>
 
 <button
 	type="button"
-	class="group block w-full rounded-2xl border border-base-300 text-left text-sm shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-base-200/40 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none motion-reduce:hover:translate-y-0 {compact
+	class="group block w-full rounded-2xl border border-border text-left text-sm shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/40 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none motion-reduce:hover:translate-y-0 {compact
 		? 'px-3 py-2.5'
 		: 'p-4'}"
 	{onclick}
@@ -42,12 +43,12 @@
 >
 	<span class="mb-2 flex items-center justify-between gap-2">
 		<span class="tabular-nums">
-			<span class="font-semibold text-base-content">{summary.answered}</span>
-			<span class="text-base-content/60">of {summary.total} answered</span>
+			<span class="font-semibold text-foreground">{summary.answered}</span>
+			<span class="text-foreground/60">of {summary.total} answered</span>
 		</span>
-		<span class="inline-flex items-center gap-1 text-xs text-base-content/60">
+		<span class="inline-flex items-center gap-1 text-xs text-foreground/60">
 			{#if summary.isMastered}
-				<span class="inline-flex items-center gap-1 font-semibold text-success"
+				<span class="inline-flex items-center gap-1 font-semibold text-success-ink"
 					><Trophy size={12} /> Mastered</span
 				>
 			{:else if compact && summary.incorrect}
@@ -60,10 +61,7 @@
 		</span>
 	</span>
 
-	<span
-		class="flex h-1.5 w-full overflow-hidden rounded-full bg-base-content/10"
-		aria-hidden="true"
-	>
+	<span class="flex h-1.5 w-full overflow-hidden rounded-full bg-foreground/10" aria-hidden="true">
 		<span class="h-full bg-success" style:width="{correctWidth.current}%"></span>
 		<span class="h-full bg-error/70" style:width="{reviewWidth.current}%"></span>
 	</span>
@@ -76,7 +74,7 @@
 			{#each summary.results as result (result.questionId)}
 				<span
 					class="relative aspect-square rounded-[3px] {result.questionId === currentId
-						? 'ring-2 ring-base-content/70 ring-offset-1 ring-offset-base-100'
+						? 'ring-2 ring-foreground/70 ring-offset-1 ring-offset-background'
 						: ''}"
 				>
 					{#key result.status}
@@ -92,7 +90,7 @@
 		</span>
 
 		<span
-			class="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-base-content/60 tabular-nums"
+			class="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-foreground/60 tabular-nums"
 			aria-hidden="true"
 		>
 			<span class="inline-flex items-center gap-1.5"
@@ -111,9 +109,11 @@
 </button>
 
 {#if summary.isComplete}
-	<button
-		type="button"
-		class="btn btn-ghost btn-xs mt-2 w-full rounded-full text-base-content/65"
-		onclick={onreset}><RotateCcw size={12} /> Reset module</button
+	<Button
+		variant="ghost"
+		tone="neutral"
+		size="xs"
+		class="mt-2 w-full text-foreground/65"
+		onclick={onreset}><RotateCcw size={12} /> Reset module</Button
 	>
 {/if}

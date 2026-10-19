@@ -17,6 +17,11 @@
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import type { Doc } from '../../../convex/_generated/dataModel';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as Card from '$lib/components/ui/card';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 
 	type QuestionItem = Doc<'question'>;
 	type MediaItem = {
@@ -152,8 +157,8 @@
 <div class="h-full flex flex-col overflow-hidden">
 	<!-- Header -->
 	<div
-		class="flex items-center justify-between p-4 border-b border-base-300 {isMobile
-			? 'sticky top-0 z-10 bg-base-100'
+		class="flex items-center justify-between p-4 border-b border-border {isMobile
+			? 'sticky top-0 z-10 bg-background'
 			: ''}"
 	>
 		<div class="flex items-center {isMobile ? 'gap-2' : 'gap-3'}">
@@ -163,72 +168,78 @@
 				<span class="text-sm font-medium whitespace-nowrap">Question #—</span>
 			{/if}
 			<div class="flex flex-wrap items-center gap-1">
-				<span class="badge badge-xs badge-ghost text-xs"
-					>{convertToDisplayFormat(question.type)}</span
-				>
-				<span
-					class="badge badge-xs {question.status === 'published'
-						? 'badge-success'
+				<Badge size="xs" class="text-xs">{convertToDisplayFormat(question.type)}</Badge>
+				<Badge
+					variant="solid"
+					size="xs"
+					tone={question.status === 'published'
+						? 'success'
 						: question.status === 'draft'
-							? 'badge-warning'
-							: 'badge-neutral'}">{question.status}</span
+							? 'warning'
+							: 'neutral'}>{question.status}</Badge
 				>
 			</div>
 		</div>
 		{#if canEdit}
 			<div class="flex items-center gap-1">
-				<button class="btn btn-sm btn-ghost rounded-full gap-1" onclick={onEdit}>
+				<Button variant="ghost" tone="neutral" size="sm" class="gap-1" onclick={onEdit}>
 					<Pencil size={14} />
 					{#if !isMobile}Edit{/if}
-				</button>
-				<button class="btn btn-sm btn-ghost rounded-full gap-1" onclick={onMove}>
+				</Button>
+				<Button variant="ghost" tone="neutral" size="sm" class="gap-1" onclick={onMove}>
 					<ArrowRightLeft size={14} />
 					{#if !isMobile}Move{/if}
-				</button>
+				</Button>
 
 				<div class="flex items-center">
-					<button
-						class="btn btn-sm btn-ghost rounded-full gap-1"
+					<Button
+						variant="ghost"
+						tone="neutral"
+						size="sm"
+						class="gap-1"
 						onclick={onDuplicate}
 						title={isModuleFull ? 'Module limit reached' : 'Duplicate question'}
 					>
 						<Copy size={14} />
 						{#if !isMobile}Duplicate{/if}
-					</button>
+					</Button>
 					{#if onDuplicateMany}
-						<div class="dropdown dropdown-end">
-							<button
-								type="button"
-								class="btn btn-sm btn-ghost btn-circle"
-								aria-label="Open duplicate options"
-							>
-								<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M19 9l-7 7-7-7"
-									></path>
-								</svg>
-							</button>
-							<ul
-								class="dropdown-content menu bg-base-100 rounded-2xl z-20 w-44 p-1 shadow-lg border border-base-300"
-							>
-								<li>
-									<button class="text-sm gap-2 rounded-xl" onclick={onDuplicateMany}>
-										<CopyPlus size={14} />
-										Duplicate many...
-									</button>
-								</li>
-							</ul>
-						</div>
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger>
+								{#snippet child({ props })}
+									<Button
+										{...props}
+										variant="ghost"
+										tone="neutral"
+										shape="circle"
+										size="sm"
+										aria-label="Open duplicate options"
+									>
+										<svg class="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M19 9l-7 7-7-7"
+											></path>
+										</svg>
+									</Button>
+								{/snippet}
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content align="end" class="w-44">
+								<DropdownMenu.Item class="gap-2" onSelect={onDuplicateMany}>
+									<CopyPlus size={14} />
+									Duplicate many...
+								</DropdownMenu.Item>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
 					{/if}
 				</div>
 
-				<button class="btn btn-sm btn-ghost rounded-full text-error gap-1" onclick={onDelete}>
+				<Button variant="ghost" tone="error" size="sm" class="gap-1" onclick={onDelete}>
 					<Trash2 size={14} />
 					{#if !isMobile}Delete{/if}
-				</button>
+				</Button>
 			</div>
 		{/if}
 	</div>
@@ -240,7 +251,7 @@
 			<div
 				class="{isMobile
 					? 'text-base'
-					: 'text-lg'} font-medium text-base-content leading-relaxed tiptap-content"
+					: 'text-lg'} font-medium text-foreground leading-relaxed tiptap-content"
 			>
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html sanitizeHtml(question.stem)}
@@ -254,14 +265,14 @@
 		{#if isFreeResponse}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
 				<div
-					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile
+					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
 						? 'mb-2'
 						: 'mb-3'}"
 				>
 					Acceptance
 				</div>
 				<div
-					class="flex items-center rounded-3xl border-2 border-base-300 bg-base-200 {isMobile
+					class="flex items-center rounded-3xl border-2 border-border bg-muted {isMobile
 						? 'gap-3 px-4 py-2'
 						: 'gap-4 px-5 py-3'}"
 				>
@@ -270,14 +281,14 @@
 						<div class="{isMobile ? 'text-xs' : 'text-sm'} font-semibold">
 							{acceptanceLevels[acceptance].label}
 						</div>
-						<p class="text-xs text-base-content/60">{acceptanceLevels[acceptance].description}</p>
+						<p class="text-xs text-foreground/60">{acceptanceLevels[acceptance].description}</p>
 					</div>
 				</div>
 			</div>
 
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
 				<div
-					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 flex items-center gap-2 {isMobile
+					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 flex items-center gap-2 {isMobile
 						? 'mb-2'
 						: 'mb-3'}"
 				>
@@ -290,9 +301,9 @@
 				>
 					{#if hasRationale(question)}
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-						<div class="text-sm text-base-content/80 tiptap-content">{@html questionRationale}</div>
+						<div class="text-sm text-foreground/80 tiptap-content">{@html questionRationale}</div>
 					{:else}
-						<p class="text-sm italic text-base-content/40">No ground truth defined</p>
+						<p class="text-sm italic text-foreground/40">No ground truth defined</p>
 					{/if}
 					<QuestionSources source={question.metadata.source ?? question.metadata.generation} />
 				</div>
@@ -302,31 +313,31 @@
 		{:else if isFillInTheBlank}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
 				<div
-					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile
+					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
 						? 'mb-2'
 						: 'mb-3'}"
 				>
 					Accepted Answers
 				</div>
-				<div class="card bg-base-100 border border-base-300 shadow-xs rounded-3xl">
-					<div class="card-body {isMobile ? 'p-3' : 'p-4'}">
+				<Card.Root class="bg-background py-0 shadow-xs">
+					<Card.Content class={isMobile ? 'p-3' : 'p-4'}>
 						{#if fitbAnswers.length > 0}
 							<div class="flex items-center gap-2 mb-2">
-								<div class="badge badge-success gap-1">
+								<Badge variant="solid" tone="success">
 									<Check size={12} />
 									Primary
-								</div>
+								</Badge>
 								<span class="{isMobile ? 'text-base' : 'text-lg'} font-semibold"
 									>{fitbAnswers[0]}</span
 								>
 							</div>
 							{#if fitbAnswers.length > 1}
-								<div class="mt-3 pt-3 border-t border-base-200">
-									<p class="text-xs text-base-content/60 mb-2">Alternate answers:</p>
+								<div class="mt-3 pt-3 border-t border-muted">
+									<p class="text-xs text-foreground/60 mb-2">Alternate answers:</p>
 									<ul class="space-y-1">
 										{#each fitbAnswers.slice(1) as alt, i (i)}
-											<li class="flex items-center gap-2 text-sm text-base-content/80">
-												<span class="w-1.5 h-1.5 rounded-full bg-base-content/30"></span>
+											<li class="flex items-center gap-2 text-sm text-foreground/80">
+												<span class="w-1.5 h-1.5 rounded-full bg-foreground/30"></span>
 												{alt}
 											</li>
 										{/each}
@@ -334,17 +345,17 @@
 								</div>
 							{/if}
 						{:else}
-							<p class="text-sm text-base-content/60">No answers defined</p>
+							<p class="text-sm text-foreground/60">No answers defined</p>
 						{/if}
-					</div>
-				</div>
+					</Card.Content>
+				</Card.Root>
 			</div>
 
 			<!-- Matching -->
 		{:else if isMatching}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
 				<div
-					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile
+					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
 						? 'mb-2'
 						: 'mb-3'}"
 				>
@@ -357,7 +368,7 @@
 							<!-- Prompt -->
 							<div class="flex-1">
 								<div
-									class="rounded-3xl border-2 border-base-300 bg-base-200 {isMobile
+									class="rounded-3xl border-2 border-border bg-muted {isMobile
 										? 'px-4 py-2'
 										: 'px-5 py-3'}"
 								>
@@ -367,7 +378,7 @@
 								</div>
 							</div>
 							<!-- Arrow -->
-							<div class="text-base-content/40 shrink-0">
+							<div class="text-foreground/40 shrink-0">
 								<svg
 									class={isMobile ? 'w-4 h-4' : 'w-5 h-5'}
 									fill="none"
@@ -397,11 +408,11 @@
 									</div>
 								{:else}
 									<div
-										class="rounded-3xl border-2 border-dashed border-base-300 bg-base-100 {isMobile
+										class="rounded-3xl border-2 border-dashed border-border bg-background {isMobile
 											? 'px-4 py-2'
 											: 'px-5 py-3'}"
 									>
-										<span class="{isMobile ? 'text-xs' : 'text-sm'} text-base-content/40 italic"
+										<span class="{isMobile ? 'text-xs' : 'text-sm'} text-foreground/40 italic"
 											>No match defined</span
 										>
 									</div>
@@ -412,13 +423,13 @@
 				</div>
 
 				{#if matchingAnswers.length > matchingPrompts.length}
-					<div class="mt-4 pt-4 border-t border-base-200">
-						<p class="text-xs text-base-content/50 mb-2">
+					<div class="mt-4 pt-4 border-t border-muted">
+						<p class="text-xs text-foreground/50 mb-2">
 							Available answers ({matchingAnswers.length}):
 						</p>
 						<div class="flex flex-wrap gap-2">
 							{#each matchingAnswers as answer (answer.id)}
-								<span class="badge badge-outline badge-sm">{getAnswerLabel(answer.text)}</span>
+								<Badge variant="outline" size="sm">{getAnswerLabel(answer.text)}</Badge>
 							{/each}
 						</div>
 					</div>
@@ -429,7 +440,7 @@
 		{:else if isMultipleChoice && question.options?.length}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
 				<div
-					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 {isMobile
+					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
 						? 'mb-2'
 						: 'mb-3'}"
 				>
@@ -438,17 +449,14 @@
 				<div class={isMobile ? 'space-y-2' : 'space-y-3'}>
 					{#each question.options as option, optIndex (option.id)}
 						<label
-							class="label cursor-pointer rounded-full flex items-center {isMobile
+							class="cursor-pointer rounded-full flex items-center {isMobile
 								? 'border p-1.5'
 								: 'border-2 p-2'} transition-colors {question.correctAnswers.includes(option.id)
 								? 'border-success bg-success/5'
-								: 'border-base-300 bg-base-200'}"
+								: 'border-border bg-muted'}"
 						>
-							<input
-								type="checkbox"
-								class="checkbox checkbox-primary {isMobile
-									? 'checkbox-xs ms-2'
-									: 'checkbox-sm ms-3'}"
+							<Checkbox
+								class={isMobile ? 'size-3.5 ms-2' : 'size-4 ms-3'}
 								checked={question.correctAnswers.includes(option.id)}
 								disabled
 							/>
@@ -464,7 +472,8 @@
 								</span>
 							</span>
 							{#if question.correctAnswers.includes(option.id)}
-								<span class="text-success text-xs font-medium {isMobile ? 'mr-3' : 'mr-4'} shrink-0"
+								<span
+									class="text-success-ink text-xs font-medium {isMobile ? 'mr-3' : 'mr-4'} shrink-0"
 									>{isMobile ? '✓' : '✓ Correct'}</span
 								>
 							{/if}
@@ -478,19 +487,19 @@
 		{#if hasRationale(question) && !isFreeResponse}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
 				<div
-					class="text-xs font-semibold uppercase tracking-wide text-base-content/60"
+					class="text-xs font-semibold uppercase tracking-wide text-foreground/60"
 					class:mb-2={isMobile}
 					class:mb-3={!isMobile}
 				>
 					Rationale
 				</div>
 				<div
-					class="rounded-2xl border border-base-300 bg-base-200/30"
+					class="rounded-2xl border border-border bg-muted/30"
 					class:p-3={isMobile}
 					class:p-4={!isMobile}
 				>
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-					<div class="text-sm text-base-content/80 tiptap-content">{@html questionRationale}</div>
+					<div class="text-sm text-foreground/80 tiptap-content">{@html questionRationale}</div>
 					<QuestionSources source={question.metadata.source ?? question.metadata.generation} />
 				</div>
 			</div>
@@ -500,7 +509,7 @@
 		{#if !isMobile && media && media.length > 0}
 			<div class="mb-6">
 				<div
-					class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-3 flex items-center gap-2"
+					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-3 flex items-center gap-2"
 				>
 					<Paperclip size={14} />
 					Attachments ({media.length})
@@ -508,7 +517,7 @@
 				<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
 					{#each media as attachment (attachment._id)}
 						<button
-							class="group border-2 border-base-300 rounded-2xl overflow-hidden cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary focus:border-primary"
+							class="group border-2 border-border rounded-2xl overflow-hidden cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary focus:border-primary"
 							onclick={() => onAttachmentClick?.(attachment)}
 							aria-label={`View attachment: ${attachment.altText}`}
 						>
@@ -536,8 +545,8 @@
 		{/if}
 
 		<!-- Attribution & timestamps -->
-		<div class="{isMobile ? 'mt-6' : 'mt-8'} pt-4 border-t border-base-200">
-			<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-base-content/40">
+		<div class="{isMobile ? 'mt-6' : 'mt-8'} pt-4 border-t border-muted">
+			<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-foreground/40">
 				{#if question.createdBy}
 					<span class="flex items-center gap-1.5">
 						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -556,7 +565,7 @@
 				{/if}
 				{#if question._creationTime}
 					<span class="flex items-center gap-1">
-						{#if question.createdBy || question.aiGenerated}<span class="text-base-content/25"
+						{#if question.createdBy || question.aiGenerated}<span class="text-foreground/25"
 								>&middot;</span
 							>{/if}
 						Created {new Date(question._creationTime).toLocaleDateString('en-US', {
@@ -568,7 +577,7 @@
 				{/if}
 				{#if question.updatedAt && question._creationTime && question.updatedAt - question._creationTime > 60_000}
 					<span class="flex items-center gap-1">
-						<span class="text-base-content/25">&middot;</span>
+						<span class="text-foreground/25">&middot;</span>
 						Updated {new Date(question.updatedAt).toLocaleDateString('en-US', {
 							month: 'short',
 							day: 'numeric',

@@ -5,6 +5,13 @@
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
 	import { Pencil, Trash2, Plus, X, Check } from 'lucide-svelte';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Input } from '$lib/components/ui/input';
+	import { Spinner } from '$lib/components/ui/spinner';
+	import { Tip } from '$lib/components/ui/tooltip';
 
 	const client = useConvexClient();
 	// useQuery with function args for reactivity
@@ -98,15 +105,15 @@
 	}
 </script>
 
-<section class="rounded-2xl border border-base-300 bg-base-100 p-4">
+<section class="rounded-2xl border border-border bg-background p-4">
 	<div class="flex items-center justify-between mb-4">
 		<div class="flex items-center gap-2">
-			<h3 class="text-base font-semibold text-base-content">Tags</h3>
-			<div
-				class="tooltip tooltip-right"
-				data-tip="Group modules together (e.g., Exam 1 covering modules 1-3). Future features will enable exam review by tags."
+			<h3 class="text-base font-semibold text-foreground">Tags</h3>
+			<Tip
+				label="Group modules together (e.g., Exam 1 covering modules 1-3). Future features will enable exam review by tags."
+				side="right"
 			>
-				<div class="btn btn-ghost btn-xs btn-circle text-base-content/60">
+				<span class="flex size-6 items-center justify-center rounded-full text-foreground/60">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="14"
@@ -119,54 +126,48 @@
 						stroke-linejoin="round"
 						><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg
 					>
-				</div>
-			</div>
+				</span>
+			</Tip>
 			{#if tagsQuery.data && tagsQuery.data.length > 0}
-				<span class="badge badge-sm">{tagsQuery.data.length}</span>
+				<Badge>{tagsQuery.data.length}</Badge>
 			{/if}
 		</div>
-		<button
-			class="btn btn-primary btn-sm rounded-full gap-2"
-			onclick={() => (showAddForm = !showAddForm)}
-		>
+		<Button size="sm" class="gap-2" onclick={() => (showAddForm = !showAddForm)}>
 			<Plus size={14} />
 			<span>New Tag</span>
-		</button>
+		</Button>
 	</div>
 
 	{#if showAddForm}
-		<div class="mb-4 p-3 rounded-2xl bg-base-200/50 border border-base-300">
+		<div class="mb-4 p-3 rounded-2xl bg-muted/50 border border-border">
 			<div class="flex flex-col gap-3">
 				<div class="flex items-center gap-2">
-					<input
+					<Input
 						type="text"
-						class="input input-bordered input-sm rounded-full flex-1"
+						class="h-8 flex-1 px-3 text-sm"
 						placeholder="Tag name (e.g. Midterm, Chapter 1)"
-						maxlength="40"
+						maxlength={40}
 						bind:value={newTagName}
 						onkeydown={(e) => e.key === 'Enter' && handleCreate()}
 					/>
 					<div class="flex items-center gap-2">
 						<input
 							type="color"
-							class="h-8 w-8 rounded-full border-2 border-base-300 cursor-pointer"
+							class="h-8 w-8 rounded-full border-2 border-border cursor-pointer"
 							bind:value={newTagColor}
 							title="Choose tag color"
 						/>
-						<button
-							class="btn btn-primary btn-sm rounded-full gap-1"
-							onclick={handleCreate}
-							disabled={isCreating}
-						>
-							{#if isCreating}
-								<span class="loading loading-spinner loading-xs"></span>
-							{:else}
+						<Button size="sm" class="gap-1" loading={isCreating} onclick={handleCreate}>
+							{#if !isCreating}
 								<Check size={14} />
 							{/if}
 							<span>Add</span>
-						</button>
-						<button
-							class="btn btn-ghost btn-sm btn-square"
+						</Button>
+						<Button
+							variant="ghost"
+							tone="neutral"
+							size="sm"
+							shape="square"
 							onclick={() => {
 								showAddForm = false;
 								createError = '';
@@ -174,11 +175,11 @@
 							}}
 						>
 							<X size={14} />
-						</button>
+						</Button>
 					</div>
 				</div>
 				{#if createError}
-					<div class="text-xs text-error">{createError}</div>
+					<div class="text-xs text-error-ink">{createError}</div>
 				{/if}
 			</div>
 		</div>
@@ -186,17 +187,17 @@
 
 	<div>
 		{#if tagsQuery.isLoading}
-			<div class="flex items-center gap-2 text-sm text-base-content/60 py-4">
-				<span class="loading loading-spinner loading-sm"></span>
+			<div class="flex items-center gap-2 text-sm text-foreground/60 py-4">
+				<Spinner />
 				<span>Loading tags...</span>
 			</div>
 		{:else if tagsQuery.error}
-			<div class="alert alert-error py-2 text-sm">
-				<span>Failed to load tags.</span>
-			</div>
+			<Alert.Root tone="error" class="py-2 text-sm">
+				<Alert.Title>Failed to load tags.</Alert.Title>
+			</Alert.Root>
 		{:else if !tagsQuery.data || tagsQuery.data.length === 0}
 			<div class="text-center py-6">
-				<div class="text-base-content/40 text-sm">No tags yet. Click "New Tag" to create one.</div>
+				<div class="text-foreground/40 text-sm">No tags yet. Click "New Tag" to create one.</div>
 			</div>
 		{:else}
 			<div>
@@ -204,107 +205,113 @@
 					{#each tagsQuery.data as tag (tag._id)}
 						{#if editingTagId === tag._id}
 							<div
-								class="inline-flex items-center gap-1.5 rounded-full border border-primary bg-base-50 px-2.5 py-1.5 text-xs"
+								class="inline-flex items-center gap-1.5 rounded-full border border-primary bg-background px-2.5 py-1.5 text-xs"
 							>
-								<input
+								<Input
 									type="text"
-									class="input input-bordered input-xs w-24"
-									maxlength="40"
+									class="h-7 w-24 px-2.5 text-xs"
+									maxlength={40}
 									bind:value={editName}
 									onkeydown={(e) => e.key === 'Enter' && handleUpdate(tag._id)}
 								/>
 								<input
 									type="color"
-									class="h-5 w-5 rounded-full border-2 border-base-300 cursor-pointer"
+									class="h-5 w-5 rounded-full border-2 border-border cursor-pointer"
 									bind:value={editColor}
 									title="Change color"
 								/>
-								<button
-									class="btn btn-ghost btn-xs btn-square p-0 h-5 w-5 min-h-0"
+								<Button
+									variant="ghost"
+									tone="neutral"
+									size="xs"
+									shape="square"
+									class="size-5"
 									onclick={cancelEdit}
 									aria-label="Cancel edit"
 									title="Cancel"
 								>
 									<X size={12} />
-								</button>
-								<button
-									class="btn btn-ghost btn-xs btn-square p-0 h-5 w-5 min-h-0"
+								</Button>
+								<Button
+									variant="ghost"
+									tone="neutral"
+									size="xs"
+									shape="square"
+									class="size-5"
+									loading={isUpdating}
 									onclick={() => handleUpdate(tag._id)}
-									disabled={isUpdating}
 									aria-label="Save tag"
 									title="Save"
 								>
-									{#if isUpdating}
-										<span class="loading loading-spinner loading-xs"></span>
-									{:else}
+									{#if !isUpdating}
 										<Check size={12} />
 									{/if}
-								</button>
+								</Button>
 							</div>
 						{:else}
 							<div
-								class="inline-flex items-center gap-1.5 rounded-full border border-base-300 bg-base-50 px-2.5 py-1 text-xs transition-all hover:border-primary/30 hover:shadow-xs"
+								class="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs transition-all hover:border-primary/30 hover:shadow-xs"
 							>
 								<span
-									class="h-2 w-2 rounded-full ring-1 ring-base-content/10"
+									class="h-2 w-2 rounded-full ring-1 ring-foreground/10"
 									style={`background-color: ${tag.color || '#94a3b8'}`}
 								></span>
 								<span class="font-medium">{tag.name}</span>
-								<div class="dropdown dropdown-end">
-									<button
-										class="btn btn-ghost btn-xs btn-square p-0 h-4 w-4 min-h-0"
-										tabindex="0"
-										aria-label="Tag options"
-										title="Options"
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="12"
-											height="12"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="2"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle
-												cx="12"
-												cy="19"
-												r="1"
-											/></svg
+								<DropdownMenu.Root>
+									<DropdownMenu.Trigger>
+										{#snippet child({ props })}
+											<Button
+												{...props}
+												variant="ghost"
+												tone="neutral"
+												size="xs"
+												shape="square"
+												class="size-4"
+												aria-label="Tag options"
+												title="Options"
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													width="12"
+													height="12"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													stroke-width="2"
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle
+														cx="12"
+														cy="19"
+														r="1"
+													/></svg
+												>
+											</Button>
+										{/snippet}
+									</DropdownMenu.Trigger>
+									<DropdownMenu.Content align="end" class="w-32">
+										<DropdownMenu.Item class="py-1.5 text-xs" onSelect={() => startEdit(tag)}>
+											<Pencil size={11} />
+											<span>Edit</span>
+										</DropdownMenu.Item>
+										<DropdownMenu.Item
+											variant="destructive"
+											class="py-1.5 text-xs"
+											onSelect={() => handleDelete(tag._id, tag.name)}
 										>
-									</button>
-									<ul
-										class="dropdown-content menu bg-base-100 rounded-2xl z-10 w-32 p-1.5 shadow-lg border border-base-300"
-									>
-										<li>
-											<button
-												onclick={() => startEdit(tag)}
-												class="flex items-center gap-2 text-xs py-1.5"
-											>
-												<Pencil size={11} />
-												<span>Edit</span>
-											</button>
-										</li>
-										<li>
-											<button
-												onclick={() => handleDelete(tag._id, tag.name)}
-												class="flex items-center gap-2 text-xs py-1.5 text-error hover:bg-error/10"
-											>
-												<Trash2 size={11} />
-												<span>Delete</span>
-											</button>
-										</li>
-									</ul>
-								</div>
+											<Trash2 size={11} />
+											<span>Delete</span>
+										</DropdownMenu.Item>
+									</DropdownMenu.Content>
+								</DropdownMenu.Root>
 							</div>
 						{/if}
 					{/each}
 				</div>
 				{#if editError}
-					<div class="alert alert-error py-2 text-sm mt-3">
-						<span>{editError}</span>
-					</div>
+					<Alert.Root tone="error" class="mt-3 py-2 text-sm">
+						<Alert.Title>{editError}</Alert.Title>
+					</Alert.Root>
 				{/if}
 			</div>
 		{/if}

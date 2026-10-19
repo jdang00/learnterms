@@ -29,4 +29,4 @@
 				expectedRevision
 			})}
 	/>
-{:else}<p role="status" class="text-sm text-base-content/60">Loading your note…</p>{/if}
+{:else}<p role="status" class="text-sm text-foreground/60">Loading your note…</p>{/if}

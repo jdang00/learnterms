@@ -26,6 +26,9 @@
 	import { resolve } from '$app/paths';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { curationState, type QuestionItem } from './states.svelte.js';
+	import { Button } from '$lib/components/ui/button';
+	import { Skeleton } from '$lib/components/ui/skeleton';
+	import * as Dialog from '$lib/components/ui/dialog';
 
 	let { data }: { data: PageData } = $props();
 	const moduleId = $derived(data.moduleId);
@@ -170,31 +173,33 @@
 	});
 </script>
 
-<div class="h-screen overflow-hidden bg-base-200/30 flex flex-col">
+<div class="h-screen overflow-hidden bg-muted/30 flex flex-col">
 	<div class="max-w-[1800px] mx-auto p-4 sm:p-6 flex flex-col flex-1 min-h-0 w-full">
 		<!-- Header -->
 		<div class="flex items-center gap-4 mb-4">
 			{#if moduleInfo.data?.classId}
-				<a
-					class="btn btn-ghost btn-sm rounded-full gap-2"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					class="gap-2"
 					href={resolve('/admin/[classId]', { classId: moduleInfo.data.classId })}
+					><ArrowLeft size={16} />
+					<span class="hidden sm:inline">Back</span></Button
 				>
-					<ArrowLeft size={16} />
-					<span class="hidden sm:inline">Back</span>
-				</a>
 			{:else}
-				<a class="btn btn-ghost btn-sm rounded-full gap-2" href={resolve('/admin')}>
-					<ArrowLeft size={16} />
-					<span class="hidden sm:inline">Back</span>
-				</a>
+				<Button variant="ghost" tone="neutral" size="sm" class="gap-2" href={resolve('/admin')}
+					><ArrowLeft size={16} />
+					<span class="hidden sm:inline">Back</span></Button
+				>
 			{/if}
-			<div class="h-6 w-px bg-base-300"></div>
+			<div class="h-6 w-px bg-muted-strong"></div>
 			{#if moduleInfo.isLoading}
-				<div class="skeleton h-6 w-48"></div>
+				<Skeleton class="h-6 w-48" />
 			{:else if moduleInfo.error != null}
-				<div class="text-error text-sm">Failed to load module</div>
+				<div class="text-error-ink text-sm">Failed to load module</div>
 			{:else if moduleInfo.data == null}
-				<div class="text-base-content/70 text-sm">Module not found</div>
+				<div class="text-foreground/70 text-sm">Module not found</div>
 			{:else}
 				<div class="flex items-center gap-2">
 					<span class="text-xl">{moduleInfo.data?.emoji || '📘'}</span>
@@ -202,7 +207,7 @@
 						<h1 class="font-display text-lg font-semibold leading-tight">
 							{moduleInfo.data.title}
 						</h1>
-						<p class="text-xs text-base-content/60 hidden sm:block">
+						<p class="text-xs text-foreground/60 hidden sm:block">
 							{curationState.questionList.length} question{curationState.questionList.length !== 1
 								? 's'
 								: ''}
@@ -213,8 +218,9 @@
 			<div class="flex-1"></div>
 			{#if canEdit && curationState.editorMode !== 'add'}
 				<div class="flex items-center gap-1 sm:gap-2">
-					<button
-						class="btn btn-primary btn-sm rounded-full gap-2"
+					<Button
+						size="sm"
+						class="gap-2"
 						onclick={() =>
 							isModuleFull
 								? (curationState.isLimitModalOpen = true)
@@ -223,7 +229,7 @@
 						<Plus size={16} />
 						<span class="hidden sm:inline">Add Question</span>
 						<span class="sm:hidden">Add</span>
-					</button>
+					</Button>
 				</div>
 			{/if}
 		</div>
@@ -234,22 +240,24 @@
 			>
 				<div class="min-w-0 flex-1">
 					<h2 class="text-sm font-semibold">Questions from Question Studio</h2>
-					<p class="mt-1 text-xs text-base-content/65">
+					<p class="mt-1 text-xs text-foreground/65">
 						Newly saved questions are published. Review their answers and sources here; you can edit
 						or archive them as needed.
 					</p>
 				</div>
-				<a
-					class="btn btn-ghost btn-sm rounded-full"
+				<Button
 					href={resolve('/admin/[classId]/module/[moduleId]', {
 						classId: page.params.classId!,
 						moduleId
-					})}>Show all module questions</a
+					})}
+					variant="ghost"
+					tone="neutral"
+					size="sm">Show all module questions</Button
 				>
 			</div>
 		{/if}
 		<!-- Controls for mobile/tablet (below xl) -->
-		<div class="xl:hidden p-3 bg-base-100 rounded-2xl border border-base-300 mb-4">
+		<div class="xl:hidden p-3 bg-background rounded-2xl border border-border mb-4">
 			<QuestionListControls
 				searchInput={curationState.searchInput}
 				sortMode={curationState.sortMode}
@@ -284,37 +292,41 @@
 		{#if !curationState.reorderMode}
 			<div class="hidden md:block xl:hidden mb-4">
 				<div
-					class="flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-3 relative items-center border border-base-300 px-4 py-3 rounded-3xl bg-base-100"
+					class="flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-3 relative items-center border border-border px-4 py-3 rounded-3xl bg-background"
 				>
 					{#if questions.isLoading}
 						<div class="flex gap-3">
 							{#each Array(10), index (index)}
-								<div class="skeleton h-10 w-10 rounded-full shrink-0"></div>
+								<Skeleton class="h-10 w-10 rounded-full shrink-0" />
 							{/each}
 						</div>
 					{:else if questions.data && questions.data.length > 0}
 						{#each curationState.questionList as questionItem, index (questionItem._id)}
-							<div class="indicator shrink-0">
+							<div class="relative inline-flex shrink-0">
 								{#if curationState.editorMode === 'edit' && curationState.editingQuestionForInline?._id === questionItem._id}
-									<span class="indicator-item indicator-start badge badge-warning badge-xs"></span>
+									<span class="absolute -top-1 -left-1 size-2.5 rounded-full bg-warning"></span>
 								{/if}
 								{#if curationState.recentlyAddedIds.has(questionItem._id)}
-									<span class="indicator-item indicator-end badge badge-success badge-xs"></span>
+									<span class="absolute -top-1 -right-1 size-2.5 rounded-full bg-success"></span>
 								{/if}
-								<button
-									class="btn btn-circle btn-sm btn-soft {curationState.selectedQuestionId ===
-									questionItem._id
-										? 'btn-primary'
-										: 'btn-outline'}"
+								<Button
+									shape="circle"
+									size="sm"
+									variant={curationState.selectedQuestionId === questionItem._id
+										? 'soft'
+										: 'outline'}
+									tone={curationState.selectedQuestionId === questionItem._id
+										? 'primary'
+										: 'neutral'}
 									onclick={() => curationState.handleQuestionSelect(questionItem._id)}
 									title={questionItem.stem?.replace(/<[^>]*>/g, '').substring(0, 50)}
 								>
 									{index + 1}
-								</button>
+								</Button>
 							</div>
 						{/each}
 					{:else}
-						<div class="text-sm text-base-content/60 py-2">No questions yet</div>
+						<div class="text-sm text-foreground/60 py-2">No questions yet</div>
 					{/if}
 				</div>
 			</div>
@@ -323,21 +335,21 @@
 		<!-- Mobile Question List (below md) -->
 		<div class="md:hidden flex-1 min-h-0 flex flex-col">
 			<div
-				class="bg-base-100 rounded-2xl border border-base-300 overflow-hidden flex-1 min-h-0 flex flex-col"
+				class="bg-background rounded-2xl border border-border overflow-hidden flex-1 min-h-0 flex flex-col"
 			>
 				{#if questions.isLoading}
-					<div class="divide-y divide-base-200">
+					<div class="divide-y divide-muted">
 						{#each Array(5), index (index)}
 							<div class="px-3 py-2.5">
 								<div class="flex items-start gap-2">
-									<div class="skeleton h-4 w-4 rounded-sm mt-0.5"></div>
+									<Skeleton class="h-4 w-4 rounded-sm mt-0.5" />
 									<div class="flex-1">
 										<div class="flex items-center gap-2 mb-1">
-											<div class="skeleton h-3 w-6 rounded-sm"></div>
-											<div class="skeleton h-3 w-12 rounded-sm"></div>
+											<Skeleton class="h-3 w-6 rounded-sm" />
+											<Skeleton class="h-3 w-12 rounded-sm" />
 										</div>
-										<div class="skeleton h-3 w-full rounded-sm mb-1"></div>
-										<div class="skeleton h-3 w-2/3 rounded-sm"></div>
+										<Skeleton class="h-3 w-full rounded-sm mb-1" />
+										<Skeleton class="h-3 w-2/3 rounded-sm" />
 									</div>
 								</div>
 							</div>
@@ -345,7 +357,7 @@
 					</div>
 				{:else if questions.error != null}
 					<div class="flex items-center justify-center p-6">
-						<div class="text-error text-xs">Failed to load: {questions.error.toString()}</div>
+						<div class="text-error-ink text-xs">Failed to load: {questions.error.toString()}</div>
 					</div>
 				{:else if !questions.data || questions.data.length === 0}
 					<div class="flex items-center justify-center p-8">
@@ -354,7 +366,7 @@
 							<h3 class="text-sm font-semibold mb-1">
 								{curationState.search ? 'No matches' : 'No questions'}
 							</h3>
-							<p class="text-xs text-base-content/60">
+							<p class="text-xs text-foreground/60">
 								{curationState.search ? 'Try different search terms' : 'Add your first question'}
 							</p>
 						</div>
@@ -409,9 +421,9 @@
 			<!-- Desktop Sidebar (xl and above) -->
 			<div class="xl:col-span-5 2xl:col-span-4 hidden xl:block min-h-0">
 				<div
-					class="bg-base-200/30 rounded-2xl border border-base-300 h-full overflow-hidden flex flex-col"
+					class="bg-muted/30 rounded-2xl border border-border h-full overflow-hidden flex flex-col"
 				>
-					<div class="p-4 border-b border-base-300 bg-base-100 shrink-0">
+					<div class="p-4 border-b border-border bg-background shrink-0">
 						<QuestionListControls
 							searchInput={curationState.searchInput}
 							sortMode={curationState.sortMode}
@@ -444,19 +456,19 @@
 
 					<div class="flex-1 overflow-y-auto pb-8 min-h-0">
 						{#if questions.isLoading}
-							<div class="divide-y divide-base-200">
+							<div class="divide-y divide-muted">
 								{#each Array(8), index (index)}
 									<div class="px-4 py-3">
 										<div class="flex items-start gap-3">
-											<div class="skeleton h-5 w-5 rounded-sm mt-0.5"></div>
+											<Skeleton class="h-5 w-5 rounded-sm mt-0.5" />
 											<div class="flex-1">
 												<div class="flex items-center gap-2 mb-2">
-													<div class="skeleton h-3 w-6 rounded-sm"></div>
-													<div class="skeleton h-4 w-12 rounded-sm"></div>
-													<div class="skeleton h-2 w-2 rounded-full"></div>
+													<Skeleton class="h-3 w-6 rounded-sm" />
+													<Skeleton class="h-4 w-12 rounded-sm" />
+													<Skeleton class="h-2 w-2 rounded-full" />
 												</div>
-												<div class="skeleton h-4 w-full rounded-sm mb-1"></div>
-												<div class="skeleton h-4 w-3/4 rounded-sm"></div>
+												<Skeleton class="h-4 w-full rounded-sm mb-1" />
+												<Skeleton class="h-4 w-3/4 rounded-sm" />
 											</div>
 										</div>
 									</div>
@@ -464,30 +476,35 @@
 							</div>
 						{:else if questions.error != null}
 							<div class="flex items-center justify-center p-8">
-								<div class="text-error text-sm">Failed to load: {questions.error.toString()}</div>
+								<div class="text-error-ink text-sm">
+									Failed to load: {questions.error.toString()}
+								</div>
 							</div>
 						{:else if !questions.data || questions.data.length === 0}
 							<div class="flex items-center justify-center p-8 h-full">
 								<div class="text-center">
 									<div class="text-3xl mb-3">📚</div>
-									<h3 class="text-sm font-semibold mb-1 text-base-content">
+									<h3 class="text-sm font-semibold mb-1 text-foreground">
 										{curationState.search ? 'No matches' : 'No questions'}
 									</h3>
-									<p class="text-xs text-base-content/60">
+									<p class="text-xs text-foreground/60">
 										{curationState.search
 											? 'Try different search terms'
 											: 'Add your first question'}
 									</p>
 									{#if curationState.search}
-										<button
-											class="btn btn-sm btn-ghost rounded-full mt-3"
-											onclick={() => curationState.clearSearch()}>Clear Search</button
+										<Button
+											variant="ghost"
+											tone="neutral"
+											size="sm"
+											class="mt-3"
+											onclick={() => curationState.clearSearch()}>Clear Search</Button
 										>
 									{/if}
 								</div>
 							</div>
 						{:else if curationState.reorderMode}
-							<div class="divide-y divide-base-200">
+							<div class="divide-y divide-muted">
 								{#each curationState.questionList as questionItem, index (questionItem._id)}
 									<div
 										use:droppable={{
@@ -495,7 +512,7 @@
 											callbacks: { onDrop: handleQuestionDrop }
 										}}
 										use:draggable={{ container: index.toString(), dragData: questionItem }}
-										class="px-4 py-3 transition-all hover:bg-base-200/50 cursor-grab active:cursor-grabbing {curationState.recentlyAddedIds.has(
+										class="px-4 py-3 transition-all hover:bg-muted/50 cursor-grab active:cursor-grabbing {curationState.recentlyAddedIds.has(
 											questionItem._id
 										)
 											? 'bg-success/5'
@@ -503,9 +520,9 @@
 										animate:flip={{ duration: 300 }}
 									>
 										<div class="flex items-center gap-3">
-											<GripVertical size={16} class="text-base-content/30 shrink-0" />
-											<span class="text-xs font-medium text-base-content/50 w-6">#{index + 1}</span>
-											<p class="flex-1 text-sm text-base-content truncate tiptap-content-inline">
+											<GripVertical size={16} class="text-foreground/30 shrink-0" />
+											<span class="text-xs font-medium text-foreground/50 w-6">#{index + 1}</span>
+											<p class="flex-1 text-sm text-foreground truncate tiptap-content-inline">
 												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 												{@html sanitizeHtml(questionItem.stem)}
 											</p>
@@ -538,7 +555,7 @@
 			<!-- Main Content Panel (md and above) -->
 			<div class="xl:col-span-7 2xl:col-span-8 hidden md:block min-h-0">
 				<div
-					class="bg-base-100 rounded-2xl border border-base-300 h-full overflow-hidden flex flex-col"
+					class="bg-background rounded-2xl border border-border h-full overflow-hidden flex flex-col"
 				>
 					<!-- Reorder mode only visible on tablet (md-xl) -->
 					<div
@@ -546,12 +563,12 @@
 							? 'flex xl:hidden'
 							: 'hidden'}"
 					>
-						<div class="p-4 border-b border-base-300">
+						<div class="p-4 border-b border-border">
 							<h3 class="text-lg font-semibold">Reorder Questions</h3>
-							<p class="text-sm text-base-content/60 mt-1">Drag questions to reorder them</p>
+							<p class="text-sm text-foreground/60 mt-1">Drag questions to reorder them</p>
 						</div>
 						<div class="flex-1 overflow-y-auto pb-8 min-h-0">
-							<div class="divide-y divide-base-200">
+							<div class="divide-y divide-muted">
 								{#each curationState.questionList as questionItem, index (questionItem._id)}
 									<div
 										use:droppable={{
@@ -559,7 +576,7 @@
 											callbacks: { onDrop: handleQuestionDrop }
 										}}
 										use:draggable={{ container: index.toString(), dragData: questionItem }}
-										class="px-4 py-3 transition-all hover:bg-base-200/50 cursor-grab active:cursor-grabbing {curationState.recentlyAddedIds.has(
+										class="px-4 py-3 transition-all hover:bg-muted/50 cursor-grab active:cursor-grabbing {curationState.recentlyAddedIds.has(
 											questionItem._id
 										)
 											? 'bg-success/5'
@@ -567,9 +584,9 @@
 										animate:flip={{ duration: 300 }}
 									>
 										<div class="flex items-center gap-3">
-											<GripVertical size={16} class="text-base-content/30 shrink-0" />
-											<span class="text-xs font-medium text-base-content/50 w-6">#{index + 1}</span>
-											<p class="flex-1 text-sm text-base-content truncate tiptap-content-inline">
+											<GripVertical size={16} class="text-foreground/30 shrink-0" />
+											<span class="text-xs font-medium text-foreground/50 w-6">#{index + 1}</span>
+											<p class="flex-1 text-sm text-foreground truncate tiptap-content-inline">
 												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 												{@html sanitizeHtml(questionItem.stem)}
 											</p>
@@ -633,24 +650,29 @@
 									{curationState.selectedQuestions.size}
 									{curationState.selectedQuestions.size === 1 ? 'question' : 'questions'} selected
 								</h3>
-								<p class="text-sm text-base-content/60 mb-4">
+								<p class="text-sm text-foreground/60 mb-4">
 									Use the toolbar to change status, move, or delete selected questions
 								</p>
 								<div class="flex gap-2">
-									<button
-										class="btn btn-sm btn-ghost rounded-full gap-1"
+									<Button
+										variant="ghost"
+										tone="neutral"
+										size="sm"
+										class="gap-1"
 										onclick={() => curationState.openMoveModalForSelected()}
 									>
 										<ArrowRightLeft size={14} />
 										Move All
-									</button>
-									<button
-										class="btn btn-sm btn-error rounded-full gap-1"
+									</Button>
+									<Button
+										tone="error"
+										size="sm"
+										class="gap-1"
 										onclick={() => curationState.openBulkDeleteModal()}
 									>
 										<Trash2 size={14} />
 										Delete All
-									</button>
+									</Button>
 								</div>
 							</div>
 						{:else}
@@ -660,7 +682,7 @@
 									<span class="hidden xl:inline">👈</span>
 								</div>
 								<h3 class="text-lg font-semibold mb-2">Select a question</h3>
-								<p class="text-sm text-base-content/60">
+								<p class="text-sm text-foreground/60">
 									Click on a question from the list to view its details
 								</p>
 							</div>
@@ -674,10 +696,17 @@
 
 {#if selectedQuestion}
 	<!-- Mobile Modal (below md) -->
-	<div class="modal md:hidden" class:modal-open={curationState.selectedQuestionId !== null}>
-		<div class="modal-box max-w-2xl max-h-[90vh] p-0">
+	<div
+		class="fixed inset-0 z-50 items-center justify-center p-4 md:hidden {curationState.selectedQuestionId !==
+		null
+			? 'flex'
+			: 'hidden'}"
+	>
+		<div
+			class="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-border bg-popover text-popover-foreground shadow-2xl shadow-black/10"
+		>
 			<div
-				class="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-base-300 bg-base-100"
+				class="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-border bg-background"
 			>
 				<div class="flex items-center gap-2">
 					<span class="text-sm font-medium"
@@ -686,14 +715,15 @@
 						) + 1}</span
 					>
 				</div>
-				<button
+				<Button
 					type="button"
-					class="btn btn-sm btn-ghost btn-circle"
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape="circle"
 					aria-label="Close question details"
-					onclick={() => curationState.clearMobileSelection()}
+					onclick={() => curationState.clearMobileSelection()}><X size={18} /></Button
 				>
-					<X size={18} />
-				</button>
 			</div>
 			<QuestionDetailView
 				question={selectedQuestion}
@@ -716,7 +746,7 @@
 		</div>
 		<button
 			type="button"
-			class="modal-backdrop bg-black/50"
+			class="absolute inset-0 bg-black/40 supports-backdrop-filter:backdrop-blur-[2px]"
 			aria-label="Close question details"
 			onclick={() => curationState.clearMobileSelection()}
 		></button>
@@ -762,28 +792,29 @@
 	selectedQuestionIds={curationState.moveQuestionIds}
 />
 
-<dialog class="modal" class:modal-open={curationState.showUnsavedChangesModal}>
-	<div class="modal-box">
-		<h3 class="font-bold text-lg mb-4">Unsaved Changes</h3>
-		<p class="py-4">You have unsaved changes. Do you want to discard them and continue?</p>
-		<div class="modal-action">
-			<button
-				class="btn btn-ghost rounded-full"
-				onclick={() => curationState.cancelDiscardChanges()}>Cancel</button
+<Dialog.Root
+	open={curationState.showUnsavedChangesModal}
+	onOpenChange={(o) => {
+		if (!o) curationState.cancelDiscardChanges();
+	}}
+>
+	<Dialog.Content showCloseButton={false}>
+		<Dialog.Header>
+			<Dialog.Title>Unsaved Changes</Dialog.Title>
+			<Dialog.Description
+				>You have unsaved changes. Do you want to discard them and continue?</Dialog.Description
 			>
-			<button
-				class="btn btn-error rounded-full"
-				onclick={() => curationState.confirmDiscardChanges()}>Discard Changes</button
+		</Dialog.Header>
+		<Dialog.Footer>
+			<Button variant="ghost" tone="neutral" onclick={() => curationState.cancelDiscardChanges()}
+				>Cancel</Button
 			>
-		</div>
-	</div>
-	<button
-		type="button"
-		class="modal-backdrop bg-black/50"
-		aria-label="Close unsaved changes dialog"
-		onclick={() => curationState.cancelDiscardChanges()}
-	></button>
-</dialog>
+			<Button tone="error" onclick={() => curationState.confirmDiscardChanges()}
+				>Discard Changes</Button
+			>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
 
 <AttachmentViewerModal
 	isOpen={curationState.isAttachmentModalOpen}

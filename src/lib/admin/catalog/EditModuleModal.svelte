@@ -1,7 +1,6 @@
 <script lang="ts">
 	import ModuleEmojiSuggestion from './ModuleEmojiSuggestion.svelte';
 	import {
-		X,
 		BookOpenText,
 		AlignLeft,
 		Hash,
@@ -14,6 +13,14 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Button } from '$lib/components/ui/button';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { Spinner } from '$lib/components/ui/spinner';
+	import { Textarea } from '$lib/components/ui/textarea';
 
 	type Props = {
 		isEditModalOpen: boolean;
@@ -34,10 +41,10 @@
 	let validationErrors: Record<string, string> = $state({});
 	let submitError: string = $state('');
 	const statusOptions = [
-		{ value: 'published', label: 'Published', icon: CheckCircle, colorClass: 'btn-success' },
-		{ value: 'draft', label: 'Draft', icon: FileText, colorClass: 'btn-info' },
-		{ value: 'archived', label: 'Archived', icon: Archive, colorClass: 'btn-error' }
-	];
+		{ value: 'published', label: 'Published', icon: CheckCircle, tone: 'success' },
+		{ value: 'draft', label: 'Draft', icon: FileText, tone: 'info' },
+		{ value: 'archived', label: 'Archived', icon: Archive, tone: 'error' }
+	] as const;
 	let selectedTagIds: Id<'tags'>[] = $state([]);
 
 	// useQuery at top level with function args
@@ -111,6 +118,12 @@
 		moduleTitle.trim() && moduleDescription.trim() && Object.keys(validationErrors).length === 0
 	);
 
+	function toggleTag(tagId: Id<'tags'>, checked: boolean) {
+		selectedTagIds = checked
+			? [...selectedTagIds, tagId]
+			: selectedTagIds.filter((id) => id !== tagId);
+	}
+
 	// Count only live tags (tags that exist in the current tag list and aren't deleted)
 	const liveSelectedTagCount = $derived.by(() => {
 		if (!tags.data) return 0;
@@ -156,156 +169,144 @@
 	}
 </script>
 
-<dialog class="modal p-6" class:modal-open={isEditModalOpen}>
-	<div class="modal-box w-full max-w-2xl rounded-2xl border border-base-300 shadow-2xl">
-		<form method="dialog">
-			<button
-				class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4"
-				onclick={closeEditModal}
-				aria-label="Close"
-			>
-				<X size={18} />
-			</button>
-		</form>
-
-		<div class="mb-6 flex items-center gap-2">
-			<h3 class="text-2xl font-extrabold tracking-tight">Edit Module</h3>
-		</div>
+<Dialog.Root
+	open={isEditModalOpen}
+	onOpenChange={(open) => {
+		if (!open) closeEditModal();
+	}}
+>
+	<Dialog.Content class="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+		<Dialog.Header>
+			<Dialog.Title class="text-2xl font-extrabold tracking-tight">Edit Module</Dialog.Title>
+		</Dialog.Header>
 
 		{#if submitError}
-			<div class="alert alert-error mb-6">
-				<span>❌ {submitError}</span>
-			</div>
+			<Alert.Root tone="error">
+				<Alert.Title>❌ {submitError}</Alert.Title>
+			</Alert.Root>
 		{/if}
 
 		{#if !editingModule}
-			<div class="alert alert-error mb-6">
-				<span>No module selected for editing.</span>
-			</div>
+			<Alert.Root tone="error">
+				<Alert.Title>No module selected for editing.</Alert.Title>
+			</Alert.Root>
 		{:else}
 			<div class="flex flex-col gap-6">
 				<div class="md:hidden">
-					<label
-						class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80"
-						for="module-description"
-					>
+					<Label class="m-0 p-0 text-base font-medium text-foreground/80" for="module-description">
 						<AlignLeft size={18} class="text-primary/80" />
 						<span>Description</span>
-					</label>
-					<textarea
+					</Label>
+					<Textarea
 						id="module-description"
-						class="textarea textarea-bordered rounded-2xl w-full min-h-48"
+						class="min-h-48"
 						bind:value={moduleDescription}
 						placeholder="Enter module description..."
-					></textarea>
+					/>
 				</div>
 
-				<div class="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-[auto_1fr]">
-					<label
-						class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
+				<div class="grid grid-cols-1 items-center gap-x-5 gap-y-5 md:grid-cols-[auto_1fr]">
+					<Label
+						class="m-0 hidden p-0 text-base font-medium text-foreground/80 md:flex"
 						for="module-title"
 					>
 						<BookOpenText size={18} class="text-primary/80" />
 						<span>Module Title</span>
-					</label>
+					</Label>
 					<div class="md:contents">
-						<label
+						<Label
 							for="module-title"
-							class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+							class="m-0 p-0 text-base font-medium text-foreground/80 md:hidden"
 						>
 							<BookOpenText size={18} class="text-primary/80" />
 							<span>Module Title</span>
-						</label>
-						<div class="form-control w-full">
-							<input
+						</Label>
+						<div class="w-full">
+							<Input
 								id="module-title"
 								type="text"
 								placeholder="e.g., Introduction to Optics"
-								class="input input-bordered rounded-full w-full"
-								class:input-error={validationErrors.moduleTitle}
+								aria-invalid={validationErrors.moduleTitle ? true : undefined}
 								bind:value={moduleTitle}
 								oninput={() => validateOnInput('moduleTitle', moduleTitle)}
-								maxlength="100"
+								maxlength={100}
 							/>
-							<div class="label">
-								<span class="label-text-alt text-xs text-base-content/60">
-									2-100 characters • Must be unique
-								</span>
-								<span class="label-text-alt text-xs text-base-content/40">
+							<div class="flex items-center justify-between gap-2 text-xs">
+								<span class="text-foreground/60"> 2-100 characters • Must be unique </span>
+								<span class="text-foreground/40">
 									{moduleTitle.length}/100
 								</span>
 							</div>
 							{#if validationErrors.moduleTitle}
-								<div class="label">
-									<span class="label-text-alt text-error text-xs">
-										{validationErrors.moduleTitle}
-									</span>
-								</div>
+								<span class="text-xs text-error-ink">
+									{validationErrors.moduleTitle}
+								</span>
 							{/if}
 						</div>
 					</div>
 
 					<span
-						class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
+						class="m-0 hidden items-center gap-2 p-0 text-base font-medium text-foreground/80 md:flex"
 					>
 						<Hash size={18} class="text-primary/80" />
 						<span>Status</span>
 					</span>
 					<div class="md:contents">
 						<span
-							class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+							class="m-0 flex items-center gap-2 p-0 text-base font-medium text-foreground/80 md:hidden"
 						>
 							<Hash size={18} class="text-primary/80" />
 							<span>Status</span>
 						</span>
 						<div
-							class="flex w-fit flex-wrap justify-self-start gap-1 rounded-full border border-base-300 bg-base-100 p-1 shadow-xs"
+							class="flex w-fit flex-wrap justify-self-start gap-1 rounded-full border border-border bg-background p-1 shadow-xs"
 							role="group"
 							aria-label="Module status"
 						>
 							{#each statusOptions as option (option.value)}
-								<button
-									type="button"
+								<Button
+									variant={moduleStatus === option.value ? 'solid' : 'ghost'}
+									tone={moduleStatus === option.value ? option.tone : 'neutral'}
+									size="sm"
+									class="px-3 font-semibold {moduleStatus === option.value
+										? ''
+										: 'text-foreground'}"
 									aria-pressed={moduleStatus === option.value}
-									class="btn btn-sm rounded-full border-0 px-3 font-semibold {moduleStatus ===
-									option.value
-										? option.colorClass
-										: 'btn-ghost text-base-content'}"
 									onclick={() => (moduleStatus = option.value)}
 									title={option.label}
 								>
 									<option.icon size={16} />
 									<span>{option.label}</span>
-								</button>
+								</Button>
 							{/each}
 						</div>
 					</div>
 
-					<label
-						class="label m-0 hidden items-center gap-2 self-start p-0 text-base font-medium text-base-content/80 md:flex"
+					<Label
+						class="m-0 hidden self-start p-0 text-base font-medium text-foreground/80 md:flex"
 						for="module-tags"
 					>
 						<Hash size={18} class="text-primary/80" />
 						<span>Tags</span>
-					</label>
+					</Label>
 					<div class="md:contents">
-						<label
+						<Label
 							for="module-tags"
-							class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+							class="m-0 p-0 text-base font-medium text-foreground/80 md:hidden"
 						>
 							<Hash size={18} class="text-primary/80" />
 							<span>Tags</span>
-						</label>
-						<div class="form-control w-full" id="module-tags">
+						</Label>
+						<div class="w-full" id="module-tags">
 							{#if tags.isLoading || moduleTagsQuery.isLoading}
-								<div class="flex items-center gap-2 text-xs text-base-content/60">
-									<span class="loading loading-spinner loading-xs"></span>
+								<div class="flex items-center gap-2 text-xs text-foreground/60">
+									<Spinner class="size-3" />
 									<span>Loading tags...</span>
 								</div>
 							{:else if tags.error || moduleTagsQuery.error}
-								<div class="text-xs text-error">Failed to load tags.</div>
+								<div class="text-xs text-error-ink">Failed to load tags.</div>
 							{:else if !tags.data || tags.data.length === 0}
-								<div class="text-xs text-base-content/60">
+								<div class="text-xs text-foreground/60">
 									No tags yet. Add tags from the class page.
 								</div>
 							{:else}
@@ -313,17 +314,16 @@
 									<div class="flex flex-wrap gap-2">
 										{#each tags.data as tag (tag._id)}
 											<label
-												class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-base-200/50 {selectedTagIds.includes(
+												class="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm cursor-pointer transition-all hover:border-primary/50 hover:bg-muted/50 {selectedTagIds.includes(
 													tag._id
 												)
 													? 'border-primary'
-													: 'border-base-300'}"
+													: 'border-border'}"
 											>
-												<input
-													type="checkbox"
-													class="checkbox checkbox-xs checkbox-primary"
-													value={tag._id}
-													bind:group={selectedTagIds}
+												<Checkbox
+													class="size-3.5"
+													checked={selectedTagIds.includes(tag._id)}
+													onCheckedChange={(checked) => toggleTag(tag._id, checked)}
 													disabled={liveSelectedTagCount >= 10 && !selectedTagIds.includes(tag._id)}
 												/>
 												<span
@@ -334,13 +334,13 @@
 											</label>
 										{/each}
 									</div>
-									<div class="text-xs text-base-content/60">
+									<div class="text-xs text-foreground/60">
 										{liveSelectedTagCount}
 										{liveSelectedTagCount === 1 ? 'tag' : 'tags'} selected
 										{#if liveSelectedTagCount >= 10}
-											<span class="text-warning ml-1">(max 10)</span>
+											<span class="ml-1 text-warning-ink">(max 10)</span>
 										{:else}
-											<span class="text-base-content/40">(max 10)</span>
+											<span class="text-foreground/40">(max 10)</span>
 										{/if}
 									</div>
 								</div>
@@ -348,44 +348,44 @@
 						</div>
 					</div>
 
-					<label
-						class="label m-0 hidden items-center gap-2 self-start p-0 text-base font-medium text-base-content/80 md:flex"
+					<Label
+						class="m-0 hidden self-start p-0 text-base font-medium text-foreground/80 md:flex"
 						for="module-description"
 					>
 						<AlignLeft size={18} class="text-primary/80" />
 						<span>Description</span>
-					</label>
-					<textarea
+					</Label>
+					<Textarea
 						id="module-description"
-						class="textarea textarea-bordered rounded-2xl hidden w-full min-h-48 md:block"
+						class="hidden min-h-48 md:block"
 						bind:value={moduleDescription}
 						placeholder="Enter module description..."
-					></textarea>
+					/>
 
-					<label
-						class="label m-0 hidden items-center gap-2 p-0 text-base font-medium text-base-content/80 md:flex"
+					<Label
+						class="m-0 hidden p-0 text-base font-medium text-foreground/80 md:flex"
 						for="module-emoji"
 					>
 						<Laugh size={18} class="text-primary/80" />
 						<span>Emoji</span>
-					</label>
+					</Label>
 					<div class="md:contents">
-						<label
+						<Label
 							for="module-emoji"
-							class="label m-0 flex items-center gap-2 p-0 text-base font-medium text-base-content/80 md:hidden"
+							class="m-0 p-0 text-base font-medium text-foreground/80 md:hidden"
 						>
 							<Laugh size={18} class="text-primary/80" />
 							<span>Emoji</span>
-						</label>
-						<div class="form-control w-full">
-							<input
+						</Label>
+						<div class="w-full">
+							<Input
 								id="module-emoji"
 								type="text"
 								placeholder="e.g., 📘"
-								class="input input-bordered rounded-full w-28"
+								class="w-28"
 								bind:value={moduleEmoji}
 								oninput={() => validateOnInput('moduleEmoji', moduleEmoji)}
-								maxlength="8"
+								maxlength={8}
 							/>
 							<ModuleEmojiSuggestion
 								title={moduleTitle}
@@ -399,39 +399,31 @@
 								}}
 							/>
 							{#if validationErrors.moduleEmoji}
-								<div class="label">
-									<span class="label-text-alt text-error text-xs"
-										>{validationErrors.moduleEmoji}</span
-									>
-								</div>
+								<span class="text-xs text-error-ink">{validationErrors.moduleEmoji}</span>
 							{/if}
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<div class="modal-action mt-8">
-				<form method="dialog" class="flex gap-3">
-					<button
-						class="btn btn-ghost rounded-full"
-						onclick={closeEditModal}
-						disabled={isSubmitting}>Cancel</button
-					>
-					<button
-						class="btn btn-primary gap-2 rounded-full"
-						onclick={handleSubmit}
-						disabled={isSubmitting || !isFormValid}
-						title={!isFormValid ? 'Please fill all fields correctly before saving changes' : ''}
-					>
-						{#if isSubmitting}
-							<span class="loading loading-spinner loading-sm"></span>
-							<span>Updating...</span>
-						{:else}
-							<span>Update Module</span>
-						{/if}
-					</button>
-				</form>
-			</div>
+			<Dialog.Footer>
+				<Button variant="ghost" tone="neutral" onclick={closeEditModal} disabled={isSubmitting}
+					>Cancel</Button
+				>
+				<Button
+					class="gap-2"
+					onclick={handleSubmit}
+					loading={isSubmitting}
+					disabled={isSubmitting || !isFormValid}
+					title={!isFormValid ? 'Please fill all fields correctly before saving changes' : ''}
+				>
+					{#if isSubmitting}
+						<span>Updating...</span>
+					{:else}
+						<span>Update Module</span>
+					{/if}
+				</Button>
+			</Dialog.Footer>
 		{/if}
-	</div>
-</dialog>
+	</Dialog.Content>
+</Dialog.Root>

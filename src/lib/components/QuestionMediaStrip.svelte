@@ -2,6 +2,7 @@
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
 	import ImageViewer from './ImageViewer.svelte';
+	import { Badge } from '$lib/components/ui/badge';
 
 	// Phones and tablets have no attachments sidebar, so images sit right under the stem.
 	let {
@@ -26,7 +27,7 @@
 			<li class="shrink-0">
 				<button
 					type="button"
-					class="relative block overflow-hidden rounded-xl border border-base-300 bg-base-200 transition-transform active:scale-[0.98]"
+					class="relative block overflow-hidden rounded-xl border border-border bg-muted transition-transform active:scale-[0.98]"
 					aria-label="View image: {item.altText}"
 					onclick={() => {
 						viewerIndex = index;
@@ -40,7 +41,7 @@
 						class="w-auto max-w-[70vw] object-cover {media.length === 1 ? 'h-44' : 'h-28'}"
 					/>
 					{#if item.showOnSolution}
-						<span class="badge badge-success badge-sm absolute left-2 top-2">Answer</span>
+						<Badge variant="solid" tone="success" class="absolute left-2 top-2">Answer</Badge>
 					{/if}
 				</button>
 			</li>

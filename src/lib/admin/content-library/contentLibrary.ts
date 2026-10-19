@@ -64,7 +64,7 @@ export function fileKind(doc: Doc<'contentLib'>): FileKind {
 			icon: FileText,
 			accent: 'text-error',
 			tint: 'bg-error/10',
-			hue: 'var(--color-error)'
+			hue: 'var(--error)'
 		};
 	}
 	if (mime.includes('presentation') || name.endsWith('.ppt') || name.endsWith('.pptx')) {
@@ -73,7 +73,7 @@ export function fileKind(doc: Doc<'contentLib'>): FileKind {
 			icon: Presentation,
 			accent: 'text-warning',
 			tint: 'bg-warning/10',
-			hue: 'var(--color-warning)'
+			hue: 'var(--warning)'
 		};
 	}
 	if (mime.startsWith('image/')) {
@@ -82,7 +82,7 @@ export function fileKind(doc: Doc<'contentLib'>): FileKind {
 			icon: ImageIcon,
 			accent: 'text-secondary',
 			tint: 'bg-secondary/10',
-			hue: 'var(--color-secondary)'
+			hue: 'var(--secondary)'
 		};
 	}
 	return {
@@ -90,6 +90,24 @@ export function fileKind(doc: Doc<'contentLib'>): FileKind {
 		icon: FileText,
 		accent: 'text-primary',
 		tint: 'bg-primary/10',
-		hue: 'var(--color-primary)'
+		hue: 'var(--primary)'
 	};
+}
+
+// Each document gets its own spine colour from the brand roles (red stays reserved for "incorrect"),
+// so the library reads as a shelf of distinct books rather than a wall of identical PDFs.
+const DOC_HUES = [
+	{ hue: 'var(--primary)', accent: 'text-primary-ink', tint: 'bg-primary/10' },
+	{ hue: 'var(--info)', accent: 'text-info-ink', tint: 'bg-info/12' },
+	{ hue: 'var(--accent)', accent: 'text-accent-ink', tint: 'bg-accent/12' },
+	{ hue: 'var(--secondary)', accent: 'text-secondary-ink', tint: 'bg-secondary/10' },
+	{ hue: 'var(--success)', accent: 'text-success-ink', tint: 'bg-success/12' },
+	{ hue: 'var(--warning)', accent: 'text-warning-ink', tint: 'bg-warning/14' },
+	{ hue: 'var(--ember)', accent: 'text-ember-ink', tint: 'bg-ember/12' }
+] as const;
+
+export function docHue(doc: Doc<'contentLib'>) {
+	let hash = 0;
+	for (const char of doc._id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
+	return DOC_HUES[Math.abs(hash) % DOC_HUES.length];
 }

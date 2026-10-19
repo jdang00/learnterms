@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Button } from '$lib/components/ui/button';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import type { PageData } from './$types';
 	import { api } from '../../../../../convex/_generated/api.js';
@@ -472,8 +473,8 @@
 			<h1 class="font-display text-2xl font-bold mb-2">
 				{data.seo?.title?.replace(' — LearnTerms', '') ?? 'Study Module'}
 			</h1>
-			<p class="text-base-content/70 mb-6">Sign in to start studying this module on LearnTerms.</p>
-			<a href={resolve('/sign-in')} class="btn btn-primary">Sign in to study</a>
+			<p class="text-foreground/70 mb-6">Sign in to start studying this module on LearnTerms.</p>
+			<Button href={resolve('/sign-in')}>Sign in to study</Button>
 		</div>
 	</div>
 {:else}

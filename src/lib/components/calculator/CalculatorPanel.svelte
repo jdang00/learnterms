@@ -15,6 +15,8 @@
 	import { FORMULAS, type Formula } from '$lib/calculator/formulas';
 	import { fillFormula, numberToLatex } from '$lib/calculator/format';
 	import { base } from '$app/paths';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 
 	type Entry = {
 		id: number;
@@ -376,7 +378,7 @@
 		['.', '.']
 	];
 	const operators = ['÷', '×', '−', '+'];
-	const keyClass = 'btn h-12 rounded-2xl border-0 shadow-none';
+	const keyClass = 'h-12 rounded-2xl border-0 shadow-none';
 </script>
 
 {#snippet copyable(
@@ -391,19 +393,19 @@
 		<button
 			type="button"
 			class="relative cursor-pointer rounded-xl tabular-nums transition-colors duration-150 {size} {done
-				? 'bg-primary/10 text-primary'
-				: 'hover:bg-primary/10 hover:text-primary'}"
+				? 'bg-primary/10 text-primary-ink'
+				: 'hover:bg-primary/10 hover:text-primary-ink'}"
 			aria-label="Copy {format(value)}"
 			onclick={() => copy(value, key)}
 		>
 			{format(value)}
 			{#if done}<span
 					transition:fade={{ duration: 150 }}
-					class="pointer-events-none absolute {label} rounded-md bg-base-100 px-1.5 text-[0.7rem] font-medium text-primary"
+					class="pointer-events-none absolute {label} rounded-md bg-background px-1.5 text-[0.7rem] font-medium text-primary-ink"
 					>Copied</span
 				>{/if}
 		</button>
-		{#if suffix}<span class="text-[0.6em] font-normal text-base-content/50">{suffix}</span>{/if}
+		{#if suffix}<span class="text-[0.6em] font-normal text-foreground/50">{suffix}</span>{/if}
 	</span>
 {/snippet}
 
@@ -414,36 +416,42 @@
 	onmousedown={keepFocus}
 >
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="cursor-text rounded-2xl bg-base-200/60 px-5 pt-3 pb-4" onmousedown={focusDisplay}>
+	<div class="cursor-text rounded-2xl bg-muted/60 px-5 pt-3 pb-4" onmousedown={focusDisplay}>
 		<div class="flex items-center justify-between gap-2">
 			{#if formula}
 				<span
-					class="flex min-w-0 items-center gap-1 rounded-full bg-base-100 py-0.5 ps-3 pe-1 text-xs font-medium"
+					class="flex min-w-0 items-center gap-1 rounded-full bg-background py-0.5 ps-3 pe-1 text-xs font-medium"
 				>
 					<span class="truncate">{formula.name}</span>
-					<button
-						type="button"
-						class="btn btn-ghost btn-xs btn-circle"
+					<Button
+						variant="ghost"
+						tone="neutral"
+						size="xs"
+						shape="circle"
 						aria-label="Clear formula"
-						onclick={() => setExpression('')}><X size={12} /></button
+						onclick={() => setExpression('')}><X size={12} /></Button
 					>
 				</span>
 			{:else}
-				<button
-					type="button"
-					class="btn btn-ghost btn-xs rounded-full font-medium text-base-content/60"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="xs"
+					class="font-medium text-foreground/60"
 					aria-pressed={view === 'formulas'}
 					onclick={() => {
 						view = view === 'formulas' ? 'keypad' : 'formulas';
 						if (view === 'formulas') track({ action: 'formulas_opened' });
-					}}>Formulas</button
+					}}>Formulas</Button
 				>
 			{/if}
-			<button
-				type="button"
-				class="btn btn-ghost btn-xs rounded-full font-semibold tracking-wide text-base-content/50"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="xs"
+				class="font-semibold tracking-wide text-foreground/50"
 				aria-label="Angle mode: {angle === 'deg' ? 'degrees' : 'radians'}"
-				onclick={toggleAngle}>{angle.toUpperCase()}</button
+				onclick={toggleAngle}>{angle.toUpperCase()}</Button
 			>
 		</div>
 		<div bind:this={host} class="math-input flex min-h-20 items-end overflow-x-auto py-2"></div>
@@ -451,7 +459,7 @@
 			<div class="min-h-11"></div>
 		{:else}
 			<div class="flex min-h-11 items-center justify-end gap-1 text-3xl break-all font-semibold">
-				<span class="text-base-content/35">=</span>
+				<span class="text-foreground/35">=</span>
 				{@render copyable(
 					result,
 					'current',
@@ -463,16 +471,16 @@
 		{/if}
 		<span class="sr-only" aria-live="polite">{result === null ? '' : format(result)}</span>
 	</div>
-	{#if loadError}<p role="alert" class="text-sm text-error">{loadError}</p>{/if}
+	{#if loadError}<p role="alert" class="text-sm text-error-ink">{loadError}</p>{/if}
 
 	{#if variables.length}
 		<div class="grid grid-cols-2 gap-3">
 			{#each variables as symbol (symbol)}
 				{@const meta = formula?.variables.find((v) => v.symbol === symbol)}
-				<label class="grid gap-1 text-xs font-medium text-base-content/60">
+				<label class="grid gap-1 text-xs font-medium text-foreground/60">
 					<span>{meta?.label ?? symbol}{meta?.unit ? ` (${meta.unit})` : ''}</span>
-					<input
-						class="input w-full rounded-xl text-base tabular-nums"
+					<Input
+						class="text-base tabular-nums"
 						type="number"
 						step="any"
 						min={meta?.min}
@@ -498,22 +506,24 @@
 
 	{#if view === 'formulas'}
 		<div class="flex min-h-0 flex-1 flex-col">
-			<button
-				type="button"
-				class="btn btn-ghost btn-xs mb-1 self-start rounded-full text-base-content/60"
-				onclick={() => (view = 'keypad')}><ChevronLeft size={14} />Keypad</button
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="xs"
+				class="mb-1 self-start text-foreground/60"
+				onclick={() => (view = 'keypad')}><ChevronLeft size={14} />Keypad</Button
 			>
 			<ul class="-mx-1 min-h-0 flex-1 overflow-y-auto">
 				{#each FORMULAS as item (item.id)}
 					<li>
 						<button
 							type="button"
-							class="w-full rounded-xl px-3 py-2.5 text-left hover:bg-base-200/60"
+							class="w-full rounded-xl px-3 py-2.5 text-left hover:bg-muted/60"
 							onclick={() => setExpression(item.latex, item)}
 						>
 							<span class="block text-sm font-medium">{item.name}</span>
 							<!-- eslint-disable svelte/no-at-html-tags -->
-							<span class="block overflow-x-auto text-sm text-base-content/60"
+							<span class="block overflow-x-auto text-sm text-foreground/60"
 								>{#if renderMath}{@html renderMath(item.latex)}{/if}</span
 							>
 							<!-- eslint-enable svelte/no-at-html-tags -->
@@ -525,57 +535,66 @@
 	{:else}
 		<fieldset disabled={!field} class="grid gap-3">
 			<div class="grid grid-cols-5 gap-1">
-				{#each functions as [label, value] (label)}<button
-						type="button"
-						class="btn btn-ghost btn-sm rounded-full px-0 font-normal text-base-content/70"
-						onclick={() => insert(value)}>{label}</button
+				{#each functions as [label, value] (label)}<Button
+						variant="ghost"
+						tone="neutral"
+						size="sm"
+						class="px-0 font-normal text-foreground/70"
+						onclick={() => insert(value)}>{label}</Button
 					>{/each}
-				<button
-					type="button"
-					class="btn btn-ghost btn-sm rounded-full px-0 font-normal text-base-content/70"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					class="px-0 font-normal text-foreground/70"
 					disabled={!history.length}
-					onclick={() => insert(`(${numberToLatex(history[0].value)})`)}>Ans</button
+					onclick={() => insert(`(${numberToLatex(history[0].value)})`)}>Ans</Button
 				>
 			</div>
 			<div class="grid grid-cols-4 gap-1.5">
-				<button
-					type="button"
-					class="{keyClass} bg-base-200/60 text-base font-medium text-error hover:bg-base-300"
-					onclick={() => setExpression('')}>AC</button
+				<Button
+					variant="soft"
+					tone="neutral"
+					class="{keyClass} bg-muted/60 text-base font-medium text-error-ink hover:bg-muted-strong"
+					onclick={() => setExpression('')}>AC</Button
 				>
-				{#each keys as [label, value] (label)}<button
-						type="button"
+				{#each keys as [label, value] (label)}<Button
+						variant="soft"
+						tone={operators.includes(label) ? 'primary' : 'neutral'}
 						class="{keyClass} text-lg font-medium {operators.includes(label)
-							? 'btn-soft btn-primary'
-							: 'bg-base-200/60 hover:bg-base-300'}"
-						onclick={() => insert(value)}>{label}</button
+							? ''
+							: 'bg-muted/60 hover:bg-muted-strong'}"
+						onclick={() => insert(value)}>{label}</Button
 					>{/each}
-				<button
-					type="button"
-					class="{keyClass} bg-base-200/60 hover:bg-base-300"
+				<Button
+					variant="soft"
+					tone="neutral"
+					class="{keyClass} bg-muted/60 hover:bg-muted-strong"
 					aria-label="Backspace"
-					onclick={backspace}><Delete size={20} /></button
+					onclick={backspace}><Delete size={20} /></Button
 				>
-				<button
-					type="button"
-					class="{keyClass} btn-primary text-xl"
+				<Button
+					tone="primary"
+					class="{keyClass} text-xl"
 					aria-label="Calculate"
-					onclick={() => commit('button')}>=</button
+					onclick={() => commit('button')}>=</Button
 				>
 			</div>
 		</fieldset>
 
 		{#if history.length}
-			<div class="flex min-h-0 flex-1 flex-col border-t border-base-300 pt-3">
+			<div class="flex min-h-0 flex-1 flex-col border-t border-border pt-3">
 				<div class="flex items-center justify-between px-1 pb-1">
-					<h3 class="text-xs font-semibold text-base-content/50">History</h3>
-					<button
-						type="button"
-						class="btn btn-ghost btn-xs rounded-full text-base-content/50"
+					<h3 class="text-xs font-semibold text-foreground/50">History</h3>
+					<Button
+						variant="ghost"
+						tone="neutral"
+						size="xs"
+						class="text-foreground/50"
 						onclick={() => {
 							history = [];
 							track({ action: 'history_cleared' });
-						}}>Clear</button
+						}}>Clear</Button
 					>
 				</div>
 				<ul class="-mx-1 min-h-0 flex-1 overflow-y-auto">
@@ -584,7 +603,7 @@
 							<!-- eslint-disable svelte/no-at-html-tags -->
 							<button
 								type="button"
-								class="min-w-0 flex-1 truncate py-2 ps-2 text-left text-sm text-base-content/55 transition-colors hover:text-base-content"
+								class="min-w-0 flex-1 truncate py-2 ps-2 text-left text-sm text-foreground/55 transition-colors hover:text-foreground"
 								aria-label="Reuse expression"
 								onclick={() =>
 									setExpression(
@@ -623,8 +642,8 @@
 		color: inherit;
 		font-size: 1.75rem;
 		outline: none;
-		--caret-color: var(--color-primary);
-		--selection-background-color: color-mix(in oklab, var(--color-primary) 20%, transparent);
+		--caret-color: var(--primary);
+		--selection-background-color: color-mix(in oklab, var(--primary) 20%, transparent);
 		--placeholder-color: color-mix(in oklab, currentColor 25%, transparent);
 	}
 	.math-input :global(math-field::part(virtual-keyboard-toggle)),

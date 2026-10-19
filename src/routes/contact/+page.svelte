@@ -1,5 +1,6 @@
 <script lang="ts">
 	import PublicPage from '$lib/components/landing/PublicPage.svelte';
+	import * as Avatar from '$lib/components/ui/avatar';
 </script>
 
 <PublicPage
@@ -17,23 +18,18 @@
 		>
 			<div>
 				<div class="flex items-center gap-4">
-					<div class="avatar">
-						<div
-							class="w-20 sm:w-24 rounded-full ring-2 ring-primary
-				  ring-offset-2 ring-offset-base-100"
-						>
-							<img
-								src="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrNYQ0L9zP0UTz89wOGJKi17DasVtufbylgkQF"
-								alt="Instagram profile avatar"
-							/>
-						</div>
-					</div>
+					<Avatar.Root
+						class="size-20 ring-2 ring-primary ring-offset-2 ring-offset-background sm:size-24"
+					>
+						<Avatar.Image
+							src="https://axcaluti7p.ufs.sh/f/DYlXFqnaImOrNYQ0L9zP0UTz89wOGJKi17DasVtufbylgkQF"
+							alt="Instagram profile avatar"
+						/>
+					</Avatar.Root>
 
 					<div class="min-w-0">
-						<h2 class="card-title truncate">@justin_a_dang</h2>
-						<p class="text-base-content/70">
-							Send me a message and let me know how I can help you!
-						</p>
+						<h2 class="truncate text-xl font-semibold">@justin_a_dang</h2>
+						<p class="text-foreground/70">Send me a message and let me know how I can help you!</p>
 					</div>
 
 					<!-- Instagram icon (decorative) -->

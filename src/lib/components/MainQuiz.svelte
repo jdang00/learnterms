@@ -34,6 +34,9 @@
 	import { cubicInOut } from 'svelte/easing';
 	import { useClerkContext } from 'svelte-clerk/client';
 	import { resolve } from '$app/paths';
+	import { Button } from '$lib/components/ui/button';
+	import * as Alert from '$lib/components/ui/alert';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 
 	let {
 		qs,
@@ -143,7 +146,7 @@
 	<ErrorDisplay error={questions.error} showReload={true} class="mb-4" />
 {:else if currentlySelected}
 	<div
-		class="flex flex-col lg:flex-row bg-base-100 h-full overflow-hidden lg:p-4 lg:ps-2 lg:gap-8 transition-all duration-500 ease-in-out"
+		class="flex flex-col lg:flex-row bg-background h-full overflow-hidden lg:p-4 lg:ps-2 lg:gap-8 transition-all duration-500 ease-in-out"
 		transition:slide={{ duration: 400, easing: cubicInOut, axis: 'y' }}
 	>
 		<span id="quiz-top" aria-hidden="true"></span>
@@ -155,19 +158,22 @@
 		>
 			<ResultBanner bind:qs />
 			{#if qs.noFlags}
-				<div
-					role="alert"
-					class="alert alert-warning fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 w-11/12 sm:w-max max-w-xs sm:max-w-sm md:max-w-md p-4 text-center rounded-full"
+				<Alert.Root
+					variant="outline"
+					tone="warning"
+					class="fixed top-4 sm:top-6 md:top-8 left-1/2 transform -translate-x-1/2 z-50 flex w-11/12 sm:w-max max-w-xs sm:max-w-sm md:max-w-md items-center justify-center gap-2 p-4 text-center rounded-full"
 				>
 					<Flag size="16" />
 					<span class="align-middle">No Questions Flagged.</span>
-					<button
-						class="btn btn-sm btn-ghost btn-warning"
+					<Button
+						variant="ghost"
+						tone="warning"
+						size="sm"
 						onclick={() => {
 							qs.noFlags = false;
-						}}>X</button
+						}}>X</Button
 					>
-				</div>
+				</Alert.Root>
 			{/if}
 
 			<div class="hidden lg:block">
@@ -202,8 +208,11 @@
 
 					<div class="lg:flex hidden items-center gap-2">
 						{#if canEdit && currentlySelected}
-							<a
-								class="btn btn-soft btn-secondary m-1 btn-circle"
+							<Button
+								variant="soft"
+								tone="secondary"
+								shape="circle"
+								class="m-1"
 								href={resolve(
 									`/admin/${data.classId}/module/${data.moduleId}?edit=${currentlySelected._id}`
 								)}
@@ -212,30 +221,27 @@
 								title="Edit"
 							>
 								<Pencil size="16" />
-							</a>
+							</Button>
 						{/if}
-						<div class="dropdown dropdown-end">
-							<div tabindex="0" role="button" class="btn btn-soft btn-accent m-1 btn-circle">
-								<ArrowDownNarrowWide />
-							</div>
-							<ul
-								tabindex="-1"
-								class="dropdown-content menu bg-base-100 rounded-2xl z-[1] w-52 p-2 shadow-xs"
-							>
-								<li>
-									<button onclick={() => handleFilterToggle('flagged')}>
-										<Flag size="16" />
-										{qs.showFlagged ? 'Show All' : 'Show Flagged'}
-									</button>
-								</li>
-								<li>
-									<button onclick={() => handleFilterToggle('incomplete')}>
-										<BookmarkCheck size="16" />
-										{qs.showIncomplete ? 'Show All' : 'Show Incomplete'}
-									</button>
-								</li>
-							</ul>
-						</div>
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger>
+								{#snippet child({ props })}
+									<Button {...props} variant="soft" tone="accent" shape="circle" class="m-1">
+										<ArrowDownNarrowWide />
+									</Button>
+								{/snippet}
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content align="end" class="w-52">
+								<DropdownMenu.Item onSelect={() => handleFilterToggle('flagged')}>
+									<Flag size="16" />
+									{qs.showFlagged ? 'Show All' : 'Show Flagged'}
+								</DropdownMenu.Item>
+								<DropdownMenu.Item onSelect={() => handleFilterToggle('incomplete')}>
+									<BookmarkCheck size="16" />
+									{qs.showIncomplete ? 'Show All' : 'Show Incomplete'}
+								</DropdownMenu.Item>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
 					</div>
 				</div>
 
@@ -266,15 +272,13 @@
 				{:else if currentlySelected.type === QUESTION_TYPES.MATCHING}
 					<Matching bind:qs {currentlySelected} />
 				{:else}
-					<div
-						class="text-base-content/70 font-medium text-base sm:text-lg leading-tight my-3 ms-2"
-					>
+					<div class="text-foreground/70 font-medium text-base sm:text-lg leading-tight my-3 ms-2">
 						Select {currentlySelected.correctAnswers.length}.
 					</div>
 					<AnswerOptions bind:qs {currentlySelected} />
 				{/if}
 
-				{#if qs.highlightPreferenceError}<p role="alert" class="text-sm text-error">
+				{#if qs.highlightPreferenceError}<p role="alert" class="text-sm text-error-ink">
 						{qs.highlightPreferenceError}
 					</p>{/if}
 				<QuizDock surface="desktop" source="button" celebrate={qs.checkResult === 'Correct!'} />

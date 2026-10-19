@@ -2,6 +2,9 @@
 	import { Check, ChevronRight, FileText } from 'lucide-svelte';
 	import { tick } from 'svelte';
 	import type { PDFDocumentProxy } from 'pdfjs-dist';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Spinner } from '$lib/components/ui/spinner';
 	import SourcePdfPage from '../source/SourcePdfPage.svelte';
 	let {
 		purpose = 'context',
@@ -52,7 +55,7 @@
 </script>
 
 <div class="flex items-center justify-between gap-2 px-5 py-3">
-	<span class="text-[11px] font-semibold tracking-wider text-base-content/45 uppercase"
+	<span class="text-[11px] font-semibold tracking-wider text-foreground/45 uppercase"
 		>{selectedOnly ? 'Selected pages' : 'All pages'}</span
 	>
 	<form
@@ -62,15 +65,15 @@
 			void jumpToPage();
 		}}
 	>
-		<input
-			class="input input-xs w-24 rounded-md"
+		<Input
+			class="h-7 w-24 px-2.5 text-xs"
 			type="number"
 			min="1"
 			aria-label="Go to page"
 			placeholder="Go to page"
 			bind:value={jump}
-		/><button class="btn btn-ghost btn-xs" aria-label="Jump to page"
-			><ChevronRight size={15} /></button
+		/><Button variant="ghost" tone="neutral" size="xs" aria-label="Jump to page"
+			><ChevronRight size={15} /></Button
 		>
 	</form>
 </div>
@@ -91,12 +94,11 @@
 						>
 							<FileText size={20} class="mb-2 opacity-30" /><span
 								>{pageText[page]?.replace(/^#+\s*/gm, '').slice(0, 160) || `Page ${page}`}</span
-							>{#if !pdfError}<span class="loading loading-spinner loading-xs mt-2 opacity-30"
-								></span>{/if}
+							>{#if !pdfError}<Spinner class="mt-2 size-3 opacity-30" />{/if}
 						</div>{/if}
 				</button>
 				<div class="flex items-center justify-between px-1 pt-2">
-					<span class="font-mono text-xs font-medium text-base-content/55">{page}</span><button
+					<span class="font-mono text-xs font-medium text-foreground/55">{page}</span><button
 						type="button"
 						class="selection-target"
 						aria-label={`${selected.has(page) ? 'Remove' : 'Add'} page ${page} ${selected.has(page) ? 'from' : 'to'} ${purpose === 'citation' ? 'citations' : 'context'}`}
@@ -111,7 +113,7 @@
 			</div>
 		{/each}
 	</div>
-	{#if !visiblePages.length}<p class="p-10 text-center text-sm text-base-content/50">
+	{#if !visiblePages.length}<p class="p-10 text-center text-sm text-foreground/50">
 			No pages selected yet.<br /><button
 				type="button"
 				class="mt-3 underline"
@@ -138,7 +140,7 @@
 		padding: 7px;
 		border: 2px solid transparent;
 		border-radius: 7px;
-		background: color-mix(in oklab, var(--color-base-200) 60%, transparent);
+		background: color-mix(in oklab, var(--muted) 60%, transparent);
 		cursor: pointer;
 		transition:
 			border-color 120ms,
@@ -147,12 +149,12 @@
 	}
 	.thumbnail-button:hover,
 	.active .thumbnail-button {
-		background: var(--color-base-200);
-		border-color: var(--color-base-300);
+		background: var(--muted);
+		border-color: var(--muted-strong);
 	}
 	.chosen .thumbnail-button {
-		border-color: var(--color-primary);
-		background: color-mix(in oklab, var(--color-primary) 5%, var(--color-base-100));
+		border-color: var(--primary);
+		background: color-mix(in oklab, var(--primary) 5%, var(--background));
 	}
 	.selection-target {
 		display: grid;
@@ -167,13 +169,13 @@
 		place-items: center;
 		width: 23px;
 		height: 23px;
-		border: 1.5px solid color-mix(in oklab, var(--color-base-content) 25%, transparent);
+		border: 1.5px solid color-mix(in oklab, var(--foreground) 25%, transparent);
 		border-radius: 50%;
 	}
 	.chosen .selection-circle {
-		background: var(--color-primary);
-		border-color: var(--color-primary);
-		color: var(--color-primary-content);
+		background: var(--primary);
+		border-color: var(--primary);
+		color: var(--primary-foreground);
 	}
 	.text-thumbnail {
 		overflow: hidden;
@@ -182,7 +184,7 @@
 		text-align: left;
 		font-size: 7px;
 		line-height: 1.5;
-		color: var(--color-base-content);
+		color: var(--foreground);
 	}
 
 	@media (max-width: 767px) {

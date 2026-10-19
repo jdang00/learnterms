@@ -5,8 +5,10 @@
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { Confetti } from 'svelte-confetti';
 	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
-	import { Award, X } from 'lucide-svelte';
+	import { Award } from 'lucide-svelte';
 	import { getBadgeIcon } from '$lib/components/badges/icons';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '$lib/components/ui/button';
 
 	const ctx = useClerkContext();
 	const user = $derived(ctx.user);
@@ -62,18 +64,21 @@
 			fallDistance="95vh"
 		/>
 	</div>
+{/if}
 
-	<dialog class="modal modal-open max-w-full p-4 z-[9999]">
-		<div class="modal-box max-w-md rounded-2xl border border-base-300">
-			<button
-				type="button"
-				class="btn btn-sm btn-circle btn-ghost absolute right-3 top-3"
+<Dialog.Root
+	open={activeAward !== null}
+	onOpenChange={(open) => {
+		if (!open) acknowledge();
+	}}
+>
+	<Dialog.Content showCloseButton={false} class="z-[9999] rounded-2xl">
+		{#if activeAward}
+			<Dialog.CornerClose
 				onclick={acknowledge}
 				disabled={isAcknowledging}
-				aria-label="Dismiss badge modal"
-			>
-				<X size={16} />
-			</button>
+				label="Dismiss badge modal"
+			/>
 
 			<div class="mx-auto mb-4 w-fit">
 				<BadgeShield
@@ -85,30 +90,22 @@
 				/>
 			</div>
 
-			<p class="text-xs uppercase tracking-[0.2em] text-base-content/60 text-center">
-				Badge earned
-			</p>
-			<h3 class="text-2xl font-bold text-center mt-1">{activeAward.badge.name}</h3>
-			<p class="text-sm text-base-content/70 text-center mt-2">{activeAward.badge.description}</p>
-			<div class="mt-4 text-center text-xs text-base-content/60">
+			<p class="text-xs uppercase tracking-[0.2em] text-foreground/60 text-center">Badge earned</p>
+			<Dialog.Title class="mt-1 text-center text-2xl leading-8 font-bold"
+				>{activeAward.badge.name}</Dialog.Title
+			>
+			<Dialog.Description class="mt-2 text-center text-sm text-foreground/70"
+				>{activeAward.badge.description}</Dialog.Description
+			>
+			<div class="mt-4 text-center text-xs text-foreground/60">
 				Issued by {activeAward.badge.issuerName}
 			</div>
 
-			<div class="modal-action justify-center mt-6">
-				<button
-					type="button"
-					class="btn btn-primary rounded-full min-w-40"
-					onclick={acknowledge}
-					disabled={isAcknowledging}
-				>
+			<Dialog.Footer class="mt-6 justify-center sm:justify-center">
+				<Button class="min-w-40" onclick={acknowledge} disabled={isAcknowledging}>
 					{isAcknowledging ? 'Saving...' : 'Awesome'}
-				</button>
-			</div>
-		</div>
-		<form method="dialog" class="modal-backdrop bg-black/60">
-			<button type="button" class="sr-only" aria-label="Dismiss badge modal" onclick={acknowledge}>
-				Close
-			</button>
-		</form>
-	</dialog>
-{/if}
+				</Button>
+			</Dialog.Footer>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>

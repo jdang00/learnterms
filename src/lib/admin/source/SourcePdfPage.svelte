@@ -2,6 +2,7 @@
 	import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 	import { restorePdfCanvas, rememberPdfCanvas } from './pdfCanvasCache';
 	import { withPdfRenderSlot } from './pdfRenderQueue';
+	import { Spinner } from '$lib/components/ui/spinner';
 	let {
 		document,
 		pageNumber,
@@ -81,9 +82,9 @@
 	<canvas bind:this={canvas} class:invisible={!ready} aria-label={`Original page ${pageNumber}`}
 	></canvas>
 	{#if !ready}<div class="placeholder">
-			{#if failed}<span>Preview unavailable</span>{:else}<span
-					class="loading loading-spinner loading-xs text-base-content/30"
-				></span>{/if}
+			{#if failed}<span>Preview unavailable</span>{:else}<Spinner
+					class="size-3 text-foreground/30"
+				/>{/if}
 		</div>{/if}
 </div>
 

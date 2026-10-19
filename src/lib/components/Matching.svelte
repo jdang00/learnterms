@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { Eye, X } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { SelectField } from '$lib/components/ui/select';
 	type Option = { id: string; text: string };
 	let { qs = $bindable(), currentlySelected, allowSolution = true, allowClear = true } = $props();
 
@@ -110,8 +112,7 @@
 		qs.scheduleSave?.();
 	}
 
-	function handleSelectionChange(promptId: string, event: Event) {
-		const answerId = (event.currentTarget as HTMLSelectElement).value;
+	function handleSelectionChange(promptId: string, answerId: string) {
 		if (answerId) {
 			setUserSelection(promptId, answerId);
 		} else {
@@ -248,7 +249,9 @@
 
 	function solutionSelectClass(promptId: string): string {
 		if (!qs.showSolution || !getUserSelectionForPrompt(promptId)) return '';
-		return isSelectionCorrectForPrompt(promptId) ? 'select-success' : 'select-error';
+		return isSelectionCorrectForPrompt(promptId)
+			? 'border-success bg-success/10'
+			: 'border-error bg-error/10';
 	}
 
 	function correctAnswerLabelForPrompt(promptId: string): string {
@@ -287,52 +290,53 @@
 			<div class="flex items-center gap-3 w-full">
 				<div class="flex-1">
 					<div
-						class="label rounded-full flex items-center border-2 border-base-300 bg-base-200 px-4 py-3"
+						class="flex items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-border bg-muted px-4 py-3 text-foreground/60"
 					>
 						<span class="font-semibold text-sm md:text-base tiptap-content"
 							>{getPromptLabel(p.text)}</span
 						>
 					</div>
 				</div>
-				<div class="text-base-content/60" aria-hidden="true">→</div>
+				<div class="text-foreground/60" aria-hidden="true">→</div>
 				<div class="flex-1 flex gap-2 items-center">
 					<div class="flex-1">
-						<select
-							class="select select-bordered w-full rounded-full {solutionSelectClass(p.id)}"
+						<SelectField
+							class="w-full {solutionSelectClass(p.id)}"
 							value={getUserSelectionForPrompt(p.id) ?? ''}
-							onchange={(event) => handleSelectionChange(p.id, event)}
+							onValueChange={(next) => handleSelectionChange(p.id, next)}
 							disabled={qs.showSolution}
 							aria-label={`Answer for ${getPromptLabel(p.text) || p.id}`}
-						>
-							<option value="">Select a choice</option>
-							{#each qs.showSolution ? shuffledAnswers : availableAnswersForPrompt(p.id) as a (a.id)}
-								<option
-									value={a.id}
-									data-correct={a.id === correctAnswerIdForPrompt(p.id) ? 'true' : undefined}
-								>
-									{answerOptionLabel(p.id, a)}
-								</option>
-							{/each}
-						</select>
+							options={[
+								{ value: '', label: 'Select a choice' },
+								...(qs.showSolution ? shuffledAnswers : availableAnswersForPrompt(p.id)).map(
+									(a) => ({
+										value: a.id,
+										label: answerOptionLabel(p.id, a)
+									})
+								)
+							]}
+						/>
 						{#if qs.showSolution && correctAnswerLabelForPrompt(p.id)}
 							<p
 								class="mt-1 px-3 text-xs {isSelectionCorrectForPrompt(p.id)
-									? 'text-success'
-									: 'text-error'}"
+									? 'text-success-ink'
+									: 'text-error-ink'}"
 							>
 								Correct: {correctAnswerLabelForPrompt(p.id)}
 							</p>
 						{/if}
 					</div>
 					{#if !qs.showSolution && getUserSelectionForPrompt(p.id)}
-						<button
-							type="button"
-							class="btn btn-ghost btn-sm btn-circle"
+						<Button
+							variant="ghost"
+							tone="neutral"
+							size="sm"
+							shape="circle"
 							onclick={() => clearSelection(p.id)}
 							aria-label={`Clear selection for ${getPromptLabel(p.text) || p.id}`}
 						>
 							<X size={16} />
-						</button>
+						</Button>
 					{/if}
 				</div>
 			</div>
@@ -341,26 +345,26 @@
 
 	<div class="mt-2 flex gap-2">
 		{#if allowSolution}
-			<button
-				type="button"
-				class="btn rounded-full"
+			<Button
+				variant="soft"
+				tone="neutral"
 				onclick={handleToggleSolution}
 				aria-pressed={qs.showSolution}
 				aria-label={qs.showSolution ? 'Hide rationale' : 'Show rationale'}
 				title={qs.showSolution ? 'Hide rationale' : 'Show rationale'}
 			>
 				<Eye />
-			</button>
+			</Button>
 		{/if}
 		{#if allowClear && !qs.showSolution && qs.selectedAnswers && qs.selectedAnswers.length > 0}
-			<button
-				type="button"
-				class="btn rounded-full"
+			<Button
+				variant="soft"
+				tone="neutral"
 				onclick={clearAllSelections}
 				aria-label="clear all selections"
 			>
 				<X /> Clear all
-			</button>
+			</Button>
 		{/if}
 	</div>
 </div>

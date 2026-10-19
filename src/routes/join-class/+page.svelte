@@ -5,6 +5,11 @@
 	import { resolve } from '$app/paths';
 	import { api } from '../../convex/_generated/api';
 	import type { CohortInfo } from '../../lib/types';
+	import * as Avatar from '$lib/components/ui/avatar';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 
 	import { fade, fly } from 'svelte/transition';
 	const client = useConvexClient();
@@ -82,54 +87,50 @@
 		{#if !showConfirmation}
 			<div class="mb-6 flex flex-col items-center text-center">
 				{#if user === undefined}
-					<div class="skeleton mb-5 h-14 w-14 rounded-full"></div>
+					<Skeleton class="mb-5 h-14 w-14 rounded-full" />
 				{:else if user}
-					<div class="avatar mb-5">
-						<div class="ring-primary ring-offset-base-100 w-14 rounded-full ring-3 ring-offset-2">
-							<img src={user.imageUrl} alt="Your profile" />
-						</div>
-					</div>
+					<Avatar.Root
+						class="mb-5 size-14 ring-3 ring-primary ring-offset-2 ring-offset-background"
+					>
+						<Avatar.Image src={user.imageUrl} alt="Your profile" />
+						<Avatar.Fallback />
+					</Avatar.Root>
 				{:else}
 					<div class="mb-5 grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
 						<School size={26} />
 					</div>
 				{/if}
-				<h1 class="font-display text-2xl font-bold text-base-content sm:text-3xl">
-					Join your class
-				</h1>
-				<p class="mt-1.5 max-w-sm text-sm text-base-content/60">
+				<h1 class="font-display text-2xl font-bold text-foreground sm:text-3xl">Join your class</h1>
+				<p class="mt-1.5 max-w-sm text-sm text-foreground/60">
 					Enter the class code from your invitation to access your class's content.
 				</p>
 			</div>
 
 			<div
-				class="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-xs sm:p-6"
+				class="rounded-2xl border border-border bg-background p-5 shadow-xs sm:p-6"
 				in:fly={{ y: 12, duration: 350, delay: 100 }}
 			>
 				{#if user === null}
-					<p class="mb-4 text-center text-sm text-base-content/70">
+					<p class="mb-4 text-center text-sm text-foreground/70">
 						Sign in to enter your class code and join your cohort.
 					</p>
 					<!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() with a query string -->
-					<a
-						href={`${resolve('/sign-in')}?redirect_url=%2Fjoin-class`}
-						class="btn btn-primary w-full gap-2 rounded-full"
-					>
+					<Button href={`${resolve('/sign-in')}?redirect_url=%2Fjoin-class`} class="w-full gap-2">
 						Sign in to continue <ArrowRight size={16} />
-					</a>
+					</Button>
 					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				{:else}
 					<form onsubmit={handleJoinClass} class="space-y-4">
 						<label class="block">
-							<span class="mb-1.5 block text-xs font-medium text-base-content/60">Class code</span>
-							<input
+							<span class="mb-1.5 block text-xs font-medium text-foreground/60">Class code</span>
+							<Input
 								id="class-code"
 								type="text"
 								placeholder="e.g. nsuoco2030"
 								autocomplete="off"
 								autocapitalize="off"
 								spellcheck="false"
-								class="input w-full rounded-xl text-center font-mono text-lg tracking-wider"
+								class="rounded-xl text-center font-mono text-lg tracking-wider"
 								bind:value={classCode}
 								disabled={isSubmitting || !user}
 							/>
@@ -137,7 +138,7 @@
 
 						{#if error}
 							<div
-								class="rounded-xl bg-error/10 px-4 py-3 text-sm text-error"
+								class="rounded-xl bg-error/10 px-4 py-3 text-sm text-error-ink"
 								role="alert"
 								in:fly={{ y: -6, duration: 200 }}
 							>
@@ -145,36 +146,36 @@
 							</div>
 						{/if}
 
-						<button
+						<Button
 							type="submit"
-							class="btn btn-primary w-full gap-2 rounded-full"
+							class="w-full gap-2"
+							loading={isSubmitting}
 							disabled={isSubmitting || !classCode.trim() || !user}
 						>
 							{#if isSubmitting}
-								<span class="loading loading-spinner loading-sm"></span>
 								Checking code…
 							{:else}
 								Continue <ArrowRight size={16} />
 							{/if}
-						</button>
+						</Button>
 					</form>
 				{/if}
 			</div>
 		{:else if cohortInfo}
 			<div class="mb-6 text-center">
-				<span class="badge badge-success badge-soft rounded-full">
+				<Badge tone="success">
 					<Check size={13} /> Class found
-				</span>
-				<h1 class="mt-3 font-display text-2xl font-bold text-base-content sm:text-3xl">
+				</Badge>
+				<h1 class="mt-3 font-display text-2xl font-bold text-foreground sm:text-3xl">
 					Confirm your class
 				</h1>
-				<p class="mt-1.5 text-sm text-base-content/60">
+				<p class="mt-1.5 text-sm text-foreground/60">
 					Make sure this is the right class before joining.
 				</p>
 			</div>
 
 			<div
-				class="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-xs sm:p-6"
+				class="rounded-2xl border border-border bg-background p-5 shadow-xs sm:p-6"
 				in:fly={{ y: 12, duration: 350, delay: 100 }}
 			>
 				<div class="flex items-center gap-4">
@@ -193,22 +194,22 @@
 						</div>
 					{/if}
 					<div class="min-w-0">
-						<h2 class="text-lg font-semibold leading-tight text-base-content">
+						<h2 class="text-lg font-semibold leading-tight text-foreground">
 							{cohortInfo.cohort.name}
 						</h2>
-						<p class="mt-0.5 text-sm text-base-content/60">{cohortInfo.school.name}</p>
+						<p class="mt-0.5 text-sm text-foreground/60">{cohortInfo.school.name}</p>
 					</div>
 				</div>
 
 				<dl class="mt-5 grid grid-cols-2 gap-2">
-					<div class="rounded-xl bg-base-200/60 px-3 py-2.5">
-						<dt class="flex items-center gap-1.5 text-xs text-base-content/50">
+					<div class="rounded-xl bg-muted/60 px-3 py-2.5">
+						<dt class="flex items-center gap-1.5 text-xs text-foreground/50">
 							<Users size={13} /> Cohort
 						</dt>
 						<dd class="mt-0.5 truncate text-sm font-medium">{cohortInfo.cohort.name}</dd>
 					</div>
-					<div class="rounded-xl bg-base-200/60 px-3 py-2.5">
-						<dt class="flex items-center gap-1.5 text-xs text-base-content/50">
+					<div class="rounded-xl bg-muted/60 px-3 py-2.5">
+						<dt class="flex items-center gap-1.5 text-xs text-foreground/50">
 							<Calendar size={13} /> Academic years
 						</dt>
 						<dd class="mt-0.5 text-sm font-medium">
@@ -218,12 +219,12 @@
 				</dl>
 
 				{#if cohortInfo.cohort.description}
-					<p class="mt-3 text-sm text-base-content/60">{cohortInfo.cohort.description}</p>
+					<p class="mt-3 text-sm text-foreground/60">{cohortInfo.cohort.description}</p>
 				{/if}
 
 				{#if error}
 					<div
-						class="mt-4 rounded-xl bg-error/10 px-4 py-3 text-sm text-error"
+						class="mt-4 rounded-xl bg-error/10 px-4 py-3 text-sm text-error-ink"
 						role="alert"
 						in:fly={{ y: -6, duration: 200 }}
 					>
@@ -232,27 +233,29 @@
 				{/if}
 
 				<div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row">
-					<button
+					<Button
 						type="button"
-						class="btn btn-ghost gap-1.5 rounded-full sm:flex-1"
+						variant="ghost"
+						tone="neutral"
+						class="gap-1.5 sm:flex-1"
 						onclick={resetForm}
 						disabled={isConfirming}
 					>
 						<ArrowLeft size={16} /> Back
-					</button>
-					<button
+					</Button>
+					<Button
 						type="button"
-						class="btn btn-primary gap-1.5 whitespace-nowrap rounded-full sm:flex-[2]"
+						class="gap-1.5 whitespace-nowrap sm:flex-[2]"
+						loading={isConfirming}
 						disabled={isConfirming}
 						onclick={confirmJoin}
 					>
 						{#if isConfirming}
-							<span class="loading loading-spinner loading-sm"></span>
 							Joining…
 						{:else}
 							<Check size={16} /> Join class
 						{/if}
-					</button>
+					</Button>
 				</div>
 			</div>
 		{/if}

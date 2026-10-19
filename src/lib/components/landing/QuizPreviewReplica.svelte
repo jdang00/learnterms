@@ -21,6 +21,12 @@
 	import { Confetti } from 'svelte-confetti';
 	import ModuleProgress from '$lib/components/ModuleProgress.svelte';
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import * as Card from '$lib/components/ui/card';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { Kbd } from '$lib/components/ui/kbd';
+	import { Separator } from '$lib/components/ui/separator';
 	import { summarizeModule } from '$lib/utils/moduleCompletion';
 	import type { StudyEvidence } from '$lib/utils/studyMastery';
 	import type { Id } from '../../../convex/_generated/dataModel';
@@ -250,30 +256,33 @@
 </script>
 
 {#snippet sources()}
-	<div class="mt-3 border-t border-base-300 pt-3">
-		<p class="mb-2 flex items-start gap-1.5 text-xs font-medium text-base-content/60">
+	<div class="mt-3 border-t border-border pt-3">
+		<p class="mb-2 flex items-start gap-1.5 text-xs font-medium text-foreground/60">
 			<FileText size={12} class="mt-0.5 shrink-0" />
 			<span class="break-words">{moduleInfo.source}</span>
 		</p>
 		<div class="flex flex-wrap gap-2">
 			{#each current.pages as page (page)}
-				<span
-					class="btn btn-ghost btn-xs pointer-events-none gap-1.5 rounded-full border border-base-300 font-mono font-normal"
+				<Badge
+					variant="outline"
+					tone="neutral"
+					size="sm"
+					class="pointer-events-none gap-1.5 font-mono font-normal"
 				>
 					<FileText size={12} /> p. {page}<ExternalLink size={11} />
-				</span>
+				</Badge>
 			{/each}
 		</div>
 	</div>
 {/snippet}
 
-<div class="relative overflow-visible bg-base-100 p-2 md:p-3 lg:p-4">
+<div class="relative overflow-visible bg-background p-2 md:p-3 lg:p-4">
 	{#if showBanner && outcome}
 		<div class="pointer-events-none absolute inset-x-0 top-16 z-[120] flex justify-center px-3">
 			<div
-				class="alert rounded-full px-4 py-2.5 shadow-lg sm:px-6 {outcome === 'correct'
-					? 'alert-success'
-					: 'alert-error'}"
+				class="rounded-full px-4 py-2.5 shadow-lg sm:px-6 {outcome === 'correct'
+					? 'bg-success text-success-foreground'
+					: 'bg-error text-error-foreground'}"
 			>
 				<span class="text-base font-extrabold sm:text-lg"
 					>{outcome === 'correct' ? 'Correct!' : 'Incorrect. Please try again.'}</span
@@ -283,15 +292,19 @@
 	{/if}
 
 	<div
-		class="flex min-h-[38rem] flex-col gap-3 overflow-visible bg-base-100 md:gap-4 lg:min-h-[46rem] lg:flex-row lg:gap-8"
+		class="flex min-h-[38rem] flex-col gap-3 overflow-visible bg-background md:gap-4 lg:min-h-[46rem] lg:flex-row lg:gap-8"
 	>
 		<div
-			class="relative hidden shrink-0 self-stretch overflow-x-hidden rounded-4xl border border-base-300 bg-base-100/80 p-3 px-4 backdrop-blur-md transition-all duration-200 ease-out lg:flex lg:flex-col {hideSidebar
+			class="relative hidden shrink-0 self-stretch overflow-x-hidden rounded-4xl border border-border bg-background/80 p-3 px-4 backdrop-blur-md transition-all duration-200 ease-out lg:flex lg:flex-col {hideSidebar
 				? 'w-[72px]'
 				: 'w-[min(22rem,30vw)] xl:w-[min(24rem,28vw)]'}"
 		>
-			<button
-				class="btn btn-ghost btn-square btn-sm absolute top-6 left-5 h-9 w-9 rounded-full"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				shape="circle"
+				class="absolute top-6 left-5 size-9"
 				aria-label="Toggle sidebar"
 				onclick={() => (hideSidebar = !hideSidebar)}
 			>
@@ -299,20 +312,20 @@
 					size={18}
 					class="transition-transform duration-300 {hideSidebar ? 'rotate-180' : ''}"
 				/>
-			</button>
+			</Button>
 
 			{#if !hideSidebar}
 				<div class="mt-8 p-4 pt-12 md:p-5 lg:p-6">
-					<h4 class="-ms-6 text-sm font-bold tracking-wide text-secondary">
-						<button type="button" class="btn btn-ghost rounded-full font-bold text-secondary">
+					<h4 class="-ms-6 text-sm font-bold tracking-wide text-secondary-ink">
+						<Button variant="ghost" tone="secondary" class="font-bold">
 							<ChevronLeft size={16} /> Back
-						</button>
+						</Button>
 					</h4>
 					<h2 class="mt-2 flex min-w-0 items-start gap-3 text-xl leading-tight font-semibold">
 						<span class="shrink-0 text-2xl">{moduleInfo.emoji}</span>
 						<span class="min-w-0 text-balance">{moduleInfo.title}</span>
 					</h2>
-					<p class="mt-2 text-base-content/70">{moduleInfo.description}</p>
+					<p class="mt-2 text-foreground/70">{moduleInfo.description}</p>
 
 					<div class="mt-6">
 						<ModuleProgress
@@ -325,54 +338,47 @@
 
 					<section class="mt-5" aria-label="Tools">
 						<div class="mb-1.5 flex items-center justify-between px-1">
-							<h3 class="text-[0.7rem] font-semibold tracking-wider text-base-content/45 uppercase">
+							<h3 class="text-[0.7rem] font-semibold tracking-wider text-foreground/45 uppercase">
 								Tools
 							</h3>
-							<span
-								class="btn btn-ghost btn-xs btn-circle pointer-events-none text-base-content/40"
-							>
+							<span class="pointer-events-none grid size-6 place-items-center text-foreground/40">
 								<SlidersHorizontal size={13} />
 							</span>
 						</div>
-						<div
-							class="grid grid-cols-4 gap-1 rounded-2xl border border-base-300 bg-base-200/50 p-1"
-						>
+						<div class="grid grid-cols-4 gap-1 rounded-2xl border border-border bg-muted/50 p-1">
 							<button
 								type="button"
 								class="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.68rem] font-medium transition-colors {highlightOn
-									? 'bg-[var(--color-highlighter)]/25 font-semibold text-[var(--color-highlighter-ink)] ring-1 ring-current/25 ring-inset'
-									: 'text-base-content/70 hover:bg-base-100 hover:text-base-content'}"
+									? 'bg-[var(--highlighter)]/25 font-semibold text-[var(--highlighter-ink)] ring-1 ring-current/25 ring-inset'
+									: 'text-foreground/70 hover:bg-background hover:text-foreground'}"
 								aria-pressed={highlightOn}
 								onclick={() => (highlightOn = !highlightOn)}
 							>
-								<Highlighter
-									size={18}
-									class={highlightOn ? '' : 'text-[var(--color-highlighter-ink)]'}
-								/>
+								<Highlighter size={18} class={highlightOn ? '' : 'text-[var(--highlighter-ink)]'} />
 								Highlight
 							</button>
 							<span
-								class="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.68rem] font-medium text-base-content/70"
+								class="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.68rem] font-medium text-foreground/70"
 							>
 								<Calculator size={18} class="text-info" /> Calculator
 							</span>
 							<span
-								class="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.68rem] font-medium text-base-content/70"
+								class="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.68rem] font-medium text-foreground/70"
 							>
 								<StickyNote size={18} class="text-info" /> Notes
 							</span>
 							<span
 								class="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.68rem] tabular-nums"
 							>
-								<span class="flex items-center gap-1 text-sm font-semibold text-base-content">
+								<span class="flex items-center gap-1 text-sm font-semibold text-foreground">
 									<Flame
 										size={16}
-										class={streak ? 'text-orange-500' : 'text-base-content/40'}
+										class={streak ? 'text-orange-500' : 'text-foreground/40'}
 										fill={streak ? 'currentColor' : 'none'}
 									/>
 									{streak}
 								</span>
-								<span class="font-medium text-base-content/55"
+								<span class="font-medium text-foreground/55"
 									>{streak === 1 ? 'correct' : 'in a row'}</span
 								>
 							</span>
@@ -381,14 +387,16 @@
 				</div>
 
 				<div class="m-4 flex flex-col justify-center">
-					<div class="card rounded-2xl border border-base-300 bg-base-100">
-						<div class="card-body">
+					<Card.Root class="gap-0 rounded-2xl bg-background py-0">
+						<Card.Content class="gap-2 p-8">
 							<div class="flex flex-row flex-wrap justify-between border-b pb-2">
-								<h2 class="card-title">Rationale</h2>
+								<h2 class="text-lg font-semibold">Rationale</h2>
 								<div class="flex flex-row">
-									<kbd class="kbd kbd-sm me-1 hidden self-center xl:block">tab</kbd>
-									<button
-										class="btn btn-ghost btn-circle"
+									<Kbd class="me-1 hidden self-center xl:inline-flex">tab</Kbd>
+									<Button
+										variant="ghost"
+										tone="neutral"
+										shape="circle"
 										aria-label="Show rationale"
 										onclick={() => {
 											showSolution = !showSolution;
@@ -396,7 +404,7 @@
 										}}
 									>
 										<Eye />
-									</button>
+									</Button>
 								</div>
 							</div>
 							<div
@@ -408,42 +416,44 @@
 								<p class="tiptap-content">{current.rationale}</p>
 								{@render sources()}
 							</div>
-						</div>
-					</div>
+						</Card.Content>
+					</Card.Root>
 
 					<div class="mt-6 flex flex-row justify-center">
-						<button class="btn btn-soft btn-sm rounded-full">
+						<Button variant="soft" tone="neutral" size="sm">
 							<Settings size={16} />
 							<span class="ml-1">Settings</span>
-						</button>
+						</Button>
 					</div>
 				</div>
 			{:else}
 				<div class="ms-1 mt-16 flex flex-col items-center space-y-4">
 					<button
 						type="button"
-						class="flex w-full items-center justify-center rounded-full bg-secondary text-center font-bold text-secondary-content"
+						class="flex w-full items-center justify-center rounded-full bg-secondary text-center font-bold text-secondary-foreground"
 						aria-label="Back"
 					>
 						<ChevronLeft size={24} />
 					</button>
-					<button type="button" class="btn btn-circle btn-lg btn-soft btn-primary">
+					<Button variant="soft" tone="primary" size="lg" shape="circle">
 						<Info />
-					</button>
+					</Button>
 					<ProgressRing correct={ring.correct} review={ring.review} label={summary.completion} />
-					<button
-						type="button"
-						class="btn btn-circle btn-lg btn-soft"
+					<Button
+						variant="soft"
+						tone="neutral"
+						size="lg"
+						shape="circle"
 						aria-label="Show rationale"
 						onclick={() => (showSolution = !showSolution)}
 					>
 						<Eye />
-					</button>
+					</Button>
 					<div
-						class="flex flex-col items-center gap-1 rounded-2xl border border-base-300 bg-base-200/50 p-1"
+						class="flex flex-col items-center gap-1 rounded-2xl border border-border bg-muted/50 p-1"
 					>
 						<span class="grid size-11 place-items-center rounded-xl">
-							<Highlighter size={20} class="text-[var(--color-highlighter-ink)]" />
+							<Highlighter size={20} class="text-[var(--highlighter-ink)]" />
 						</span>
 						<span class="grid size-11 place-items-center rounded-xl">
 							<Calculator size={20} class="text-info" />
@@ -452,35 +462,44 @@
 							<StickyNote size={20} class="text-info" />
 						</span>
 					</div>
-					<div class="my-2 w-full border-t border-base-300"></div>
-					<button type="button" class="btn btn-circle btn-lg btn-soft" aria-label="Settings">
+					<div class="my-2 w-full border-t border-border"></div>
+					<Button variant="soft" tone="neutral" size="lg" shape="circle" aria-label="Settings">
 						<Settings />
-					</button>
+					</Button>
 				</div>
 			{/if}
 		</div>
 
 		<div class="w-full lg:min-w-0 lg:flex-1">
-			<div class="mb-3 rounded-2xl border border-base-300 bg-base-100/80 p-3 lg:hidden">
+			<div class="mb-3 rounded-2xl border border-border bg-background/80 p-3 lg:hidden">
 				<h3 class="text-lg font-semibold">{moduleInfo.emoji} {moduleInfo.title}</h3>
-				<p class="text-sm text-base-content/70">{moduleInfo.description}</p>
+				<p class="text-sm text-foreground/70">{moduleInfo.description}</p>
 			</div>
 
 			<div
-				class="relative flex h-20 max-h-20 min-h-20 flex-none flex-row items-center space-x-4 overflow-x-auto overflow-y-hidden rounded-4xl border border-base-300 px-6 py-3 whitespace-nowrap"
+				class="relative flex h-20 max-h-20 min-h-20 flex-none flex-row items-center space-x-4 overflow-x-auto overflow-y-hidden rounded-4xl border border-border px-6 py-3 whitespace-nowrap"
 			>
 				{#each questions as question, index (question._id)}
-					<div class="indicator">
+					<div class="relative inline-flex">
 						{#if flagged.includes(question._id)}
-							<span
-								class="indicator-item indicator-start badge badge-xs z-[1] translate-x-[-1/4] translate-y-[-1/4] badge-warning"
-							></span>
+							<Badge
+								tone="warning"
+								variant="solid"
+								size="xs"
+								class="absolute -top-1 -left-1 z-[1] translate-x-[-1/4] translate-y-[-1/4]"
+							></Badge>
 						{/if}
-						<button
-							class="btn btn-circle btn-md btn-soft {current._id === question._id
-								? 'btn-primary'
-								: 'btn-outline'} {interacted.includes(question._id) ? 'btn-accent' : ''}"
-							onclick={() => select(index)}>{index + 1}</button
+						<Button
+							variant={current._id === question._id || interacted.includes(question._id)
+								? 'soft'
+								: 'outline'}
+							tone={current._id === question._id
+								? 'primary'
+								: interacted.includes(question._id)
+									? 'accent'
+									: 'neutral'}
+							shape="circle"
+							onclick={() => select(index)}>{index + 1}</Button
 						>
 					</div>
 				{/each}
@@ -494,28 +513,29 @@
 						</div>
 					</div>
 					<div class="hidden items-center gap-2 lg:flex">
-						<span class="btn btn-soft btn-accent btn-circle pointer-events-none m-1">
+						<span
+							class="pointer-events-none m-1 grid size-12 place-items-center rounded-full bg-accent/15 text-accent-ink"
+						>
 							<ArrowDownNarrowWide />
 						</span>
 					</div>
 				</div>
 
-				<div class="my-3 ms-2 text-base leading-tight font-medium text-base-content/70 sm:text-lg">
+				<div class="my-3 ms-2 text-base leading-tight font-medium text-foreground/70 sm:text-lg">
 					Select {current.correctAnswers.length}.
 				</div>
 
 				<div class="flex flex-col justify-start space-y-2 md:space-y-3 lg:space-y-4">
 					{#each current.options as option, i (option.id)}
 						<label
-							class="label flex w-full cursor-pointer items-center rounded-2xl border-2 border-base-300 bg-base-200 p-2 transition-colors duration-200 sm:rounded-full md:p-3 {optionBorder(
+							class="flex w-full cursor-pointer items-center rounded-2xl border-2 border-border bg-muted p-2 transition-colors duration-200 sm:rounded-full md:p-3 {optionBorder(
 								option.id
 							)}"
 						>
-							<input
-								type="checkbox"
-								class="checkbox checkbox-primary checkbox-sm ms-4"
+							<Checkbox
+								class="ms-4 size-4 border-primary/50"
 								checked={selected.includes(option.id)}
-								onchange={() => toggleOption(option.id)}
+								onCheckedChange={() => toggleOption(option.id)}
 								disabled={eliminated.includes(option.id) || showSolution}
 							/>
 							<span class="my-3 ml-3 grow text-base text-wrap break-words md:ml-4">
@@ -525,15 +545,16 @@
 								>
 							</span>
 							<div class="mr-2 flex w-12 items-center justify-center md:mr-4 md:w-16">
-								<button
-									type="button"
-									class="btn btn-ghost btn-circle btn-md"
+								<Button
+									variant="ghost"
+									tone="neutral"
+									shape="circle"
 									onclick={() => toggleElimination(option.id)}
 									disabled={showSolution}
 									aria-label="eliminate option {option.id}"
 								>
 									<Eye />
-								</button>
+								</Button>
 							</div>
 						</label>
 					{/each}
@@ -541,7 +562,7 @@
 
 				<!-- The Classic dock layout, pinned inside the preview instead of the viewport. -->
 				<div
-					class="absolute -bottom-7 left-1/2 z-40 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-base-300 bg-base-100/80 px-5 py-4 shadow-xl backdrop-blur-md md:inline-flex"
+					class="absolute -bottom-7 left-1/2 z-40 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-background/80 px-5 py-4 shadow-xl backdrop-blur-md md:inline-flex"
 					role="toolbar"
 					aria-label="Quiz controls"
 				>
@@ -552,46 +573,50 @@
 							<Confetti />
 						</div>
 					{/if}
-					<button class="btn btn-sm btn-ghost rounded-full text-base-content/75" onclick={clear}
-						>Clear</button
-					>
-					<button class="btn btn-sm btn-success rounded-full" onclick={check}>Check</button>
-					<button
-						class="btn btn-sm btn-circle btn-warning {isFlagged ? '' : 'btn-outline'}"
+					<Button variant="ghost" tone="neutral" size="sm" onclick={clear}>Clear</Button>
+					<Button tone="success" size="sm" onclick={check}>Check</Button>
+					<Button
+						variant={isFlagged ? 'solid' : 'outline'}
+						tone="warning"
+						size="sm"
+						shape="circle"
 						aria-label="Flag question"
 						aria-pressed={isFlagged}
 						onclick={toggleFlag}
 					>
 						<Flag size={18} />
-					</button>
-					<button
-						class="btn btn-sm btn-secondary rounded-full"
-						onclick={() => (isShuffled = !isShuffled)}
-					>
+					</Button>
+					<Button tone="secondary" size="sm" onclick={() => (isShuffled = !isShuffled)}>
 						<Shuffle size={18} />
 						{isShuffled ? 'Unshuffle' : 'Shuffle'}
-					</button>
-					<div class="divider divider-horizontal mx-0.5"></div>
-					<button
-						class="btn btn-sm btn-outline"
+					</Button>
+					<Separator orientation="vertical" class="mx-0.5" />
+					<Button
+						variant="outline"
+						tone="neutral"
+						size="sm"
+						shape="rect"
 						style="border-radius: 9999px 0.3rem 0.3rem 9999px"
 						aria-label="Previous question"
 						disabled={currentIndex === 0}
 						onclick={() => select(currentIndex - 1)}
 					>
 						<ArrowLeft size={18} />
-					</button>
-					<button
-						class="btn btn-sm btn-outline"
+					</Button>
+					<Button
+						variant="outline"
+						tone="neutral"
+						size="sm"
+						shape="rect"
 						style="border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: calc(2px - 0.5rem)"
 						aria-label="Next question"
 						disabled={currentIndex === questions.length - 1}
 						onclick={() => select(currentIndex + 1)}
 					>
 						<ArrowRight size={18} />
-					</button>
+					</Button>
 					<span
-						class="btn btn-ghost btn-sm btn-circle pointer-events-none text-base-content/40"
+						class="pointer-events-none grid size-8 place-items-center text-foreground/40"
 						aria-hidden="true"
 					>
 						<SlidersHorizontal size={16} />

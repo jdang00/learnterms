@@ -15,6 +15,7 @@
 		ListOrdered as ListOrderedIcon
 	} from 'lucide-svelte';
 	import { getEditorExtensions } from '$lib/config/tiptap';
+	import { Button } from '$lib/components/ui/button';
 	let {
 		value = $bindable(''),
 		label,
@@ -185,23 +186,25 @@
 </script>
 
 <div
-	class="min-w-0 overflow-hidden rounded-2xl border border-base-300 bg-base-100 focus-within:border-primary"
+	class="min-w-0 overflow-hidden rounded-2xl border border-border bg-background focus-within:border-primary"
 >
 	{#if $editor}
 		<div
-			class="flex flex-wrap gap-1 border-b border-base-300 bg-base-200/50 p-1"
+			class="flex flex-wrap gap-1 border-b border-border bg-muted/50 p-1"
 			role="group"
 			aria-label={`${label} formatting`}
 		>
 			{#each toolbar.menuItems() as item (item.name)}
-				<button
-					type="button"
-					class="btn btn-ghost btn-xs btn-square {item.active() ? 'btn-active text-primary' : ''}"
+				<Button
+					variant="ghost"
+					tone={item.active() ? 'primary' : 'neutral'}
+					size="xs"
+					shape="square"
 					{disabled}
 					onclick={item.command}
 					title={item.name}
 					aria-label={item.name}
-					aria-pressed={item.active()}><item.icon size={14} /></button
+					aria-pressed={item.active()}><item.icon size={14} /></Button
 				>
 			{/each}
 		</div>

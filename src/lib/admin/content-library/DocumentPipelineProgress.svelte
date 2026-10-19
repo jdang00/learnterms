@@ -11,7 +11,9 @@
 	<div
 		role="status"
 		aria-atomic="true"
-		class="my-1 max-w-64 space-y-1.5 text-[11px] {progress.failed ? 'text-error' : 'text-info'}"
+		class="my-1 max-w-64 space-y-1.5 text-[11px] {progress.failed
+			? 'text-error-ink'
+			: 'text-info-ink'}"
 		title={progress.description}
 	>
 		<div class="flex items-start gap-1.5 leading-snug">
@@ -29,7 +31,7 @@
 			<span class="line-clamp-2 min-w-0 flex-1">{progress.label}</span>
 			{#if !progress.complete && !progress.failed}
 				<span
-					class="shrink-0 tabular-nums text-base-content/50"
+					class="shrink-0 tabular-nums text-foreground/50"
 					aria-label="Stage {progress.current + 1} of 4"
 				>
 					{progress.current + 1}/4
@@ -46,7 +48,7 @@
 								? 'bg-info motion-safe:animate-pulse'
 								: state === 'error'
 									? 'bg-error'
-									: 'bg-base-300'}"
+									: 'bg-muted-strong'}"
 					></span>
 				{/each}
 			</div>

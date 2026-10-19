@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { Paperclip } from 'lucide-svelte';
+	import { Paperclip, X } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 
@@ -22,7 +25,7 @@
 	} = $props();
 
 	let selectedAttachment = $state<Attachment | null>(null);
-	let attachmentDialog = $state<HTMLDialogElement | null>(null);
+	let attachmentOpen = $state(false);
 	let showCompactAttachments = $state(false);
 	let attachmentZoom = $state(1);
 	let panX = $state(0);
@@ -106,11 +109,11 @@
 		attachmentZoom = 1;
 		panX = 0;
 		panY = 0;
-		attachmentDialog?.showModal();
+		attachmentOpen = true;
 	}
 
 	function closeAttachmentDialog() {
-		attachmentDialog?.close();
+		attachmentOpen = false;
 		selectedAttachment = null;
 	}
 
@@ -142,21 +145,21 @@
 </script>
 
 {#if mediaQuery.error}
-	<p class="text-sm text-error p-3" role="alert">
+	<p class="text-sm text-error-ink p-3" role="alert">
 		Question images could not be loaded. Refresh the page to try again.
 	</p>
 {/if}
 
 {#if !collapsed}
 	{#if visibleMedia.length > 0 || (showHiddenNote && hiddenCount > 0)}
-		<div class="card bg-base-100 shadow-xl mt-6 rounded-2xl">
-			<div class="card-body">
-				<h3 class="card-title">Attachments</h3>
+		<div class="mt-6 rounded-3xl border border-border bg-card shadow-xl shadow-black/5">
+			<div class="flex flex-col gap-2 p-6">
+				<h3 class="text-lg font-semibold">Attachments</h3>
 				{#if visibleMedia.length > 0}
 					<div class="grid grid-cols-2 gap-3 mt-2">
 						{#each visibleMedia as attachment (attachment._id)}
 							<button
-								class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary focus:border-primary"
+								class="group border-2 border-border rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary focus:border-primary"
 								onclick={() => handleAttachmentClick(attachment)}
 								onkeydown={(e) => {
 									if (e.key === 'Enter' || e.key === ' ') {
@@ -175,9 +178,7 @@
 										class="w-full h-28 object-cover group-hover:brightness-110 group-hover:scale-105 transition-all duration-200"
 									/>
 									{#if showSolutionBadges && attachment.showOnSolution}
-										<span class="badge badge-xs badge-soft rounded-full absolute top-2 left-2">
-											Rationale
-										</span>
+										<Badge size="xs" class="absolute top-2 left-2">Rationale</Badge>
 									{/if}
 									<div
 										class="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-200"
@@ -185,7 +186,7 @@
 								</div>
 								{#if attachment.caption}
 									<div
-										class="p-2 text-xs text-base-content/70 group-hover:text-base-content/90 transition-colors duration-200 break-words hyphens-auto"
+										class="p-2 text-xs text-foreground/70 group-hover:text-foreground/90 transition-colors duration-200 break-words hyphens-auto"
 									>
 										{attachment.caption}
 									</div>
@@ -195,7 +196,7 @@
 					</div>
 				{/if}
 				{#if showHiddenNote && hiddenCount > 0}
-					<div class="text-xs text-base-content/50 mt-3">
+					<div class="text-xs text-foreground/50 mt-3">
 						{hiddenCount} attachment{hiddenCount === 1 ? '' : 's'} will appear in review after submission.
 					</div>
 				{/if}
@@ -203,8 +204,12 @@
 		</div>
 	{/if}
 {:else if visibleMedia.length > 0}
-	<button
-		class="btn btn-circle btn-lg btn-soft btn-info relative group"
+	<Button
+		variant="soft"
+		tone="info"
+		size="lg"
+		shape="circle"
+		class="relative group"
 		onclick={handleCollapsedAttachmentClick}
 		title="View {visibleMedia.length} attachment{visibleMedia.length > 1 ? 's' : ''}"
 		aria-label="View attachments ({visibleMedia.length})"
@@ -212,18 +217,18 @@
 		<Paperclip size={20} />
 		{#if visibleMedia.length > 1}
 			<span
-				class="absolute -top-1 -right-1 bg-error text-error-content text-xs rounded-full min-w-[1.2rem] h-5 flex items-center justify-center font-bold px-1"
+				class="absolute -top-1 -right-1 bg-error text-error-foreground text-xs rounded-full min-w-[1.2rem] h-5 flex items-center justify-center font-bold px-1"
 			>
 				{visibleMedia.length}
 			</span>
 		{:else}
 			<span
-				class="absolute -top-1 -right-1 bg-info text-info-content text-xs rounded-full w-3 h-3 flex items-center justify-center"
+				class="absolute -top-1 -right-1 bg-info text-info-foreground text-xs rounded-full w-3 h-3 flex items-center justify-center"
 			>
 				✓
 			</span>
 		{/if}
-	</button>
+	</Button>
 {/if}
 
 {#if showCompactAttachments && visibleMedia.length > 1}
@@ -244,26 +249,29 @@
 		></button>
 
 		<div
-			class="bg-base-100 rounded-xl shadow-2xl border border-base-300 p-4 max-w-sm w-full mx-4 max-h-[80vh] overflow-y-auto relative z-10"
+			class="bg-background rounded-xl shadow-2xl border border-border p-4 max-w-sm w-full mx-4 max-h-[80vh] overflow-y-auto relative z-10"
 			role="document"
 		>
 			<div class="flex items-center justify-between mb-4">
 				<h3 id="compact-attachments-title" class="font-semibold text-lg">
 					Attachments ({visibleMedia.length})
 				</h3>
-				<button
-					class="btn btn-sm btn-ghost btn-circle"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape="circle"
 					onclick={closeCompactAttachments}
 					aria-label="Close attachments"
 				>
-					✕
-				</button>
+					<X size={16} />
+				</Button>
 			</div>
 
 			<div class="grid grid-cols-2 gap-3">
 				{#each visibleMedia as attachment (attachment._id)}
 					<button
-						class="group border-2 border-base-300 rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary"
+						class="group border-2 border-border rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary"
 						onclick={() => {
 							handleAttachmentClick(attachment);
 							closeCompactAttachments();
@@ -278,9 +286,7 @@
 								class="w-full h-20 object-cover group-hover:brightness-110 transition-all duration-200"
 							/>
 							{#if showSolutionBadges && attachment.showOnSolution}
-								<span class="badge badge-xs badge-soft rounded-full absolute top-1.5 left-1.5">
-									Rationale
-								</span>
+								<Badge size="xs" class="absolute top-1.5 left-1.5">Rationale</Badge>
 							{/if}
 							{#if attachment.caption}
 								<div
@@ -297,21 +303,21 @@
 	</div>
 {/if}
 
-<dialog bind:this={attachmentDialog} class="modal" onclose={closeAttachmentDialog}>
-	<div class="modal-box max-w-4xl w-full h-[90vh] rounded-2xl">
-		<button
-			class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-10"
-			onclick={closeAttachmentDialog}
-		>
-			✕
-		</button>
-
+<Dialog.Root
+	open={attachmentOpen}
+	onOpenChange={(open) => {
+		if (!open) closeAttachmentDialog();
+	}}
+>
+	<Dialog.Content class="flex h-[90vh] w-full flex-col gap-0 sm:max-w-4xl">
 		{#if selectedAttachment}
 			<div class="flex flex-col h-full">
-				<h3 class="font-bold text-lg mb-4">{selectedAttachment.altText}</h3>
+				<Dialog.Title class="mb-4 pe-10 text-lg font-semibold"
+					>{selectedAttachment.altText}</Dialog.Title
+				>
 				<div
 					bind:this={imageContainer}
-					class="flex-1 relative overflow-hidden bg-base-200 rounded-2xl"
+					class="flex-1 relative overflow-hidden bg-muted rounded-2xl"
 					onmousedown={handleMouseDown}
 					onmousemove={handleMouseMove}
 					onmouseup={handleMouseUp}
@@ -351,14 +357,17 @@
 				</div>
 
 				{#if selectedAttachment.caption}
-					<div class="mt-4 p-3 bg-base-200 rounded-2xl">
-						<p class="text-sm text-base-content/70">{selectedAttachment.caption}</p>
+					<div class="mt-4 p-3 bg-muted rounded-2xl">
+						<p class="text-sm text-foreground/70">{selectedAttachment.caption}</p>
 					</div>
 				{/if}
 
 				<div class="flex justify-center gap-2 mt-4">
-					<button
-						class="btn btn-sm btn-outline rounded-full"
+					<Button
+						variant="outline"
+						tone="neutral"
+						size="sm"
+						shape="circle"
 						onclick={handleZoomOut}
 						aria-label="Zoom out"
 					>
@@ -370,9 +379,12 @@
 								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
 							/>
 						</svg>
-					</button>
-					<button
-						class="btn btn-sm btn-outline rounded-full"
+					</Button>
+					<Button
+						variant="outline"
+						tone="neutral"
+						size="sm"
+						shape="circle"
 						onclick={handleFitToScreen}
 						aria-label="Fit to screen"
 					>
@@ -384,9 +396,12 @@
 								d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
 							/>
 						</svg>
-					</button>
-					<button
-						class="btn btn-sm btn-outline rounded-full"
+					</Button>
+					<Button
+						variant="outline"
+						tone="neutral"
+						size="sm"
+						shape="circle"
 						onclick={handleZoomIn}
 						aria-label="Zoom in"
 					>
@@ -398,12 +413,9 @@
 								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
 							/>
 						</svg>
-					</button>
+					</Button>
 				</div>
 			</div>
 		{/if}
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button onclick={closeAttachmentDialog}>close</button>
-	</form>
-</dialog>
+	</Dialog.Content>
+</Dialog.Root>

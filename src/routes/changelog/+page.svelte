@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
 	import {
 		Sparkles,
 		BrainCircuit,
@@ -834,12 +836,12 @@
 				>
 					<Sparkles size={20} />
 				</div>
-				<div class="badge badge-primary badge-soft rounded-full text-xs">Changelog</div>
+				<Badge tone="primary" variant="soft">Changelog</Badge>
 			</div>
 			<h1 class="font-display text-4xl font-bold leading-tight sm:text-5xl">
 				What's new in LearnTerms
 			</h1>
-			<p class="mt-4 max-w-2xl text-lg text-base-content/65 leading-relaxed">
+			<p class="mt-4 max-w-2xl text-lg text-foreground/65 leading-relaxed">
 				A history of LearnTerms updates, with links to the GitHub releases and code behind them.
 			</p>
 		</section>
@@ -861,9 +863,9 @@
 					<!-- Content -->
 					<div class="timeline-content">
 						<div class="flex flex-wrap items-center gap-2 mb-1">
-							<span class="font-mono text-sm font-bold text-base-content/80">{entry.version}</span>
-							<span class="text-xs text-base-content/35">&middot;</span>
-							<span class="text-xs text-base-content/45">{entry.date}</span>
+							<span class="font-mono text-sm font-bold text-foreground/80">{entry.version}</span>
+							<span class="text-xs text-foreground/35">&middot;</span>
+							<span class="text-xs text-foreground/45">{entry.date}</span>
 						</div>
 
 						<h2 class="text-xl font-bold sm:text-2xl mb-4">{entry.title}</h2>
@@ -875,17 +877,17 @@
 							{#each entry.highlights as highlight (highlight.title)}
 								{@const Icon = highlight.icon}
 								<div class="highlight-card">
-									<div class="rounded-xl border border-base-300/80 bg-base-100/70 p-2 mb-3 w-fit">
+									<div class="rounded-xl border border-border/80 bg-background/70 p-2 mb-3 w-fit">
 										<Icon size={16} />
 									</div>
 									<h3 class="text-sm font-semibold">{highlight.title}</h3>
-									<p class="mt-1 text-xs text-base-content/55 leading-relaxed">
+									<p class="mt-1 text-xs text-foreground/55 leading-relaxed">
 										{highlight.description}
 									</p>
 									{#if highlight.href}
 										<button
 											type="button"
-											class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80"
+											class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:text-primary-ink/80"
 											onclick={() => window.open(highlight.href, '_blank', 'noreferrer')}
 										>
 											View source
@@ -904,15 +906,17 @@
 		<section class="mt-16" use:reveal={{ y: 20 }}>
 			<div class="cta-section text-center py-12 px-6">
 				<h2 class="text-2xl font-bold sm:text-3xl">More on the way</h2>
-				<p class="mx-auto mt-3 max-w-md text-base-content/55 text-sm leading-relaxed">
+				<p class="mx-auto mt-3 max-w-md text-foreground/55 text-sm leading-relaxed">
 					LearnTerms is actively developed. Have a feature request or idea? We'd love to hear it.
 				</p>
 				<div class="mt-6 flex flex-wrap items-center justify-center gap-3">
-					<a href={resolve('/sign-in')} class="btn btn-primary rounded-full px-6">
+					<Button href={resolve('/sign-in')} class="px-6">
 						Start studying
 						<ArrowRight size={16} />
-					</a>
-					<a href={resolve('/contact')} class="btn btn-ghost rounded-full px-5"> Get in touch </a>
+					</Button>
+					<Button href={resolve('/contact')} variant="ghost" tone="neutral" class="px-5"
+						>Get in touch</Button
+					>
 				</div>
 			</div>
 		</section>
@@ -939,8 +943,8 @@
 		border-radius: 40% 60% 55% 45%;
 		background: radial-gradient(
 			ellipse at 40% 50%,
-			color-mix(in oklab, var(--color-primary) 40%, transparent),
-			color-mix(in oklab, var(--color-primary) 14%, transparent) 55%,
+			color-mix(in oklab, var(--primary) 40%, transparent),
+			color-mix(in oklab, var(--primary) 14%, transparent) 55%,
 			transparent 100%
 		);
 		filter: blur(64px);
@@ -957,9 +961,9 @@
 		background: linear-gradient(
 			90deg,
 			transparent 5%,
-			color-mix(in oklab, var(--color-secondary) 40%, transparent) 35%,
-			color-mix(in oklab, var(--color-secondary) 50%, transparent) 55%,
-			color-mix(in oklab, var(--color-secondary) 15%, transparent) 85%,
+			color-mix(in oklab, var(--secondary) 40%, transparent) 35%,
+			color-mix(in oklab, var(--secondary) 50%, transparent) 55%,
+			color-mix(in oklab, var(--secondary) 15%, transparent) 85%,
 			transparent
 		);
 		filter: blur(44px);
@@ -1024,15 +1028,15 @@
 	}
 
 	.timeline-dot-active {
-		background: var(--color-primary);
+		background: var(--primary);
 		box-shadow:
-			0 0 0 4px color-mix(in oklab, var(--color-primary) 18%, transparent),
-			0 0 12px color-mix(in oklab, var(--color-primary) 25%, transparent);
+			0 0 0 4px color-mix(in oklab, var(--primary) 18%, transparent),
+			0 0 12px color-mix(in oklab, var(--primary) 25%, transparent);
 	}
 
 	.timeline-dot-past {
-		background: color-mix(in oklab, var(--color-base-content) 25%, transparent);
-		box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-base-content) 8%, transparent);
+		background: color-mix(in oklab, var(--foreground) 25%, transparent);
+		box-shadow: 0 0 0 3px color-mix(in oklab, var(--foreground) 8%, transparent);
 	}
 
 	.timeline-line {
@@ -1041,8 +1045,8 @@
 		margin-top: 0.5rem;
 		background: linear-gradient(
 			to bottom,
-			color-mix(in oklab, var(--color-base-content) 18%, transparent),
-			color-mix(in oklab, var(--color-base-content) 6%, transparent)
+			color-mix(in oklab, var(--foreground) 18%, transparent),
+			color-mix(in oklab, var(--foreground) 6%, transparent)
 		);
 	}
 
@@ -1059,22 +1063,22 @@
 		background:
 			linear-gradient(
 				to bottom,
-				color-mix(in oklab, var(--color-base-200) 70%, transparent),
-				color-mix(in oklab, var(--color-base-100) 95%, transparent)
+				color-mix(in oklab, var(--muted) 70%, transparent),
+				color-mix(in oklab, var(--background) 95%, transparent)
 			),
 			linear-gradient(
 					to right,
-					color-mix(in oklab, var(--color-base-content) 6%, transparent) 1px,
+					color-mix(in oklab, var(--foreground) 6%, transparent) 1px,
 					transparent 1px
 				)
 				0 0 / 18px 18px,
 			linear-gradient(
 					to bottom,
-					color-mix(in oklab, var(--color-base-content) 6%, transparent) 1px,
+					color-mix(in oklab, var(--foreground) 6%, transparent) 1px,
 					transparent 1px
 				)
 				0 0 / 18px 18px;
-		border: 1px solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
+		border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
 		transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
@@ -1090,12 +1094,12 @@
 
 	.highlight-card:hover {
 		transform: translateY(-2px);
-		box-shadow: 0 4px 20px color-mix(in oklab, var(--color-base-content) 6%, transparent);
-		border-color: color-mix(in oklab, var(--color-primary) 25%, transparent);
+		box-shadow: 0 4px 20px color-mix(in oklab, var(--foreground) 6%, transparent);
+		border-color: color-mix(in oklab, var(--primary) 25%, transparent);
 	}
 
 	.cta-section {
-		border-top: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
+		border-top: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
 	}
 
 	@media (prefers-reduced-motion: reduce) {

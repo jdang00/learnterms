@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { ChevronDown, ChevronLeft } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	// The one top bar study screens show below lg: back, where you are, and one or two instruments.
 	let {
@@ -25,20 +26,22 @@
 </script>
 
 <header
-	class="sticky top-0 z-40 shrink-0 border-b border-base-300/70 bg-base-100/95 pt-safe backdrop-blur-md lg:hidden"
+	class="sticky top-0 z-40 shrink-0 border-b border-border/70 bg-background/95 pt-safe backdrop-blur-md lg:hidden"
 >
 	<div class="flex h-14 items-center gap-0.5 px-1">
-		<button
-			type="button"
-			class="btn btn-ghost btn-circle size-11 shrink-0"
+		<Button
+			variant="ghost"
+			tone="neutral"
+			shape="circle"
+			class="size-11 shrink-0"
 			aria-label={backLabel}
 			onclick={onback}
 		>
 			<ChevronLeft size={22} />
-		</button>
+		</Button>
 		<button
 			type="button"
-			class="flex min-w-0 flex-1 flex-col items-start rounded-xl px-2 py-1 text-left transition-colors active:bg-base-200"
+			class="flex min-w-0 flex-1 flex-col items-start rounded-xl px-2 py-1 text-left transition-colors active:bg-muted"
 			aria-haspopup="dialog"
 			aria-label="{title}, {subtitle}. Show all questions"
 			onclick={onnavigate}
@@ -49,7 +52,7 @@
 				{#if emoji}<span class="shrink-0 text-base leading-none">{emoji}</span>{/if}
 				<span class="truncate">{title}</span>
 			</span>
-			<span class="flex items-center gap-0.5 text-xs text-base-content/60 tabular-nums">
+			<span class="flex items-center gap-0.5 text-xs text-foreground/60 tabular-nums">
 				{subtitle}
 				<ChevronDown size={13} aria-hidden="true" />
 			</span>

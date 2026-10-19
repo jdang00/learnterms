@@ -6,11 +6,14 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
-	import { Search } from 'lucide-svelte';
+	import { Search, Sparkles } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { modifierKeyLabel } from '$lib/utils/platform';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Kbd } from '$lib/components/ui/kbd';
 	import PowerBar from './power-bar/PowerBar.svelte';
 	import type { CohortItem, QuickLinkItem } from './power-bar/types';
 
@@ -94,13 +97,13 @@
 	}
 </script>
 
-<div class="navbar bg-base-100 h-16">
-	<div class="navbar-start">
+<div class="flex h-16 w-full items-center bg-background p-2">
+	<div class="inline-flex w-1/2 items-center justify-start">
 		<BrandLogo class="ml-1 rounded-full px-2 py-1 text-xl sm:ml-2" />
 	</div>
 
 	{#if !user}
-		<nav class="navbar-center hidden gap-1 md:flex" aria-label="Public site">
+		<nav class="hidden shrink-0 items-center gap-1 md:flex" aria-label="Public site">
 			{#each publicLinks as link (link.href)}
 				<!-- eslint-disable svelte/no-navigation-without-resolve -- resolved in publicLinks; Docs is external -->
 				<a
@@ -114,21 +117,25 @@
 	{/if}
 
 	{#if user}
-		<div class="navbar-center flex sm:hidden">
-			<button
-				type="button"
-				class="btn btn-ghost btn-sm btn-circle"
+		<div class="flex shrink-0 items-center sm:hidden">
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				shape="circle"
 				onclick={() => (isPowerBarOpen = true)}
 				aria-label="Open search"
 			>
 				<Search size={16} />
-			</button>
+			</Button>
 		</div>
 
-		<div class="navbar-center hidden sm:flex">
-			<button
-				type="button"
-				class="btn btn-outline btn-sm rounded-full border-base-300 hover:border-primary hover:bg-primary/5 px-3 max-w-[24rem]"
+		<div class="hidden shrink-0 items-center sm:flex">
+			<Button
+				variant="outline"
+				tone="neutral"
+				size="sm"
+				class="max-w-[24rem] px-3 hover:border-primary hover:bg-primary/5"
 				onclick={() => (isPowerBarOpen = true)}
 			>
 				<Search size={12} class="shrink-0 opacity-50" />
@@ -137,20 +144,26 @@
 				</span>
 				{#if modifierKey}
 					<span class="hidden items-center gap-0.5 opacity-50 lg:inline-flex" aria-hidden="true">
-						<kbd class="kbd kbd-xs">{modifierKey}</kbd><kbd class="kbd kbd-xs">K</kbd>
+						<Kbd>{modifierKey}</Kbd><Kbd>K</Kbd>
 					</span>
 				{/if}
-			</button>
+			</Button>
 		</div>
 	{/if}
 
-	<div class="navbar-end">
+	<div class="inline-flex w-1/2 items-center justify-end">
 		<div class="flex flex-row items-center gap-2 sm:gap-3">
-			<ThemeToggle variant="ghost" size="md" class="btn-circle m-1" />
+			<ThemeToggle variant="ghost" size="md" class="m-1" />
 
 			{#if isPro}
 				<div class="self-center">
-					<div class="badge badge-primary badge-outline rounded-full hidden sm:block">PRO</div>
+					<Badge
+						tone="primary"
+						size="md"
+						class="hidden gap-1 px-2.5 font-bold tracking-wide shadow-[inset_0_1px_0_rgb(255_255_255/0.6),inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_22%,transparent)] sm:inline-flex"
+					>
+						<Sparkles />Pro
+					</Badge>
 				</div>
 			{/if}
 
@@ -162,10 +175,11 @@
 				</SignedIn>
 				<SignedOut>
 					<div class="flex items-center gap-1">
-						<a class="btn btn-ghost btn-sm rounded-full" href={resolve('/sign-in')}>Sign in</a>
-						<a
-							class="btn btn-primary btn-sm hidden rounded-full px-4 sm:inline-flex"
-							href={resolve('/sign-up')}>Get started</a
+						<Button variant="ghost" tone="neutral" size="sm" href={resolve('/sign-in')}
+							>Sign in</Button
+						>
+						<Button size="sm" class="hidden px-4 sm:inline-flex" href={resolve('/sign-up')}
+							>Get started</Button
 						>
 					</div>
 				</SignedOut>
@@ -176,7 +190,7 @@
 
 {#if !user}
 	<nav
-		class="flex justify-center gap-1 overflow-x-auto border-b border-base-300 px-2 pb-2 md:hidden"
+		class="flex justify-center gap-1 overflow-x-auto border-b border-border px-2 pb-2 md:hidden"
 		aria-label="Public site"
 	>
 		{#each publicLinks as link (link.href)}
@@ -210,19 +224,19 @@
 		padding: 0.35rem 0.8rem;
 		font-size: 0.875rem;
 		font-weight: 500;
-		color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+		color: color-mix(in oklab, var(--foreground) 70%, transparent);
 		transition:
 			color 0.15s ease,
 			background-color 0.15s ease;
 	}
 
 	.nav-link:hover {
-		color: var(--color-base-content);
-		background: color-mix(in oklab, var(--color-base-content) 6%, transparent);
+		color: var(--foreground);
+		background: color-mix(in oklab, var(--foreground) 6%, transparent);
 	}
 
 	.nav-link[aria-current='page'] {
-		color: var(--color-base-content);
+		color: var(--foreground);
 	}
 
 	.nav-link[aria-current='page']::after {
@@ -233,7 +247,7 @@
 		width: 0.3rem;
 		height: 0.3rem;
 		border-radius: 999px;
-		background: var(--color-primary);
+		background: var(--primary);
 		transform: translateX(-50%);
 	}
 

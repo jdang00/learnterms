@@ -2,6 +2,7 @@
 	import { X } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { Button } from '$lib/components/ui/button';
 
 	let {
 		html,
@@ -16,25 +17,28 @@
 
 {#if html}
 	<div
-		class="fixed inset-0 z-[70] flex flex-col bg-base-100"
+		class="fixed inset-0 z-[70] flex flex-col bg-background"
 		role="dialog"
 		aria-modal="true"
 		aria-label={label}
 		transition:fade={{ duration: 120 }}
 	>
-		<div class="flex items-center gap-3 border-b border-base-300 px-5 py-3">
+		<div class="flex items-center gap-3 border-b border-border px-5 py-3">
 			<div>
 				<p class="text-sm font-semibold">{label}</p>
-				<p class="text-xs text-base-content/50">Fullscreen table preview</p>
+				<p class="text-xs text-foreground/50">Fullscreen table preview</p>
 			</div>
 			<div class="flex-1"></div>
-			<button
-				class="btn btn-ghost btn-sm btn-circle"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				shape="circle"
 				onclick={onClose}
 				aria-label="Close table preview"
 			>
 				<X size={16} />
-			</button>
+			</Button>
 		</div>
 		<div class="fullscreen-table markdown-preview flex-1 overflow-auto p-6 pb-24">
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->

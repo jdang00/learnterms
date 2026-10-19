@@ -1,6 +1,14 @@
 <script lang="ts">
+	import { SelectField } from '$lib/components/ui/select';
 	import { acceptanceLevels, type AcceptanceLevel } from '$lib/utils/freeResponse';
 	import AcceptanceMeter from '$lib/components/AcceptanceMeter.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as Card from '$lib/components/ui/card';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { Input } from '$lib/components/ui/input';
+	import { Separator } from '$lib/components/ui/separator';
+	import * as Tabs from '$lib/components/ui/tabs';
 	import QuestionSourceEditor from './QuestionSourceEditor.svelte';
 	import ExamFindingsWorkspace from './ExamFindingsWorkspace.svelte';
 	import type { ExamFinding } from '$lib/examFindings/findings';
@@ -365,19 +373,19 @@
 			value: 'published',
 			label: 'Published',
 			icon: CheckCircle,
-			colorClass: 'btn-success'
+			tone: 'success' as const
 		},
 		{
 			value: 'draft',
 			label: 'Draft',
 			icon: FileText,
-			colorClass: 'btn-info'
+			tone: 'info' as const
 		},
 		{
 			value: 'archived',
 			label: 'Archived',
 			icon: Archive,
-			colorClass: 'btn-error'
+			tone: 'error' as const
 		}
 	];
 
@@ -1341,71 +1349,68 @@
 	}
 </script>
 
-<div class="h-full flex flex-col overflow-hidden bg-base-100">
+<div class="h-full flex flex-col overflow-hidden bg-background">
 	<!-- Top Bar: Title & Actions -->
 	<div
-		class="flex flex-wrap items-center justify-between gap-y-2 px-4 py-3 border-b border-base-300 bg-base-100 shrink-0"
+		class="flex flex-wrap items-center justify-between gap-y-2 px-4 py-3 border-b border-border bg-background shrink-0"
 	>
 		<h3 class="text-base font-semibold">{mode === 'edit' ? 'Edit Question' : 'New Question'}</h3>
 		{#if canEditExamFindings}
-			<div
-				role="tablist"
-				aria-label="Editor view"
-				class="tabs tabs-box tabs-xs mx-3 rounded-full p-1"
+			<Tabs.Root
+				value={editorView}
+				onValueChange={(value) => (editorView = value as typeof editorView)}
+				class="mx-3"
 			>
-				<button
-					role="tab"
-					type="button"
-					class="tab gap-1.5 rounded-full px-3 {editorView === 'question' ? 'tab-active' : ''}"
-					aria-selected={editorView === 'question'}
-					onclick={() => (editorView = 'question')}
-				>
-					<MessageSquare size={13} /> Question
-				</button>
-				<button
-					role="tab"
-					type="button"
-					class="tab gap-1.5 rounded-full px-3 {editorView === 'findings' ? 'tab-active' : ''}"
-					aria-selected={editorView === 'findings'}
-					onclick={() => (editorView = 'findings')}
-				>
-					<Stethoscope size={13} />
-					<span class="hidden sm:inline">Exam findings</span>
-					{#if examFindings.length}
-						<span class="badge badge-primary badge-xs tabular-nums">{examFindings.length}</span>
-					{:else}
-						<span class="badge badge-soft badge-info badge-xs">Beta</span>
-					{/if}
-				</button>
-			</div>
+				<Tabs.List aria-label="Editor view" class="h-8">
+					<Tabs.Trigger value="question" class="px-3">
+						<MessageSquare size={13} /> Question
+					</Tabs.Trigger>
+					<Tabs.Trigger value="findings" class="px-3">
+						<Stethoscope size={13} />
+						<span class="hidden sm:inline">Exam findings</span>
+						{#if examFindings.length}
+							<Badge variant="solid" tone="primary" size="xs" class="tabular-nums"
+								>{examFindings.length}</Badge
+							>
+						{:else}
+							<Badge variant="soft" tone="info" size="xs">Beta</Badge>
+						{/if}
+					</Tabs.Trigger>
+				</Tabs.List>
+			</Tabs.Root>
 		{/if}
 		<div class="ml-auto flex items-center gap-2">
-			<button
-				class="btn btn-sm btn-ghost rounded-full"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
 				onclick={onCancel}
-				disabled={isSubmitting || isUploading}>Cancel</button
+				disabled={isSubmitting || isUploading}>Cancel</Button
 			>
-			<button
-				class="btn btn-sm btn-primary rounded-full gap-2"
+			<Button
+				size="sm"
+				class="gap-2"
 				onclick={handleSubmit}
+				loading={isSubmitting}
 				disabled={isSubmitting || isUploading || !canSubmit}
 			>
-				{#if isSubmitting}
-					<span class="loading loading-spinner loading-xs"></span>
-				{:else}
-					<Save size={14} />
-				{/if}
+				{#if !isSubmitting}<Save size={14} />{/if}
 				{mode === 'edit' ? 'Save' : 'Create'}
-			</button>
+			</Button>
 		</div>
 	</div>
 
 	{#if saveError}
-		<div class="px-4 py-3 border-b border-error/20 bg-error/10 text-sm text-error">
+		<div class="px-4 py-3 border-b border-error/20 bg-error/10 text-sm text-error-ink">
 			<div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
 				<span>{saveError}</span>
 				{#if isRationaleError && questionType !== QUESTION_TYPES.FREE_RESPONSE}
-					<a class="link font-semibold" href={rationaleDocsUrl} target="_blank" rel="noreferrer">
+					<a
+						class="font-semibold underline underline-offset-4"
+						href={rationaleDocsUrl}
+						target="_blank"
+						rel="noreferrer"
+					>
 						Why rationales are required
 					</a>
 				{/if}
@@ -1429,21 +1434,23 @@
 	<!-- Toolbar: Type & Status -->
 	<!-- The question view is hidden, not unmounted, so its TipTap editors keep their state. -->
 	<div
-		class="flex flex-wrap items-center gap-8 px-6 py-4 border-b border-base-300 bg-base-200/30 shrink-0"
+		class="flex flex-wrap items-center gap-8 px-6 py-4 border-b border-border bg-muted/30 shrink-0"
 		class:hidden={showFindings}
 	>
 		<!-- Type Selector -->
 		<div class="flex flex-col gap-2">
 			<span
 				id="question-type-label"
-				class="text-[10px] font-bold text-base-content/40 uppercase tracking-wider ml-1">Type</span
+				class="text-[10px] font-bold text-foreground/40 uppercase tracking-wider ml-1">Type</span
 			>
 			<div class="relative" bind:this={typeMenuEl}>
-				<div class="flex shadow-xs bg-base-100 rounded-full border border-base-300 p-1">
-					<button
-						type="button"
-						bind:this={typeTriggerEl}
-						class="btn btn-xs sm:btn-sm rounded-full border-0 btn-active font-medium gap-2 pr-2.5"
+				<div class="flex shadow-xs bg-background rounded-full border border-border p-1">
+					<Button
+						bind:ref={typeTriggerEl}
+						variant="soft"
+						tone="neutral"
+						size="xs"
+						class="gap-2 pr-2.5 font-medium sm:h-8 sm:px-3.5 sm:text-sm"
 						aria-haspopup="menu"
 						aria-expanded={typeMenuOpen}
 						aria-labelledby="question-type-label question-type-current"
@@ -1463,7 +1470,7 @@
 								? 'rotate-180'
 								: ''}"
 						/>
-					</button>
+					</Button>
 				</div>
 
 				{#if typeMenuOpen}
@@ -1471,7 +1478,7 @@
 						role="menu"
 						tabindex="-1"
 						aria-labelledby="question-type-label"
-						class="type-menu absolute left-0 top-full z-30 mt-2 w-72 rounded-3xl border border-base-300 bg-base-100 p-1.5 shadow-lg"
+						class="type-menu absolute left-0 top-full z-30 mt-2 w-72 rounded-3xl border border-border bg-background p-1.5 shadow-lg"
 						onkeydown={handleTypeMenuKeydown}
 					>
 						{#each questionTypeOptions as option (option.value)}
@@ -1481,14 +1488,14 @@
 								role="menuitemradio"
 								aria-checked={selected}
 								class="flex w-full items-center gap-3 rounded-2xl px-2.5 py-2 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 {selected
-									? 'bg-base-200'
-									: 'hover:bg-base-200/60 focus-visible:bg-base-200/60'}"
+									? 'bg-muted'
+									: 'hover:bg-muted/60 focus-visible:bg-muted/60'}"
 								onclick={() => selectQuestionType(option.value)}
 							>
 								<span
 									class="grid size-8 shrink-0 place-items-center rounded-full transition-colors {selected
 										? 'bg-primary/10 text-primary'
-										: 'bg-base-200 text-base-content/60'}"
+										: 'bg-muted text-foreground/60'}"
 								>
 									<option.icon size={16} />
 								</span>
@@ -1496,7 +1503,7 @@
 									<span class="block text-sm {selected ? 'font-semibold' : 'font-medium'}"
 										>{option.label}</span
 									>
-									<span class="block text-xs text-base-content/50">{option.description}</span>
+									<span class="block text-xs text-foreground/50">{option.description}</span>
 								</span>
 								{#if selected}
 									<Check size={14} class="shrink-0 text-primary" />
@@ -1508,24 +1515,23 @@
 			</div>
 		</div>
 
-		<div class="w-px h-10 bg-base-300 hidden sm:block"></div>
+		<div class="w-px h-10 bg-muted-strong hidden sm:block"></div>
 
 		<!-- Status Selector -->
 		<div class="flex flex-col gap-2">
-			<span class="text-[10px] font-bold text-base-content/70 uppercase tracking-wider ml-1"
+			<span class="text-[10px] font-bold text-foreground/70 uppercase tracking-wider ml-1"
 				>Status</span
 			>
 			<div
-				class="flex flex-wrap gap-1 rounded-2xl border border-base-300 bg-base-100 p-1 shadow-xs"
+				class="flex flex-wrap gap-1 rounded-2xl border border-border bg-background p-1 shadow-xs"
 			>
 				{#each statusOptions as option (option.value)}
-					<button
-						type="button"
+					<Button
+						size="sm"
+						variant={questionStatus === option.value ? 'solid' : 'ghost'}
+						tone={questionStatus === option.value ? option.tone : 'neutral'}
 						aria-pressed={questionStatus === option.value}
-						class="btn btn-sm rounded-full border-0 px-3 font-semibold {questionStatus ===
-						option.value
-							? option.colorClass
-							: 'btn-ghost text-base-content'}"
+						class="px-3 font-semibold"
 						onclick={() => {
 							questionStatus = option.value;
 							onChange();
@@ -1534,7 +1540,7 @@
 					>
 						<option.icon size={16} />
 						<span>{option.label}</span>
-					</button>
+					</Button>
 				{/each}
 			</div>
 		</div>
@@ -1551,32 +1557,32 @@
 			<div class="space-y-2">
 				<div class="flex items-center justify-between">
 					<label
-						class="text-xs font-semibold uppercase tracking-wide text-base-content/60 flex items-center gap-2"
+						class="text-xs font-semibold uppercase tracking-wide text-foreground/60 flex items-center gap-2"
 					>
 						<MessageSquare size={14} /> Question
 					</label>
-					<span class="text-[10px] text-base-content/40 font-medium hidden sm:inline"
+					<span class="text-[10px] text-foreground/40 font-medium hidden sm:inline"
 						>Ctrl + S to save</span
 					>
 				</div>
 				<div
-					class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 shadow-xs group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all"
+					class="border border-border rounded-2xl overflow-hidden bg-background shadow-xs group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all"
 				>
 					{#if editor}
 						<div
-							class="bg-base-200/50 border-b border-base-300 p-1 flex gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+							class="bg-muted/50 border-b border-border p-1 flex gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
 						>
 							{#each menuItems as item (item.name)}
-								<button
-									type="button"
-									class="btn btn-ghost btn-xs btn-square {item.active()
-										? 'btn-active text-primary'
-										: ''}"
+								<Button
+									variant={item.active() ? 'soft' : 'ghost'}
+									tone={item.active() ? 'primary' : 'neutral'}
+									size="xs"
+									shape="square"
 									onclick={item.command}
 									title={item.name}
 								>
 									<item.icon size={12} />
-								</button>
+								</Button>
 							{/each}
 						</div>
 						<EditorContent editor={$editor} />
@@ -1584,43 +1590,45 @@
 				</div>
 				{#if visibleSuggestion}
 					{@const suggestion = visibleSuggestion}
-					<div class="flex flex-wrap items-center gap-2 px-1 text-xs text-base-content/70">
+					<div class="flex flex-wrap items-center gap-2 px-1 text-xs text-foreground/70">
 						<Sparkles size={12} class="text-primary" />
 						<span>
 							Looks like <span class="font-semibold">{DISPLAY_QUESTION_TYPES[suggestion.type]}</span
 							>
-							<span class="text-base-content/50">· {suggestion.reason}</span>
+							<span class="text-foreground/50">· {suggestion.reason}</span>
 						</span>
-						<button
-							type="button"
-							class="btn btn-xs btn-soft btn-primary rounded-full"
-							onclick={() => acceptSuggestion(suggestion)}>Switch</button
+						<Button
+							variant="soft"
+							tone="primary"
+							size="xs"
+							onclick={() => acceptSuggestion(suggestion)}>Switch</Button
 						>
-						<button
-							type="button"
-							class="btn btn-xs btn-ghost rounded-full"
-							onclick={() => (dismissedSuggestion = suggestion.type)}>Dismiss</button
+						<Button
+							variant="ghost"
+							tone="neutral"
+							size="xs"
+							onclick={() => (dismissedSuggestion = suggestion.type)}>Dismiss</Button
 						>
 					</div>
 				{:else if showAutoTyped && autoTyped}
-					<div class="flex flex-wrap items-center gap-2 px-1 text-xs text-base-content/70">
+					<div class="flex flex-wrap items-center gap-2 px-1 text-xs text-foreground/70">
 						<Sparkles size={12} class="text-primary" />
 						<span>
 							Switched to <span class="font-semibold">{DISPLAY_QUESTION_TYPES[autoTyped.type]}</span
 							>
-							<span class="text-base-content/50">· {autoTyped.reason}</span>
+							<span class="text-foreground/50">· {autoTyped.reason}</span>
 						</span>
-						<button type="button" class="btn btn-xs btn-ghost rounded-full" onclick={undoAutoType}
-							>Keep Multiple Choice</button
+						<Button variant="ghost" tone="neutral" size="xs" onclick={undoAutoType}
+							>Keep Multiple Choice</Button
 						>
 					</div>
 				{/if}
 				{#if stemHint}
-					<p class="px-1 text-xs text-warning">{stemHint}</p>
+					<p class="px-1 text-xs text-warning-ink">{stemHint}</p>
 				{/if}
 			</div>
 
-			<div class="divider my-2 opacity-50"></div>
+			<Separator class="my-2 opacity-50" />
 
 			<!-- Options Section -->
 			<div>
@@ -1628,7 +1636,7 @@
 					<div class="space-y-4">
 						<div
 							id="acceptance-label"
-							class="text-xs font-semibold uppercase tracking-wide text-base-content/60"
+							class="text-xs font-semibold uppercase tracking-wide text-foreground/60"
 						>
 							Acceptance
 						</div>
@@ -1642,7 +1650,7 @@
 								<label
 									class="flex cursor-pointer flex-col gap-1.5 rounded-3xl border-2 px-4 py-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/20 {selected
 										? 'border-primary bg-primary/5'
-										: 'border-base-300 bg-base-100 hover:border-base-content/20'}"
+										: 'border-border bg-background hover:border-foreground/20'}"
 								>
 									<input
 										type="radio"
@@ -1655,16 +1663,15 @@
 									<span class="flex items-center gap-2 text-sm font-semibold">
 										<AcceptanceMeter
 											level={value as AcceptanceLevel}
-											class={selected ? 'text-primary' : 'text-base-content/50'}
+											class={selected ? 'text-primary' : 'text-foreground/50'}
 										/>
 										{level.label}
 										{#if value === 'lenient'}
-											<span class="ml-auto text-[10px] font-medium text-base-content/40"
-												>Default</span
+											<span class="ml-auto text-[10px] font-medium text-foreground/40">Default</span
 											>
 										{/if}
 									</span>
-									<span class="text-xs leading-snug text-base-content/60">{level.description}</span>
+									<span class="text-xs leading-snug text-foreground/60">{level.description}</span>
 								</label>
 							{/each}
 						</div>
@@ -1672,11 +1679,14 @@
 				{:else if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
 					<div class="space-y-4">
 						<div class="flex items-center justify-between mb-2">
-							<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60">
+							<div class="text-xs font-semibold uppercase tracking-wide text-foreground/60">
 								Accepted Answers
 							</div>
-							<button
-								class="btn btn-xs btn-ghost rounded-full gap-1"
+							<Button
+								variant="ghost"
+								tone="neutral"
+								size="xs"
+								class="gap-1"
 								onclick={generateAIOptions}
 								title="Create source-grounded questions in Question Studio"
 							>
@@ -1686,95 +1696,104 @@
 									<Sparkles size={12} />
 								{/if}
 								<span class="hidden sm:inline">Question Studio</span>
-							</button>
+							</Button>
 						</div>
-						<div
-							class="card bg-base-100 border border-base-300 shadow-xs rounded-3xl overflow-hidden"
-						>
-							<div class="card-body p-4 gap-4">
+						<Card.Root class="gap-0 bg-background py-0 shadow-xs">
+							<Card.Content class="gap-4 p-4">
 								{#each fitbAnswers as row, index (index)}
 									<div class="flex flex-col sm:flex-row gap-3 items-start">
 										<div class="flex-1 w-full">
 											<div class="flex items-center gap-2 mb-1">
-												<span
-													class="badge badge-sm {index === 0 ? 'badge-success' : 'badge-ghost'}"
+												<Badge
+													variant={index === 0 ? 'solid' : 'soft'}
+													tone={index === 0 ? 'success' : 'neutral'}
+													size="sm"
 												>
 													{index === 0 ? 'Primary' : 'Alt'}
-												</span>
+												</Badge>
 												{#if fitbAnswers.length > 1}
-													<button
-														class="btn btn-ghost btn-xs btn-circle text-error ml-auto sm:hidden"
+													<Button
+														variant="ghost"
+														tone="error"
+														size="xs"
+														shape="circle"
+														class="ml-auto sm:hidden"
 														onclick={() => removeFitbRow(index)}
 													>
 														<X size={14} />
-													</button>
+													</Button>
 												{/if}
 											</div>
-											<input
+											<Input
 												type="text"
-												class="input input-bordered input-sm w-full rounded-full font-medium"
+												class="h-8 px-3 text-sm font-medium"
 												placeholder="Answer text"
 												bind:value={row.value}
 												oninput={onChange}
 											/>
 										</div>
 										<div class="flex flex-wrap items-center gap-2 w-full sm:w-auto pt-6">
-											<select
-												class="select select-bordered select-sm rounded-full"
+											<SelectField
+												size="sm"
+												class="w-auto"
 												value={row.mode}
-												onchange={(e) => updateFitbMode(index, e.currentTarget.value as FitbMode)}
-											>
-												{#each Object.entries(FITB_MODE_LABELS) as [mode, label] (mode)}
-													<option value={mode}>{label}</option>
-												{/each}
-											</select>
+												onValueChange={(v) => updateFitbMode(index, v as FitbMode)}
+												options={Object.entries(FITB_MODE_LABELS).map(([mode, label]) => ({
+													value: mode,
+													label
+												}))}
+											/>
 											<div
-												class="flex items-center rounded-full border border-base-300 p-0.5 gap-0.5"
+												class="flex items-center rounded-full border border-border p-0.5 gap-0.5"
 											>
-												<button
-													class="btn btn-sm rounded-full border-0 {row.flags.ignorePunct
-														? 'btn-active'
-														: 'btn-ghost'}"
+												<Button
+													size="sm"
+													variant={row.flags.ignorePunct ? 'soft' : 'ghost'}
+													tone="neutral"
 													onclick={() => toggleFitbFlag(index, 'ignorePunct')}
 													title="Ignore Punctuation"
 												>
 													Punct
-												</button>
-												<button
-													class="btn btn-sm rounded-full border-0 {row.flags.normalizeWs
-														? 'btn-active'
-														: 'btn-ghost'}"
+												</Button>
+												<Button
+													size="sm"
+													variant={row.flags.normalizeWs ? 'soft' : 'ghost'}
+													tone="neutral"
 													onclick={() => toggleFitbFlag(index, 'normalizeWs')}
 													title="Normalize Whitespace"
 												>
 													Space
-												</button>
+												</Button>
 											</div>
 											{#if fitbAnswers.length > 1}
-												<button
-													class="btn btn-ghost btn-sm btn-circle text-error hidden sm:flex"
+												<Button
+													variant="ghost"
+													tone="error"
+													size="sm"
+													shape="circle"
+													class="hidden sm:flex"
 													onclick={() => removeFitbRow(index)}
 												>
 													<X size={16} />
-												</button>
+												</Button>
 											{/if}
 										</div>
 									</div>
 									{#if index < fitbAnswers.length - 1}
-										<div class="divider my-0"></div>
+										<Separator class="my-0" />
 									{/if}
 								{/each}
-							</div>
-							<div class="bg-base-200/50 p-2 border-t border-base-300 flex justify-center">
-								<button class="btn btn-xs btn-ghost rounded-full gap-1" onclick={addFitbRow}>
+							</Card.Content>
+							<div class="bg-muted/50 p-2 border-t border-border flex justify-center">
+								<Button variant="ghost" tone="neutral" size="xs" class="gap-1" onclick={addFitbRow}>
 									<Plus size={14} /> Add Alternative
-								</button>
+								</Button>
 							</div>
-						</div>
+						</Card.Root>
 					</div>
 				{:else if questionType === QUESTION_TYPES.MATCHING}
 					<div class="space-y-4">
-						<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2">
+						<div class="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-2">
 							Matching Pairs
 						</div>
 						<div class="space-y-3">
@@ -1783,25 +1802,28 @@
 									<!-- Left Column: Prompt -->
 									<div class="flex-1 w-full relative">
 										{#if i < matchingPrompts.length}
-											<input
+											<Input
 												type="text"
-												class="input input-bordered w-full rounded-3xl pr-10"
+												class="pr-10"
 												placeholder="Prompt {i + 1}"
 												bind:value={matchingPrompts[i]}
 												oninput={onChange}
 											/>
 											{#if matchingPrompts.length > 1}
-												<button
-													type="button"
-													class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-error"
+												<Button
+													variant="ghost"
+													tone="neutral"
+													size="xs"
+													shape="circle"
+													class="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-error-ink"
 													onclick={() => removeMatchingPrompt(i)}
 												>
 													<X size={14} />
-												</button>
+												</Button>
 											{/if}
 										{:else}
 											<div
-												class="h-12 w-full rounded-3xl border border-dashed border-base-300 bg-base-100/50 flex items-center justify-center text-xs text-base-content/30 italic"
+												class="h-12 w-full rounded-3xl border border-dashed border-border bg-background/50 flex items-center justify-center text-xs text-foreground/30 italic"
 											>
 												Distractor (No Prompt)
 											</div>
@@ -1809,7 +1831,7 @@
 									</div>
 
 									<!-- Center: Arrow -->
-									<div class="text-base-content/30 rotate-90 sm:rotate-0 w-5 flex justify-center">
+									<div class="text-foreground/30 rotate-90 sm:rotate-0 w-5 flex justify-center">
 										{#if i < matchingPrompts.length && i < matchingAnswers.length}
 											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path
@@ -1825,25 +1847,28 @@
 									<!-- Right Column: Answer -->
 									<div class="flex-1 w-full relative">
 										{#if i < matchingAnswers.length}
-											<input
+											<Input
 												type="text"
-												class="input input-bordered w-full rounded-3xl pr-10 border-success/30 focus:border-success focus:ring-success/20"
+												class="pr-10 border-success/30 focus:border-success focus:ring-success/20"
 												placeholder="Answer {i + 1}"
 												bind:value={matchingAnswers[i]}
 												oninput={onChange}
 											/>
 											{#if matchingAnswers.length > 1}
-												<button
-													type="button"
-													class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-error"
+												<Button
+													variant="ghost"
+													tone="neutral"
+													size="xs"
+													shape="circle"
+													class="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-error-ink"
 													onclick={() => removeMatchingAnswer(i)}
 												>
 													<X size={14} />
-												</button>
+												</Button>
 											{/if}
 										{:else}
 											<div
-												class="h-12 w-full rounded-3xl border border-dashed border-base-300 bg-base-100/50 flex items-center justify-center text-xs text-base-content/30 italic"
+												class="h-12 w-full rounded-3xl border border-dashed border-border bg-background/50 flex items-center justify-center text-xs text-foreground/30 italic"
 											>
 												No Answer
 											</div>
@@ -1855,20 +1880,26 @@
 
 						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
 							<div class="flex justify-center sm:justify-start">
-								<button
-									class="btn btn-sm btn-outline gap-2 w-full rounded-full sm:w-auto"
+								<Button
+									variant="outline"
+									tone="neutral"
+									size="sm"
+									class="w-full gap-2 sm:w-auto"
 									onclick={addMatchingPrompt}
 								>
 									<Plus size={14} /> Add Prompt
-								</button>
+								</Button>
 							</div>
 							<div class="flex justify-center sm:justify-end">
-								<button
-									class="btn btn-sm btn-outline gap-2 w-full rounded-full sm:w-auto"
+								<Button
+									variant="outline"
+									tone="neutral"
+									size="sm"
+									class="w-full gap-2 sm:w-auto"
 									onclick={addMatchingAnswer}
 								>
 									<Plus size={14} /> Add Answer
-								</button>
+								</Button>
 							</div>
 						</div>
 					</div>
@@ -1877,17 +1908,20 @@
 					<div class="space-y-4">
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-3">
-								<div class="text-xs font-semibold uppercase tracking-wide text-base-content/60">
+								<div class="text-xs font-semibold uppercase tracking-wide text-foreground/60">
 									Options
 								</div>
-								<span class="text-[10px] text-base-content/40 font-medium hidden sm:inline"
+								<span class="text-[10px] text-foreground/40 font-medium hidden sm:inline"
 									>Ctrl + Enter to toggle correct</span
 								>
 							</div>
 							<div class="flex items-center gap-1">
 								{#if questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
-									<button
-										class="btn btn-xs btn-ghost gap-1"
+									<Button
+										variant="ghost"
+										tone="neutral"
+										size="xs"
+										class="gap-1"
 										onclick={generateAIOptions}
 										title={canGenerateAI()
 											? 'Generate distractor options with AI'
@@ -1899,10 +1933,16 @@
 											<Sparkles size={12} />
 										{/if}
 										<span class="hidden sm:inline">Question Studio</span>
-									</button>
-									<button class="btn btn-xs btn-ghost gap-1" onclick={shuffleOptions}>
+									</Button>
+									<Button
+										variant="ghost"
+										tone="neutral"
+										size="xs"
+										class="gap-1"
+										onclick={shuffleOptions}
+									>
 										<Shuffle size={12} /> <span class="hidden sm:inline">Shuffle</span>
-									</button>
+									</Button>
 								{/if}
 							</div>
 						</div>
@@ -1911,22 +1951,21 @@
 							{#each options as option, index (index)}
 								<div class="relative group">
 									<div
-										class="flex items-center rounded-full border-2 transition-colors bg-base-100 pl-3 pr-2 py-1 {correctAnswers.includes(
+										class="flex items-center rounded-full border-2 transition-colors bg-background pl-3 pr-2 py-1 {correctAnswers.includes(
 											index.toString()
 										)
 											? 'border-success bg-success/5'
-											: 'border-base-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20'}"
+											: 'border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20'}"
 									>
-										<input
-											type="checkbox"
-											class="checkbox checkbox-sm {correctAnswers.includes(index.toString())
-												? 'checkbox-success'
-												: 'checkbox-primary'}"
+										<Checkbox
+											class="size-4 {correctAnswers.includes(index.toString())
+												? 'data-checked:border-success data-checked:bg-success'
+												: ''}"
 											checked={correctAnswers.includes(index.toString())}
-											onclick={() => toggleCorrectAnswer(index)}
+											onCheckedChange={() => toggleCorrectAnswer(index)}
 											tabindex={-1}
 										/>
-										<span class="font-semibold text-sm ml-3 text-base-content/50 select-none w-6"
+										<span class="font-semibold text-sm ml-3 text-foreground/50 select-none w-6"
 											>{String.fromCharCode(65 + index)}.</span
 										>
 										<input
@@ -1944,14 +1983,17 @@
 											}}
 										/>
 										{#if options.length > 2 && questionType !== QUESTION_TYPES.TRUE_FALSE}
-											<button
-												type="button"
-												class="btn btn-ghost btn-xs btn-circle text-base-content/30 hover:text-error ml-1"
+											<Button
+												variant="ghost"
+												tone="neutral"
+												size="xs"
+												shape="circle"
+												class="ml-1 text-foreground/30 hover:text-error-ink"
 												tabindex={-1}
 												onclick={() => removeOption(index)}
 											>
 												<X size={14} />
-											</button>
+											</Button>
 										{:else if questionType === QUESTION_TYPES.TRUE_FALSE}
 											<div class="w-8"></div>
 										{/if}
@@ -1961,12 +2003,15 @@
 						</div>
 
 						{#if questionType === QUESTION_TYPES.MULTIPLE_CHOICE}
-							<button
-								class="btn btn-sm btn-ghost gap-2 w-full border-2 border-dashed border-base-300 hover:border-primary hover:text-primary mt-2"
+							<Button
+								variant="ghost"
+								tone="neutral"
+								size="sm"
+								class="mt-2 w-full gap-2 border-2 border-dashed border-border hover:border-primary hover:text-primary"
 								onclick={addOption}
 							>
 								<Plus size={14} /> Add Option
-							</button>
+							</Button>
 						{/if}
 					</div>
 				{/if}
@@ -1974,56 +2019,61 @@
 
 			<!-- Rationale & Attachments -->
 			<div
-				class="grid grid-cols-1 gap-6 pt-4 border-t border-base-200 {isFreeResponse
+				class="grid grid-cols-1 gap-6 pt-4 border-t border-muted {isFreeResponse
 					? ''
 					: 'md:grid-cols-2'}"
 			>
 				<div>
 					{#if isFreeResponse}
 						<div
-							class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-1 flex items-center gap-2"
+							class="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1 flex items-center gap-2"
 						>
 							<Target size={14} /> Ground Truth
 						</div>
-						<p class="text-[10px] text-base-content/40 mb-2">
+						<p class="text-[10px] text-foreground/40 mb-2">
 							The expected answer or source text responses are graded against.
 						</p>
 					{:else}
 						<div
-							class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-1 flex items-center gap-2"
+							class="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1 flex items-center gap-2"
 						>
 							<MessageSquare size={14} /> Rationale
 						</div>
-						<p class="text-[10px] text-base-content/40 mb-2">
+						<p class="text-[10px] text-foreground/40 mb-2">
 							Required for every saved question.
-							<a class="link" href={rationaleDocsUrl} target="_blank" rel="noreferrer"> Why? </a>
+							<a
+								class="underline underline-offset-4"
+								href={rationaleDocsUrl}
+								target="_blank"
+								rel="noreferrer"
+							>
+								Why?
+							</a>
 						</p>
 					{/if}
 					<div
-						class="border border-base-300 rounded-2xl overflow-hidden bg-base-100 group {isFreeResponse
+						class="border border-border rounded-2xl overflow-hidden bg-background group {isFreeResponse
 							? 'shadow-xs flex flex-col-reverse focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all [&_.tiptap]:min-h-56 [&_.tiptap]:px-4 [&_.tiptap]:py-3'
 							: ''}"
 					>
 						{#if rationaleEditor}
 							<EditorContent editor={$rationaleEditor} />
 							<div
-								class="bg-base-200/50 border-base-300 p-1 flex flex-wrap gap-1 transition-opacity {isFreeResponse
+								class="bg-muted/50 border-border p-1 flex flex-wrap gap-1 transition-opacity {isFreeResponse
 									? 'border-b opacity-60 group-hover:opacity-100 group-focus-within:opacity-100'
 									: 'border-t opacity-50 group-hover:opacity-100'}"
 							>
 								{#each rationaleMenuItems as item (item.name)}
-									<button
-										type="button"
-										class="btn btn-ghost btn-xs btn-square {item.active()
-											? isFreeResponse
-												? 'btn-active text-primary'
-												: 'btn-active'
-											: ''}"
+									<Button
+										variant={item.active() ? 'soft' : 'ghost'}
+										tone={item.active() && isFreeResponse ? 'primary' : 'neutral'}
+										size="xs"
+										shape="square"
 										onclick={item.command}
 										title={item.name}
 									>
 										<item.icon size={12} />
-									</button>
+									</Button>
 								{/each}
 							</div>
 						{/if}
@@ -2043,7 +2093,7 @@
 
 				<div>
 					<div
-						class="text-xs font-semibold uppercase tracking-wide text-base-content/60 mb-2 flex items-center gap-2"
+						class="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-2 flex items-center gap-2"
 					>
 						<ImageIcon size={14} /> Attachments
 					</div>
@@ -2053,19 +2103,23 @@
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 								<!-- Existing Media -->
 								{#each existingMedia as m (m._id)}
-									<div class="border border-base-300 rounded-2xl overflow-hidden bg-base-100">
+									<div class="border border-border rounded-2xl overflow-hidden bg-background">
 										<div class="relative group">
 											<img src={m.url} alt={m.altText} class="w-full h-32 object-cover" />
-											<button
-												class="absolute top-1 right-1 btn btn-circle btn-xs btn-error opacity-0 group-hover:opacity-100 transition-opacity"
+											<Button
+												variant="solid"
+												tone="error"
+												size="xs"
+												shape="circle"
+												class="absolute top-1 right-1 opacity-0 transition-opacity group-hover:opacity-100"
 												onclick={() => removeExistingMedia(m._id)}
 											>
 												<Trash2 size={12} />
-											</button>
+											</Button>
 										</div>
 										<div class="p-3 space-y-2">
-											<input
-												class="input input-bordered input-sm w-full"
+											<Input
+												class="h-8 px-3 text-sm"
 												placeholder="Alt text"
 												bind:value={m.altText}
 												onblur={() =>
@@ -2076,8 +2130,8 @@
 														m.showOnSolution
 													)}
 											/>
-											<input
-												class="input input-bordered input-sm w-full"
+											<Input
+												class="h-8 px-3 text-sm"
 												placeholder="Caption (optional)"
 												bind:value={m.caption}
 												onblur={() =>
@@ -2088,18 +2142,21 @@
 														m.showOnSolution
 													)}
 											/>
-											<label class="label cursor-pointer gap-2 text-xs p-0 justify-start">
-												<input
-													type="checkbox"
-													class="checkbox checkbox-xs"
-													bind:checked={m.showOnSolution}
-													onchange={() =>
+											<label
+												class="flex cursor-pointer items-center justify-start gap-2 p-0 text-xs"
+											>
+												<Checkbox
+													class="size-3.5"
+													checked={m.showOnSolution}
+													onCheckedChange={(checked) => {
+														m.showOnSolution = checked === true;
 														commitExistingMediaChange(
 															m._id,
 															m.altText,
 															m.caption || '',
 															m.showOnSolution
-														)}
+														);
+													}}
 												/>
 												<span
 													>{questionType === QUESTION_TYPES.FREE_RESPONSE
@@ -2114,37 +2171,50 @@
 								<!-- Queued Media -->
 								{#each queuedMedia as m, idx (idx)}
 									<div
-										class="border border-primary/50 rounded-2xl overflow-hidden bg-base-100 relative"
+										class="border border-primary/50 rounded-2xl overflow-hidden bg-background relative"
 									>
-										<div class="absolute top-2 left-2 badge badge-primary badge-xs z-10">New</div>
+										<Badge
+											variant="solid"
+											tone="primary"
+											size="xs"
+											class="absolute top-2 left-2 z-10">New</Badge
+										>
 										<div class="relative">
 											<img src={m.url} alt={m.name} class="w-full h-32 object-cover" />
-											<button
-												class="absolute top-1 right-1 btn btn-circle btn-xs btn-error z-10"
+											<Button
+												variant="solid"
+												tone="error"
+												size="xs"
+												shape="circle"
+												class="absolute top-1 right-1 z-10"
 												onclick={() => removeQueuedMedia(idx)}
 											>
 												<Trash2 size={12} />
-											</button>
+											</Button>
 										</div>
 										<div class="p-3 space-y-2">
-											<input
-												class="input input-bordered input-sm w-full"
+											<Input
+												class="h-8 px-3 text-sm"
 												placeholder="Alt text"
 												bind:value={m.name}
 												oninput={onChange}
 											/>
-											<input
-												class="input input-bordered input-sm w-full"
+											<Input
+												class="h-8 px-3 text-sm"
 												placeholder="Caption (optional)"
 												bind:value={m.caption}
 												oninput={onChange}
 											/>
-											<label class="label cursor-pointer gap-2 text-xs p-0 justify-start">
-												<input
-													type="checkbox"
-													class="checkbox checkbox-xs"
-													bind:checked={m.showOnSolution}
-													onchange={onChange}
+											<label
+												class="flex cursor-pointer items-center justify-start gap-2 p-0 text-xs"
+											>
+												<Checkbox
+													class="size-3.5"
+													checked={m.showOnSolution}
+													onCheckedChange={(checked) => {
+														m.showOnSolution = checked === true;
+														onChange();
+													}}
 												/>
 												<span
 													>{questionType === QUESTION_TYPES.FREE_RESPONSE
@@ -2161,7 +2231,7 @@
 						<label
 							class="relative min-h-36 w-full border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center p-4 {isDraggingImage
 								? 'border-primary bg-primary/10'
-								: 'border-base-300 bg-base-100/50'} {isUploading || isSubmitting
+								: 'border-border bg-background/50'} {isUploading || isSubmitting
 								? 'opacity-60'
 								: 'cursor-pointer hover:border-primary'}"
 							ondragover={(event) => {
@@ -2173,7 +2243,7 @@
 							}}
 							ondrop={handleImageDrop}
 						>
-							<ImageIcon size={24} class="text-base-content/50" />
+							<ImageIcon size={24} class="text-foreground/50" />
 							<span class="mt-2 text-sm font-semibold"
 								>{isUploading
 									? uploadProgress === 100
@@ -2181,10 +2251,10 @@
 										: `Uploading ${uploadProgress}%`
 									: 'Add images'}</span
 							>
-							<span class="mt-1 text-xs text-base-content/60"
+							<span class="mt-1 text-xs text-foreground/60"
 								>{isUploading ? uploadLabel : 'Browse, drag & drop, or paste an image'}</span
 							>
-							<span class="mt-1 text-xs text-base-content/50"
+							<span class="mt-1 text-xs text-foreground/50"
 								>PNG, JPEG, WebP, GIF · 8 MB each · up to {MAX_QUESTION_IMAGES} images</span
 							>
 							<input
@@ -2200,7 +2270,7 @@
 								}}
 							/>
 						</label>
-						{#if uploadError}<p class="text-sm text-error" role="alert">{uploadError}</p>{/if}
+						{#if uploadError}<p class="text-sm text-error-ink" role="alert">{uploadError}</p>{/if}
 					</div>
 				</div>
 			</div>

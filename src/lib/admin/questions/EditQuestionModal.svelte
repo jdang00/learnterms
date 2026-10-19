@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { X } from 'lucide-svelte';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import QuestionEditorInline from './QuestionEditorInline.svelte';
 	import type { Doc } from '../../../convex/_generated/dataModel';
 
@@ -16,19 +16,17 @@
 	} = $props();
 </script>
 
-<dialog class="modal" class:modal-open={isEditModalOpen}>
-	<div
-		class="modal-box w-full max-w-4xl h-[90vh] rounded-2xl border border-base-300 shadow-2xl p-0 overflow-hidden flex flex-col bg-base-100"
+<Dialog.Root
+	open={isEditModalOpen}
+	onOpenChange={(open) => {
+		if (!open) closeEditModal();
+	}}
+>
+	<Dialog.Content
+		showCloseButton={false}
+		class="h-[90vh] w-full sm:max-w-4xl flex flex-col gap-0 overflow-hidden p-0 bg-background"
 	>
-		<button
-			class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-10 hidden"
-			onclick={closeEditModal}
-			aria-label="Close"
-		>
-			<X size={18} />
-		</button>
-
-		{#if isEditModalOpen && editingQuestion}
+		{#if editingQuestion}
 			{#key editingQuestion._id}
 				<QuestionEditorInline
 					{moduleId}
@@ -38,16 +36,10 @@
 					onCancel={closeEditModal}
 				/>
 			{/key}
-		{:else if isEditModalOpen}
-			<div class="flex items-center justify-center h-full text-base-content/50">
+		{:else}
+			<div class="flex items-center justify-center h-full text-foreground/50">
 				No question selected
 			</div>
 		{/if}
-	</div>
-	<button
-		type="button"
-		class="modal-backdrop bg-black/50"
-		aria-label="Close edit question modal"
-		onclick={closeEditModal}
-	></button>
-</dialog>
+	</Dialog.Content>
+</Dialog.Root>

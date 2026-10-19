@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Sun, Moon } from 'lucide-svelte';
 	import { theme, isDark } from '$lib/theme.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		size?: 'sm' | 'md' | 'lg';
@@ -10,23 +11,20 @@
 
 	const { size = 'md', variant = 'ghost', class: className = '' }: Props = $props();
 
-	const sizeClasses = {
-		sm: 'btn-sm',
-		md: '',
-		lg: 'btn-lg'
-	};
-
-	const variantClasses = {
-		ghost: 'btn-ghost',
-		outline: 'btn-outline',
-		primary: 'btn-primary'
-	};
+	const sizes = { sm: 'sm', md: 'md', lg: 'lg' } as const;
+	const looks = {
+		ghost: { variant: 'ghost', tone: 'neutral' },
+		outline: { variant: 'outline', tone: 'neutral' },
+		primary: { variant: 'solid', tone: 'primary' }
+	} as const;
 </script>
 
-<button
-	class="btn {variantClasses[variant as keyof typeof variantClasses]} {sizeClasses[
-		size as keyof typeof sizeClasses
-	]} relative overflow-hidden {className}"
+<Button
+	variant={looks[variant].variant}
+	tone={looks[variant].tone}
+	size={sizes[size]}
+	shape="circle"
+	class="relative overflow-hidden {className}"
 	onclick={() => theme.toggle()}
 	aria-label="Toggle theme"
 >
@@ -44,4 +42,4 @@
 	>
 		<Moon size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} />
 	</div>
-</button>
+</Button>

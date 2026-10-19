@@ -19,8 +19,8 @@
 		border-radius: 40% 60% 55% 45%;
 		background: radial-gradient(
 			ellipse at 40% 50%,
-			color-mix(in oklab, var(--color-primary) 40%, transparent),
-			color-mix(in oklab, var(--color-primary) 12%, transparent) 55%,
+			color-mix(in oklab, var(--primary) 40%, transparent),
+			color-mix(in oklab, var(--primary) 12%, transparent) 55%,
 			transparent 100%
 		);
 		filter: blur(64px);
@@ -36,7 +36,7 @@
 		background: linear-gradient(
 			90deg,
 			transparent,
-			color-mix(in oklab, var(--color-secondary) 45%, transparent) 45%,
+			color-mix(in oklab, var(--secondary) 45%, transparent) 45%,
 			transparent
 		);
 		filter: blur(48px);

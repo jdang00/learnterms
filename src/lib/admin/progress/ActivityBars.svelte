@@ -19,15 +19,15 @@
 </script>
 
 <div>
-	<p class="mb-3 h-5 text-sm text-base-content/60" aria-live="polite">
+	<p class="mb-3 h-5 text-sm text-foreground/60" aria-live="polite">
 		{#if days[focus]}
-			<span class="font-semibold text-base-content tabular-nums">{values[focus]}</span>
+			<span class="font-semibold text-foreground tabular-nums">{values[focus]}</span>
 			{unit} · {days[focus].isToday ? 'Today so far' : dayLabel(days[focus].start, true)}
 		{/if}
 	</p>
 	<div class="flex gap-3">
 		<div
-			class="flex h-44 flex-col justify-between text-right text-[10px] tabular-nums text-base-content/40"
+			class="flex h-44 flex-col justify-between text-right text-[10px] tabular-nums text-foreground/40"
 			aria-hidden="true"
 		>
 			{#each ticks as tick, i (i)}<span class="-my-1.5">{tick}</span>{/each}
@@ -39,8 +39,8 @@
 			>
 				{#each ticks.keys() as i (i)}<span
 						class="border-t {i === ticks.length - 1
-							? 'border-base-300'
-							: 'border-dashed border-base-200'}"
+							? 'border-border'
+							: 'border-dashed border-muted'}"
 					></span>{/each}
 			</div>
 			<div
@@ -71,7 +71,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="mt-2 flex gap-0.5 pl-8 text-[10px] text-base-content/45" aria-hidden="true">
+	<div class="mt-2 flex gap-0.5 pl-8 text-[10px] text-foreground/45" aria-hidden="true">
 		{#each days as day, i (day.start)}
 			<span
 				class="min-w-0 flex-1 truncate text-center {day.isToday

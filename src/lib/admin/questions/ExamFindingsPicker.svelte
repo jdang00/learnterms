@@ -16,6 +16,10 @@
 	} from '$lib/examFindings/findings';
 	import { buildExamFindingView } from '$lib/examFindings/view';
 	import ExamFindingCard from '$lib/components/exam-findings/ExamFindingCard.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import * as InputGroup from '$lib/components/ui/input-group';
+	import { Kbd } from '$lib/components/ui/kbd';
 	import { EXAM_GROUP_STYLE } from '$lib/components/exam-findings/groups';
 
 	let {
@@ -24,7 +28,6 @@
 		onAdd
 	}: { open?: boolean; findings: ExamFinding[]; onAdd: (test: string) => void } = $props();
 
-	let dialog = $state<HTMLDialogElement | null>(null);
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let listEl = $state<HTMLElement | null>(null);
 	let query = $state('');
@@ -74,12 +77,7 @@
 	}
 
 	$effect(() => {
-		if (!dialog) return;
-		if (open && !dialog.open) {
-			query = '';
-			dialog.showModal();
-			void tick().then(() => searchInput?.focus());
-		} else if (!open && dialog.open) dialog.close();
+		if (open) query = '';
 	});
 
 	function add(id = active?.id) {
@@ -107,40 +105,44 @@
 	}
 </script>
 
-<dialog
-	bind:this={dialog}
-	class="modal modal-bottom sm:modal-middle"
-	aria-labelledby="exam-picker-title"
-	onclose={() => (open = false)}
->
-	<div
-		class="modal-box flex h-[min(40rem,88dvh)] w-full max-w-4xl flex-col overflow-hidden rounded-t-[2rem] border border-base-300 p-0 shadow-2xl sm:rounded-[1.75rem]"
+<Dialog.Root bind:open>
+	<Dialog.Content
+		class="inset-x-0 top-auto bottom-0 flex h-[min(40rem,88dvh)] max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-t-[2rem] rounded-b-none border p-0 shadow-2xl sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-w-4xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[1.75rem]"
+		showCloseButton={false}
+		onOpenAutoFocus={(event) => {
+			event.preventDefault();
+			searchInput?.focus();
+		}}
 	>
-		<header class="flex items-center gap-3 border-b border-base-200 px-5 pb-3 pt-4">
+		<header class="flex items-center gap-3 border-b border-muted px-5 pb-3 pt-4">
 			<div class="min-w-0 flex-1">
-				<h2 id="exam-picker-title" class="text-lg font-semibold tracking-tight">Add findings</h2>
-				<p class="text-sm text-base-content/55">
+				<Dialog.Title id="exam-picker-title" class="text-lg font-semibold tracking-tight"
+					>Add findings</Dialog.Title
+				>
+				<p class="text-sm text-foreground/55">
 					Pick a test. Each box records only what you fill in.
 				</p>
 			</div>
-			<button
-				type="button"
-				class="btn btn-ghost btn-sm btn-circle"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
+				shape="circle"
 				aria-label="Close"
-				onclick={() => (open = false)}><X size={16} /></button
+				onclick={() => (open = false)}><X size={16} /></Button
 			>
 		</header>
 
 		<div class="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] sm:grid-cols-[17rem_minmax(0,1fr)]">
 			<!-- List -->
-			<div class="flex min-h-0 flex-col border-base-200 sm:border-r">
+			<div class="flex min-h-0 flex-col border-muted sm:border-r">
 				<div class="px-3 pt-3">
-					<label
-						class="input input-sm w-full rounded-full border-base-300 bg-base-200/50 focus-within:bg-base-100"
-					>
-						<Search size={14} class="text-base-content/45" />
-						<input
-							bind:this={searchInput}
+					<InputGroup.Root class="h-8 w-full bg-muted/50 focus-within:bg-background">
+						<InputGroup.Addon>
+							<Search size={14} class="text-foreground/45" />
+						</InputGroup.Addon>
+						<InputGroup.Input
+							bind:ref={searchInput}
 							type="search"
 							placeholder="Search tests"
 							aria-label="Search tests"
@@ -148,7 +150,7 @@
 							bind:value={query}
 							onkeydown={handleKeydown}
 						/>
-					</label>
+					</InputGroup.Root>
 				</div>
 				<div
 					id="exam-picker-list"
@@ -160,7 +162,7 @@
 				>
 					{#each groups as group (group.group)}
 						<p
-							class="px-2.5 pb-1 pt-3 text-[0.65rem] font-semibold uppercase tracking-wider text-base-content/40 first:pt-1"
+							class="px-2.5 pb-1 pt-3 text-[0.65rem] font-semibold uppercase tracking-wider text-foreground/40 first:pt-1"
 						>
 							{group.label}
 						</p>
@@ -173,8 +175,8 @@
 								aria-selected={selected}
 								data-test={entry.id}
 								class="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm transition-colors {selected
-									? 'bg-base-200 font-semibold'
-									: 'hover:bg-base-200/60'}"
+									? 'bg-muted font-semibold'
+									: 'hover:bg-muted/60'}"
 								onclick={() => (activeId = entry.id)}
 								ondblclick={() => add(entry.id)}
 							>
@@ -193,7 +195,7 @@
 							</button>
 						{/each}
 					{:else}
-						<p class="px-3 py-10 text-center text-sm text-base-content/50">
+						<p class="px-3 py-10 text-center text-sm text-foreground/50">
 							No tests match “{query}”.
 						</p>
 					{/each}
@@ -201,12 +203,12 @@
 			</div>
 
 			<!-- Preview -->
-			<div class="graph-stage hidden min-h-0 flex-col bg-base-200/40 sm:flex">
+			<div class="graph-stage hidden min-h-0 flex-col bg-muted/40 sm:flex">
 				{#if active && preview}
 					{#key active.id}
 						<div class="min-h-0 flex-1 overflow-y-auto p-5" in:fade={{ duration: 140 }}>
 							<p
-								class="mb-2 text-[0.65rem] font-semibold uppercase tracking-wider text-base-content/40"
+								class="mb-2 text-[0.65rem] font-semibold uppercase tracking-wider text-foreground/40"
 							>
 								Preview · sample values
 							</p>
@@ -215,15 +217,15 @@
 							</div>
 							<dl class="mx-auto mt-5 max-w-md space-y-2 text-xs">
 								<div>
-									<dt class="font-semibold text-base-content/60">Records</dt>
+									<dt class="font-semibold text-foreground/60">Records</dt>
 									{#each active.layout as section, index (index)}
-										<dd class="text-base-content/55">{describe(section)}</dd>
+										<dd class="text-foreground/55">{describe(section)}</dd>
 									{/each}
 								</div>
 								{#if siblings.length}
 									<div>
-										<dt class="font-semibold text-base-content/60">Same layout as</dt>
-										<dd class="text-base-content/55">
+										<dt class="font-semibold text-foreground/60">Same layout as</dt>
+										<dd class="text-foreground/55">
 											{siblings.map((entry) => entry.title).join(', ')}
 										</dd>
 									</div>
@@ -233,39 +235,26 @@
 					{/key}
 				{/if}
 				<footer
-					class="flex items-center justify-between gap-3 border-t border-base-200 bg-base-100/80 px-5 py-3 backdrop-blur"
+					class="flex items-center justify-between gap-3 border-t border-muted bg-background/80 px-5 py-3 backdrop-blur"
 				>
-					<span class="hidden text-xs text-base-content/45 md:inline">
-						<kbd class="kbd kbd-xs">↑</kbd><kbd class="kbd kbd-xs">↓</kbd> to browse ·
-						<kbd class="kbd kbd-xs">Enter</kbd> to add
+					<span class="hidden text-xs text-foreground/45 md:inline">
+						<Kbd>↑</Kbd><Kbd>↓</Kbd> to browse ·
+						<Kbd>Enter</Kbd> to add
 					</span>
-					<button
-						type="button"
-						class="btn btn-primary btn-sm ml-auto rounded-full px-4"
-						disabled={!active || full}
-						onclick={() => add()}
-					>
+					<Button size="sm" class="ml-auto px-4" disabled={!active || full} onclick={() => add()}>
 						<Plus size={14} />
 						{full ? `Limit of ${MAX_EXAM_FINDINGS} boxes` : `Add ${active?.title ?? ''}`}
 						<CornerDownLeft size={12} class="opacity-60" />
-					</button>
+					</Button>
 				</footer>
 			</div>
 		</div>
 
 		<!-- Phones skip the preview; tapping a test adds it. -->
-		<div class="border-t border-base-200 p-3 sm:hidden">
-			<button
-				type="button"
-				class="btn btn-primary w-full rounded-full"
-				disabled={!active || full}
-				onclick={() => add()}
-			>
+		<div class="border-t border-muted p-3 sm:hidden">
+			<Button class="w-full" disabled={!active || full} onclick={() => add()}>
 				<Plus size={16} /> Add {active?.title ?? ''}
-			</button>
+			</Button>
 		</div>
-	</div>
-	<form method="dialog" class="modal-backdrop bg-black/35 backdrop-blur-[3px]">
-		<button aria-label="Close add findings">close</button>
-	</form>
-</dialog>
+	</Dialog.Content>
+</Dialog.Root>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SelectField } from '$lib/components/ui/select';
 	import { resolve } from '$app/paths';
 	import {
 		ArrowRight,
@@ -14,6 +15,8 @@
 	} from 'lucide-svelte';
 	import PublicPage from '$lib/components/landing/PublicPage.svelte';
 	import PublicCta from '$lib/components/landing/PublicCta.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Tip } from '$lib/components/ui/tooltip';
 	import {
 		featureGroups,
 		featureAvailability,
@@ -64,7 +67,7 @@
 
 <PublicPage title="Features">
 	{#snippet intro()}
-		<div class="mt-5 max-w-3xl space-y-4 leading-relaxed text-base-content/75">
+		<div class="mt-5 max-w-3xl space-y-4 leading-relaxed text-foreground/75">
 			<p>
 				LearnTerms brings course-aligned questions, curator-reviewed content, explanations, and
 				source references into a shared question bank for your cohort. Multiple question formats let
@@ -82,22 +85,22 @@
 		</div>
 	{/snippet}
 	{#snippet actions()}
-		<a href={resolve('/sign-in')} class="btn btn-primary rounded-full px-6">
+		<Button href={resolve('/sign-in')} class="px-6">
 			Start studying
 			<ArrowRight size={18} />
-		</a>
-		<a href="#compare" class="btn btn-ghost rounded-full px-5">See the comparison</a>
+		</Button>
+		<Button href="#compare" variant="ghost" tone="neutral" class="px-5">See the comparison</Button>
 	{/snippet}
 
 	<section class="grid gap-4 md:grid-cols-3" aria-label="Highlights">
 		{#each highlights as item (item.title)}
 			{@const Icon = item.icon}
 			<div class="panel-graph p-5">
-				<div class="w-fit rounded-xl border border-base-300/80 bg-base-100/70 p-2">
+				<div class="w-fit rounded-xl border border-border/80 bg-background/70 p-2">
 					<Icon size={18} />
 				</div>
 				<h2 class="mt-4 text-lg font-semibold">{item.title}</h2>
-				<p class="mt-2 text-sm leading-relaxed text-base-content/70">{item.detail}</p>
+				<p class="mt-2 text-sm leading-relaxed text-foreground/70">{item.detail}</p>
 			</div>
 		{/each}
 	</section>
@@ -106,23 +109,24 @@
 		<h2 id="compare-title" class="text-2xl font-bold sm:text-3xl">
 			LearnTerms compared with Anki, Quizlet, and UWorld
 		</h2>
-		<p class="mt-3 max-w-2xl text-base-content/70">
+		<p class="mt-3 max-w-2xl text-foreground/70">
 			{featureCount} study features across four tools. Hover or tap a symbol for details.
 		</p>
 		<div class="mt-6 flex flex-wrap items-center justify-between gap-4">
 			<div class="flex flex-wrap gap-2" role="group" aria-label="Filter comparison by category">
 				{#each ['All features', ...featureGroups.map((group) => group.name)] as name (name)}
-					<button
-						class="btn btn-sm rounded-full {category === name
-							? 'btn-primary'
-							: 'btn-ghost border-base-300 bg-base-100/60'}"
+					<Button
+						size="sm"
+						variant={category === name ? 'solid' : 'ghost'}
+						tone={category === name ? 'primary' : 'neutral'}
+						class={category === name ? '' : 'border-border bg-background/60'}
 						aria-pressed={category === name}
-						onclick={() => (category = name)}>{name}</button
+						onclick={() => (category = name)}>{name}</Button
 					>
 				{/each}
 			</div>
 			<div
-				class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-base-content/65"
+				class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-foreground/65"
 				aria-label="Comparison legend"
 			>
 				<span class="inline-flex items-center gap-1.5"
@@ -136,11 +140,17 @@
 		</div>
 		<div class="mt-5 flex items-center justify-between gap-3 md:hidden">
 			<label for="competitor" class="text-sm font-medium">Compare with</label>
-			<select id="competitor" class="select select-bordered w-36" bind:value={competitor}>
-				<option value="anki">Anki</option><option value="quizlet">Quizlet</option><option
-					value="uworld">UWorld</option
-				>
-			</select>
+			<SelectField
+				id="competitor"
+				class="w-36"
+				value={competitor}
+				onValueChange={(v) => (competitor = v as typeof competitor)}
+				options={[
+					{ value: 'anki', label: 'Anki' },
+					{ value: 'quizlet', label: 'Quizlet' },
+					{ value: 'uworld', label: 'UWorld' }
+				]}
+			/>
 		</div>
 		<div class="comparison-frame mt-5">
 			<table class="comparison-table w-full table-fixed border-collapse text-left">
@@ -182,23 +192,32 @@
 											? 'hidden md:table-cell'
 											: ''}
 									>
-										<div class="tooltip tooltip-left" data-tip={feature[product.id].text}>
-											<button
-												type="button"
-												class="status-symbol"
-												aria-label={`${product.name}: ${feature.name}. ${labels[status]}. ${feature[product.id].text}`}
+										<div>
+											<Tip
+												label={feature[product.id].text}
+												side="left"
+												class="max-w-[min(13rem,42vw)]"
 											>
-												{#if status === 'yes'}<Check
-														size={20}
-														strokeWidth={2.4}
-														class="text-success"
-													/>
-												{:else if status === 'partial'}<TriangleAlert
-														size={18}
-														class="text-warning"
-													/>
-												{:else}<Minus size={19} class="text-base-content/35" />{/if}
-											</button>
+												{#snippet child({ props })}
+													<button
+														{...props}
+														type="button"
+														class="status-symbol"
+														aria-label={`${product.name}: ${feature.name}. ${labels[status]}. ${feature[product.id].text}`}
+													>
+														{#if status === 'yes'}<Check
+																size={20}
+																strokeWidth={2.4}
+																class="text-success"
+															/>
+														{:else if status === 'partial'}<TriangleAlert
+																size={18}
+																class="text-warning"
+															/>
+														{:else}<Minus size={19} class="text-foreground/35" />{/if}
+													</button>
+												{/snippet}
+											</Tip>
 										</div>
 									</td>
 								{/each}
@@ -208,12 +227,12 @@
 				{/each}
 			</table>
 		</div>
-		<p class="mt-4 text-xs leading-relaxed text-base-content/55">
+		<p class="mt-4 text-xs leading-relaxed text-foreground/55">
 			Availability varies by plan and course content. UWorld column reflects its USMLE products.
 			Competitor details reviewed {reviewedOn}.
 		</p>
-		<details class="group mt-3 text-xs text-base-content/60">
-			<summary class="cursor-pointer font-medium hover:text-base-content">
+		<details class="group mt-3 text-xs text-foreground/60">
+			<summary class="cursor-pointer font-medium hover:text-foreground">
 				Sources ({sources.length})
 			</summary>
 			<ul class="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
@@ -221,7 +240,7 @@
 					<li>
 						<!-- eslint-disable svelte/no-navigation-without-resolve -- external source URL -->
 						<a
-							class="inline-flex items-start gap-1 hover:text-primary"
+							class="inline-flex items-start gap-1 hover:text-primary-ink"
 							href={source.url}
 							target="_blank"
 							rel="noopener noreferrer"
@@ -236,7 +255,7 @@
 
 	<section class="mt-16" aria-labelledby="study-tools-title">
 		<h2 id="study-tools-title" class="text-2xl font-bold sm:text-3xl">Free study tools</h2>
-		<p class="mt-3 max-w-2xl text-base-content/70">
+		<p class="mt-3 max-w-2xl text-foreground/70">
 			Use these on their own while planning coursework or working through practice problems.
 		</p>
 		<div class="mt-6 grid gap-4 sm:grid-cols-2">
@@ -244,7 +263,7 @@
 				class="panel-graph group flex items-start gap-4 p-5 transition-colors hover:border-primary/50"
 				href={resolve('/tools/grade-calculator')}
 			>
-				<span class="rounded-xl border border-base-300/80 bg-base-100/70 p-2"
+				<span class="rounded-xl border border-border/80 bg-background/70 p-2"
 					><GraduationCap size={18} /></span
 				>
 				<span class="min-w-0 flex-1">
@@ -254,7 +273,7 @@
 							class="opacity-40 transition group-hover:translate-x-0.5 group-hover:opacity-100"
 						/></span
 					>
-					<span class="mt-1 block text-sm text-base-content/70"
+					<span class="mt-1 block text-sm text-foreground/70"
 						>Calculate your current grade and plan the scores you need on remaining coursework.</span
 					>
 				</span>
@@ -263,7 +282,7 @@
 				class="panel-graph group flex items-start gap-4 p-5 transition-colors hover:border-primary/50"
 				href={resolve('/tools/calculator')}
 			>
-				<span class="rounded-xl border border-base-300/80 bg-base-100/70 p-2"
+				<span class="rounded-xl border border-border/80 bg-background/70 p-2"
 					><Calculator size={18} /></span
 				>
 				<span class="min-w-0 flex-1">
@@ -273,7 +292,7 @@
 							class="opacity-40 transition group-hover:translate-x-0.5 group-hover:opacity-100"
 						/></span
 					>
-					<span class="mt-1 block text-sm text-base-content/70"
+					<span class="mt-1 block text-sm text-foreground/70"
 						>Keyboard entry, calculation history, and click-to-copy results.</span
 					>
 				</span>
@@ -287,13 +306,13 @@
 <style>
 	.comparison-frame {
 		border-radius: 1.1rem;
-		border: 1px solid color-mix(in oklab, var(--color-base-content) 14%, transparent);
-		background: var(--color-base-100);
+		border: 1px solid color-mix(in oklab, var(--foreground) 14%, transparent);
+		background: var(--background);
 	}
 	.comparison-table th,
 	.comparison-table td {
 		padding: 0.65rem 1rem;
-		border-bottom: 1px solid var(--color-base-300);
+		border-bottom: 1px solid var(--muted-strong);
 		vertical-align: middle;
 		font-size: 0.85rem;
 	}
@@ -309,24 +328,20 @@
 		width: 36%;
 	}
 	.comparison-table .lt-column {
-		background: color-mix(in oklab, var(--color-primary) 5%, var(--color-base-100));
+		background: color-mix(in oklab, var(--primary) 5%, var(--background));
 	}
 	.comparison-table thead .lt-column {
-		box-shadow: inset 0 3px 0 var(--color-primary);
+		box-shadow: inset 0 3px 0 var(--primary);
 	}
 	.comparison-table .group-heading th {
 		padding-block: 0.6rem;
-		background: var(--color-base-200);
+		background: var(--muted);
 		text-align: left;
 		font-size: 0.75rem;
 		font-weight: 600;
 	}
 	.comparison-table tbody:last-child tr:last-child > * {
 		border-bottom: 0;
-	}
-	.tooltip::before {
-		max-width: min(13rem, 42vw);
-		white-space: normal;
 	}
 	.status-symbol {
 		display: inline-grid;
@@ -337,7 +352,7 @@
 		border-radius: 0.4rem;
 	}
 	.status-symbol:focus-visible {
-		outline: 2px solid var(--color-primary);
+		outline: 2px solid var(--primary);
 		outline-offset: 2px;
 	}
 	@media (max-width: 767px) {

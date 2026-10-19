@@ -23,7 +23,7 @@
 
 <PublicPage title="About" width="narrow">
 	<article>
-		<div class="space-y-5 text-base leading-relaxed text-base-content/80 sm:text-lg">
+		<div class="space-y-5 text-base leading-relaxed text-foreground/80 sm:text-lg">
 			<p>
 				I’m Justin Dang, an optometry student at Northeastern State University Oklahoma College of
 				Optometry and the developer of LearnTerms. Before optometry school, I studied computer
@@ -44,12 +44,12 @@
 				loading="lazy"
 				decoding="async"
 			/>
-			<figcaption class="mt-3 text-sm text-base-content/60">
+			<figcaption class="mt-3 text-sm text-foreground/60">
 				Me, coding in the middle of lab.
 			</figcaption>
 		</figure>
 
-		<div class="space-y-5 text-base leading-relaxed text-base-content/80 sm:text-lg">
+		<div class="space-y-5 text-base leading-relaxed text-foreground/80 sm:text-lg">
 			<p>
 				My interest in the project comes from being on both sides of it: I write the software, and I
 				also have to sit down and study. That gives me plenty of opportunities to notice what’s
@@ -64,7 +64,7 @@
 			<p>
 				I build and maintain it myself while I’m in school. If something is frustrating, a question
 				seems off, or you have an idea, <a
-					class="link underline-offset-4"
+					class="underline underline-offset-4"
 					href={resolve('/contact')}>let me know</a
 				>. I’d like to hear it.
 			</p>

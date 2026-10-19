@@ -6,6 +6,7 @@
 	import { onMount, tick, untrack, type Snippet } from 'svelte';
 	import { sidePanel, type SidePanelId } from './state.svelte';
 	import { sheetDrag } from '$lib/utils/sheetDrag';
+	import { Button } from '$lib/components/ui/button';
 
 	let {
 		id,
@@ -84,23 +85,25 @@
 		: 'translate 300ms ease-out, width 300ms ease-out, margin 300ms ease-out, height 200ms ease-out'}
 >
 	<div
-		class="flex h-full flex-col rounded-t-3xl border border-b-0 border-base-300 bg-base-100 shadow-[0_-8px_30px_rgb(0_0_0/0.12)] md:rounded-3xl md:border-b md:shadow-xl lg:w-[22rem] lg:shadow-none"
+		class="flex h-full flex-col rounded-t-3xl border border-b-0 border-border bg-background shadow-[0_-8px_30px_rgb(0_0_0/0.12)] md:rounded-3xl md:border-b md:shadow-xl lg:w-[22rem] lg:shadow-none"
 		style="padding-bottom: env(safe-area-inset-bottom, 0px);"
 	>
 		<header class="px-5 pt-2 pb-2 md:pt-4" use:sheetDrag={drag}>
 			<div
-				class="mx-auto mb-1 h-1.5 w-10 rounded-full bg-base-300 md:hidden"
+				class="mx-auto mb-1 h-1.5 w-10 rounded-full bg-muted-strong md:hidden"
 				aria-hidden="true"
 			></div>
 			<div class="flex items-center justify-between">
 				<h2 class="flex items-center gap-2 font-semibold">
 					<Icon size={18} class="text-info" />{title}
 				</h2>
-				<button
-					type="button"
-					class="btn btn-circle btn-ghost size-11 -me-2 md:size-8"
+				<Button
+					variant="ghost"
+					tone="neutral"
+					shape="circle"
+					class="-me-2 size-11 md:size-8"
 					aria-label="Close {title.toLowerCase()}"
-					onclick={() => sidePanel.set(null)}><X size={18} /></button
+					onclick={() => sidePanel.set(null)}><X size={18} /></Button
 				>
 			</div>
 		</header>

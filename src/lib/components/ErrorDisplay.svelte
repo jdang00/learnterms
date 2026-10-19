@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { RefreshCw } from 'lucide-svelte';
 	import { isConvexAuthError } from '$lib/utils/errorHandling';
+	import { Button } from '$lib/components/ui/button';
 
 	let { error, showReload = false, size = 'normal', class: className = '' } = $props();
 
@@ -42,26 +43,29 @@
 
 	<h3
 		class="font-semibold {sizeClasses} {isAuthError
-			? 'text-primary'
-			: 'text-error'} mb-2 text-center"
+			? 'text-primary-ink'
+			: 'text-error-ink'} mb-2 text-center"
 	>
 		{isAuthError ? 'Session Refreshed' : 'Error'}
 	</h3>
 
-	<p class="{sizeClasses} text-base-content/80 text-center mb-4 max-w-sm">
+	<p class="{sizeClasses} text-foreground/80 text-center mb-4 max-w-sm">
 		{isAuthError
 			? 'Your session has been refreshed for security. Please reload to continue learning.'
 			: 'Something went wrong while loading this content.'}
 	</p>
 
 	{#if showReload}
-		<button
-			class="btn btn-sm {isAuthError ? 'btn-primary' : 'btn-outline btn-error'} gap-2"
+		<Button
+			size="sm"
+			variant={isAuthError ? 'solid' : 'outline'}
+			tone={isAuthError ? 'primary' : 'error'}
+			class="gap-2"
 			onclick={handleReload}
 			aria-label="Reload page"
 		>
 			<RefreshCw size="16" />
 			<span>{isAuthError ? 'Continue' : 'Reload'}</span>
-		</button>
+		</Button>
 	{/if}
 </div>

@@ -113,7 +113,7 @@
 			<div
 				role="button"
 				tabindex="0"
-				class="flex min-h-12 w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-base-300 bg-base-100 px-4 py-2 text-left shadow-lg active:bg-base-200"
+				class="flex min-h-12 w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-border bg-background px-4 py-2 text-left shadow-lg active:bg-muted"
 				aria-label="Show rationale"
 				use:sheetDrag={peekDrag}
 				onclick={() => (qs.isModalOpen = true)}
@@ -125,8 +125,8 @@
 				}}
 			>
 				<span class="shrink-0 text-sm font-semibold text-success">Why</span>
-				<span class="min-w-0 flex-1 truncate text-sm text-base-content/70">{rationalePreview}</span>
-				<ChevronUp size={18} class="shrink-0 text-base-content/50" />
+				<span class="min-w-0 flex-1 truncate text-sm text-foreground/70">{rationalePreview}</span>
+				<ChevronUp size={18} class="shrink-0 text-foreground/50" />
 			</div>
 		</div>
 	{/if}

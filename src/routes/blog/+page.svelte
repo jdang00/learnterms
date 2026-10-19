@@ -10,10 +10,10 @@
 	lede="Notes on building LearnTerms, with a few posts from the early days."
 	width="narrow"
 >
-	<div class="divide-y divide-base-content/10 border-y border-base-content/10">
+	<div class="divide-y divide-foreground/10 border-y border-foreground/10">
 		{#each blogPosts as post (post.slug)}
 			<article class="py-7">
-				<time datetime={post.date} class="text-sm text-base-content/55">{post.displayDate}</time>
+				<time datetime={post.date} class="text-sm text-foreground/55">{post.displayDate}</time>
 				<h2 class="mt-2 text-xl font-semibold">
 					<a
 						class="group inline-flex items-start gap-2 hover:text-primary"
@@ -24,7 +24,7 @@
 						/></a
 					>
 				</h2>
-				<p class="mt-2 leading-relaxed text-base-content/70">{post.summary}</p>
+				<p class="mt-2 leading-relaxed text-foreground/70">{post.summary}</p>
 			</article>
 		{/each}
 	</div>

@@ -42,7 +42,7 @@
 {#if isVisible}
 	<section class="space-y-2">
 		<div class="px-3 pt-1">
-			<p class="text-[11px] font-medium uppercase tracking-wider text-base-content/35">
+			<p class="text-[11px] font-medium uppercase tracking-wider text-foreground/35">
 				Switch Cohort
 			</p>
 		</div>
@@ -52,7 +52,7 @@
 				<button
 					type="button"
 					class="group w-full rounded-xl px-3 py-2.5 text-left transition-colors duration-100
-						{activeCohortId === cohort._id ? 'bg-primary/8 ring-1 ring-primary/20' : 'hover:bg-base-200/60'}"
+						{activeCohortId === cohort._id ? 'bg-primary/8 ring-1 ring-primary/20' : 'hover:bg-muted/60'}"
 					onclick={() => onSwitch?.(cohort._id)}
 					disabled={isSwitching}
 					data-power-item="true"
@@ -62,7 +62,7 @@
 							{#if activeCohortId === cohort._id}
 								<Check size={14} class="text-primary" />
 							{:else}
-								<GraduationCap size={12} class="text-base-content/25" />
+								<GraduationCap size={12} class="text-foreground/25" />
 							{/if}
 						</div>
 						<div class="min-w-0 flex-1 space-y-1">
@@ -74,21 +74,21 @@
 									{cohort.name}
 								</p>
 								{#if cohort.startYear && cohort.endYear}
-									<span class="shrink-0 text-[10px] tabular-nums text-base-content/35"
+									<span class="shrink-0 text-[10px] tabular-nums text-foreground/35"
 										>{cohort.startYear}–{cohort.endYear}</span
 									>
 								{/if}
 							</div>
 
 							{#if cohort.schoolName}
-								<div class="flex items-start gap-1.5 text-base-content/45">
+								<div class="flex items-start gap-1.5 text-foreground/45">
 									<School size={11} class="mt-px shrink-0" />
 									<span class="text-[11px] leading-snug break-words">{cohort.schoolName}</span>
 								</div>
 							{/if}
 
 							<div
-								class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-base-content/30"
+								class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-foreground/30"
 							>
 								<span class="flex items-center gap-1">
 									<Users size={10} class="shrink-0" />
@@ -116,7 +116,7 @@
 								{/if}
 							</div>
 
-							<div class="flex items-center gap-1 text-base-content/20">
+							<div class="flex items-center gap-1 text-foreground/20">
 								<Hash size={9} class="shrink-0" />
 								<span class="font-mono text-[9px] break-all leading-tight">{cohort._id}</span>
 							</div>
@@ -125,7 +125,7 @@
 				</button>
 			{/each}
 		{:else if !searchQuery.trim()}
-			<p class="px-3 py-4 text-sm text-base-content/45">No cohorts available</p>
+			<p class="px-3 py-4 text-sm text-foreground/45">No cohorts available</p>
 		{/if}
 	</section>
 {/if}

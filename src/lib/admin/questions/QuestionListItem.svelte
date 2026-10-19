@@ -3,6 +3,7 @@
 	import { abbreviateType } from '$lib/utils/questionType.js';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import type { Doc } from '../../../convex/_generated/dataModel';
+	import { Checkbox } from '$lib/components/ui/checkbox';
 
 	type QuestionItem = Doc<'question'>;
 
@@ -33,7 +34,7 @@
 	}: Props = $props();
 
 	const isMobile = $derived(variant === 'mobile');
-	const checkboxSize = $derived(isMobile ? 'checkbox-xs' : 'checkbox-sm');
+	const checkboxSize = $derived(isMobile ? 'size-3.5' : 'size-4');
 	const textSize = $derived(isMobile ? 'text-xs' : 'text-sm');
 	const typeSize = $derived(isMobile ? 'text-[9px]' : 'text-[10px]');
 	const dotSize = $derived(isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2');
@@ -43,16 +44,16 @@
 {#if reorderMode}
 	<!-- Reorder mode: simplified view with grip handle -->
 	<div
-		class="px-3 py-2.5 rounded-2xl transition-all cursor-grab active:cursor-grabbing hover:bg-base-200/40 hover:border-base-300
-			{isRecentlyAdded ? 'bg-success/5' : ''} border border-base-300/60 bg-base-100"
+		class="px-3 py-2.5 rounded-2xl transition-all cursor-grab active:cursor-grabbing hover:bg-muted/40 hover:border-border
+			{isRecentlyAdded ? 'bg-success/5' : ''} border border-border/60 bg-background"
 	>
 		<div class="flex items-center {isMobile ? 'gap-2' : 'gap-3'}">
-			<GripVertical size={16} class="text-base-content/30 shrink-0" />
-			<span class="text-xs font-medium text-base-content/50 {isMobile ? '' : 'w-6'}"
+			<GripVertical size={16} class="text-foreground/30 shrink-0" />
+			<span class="text-xs font-medium text-foreground/50 {isMobile ? '' : 'w-6'}"
 				>#{index + 1}</span
 			>
 			<p
-				class="flex-1 {textSize} text-base-content {isMobile
+				class="flex-1 {textSize} text-foreground {isMobile
 					? 'line-clamp-2'
 					: 'truncate'} tiptap-content-inline"
 			>
@@ -69,29 +70,26 @@
 		class="px-3 py-2.5 rounded-2xl transition-all cursor-pointer
 			{isHighlighted
 			? 'bg-primary/8 border border-primary/30 hover:bg-primary/12'
-			: 'border border-base-300/60 bg-base-100 hover:bg-base-200/40 hover:border-base-300'}
+			: 'border border-border/60 bg-background hover:bg-muted/40 hover:border-border'}
 			{isRecentlyAdded ? 'bg-success/5' : ''}"
 		onclick={onSelect}
 		onkeydown={(e) => e.key === 'Enter' && onSelect()}
 	>
 		<div class="flex items-start {isMobile ? 'gap-2' : 'gap-3'}">
-			<input
-				type="checkbox"
-				class="checkbox {checkboxSize} checkbox-primary mt-0.5 shrink-0"
+			<Checkbox
+				class="mt-0.5 shrink-0 {checkboxSize}"
 				aria-label="Select question"
 				checked={isSelected}
-				onclick={(e) => {
-					e.stopPropagation();
-					onToggleSelection();
-				}}
+				onclick={(e) => e.stopPropagation()}
+				onCheckedChange={() => onToggleSelection()}
 			/>
 			<div class="flex-1 min-w-0">
 				<div class="flex items-center {isMobile ? 'gap-1.5' : 'gap-2'} mb-1">
-					<span class="text-xs font-medium text-base-content/50">#{index + 1}</span>
+					<span class="text-xs font-medium text-foreground/50">#{index + 1}</span>
 					<span
 						class="{typeSize} {isMobile
 							? 'px-1'
-							: 'px-1.5'} py-0.5 rounded-sm bg-base-200 text-base-content/60 uppercase font-medium whitespace-nowrap"
+							: 'px-1.5'} py-0.5 rounded-sm bg-muted text-foreground/60 uppercase font-medium whitespace-nowrap"
 					>
 						{abbreviateType(question.type)}
 					</span>
@@ -101,14 +99,14 @@
 							? 'bg-success'
 							: question.status === 'draft'
 								? 'bg-warning'
-								: 'bg-base-300'}"
+								: 'bg-muted-strong'}"
 						title={question.status}
 					></span>
 					{#if hasAttachment}
-						<Paperclip size={iconSize} class="text-base-content/40" />
+						<Paperclip size={iconSize} class="text-foreground/40" />
 					{/if}
 				</div>
-				<p class="{textSize} text-base-content leading-snug line-clamp-2 tiptap-content-inline">
+				<p class="{textSize} text-foreground leading-snug line-clamp-2 tiptap-content-inline">
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					{@html sanitizeHtml(question.stem)}
 				</p>

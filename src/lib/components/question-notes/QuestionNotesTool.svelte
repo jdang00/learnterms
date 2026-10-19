@@ -37,7 +37,7 @@
 
 <SidePanel id="notes" title="Notes" icon={StickyNote} focus="[contenteditable=true]">
 	<div class="flex min-h-0 flex-1 flex-col px-4 pb-4">
-		<p class="mb-3 px-1 text-xs text-base-content/50">Private to you · saved with this question</p>
+		<p class="mb-3 px-1 text-xs text-foreground/50">Private to you · saved with this question</p>
 		{#if Panel}
 			<!-- Each question gets a fresh editor; the old one saves as it unmounts. -->
 			{#key `${userKey}:${questionId}`}<Panel {questionId} {userKey} />{/key}

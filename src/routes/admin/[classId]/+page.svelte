@@ -14,6 +14,9 @@
 	import ExportModuleModal from '$lib/admin/catalog/ExportModuleModal.svelte';
 	import TagManager from '$lib/admin/catalog/TagManager.svelte';
 	import { useClerkContext } from 'svelte-clerk';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 
 	let { data }: { data: PageData } = $props();
 	const classId: Id<'class'> = $derived(data.classId as Id<'class'>);
@@ -257,33 +260,32 @@
 </script>
 
 <div class="min-h-screen p-8 max-w-7xl mx-auto">
-	<a class="btn mb-4 btn-ghost rounded-full" href={resolve('/admin')}><ArrowLeft size={16} />Back</a
+	<Button href={resolve('/admin')} variant="ghost" tone="neutral" class="mb-4"
+		><ArrowLeft size={16} />Back</Button
 	>
 	<div class="mb-8 flex flex-col gap-2">
 		<div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
 			{#if classInfo.isLoading}
 				<div class="flex items-center justify-center p-8">
-					<div class="text-base-content/70">Loading class...</div>
+					<div class="text-foreground/70">Loading class...</div>
 				</div>
 			{:else if classInfo.error != null}
 				<div class="flex items-center justify-center p-8">
-					<div class="text-error">Failed to load: {classInfo.error.toString()}</div>
+					<div class="text-error-ink">Failed to load: {classInfo.error.toString()}</div>
 				</div>
 			{:else if classInfo.data == null}
 				<div class="flex items-center justify-center p-8">
 					<div class="text-center">
 						<div class="text-4xl mb-4">📚</div>
-						<h3 class="text-lg font-semibold mb-2 text-base-content">
-							Class information not found.
-						</h3>
+						<h3 class="text-lg font-semibold mb-2 text-foreground">Class information not found.</h3>
 					</div>
 				</div>
 			{:else}
 				<div>
-					<h1 class="font-display text-xl sm:text-2xl font-bold text-base-content">
+					<h1 class="font-display text-xl sm:text-2xl font-bold text-foreground">
 						{classInfo.data.name}
 					</h1>
-					<p class="text-sm sm:text-base text-base-content/70">
+					<p class="text-sm sm:text-base text-foreground/70">
 						Manage your learning modules for {classInfo.data.code}. {#if reorderMode}Drag to
 							reorder.{/if}
 					</p>
@@ -292,18 +294,20 @@
 
 			<div class="flex items-center gap-2 self-start sm:self-auto">
 				{#if admin}
-					<button
-						class="btn rounded-full gap-2 {reorderMode ? 'btn-primary' : 'btn-ghost'}"
+					<Button
+						variant={reorderMode ? 'solid' : 'ghost'}
+						tone={reorderMode ? 'primary' : 'neutral'}
+						class="gap-2"
 						onclick={() => (reorderMode = !reorderMode)}
 					>
 						<GripVertical size={16} />
 						<span class="hidden sm:inline">{reorderMode ? 'Done' : 'Reorder'}</span>
-					</button>
-					<button class="btn btn-primary rounded-full gap-2" onclick={openAddModuleModal}>
+					</Button>
+					<Button class="gap-2" onclick={openAddModuleModal}>
 						<Plus size={16} />
 						<span class="hidden sm:inline">Add New Module</span>
 						<span class="sm:hidden">Add</span>
-					</button>
+					</Button>
 				{/if}
 			</div>
 		</div>
@@ -317,18 +321,18 @@
 
 	{#if modules.isLoading}
 		<div class="flex items-center justify-center p-8">
-			<div class="text-base-content/70">Loading modules...</div>
+			<div class="text-foreground/70">Loading modules...</div>
 		</div>
 	{:else if modules.error != null}
 		<div class="flex items-center justify-center p-8">
-			<div class="text-error">Failed to load: {modules.error.toString()}</div>
+			<div class="text-error-ink">Failed to load: {modules.error.toString()}</div>
 		</div>
 	{:else if modules.data.length === 0}
 		<div class="flex items-center justify-center p-8">
 			<div class="text-center">
 				<div class="text-4xl mb-4">📚</div>
-				<h3 class="text-lg font-semibold mb-2 text-base-content">No modules found</h3>
-				<p class="text-base-content/70">No modules available for the selected class.</p>
+				<h3 class="text-lg font-semibold mb-2 text-foreground">No modules found</h3>
+				<p class="text-foreground/70">No modules available for the selected class.</p>
 			</div>
 		</div>
 	{:else}
@@ -340,7 +344,7 @@
 						callbacks: { onDrop: handleDrop },
 						disabled: !reorderEnabled
 					}}
-					class="relative rounded-2xl bg-base-100 shadow-xs border border-base-300 p-4
+					class="relative rounded-2xl bg-background shadow-xs border border-border p-4
                            transition-all duration-300 hover:shadow-md hover:border-primary/30
                            svelte-dnd-touch-feedback overflow-visible"
 					animate:flip={{ duration: 300 }}
@@ -365,7 +369,7 @@
 								<div class="flex flex-col gap-1 flex-1 min-w-0">
 									<div class="flex items-start gap-2">
 										{#if reorderMode}
-											<div class="mt-1 cursor-grab active:cursor-grabbing text-base-content/40">
+											<div class="mt-1 cursor-grab active:cursor-grabbing text-foreground/40">
 												<GripVertical size={20} />
 											</div>
 										{/if}
@@ -375,7 +379,7 @@
 													classId,
 													moduleId: moduleItem._id
 												})}
-												class="font-semibold text-base-content text-left hover:text-primary transition-colors cursor-pointer block"
+												class="font-semibold text-foreground text-left hover:text-primary transition-colors cursor-pointer block"
 												title={`Go to questions for ${moduleItem.title}`}
 											>
 												<span class="mr-2 text-xl inline-block align-middle"
@@ -386,7 +390,7 @@
 										</div>
 									</div>
 									<div
-										class="text-xs text-base-content/60 flex items-center gap-1 {reorderMode
+										class="text-xs text-foreground/60 flex items-center gap-1 {reorderMode
 											? 'pl-7'
 											: ''}"
 									>
@@ -398,7 +402,7 @@
 										<div class="flex flex-wrap items-center gap-2 mt-2">
 											{#each moduleItem.tags.slice(0, 3) as tag (tag._id)}
 												<span
-													class="inline-flex items-center gap-1 rounded-full border border-base-300 px-2 py-0.5 text-xs"
+													class="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs"
 												>
 													<span
 														class="h-2 w-2 rounded-full"
@@ -408,21 +412,22 @@
 												</span>
 											{/each}
 											{#if moduleItem.tags.length > 3}
-												<div class="dropdown dropdown-hover z-50">
-													<div
-														tabindex="0"
+												<div class="group relative z-50 inline-block">
+													<Button
+														tabindex={0}
 														role="button"
-														class="btn btn-ghost btn-xs rounded-full border border-base-300 px-2"
+														variant="ghost"
+														tone="neutral"
+														size="xs"
+														class="border border-border px-2">+{moduleItem.tags.length - 3}</Button
 													>
-														+{moduleItem.tags.length - 3}
-													</div>
 													<div
-														class="dropdown-content z-50 mt-2 left-0 w-44 rounded-2xl border border-base-300 bg-base-100 p-2 shadow-lg"
+														class="absolute z-50 mt-2 left-0 hidden w-44 rounded-2xl border border-border bg-background p-2 shadow-lg group-hover:block group-focus-within:block"
 													>
 														<div class="flex flex-col gap-1">
 															{#each moduleItem.tags.slice(3) as tag (tag._id)}
 																<div
-																	class="flex items-center gap-2 rounded-md px-2 py-1 text-xs hover:bg-base-200/70"
+																	class="flex items-center gap-2 rounded-md px-2 py-1 text-xs hover:bg-muted/70"
 																>
 																	<span
 																		class="h-2 w-2 rounded-full"
@@ -440,67 +445,66 @@
 								</div>
 								<div class="flex items-center gap-2">
 									{#if admin}
-										<div class="dropdown dropdown-end">
-											<button
-												class="btn btn-ghost btn-circle btn-sm interactive"
-												aria-haspopup="menu"
-												aria-label="Open menu">⋮</button
-											>
-											<ul
-												role="menu"
-												class="dropdown-content menu bg-base-100 rounded-2xl z-1 w-52 p-2 shadow-xs border border-base-300"
-											>
-												<li>
-													<button
-														data-edit-btn
-														class="btn btn-sm btn-ghost w-full justify-start"
-														type="button"
-														aria-label="Edit module"
-														onclick={() => editModule(moduleItem)}
+										<DropdownMenu.Root>
+											<DropdownMenu.Trigger>
+												{#snippet child({ props })}
+													<Button
+														{...props}
+														variant="ghost"
+														tone="neutral"
+														shape="circle"
+														size="sm"
+														class="interactive"
+														aria-haspopup="menu"
+														aria-label="Open menu">⋮</Button
 													>
-														<Pencil size={16} />
-														<span>Edit</span>
-													</button>
-												</li>
+												{/snippet}
+											</DropdownMenu.Trigger>
+											<DropdownMenu.Content align="end" role="menu" class="w-52">
+												<DropdownMenu.Item
+													data-edit-btn
+													aria-label="Edit module"
+													onSelect={() => editModule(moduleItem)}
+												>
+													<Pencil size={16} />
+													<span>Edit</span>
+												</DropdownMenu.Item>
 												{#if moduleItem.questionCount > 0}
-													<li>
-														<button
-															class="btn btn-sm btn-ghost w-full justify-start interactive"
-															type="button"
-															onclick={() => openExportModal(moduleItem)}
-														>
-															<Download size={16} />
-															<span>Export Questions</span>
-															{#if !isPro}
-																<span class="badge badge-xs badge-primary ml-auto">Pro</span>
-															{/if}
-														</button>
-													</li>
-												{/if}
-												<li class="pt-2">
-													<button
-														data-delete-btn
-														class="btn btn-sm btn-ghost text-error w-full justify-start"
-														type="button"
-														aria-label="Delete module"
-														onclick={() => handleModuleDelete(moduleItem._id)}
+													<DropdownMenu.Item
+														class="interactive"
+														onSelect={() => openExportModal(moduleItem)}
 													>
-														<Trash2 size={16} />
-														<span>Delete</span>
-													</button>
-												</li>
-											</ul>
-										</div>
+														<Download size={16} />
+														<span>Export Questions</span>
+														{#if !isPro}
+															<Badge variant="solid" tone="primary" size="xs" class="ml-auto"
+																>Pro</Badge
+															>
+														{/if}
+													</DropdownMenu.Item>
+												{/if}
+												<DropdownMenu.Separator />
+												<DropdownMenu.Item
+													variant="destructive"
+													data-delete-btn
+													aria-label="Delete module"
+													onSelect={() => handleModuleDelete(moduleItem._id)}
+												>
+													<Trash2 size={16} />
+													<span>Delete</span>
+												</DropdownMenu.Item>
+											</DropdownMenu.Content>
+										</DropdownMenu.Root>
 									{/if}
 								</div>
 							</div>
-							<p class="text-sm text-base-content/70 mb-4 text-left line-clamp-4">
+							<p class="text-sm text-foreground/70 mb-4 text-left line-clamp-4">
 								{moduleItem.description || 'No description available'}
 							</p>
 							<div class="mt-auto flex justify-end">
-								<div class="text-xs text-base-content/60 font-mono badge rounded-full">
+								<Badge class="font-mono text-foreground/60">
 									{moduleItem.order + 1}
-								</div>
+								</Badge>
 							</div>
 						</div>
 					</div>

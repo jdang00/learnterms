@@ -47,6 +47,10 @@ const routeMetadata: Record<string, readonly [string, string]> = {
 		'Read notes on building LearnTerms, release updates, and archived posts from the early days.'
 	],
 	'/blog/[slug]': ['Blog Post', 'An archived post from the early days of LearnTerms.'],
+	'/design-system': [
+		'Design System',
+		'The LearnTerms interface primitives: color, type, buttons, overlays and form controls.'
+	],
 	'/status': [
 		'Service Status',
 		'View the LearnTerms service status page for hosting, authentication, data services, and AI processing.'

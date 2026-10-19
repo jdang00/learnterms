@@ -1,9 +1,17 @@
 <script lang="ts">
+	import { SelectField } from '$lib/components/ui/select';
 	import { browser } from '$app/environment';
 	import { onMount, tick } from 'svelte';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
-	import { RotateCcw, Trash2, Eraser, ChevronsUp, X, Target } from 'lucide-svelte';
+	import { RotateCcw, Trash2, Eraser, ChevronsUp, X, Target, CircleAlert } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import * as Card from '$lib/components/ui/card';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { Progress } from '$lib/components/ui/progress';
+	import * as Table from '$lib/components/ui/table';
+	import * as InputGroup from '$lib/components/ui/input-group';
 	import {
 		calculateCourseSummary,
 		expandCourseEntries,
@@ -75,7 +83,7 @@
 	);
 
 	function letterColor(letter: string | null) {
-		if (!letter) return 'text-base-content/60';
+		if (!letter) return 'text-foreground/60';
 		const first = letter[0]?.toUpperCase();
 		switch (first) {
 			case 'A':
@@ -92,11 +100,11 @@
 	}
 
 	function progressTone(value: number | null) {
-		if (value === null) return 'progress-primary';
-		if (value >= 90) return 'progress-success';
-		if (value >= 80) return 'progress-success';
-		if (value >= 70) return 'progress-warning';
-		return 'progress-error';
+		if (value === null) return 'primary';
+		if (value >= 90) return 'success';
+		if (value >= 80) return 'success';
+		if (value >= 70) return 'warning';
+		return 'error';
 	}
 
 	const currentColor = $derived(letterColor(currentLetter));
@@ -364,11 +372,11 @@
 	}
 </script>
 
-<div class="min-h-screen bg-base-100">
+<div class="min-h-screen bg-background">
 	<div class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
 		<header class="mb-6">
 			<h1 class="font-display text-2xl font-bold sm:text-3xl">Grade calculator</h1>
-			<p class="mt-2 max-w-2xl text-sm text-base-content/70">
+			<p class="mt-2 max-w-2xl text-sm text-foreground/70">
 				LearnTerms doesn't store your grades on any server. Everything you type stays in this
 				browser, on your device — no one else can see it unless they're sitting at your screen.
 			</p>
@@ -376,45 +384,45 @@
 
 		<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
 			<aside class="space-y-6 lg:sticky lg:top-6 lg:self-start">
-				<div class="card border border-base-300 bg-base-100">
-					<div class="card-body gap-4 p-5 sm:p-6">
+				<Card.Root class="py-0">
+					<Card.Content class="gap-4 p-5 sm:p-6">
 						{#if workspaceQuery.error}
-							<div role="alert" class="alert alert-error">
-								<span>Couldn't load the course catalog.</span>
-							</div>
+							<Alert.Root tone="error">
+								<CircleAlert />
+								<Alert.Title>Couldn't load the course catalog.</Alert.Title>
+							</Alert.Root>
 						{:else if workspaceQuery.isLoading}
-							<div class="skeleton h-12 w-full"></div>
+							<Skeleton class="h-12 w-full" />
 						{:else if workspace.courses.length === 0}
 							<div
-								class="rounded-xl border border-dashed border-base-300 bg-base-200/50 p-4 text-sm text-base-content/70"
+								class="rounded-xl border border-dashed border-border bg-muted/50 p-4 text-sm text-foreground/70"
 							>
 								No courses available yet.
 							</div>
 						{:else}
-							<select
-								class="select select-bordered rounded-full w-full"
-								bind:value={selectedCourseId}
+							<SelectField
+								value={selectedCourseId ?? ''}
+								onValueChange={(v) => (selectedCourseId = v as typeof selectedCourseId)}
 								aria-label="Select a course"
-							>
-								{#each workspace.courses as course (course._id)}
-									<option value={course._id}>
-										{course.code ?? course.name} — {course.name}
-									</option>
-								{/each}
-							</select>
+								placeholder="Select a course"
+								options={workspace.courses.map((course) => ({
+									value: course._id,
+									label: `${course.code ?? course.name} — ${course.name}`
+								}))}
+							/>
 
 							{#if selectedCourse}
-								<div class="rounded-2xl bg-base-200/60 p-4">
+								<div class="rounded-2xl bg-muted/60 p-4">
 									{#if selectedCourse.code}
-										<div class="text-xs font-semibold uppercase tracking-wider text-primary">
+										<div class="text-xs font-semibold uppercase tracking-wider text-primary-ink">
 											{selectedCourse.code}
 										</div>
 									{/if}
 									<h2 class="mt-1 text-lg font-semibold">{selectedCourse.name}</h2>
 									{#if selectedCourse.description}
-										<p class="mt-2 text-sm leading-6 text-base-content/70">
+										<p class="mt-2 text-sm leading-6 text-foreground/70">
 											{#if selectedCourse.ruleset}
-												<strong class="font-semibold text-base-content">
+												<strong class="font-semibold text-foreground">
 													{selectedCourse.ruleset.calculationMode === 'points'
 														? 'Points-based.'
 														: selectedCourse.ruleset.calculationMode === 'weighted'
@@ -429,7 +437,7 @@
 										</p>
 									{/if}
 									<div
-										class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-base-content/60"
+										class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-foreground/60"
 									>
 										{#if selectedCourse.termLabel}
 											<span>{selectedCourse.termLabel}</span>
@@ -444,17 +452,17 @@
 								</div>
 							{/if}
 						{/if}
-					</div>
-				</div>
+					</Card.Content>
+				</Card.Root>
 
 				<!-- Live summary -->
-				<div class="card border border-base-300 bg-base-100">
-					<div class="card-body gap-4 p-5 sm:p-6">
+				<Card.Root class="py-0">
+					<Card.Content class="gap-4 p-5 sm:p-6">
 						{#if !selectedCourse}
-							<p class="text-sm text-base-content/70">Select a course to begin.</p>
+							<p class="text-sm text-foreground/70">Select a course to begin.</p>
 						{:else}
 							<div>
-								<div class="text-xs text-base-content/60">Current grade</div>
+								<div class="text-xs text-foreground/60">Current grade</div>
 								<div class="mt-1 flex items-baseline gap-3">
 									<span class="text-5xl font-bold tracking-tight transition-colors {currentColor}">
 										{formatPercentage(summary.currentPercentage)}
@@ -463,54 +471,56 @@
 										{currentLetter ?? '—'}
 									</span>
 								</div>
-								<p class="mt-1 text-xs text-base-content/60">
+								<p class="mt-1 text-xs text-foreground/60">
 									{currentGradeNote(selectedCourse)}
 								</p>
 							</div>
 
 							<div>
-								<div class="mb-1 flex items-center justify-between text-xs text-base-content/60">
+								<div class="mb-1 flex items-center justify-between text-xs text-foreground/60">
 									<span>Progress</span>
 									<span>{summary.enteredItemCount}/{summary.totalItemCount} entered</span>
 								</div>
-								<progress
-									class="progress w-full {progressTone(summary.currentPercentage)}"
+								<Progress
+									class="w-full"
 									value={percentDone}
-									max="100"
-								></progress>
+									tone={progressTone(summary.currentPercentage)}
+								/>
 							</div>
 
 							{#if bandRequirements.length > 0}
-								<div class="border-t border-base-200 pt-4">
+								<div class="border-t border-muted pt-4">
 									<div
-										class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-base-content/60"
+										class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-foreground/60"
 									>
 										<Target size={13} />
 										What you need to finish at
 									</div>
-									<div class="overflow-hidden rounded-2xl border border-base-300">
-										<table class="table table-sm m-0">
-											<thead>
-												<tr
-													class="bg-base-200/60 text-xs uppercase tracking-wider text-base-content/60"
+									<div class="overflow-hidden rounded-2xl border border-border">
+										<Table.Root>
+											<Table.Header>
+												<Table.Row
+													class="bg-muted/60 text-xs uppercase tracking-wider text-foreground/60"
 												>
-													<th class="font-semibold">Grade</th>
-													<th class="font-semibold text-right">Needed on remaining</th>
-												</tr>
-											</thead>
-											<tbody>
+													<Table.Head class="font-semibold">Grade</Table.Head>
+													<Table.Head class="text-right font-semibold"
+														>Needed on remaining</Table.Head
+													>
+												</Table.Row>
+											</Table.Header>
+											<Table.Body>
 												{#each bandRequirements as row (row.label)}
-													<tr>
-														<td class="text-lg font-bold {letterColor(row.label)}">
+													<Table.Row>
+														<Table.Cell class="text-lg font-bold {letterColor(row.label)}">
 															{row.label}
-														</td>
-														<td class="text-right font-mono">
+														</Table.Cell>
+														<Table.Cell class="text-right font-mono">
 															{#if row.status === 'achieved'}
 																<span class="text-green-500 font-sans text-sm font-medium">
 																	already secured
 																</span>
 															{:else if row.status === 'impossible'}
-																<span class="text-base-content/50 font-sans text-sm">
+																<span class="text-foreground/50 font-sans text-sm">
 																	out of reach
 																</span>
 															{:else}
@@ -518,54 +528,46 @@
 																	{row.neededPercent.toFixed(1)}%
 																</span>
 															{/if}
-														</td>
-													</tr>
+														</Table.Cell>
+													</Table.Row>
 												{/each}
-											</tbody>
-										</table>
+											</Table.Body>
+										</Table.Root>
 									</div>
-									<p class="mt-2 text-[11px] leading-4 text-base-content/50">
+									<p class="mt-2 text-[11px] leading-4 text-foreground/50">
 										Score you'd need, on average, on every item still blank to land each grade.
 									</p>
 								</div>
 							{/if}
 
 							<div class="flex flex-wrap gap-2 pt-1">
-								<button
-									type="button"
-									class="btn btn-sm btn-ghost rounded-full"
-									onclick={clearCurrentCourse}
-								>
+								<Button variant="ghost" tone="neutral" size="sm" onclick={clearCurrentCourse}>
 									<RotateCcw size={14} />
 									Clear this course
-								</button>
-								<button
-									type="button"
-									class="btn btn-sm btn-ghost rounded-full"
-									onclick={clearAllCourses}
-								>
+								</Button>
+								<Button variant="ghost" tone="neutral" size="sm" onclick={clearAllCourses}>
 									<Trash2 size={14} />
 									Clear all
-								</button>
+								</Button>
 							</div>
 						{/if}
-					</div>
-				</div>
+					</Card.Content>
+				</Card.Root>
 
 				<!-- Grade scale -->
 				{#if selectedCourse?.ruleset}
-					<div class="card border border-base-300 bg-base-100">
-						<div class="card-body gap-3 p-5 sm:p-6">
-							<div class="text-xs font-semibold uppercase tracking-wider text-base-content/60">
+					<Card.Root class="py-0">
+						<Card.Content class="gap-3 p-5 sm:p-6">
+							<div class="text-xs font-semibold uppercase tracking-wider text-foreground/60">
 								Grade scale
 							</div>
-							<dl class="divide-y divide-base-200">
+							<dl class="divide-y divide-muted">
 								{#each [...selectedCourse.ruleset.gradeBands].sort((a, b) => b.minPercentage - a.minPercentage) as band (band.id)}
 									<div class="flex items-baseline justify-between py-2">
 										<dt class="w-10 text-lg font-bold {letterColor(band.label)}">
 											{band.label}
 										</dt>
-										<dd class="text-sm font-mono text-base-content/70">
+										<dd class="text-sm font-mono text-foreground/70">
 											{formatValue(
 												band.minPercentage
 											)}%{#if band.maxPercentage !== null && band.maxPercentage !== undefined}
@@ -575,17 +577,17 @@
 									</div>
 								{/each}
 							</dl>
-						</div>
-					</div>
+						</Card.Content>
+					</Card.Root>
 				{/if}
 			</aside>
 
 			<section class="space-y-6">
-				<div class="card border border-base-300 bg-base-100">
-					<div class="card-body gap-4 p-5 sm:p-6">
+				<Card.Root class="py-0">
+					<Card.Content class="gap-4 p-5 sm:p-6">
 						<div class="flex flex-wrap items-center justify-between gap-3">
-							<h2 class="text-lg font-semibold text-base-content">Assignments</h2>
-							<div class="flex items-center gap-3 text-xs text-base-content/60">
+							<h2 class="text-lg font-semibold text-foreground">Assignments</h2>
+							<div class="flex items-center gap-3 text-xs text-foreground/60">
 								<span class="inline-flex items-center gap-1">
 									<ChevronsUp size={13} />
 									fill max
@@ -600,42 +602,41 @@
 						<div bind:this={entriesRoot} class="space-y-4">
 							{#if workspaceQuery.isLoading}
 								{#each [0, 1, 2, 3] as i (i)}
-									<div class="skeleton h-24 w-full"></div>
+									<Skeleton class="h-24 w-full" />
 								{/each}
 							{:else if workspaceQuery.error}
-								<div role="alert" class="alert alert-error">
-									<span>Course entry data is unavailable.</span>
-								</div>
+								<Alert.Root tone="error">
+									<CircleAlert />
+									<Alert.Title>Course entry data is unavailable.</Alert.Title>
+								</Alert.Root>
 							{:else if !selectedCourse}
 								<div
-									class="rounded-2xl border border-dashed border-base-300 bg-base-200/50 p-6 text-center text-sm text-base-content/70"
+									class="rounded-2xl border border-dashed border-border bg-muted/50 p-6 text-center text-sm text-foreground/70"
 								>
 									Pick a course to open its entry fields.
 								</div>
 							{:else}
 								{#each expandedEntries as group (group.entry.id)}
 									{@const isBonus = (group.entry.contributionType ?? 'standard') === 'bonus'}
-									<article
-										class="rounded-2xl border border-base-300 bg-base-200/40 overflow-hidden"
-									>
+									<article class="rounded-2xl border border-border bg-muted/40 overflow-hidden">
 										<header
-											class="flex items-start justify-between gap-3 border-b border-base-300/70 px-4 py-3"
+											class="flex items-start justify-between gap-3 border-b border-border/70 px-4 py-3"
 										>
 											<div class="min-w-0 flex-1">
 												<div class="flex flex-wrap items-center gap-2">
-													<h3 class="font-semibold text-base-content">
+													<h3 class="font-semibold text-foreground">
 														{group.entry.name}
 													</h3>
 													{#if isBonus}
 														<span class="text-xs font-medium text-amber-500">bonus</span>
 													{/if}
-													<span class="text-xs font-mono text-base-content/60">
+													<span class="text-xs font-mono text-foreground/60">
 														{groupCompletion(group.items)}/{group.items.length}
 													</span>
 												</div>
 												{#if entryChips(group.entry).length > 0}
 													<div
-														class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-base-content/60"
+														class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-foreground/60"
 													>
 														{#each entryChips(group.entry) as chip, chipIndex (chip)}
 															{#if chipIndex > 0}<span aria-hidden="true">·</span>{/if}
@@ -645,28 +646,32 @@
 												{/if}
 											</div>
 											<div class="flex items-center gap-1 shrink-0">
-												<button
-													type="button"
-													class="btn btn-ghost btn-xs btn-circle"
+												<Button
+													variant="ghost"
+													tone="neutral"
+													size="xs"
+													shape="circle"
 													aria-label="Fill this group with full-credit values"
 													title="Fill this group with full-credit values"
 													onclick={() => fillGroupWithMaximum(group.items)}
 												>
 													<ChevronsUp size={14} />
-												</button>
-												<button
-													type="button"
-													class="btn btn-ghost btn-xs btn-circle"
+												</Button>
+												<Button
+													variant="ghost"
+													tone="neutral"
+													size="xs"
+													shape="circle"
 													aria-label="Clear this group"
 													title="Clear this group"
 													onclick={() => clearGroup(group.items)}
 												>
 													<X size={14} />
-												</button>
+												</Button>
 											</div>
 										</header>
 
-										<ul class="divide-y divide-base-300/60">
+										<ul class="divide-y divide-border/60">
 											{#each group.items as item (item.key)}
 												{@const flatIndex = flatItems.findIndex((fi) => fi.item.key === item.key)}
 												{@const raw = getItemValue(item.key)}
@@ -675,21 +680,19 @@
 													<div class="min-w-0 flex-1">
 														<label
 															for="gc-{item.key}"
-															class="block text-sm font-medium text-base-content"
+															class="block text-sm font-medium text-foreground"
 														>
 															{item.label}
 														</label>
 													</div>
-													<label
-														class="input input-bordered input-sm flex items-center gap-1.5 rounded-full w-24 sm:w-28 {filled
-															? 'input-primary'
-															: ''}"
+													<InputGroup.Root
+														class="h-8 w-24 sm:w-28 {filled ? 'border-primary' : ''}"
 													>
-														<input
+														<InputGroup.Input
 															id="gc-{item.key}"
 															type="text"
 															inputmode="decimal"
-															class="grow min-w-0 text-right font-mono"
+															class="text-right font-mono"
 															data-gc-input
 															value={raw}
 															onkeydown={(e) => handleKey(e, flatIndex)}
@@ -699,10 +702,10 @@
 																	(event.currentTarget as HTMLInputElement).value
 																)}
 														/>
-														<span class="shrink-0 text-xs text-base-content/60 font-mono">
+														<InputGroup.Addon class="text-xs text-foreground/60 font-mono">
 															{itemSuffix(item) || 'score'}
-														</span>
-													</label>
+														</InputGroup.Addon>
+													</InputGroup.Root>
 												</li>
 											{/each}
 										</ul>
@@ -710,16 +713,16 @@
 								{/each}
 							{/if}
 						</div>
-					</div>
-				</div>
+					</Card.Content>
+				</Card.Root>
 
 				<div
-					class="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-base-300 bg-base-200/40 px-4 py-3"
+					class="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/40 px-4 py-3"
 				>
-					<button type="button" class="btn btn-sm btn-ghost rounded-full" onclick={wipeEverything}>
+					<Button variant="ghost" tone="neutral" size="sm" onclick={wipeEverything}>
 						<Eraser size={14} />
 						Erase local data
-					</button>
+					</Button>
 				</div>
 			</section>
 		</div>

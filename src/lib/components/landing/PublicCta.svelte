@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ArrowRight } from 'lucide-svelte';
 	import { resolve } from '$app/paths';
+	import { Button } from '$lib/components/ui/button';
 
 	let {
 		title = 'Ready to study smarter?',
@@ -8,16 +9,16 @@
 	}: { title?: string; body?: string } = $props();
 </script>
 
-<section class="mt-20 border-t border-base-content/10 px-6 py-14 text-center sm:px-10">
+<section class="mt-20 border-t border-foreground/10 px-6 py-14 text-center sm:px-10">
 	<h2 class="text-3xl font-bold sm:text-4xl">{title}</h2>
-	<p class="mx-auto mt-4 max-w-lg text-base-content/70">{body}</p>
+	<p class="mx-auto mt-4 max-w-lg text-foreground/70">{body}</p>
 	<div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-		<a href={resolve('/sign-in')} class="btn btn-primary btn-lg rounded-full px-8">
+		<Button href={resolve('/sign-in')} size="lg" class="px-8">
 			Start studying
 			<ArrowRight size={18} />
-		</a>
-		<a href={resolve('/contact')} class="btn btn-ghost btn-lg rounded-full px-6">
+		</Button>
+		<Button href={resolve('/contact')} variant="ghost" tone="neutral" size="lg" class="px-6">
 			Sign your school up
-		</a>
+		</Button>
 	</div>
 </section>

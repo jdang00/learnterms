@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { Eye } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	let { qs = $bindable(), currentlySelected, compact = false, allowElimination = true } = $props();
 
@@ -67,17 +69,17 @@
 		<div class="relative" data-option>
 			{#if offset}
 				<div
-					class="absolute inset-0 flex items-center justify-end rounded-2xl bg-base-300 pe-5 text-sm font-medium sm:rounded-full {offset <=
+					class="absolute inset-0 flex items-center justify-end rounded-2xl bg-muted-strong pe-5 text-sm font-medium sm:rounded-full {offset <=
 					-SWIPE_COMMIT
-						? 'text-base-content'
-						: 'text-base-content/50'}"
+						? 'text-foreground'
+						: 'text-foreground/50'}"
 					aria-hidden="true"
 				>
 					{qs.isOptionEliminated(option.id) ? 'Restore' : 'Cross out'}
 				</div>
 			{/if}
 			<label
-				class="label relative w-full touch-pan-y cursor-pointer rounded-2xl sm:rounded-full flex items-center border-base-300 bg-base-200 transition-[color,background-color,border-color,translate] duration-200
+				class="relative w-full touch-pan-y cursor-pointer rounded-2xl sm:rounded-full flex items-center gap-1.5 text-foreground/60 border-border bg-muted transition-[color,background-color,border-color,translate] duration-200
             {compact ? 'border p-1.5 md:p-2' : 'border-2 p-2 md:p-3'}
             {qs.showSolution
 					? qs.isCorrect(option.id)
@@ -96,14 +98,13 @@
 				onpointercancel={swipeEnd}
 				onclickcapture={swallowSwipeClick}
 			>
-				<input
-					type="checkbox"
-					class="checkbox checkbox-primary {compact ? 'checkbox-xs' : 'checkbox-sm'} {compact
-						? 'ms-2 md:ms-3'
-						: 'ms-4'}"
+				<Checkbox
+					class={compact
+						? 'ms-2 size-3.5 border-primary/50 md:ms-3'
+						: 'ms-4 size-4 border-primary/50'}
 					value={option.id}
 					checked={qs.isOptionSelected(option.id)}
-					onchange={() => {
+					onCheckedChange={() => {
 						handleOptionChange(option.id);
 					}}
 					disabled={qs.isOptionEliminated(option.id) || qs.showSolution}
@@ -129,14 +130,17 @@
 							? 'w-10 md:w-12 mr-1 md:mr-2'
 							: 'w-12 md:w-16 mr-2 md:mr-4'}"
 					>
-						<button
-							class="btn btn-ghost btn-circle {compact ? 'btn-sm' : 'btn-md'}"
+						<Button
+							variant="ghost"
+							tone="neutral"
+							shape="circle"
+							size={compact ? 'sm' : 'md'}
 							onclick={() => handleEliminateOption(option.id)}
 							disabled={qs.showSolution}
 							aria-label="eliminate option {option.id}"
 						>
 							<Eye />
-						</button>
+						</Button>
 					</div>
 				{/if}
 			</label>
@@ -147,16 +151,16 @@
 <style>
 	@keyframes flash-success {
 		0% {
-			border-color: var(--color-base-300);
+			border-color: var(--muted-strong);
 		}
 		15% {
-			border-color: var(--color-success);
+			border-color: var(--success);
 		}
 		85% {
-			border-color: var(--color-success);
+			border-color: var(--success);
 		}
 		100% {
-			border-color: var(--color-base-300);
+			border-color: var(--muted-strong);
 		}
 	}
 	.flash-green {

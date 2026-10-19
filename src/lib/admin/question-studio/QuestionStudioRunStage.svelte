@@ -10,6 +10,8 @@
 	import { resolve } from '$app/paths';
 	import { fade } from 'svelte/transition';
 	import ShimmerText from '$lib/components/ShimmerText.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Kbd } from '$lib/components/ui/kbd';
 	import QuestionStudioCandidateCard from './QuestionStudioCandidateCard.svelte';
 	import QuestionStudioCandidateInspector from './QuestionStudioCandidateInspector.svelte';
 	import QuestionStudioSlotRow from './QuestionStudioSlotRow.svelte';
@@ -107,28 +109,32 @@
 		<!-- Question list -->
 		<div class="flex min-h-0 flex-col gap-3 lg:col-span-5 xl:col-span-4">
 			<aside
-				class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-xs"
+				class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xs"
 			>
-				<div class="flex shrink-0 items-center gap-2 border-b border-base-300 px-3 py-2">
+				<div class="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
 					<h2 class="text-sm font-semibold">Questions</h2>
-					<span class="text-xs text-base-content/45">
+					<span class="text-xs text-foreground/45">
 						{selectedCount} of {selectableCount} selected
 					</span>
 					<div class="ml-auto flex items-center gap-0.5">
-						<button
-							class="btn btn-ghost btn-xs rounded-full"
+						<Button
+							variant="ghost"
+							tone="neutral"
+							size="xs"
 							disabled={editing || isSaving || selectableCount === 0}
 							onclick={() => onSelectAllCandidates(true)}
 						>
 							All
-						</button>
-						<button
-							class="btn btn-ghost btn-xs rounded-full"
+						</Button>
+						<Button
+							variant="ghost"
+							tone="neutral"
+							size="xs"
 							disabled={editing || isSaving || selectedCount === 0}
 							onclick={() => onSelectAllCandidates(false)}
 						>
 							None
-						</button>
+						</Button>
 					</div>
 				</div>
 
@@ -156,7 +162,7 @@
 
 		<!-- Inspector -->
 		<section
-			class="hidden min-h-0 overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-xs lg:col-span-7 lg:flex xl:col-span-8"
+			class="hidden min-h-0 overflow-hidden rounded-2xl border border-border bg-background shadow-xs lg:col-span-7 lg:flex xl:col-span-8"
 		>
 			{#if activeCandidate && displayIndex !== null}
 				<QuestionStudioCandidateInspector
@@ -176,11 +182,11 @@
 			{:else}
 				<div class="flex h-full w-full flex-col items-center justify-center gap-3 p-8 text-center">
 					<span
-						class="flex h-10 w-10 items-center justify-center rounded-full bg-base-200 text-base-content/35"
+						class="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-foreground/35"
 					>
 						<MousePointerClick size={18} />
 					</span>
-					<p class="max-w-56 text-sm text-base-content/45">
+					<p class="max-w-56 text-sm text-foreground/45">
 						Pick a question to read it here while the rest are written.
 					</p>
 				</div>
@@ -190,20 +196,19 @@
 
 	<!-- Commit bar -->
 	<div
-		class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-base-300 bg-base-100 px-3 py-2 shadow-xs"
+		class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-border bg-background px-3 py-2 shadow-xs"
 	>
 		{#if telemetry}
-			<span
-				class="flex items-center gap-1.5 text-xs text-base-content/55"
-				aria-label="Elapsed time"
-			>
+			<span class="flex items-center gap-1.5 text-xs text-foreground/55" aria-label="Elapsed time">
 				<Clock3 size={14} />
 				<span class="tabular-nums">{formatDuration(telemetry.elapsedMs)}</span>
 			</span>
 		{/if}
-		<button
-			type="button"
-			class="btn btn-ghost btn-sm btn-circle"
+		<Button
+			variant="ghost"
+			tone="neutral"
+			shape="circle"
+			size="sm"
 			aria-label="Open stats for nerds"
 			title="Stats for nerds"
 			aria-haspopup="dialog"
@@ -214,43 +219,45 @@
 			}}
 		>
 			<ChartNoAxesCombined size={16} />
-		</button>
+		</Button>
 		{#if editing}
-			<p class="text-xs text-base-content/55">Apply or cancel this edit to publish questions.</p>
+			<p class="text-xs text-foreground/55">Apply or cancel this edit to publish questions.</p>
 		{:else}
-			<p class="text-xs text-base-content/55">
+			<p class="text-xs text-foreground/55">
 				{#if savedIndexes.size > 0}
-					<span class="font-medium text-success">Published {savedIndexes.size}</span>
+					<span class="font-medium text-success-ink">Published {savedIndexes.size}</span>
 					to {moduleTitle}.
 				{:else}
 					Selected questions publish directly to the module when saved.
 				{/if}
 			</p>
-			<p class="hidden items-center gap-1 text-xs text-base-content/35 sm:flex">
-				<kbd class="kbd kbd-xs">↑</kbd>
-				<kbd class="kbd kbd-xs">↓</kbd> browse
-				<kbd class="kbd kbd-xs ml-2">space</kbd> select
+			<p class="hidden items-center gap-1 text-xs text-foreground/35 sm:flex">
+				<Kbd>↑</Kbd>
+				<Kbd>↓</Kbd> browse
+				<Kbd class="ml-2">space</Kbd> select
 			</p>
 			<div class="ml-auto flex items-center gap-2">
 				{#if savedDraftsLink}
-					<a
-						class="btn btn-ghost btn-sm rounded-full"
+					<Button
+						variant="ghost"
+						tone="neutral"
+						size="sm"
 						href="{resolve('/admin/[classId]/module/[moduleId]', {
 							classId: savedDraftsLink.classId,
 							moduleId: savedDraftsLink.moduleId
 						})}?{savedDraftsLink.query}"
 					>
 						Open module
-					</a>
+					</Button>
 				{/if}
 				{#if runFinished}
-					<button class="btn btn-primary btn-sm gap-1.5 rounded-full" onclick={onStartNewRun}>
+					<Button size="sm" onclick={onStartNewRun}>
 						<RotateCcw size={14} />
 						Start a new run
-					</button>
+					</Button>
 				{:else}
-					<button
-						class="btn btn-primary btn-sm gap-1.5 rounded-full"
+					<Button
+						size="sm"
 						disabled={selectedCount === 0 || isSaving || !isReady}
 						onclick={onSaveSelected}
 					>
@@ -262,7 +269,7 @@
 								Publish {selectedCount} question{selectedCount === 1 ? '' : 's'} to {moduleTitle}
 							</span>
 						{/if}
-					</button>
+					</Button>
 				{/if}
 			</div>
 		{/if}
@@ -271,23 +278,25 @@
 
 <dialog
 	bind:this={diagnosticsDialog}
-	class="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-full max-w-sm border-l border-base-300 bg-base-200 p-0 text-base-content shadow-xl backdrop:bg-black/30"
+	class="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-full max-w-sm border-l border-border bg-muted p-0 text-foreground shadow-xl backdrop:bg-black/30"
 	aria-labelledby="generation-details-title"
 	onclose={() => (diagnosticsOpen = false)}
 >
 	<div class="flex h-full flex-col">
 		<div
-			class="flex shrink-0 items-center justify-between border-b border-base-300 bg-base-100 px-3 py-2"
+			class="flex shrink-0 items-center justify-between border-b border-border bg-background px-3 py-2"
 		>
 			<h2 id="generation-details-title" class="text-sm font-semibold">Stats for nerds</h2>
-			<button
-				type="button"
-				class="btn btn-ghost btn-sm btn-circle"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				shape="circle"
+				size="sm"
 				aria-label="Close stats for nerds"
 				onclick={() => diagnosticsDialog.close()}
 			>
 				<X size={18} />
-			</button>
+			</Button>
 		</div>
 		<div class="min-h-0 flex-1 space-y-2 overflow-y-auto p-2">
 			{#if telemetry}
@@ -301,8 +310,8 @@
 				bind:expanded={activityExpanded}
 			/>
 			{#if cutRows.length > 0}
-				<details class="rounded-2xl px-3 py-2 text-xs text-base-content/50">
-					<summary class="cursor-pointer select-none hover:text-base-content/75">
+				<details class="rounded-2xl px-3 py-2 text-xs text-foreground/50">
+					<summary class="cursor-pointer select-none hover:text-foreground/75">
 						{cutRows.length}
 						{cutRows.length === 1 ? "wasn't" : "weren't"} kept. See why
 					</summary>
@@ -311,7 +320,7 @@
 							{#if row.kind === 'cut'}
 								<li>
 									{#if row.slot.topicTitle}
-										<span class="font-medium text-base-content/70">{row.slot.topicTitle}:</span>
+										<span class="font-medium text-foreground/70">{row.slot.topicTitle}:</span>
 									{/if}
 									{row.reason}
 								</li>

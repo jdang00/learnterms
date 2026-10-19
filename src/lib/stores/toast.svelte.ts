@@ -1,24 +1,12 @@
+import { toast } from 'svelte-sonner';
+
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
-export type Toast = {
-	id: number;
-	message: string;
-	type: ToastType;
-};
-
-let nextId = 0;
-
+// Thin facade over svelte-sonner so existing call sites keep working. For actions, promises or
+// descriptions, import `toast` from 'svelte-sonner' directly.
 class ToastStore {
-	toasts: Toast[] = $state([]);
-
 	add(message: string, type: ToastType = 'success', duration = 3000) {
-		const id = nextId++;
-		this.toasts = [...this.toasts, { id, message, type }];
-		setTimeout(() => this.remove(id), duration);
-	}
-
-	remove(id: number) {
-		this.toasts = this.toasts.filter((t) => t.id !== id);
+		toast[type](message, { duration });
 	}
 
 	success(message: string) {
@@ -31,6 +19,10 @@ class ToastStore {
 
 	info(message: string) {
 		this.add(message, 'info');
+	}
+
+	warning(message: string) {
+		this.add(message, 'warning', 4000);
 	}
 }
 

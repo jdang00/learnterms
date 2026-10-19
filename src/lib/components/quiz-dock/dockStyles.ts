@@ -1,47 +1,21 @@
-import type { ButtonLook, ButtonVariant, CommandTone, QuizCommand } from './types';
+import { buttonVariants } from '$lib/components/ui/button';
+import type { ButtonLook, CommandTone, QuizCommand } from './types';
 import type { DockDisplay } from './layouts';
 
 export type DockShape = 'auto' | 'segment-start' | 'segment-end';
 
-// Literal class names so Tailwind/daisyUI can see them.
-const VARIANT: Record<ButtonVariant, string> = {
-	solid: '',
-	soft: 'btn-soft',
-	outline: 'btn-outline',
-	dash: 'btn-dash',
-	ghost: 'btn-ghost'
-};
-
-const COLOR: Record<Exclude<CommandTone, 'neutral' | 'highlighter' | 'ember'>, string> = {
-	primary: 'btn-primary',
-	success: 'btn-success',
-	warning: 'btn-warning',
-	secondary: 'btn-secondary',
-	info: 'btn-info',
-	accent: 'btn-accent',
-	error: 'btn-error'
-};
-
-// Matches the stem highlight marks: solid lemon when on, theme-aware ink at rest (see app.css).
-const HIGHLIGHTER_SOLID = '[--btn-color:var(--color-highlighter)] [--btn-fg:#422006]';
-const HIGHLIGHTER_TINT = '[--btn-color:var(--color-highlighter-ink)]';
-
-// A true orange for streaks; daisyUI's warning reads as amber in most themes.
-const EMBER_SOLID = '[--btn-color:#f97316] [--btn-fg:#fff]';
-const EMBER_TINT = '[--btn-color:#f97316]';
-
-// Ghost buttons keep their hue in the text; a colored ghost would inherit the -content color.
+// Icon and label ink for a tone on the page (menus, readouts, the tools bar).
 export const TONE_TEXT: Record<CommandTone, string> = {
-	neutral: 'text-base-content/75',
-	primary: 'text-primary',
-	success: 'text-success',
-	warning: 'text-warning',
-	secondary: 'text-secondary',
-	info: 'text-info',
-	accent: 'text-accent',
-	error: 'text-error',
-	highlighter: 'text-[var(--color-highlighter-ink)]',
-	ember: 'text-orange-500'
+	neutral: 'text-foreground/75',
+	primary: 'text-primary-ink',
+	success: 'text-success-ink',
+	warning: 'text-warning-ink',
+	secondary: 'text-secondary-ink',
+	info: 'text-info-ink',
+	accent: 'text-accent-ink',
+	error: 'text-error-ink',
+	highlighter: 'text-highlighter-ink',
+	ember: 'text-ember-ink'
 };
 
 // Previous/next read as one split pill: rounded outside, flat where they meet, nearly touching.
@@ -57,32 +31,38 @@ export function segmentStyle(shape: DockShape): string | undefined {
 }
 
 export const TONE_BADGE: Record<CommandTone, string> = {
-	neutral: 'bg-base-content/5 text-base-content/80',
-	primary: 'bg-primary/12 text-primary',
-	success: 'bg-success/12 text-success',
-	warning: 'bg-warning/15 text-warning',
-	secondary: 'bg-secondary/12 text-secondary',
-	info: 'bg-info/12 text-info',
-	accent: 'bg-accent/12 text-accent',
-	error: 'bg-error/12 text-error',
-	highlighter: 'bg-[var(--color-highlighter)]/25 text-[var(--color-highlighter-ink)]',
-	ember: 'bg-orange-500/15 text-orange-500'
+	neutral: 'bg-foreground/5 text-foreground/80',
+	primary: 'bg-primary/12 text-primary-ink',
+	success: 'bg-success/14 text-success-ink',
+	warning: 'bg-warning/18 text-warning-ink',
+	secondary: 'bg-secondary/12 text-secondary-ink',
+	info: 'bg-info/14 text-info-ink',
+	accent: 'bg-accent/14 text-accent-ink',
+	error: 'bg-error/14 text-error-ink',
+	highlighter: 'bg-highlighter/30 text-highlighter-ink',
+	ember: 'bg-ember/15 text-ember-ink'
 };
-
-export function lookClass({ variant, tone }: ButtonLook) {
-	if (variant === 'ghost') return `btn-ghost ${TONE_TEXT[tone]}`;
-	if (tone === 'neutral') return variant === 'solid' ? 'btn-neutral' : VARIANT[variant];
-	if (tone === 'ember')
-		return variant === 'solid' ? EMBER_SOLID : `${VARIANT[variant]} ${EMBER_TINT}`;
-	if (tone === 'highlighter') {
-		return variant === 'solid' ? HIGHLIGHTER_SOLID : `${VARIANT[variant]} ${HIGHLIGHTER_TINT}`;
-	}
-	return `${VARIANT[variant]} ${COLOR[tone]}`;
-}
 
 export function lookFor(command: QuizCommand, active: boolean): ButtonLook {
 	if (!active) return command.look;
 	return command.activeLook ?? command.look;
+}
+
+// Glass finishes by role. Solids read as glossy candy (sheen, inner rim) and light up on hover;
+// toggles are frosted pills with a tone rim; utilities stay quiet until hovered.
+const GLASS: Record<ButtonLook['variant'], string> = {
+	solid:
+		'bg-linear-to-b from-white/20 via-white/4 to-transparent shadow-[inset_0_1px_0_rgb(255_255_255/0.4),inset_0_-1px_0_rgb(0_0_0/0.12)] dark:from-white/10 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.18)] hover:bg-(--tone) hover:brightness-110 [transition-property:color,background-color,border-color,box-shadow,translate,filter]',
+	soft: 'shadow-[inset_0_1px_0_rgb(255_255_255/0.55),inset_0_0_0_1px_color-mix(in_oklab,var(--tone)_24%,transparent)]',
+	outline:
+		'border-[1.5px] bg-white/35 shadow-[inset_0_1px_0_rgb(255_255_255/0.6)] hover:bg-white/60 dark:bg-white/[0.03] dark:shadow-none dark:hover:bg-white/8',
+	dash: 'border-[1.5px] bg-white/25 hover:bg-white/55 dark:bg-white/[0.03] dark:hover:bg-white/8',
+	ghost: 'hover:bg-white/60 dark:hover:bg-white/10'
+};
+
+/** The dock's glass finish for a Button variant, for islands built from plain Buttons. */
+export function dockGlass(variant: ButtonLook['variant'] = 'solid') {
+	return GLASS[variant];
 }
 
 export function dockButtonClass(
@@ -93,12 +73,17 @@ export function dockButtonClass(
 		active = false
 	}: { display: DockDisplay; shape?: DockShape; active?: boolean }
 ) {
-	const form = shape !== 'auto' ? '' : display === 'icon' ? 'btn-circle' : 'rounded-full';
-	return `btn btn-sm ${lookClass(lookFor(command, active))} ${form}`;
+	const { variant, tone } = lookFor(command, active);
+	return `${buttonVariants({
+		variant,
+		tone,
+		size: 'md',
+		shape: shape === 'auto' && display === 'icon' ? 'circle' : 'pill'
+	})} ${GLASS[variant]}`;
 }
 
 export const READOUT_CLASS =
-	'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium tabular-nums text-base-content/80 bg-base-content/[0.06]';
+	'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium tabular-nums text-foreground/80 bg-foreground/[0.06]';
 
 export function isPassive(command: QuizCommand | undefined) {
 	return command?.kind === 'readout' || command?.kind === 'meter';

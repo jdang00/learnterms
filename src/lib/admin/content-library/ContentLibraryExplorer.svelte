@@ -3,8 +3,10 @@
 	import { documentPipeline } from './documentPipeline';
 	import { Check, Library, Pencil, Plus, Search } from 'lucide-svelte';
 	import type { Doc } from '../../../convex/_generated/dataModel';
-	import { fileKind, formatPages, relativeTime, type ViewMode } from './contentLibrary';
+	import { docHue, fileKind, formatPages, relativeTime, type ViewMode } from './contentLibrary';
 	import { formatBytes } from '$lib/utils/format';
+	import { Button } from '$lib/components/ui/button';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 
 	let {
 		docs,
@@ -33,41 +35,41 @@
 	{#if viewMode === 'grid'}
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6">
 			{#each Array.from({ length: 12 }, (_, index) => index) as index (index)}
-				<div class="skeleton h-52 w-full rounded-2xl"></div>
+				<Skeleton class="h-52 w-full rounded-2xl" />
 			{/each}
 		</div>
 	{:else}
 		<div class="space-y-2">
 			{#each Array.from({ length: 8 }, (_, index) => index) as index (index)}
-				<div class="skeleton h-16 w-full rounded-xl"></div>
+				<Skeleton class="h-16 w-full rounded-xl" />
 			{/each}
 		</div>
 	{/if}
 {:else if docs.length === 0 && searchTerm}
 	<div
-		class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-base-300 bg-base-100 py-20 text-center"
+		class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background py-20 text-center"
 	>
-		<div class="mb-3 rounded-full bg-base-200 p-4 text-base-content/40">
+		<div class="mb-3 rounded-full bg-muted p-4 text-foreground/40">
 			<Search size={24} />
 		</div>
 		<p class="text-sm font-semibold">No matches for "{searchTerm}"</p>
-		<p class="mt-1 text-xs text-base-content/50">Try a different word or check the spelling.</p>
+		<p class="mt-1 text-xs text-foreground/50">Try a different word or check the spelling.</p>
 	</div>
 {:else if docs.length === 0}
 	<div
-		class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-base-300 bg-base-100 py-20 text-center"
+		class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background py-20 text-center"
 	>
 		<div class="mb-4 rounded-2xl bg-primary/10 p-5 text-primary">
 			<Library size={30} />
 		</div>
 		<p class="text-base font-semibold">Your library is empty</p>
-		<p class="mt-1 max-w-xs text-sm text-base-content/50">
+		<p class="mt-1 max-w-xs text-sm text-foreground/50">
 			Add your first PDF to make it searchable for your class.
 		</p>
-		<button class="btn btn-primary btn-sm mt-5 gap-2 rounded-full" onclick={onAdd}>
+		<Button size="sm" class="mt-5 gap-2" onclick={onAdd}>
 			<Plus size={15} />
 			Add file
-		</button>
+		</Button>
 	</div>
 {:else if viewMode === 'grid'}
 	<div
@@ -77,26 +79,27 @@
 	>
 		{#each docs as doc (doc._id)}
 			{@const kind = fileKind(doc)}
+			{@const tone = docHue(doc)}
 			{@const pages = formatPages(doc.metadata?.pageCount)}
 			{@const pipeline = documentPipeline(doc.metadata)}
 			{@const isReady = pipeline.complete}
 			{@const isSelected = selectedDocumentId === doc._id && isDrawerOpen}
-			<div class="group relative" style="--kind: {kind.hue}">
+			<div class="group relative" style="--kind: {tone.hue}">
 				<button
-					class="doc-card flex h-52 w-full flex-col overflow-hidden rounded-2xl border bg-base-100 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg {isSelected
+					class="doc-card flex h-52 w-full flex-col overflow-hidden rounded-2xl border bg-background text-left transition-all duration-200 hover:-translate-y-1 {isSelected
 						? 'border-primary ring-1 ring-primary'
-						: 'border-base-300 hover:border-base-content/20'}"
+						: 'border-border hover:border-[color-mix(in_oklab,var(--kind)_45%,var(--line))]'}"
 					onclick={() => onSelect(doc)}
 				>
 					<div class="doc-stage relative h-28 w-full shrink-0 overflow-hidden">
 						<span
-							class="absolute left-2.5 top-2.5 z-10 inline-flex items-center rounded-full bg-base-100/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide backdrop-blur {kind.accent}"
+							class="absolute left-2.5 top-2.5 z-10 inline-flex items-center rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground/65 backdrop-blur"
 						>
 							{kind.label}
 						</span>
 						{#if isReady}
 							<span
-								class="absolute right-3 top-3 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-base-100/90 text-success group-hover:opacity-0 group-focus-within:opacity-0"
+								class="absolute right-3 top-3 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-background/90 text-success group-hover:opacity-0 group-focus-within:opacity-0"
 								title="Ready"
 							>
 								<Check size={12} strokeWidth={2.5} aria-hidden="true" /><span class="sr-only"
@@ -106,25 +109,27 @@
 						{/if}
 						{#if pages && (!pipeline.visible || pipeline.complete)}
 							<span
-								class="absolute bottom-2 right-2.5 z-10 inline-flex items-center rounded-full bg-base-100/85 px-2 py-0.5 text-[10px] font-semibold text-base-content/70 backdrop-blur"
+								class="absolute bottom-2 right-2.5 z-10 inline-flex items-center rounded-full bg-background/85 px-2 py-0.5 font-mono text-[10px] font-medium text-foreground/70 backdrop-blur"
 							>
 								{pages}
 							</span>
 						{/if}
 						<div class="sheet sheet-back"></div>
 						<div class="sheet sheet-mid"></div>
-						<div class="sheet sheet-front {kind.accent}">
+						<div class="sheet sheet-front {tone.accent}">
 							<kind.icon size={24} strokeWidth={1.5} />
 							<span class="sheet-lines"></span>
 							<span class="sheet-fold"></span>
 						</div>
 						{#if pipeline.visible && !pipeline.complete}
-							<div class="absolute inset-x-0 bottom-0 z-10 bg-base-100/95 px-3 py-1 backdrop-blur">
+							<div
+								class="absolute inset-x-0 bottom-0 z-10 bg-background/95 px-3 py-1 backdrop-blur"
+							>
 								<DocumentPipelineProgress metadata={doc.metadata} />
 							</div>
 						{/if}
 					</div>
-					<div class="flex min-h-0 flex-1 flex-col gap-1 border-t border-base-300/60 p-3">
+					<div class="flex min-h-0 flex-1 flex-col gap-1 border-t border-border/60 p-3">
 						<p
 							class="line-clamp-2 h-10 shrink-0 break-words text-sm font-medium leading-snug"
 							title={doc.title}
@@ -132,29 +137,33 @@
 							{doc.title}
 						</p>
 						<div
-							class="mt-auto flex shrink-0 items-center gap-1.5 pt-1.5 text-[11px] text-base-content/50"
+							class="mt-auto flex shrink-0 items-center gap-1.5 pt-1.5 text-[11px] text-foreground/50"
 						>
 							<span>{formatBytes(doc.metadata?.sizeBytes)}</span>
-							<span class="text-base-content/30">·</span>
+							<span class="text-foreground/30">·</span>
 							<span class="truncate">{relativeTime(doc.updatedAt)}</span>
 						</div>
 					</div>
 				</button>
-				<button
-					class="btn btn-circle btn-xs absolute right-2 top-2 z-20 border-base-300 bg-base-100/90 opacity-0 shadow-sm backdrop-blur transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+				<Button
+					variant="outline"
+					tone="neutral"
+					shape="circle"
+					size="xs"
+					class="absolute top-2 right-2 z-20 bg-background/90 opacity-0 shadow-sm backdrop-blur transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
 					onclick={() => onRename(doc)}
 					aria-label="Rename {doc.title}"
 					title="Rename"
 				>
 					<Pencil size={12} />
-				</button>
+				</Button>
 			</div>
 		{/each}
 	</div>
 {:else}
-	<div class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
+	<div class="overflow-hidden rounded-2xl border border-border bg-background">
 		<div
-			class="hidden grid-cols-[1fr_4rem_5rem_7rem_2.25rem] items-center gap-3 border-b border-base-300 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-base-content/40 sm:grid"
+			class="hidden grid-cols-[1fr_4rem_5rem_7rem_2.25rem] items-center gap-3 border-b border-border px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-foreground/40 sm:grid"
 		>
 			<span>Name</span>
 			<span class="text-right">Pages</span>
@@ -162,25 +171,26 @@
 			<span class="text-right">Updated</span>
 			<span></span>
 		</div>
-		<div class="divide-y divide-base-200">
+		<div class="divide-y divide-muted">
 			{#each docs as doc (doc._id)}
 				{@const kind = fileKind(doc)}
+				{@const tone = docHue(doc)}
 				{@const pages = formatPages(doc.metadata?.pageCount)}
 				{@const isReady = documentPipeline(doc.metadata).complete}
 				{@const isSelected = selectedDocumentId === doc._id && isDrawerOpen}
-				<div class="group relative" style="--kind: {kind.hue}">
+				<div class="group relative" style="--kind: {tone.hue}">
 					<button
 						class="grid w-full grid-cols-[1fr_2.25rem] items-center gap-3 px-4 py-2.5 text-left transition-colors sm:grid-cols-[1fr_4rem_5rem_7rem_2.25rem] {isSelected
 							? 'bg-primary/5'
-							: 'hover:bg-base-200/60'}"
+							: 'hover:bg-muted/60'}"
 						onclick={() => onSelect(doc)}
 					>
 						<div class="flex min-w-0 items-center gap-3">
 							<div class="relative shrink-0">
-								<div class="doc-mini {kind.tint} {kind.accent}"><kind.icon size={15} /></div>
+								<div class="doc-mini {tone.tint} {tone.accent}"><kind.icon size={15} /></div>
 								{#if isReady}
 									<span
-										class="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-base-100 text-success"
+										class="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-background text-success"
 										title="Ready"
 									>
 										<Check size={11} strokeWidth={2.5} aria-hidden="true" /><span class="sr-only"
@@ -192,32 +202,36 @@
 							<div class="min-w-0">
 								<p class="truncate text-sm font-medium">{doc.title}</p>
 								<DocumentPipelineProgress metadata={doc.metadata} />
-								<p class="truncate text-xs text-base-content/50">
+								<p class="truncate text-xs text-foreground/50">
 									{doc.metadata?.originalFileName ?? kind.label}{#if pages}<span class="sm:hidden">
 											· {pages}</span
 										>{/if}
 								</p>
 							</div>
 						</div>
-						<span class="text-right text-xs tabular-nums text-base-content/60 max-sm:hidden">
+						<span class="text-right text-xs tabular-nums text-foreground/60 max-sm:hidden">
 							{doc.metadata?.pageCount ?? '—'}
 						</span>
-						<span class="text-right text-xs text-base-content/60 max-sm:hidden">
+						<span class="text-right text-xs text-foreground/60 max-sm:hidden">
 							{formatBytes(doc.metadata?.sizeBytes)}
 						</span>
-						<span class="text-right text-xs text-base-content/60 max-sm:hidden">
+						<span class="text-right text-xs text-foreground/60 max-sm:hidden">
 							{relativeTime(doc.updatedAt)}
 						</span>
 						<span></span>
 					</button>
-					<button
-						class="btn btn-circle btn-xs absolute right-3 top-1/2 z-10 -translate-y-1/2 border-base-300 bg-base-100/90 opacity-0 shadow-sm transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+					<Button
+						variant="outline"
+						tone="neutral"
+						shape="circle"
+						size="xs"
+						class="absolute top-1/2 right-3 z-10 -translate-y-1/2 bg-background/90 opacity-0 shadow-sm transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
 						onclick={() => onRename(doc)}
 						aria-label="Rename {doc.title}"
 						title="Rename"
 					>
 						<Pencil size={12} />
-					</button>
+					</Button>
 				</div>
 			{/each}
 		</div>
@@ -228,7 +242,7 @@
 	/* Kind-tinted backdrop with a graph-paper grid (same motif as the landing
 	   page) fading out behind the paper stack. */
 	.doc-stage {
-		background-color: color-mix(in oklab, var(--kind) 6%, var(--color-base-200));
+		background-color: color-mix(in oklab, var(--kind) 6%, var(--muted));
 	}
 
 	.doc-stage::before {
@@ -259,8 +273,8 @@
 		width: 58%;
 		height: 82%;
 		border-radius: 9px 9px 0 0;
-		background: var(--color-base-100);
-		border: 1px solid color-mix(in oklab, var(--kind) 25%, var(--color-base-300));
+		background: var(--background);
+		border: 1px solid color-mix(in oklab, var(--kind) 25%, var(--muted-strong));
 		transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
@@ -281,7 +295,7 @@
 		gap: 8px;
 		padding-top: 11px;
 		transform: translateX(-50%);
-		box-shadow: 0 -1px 10px color-mix(in oklab, var(--kind) 12%, transparent);
+		box-shadow: 0 -1px 10px color-mix(in oklab, var(--kind) 10%, transparent);
 		clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 0 100%);
 	}
 
@@ -316,7 +330,7 @@
 		width: 13px;
 		height: 13px;
 		border-bottom-left-radius: 7px;
-		background: color-mix(in oklab, var(--kind) 18%, var(--color-base-200));
+		background: color-mix(in oklab, var(--kind) 18%, var(--muted));
 		box-shadow: -1px 1px 2px rgb(0 0 0 / 0.06);
 	}
 
@@ -328,7 +342,7 @@
 		justify-content: center;
 		width: 2.1rem;
 		height: 2.1rem;
-		border: 1px solid color-mix(in oklab, var(--kind) 22%, var(--color-base-300));
+		border: 1px solid color-mix(in oklab, var(--kind) 22%, var(--muted-strong));
 		border-radius: 0.55rem;
 		clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%);
 	}
@@ -341,6 +355,6 @@
 		width: 9px;
 		height: 9px;
 		border-bottom-left-radius: 5px;
-		background: color-mix(in oklab, var(--kind) 22%, var(--color-base-200));
+		background: color-mix(in oklab, var(--kind) 22%, var(--muted));
 	}
 </style>

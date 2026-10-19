@@ -2,6 +2,7 @@
 	import { BookmarkCheck, ChartPie, Eye, EyeOff, Flag, ListRestart } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { Button } from '$lib/components/ui/button';
 	import { cameFrom } from '$lib/utils/backNavigation';
 	import { hasRationale } from '$lib/utils/rationale';
 	import type { Doc } from '../../convex/_generated/dataModel';
@@ -88,7 +89,7 @@
 	{#snippet trailing()}
 		<button
 			type="button"
-			class="grid size-11 shrink-0 place-items-center rounded-full active:bg-base-200"
+			class="grid size-11 shrink-0 place-items-center rounded-full active:bg-muted"
 			aria-label="Progress overview: {summary.answered} of {summary.total} answered"
 			onclick={() => qs.openCompletion()}
 		>
@@ -101,11 +102,11 @@
 		</button>
 	{/snippet}
 	{#snippet tools()}
-		<button
-			type="button"
-			class="btn btn-ghost btn-circle size-11 shrink-0 {qs.showSolution
-				? 'text-success'
-				: 'text-base-content/70'}"
+		<Button
+			variant="ghost"
+			tone={qs.showSolution ? 'success' : 'neutral'}
+			shape="circle"
+			class="size-11 shrink-0"
 			aria-label={canShowRationale
 				? qs.showSolution
 					? 'Show rationale'
@@ -116,7 +117,7 @@
 			onclick={showRationale}
 		>
 			{#if qs.showSolution && !canShowRationale}<EyeOff size={20} />{:else}<Eye size={20} />{/if}
-		</button>
+		</Button>
 		<QuizToolsBar variant="sheet" />
 	{/snippet}
 </MobileStudyBar>
@@ -134,51 +135,53 @@
 >
 	{#snippet filters()}
 		{@const flaggedCount = qs.liveFlaggedQuestions.length}
-		<button
-			type="button"
-			class="btn btn-sm min-h-10 shrink-0 rounded-full {activeFilter === 'all'
-				? 'btn-neutral'
-				: 'btn-ghost bg-base-200'}"
+		<Button
+			variant={activeFilter === 'all' ? 'solid' : 'ghost'}
+			tone="neutral"
+			size="sm"
+			class="h-10 shrink-0 {activeFilter === 'all' ? '' : 'bg-muted'}"
 			aria-pressed={activeFilter === 'all'}
-			onclick={() => setFilter('all')}>All {summary.total}</button
+			onclick={() => setFilter('all')}>All {summary.total}</Button
 		>
-		<button
-			type="button"
-			class="btn btn-sm min-h-10 shrink-0 rounded-full {activeFilter === 'flagged'
-				? 'btn-warning'
-				: 'btn-ghost bg-base-200'}"
+		<Button
+			variant={activeFilter === 'flagged' ? 'solid' : 'ghost'}
+			tone={activeFilter === 'flagged' ? 'warning' : 'neutral'}
+			size="sm"
+			class="h-10 shrink-0 {activeFilter === 'flagged' ? '' : 'bg-muted'}"
 			aria-pressed={activeFilter === 'flagged'}
 			disabled={!flaggedCount && activeFilter !== 'flagged'}
-			onclick={() => setFilter('flagged')}><Flag size={14} /> Flagged {flaggedCount}</button
+			onclick={() => setFilter('flagged')}><Flag size={14} /> Flagged {flaggedCount}</Button
 		>
-		<button
-			type="button"
-			class="btn btn-sm min-h-10 shrink-0 rounded-full {activeFilter === 'incomplete'
-				? 'btn-primary'
-				: 'btn-ghost bg-base-200'}"
+		<Button
+			variant={activeFilter === 'incomplete' ? 'solid' : 'ghost'}
+			tone={activeFilter === 'incomplete' ? 'primary' : 'neutral'}
+			size="sm"
+			class="h-10 shrink-0 {activeFilter === 'incomplete' ? '' : 'bg-muted'}"
 			aria-pressed={activeFilter === 'incomplete'}
 			disabled={!summary.unanswered && activeFilter !== 'incomplete'}
 			onclick={() => setFilter('incomplete')}
-			><BookmarkCheck size={14} /> Unanswered {summary.unanswered}</button
+			><BookmarkCheck size={14} /> Unanswered {summary.unanswered}</Button
 		>
 	{/snippet}
 	{#snippet footer()}
 		<div class="flex gap-2">
-			<button
-				type="button"
-				class="btn btn-ghost min-h-11 flex-1 rounded-full"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				class="h-11 flex-1"
 				onclick={() => {
 					navigatorOpen = false;
 					qs.openCompletion();
-				}}><ChartPie size={16} /> Progress overview</button
+				}}><ChartPie size={16} /> Progress overview</Button
 			>
-			<button
-				type="button"
-				class="btn btn-ghost min-h-11 flex-1 rounded-full text-error"
+			<Button
+				variant="ghost"
+				tone="error"
+				class="h-11 flex-1"
 				onclick={() => {
 					navigatorOpen = false;
 					qs.isResetModalOpen = true;
-				}}><ListRestart size={16} /> Reset module</button
+				}}><ListRestart size={16} /> Reset module</Button
 			>
 		</div>
 	{/snippet}

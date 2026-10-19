@@ -13,7 +13,7 @@
 		<span
 			class="w-1 rounded-full transition-colors {barHeights[i]} {i < filled
 				? 'bg-current'
-				: 'bg-base-content/15'}"
+				: 'bg-foreground/15'}"
 		></span>
 	{/each}
 </span>

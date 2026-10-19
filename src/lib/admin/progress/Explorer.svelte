@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { SelectField } from '$lib/components/ui/select';
+	import SemesterSelect from '$lib/components/SemesterSelect.svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import type { FunctionReturnType } from 'convex/server';
 	import { api } from '../../../convex/_generated/api';
@@ -6,6 +8,13 @@
 	import { ArrowLeft, BookOpen, ChevronRight, Flag, Layers, Search } from 'lucide-svelte';
 	import ModuleDetail from './ModuleDetail.svelte';
 	import { relativeTime } from './utils';
+	import * as Alert from '$lib/components/ui/alert';
+	import * as Card from '$lib/components/ui/card';
+	import * as InputGroup from '$lib/components/ui/input-group';
+	import * as Table from '$lib/components/ui/table';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 
 	let {
 		cohortId,
@@ -80,17 +89,22 @@
 </script>
 
 {#if coverage.error || semesters.error}
-	<div class="alert alert-error alert-soft" role="alert">
-		Class insights could not load. {coverage.error?.message ?? semesters.error?.message}
-	</div>
+	<Alert.Root tone="error" role="alert">
+		<Alert.Description>
+			Class insights could not load. {coverage.error?.message ?? semesters.error?.message}
+		</Alert.Description>
+	</Alert.Root>
 {:else if moduleId && selectedModule}
 	<div class="space-y-4">
 		<nav class="flex flex-wrap items-center gap-2 text-sm" aria-label="Module breadcrumb">
-			<button
-				class="btn btn-ghost btn-sm rounded-full"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				size="sm"
 				onclick={() => onNavigate({ module: null, class: selectedModule.classId })}
-				><ArrowLeft size={15} />{selectedModule.className}</button
 			>
+				<ArrowLeft size={15} />{selectedModule.className}
+			</Button>
 		</nav>
 		{#key selectedModule.moduleId}<ModuleDetail
 				{cohortId}
@@ -102,43 +116,42 @@
 {:else if !coverage.data}
 	<div class="space-y-4">
 		<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-			{#each [1, 2, 3, 4] as row (row)}<div class="skeleton h-14"></div>{/each}
+			{#each [1, 2, 3, 4] as row (row)}<Skeleton class="h-14" />{/each}
 		</div>
-		<div class="skeleton h-80"></div>
+		<Skeleton class="h-80" />
 	</div>
 {:else}
 	{#if moduleId && !selectedModule}
-		<div class="alert alert-warning alert-soft mb-4">
-			That module is no longer available.
-			<button class="btn btn-ghost btn-xs rounded-full" onclick={() => onNavigate({ module: null })}
-				>Dismiss</button
-			>
-		</div>
+		<Alert.Root tone="warning" class="mb-4 flex flex-wrap items-center justify-between gap-3">
+			<Alert.Description>That module is no longer available.</Alert.Description>
+			<Button variant="ghost" tone="neutral" size="xs" onclick={() => onNavigate({ module: null })}>
+				Dismiss
+			</Button>
+		</Alert.Root>
 	{/if}
 	<div class="space-y-4">
 		<div class="flex flex-wrap items-center gap-2">
-			<select
-				class="select select-sm w-44 rounded-full"
+			<SemesterSelect
+				semesters={semesters.data}
+				by="id"
+				allLabel="All semesters"
+				value={semesterId ?? ''}
 				aria-label="Filter by semester"
-				value={semesterId}
-				onchange={(e) =>
-					onNavigate({ semester: e.currentTarget.value || null, class: null, module: null })}
-				><option value="">All semesters</option
-				>{#each semesters.data ?? [] as semester (semester._id)}<option value={semester._id}
-						>{semester.name}</option
-					>{/each}</select
-			>
-			<span class="text-xs text-base-content/50"
+				onValueChange={(next) => onNavigate({ semester: next || null, class: null, module: null })}
+			/>
+			<span class="text-xs text-foreground/50"
 				>{classes.length} {classes.length === 1 ? 'class' : 'classes'}</span
 			>
-			<label class="input input-sm ml-auto w-full min-w-0 rounded-full sm:w-64"
-				><Search size={15} class="text-base-content/50" /><input
+			<InputGroup.Root class="ml-auto w-full min-w-0 rounded-full sm:w-64">
+				<InputGroup.Addon><Search size={15} class="text-foreground/50" /></InputGroup.Addon>
+				<InputGroup.Input
 					type="search"
 					placeholder="Search modules in every class…"
 					aria-label="Search modules in every class"
+					class="h-8 px-3 text-sm"
 					bind:value={search}
-				/></label
-			>
+				/>
+			</InputGroup.Root>
 		</div>
 
 		<nav class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Classes">
@@ -147,7 +160,7 @@
 				<button
 					class="rounded-xl border px-3.5 py-2.5 text-left transition {active
 						? 'border-primary bg-primary/5'
-						: 'border-base-300 bg-base-100 hover:border-base-content/25'}"
+						: 'border-border bg-background hover:border-foreground/25'}"
 					aria-current={active ? 'true' : undefined}
 					onclick={() => {
 						search = '';
@@ -156,16 +169,18 @@
 				>
 					<span class="flex items-center gap-2">
 						<span
-							class="min-w-0 flex-1 truncate text-sm font-semibold {active ? 'text-primary' : ''}"
+							class="min-w-0 flex-1 truncate text-sm font-semibold {active
+								? 'text-primary-ink'
+								: ''}"
 							title={course.name}>{course.name}</span
 						>
 						{#if course.questionsFlagged}<span
-								class="flex shrink-0 items-center gap-0.5 text-xs text-warning tabular-nums"
+								class="flex shrink-0 items-center gap-0.5 text-xs text-warning-ink tabular-nums"
 								title="{course.questionsFlagged} student flags"
 								><Flag size={11} />{course.questionsFlagged}</span
 							>{/if}
 					</span>
-					<span class="mt-0.5 block truncate text-xs text-base-content/50">
+					<span class="mt-0.5 block truncate text-xs text-foreground/50">
 						{course.code} · {course.activeStudents} studying · {course.lastActivityAt
 							? relativeTime(course.lastActivityAt, now)
 							: 'no activity'}
@@ -173,23 +188,23 @@
 				</button>
 			{:else}
 				<div
-					class="col-span-full rounded-2xl border border-dashed border-base-300 p-10 text-center text-sm text-base-content/55"
+					class="col-span-full rounded-2xl border border-dashed border-border p-10 text-center text-sm text-foreground/55"
 				>
-					<BookOpen size={22} class="mx-auto mb-2 text-base-content/35" />
+					<BookOpen size={22} class="mx-auto mb-2 text-foreground/35" />
 					No classes in this semester yet.
 				</div>
 			{/each}
 		</nav>
 
-		<section class="card card-border min-w-0 overflow-hidden bg-base-100">
+		<Card.Root class="min-w-0 gap-0 overflow-hidden bg-background py-0">
 			<header
-				class="flex flex-wrap items-center justify-between gap-3 border-b border-base-200 px-5 py-4"
+				class="flex flex-wrap items-center justify-between gap-3 border-b border-muted px-5 py-4"
 			>
 				<div class="min-w-0">
 					<h2 class="truncate text-base font-semibold">
 						{query ? `Modules matching “${search.trim()}”` : (selectedClass?.name ?? 'Modules')}
 					</h2>
-					<p class="text-xs text-base-content/55">
+					<p class="text-xs text-foreground/55">
 						{query
 							? `${visibleModules.length} across all classes`
 							: selectedClass
@@ -197,91 +212,99 @@
 								: 'Choose a class'}
 					</p>
 				</div>
-				<select
-					class="select select-sm w-40 rounded-full"
+				<SelectField
+					size="sm"
+					class="w-44"
 					aria-label="Sort modules"
-					bind:value={sort}
-				>
-					<option value="order">Course order</option>
-					<option value="recent">Recently studied</option>
-					<option value="students">Most students</option>
-					<option value="quiet">Quietest first</option>
-					<option value="flags">Most flags</option>
-				</select>
+					value={sort}
+					onValueChange={(v) => (sort = v as typeof sort)}
+					options={[
+						{ value: 'order', label: 'Course order' },
+						{ value: 'recent', label: 'Recently studied' },
+						{ value: 'students', label: 'Most students' },
+						{ value: 'quiet', label: 'Quietest first' },
+						{ value: 'flags', label: 'Most flags' }
+					]}
+				/>
 			</header>
 
 			{#if visibleModules.length}
-				<div class="overflow-x-auto">
-					<table class="table table-sm">
-						<thead>
-							<tr class="text-[11px] text-base-content/50">
-								<th class="pl-5">Module</th>
-								<th class="text-right">Questions</th>
-								<th>Students</th>
-								<th class="text-right">Answers</th>
-								<th class="text-right">Flags</th>
-								<th>Last studied</th>
-								<th><span class="sr-only">Open</span></th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each visibleModules as module (module.moduleId)}
-								<tr
-									class="cursor-pointer hover:bg-base-200/50"
-									onclick={() => onNavigate({ class: module.classId, module: module.moduleId })}
-								>
-									<td class="py-2.5 pl-5">
-										<span class="flex items-center gap-3">
-											<span
-												class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-200"
-												>{module.moduleEmoji ?? '📚'}</span
+				<Table.Root class="text-xs">
+					<Table.Header>
+						<Table.Row class="text-[11px] text-foreground/50">
+							<Table.Head class="pl-5">Module</Table.Head>
+							<Table.Head class="text-right">Questions</Table.Head>
+							<Table.Head>Students</Table.Head>
+							<Table.Head class="text-right">Answers</Table.Head>
+							<Table.Head class="text-right">Flags</Table.Head>
+							<Table.Head>Last studied</Table.Head>
+							<Table.Head><span class="sr-only">Open</span></Table.Head>
+						</Table.Row>
+					</Table.Header>
+					<Table.Body>
+						{#each visibleModules as module (module.moduleId)}
+							<Table.Row
+								class="cursor-pointer hover:bg-muted/50"
+								onclick={() => onNavigate({ class: module.classId, module: module.moduleId })}
+							>
+								<Table.Cell class="py-2.5 pl-5">
+									<span class="flex items-center gap-3">
+										<span
+											class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted"
+											>{module.moduleEmoji ?? '📚'}</span
+										>
+										<span class="min-w-0">
+											<span class="block max-w-72 truncate font-medium">{module.moduleTitle}</span>
+											<span class="block text-[11px] text-foreground/50"
+												>{query ? module.className : ''}{#if module.moduleStatus !== 'published'}
+													<Badge size="xs" class="capitalize">{module.moduleStatus}</Badge
+													>{/if}</span
 											>
-											<span class="min-w-0">
-												<span class="block max-w-72 truncate font-medium">{module.moduleTitle}</span
-												>
-												<span class="block text-[11px] text-base-content/50"
-													>{query ? module.className : ''}{#if module.moduleStatus !== 'published'}
-														<span class="badge badge-ghost badge-xs capitalize"
-															>{module.moduleStatus}</span
-														>{/if}</span
-												>
-											</span>
 										</span>
-									</td>
-									<td class="text-right tabular-nums">{module.totalQuestions}</td>
-									<td class="whitespace-nowrap tabular-nums"
-										>{module.activeStudents}<span class="text-base-content/40"
-											>/{totalStudents}</span
-										></td
-									>
-									<td class="text-right tabular-nums">{module.questionsInteracted}</td>
-									<td class="text-right">
-										{#if module.questionsFlagged}<span
-												class="badge badge-soft badge-warning badge-sm tabular-nums"
-												>{module.questionsFlagged}</span
-											>{:else}<span class="text-base-content/35">—</span>{/if}
-									</td>
-									<td class="whitespace-nowrap text-xs text-base-content/60"
-										>{module.lastActivityAt ? relativeTime(module.lastActivityAt, now) : '—'}</td
-									>
-									<td class="pr-4"><ChevronRight size={15} class="text-base-content/40" /></td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
+									</span>
+								</Table.Cell>
+								<Table.Cell class="text-right tabular-nums">{module.totalQuestions}</Table.Cell>
+								<Table.Cell class="whitespace-nowrap tabular-nums"
+									>{module.activeStudents}<span class="text-foreground/40">/{totalStudents}</span
+									></Table.Cell
+								>
+								<Table.Cell class="text-right tabular-nums">{module.questionsInteracted}</Table.Cell
+								>
+								<Table.Cell class="text-right">
+									{#if module.questionsFlagged}<Badge
+											variant="soft"
+											tone="warning"
+											size="sm"
+											class="tabular-nums">{module.questionsFlagged}</Badge
+										>{:else}<span class="text-foreground/35">—</span>{/if}
+								</Table.Cell>
+								<Table.Cell class="whitespace-nowrap text-xs text-foreground/60"
+									>{module.lastActivityAt
+										? relativeTime(module.lastActivityAt, now)
+										: '—'}</Table.Cell
+								>
+								<Table.Cell class="pr-4"
+									><ChevronRight size={15} class="text-foreground/40" /></Table.Cell
+								>
+							</Table.Row>
+						{/each}
+					</Table.Body>
+				</Table.Root>
 			{:else}
 				<div class="p-12 text-center">
-					<Layers size={26} class="mx-auto mb-3 text-base-content/40" />
-					<p class="text-sm text-base-content/60">
+					<Layers size={26} class="mx-auto mb-3 text-foreground/40" />
+					<p class="text-sm text-foreground/60">
 						{query ? 'No modules match your search.' : 'No modules in this class yet.'}
 					</p>
-					{#if query}<button
-							class="btn btn-ghost btn-sm mt-2 rounded-full"
-							onclick={() => (search = '')}>Clear search</button
+					{#if query}<Button
+							variant="ghost"
+							tone="neutral"
+							size="sm"
+							class="mt-2"
+							onclick={() => (search = '')}>Clear search</Button
 						>{/if}
 				</div>
 			{/if}
-		</section>
+		</Card.Root>
 	</div>
 {/if}

@@ -56,7 +56,7 @@
 					<!-- eslint-disable svelte/no-navigation-without-resolve -- base-prefixed by resolveInternalHref -->
 					<a
 						href={resolveInternalHref(action.href)}
-						class="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-base-300 bg-base-100 px-4 text-sm font-medium active:bg-base-200"
+						class="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-medium active:bg-muted"
 						onclick={action.onClick}
 					>
 						<span aria-hidden="true">{action.icon}</span>{action.title}
@@ -65,7 +65,7 @@
 				{:else}
 					<button
 						type="button"
-						class="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-base-300 bg-base-100 px-4 text-sm font-medium active:bg-base-200"
+						class="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-medium active:bg-muted"
 						onclick={() => {
 							if (action.href) window.open(action.href, '_blank', 'noreferrer');
 							action.onClick?.();
@@ -79,7 +79,7 @@
 	{/if}
 {:else}
 	<div class="lg:col-span-1">
-		<h3 class="mb-4 text-xs font-semibold uppercase tracking-wider text-base-content/50">
+		<h3 class="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground/50">
 			{title}
 		</h3>
 
@@ -106,14 +106,14 @@
 								<div class="min-w-0 flex-1">
 									<span class="block text-sm font-medium">{action.title}</span>
 									{#if action.description}
-										<span class="block truncate text-xs text-base-content/50"
+										<span class="block truncate text-xs text-foreground/50"
 											>{action.description}</span
 										>
 									{/if}
 								</div>
 								<ChevronRight
 									size={14}
-									class="text-base-content/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-base-content/60"
+									class="text-foreground/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-foreground/60"
 								/>
 							</button>
 						{:else}
@@ -133,14 +133,14 @@
 								<div class="min-w-0 flex-1">
 									<span class="block text-sm font-medium">{action.title}</span>
 									{#if action.description}
-										<span class="block truncate text-xs text-base-content/50"
+										<span class="block truncate text-xs text-foreground/50"
 											>{action.description}</span
 										>
 									{/if}
 								</div>
 								<ChevronRight
 									size={14}
-									class="text-base-content/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-base-content/60"
+									class="text-foreground/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-foreground/60"
 								/>
 							</a>
 							<!-- eslint-enable svelte/no-navigation-without-resolve -->
@@ -159,44 +159,43 @@
 							<div class="min-w-0 flex-1">
 								<span class="block text-sm font-medium">{action.title}</span>
 								{#if action.description}
-									<span class="block truncate text-xs text-base-content/50"
-										>{action.description}</span
+									<span class="block truncate text-xs text-foreground/50">{action.description}</span
 									>
 								{/if}
 							</div>
 							<ChevronRight
 								size={14}
-								class="text-base-content/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-base-content/60"
+								class="text-foreground/30 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-foreground/60"
 							/>
 						</button>
 					{/if}
 				{/each}
 			</nav>
 		{:else}
-			<div class="text-sm text-base-content/50">No links for now</div>
+			<div class="text-sm text-foreground/50">No links for now</div>
 		{/if}
 	</div>
 {/if}
 
 <style>
 	.sidebar-link {
-		color: var(--color-base-content);
+		color: var(--foreground);
 	}
 
 	.sidebar-link:hover {
-		background: color-mix(in oklab, var(--color-base-content) 5%, transparent);
+		background: color-mix(in oklab, var(--foreground) 5%, transparent);
 	}
 
 	.sidebar-link--active {
-		background: color-mix(in oklab, var(--color-primary) 8%, transparent);
+		background: color-mix(in oklab, var(--primary) 8%, transparent);
 	}
 
 	.sidebar-link--active:hover {
-		background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+		background: color-mix(in oklab, var(--primary) 12%, transparent);
 	}
 
 	.sidebar-icon--active {
-		background: color-mix(in oklab, var(--color-primary) 14%, transparent);
+		background: color-mix(in oklab, var(--primary) 14%, transparent);
 		border-radius: 0.5rem;
 	}
 </style>

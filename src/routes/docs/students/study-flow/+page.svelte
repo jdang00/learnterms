@@ -9,6 +9,12 @@
 		Settings,
 		Check
 	} from 'lucide-svelte';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Button } from '$lib/components/ui/button';
+	import * as Card from '$lib/components/ui/card';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { Progress } from '$lib/components/ui/progress';
+	import { Separator } from '$lib/components/ui/separator';
 </script>
 
 <h1>Study Flow</h1>
@@ -37,33 +43,43 @@
 	<li>After <strong>Check</strong>, correct options are highlighted for quick feedback.</li>
 </ul>
 
-<div class="card bg-base-100 border border-base-300 shadow-xs">
-	<div class="card-body">
-		<p class="text-sm text-base-content/70 mb-2">Example options preview</p>
+<Card.Root class="bg-background shadow-xs">
+	<Card.Content>
+		<p class="mb-2 text-sm text-foreground/70">Example options preview</p>
 		<div class="flex flex-col space-y-3">
-			<label class="label cursor-pointer rounded-full border-2 p-3 bg-base-200">
-				<input type="checkbox" class="checkbox checkbox-primary checkbox-sm ms-4" />
-				<span class="grow ml-3 my-3 text-sm">
-					<span class="font-semibold mr-2 select-none">A.</span>
+			<label class="flex cursor-pointer items-center rounded-full border-2 bg-muted p-3">
+				<Checkbox class="ms-4 size-4" />
+				<span class="my-3 ml-3 grow text-sm">
+					<span class="mr-2 font-semibold select-none">A.</span>
 					Option text goes here
 				</span>
-				<button class="btn btn-ghost btn-circle btn-sm mr-4" title="Eliminate"
-					><Eye size={16} /></button
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape="circle"
+					class="mr-4"
+					title="Eliminate"><Eye size={16} /></Button
 				>
 			</label>
-			<label class="label cursor-pointer rounded-full border-2 p-3 bg-base-200">
-				<input type="checkbox" class="checkbox checkbox-primary checkbox-sm ms-4" />
-				<span class="grow ml-3 my-3 text-sm line-through opacity-50">
-					<span class="font-semibold mr-2 select-none">B.</span>
+			<label class="flex cursor-pointer items-center rounded-full border-2 bg-muted p-3">
+				<Checkbox class="ms-4 size-4" />
+				<span class="my-3 ml-3 grow text-sm line-through opacity-50">
+					<span class="mr-2 font-semibold select-none">B.</span>
 					This option has been eliminated
 				</span>
-				<button class="btn btn-ghost btn-circle btn-sm mr-4" title="Eliminate"
-					><Eye size={16} /></button
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape="circle"
+					class="mr-4"
+					title="Eliminate"><Eye size={16} /></Button
 				>
 			</label>
 		</div>
-	</div>
-</div>
+	</Card.Content>
+</Card.Root>
 
 <h3>Check and feedback</h3>
 <ul>
@@ -72,31 +88,31 @@
 	<li><strong>Flag</strong> to review later; flagged questions show a badge on their number.</li>
 </ul>
 
-<div class="alert alert-success rounded-full">
+<Alert.Root tone="success" class="rounded-full" role={undefined}>
 	<Check class="mr-2" size={18} />
 	<span class="font-extrabold">Correct!</span>
-</div>
+</Alert.Root>
 
 <h2>Navigation & controls</h2>
 
 <h3>Top question navigation</h3>
 <p>Jump directly between questions. We save your interactions automatically.</p>
 
-<div class="flex flex-row w-full overflow-x-auto space-x-4 border border-base-300 p-4 rounded-xl">
-	<div class="indicator">
+<div class="flex flex-row w-full overflow-x-auto space-x-4 border border-border p-4 rounded-xl">
+	<div class="relative inline-flex">
 		<span
-			class="indicator-item indicator-start badge badge-warning badge-xs translate-x-[-1/4] translate-y-[-1/4]"
+			class="absolute -top-0.5 -right-0.5 size-2 rounded-full border border-background bg-warning"
 		></span>
-		<button class="btn btn-circle btn-soft btn-primary">1</button>
+		<Button variant="soft" tone="primary" shape="circle">1</Button>
 	</div>
-	<div class="indicator">
-		<button class="btn btn-circle btn-soft btn-outline">2</button>
+	<div class="relative inline-flex">
+		<Button variant="outline" tone="neutral" shape="circle">2</Button>
 	</div>
-	<div class="indicator">
-		<button class="btn btn-circle btn-soft btn-accent">3</button>
+	<div class="relative inline-flex">
+		<Button variant="soft" tone="accent" shape="circle">3</Button>
 	</div>
-	<div class="indicator">
-		<button class="btn btn-circle btn-soft btn-outline">4</button>
+	<div class="relative inline-flex">
+		<Button variant="outline" tone="neutral" shape="circle">4</Button>
 	</div>
 </div>
 
@@ -104,40 +120,48 @@
 <p>Quick controls appear centered near the bottom on larger screens.</p>
 
 <div
-	class="flex flex-wrap items-center gap-2 p-3 rounded-full border border-base-300 shadow-xs bg-base-100"
+	class="flex flex-wrap items-center gap-2 p-3 rounded-full border border-border shadow-xs bg-background"
 >
-	<button class="btn btn-sm btn-outline">Clear</button>
-	<button class="btn btn-sm btn-success btn-soft"><Check size={16} class="mr-1" /> Check</button>
-	<button class="btn btn-sm btn-warning btn-soft" aria-label="flag question"
-		><Flag size={16} class="mr-1" /> Flag</button
+	<Button size="sm" variant="outline" tone="neutral">Clear</Button>
+	<Button size="sm" variant="soft" tone="success"><Check size={16} class="mr-1" /> Check</Button>
+	<Button size="sm" variant="soft" tone="warning" aria-label="flag question"
+		><Flag size={16} class="mr-1" /> Flag</Button
 	>
-	<button class="btn btn-sm btn-secondary"><Shuffle size={16} class="mr-1" /> Shuffle</button>
-	<div class="divider divider-horizontal mx-1"></div>
-	<button class="btn btn-sm btn-outline"><ArrowLeft size={16} class="mr-1" /> Prev</button>
-	<button class="btn btn-sm btn-outline">Next <ArrowRight size={16} class="ml-1" /></button>
+	<Button size="sm" tone="secondary"><Shuffle size={16} class="mr-1" /> Shuffle</Button>
+	<Separator orientation="vertical" class="mx-1 h-6" />
+	<Button size="sm" variant="outline" tone="neutral"
+		><ArrowLeft size={16} class="mr-1" /> Prev</Button
+	>
+	<Button size="sm" variant="outline" tone="neutral"
+		>Next <ArrowRight size={16} class="ml-1" /></Button
+	>
 </div>
 
 <h2>Sidebar</h2>
 <p>Your sidebar keeps you oriented with module info, progress, rationale reveal, and settings.</p>
 
-<div class="card bg-base-100 border border-base-300 shadow-xs">
-	<div class="card-body">
-		<h4 class="text-sm tracking-wide text-secondary">MODULE 2</h4>
+<Card.Root class="bg-background shadow-xs">
+	<Card.Content>
+		<h4 class="text-sm tracking-wide text-secondary-ink">MODULE 2</h4>
 		<h2 class="font-semibold text-2xl mt-1 flex items-center gap-2">
 			<BookOpenText size={18} class="text-primary/80" />
 			<span>Pharmacology: Beta Blockers</span>
 		</h2>
-		<p class="text-base-content/70 mt-1">Core mechanisms, clinical use, and side effects.</p>
+		<p class="text-foreground/70 mt-1">Core mechanisms, clinical use, and side effects.</p>
 		<div class="mt-4">
-			<p class="text-base-content/60 mb-1">13% done.</p>
-			<progress class="progress progress-success w-full" value="13" max="100"></progress>
+			<p class="text-foreground/60 mb-1">13% done.</p>
+			<Progress value={13} max={100} tone="success" class="w-full" />
 		</div>
 		<div class="mt-4 flex gap-2">
-			<button class="btn btn-ghost btn-sm"><Eye size={16} class="mr-1" /> Rationale</button>
-			<button class="btn btn-soft btn-sm"><Settings size={16} class="mr-1" /> Settings</button>
+			<Button variant="ghost" tone="neutral" size="sm"
+				><Eye size={16} class="mr-1" /> Rationale</Button
+			>
+			<Button variant="soft" tone="neutral" size="sm"
+				><Settings size={16} class="mr-1" /> Settings</Button
+			>
 		</div>
-	</div>
-</div>
+	</Card.Content>
+</Card.Root>
 
 <h2>Why this design works for you</h2>
 <ul>

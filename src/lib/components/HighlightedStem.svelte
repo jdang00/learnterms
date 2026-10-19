@@ -266,12 +266,12 @@
 ></div>
 {#if enabled && busy}<span class="sr-only" role="status">Saving highlight…</span>{/if}
 {#if error || saved.error}
-	<p role="alert" class="mt-2 text-sm font-normal text-error">
+	<p role="alert" class="mt-2 text-sm font-normal text-error-ink">
 		{error || 'Could not load highlights. Reload to try again.'}
 	</p>
 {/if}
 {#if saved.data?.questionId === questionId && saved.data?.stale}
-	<p class="mt-2 text-xs font-normal text-base-content/60">
+	<p class="mt-2 text-xs font-normal text-foreground/60">
 		This stem was updated. Highlights from its previous version are hidden.
 	</p>
 {/if}

@@ -12,8 +12,8 @@
 
 <style>
 	.lt-shimmer {
-		--lt-shimmer-base: var(--color-base-content);
-		--lt-shimmer-sheen: color-mix(in oklch, var(--color-base-content) 74%, var(--color-base-100));
+		--lt-shimmer-base: var(--foreground);
+		--lt-shimmer-sheen: color-mix(in oklch, var(--foreground) 74%, var(--background));
 		color: var(--lt-shimmer-base);
 		background-image: linear-gradient(
 			100deg,
@@ -32,8 +32,8 @@
 	}
 
 	.lt-shimmer[data-tone='primary'] {
-		--lt-shimmer-base: var(--color-primary);
-		--lt-shimmer-sheen: color-mix(in oklch, var(--color-primary) 68%, var(--color-primary-content));
+		--lt-shimmer-base: var(--primary);
+		--lt-shimmer-sheen: color-mix(in oklch, var(--primary) 68%, var(--primary-foreground));
 	}
 
 	@keyframes lt-shimmer-sweep {

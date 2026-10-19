@@ -2,6 +2,8 @@
 	import { ExternalLink, TriangleAlert } from 'lucide-svelte';
 	import type { Doc } from '../../../convex/_generated/dataModel';
 	import { fileKind } from './contentLibrary';
+	import { Button } from '$lib/components/ui/button';
+	import { Spinner } from '$lib/components/ui/spinner';
 
 	let {
 		document,
@@ -20,11 +22,11 @@
 	}
 </script>
 
-<div class="h-full overflow-hidden rounded-2xl border border-base-300 bg-base-200/40">
+<div class="h-full overflow-hidden rounded-2xl border border-border bg-muted/40">
 	{#if isOpening}
 		<div class="flex h-full min-h-72 flex-col items-center justify-center gap-3">
-			<span class="loading loading-spinner loading-lg text-primary"></span>
-			<p class="text-sm text-base-content/60">Loading source...</p>
+			<Spinner class="size-6 text-primary" />
+			<p class="text-sm text-foreground/60">Loading source...</p>
 		</div>
 	{:else if viewUrl && document.metadata?.mimeType === 'application/pdf'}
 		<iframe class="h-full min-h-[60vh] w-full" title={`${document.title} source`} src={viewUrl}
@@ -39,25 +41,21 @@
 				<kind.icon size={34} />
 			</div>
 			<p class="font-semibold">Best viewed full-screen</p>
-			<p class="mt-1 max-w-xs text-sm text-base-content/60">
+			<p class="mt-1 max-w-xs text-sm text-foreground/60">
 				{kind.label} files don't preview inline here.
 			</p>
-			<button
-				type="button"
-				class="btn btn-primary btn-sm mt-4 gap-2 rounded-full"
-				onclick={openSource}
-			>
+			<Button size="sm" class="mt-4 gap-2" onclick={openSource}>
 				<ExternalLink size={14} />
 				Open {kind.label.toLowerCase()}
-			</button>
+			</Button>
 		</div>
 	{:else}
 		<div class="flex h-full min-h-72 flex-col items-center justify-center p-8 text-center">
-			<div class="mb-3 rounded-2xl bg-base-200 p-4 text-base-content/40">
+			<div class="mb-3 rounded-2xl bg-muted p-4 text-foreground/40">
 				<TriangleAlert size={26} />
 			</div>
 			<p class="text-sm font-semibold">No source available</p>
-			<p class="mt-1 max-w-xs text-xs text-base-content/50">
+			<p class="mt-1 max-w-xs text-xs text-foreground/50">
 				This file is missing its storage key. Try re-uploading it.
 			</p>
 		</div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SelectField } from '$lib/components/ui/select';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -8,6 +9,7 @@
 	import { getErrorText } from '$lib/utils/errorHandling';
 	import {
 		ChevronLeft,
+		CircleAlert,
 		Clock,
 		Target,
 		Shuffle,
@@ -17,6 +19,15 @@
 		History,
 		Tags
 	} from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as Card from '$lib/components/ui/card';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { Switch } from '$lib/components/ui/switch';
 
 	type SourceFilter = 'all' | 'flagged' | 'incomplete';
 	type QuestionTypeKey = 'multiple_choice' | 'fill_in_the_blank' | 'matching';
@@ -250,16 +261,16 @@
 		}
 	}
 
-	function statusBadgeClass(status: string): string {
+	function statusBadgeTone(status: string): 'neutral' | 'warning' | 'success' | 'error' {
 		switch (status) {
 			case 'in_progress':
-				return 'badge-warning';
+				return 'warning';
 			case 'submitted':
-				return 'badge-success';
+				return 'success';
 			case 'timed_out':
-				return 'badge-error';
+				return 'error';
 			default:
-				return 'badge-ghost';
+				return 'neutral';
 		}
 	}
 </script>
@@ -270,102 +281,114 @@
 			<div class="flex items-center justify-between gap-3 flex-wrap">
 				<div>
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->
-					<a
-						class="btn btn-ghost btn-sm font-bold rounded-full text-secondary mb-2"
+					<Button
 						href={classDashboardHref}
+						variant="ghost"
+						tone="secondary"
+						size="sm"
+						class="mb-2 font-bold"
 					>
 						<ChevronLeft size={16} /> Back to Class
-					</a>
+					</Button>
 					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					<h1 class="font-display text-2xl sm:text-3xl font-bold">Build Your Test</h1>
-					<p class="text-base-content/60 text-sm mt-1">
+					<p class="text-foreground/60 text-sm mt-1">
 						Pick your modules, set your preferences, and jump in.
 					</p>
 				</div>
 			</div>
 
 			{#if builderQuery.isLoading}
-				<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs">
-					<div class="card-body">
-						<div class="skeleton h-6 w-56"></div>
-						<div class="skeleton h-4 w-full mt-2"></div>
-						<div class="skeleton h-4 w-5/6 mt-1"></div>
-					</div>
-				</div>
+				<Card.Root>
+					<Card.Content>
+						<Skeleton class="h-6 w-56" />
+						<Skeleton class="mt-2 h-4 w-full" />
+						<Skeleton class="mt-1 h-4 w-5/6" />
+					</Card.Content>
+				</Card.Root>
 			{:else if builderQuery.error}
-				<div class="alert alert-error rounded-2xl">
-					<span>{builderQuery.error.toString()}</span>
-				</div>
+				<Alert.Root tone="error">
+					<CircleAlert />
+					<Alert.Title>{builderQuery.error.toString()}</Alert.Title>
+				</Alert.Root>
 			{:else if builderQuery.data}
 				<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 					<section class="xl:col-span-2 space-y-6">
-						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs">
-							<div class="card-body">
-								<h2 class="card-title">
+						<Card.Root>
+							<Card.Content>
+								<h2 class="text-lg font-semibold">
 									{builderQuery.data.class.name}
-									<span class="badge badge-soft badge-primary rounded-full text-xs"
-										>{builderQuery.data.class.code}</span
-									>
+									<Badge tone="primary">{builderQuery.data.class.code}</Badge>
 								</h2>
-								<p class="text-sm text-base-content/60">{builderQuery.data.class.description}</p>
+								<p class="text-sm text-foreground/60">{builderQuery.data.class.description}</p>
 
 								<div class="mt-5">
 									<div class="flex items-center justify-between mb-3">
 										<h3 class="font-semibold">Choose Modules</h3>
 										<div class="flex gap-2">
-											<button
-												class="btn btn-xs btn-primary btn-soft rounded-full"
+											<Button
+												variant="soft"
+												tone="primary"
+												size="xs"
 												onclick={() => {
 													createError = null;
 													selectedModuleIds = (builderQuery.data.modules ?? []).map((m) => m._id);
 												}}
 											>
 												Select All
-											</button>
-											<button
-												class="btn btn-xs btn-ghost rounded-full"
+											</Button>
+											<Button
+												variant="ghost"
+												tone="neutral"
+												size="xs"
 												onclick={() => {
 													createError = null;
 													selectedModuleIds = [];
 												}}
 											>
 												Clear
-											</button>
+											</Button>
 										</div>
 									</div>
 
 									{#if builderQuery.data.tagCollections && builderQuery.data.tagCollections.length > 0}
-										<div class="mb-4 rounded-2xl border border-base-300 bg-base-200/40 p-4">
+										<div class="mb-4 rounded-2xl border border-border bg-muted/40 p-4">
 											<div class="flex items-start justify-between gap-3 flex-wrap">
 												<div>
 													<div class="text-sm font-semibold flex items-center gap-2">
-														<Tags size={14} class="text-base-content/50" />
+														<Tags size={14} class="text-foreground/50" />
 														Build from Tag Collections
 													</div>
-													<div class="text-xs text-base-content/50 mt-1">
+													<div class="text-xs text-foreground/50 mt-1">
 														Use tags like “Quiz 4” or “Midterm” to auto-select all tagged modules.
 													</div>
-													<div class="text-xs text-base-content/40 mt-1">
+													<div class="text-xs text-foreground/40 mt-1">
 														Clicking a tag immediately checks the matching modules below.
 													</div>
 												</div>
 												<div class="flex gap-2">
-													<button
-														class="btn btn-xs btn-primary btn-soft rounded-full"
+													<Button
+														variant="soft"
+														tone="primary"
+														size="xs"
 														onclick={() => applyTagCollections('replace')}
 														disabled={matchedTagModuleIds.length === 0}
 													>
 														Use Tags
-													</button>
-													<button
-														class="btn btn-xs btn-ghost rounded-full"
+													</Button>
+													<Button
+														variant="ghost"
+														tone="neutral"
+														size="xs"
 														onclick={() => applyTagCollections('add')}
 														disabled={matchedTagModuleIds.length === 0}
 													>
 														Add Modules
-													</button>
-													<button
-														class="btn btn-xs btn-ghost rounded-full"
+													</Button>
+													<Button
+														variant="ghost"
+														tone="neutral"
+														size="xs"
 														onclick={() => {
 															createError = null;
 															selectedTagCollectionIds = [];
@@ -374,7 +397,7 @@
 														disabled={selectedTagCollectionIds.length === 0}
 													>
 														Clear Tags
-													</button>
+													</Button>
 												</div>
 											</div>
 
@@ -382,10 +405,13 @@
 												{#each builderQuery.data.tagCollections as tag (tag._id)}
 													{@const active = selectedTagCollectionIds.includes(tag._id)}
 													{@const tagColor = safeTagColor(tag.color)}
-													<button
-														class="btn btn-sm rounded-full border transition-all duration-200 {active
-															? 'btn-primary btn-soft border-primary/40'
-															: 'btn-ghost border-base-300'}"
+													<Button
+														variant={active ? 'soft' : 'ghost'}
+														tone={active ? 'primary' : 'neutral'}
+														size="sm"
+														class="border transition-all duration-200 {active
+															? 'border-primary/40'
+															: 'border-border'}"
 														onclick={() => toggleTagCollection(tag._id)}
 														title={`Modules: ${tag.moduleCount} · Questions: ${tag.questionCount}`}
 													>
@@ -399,13 +425,13 @@
 														<span class="opacity-60 text-xs"
 															>({tag.moduleCount}m · {tag.questionCount}q)</span
 														>
-													</button>
+													</Button>
 												{/each}
 											</div>
 
 											{#if selectedTagCollectionIds.length > 0}
-												<div class="text-xs text-base-content/50 mt-3">
-													Selected tags map to <span class="font-semibold text-base-content/70"
+												<div class="text-xs text-foreground/50 mt-3">
+													Selected tags map to <span class="font-semibold text-foreground/70"
 														>{matchedTagModuleIds.length}</span
 													>
 													{matchedTagModuleIds.length === 1 ? ' module' : ' modules'}.
@@ -419,21 +445,20 @@
 											{@const isSelected = selectedModuleIds.includes(module._id)}
 											<label
 												class="border-2 rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
-												{isSelected ? 'border-primary/50 bg-primary/5' : 'border-base-300 hover:border-primary/30'}"
+												{isSelected ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/30'}"
 											>
 												<div class="flex items-start gap-3">
-													<input
-														type="checkbox"
-														class="checkbox checkbox-primary checkbox-sm mt-1"
+													<Checkbox
+														class="mt-1 size-4"
 														checked={isSelected}
-														onchange={() => toggleModule(module._id)}
+														onCheckedChange={() => toggleModule(module._id)}
 													/>
 													<div class="min-w-0 flex-1">
 														<div class="font-medium flex items-center gap-2">
 															<span class="text-lg">{module.emoji || '📘'}</span>
 															<span class="truncate">{module.title}</span>
 														</div>
-														<div class="text-xs text-base-content/50 mt-1">
+														<div class="text-xs text-foreground/50 mt-1">
 															{module.questionCount}
 															{module.questionCount === 1 ? 'question' : 'questions'}
 														</div>
@@ -441,9 +466,7 @@
 															<div class="flex flex-wrap gap-1 mt-2">
 																{#each module.tags as tag (tag._id)}
 																	{@const tagColor = safeTagColor(tag.color)}
-																	<span
-																		class="badge badge-soft badge-xs rounded-full border border-base-300"
-																	>
+																	<Badge size="xs" class="border border-border">
 																		{#if tagColor}
 																			<span
 																				class="inline-block w-1.5 h-1.5 rounded-full mr-1"
@@ -451,12 +474,12 @@
 																			></span>
 																		{/if}
 																		{tag.name}
-																	</span>
+																	</Badge>
 																{/each}
 															</div>
 														{/if}
 														{#if module.description}
-															<div class="text-xs text-base-content/40 mt-1 line-clamp-2">
+															<div class="text-xs text-foreground/40 mt-1 line-clamp-2">
 																{module.description}
 															</div>
 														{/if}
@@ -466,161 +489,138 @@
 										{/each}
 									</div>
 								</div>
-							</div>
-						</div>
+							</Card.Content>
+						</Card.Root>
 
-						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs">
-							<div class="card-body space-y-5">
-								<h2 class="card-title">Test Settings</h2>
+						<Card.Root>
+							<Card.Content class="gap-5">
+								<h2 class="text-lg font-semibold">Test Settings</h2>
 
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<label class="form-control">
-										<div class="label">
-											<span class="label-text font-medium flex items-center gap-2">
-												<Filter size={14} class="text-base-content/50" />
-												Question Source
-											</span>
-										</div>
-										<select class="select select-bordered rounded-xl" bind:value={sourceFilter}>
-											<option value="all">All questions</option>
-											<option value="flagged">Flagged only</option>
-											<option value="incomplete">Not yet completed</option>
-										</select>
-									</label>
-
-									<label class="form-control">
-										<div class="label">
-											<span class="label-text font-medium flex items-center gap-2">
-												<Hash size={14} class="text-base-content/50" />
-												Number of Questions
-											</span>
-										</div>
-										<input
-											type="number"
-											class="input input-bordered rounded-xl"
-											min="1"
-											max={maxQuestions}
-											bind:value={questionCount}
+									<Label class="flex-col items-stretch">
+										<span class="flex items-center gap-2">
+											<Filter size={14} class="text-foreground/50" />
+											Question Source
+										</span>
+										<SelectField
+											value={sourceFilter}
+											onValueChange={(v) => (sourceFilter = v as typeof sourceFilter)}
+											options={[
+												{ value: 'all', label: 'All questions' },
+												{ value: 'flagged', label: 'Flagged only' },
+												{ value: 'incomplete', label: 'Not yet completed' }
+											]}
 										/>
-										<div class="label">
-											<span class="label-text-alt text-base-content/40">
-												Max {maxQuestions}. Adjusted to match available questions.
-											</span>
-										</div>
-									</label>
+									</Label>
+
+									<Label class="flex-col items-stretch">
+										<span class="flex items-center gap-2">
+											<Hash size={14} class="text-foreground/50" />
+											Number of Questions
+										</span>
+										<Input type="number" min="1" max={maxQuestions} bind:value={questionCount} />
+										<span class="text-xs font-normal text-foreground/40">
+											Max {maxQuestions}. Adjusted to match available questions.
+										</span>
+									</Label>
 								</div>
 
 								<div>
 									<div class="text-sm font-medium mb-2">Question Types</div>
-									<p class="text-xs text-base-content/60 mb-2">
+									<p class="text-xs text-foreground/60 mb-2">
 										Free response questions are available in module practice.
 									</p>
 									<div class="flex flex-wrap gap-2">
 										{#each questionTypeOptions as type (type)}
-											<button
-												class="btn btn-sm rounded-full transition-all duration-200
-												{selectedQuestionTypes.includes(type)
-													? 'btn-primary btn-soft'
-													: 'btn-ghost border border-base-300'}"
+											{@const selected = selectedQuestionTypes.includes(type)}
+											<Button
+												variant={selected ? 'soft' : 'ghost'}
+												tone={selected ? 'primary' : 'neutral'}
+												size="sm"
+												class="transition-all duration-200 {selected ? '' : 'border-border'}"
 												onclick={() => toggleQuestionType(type)}
 											>
 												{typeLabel(type)}
-											</button>
+											</Button>
 										{/each}
 									</div>
 								</div>
 
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<label class="form-control">
-										<div class="label">
-											<span class="label-text font-medium flex items-center gap-2">
-												<Target size={14} class="text-base-content/50" />
-												Passing Score
-											</span>
-										</div>
+									<Label class="flex-col items-stretch">
+										<span class="flex items-center gap-2">
+											<Target size={14} class="text-foreground/50" />
+											Passing Score
+										</span>
 										<div class="flex items-center gap-2">
-											<input
+											<Input
 												type="number"
-												class="input input-bordered rounded-xl flex-1"
+												class="flex-1"
 												min="0"
 												max="100"
 												bind:value={passThresholdPct}
 											/>
-											<span class="text-base-content/50 font-medium">%</span>
+											<span class="text-foreground/50 font-medium">%</span>
 										</div>
-									</label>
+									</Label>
 
-									<label class="form-control">
-										<div class="label">
-											<span class="label-text font-medium flex items-center gap-2">
-												<Clock size={14} class="text-base-content/50" />
-												Time Limit
-											</span>
-										</div>
+									<Label class="flex-col items-stretch">
+										<span class="flex items-center gap-2">
+											<Clock size={14} class="text-foreground/50" />
+											Time Limit
+										</span>
 										<div class="flex items-center gap-2">
-											<input
-												type="checkbox"
-												class="toggle toggle-primary toggle-sm"
-												bind:checked={timed}
-											/>
-											<input
+											<Switch size="sm" bind:checked={timed} />
+											<Input
 												type="number"
-												class="input input-bordered rounded-xl flex-1"
+												class="flex-1"
 												min="1"
 												max="1440"
 												bind:value={timeLimitMinutes}
 												disabled={!timed}
 											/>
-											<span class="text-base-content/50 text-sm">min</span>
+											<span class="text-foreground/50 text-sm">min</span>
 										</div>
-										<div class="label">
-											<span class="label-text-alt text-base-content/40"
-												>Time is always tracked, even without a limit.</span
-											>
-										</div>
-									</label>
+										<span class="text-xs font-normal text-foreground/40"
+											>Time is always tracked, even without a limit.</span
+										>
+									</Label>
 								</div>
 
 								<div class="flex flex-wrap gap-4 pt-1">
-									<label class="label cursor-pointer gap-2">
-										<input
-											type="checkbox"
-											class="checkbox checkbox-sm checkbox-primary"
-											bind:checked={shuffleQuestions}
-										/>
-										<span class="label-text flex items-center gap-1.5">
-											<Shuffle size={14} class="text-base-content/50" />
+									<Label class="cursor-pointer gap-2">
+										<Checkbox class="size-4" bind:checked={shuffleQuestions} />
+										<span class="flex items-center gap-1.5">
+											<Shuffle size={14} class="text-foreground/50" />
 											Shuffle questions
 										</span>
-									</label>
-									<label class="label cursor-pointer gap-2">
-										<input
-											type="checkbox"
-											class="checkbox checkbox-sm checkbox-primary"
-											bind:checked={shuffleOptions}
-										/>
-										<span class="label-text flex items-center gap-1.5">
-											<Shuffle size={14} class="text-base-content/50" />
+									</Label>
+									<Label class="cursor-pointer gap-2">
+										<Checkbox class="size-4" bind:checked={shuffleOptions} />
+										<span class="flex items-center gap-1.5">
+											<Shuffle size={14} class="text-foreground/50" />
 											Shuffle answer choices
 										</span>
-									</label>
+									</Label>
 								</div>
-							</div>
-						</div>
+							</Card.Content>
+						</Card.Root>
 					</section>
 
 					<aside class="space-y-4">
-						<div class="card bg-base-100 border border-base-300 rounded-2xl shadow-xs sticky top-4">
-							<div class="card-body gap-4">
+						<Card.Root class="sticky top-4">
+							<Card.Content class="gap-4">
 								<!-- Start Test CTA -->
 								{#if createError}
-									<div class="alert alert-error rounded-xl">
-										<span class="text-sm">{createError}</span>
-									</div>
+									<Alert.Root tone="error">
+										<CircleAlert />
+										<Alert.Title>{createError}</Alert.Title>
+									</Alert.Root>
 								{/if}
 
-								<button
-									class="btn btn-primary rounded-full w-full py-4 text-base gap-2 group shadow-lg hover:shadow-xl transition-all duration-200 max-xl:hidden"
+								<Button
+									size="lg"
+									class="w-full group shadow-lg hover:shadow-xl transition-all duration-200 max-xl:hidden"
 									onclick={startTest}
 									disabled={starting ||
 										builderQuery.isLoading ||
@@ -629,42 +629,42 @@
 								>
 									<Play size={20} class="transition-transform group-hover:scale-110" />
 									{starting ? 'Setting up...' : 'Start Test'}
-								</button>
+								</Button>
 
 								<!-- Summary stats -->
 								{#if summaryQuery.isLoading}
 									<div class="space-y-2">
-										<div class="skeleton h-4 w-24"></div>
-										<div class="skeleton h-4 w-32"></div>
+										<Skeleton class="h-4 w-24" />
+										<Skeleton class="h-4 w-32" />
 									</div>
 								{:else if summaryQuery.error}
-									<div class="text-error text-sm">{summaryQuery.error.toString()}</div>
+									<div class="text-error-ink text-sm">{summaryQuery.error.toString()}</div>
 								{:else}
 									<div class="grid grid-cols-3 gap-2 text-sm">
-										<div class="rounded-xl border border-base-300 p-2.5 text-center">
+										<div class="rounded-xl border border-border p-2.5 text-center">
 											<div class="font-bold text-lg">{effectiveQuestionCount}</div>
-											<div class="text-[10px] text-base-content/40">Questions</div>
+											<div class="text-[10px] text-foreground/40">Questions</div>
 										</div>
-										<div class="rounded-xl border border-base-300 p-2.5 text-center">
+										<div class="rounded-xl border border-border p-2.5 text-center">
 											<div class="font-bold text-lg">{timed ? `${timeLimitMinutes}` : '—'}</div>
-											<div class="text-[10px] text-base-content/40">
+											<div class="text-[10px] text-foreground/40">
 												{timed ? 'Minutes' : 'Untimed'}
 											</div>
 										</div>
-										<div class="rounded-xl border border-base-300 p-2.5 text-center">
+										<div class="rounded-xl border border-border p-2.5 text-center">
 											<div class="font-bold text-lg">{passThresholdPct}%</div>
-											<div class="text-[10px] text-base-content/40">To pass</div>
+											<div class="text-[10px] text-foreground/40">To pass</div>
 										</div>
 									</div>
 
-									<div class="flex items-center justify-between text-xs text-base-content/50">
+									<div class="flex items-center justify-between text-xs text-foreground/50">
 										<span
 											>{totalEligible} available from {selectedModuleIds.length}
 											{selectedModuleIds.length === 1 ? 'module' : 'modules'}</span
 										>
 									</div>
 									{#if selectedModuleIds.length === 0}
-										<div class="text-xs text-warning">
+										<div class="text-xs text-warning-ink">
 											No modules selected. Use tags or pick modules to build a test.
 										</div>
 									{/if}
@@ -672,9 +672,9 @@
 									{#if summaryQuery.data?.byType?.length > 0}
 										<div class="flex flex-wrap gap-1.5">
 											{#each summaryQuery.data.byType as row (row.questionType)}
-												<div class="badge badge-soft badge-sm rounded-full">
+												<Badge size="sm">
 													{typeLabel(row.questionType)}: {row.count}
-												</div>
+												</Badge>
 											{/each}
 										</div>
 									{/if}
@@ -682,10 +682,10 @@
 
 								<!-- Recent Attempts (collapsed) -->
 								{#if !attemptsQuery.isLoading && attemptsQuery.data && attemptsQuery.data.length > 0}
-									<div class="border-t border-base-300 pt-3">
+									<div class="border-t border-border pt-3">
 										<details class="group">
 											<summary
-												class="flex items-center gap-2 cursor-pointer text-sm font-medium text-base-content/60 hover:text-base-content transition-colors select-none"
+												class="flex items-center gap-2 cursor-pointer text-sm font-medium text-foreground/60 hover:text-foreground transition-colors select-none"
 											>
 												<History size={14} />
 												<span>Recent Attempts ({attemptsQuery.data.length})</span>
@@ -716,25 +716,21 @@
 																})}
 													<!-- eslint-disable svelte/no-navigation-without-resolve -->
 													<a
-														class="block border border-base-300 rounded-xl p-2.5 hover:border-primary/40 transition-all duration-200"
+														class="block border border-border rounded-xl p-2.5 hover:border-primary/40 transition-all duration-200"
 														href={attemptHref}
 													>
 														<div class="flex justify-between items-center gap-2 text-xs">
-															<span
-																class="badge badge-xs badge-soft rounded-full {statusBadgeClass(
-																	attempt.status
-																)}"
-															>
+															<Badge size="xs" tone={statusBadgeTone(attempt.status)}>
 																{formatAttemptStatus(attempt.status)}
-															</span>
-															<span class="text-base-content/40">
+															</Badge>
+															<span class="text-foreground/40">
 																{new Date(attempt.startedAt).toLocaleDateString()}
 															</span>
 														</div>
-														<div class="text-xs text-base-content/50 mt-1">
+														<div class="text-xs text-foreground/50 mt-1">
 															{attempt.configSnapshot.questionCountActual} questions
 															{#if attempt.resultSummary}
-																<span class="font-semibold text-base-content/70"
+																<span class="font-semibold text-foreground/70"
 																	>· {attempt.resultSummary.scorePct}%</span
 																>
 															{/if}
@@ -746,8 +742,8 @@
 										</details>
 									</div>
 								{/if}
-							</div>
-						</div>
+							</Card.Content>
+						</Card.Root>
 					</aside>
 				</div>
 			{/if}
@@ -757,7 +753,7 @@
 	{#if builderQuery.data}
 		<!-- Below xl the summary column lands under the form, so Start stays pinned here. -->
 		<div
-			class="flex shrink-0 items-center gap-3 border-t border-base-300 bg-base-100 px-4 pt-3 xl:hidden"
+			class="flex shrink-0 items-center gap-3 border-t border-border bg-background px-4 pt-3 xl:hidden"
 			style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));"
 		>
 			<div class="min-w-0 flex-1 text-sm">
@@ -765,12 +761,13 @@
 					{effectiveQuestionCount}
 					{effectiveQuestionCount === 1 ? 'question' : 'questions'}
 				</div>
-				<div class="text-xs text-base-content/60">
+				<div class="text-xs text-foreground/60">
 					{timed ? `${timeLimitMinutes} minutes` : 'Untimed'}, {passThresholdPct}% to pass
 				</div>
 			</div>
-			<button
-				class="btn btn-primary min-h-11 shrink-0 gap-2 rounded-full px-6"
+			<Button
+				size="lg"
+				class="shrink-0 gap-2 px-6"
 				onclick={startTest}
 				disabled={starting ||
 					builderQuery.isLoading ||
@@ -779,7 +776,7 @@
 			>
 				<Play size={18} />
 				{starting ? 'Setting up…' : 'Start test'}
-			</button>
+			</Button>
 		</div>
 	{/if}
 </main>

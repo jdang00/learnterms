@@ -31,7 +31,7 @@
 				{title}
 			</h1>
 			{#if lede}
-				<p class="mt-4 max-w-2xl text-lg leading-relaxed text-base-content/75">{lede}</p>
+				<p class="mt-4 max-w-2xl text-lg leading-relaxed text-foreground/75">{lede}</p>
 			{/if}
 			{@render intro?.()}
 			{#if actions}

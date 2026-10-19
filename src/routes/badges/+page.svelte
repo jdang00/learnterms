@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Globe, GraduationCap, Eye, EyeOff } from 'lucide-svelte';
+	import { Globe, GraduationCap, Eye, EyeOff, CircleAlert } from 'lucide-svelte';
 	import { useQuery } from 'convex-svelte';
 	import type { FunctionReturnType } from 'convex/server';
 	import { resolve } from '$app/paths';
@@ -7,6 +7,9 @@
 	import type { Doc } from '../../convex/_generated/dataModel';
 	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
 	import { getBadgeIcon } from '$lib/components/badges/icons';
+	import { Button } from '$lib/components/ui/button';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Switch } from '$lib/components/ui/switch';
 
 	const percentFormatter = new Intl.NumberFormat('en-US', {
 		minimumFractionDigits: 2,
@@ -43,11 +46,13 @@
 
 <main class="container mx-auto px-4 py-24">
 	<h1 class="font-display text-4xl font-bold text-center mb-12">Badge Catalog</h1>
-	<p class="text-center text-sm text-base-content/65 -mt-9 mb-8">
+	<p class="text-center text-sm text-foreground/65 -mt-9 mb-8">
 		All possible badges users can earn.
 	</p>
 	<div class="flex justify-center mb-5">
-		<a href={resolve('/cohort')} class="btn btn-sm btn-outline">View Cohort Info</a>
+		<Button href={resolve('/cohort')} variant="outline" tone="neutral" size="sm"
+			>View Cohort Info</Button
+		>
 	</div>
 	<div class="view-toggle-wrap">
 		<label class="view-toggle">
@@ -60,18 +65,19 @@
 					<span>Public user view</span>
 				{/if}
 			</div>
-			<input type="checkbox" class="toggle toggle-sm" bind:checked={showInternalDetails} />
+			<Switch size="sm" bind:checked={showInternalDetails} />
 		</label>
 	</div>
 
 	{#if badgesQuery.isLoading}
-		<div class="text-center text-base-content/60">Loading badges...</div>
+		<div class="text-center text-foreground/60">Loading badges...</div>
 	{:else if badgesQuery.error}
-		<div class="alert alert-error max-w-3xl mx-auto">
-			Failed to load badges: {badgesQuery.error.message}
-		</div>
+		<Alert.Root tone="error" class="mx-auto max-w-3xl">
+			<CircleAlert />
+			<Alert.Title>Failed to load badges: {badgesQuery.error.message}</Alert.Title>
+		</Alert.Root>
 	{:else if badges.length === 0}
-		<div class="text-center text-base-content/60">No badges are published yet.</div>
+		<div class="text-center text-foreground/60">No badges are published yet.</div>
 	{:else}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
 			{#each badges as badge, i (badge._id)}
@@ -99,7 +105,7 @@
 					</div>
 
 					<div class="uppercase font-bold mt-4 text-lg">{badge.name}</div>
-					<div class="text-sm text-base-content/70">{badge.description}</div>
+					<div class="text-sm text-foreground/70">{badge.description}</div>
 					<div class="badge-stat">
 						{percentFormatter.format(badge.ownedPct)}% of users have this badge
 					</div>
@@ -164,24 +170,24 @@
 		isolation: isolate;
 		overflow: hidden;
 		border-radius: 1.1rem;
-		border: 1px solid color-mix(in oklab, var(--color-base-content) 14%, transparent);
+		border: 1px solid color-mix(in oklab, var(--foreground) 14%, transparent);
 		background:
 			linear-gradient(
 					to right,
-					color-mix(in oklab, var(--color-base-content) 8%, transparent) 1px,
+					color-mix(in oklab, var(--foreground) 8%, transparent) 1px,
 					transparent 1px
 				)
 				0 0 / 28px 28px,
 			linear-gradient(
 					to bottom,
-					color-mix(in oklab, var(--color-base-content) 8%, transparent) 1px,
+					color-mix(in oklab, var(--foreground) 8%, transparent) 1px,
 					transparent 1px
 				)
 				0 0 / 28px 28px,
 			linear-gradient(
 				180deg,
-				color-mix(in oklab, var(--color-base-200) 72%, transparent),
-				color-mix(in oklab, var(--color-base-100) 95%, transparent)
+				color-mix(in oklab, var(--muted) 72%, transparent),
+				color-mix(in oklab, var(--background) 95%, transparent)
 			);
 		animation: badgeCardIn 450ms ease both;
 		animation-delay: var(--delay, 0ms);
@@ -199,8 +205,8 @@
 		gap: 0.75rem;
 		padding: 0.45rem 0.7rem;
 		border-radius: 999px;
-		border: 1px solid color-mix(in oklab, var(--color-base-content) 15%, transparent);
-		background-color: color-mix(in oklab, var(--color-base-100) 80%, transparent);
+		border: 1px solid color-mix(in oklab, var(--foreground) 15%, transparent);
+		background-color: color-mix(in oklab, var(--background) 80%, transparent);
 	}
 
 	.view-toggle-copy {
@@ -208,7 +214,7 @@
 		align-items: center;
 		gap: 0.35rem;
 		font-size: 0.78rem;
-		color: color-mix(in oklab, var(--color-base-content) 74%, transparent);
+		color: color-mix(in oklab, var(--foreground) 74%, transparent);
 	}
 
 	.badge-frame::before {
@@ -227,7 +233,7 @@
 		inset: 12px;
 		pointer-events: none;
 		border-radius: 0.85rem;
-		border: 1px dashed color-mix(in oklab, var(--color-base-content) 14%, transparent);
+		border: 1px dashed color-mix(in oklab, var(--foreground) 14%, transparent);
 		opacity: 0.45;
 	}
 
@@ -244,7 +250,7 @@
 		margin-top: 0.6rem;
 		font-size: 0.8rem;
 		letter-spacing: 0.02em;
-		color: color-mix(in oklab, var(--color-base-content) 66%, transparent);
+		color: color-mix(in oklab, var(--foreground) 66%, transparent);
 	}
 
 	.badge-chip-row {
@@ -261,17 +267,17 @@
 		font-weight: 700;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
-		border: 1px solid color-mix(in oklab, var(--color-base-content) 20%, transparent);
+		border: 1px solid color-mix(in oklab, var(--foreground) 20%, transparent);
 	}
 
 	.badge-source-platform {
-		color: color-mix(in oklab, var(--color-primary) 78%, var(--color-base-content));
-		background-color: color-mix(in oklab, var(--color-primary) 16%, transparent);
+		color: color-mix(in oklab, var(--primary) 78%, var(--foreground));
+		background-color: color-mix(in oklab, var(--primary) 16%, transparent);
 	}
 
 	.badge-source-cohort {
-		color: color-mix(in oklab, var(--color-secondary) 78%, var(--color-base-content));
-		background-color: color-mix(in oklab, var(--color-secondary) 16%, transparent);
+		color: color-mix(in oklab, var(--secondary) 78%, var(--foreground));
+		background-color: color-mix(in oklab, var(--secondary) 16%, transparent);
 	}
 
 	.issuer-row {
@@ -280,7 +286,7 @@
 		gap: 0.38rem;
 		margin-top: 0.55rem;
 		font-size: 0.78rem;
-		color: color-mix(in oklab, var(--color-base-content) 74%, transparent);
+		color: color-mix(in oklab, var(--foreground) 74%, transparent);
 	}
 
 	.issuer-row a {
@@ -304,16 +310,16 @@
 		text-align: left;
 		padding: 0.45rem 0.55rem;
 		border-radius: 0.55rem;
-		background-color: color-mix(in oklab, var(--color-base-100) 82%, transparent);
-		border: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
-		color: color-mix(in oklab, var(--color-base-content) 76%, transparent);
+		background-color: color-mix(in oklab, var(--background) 82%, transparent);
+		border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+		color: color-mix(in oklab, var(--foreground) 76%, transparent);
 	}
 
 	.badge-meta-label {
 		font-size: 0.65rem;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: color-mix(in oklab, var(--color-base-content) 48%, transparent);
+		color: color-mix(in oklab, var(--foreground) 48%, transparent);
 	}
 
 	.badge-meta-full {

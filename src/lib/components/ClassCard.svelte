@@ -36,8 +36,8 @@
 		...new Set((progress?.modules ?? []).map((m) => m.emoji).filter((e): e is string => !!e))
 	]);
 	const cellClass = {
-		empty: 'bg-base-content/5',
-		new: 'bg-base-content/10',
+		empty: 'bg-foreground/5',
+		new: 'bg-foreground/10',
 		started: 'bg-success/60',
 		answered: 'bg-success/60',
 		mastered: 'bg-emerald-800'
@@ -50,13 +50,13 @@
 	onclick={() => onSelect(classItem)}
 	aria-label={`Open class ${classItem.name}`}
 	style:--class-color={color}
-	class="class-card group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-100 text-left transition-[border-color,translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:hover:translate-y-0"
+	class="class-card group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border bg-background text-left transition-[border-color,translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:hover:translate-y-0"
 >
 	<span class="class-card-head flex items-center gap-3 px-5 py-4">
-		<ColorMark {color} class="size-9 text-base-content" />
+		<ColorMark {color} class="size-9 text-foreground" />
 		<span class="min-w-0 flex-1">
-			<span class="block font-mono text-xs text-base-content/60">{classItem.code}</span>
-			<span class="line-clamp-2 block text-lg leading-snug font-semibold text-base-content"
+			<span class="block font-mono text-xs text-foreground/60">{classItem.code}</span>
+			<span class="line-clamp-2 block text-lg leading-snug font-semibold text-foreground"
 				>{classItem.name}</span
 			>
 		</span>
@@ -64,14 +64,14 @@
 			<span class="hidden shrink-0 items-center sm:flex" aria-hidden="true">
 				{#each emojis.slice(0, 3) as emoji, i (emoji)}
 					<span
-						class="class-card-chip grid size-8 place-items-center rounded-full bg-base-100 text-base leading-none {i
+						class="class-card-chip grid size-8 place-items-center rounded-full bg-background text-base leading-none {i
 							? '-ms-2'
 							: ''}">{emoji}</span
 					>
 				{/each}
 				{#if emojis.length > 3}
 					<span
-						class="class-card-chip -ms-2 grid size-8 place-items-center rounded-full bg-base-100 text-[0.65rem] font-semibold text-base-content/60 tabular-nums"
+						class="class-card-chip -ms-2 grid size-8 place-items-center rounded-full bg-background text-[0.65rem] font-semibold text-foreground/60 tabular-nums"
 						>+{emojis.length - 3}</span
 					>
 				{/if}
@@ -82,7 +82,7 @@
 	<span class="flex flex-1 flex-col gap-3 px-5 pt-3.5 pb-4">
 		{#if blurb}
 			<span
-				class="line-clamp-2 text-sm leading-relaxed text-base-content/65"
+				class="line-clamp-2 text-sm leading-relaxed text-foreground/65"
 				title={blurb.truncated ? classItem.description : undefined}>{blurb.text}</span
 			>
 		{/if}
@@ -97,15 +97,15 @@
 				{/each}
 			</span>
 		{:else if loading && !progress}
-			<span class="block h-2.5 w-full skeleton rounded-full"></span>
+			<span class="block h-2.5 w-full animate-pulse rounded-full bg-muted-strong"></span>
 		{/if}
 
 		<span class="mt-auto flex items-center justify-between gap-3">
-			<span class="min-w-0 text-xs text-base-content/60 tabular-nums">
+			<span class="min-w-0 text-xs text-foreground/60 tabular-nums">
 				{progressLabel}
 			</span>
 			<span
-				class="class-card-cta inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium text-base-content transition-[gap] group-hover:gap-2.5 motion-reduce:transition-none"
+				class="class-card-cta inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium text-foreground transition-[gap] group-hover:gap-2.5 motion-reduce:transition-none"
 			>
 				{counts ? classActionLabel(counts) : 'Open'}
 				<ArrowRight size={14} />
@@ -115,18 +115,18 @@
 </button>
 
 <style>
-	/* Flat wash of the class color; mixing into base-100 keeps it right in both themes. */
+	/* Flat wash of the class color; mixing into the background keeps it right in both themes. */
 	.class-card-head {
-		background: color-mix(in oklab, var(--class-color) 16%, var(--color-base-100));
+		background: color-mix(in oklab, var(--class-color) 16%, var(--background));
 		border-bottom: 1px solid color-mix(in oklab, var(--class-color) 28%, transparent);
 	}
 
 	.class-card-chip {
-		box-shadow: 0 0 0 2px color-mix(in oklab, var(--class-color) 16%, var(--color-base-100));
+		box-shadow: 0 0 0 2px color-mix(in oklab, var(--class-color) 16%, var(--background));
 	}
 
 	.class-card-cta {
-		background: color-mix(in oklab, var(--class-color) 18%, var(--color-base-100));
+		background: color-mix(in oklab, var(--class-color) 18%, var(--background));
 	}
 
 	.class-card:hover {
@@ -134,6 +134,6 @@
 	}
 
 	.class-card:hover .class-card-cta {
-		background: color-mix(in oklab, var(--class-color) 30%, var(--color-base-100));
+		background: color-mix(in oklab, var(--class-color) 30%, var(--background));
 	}
 </style>

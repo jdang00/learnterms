@@ -7,6 +7,7 @@
 	import StarterKit from '@tiptap/starter-kit';
 	import { Plugin } from '@tiptap/pm/state';
 	import { Bold, Italic, Underline, List, ListOrdered, Undo2, Redo2 } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
 	import {
 		EMPTY_NOTE,
 		NOTE_LIMIT,
@@ -279,16 +280,18 @@
 	}}
 />
 <div
-	class="flex min-h-72 flex-1 flex-col rounded-xl border border-base-300 overflow-hidden ph-no-capture ph-mask"
+	class="flex min-h-72 flex-1 flex-col rounded-xl border border-border overflow-hidden ph-no-capture ph-mask"
 >
 	<div
-		class="flex flex-wrap gap-1 border-b border-base-300 bg-base-200/50 p-2"
+		class="flex flex-wrap gap-1 border-b border-border bg-muted/50 p-2"
 		role="group"
 		aria-label="Note formatting"
 	>
-		{#each buttons as button (button.name)}<button
-				type="button"
-				class="btn btn-sm btn-square {isActive(button.mark) ? 'btn-primary btn-soft' : 'btn-ghost'}"
+		{#each buttons as button (button.name)}<Button
+				size="sm"
+				shape="square"
+				variant={isActive(button.mark) ? 'soft' : 'ghost'}
+				tone={isActive(button.mark) ? 'primary' : 'neutral'}
 				aria-label={button.name}
 				title={button.name}
 				aria-pressed={isActive(button.mark)}
@@ -296,22 +299,26 @@
 				onclick={() => {
 					button.run();
 					track({ action: 'format', format: button.mark });
-				}}><button.icon size={16} /></button
+				}}><button.icon size={16} /></Button
 			>{/each}
 		<span class="flex-1"></span>
-		<button
-			type="button"
-			class="btn btn-sm btn-square btn-ghost"
+		<Button
+			size="sm"
+			shape="square"
+			variant="ghost"
+			tone="neutral"
 			aria-label="Undo"
 			disabled={!editor}
-			onclick={() => editor?.chain().focus().undo().run()}><Undo2 size={16} /></button
+			onclick={() => editor?.chain().focus().undo().run()}><Undo2 size={16} /></Button
 		>
-		<button
-			type="button"
-			class="btn btn-sm btn-square btn-ghost"
+		<Button
+			size="sm"
+			shape="square"
+			variant="ghost"
+			tone="neutral"
 			aria-label="Redo"
 			disabled={!editor}
-			onclick={() => editor?.chain().focus().redo().run()}><Redo2 size={16} /></button
+			onclick={() => editor?.chain().focus().redo().run()}><Redo2 size={16} /></Button
 		>
 	</div>
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
@@ -323,7 +330,7 @@
 		}}
 	></div>
 </div>
-<div class="mt-2 flex justify-between gap-3 text-xs text-base-content/60">
+<div class="mt-2 flex justify-between gap-3 text-xs text-foreground/60">
 	<span role="status"
 		>{saving
 			? 'Saving…'
@@ -335,22 +342,25 @@
 						? 'Unsaved changes'
 						: 'Saved'}</span
 	>
-	<span class:!text-warning={count > NOTE_LIMIT - 200}
+	<span class:!text-warning-ink={count > NOTE_LIMIT - 200}
 		>{count.toLocaleString()} / {NOTE_LIMIT.toLocaleString()}</span
 	>
 </div>
-{#if limitError}<p role="alert" class="mt-2 text-sm text-error">{limitError}</p>{/if}
-{#if error}<div role="alert" class="mt-3 text-sm text-error">
-		{error}<button class="btn btn-sm btn-ghost ml-1" onclick={() => void flush()}>Retry save</button
+{#if limitError}<p role="alert" class="mt-2 text-sm text-error-ink">{limitError}</p>{/if}
+{#if error}<div role="alert" class="mt-3 text-sm text-error-ink">
+		{error}<Button
+			size="sm"
+			variant="ghost"
+			tone="neutral"
+			class="ml-1"
+			onclick={() => void flush()}>Retry save</Button
 		>
 	</div>{/if}
 {#if conflict}<div class="mt-3 rounded-xl bg-warning/10 p-3 text-sm" role="alert">
 		<p>This note changed in another tab or device. Choose which version to keep.</p>
 		<div class="flex flex-wrap gap-2 mt-2">
-			<button class="btn btn-sm" onclick={useLatest}>Use saved version</button><button
-				class="btn btn-sm btn-warning btn-soft"
-				onclick={keepMine}>Keep my version</button
-			>
+			<Button size="sm" variant="soft" tone="neutral" onclick={useLatest}>Use saved version</Button
+			><Button size="sm" variant="soft" tone="warning" onclick={keepMine}>Keep my version</Button>
 		</div>
 	</div>{/if}
 

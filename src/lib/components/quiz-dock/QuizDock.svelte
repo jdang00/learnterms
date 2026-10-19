@@ -11,6 +11,10 @@
 	import { Confetti } from 'svelte-confetti';
 	import Sheet from '$lib/components/Sheet.svelte';
 	import DockButton from './DockButton.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Tip } from '$lib/components/ui/tooltip';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { getQuizCommands, isCommandShown } from './commands.svelte';
 	import { getDockPreferences } from './dockPreferences.svelte';
 	import { isPassive, segmentShape, TONE_TEXT } from './dockStyles';
@@ -141,47 +145,33 @@
 		void command.run(source);
 	}
 
-	const TONE_BADGE_CLASS: Record<QuizCommand['tone'], string> = {
-		neutral: '',
-		primary: 'badge-primary',
-		success: 'badge-success',
-		warning: 'badge-warning',
-		secondary: 'badge-secondary',
-		info: 'badge-info',
-		accent: 'badge-accent',
-		error: 'badge-error',
-		highlighter: 'badge-warning',
-		ember: 'badge-warning'
-	};
-
+	// The desktop island: centred with margins (not translate) so its rise-in animation can't knock it off-centre.
 	const DESKTOP_CLASS =
-		'items-center gap-2 px-3 sm:px-4 md:px-5 lg:px-6 py-3 sm:py-4 md:py-5 rounded-full backdrop-blur-md border border-base-300 shadow-xl w-auto fixed left-1/2 -translate-x-1/2 bottom-4 z-40 hidden md:inline-flex';
+		'dock-glass fixed inset-x-0 bottom-5 z-40 mx-auto hidden w-fit items-center gap-2 rounded-full p-2.5 md:inline-flex animate-in fade-in-0 slide-in-from-bottom-6 duration-500 ease-out motion-reduce:animate-none';
 </script>
 
 {#snippet checkSlot(slot: CommandSlot)}
 	{#if (checkOutcome === 'correct' || checkOutcome === 'answered') && nextCommand}
-		<button
-			type="button"
-			class="btn h-11 min-w-28 flex-1 gap-1.5 rounded-full {checkOutcome === 'correct'
-				? 'btn-success'
-				: 'btn-primary'}"
+		<Button
+			tone={checkOutcome === 'correct' ? 'success' : 'primary'}
+			class="h-11 min-w-28 flex-1 gap-1.5"
 			disabled={nextCommand.enabled?.() === false}
 			aria-label={checkOutcome === 'correct' ? 'Correct. Next question' : 'Next question'}
 			onclick={() => nextCommand.run(source)}
 		>
 			{#if checkOutcome === 'correct'}<Check size={18} strokeWidth={3} />Correct{:else}Next{/if}
 			<ArrowRight size={18} class="opacity-80" />
-		</button>
+		</Button>
 	{:else if checkOutcome === 'incorrect'}
 		<!-- Stays until the answer changes; re-checking the same answer would only log another miss. -->
-		<button
-			type="button"
-			class="btn btn-error h-11 min-w-28 flex-1 gap-1.5 rounded-full {shaking ? 'dock-shake' : ''}"
+		<Button
+			tone="error"
+			class="h-11 min-w-28 flex-1 gap-1.5 {shaking ? 'dock-shake' : ''}"
 			aria-label="Incorrect. Change your answer, then check again"
 			onclick={shake}
 		>
 			<X size={18} strokeWidth={3} />Incorrect
-		</button>
+		</Button>
 	{:else}
 		<DockButton
 			command={slot.command}
@@ -195,7 +185,7 @@
 
 {#if phone}
 	<div
-		class="bottom-dock fixed inset-x-0 z-50 border-t border-base-300 bg-base-100/95 backdrop-blur-md md:hidden"
+		class="dock-glass bottom-dock fixed inset-x-0 z-50 rounded-t-[1.75rem] border-b-0 md:hidden"
 		bind:clientWidth={dockWidth}
 	>
 		{#if above}
@@ -221,15 +211,17 @@
 					{/if}
 				{/each}
 				{#if phone.more.length || customizable}
-					<button
-						type="button"
-						class="btn btn-ghost btn-circle [--size:2.75rem] text-base-content/70"
+					<Button
+						variant="ghost"
+						tone="neutral"
+						shape="circle"
+						class="size-11 text-foreground/70"
 						aria-label="More quiz options"
 						aria-haspopup="dialog"
 						onclick={() => (moreOpen = true)}
 					>
 						<Ellipsis size={20} />
-					</button>
+					</Button>
 				{/if}
 			</div>
 			{#if phone.prev || phone.next}
@@ -271,7 +263,7 @@
 							href={command.href()}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="flex min-h-12 items-center gap-3 rounded-xl px-2 active:bg-base-200"
+							class="flex min-h-12 items-center gap-3 rounded-xl px-2 active:bg-muted"
 						>
 							<Icon size={20} class={TONE_TEXT[command.tone]} />
 							<span class="flex-1">{command.name}</span>
@@ -281,14 +273,14 @@
 						<div class="flex min-h-12 items-center gap-3 px-2">
 							<Icon size={20} class={TONE_TEXT[command.tone]} />
 							<span class="flex-1">{command.name}</span>
-							<span class="text-sm tabular-nums text-base-content/60">{value}</span>
+							<span class="text-sm tabular-nums text-foreground/60">{value}</span>
 						</div>
 					{:else}
 						<button
 							type="button"
-							class="flex min-h-12 w-full items-center gap-3 rounded-xl px-2 text-left active:bg-base-200 disabled:opacity-40 {command.tone ===
+							class="flex min-h-12 w-full items-center gap-3 rounded-xl px-2 text-left active:bg-muted disabled:opacity-40 {command.tone ===
 							'error'
-								? 'text-error'
+								? 'text-error-ink'
 								: ''}"
 							aria-pressed={command.active ? active : undefined}
 							disabled={command.enabled?.() === false}
@@ -297,9 +289,9 @@
 							<Icon size={20} class={TONE_TEXT[command.tone]} />
 							<span class="flex-1">{command.name}</span>
 							{#if value}
-								<span class="text-sm tabular-nums text-base-content/60">{value}</span>
+								<span class="text-sm tabular-nums text-foreground/60">{value}</span>
 							{:else if active}
-								<span class="badge badge-sm badge-soft {TONE_BADGE_CLASS[command.tone]}">On</span>
+								<Badge tone={command.tone}>On</Badge>
 							{/if}
 						</button>
 					{/if}
@@ -307,16 +299,17 @@
 			{/each}
 		</ul>
 		{#if customizable && preferences}
-			<button
-				type="button"
-				class="btn btn-ghost mt-2 min-h-11 w-full rounded-full text-base-content/70"
+			<Button
+				variant="ghost"
+				tone="neutral"
+				class="mt-2 h-11 w-full text-foreground/70"
 				onclick={() => {
 					moreOpen = false;
 					preferences.open();
 				}}
 			>
 				<SlidersHorizontal size={16} /> Customize dock
-			</button>
+			</Button>
 		{/if}
 	</Sheet>
 {:else}
@@ -328,65 +321,70 @@
 		{/if}
 
 		{#if overflow.length > 0}
-			<div class="dropdown dropdown-top dropdown-center">
-				<div
-					tabindex="0"
-					role="button"
-					class="btn btn-sm btn-ghost btn-circle text-base-content/70"
-					aria-label="More quiz options"
-					title="More"
-				>
-					<ArrowUpWideNarrow size={18} />
-				</div>
-				<ul
-					tabindex="-1"
-					class="dropdown-content menu bg-base-100 rounded-2xl z-1 w-56 p-2 shadow-lg mb-2"
-				>
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<Button
+							{...props}
+							variant="ghost"
+							tone="neutral"
+							shape="circle"
+							class="text-foreground/70 hover:bg-white/60 dark:hover:bg-white/10"
+							aria-label="More quiz options"
+							title="More"
+						>
+							<ArrowUpWideNarrow size={19} />
+						</Button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content side="top" align="center" sideOffset={10} class="w-56">
 					{#each overflow as command (command.id)}
 						{@const active = command.active?.() ?? false}
 						{@const Icon = active && command.activeIcon ? command.activeIcon : command.icon}
 						{@const value = command.menuValue?.()}
-						<li>
-							{#if command.href}
-								<!-- eslint-disable svelte/no-navigation-without-resolve -- resolved at command creation -->
-								<a
-									href={command.href()}
-									target="_blank"
-									rel="noopener noreferrer"
-									title={command.description}
-								>
-									<Icon size={16} class={TONE_TEXT[command.tone]} />{command.name}
-								</a>
-								<!-- eslint-enable svelte/no-navigation-without-resolve -->
-							{:else}
-								<button
-									type="button"
-									class={command.tone === 'error' ? 'text-error' : ''}
-									title={command.detail?.() ?? command.description}
-									aria-pressed={command.active ? active : undefined}
-									disabled={command.enabled?.() === false}
-									onclick={() => command.run(source)}
-								>
-									<Icon size={16} class={TONE_TEXT[command.tone]} />
-									<span class="flex-1">{command.name}</span>
-									{#if value}
-										<span class="text-xs tabular-nums text-base-content/55">{value}</span>
-									{:else if active}
-										<span class="badge badge-xs badge-soft {TONE_BADGE_CLASS[command.tone]}"
-											>On</span
-										>
-									{/if}
-								</button>
-							{/if}
-						</li>
+						{#if command.href}
+							<DropdownMenu.Item>
+								{#snippet child({ props })}
+									<!-- eslint-disable svelte/no-navigation-without-resolve -- resolved at command creation -->
+									<a
+										{...props}
+										href={command.href?.()}
+										target="_blank"
+										rel="noopener noreferrer"
+										title={command.description}
+									>
+										<Icon size={16} class={TONE_TEXT[command.tone]} />{command.name}
+									</a>
+									<!-- eslint-enable svelte/no-navigation-without-resolve -->
+								{/snippet}
+							</DropdownMenu.Item>
+						{:else}
+							<DropdownMenu.Item
+								class={command.tone === 'error' ? 'text-error-ink' : ''}
+								title={command.detail?.() ?? command.description}
+								disabled={command.enabled?.() === false}
+								onSelect={() => command.run(source)}
+							>
+								<Icon size={16} class={TONE_TEXT[command.tone]} />
+								<span class="flex-1">{command.name}</span>
+								{#if value}
+									<span class="text-xs tabular-nums text-foreground/55">{value}</span>
+								{:else if active}
+									<Badge size="xs" tone={command.tone}>On</Badge>
+								{/if}
+							</DropdownMenu.Item>
+						{/if}
 					{/each}
-				</ul>
-			</div>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 		{/if}
 
 		{#each slots as slot, index (slot.key)}
 			{#if slot.kind === 'divider'}
-				<div class="divider divider-horizontal mx-0.5"></div>
+				<span
+					class="mx-1 h-7 w-px shrink-0 bg-linear-to-b from-transparent via-foreground/18 to-transparent"
+					aria-hidden="true"
+				></span>
 			{:else}
 				<DockButton
 					command={slot.command}
@@ -398,15 +396,21 @@
 		{/each}
 
 		{#if customizable && preferences}
-			<button
-				type="button"
-				class="btn btn-ghost btn-sm btn-circle text-base-content/40 hover:text-base-content transition-colors"
-				aria-label="Customize dock"
-				title="Customize dock"
-				onclick={() => preferences.open()}
-			>
-				<SlidersHorizontal size={16} />
-			</button>
+			<Tip label="Customize dock">
+				{#snippet child({ props })}
+					<Button
+						{...props}
+						variant="ghost"
+						tone="neutral"
+						shape="circle"
+						class="text-foreground/45 hover:bg-white/60 hover:text-foreground dark:hover:bg-white/10"
+						aria-label="Customize dock"
+						onclick={() => preferences.open()}
+					>
+						<SlidersHorizontal size={16} />
+					</Button>
+				{/snippet}
+			</Tip>
 		{/if}
 	</div>
 {/if}
