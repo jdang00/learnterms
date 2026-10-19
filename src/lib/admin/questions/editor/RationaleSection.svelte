@@ -2,7 +2,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import MessageSquare from '@lucide/svelte/icons/message-square';
 	import Target from '@lucide/svelte/icons/target';
-	import { EditorContent, type Editor } from 'svelte-tiptap';
+	import type { Editor, EditorContent } from 'svelte-tiptap';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import QuestionSourceEditor from '../QuestionSourceEditor.svelte';
 	import type { Id } from '../../../../convex/_generated/dataModel';
@@ -12,6 +13,7 @@
 	let {
 		form,
 		editor,
+		Content,
 		menuItems,
 		moduleId,
 		editingQuestion,
@@ -19,6 +21,7 @@
 	}: {
 		form: QuestionEditorState;
 		editor: Editor | undefined;
+		Content: typeof EditorContent | undefined;
 		menuItems: ToolbarItem[];
 		moduleId: string;
 		editingQuestion: QuestionItem | null;
@@ -55,8 +58,8 @@
 			? 'shadow-xs flex flex-col-reverse focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all [&_.tiptap]:min-h-56 [&_.tiptap]:px-4 [&_.tiptap]:py-3'
 			: ''}"
 	>
-		{#if editor}
-			<EditorContent {editor} />
+		{#if editor && Content}
+			<Content {editor} />
 			<div
 				class="bg-muted/50 border-border p-1 flex flex-wrap gap-1 transition-opacity {form.isFreeResponse
 					? 'border-b opacity-60 group-hover:opacity-100 group-focus-within:opacity-100'
@@ -76,6 +79,8 @@
 					</Button>
 				{/each}
 			</div>
+		{:else}
+			<Skeleton class="m-3 h-12 rounded-lg" />
 		{/if}
 	</div>
 	{#if editingQuestion?.aiGenerated && !form.questionSource}
