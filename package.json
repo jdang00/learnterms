@@ -17,12 +17,13 @@
 		"eval:questions": "bun scripts/ai-eval/run.ts",
 		"posthog:ai": "bun scripts/posthog-ai-observability.ts",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:convex": "tsc --project src/convex/tsconfig.json --noEmit",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"eval:report": "bun scripts/ai-eval/report.ts",
-		"verify": "bun run check && bun run lint && bun run test",
-		"verify:fast": "bun run check && bun run lint"
+		"verify": "bun run check && bun run check:convex && bun run lint && bun run test",
+		"verify:fast": "bun run check && bun run check:convex && bun run lint"
 	},
 	"devDependencies": {
 		"@edge-runtime/vm": "^5.0.0",

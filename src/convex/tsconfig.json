@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"types": ["node"],
 		"allowJs": true,
 		"strict": true,
 		"moduleResolution": "Bundler",
