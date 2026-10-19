@@ -578,6 +578,23 @@ test('foreign staff cannot edit, delete, or create content through direct reques
 	await expect(
 		outside.mutation(api.tags.createTag, { classId: ids.classId, name: 'Foreign tag' })
 	).rejects.toThrow('access denied');
+	const tagId = await t.run((ctx) =>
+		ctx.db.insert('tags', {
+			name: 'Midterm',
+			slug: 'midterm',
+			classId: ids.classId,
+			createdAt: 0,
+			updatedAt: 0,
+			deletedAt: 1
+		})
+	);
+	await expect(
+		outside.mutation(api.tags.restoreTag, {
+			tagId,
+			classId: ids.classId,
+			moduleIds: [ids.moduleId]
+		})
+	).rejects.toThrow('access denied');
 	await expect(
 		outside.mutation(api.questions.write.deleteQuestion, {
 			questionId: ids.questionId,

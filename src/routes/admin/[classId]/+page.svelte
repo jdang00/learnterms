@@ -311,7 +311,7 @@
 
 	{#if admin}
 		<div class="mb-8">
-			<TagManager {classId} />
+			<TagManager {classId} modules={sortedModules} />
 		</div>
 	{/if}
 
