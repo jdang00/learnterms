@@ -6,8 +6,8 @@
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import { getQuizCommands } from './commands.svelte';
 	import { getDockPreferences } from './dockPreferences.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import * as Tabs from '$lib/components/ui/tabs';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Tabs from '#lib/components/ui/tabs/index.js';
 	import { Dialog } from 'bits-ui';
 	import { DockCustomizerState } from './customizer/dockCustomizer.svelte';
 	import { CAPTION, MOTION } from './customizer/constants';

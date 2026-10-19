@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { asset, resolve } from '$app/paths';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 </script>
 
 <section

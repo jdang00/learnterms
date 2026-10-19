@@ -1,15 +1,15 @@
 import type { Doc } from '../../../../convex/_generated/dataModel';
-import type { ExamFinding } from '$lib/examFindings/findings';
-import type { AcceptanceLevel } from '$lib/utils/freeResponse';
-import { QUESTION_TYPES } from '$lib/types';
+import type { ExamFinding } from '#lib/examFindings/findings.js';
+import type { AcceptanceLevel } from '#lib/utils/freeResponse.js';
+import { QUESTION_TYPES } from '#lib/types.js';
 import {
 	countBlanks,
 	expectedAnswerCount,
 	inferQuestionType,
 	type ParsedQuestion,
 	type TypeSuggestion
-} from '$lib/utils/questionAuthoring';
-import { getRationale, getRationalePlainText } from '$lib/utils/rationale';
+} from '#lib/utils/questionAuthoring.js';
+import { getRationale, getRationalePlainText } from '#lib/utils/rationale.js';
 
 export type QuestionItem = Doc<'question'>;
 export type EditorMode = 'add' | 'edit';

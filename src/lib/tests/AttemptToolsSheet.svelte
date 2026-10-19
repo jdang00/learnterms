@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Sheet from '$lib/components/Sheet.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { TOOL_TILE_CLASS } from '$lib/components/quiz-dock/dockStyles';
-	import { sidePanel } from '$lib/components/side-panel/state.svelte';
+	import Sheet from '#lib/components/Sheet.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { TOOL_TILE_CLASS } from '#lib/components/quiz-dock/dockStyles.js';
+	import { sidePanel } from '#lib/components/side-panel/state.svelte.js';
 	import Calculator from '@lucide/svelte/icons/calculator';
 	import StickyNote from '@lucide/svelte/icons/sticky-note';
 	import Save from '@lucide/svelte/icons/save';

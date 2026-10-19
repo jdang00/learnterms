@@ -4,7 +4,7 @@ import { convexLoad, createConvexHttpClient } from 'convex-svelte/sveltekit';
 import { api } from '../../../../../convex/_generated/api';
 import { PUBLIC_CONVEX_URL } from '$env/static/public';
 import type { Id } from '../../../../../convex/_generated/dataModel';
-import { rateLimit } from '$lib/server/rateLimit';
+import { rateLimit } from '#lib/server/rateLimit.js';
 
 export const load: PageServerLoad = async ({
 	params,

@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
-import { blogPosts, findBlogPost } from '$lib/content/blog';
+import { blogPosts, findBlogPost } from '#lib/content/blog.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ params }) => {

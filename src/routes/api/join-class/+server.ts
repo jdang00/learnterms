@@ -2,8 +2,8 @@ import { isRedirect, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { Id } from '../../../convex/_generated/dataModel';
 import { api } from '../../../convex/_generated/api';
-import { authenticatedConvexClient } from '$lib/server/convex';
-import { userDisplayName } from '$lib/userDisplayName';
+import { authenticatedConvexClient } from '#lib/server/convex.js';
+import { userDisplayName } from '#lib/userDisplayName.js';
 import { clerkClient } from 'svelte-clerk/server';
 
 export const POST: RequestHandler = async ({ request, locals }) => {

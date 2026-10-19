@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import type { DetachedQueryResult } from 'convex-svelte/sveltekit';
 	import type { PageData } from './$types';
 	import { api } from '../../../../../convex/_generated/api.js';
 	import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 	import { QuizState } from './states.svelte';
-	import MainQuiz from '$lib/components/MainQuiz.svelte';
-	import ModuleCompletion from '$lib/components/ModuleCompletion.svelte';
-	import ResetProgressSheet from '$lib/components/ResetProgressSheet.svelte';
+	import MainQuiz from '#lib/components/MainQuiz.svelte';
+	import ModuleCompletion from '#lib/components/ModuleCompletion.svelte';
+	import ResetProgressSheet from '#lib/components/ResetProgressSheet.svelte';
 	import { onMount, tick, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { resolve } from '$app/paths';
@@ -19,7 +19,7 @@
 		QUIZ_PREFERENCE_CHANGED_EVENT,
 		QUIZ_PREFERENCE_KEYS,
 		type QuizPreferenceChangedDetail
-	} from '$lib/components/power-bar/preferences';
+	} from '#lib/components/power-bar/preferences.js';
 
 	let { data }: { data: PageData } = $props();
 

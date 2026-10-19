@@ -1,6 +1,6 @@
 <script lang="ts">
-	import * as Empty from '$lib/components/ui/empty';
-	import { Progress } from '$lib/components/ui/progress';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import { Progress } from '#lib/components/ui/progress/index.js';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import type { PageData } from './$types';
 	import { api } from '../../convex/_generated/api.js';
@@ -20,18 +20,18 @@
 	import FeatureSpotlight from '../../lib/components/FeatureSpotlight.svelte';
 	import ModuleRow from '../../lib/components/ModuleRow.svelte';
 	import ColorMark from '../../lib/components/ColorMark.svelte';
-	import { classColor, summarizeClassProgress } from '$lib/utils/classProgress';
+	import { classColor, summarizeClassProgress } from '#lib/utils/classProgress.js';
 	import Sidebar from '../../lib/components/Sidebar.svelte';
 	import ClassList from '../../lib/components/ClassList.svelte';
 	import ClampedText from '../../lib/components/ClampedText.svelte';
 	import ResetProgressSheet from '../../lib/components/ResetProgressSheet.svelte';
 	import type { ClassWithSemester } from '../../lib/types';
 	import { useClerkContext } from 'svelte-clerk/client';
-	import * as Alert from '$lib/components/ui/alert';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	const client = useConvexClient();
 	const ctx = useClerkContext();
 	const name = $derived(ctx.user?.firstName);

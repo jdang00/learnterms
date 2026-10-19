@@ -3,8 +3,6 @@ import { transformWithOxc } from 'vite';
 import { compile, compileModule } from 'svelte/compiler';
 import { fileURLToPath } from 'node:url';
 
-const $lib = fileURLToPath(new URL('./src/lib', import.meta.url));
-
 export default defineConfig({
 	test: {
 		projects: [
@@ -18,7 +16,6 @@ export default defineConfig({
 			{
 				resolve: {
 					alias: {
-						$lib,
 						'svelte-clerk/server': fileURLToPath(
 							new URL('./node_modules/svelte-clerk/dist/server/index.js', import.meta.url)
 						),
@@ -50,7 +47,6 @@ export default defineConfig({
 				}
 			},
 			{
-				resolve: { alias: { $lib } },
 				// Compiles .svelte.ts rune modules so their state classes can run outside a component.
 				plugins: [
 					{

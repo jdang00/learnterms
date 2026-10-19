@@ -1,9 +1,9 @@
 <script lang="ts">
 	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { useQuestionMedia } from '#lib/utils/useQuestionMedia.svelte.js';
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 
 	type Attachment = Doc<'questionMedia'>;

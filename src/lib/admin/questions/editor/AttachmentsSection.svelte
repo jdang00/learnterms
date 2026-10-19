@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { Input } from '$lib/components/ui/input';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
 	import ImageIcon from '@lucide/svelte/icons/image';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import { useConvexClient } from 'convex-svelte';
 	import type { FunctionArgs, FunctionReturnType } from 'convex/server';
 	import { api } from '../../../../convex/_generated/api.js';
 	import type { Id } from '../../../../convex/_generated/dataModel';
-	import { MAX_QUESTION_IMAGES, QUESTION_IMAGE_ACCEPT } from '$lib/utils/questionMediaUpload';
+	import { MAX_QUESTION_IMAGES, QUESTION_IMAGE_ACCEPT } from '#lib/utils/questionMediaUpload.js';
 	import type { QuestionMediaQueue } from './questionMediaQueue.svelte';
 	import type { QuestionEditorState, QuestionItem } from './questionEditor.svelte';
 

@@ -1,9 +1,9 @@
 import type { FunctionReturnType } from 'convex/server';
 import type { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
-import type { NavigatorItem } from '$lib/components/QuestionNavigatorSheet.svelte';
-import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
-import { getErrorText } from '$lib/utils/errorHandling';
+import type { NavigatorItem } from '#lib/components/QuestionNavigatorSheet.svelte';
+import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
+import { getErrorText } from '#lib/utils/errorHandling.js';
 
 export type AttemptRunnerBundle = NonNullable<
 	FunctionReturnType<typeof api.tests.attempts.getAttemptRunnerBundle>

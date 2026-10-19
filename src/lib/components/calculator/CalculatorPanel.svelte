@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { captureStudyTool } from '$lib/analytics/studyTools';
-	import { useStudyToolContext } from '$lib/analytics/studyToolContext';
+	import { captureStudyTool } from '#lib/analytics/studyTools.js';
+	import { useStudyToolContext } from '#lib/analytics/studyToolContext.js';
 	import {
 		createCalculationTracker,
 		type StudyToolContext,
 		type StudyToolDetails
-	} from '$lib/analytics/studyToolEvents';
+	} from '#lib/analytics/studyToolEvents.js';
 	import 'mathlive/static.css';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import Delete from '@lucide/svelte/icons/delete';
@@ -13,12 +13,12 @@
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import type { MathfieldElement } from 'mathlive';
-	import type { AngleMode } from '$lib/calculator/engine';
-	import { FORMULAS, type Formula } from '$lib/calculator/formulas';
-	import { fillFormula, numberToLatex } from '$lib/calculator/format';
+	import type { AngleMode } from '#lib/calculator/engine.js';
+	import { FORMULAS, type Formula } from '#lib/calculator/formulas.js';
+	import { fillFormula, numberToLatex } from '#lib/calculator/format.js';
 	import { base } from '$app/paths';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
 
 	type Entry = {
 		id: number;

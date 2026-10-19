@@ -9,12 +9,12 @@
 	import Search from '@lucide/svelte/icons/search';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { onMount } from 'svelte';
-	import { modifierKeyLabel } from '$lib/utils/platform';
+	import { modifierKeyLabel } from '#lib/utils/platform.js';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Kbd } from '$lib/components/ui/kbd';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
 	import PowerBar from './power-bar/PowerBar.svelte';
 	import type { CohortItem, QuickLinkItem } from './power-bar/types';
 

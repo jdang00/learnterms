@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import Clock3 from '@lucide/svelte/icons/clock-3';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import type { Doc } from '../../../convex/_generated/dataModel';

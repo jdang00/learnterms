@@ -3,9 +3,9 @@
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import { getDockPreferences } from './quiz-dock/dockPreferences.svelte';
 	import Sheet from './Sheet.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Kbd } from '$lib/components/ui/kbd';
-	import { Switch } from '$lib/components/ui/switch';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
 	let { qs = $bindable(), isOpen = $bindable(false) } = $props();
 	const dockPreferences = getDockPreferences();
 </script>

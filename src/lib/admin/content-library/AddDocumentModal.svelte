@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatBytes } from '$lib/utils/format';
+	import { formatBytes } from '#lib/utils/format.js';
 	import { untrack } from 'svelte';
 	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
 	import FileUp from '@lucide/svelte/icons/file-up';
@@ -8,13 +8,13 @@
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id } from '../../../convex/_generated/dataModel';
 	import { addDocumentUploads, uploadDocumentBatch, type DocumentUpload } from './documentUploads';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Badge, type BadgeTone } from '$lib/components/ui/badge';
-	import * as FileDropZone from '$lib/components/ui/file-drop-zone';
-	import { toastStore } from '$lib/stores/toast.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Progress } from '$lib/components/ui/progress';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Badge, type BadgeTone } from '#lib/components/ui/badge/index.js';
+	import * as FileDropZone from '#lib/components/ui/file-drop-zone/index.js';
+	import { toastStore } from '#lib/stores/toast.svelte.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Progress } from '#lib/components/ui/progress/index.js';
 
 	let {
 		isAddModalOpen,

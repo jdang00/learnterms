@@ -1,26 +1,26 @@
 <script lang="ts">
 	import '../app.css';
 	import '@fontsource-variable/geist-mono';
-	import { getRouteSeo, SITE_ORIGIN } from '$lib/seo';
+	import { getRouteSeo, SITE_ORIGIN } from '#lib/seo.js';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
-	import NavBar from '$lib/components/NavBar.svelte';
-	import BrandLogo from '$lib/components/BrandLogo.svelte';
-	import BadgeAwardModal from '$lib/components/BadgeAwardModal.svelte';
-	import { Toaster } from '$lib/components/ui/sonner';
-	import * as Tooltip from '$lib/components/ui/tooltip';
-	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
+	import NavBar from '#lib/components/NavBar.svelte';
+	import BrandLogo from '#lib/components/BrandLogo.svelte';
+	import BadgeAwardModal from '#lib/components/BadgeAwardModal.svelte';
+	import { Toaster } from '#lib/components/ui/sonner/index.js';
+	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
+	import PostHogIdentify from '#lib/components/PostHogIdentify.svelte';
 	import { setupConvex } from 'convex-svelte';
-	import ConvexAuth from '$lib/components/ConvexAuth.svelte';
-	import { theme, clerkTheme } from '$lib/theme.svelte';
-	import { getPostHog } from '$lib/analytics/posthogClient';
+	import ConvexAuth from '#lib/components/ConvexAuth.svelte';
+	import { theme, clerkTheme } from '#lib/theme.svelte.js';
+	import { getPostHog } from '#lib/analytics/posthogClient.js';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { browser, dev } from '$app/environment';
-	import { trackKeyboardInset } from '$lib/utils/keyboardInset';
-	import { trackPreviousPath } from '$lib/utils/backNavigation';
+	import { trackKeyboardInset } from '#lib/utils/keyboardInset.js';
+	import { trackPreviousPath } from '#lib/utils/backNavigation.js';
 
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
 

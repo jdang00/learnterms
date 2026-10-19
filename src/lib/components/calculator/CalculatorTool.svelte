@@ -1,9 +1,9 @@
 <script lang="ts">
 	import Calculator from '@lucide/svelte/icons/calculator';
 	import { untrack } from 'svelte';
-	import { getQuizCommands } from '$lib/components/quiz-dock/commands.svelte';
-	import SidePanel from '$lib/components/side-panel/SidePanel.svelte';
-	import { sidePanel } from '$lib/components/side-panel/state.svelte';
+	import { getQuizCommands } from '#lib/components/quiz-dock/commands.svelte.js';
+	import SidePanel from '#lib/components/side-panel/SidePanel.svelte';
+	import { sidePanel } from '#lib/components/side-panel/state.svelte.js';
 	import type CalculatorPanelType from './CalculatorPanel.svelte';
 	let { storageKey = 'guest' }: { storageKey?: string } = $props();
 	const registry = getQuizCommands();

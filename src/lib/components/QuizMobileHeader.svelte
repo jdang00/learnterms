@@ -7,9 +7,9 @@
 	import ListRestart from '@lucide/svelte/icons/list-restart';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Button } from '$lib/components/ui/button';
-	import { cameFrom } from '$lib/utils/backNavigation';
-	import { hasRationale } from '$lib/utils/rationale';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { cameFrom } from '#lib/utils/backNavigation.js';
+	import { hasRationale } from '#lib/utils/rationale.js';
 	import type { Doc } from '../../convex/_generated/dataModel';
 	import MobileStudyBar from './MobileStudyBar.svelte';
 	import ProgressRing from './ProgressRing.svelte';

@@ -1,4 +1,4 @@
-import { buttonVariants } from '$lib/components/ui/button';
+import { buttonVariants } from '#lib/components/ui/button/index.js';
 import type { ButtonLook, CommandTone, QuizCommand } from './types';
 import type { DockDisplay } from './layouts';
 

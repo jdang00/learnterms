@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import MessageSquare from '@lucide/svelte/icons/message-square';
 	import Target from '@lucide/svelte/icons/target';
 	import type { Editor, EditorContent } from 'svelte-tiptap';
-	import { Skeleton } from '$lib/components/ui/skeleton';
-	import QuestionSources from '$lib/components/QuestionSources.svelte';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
+	import QuestionSources from '#lib/components/QuestionSources.svelte';
 	import QuestionSourceEditor from '../QuestionSourceEditor.svelte';
 	import type { Id } from '../../../../convex/_generated/dataModel';
 	import type { ToolbarItem } from './toolbar';

@@ -17,16 +17,16 @@
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import StickyNote from '@lucide/svelte/icons/sticky-note';
 	import { Confetti } from 'svelte-confetti';
-	import ModuleProgress from '$lib/components/ModuleProgress.svelte';
-	import ProgressRing from '$lib/components/ProgressRing.svelte';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import * as Card from '$lib/components/ui/card';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { Kbd } from '$lib/components/ui/kbd';
-	import { Separator } from '$lib/components/ui/separator';
-	import { summarizeModule } from '$lib/utils/moduleCompletion';
-	import type { StudyEvidence } from '$lib/utils/studyMastery';
+	import ModuleProgress from '#lib/components/ModuleProgress.svelte';
+	import ProgressRing from '#lib/components/ProgressRing.svelte';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import { summarizeModule } from '#lib/utils/moduleCompletion.js';
+	import type { StudyEvidence } from '#lib/utils/studyMastery.js';
 	import type { Id } from '../../../convex/_generated/dataModel';
 
 	type Option = { id: string; text: string };

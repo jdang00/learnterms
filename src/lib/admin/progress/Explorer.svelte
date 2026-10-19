@@ -1,7 +1,7 @@
 <script lang="ts">
-	import * as Empty from '$lib/components/ui/empty';
-	import { SelectField } from '$lib/components/ui/select';
-	import SemesterSelect from '$lib/components/SemesterSelect.svelte';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import { SelectField } from '#lib/components/ui/select/index.js';
+	import SemesterSelect from '#lib/components/SemesterSelect.svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import type { FunctionReturnType } from 'convex/server';
 	import { api } from '../../../convex/_generated/api';
@@ -14,13 +14,13 @@
 	import Search from '@lucide/svelte/icons/search';
 	import ModuleDetail from './ModuleDetail.svelte';
 	import { relativeTime } from './utils';
-	import * as Alert from '$lib/components/ui/alert';
-	import * as Card from '$lib/components/ui/card';
-	import * as InputGroup from '$lib/components/ui/input-group';
-	import * as Table from '$lib/components/ui/table';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import * as Table from '#lib/components/ui/table/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 
 	let {
 		cohortId,

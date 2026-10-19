@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import type { Id } from '../../../../../../convex/_generated/dataModel';
-	import ResultsSummary from '$lib/tests/ResultsSummary.svelte';
-	import ReviewSidebar from '$lib/tests/ReviewSidebar.svelte';
-	import ReviewNavigator from '$lib/tests/ReviewNavigator.svelte';
-	import ReviewQuestion from '$lib/tests/ReviewQuestion.svelte';
-	import ReviewDock from '$lib/tests/ReviewDock.svelte';
-	import { ReviewState } from '$lib/tests/review.svelte';
+	import ResultsSummary from '#lib/tests/ResultsSummary.svelte';
+	import ReviewSidebar from '#lib/tests/ReviewSidebar.svelte';
+	import ReviewNavigator from '#lib/tests/ReviewNavigator.svelte';
+	import ReviewQuestion from '#lib/tests/ReviewQuestion.svelte';
+	import ReviewDock from '#lib/tests/ReviewDock.svelte';
+	import { ReviewState } from '#lib/tests/review.svelte.js';
 	import { fade, slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import * as Alert from '$lib/components/ui/alert';
-	import { LoadingState } from '$lib/components/ui/spinner';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
 
 	let { data } = $props();
 

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Eye from '@lucide/svelte/icons/eye';
 	import X from '@lucide/svelte/icons/x';
-	import { Button } from '$lib/components/ui/button';
-	import { SelectField } from '$lib/components/ui/select';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { SelectField } from '#lib/components/ui/select/index.js';
 	type Option = { id: string; text: string };
 	let { qs = $bindable(), currentlySelected, allowSolution = true, allowClear = true } = $props();
 

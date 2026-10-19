@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SelectField } from '$lib/components/ui/select';
+	import { SelectField } from '#lib/components/ui/select/index.js';
 	import { browser } from '$app/environment';
 	import { onMount, tick } from 'svelte';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
@@ -9,13 +9,13 @@
 	import X from '@lucide/svelte/icons/x';
 	import Target from '@lucide/svelte/icons/target';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import { Button } from '$lib/components/ui/button';
-	import * as Card from '$lib/components/ui/card';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { Progress } from '$lib/components/ui/progress';
-	import * as Table from '$lib/components/ui/table';
-	import * as InputGroup from '$lib/components/ui/input-group';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
+	import { Progress } from '#lib/components/ui/progress/index.js';
+	import * as Table from '#lib/components/ui/table/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
 	import {
 		calculateCourseSummary,
 		expandCourseEntries,
@@ -23,7 +23,7 @@
 		type CalculatorCourse,
 		type ItemInputMap,
 		type TrackableItem
-	} from '$lib/grade-calculator/runtime';
+	} from '#lib/grade-calculator/runtime.js';
 
 	type WorkspaceData = {
 		stats: {

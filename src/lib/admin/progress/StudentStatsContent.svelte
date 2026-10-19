@@ -7,13 +7,13 @@
 	import Flag from '@lucide/svelte/icons/flag';
 	import TrendingUp from '@lucide/svelte/icons/trending-up';
 	import { SvelteSet } from 'svelte/reactivity';
-	import * as Alert from '$lib/components/ui/alert';
-	import * as Collapsible from '$lib/components/ui/collapsible';
-	import * as Table from '$lib/components/ui/table';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Progress } from '$lib/components/ui/progress';
-	import { LoadingState } from '$lib/components/ui/spinner';
-	import type { Tone } from '$lib/components/ui/tone';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import * as Collapsible from '#lib/components/ui/collapsible/index.js';
+	import * as Table from '#lib/components/ui/table/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Progress } from '#lib/components/ui/progress/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
+	import type { Tone } from '#lib/components/ui/tone.js';
 
 	let { userId, cohortId }: { userId: Id<'users'>; cohortId: Id<'cohort'> } = $props();
 

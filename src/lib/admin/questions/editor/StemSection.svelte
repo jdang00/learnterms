@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import MessageSquare from '@lucide/svelte/icons/message-square';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import type { Editor, EditorContent } from 'svelte-tiptap';
-	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { DISPLAY_QUESTION_TYPES } from '$lib/types';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
+	import { DISPLAY_QUESTION_TYPES } from '#lib/types.js';
 	import type { ToolbarItem } from './toolbar';
 	import type { QuestionEditorState } from './questionEditor.svelte';
 

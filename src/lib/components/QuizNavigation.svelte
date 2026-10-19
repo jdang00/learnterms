@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	let { questions, handleSelect, currentlySelected, qs } = $props();
 
 	let reactiveInteractedQuestions = $derived(qs?.liveInteractedQuestions || []);

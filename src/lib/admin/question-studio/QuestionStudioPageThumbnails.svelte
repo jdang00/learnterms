@@ -4,9 +4,9 @@
 	import FileText from '@lucide/svelte/icons/file-text';
 	import { tick } from 'svelte';
 	import type { PDFDocumentProxy } from 'pdfjs-dist';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import SourcePdfPage from '../source/SourcePdfPage.svelte';
 	let {
 		purpose = 'context',

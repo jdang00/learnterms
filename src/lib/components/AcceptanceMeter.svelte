@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { acceptanceLevels, type AcceptanceLevel } from '$lib/utils/freeResponse';
+	import { acceptanceLevels, type AcceptanceLevel } from '#lib/utils/freeResponse.js';
 
 	let { level, class: className = '' }: { level: AcceptanceLevel; class?: string } = $props();
 

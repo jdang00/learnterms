@@ -1,24 +1,24 @@
 <script lang="ts">
 	import ModuleProgress from './ModuleProgress.svelte';
-	import QuestionSources from '$lib/components/QuestionSources.svelte';
+	import QuestionSources from '#lib/components/QuestionSources.svelte';
 	import PanelRight from '@lucide/svelte/icons/panel-right';
 	import Eye from '@lucide/svelte/icons/eye';
 	import Info from '@lucide/svelte/icons/info';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import Settings from '@lucide/svelte/icons/settings';
-	import SettingsModal from '$lib/components/SettingsModal.svelte';
-	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
-	import QuizToolsBar from '$lib/components/quiz-dock/QuizToolsBar.svelte';
-	import { getRationale, hasRationale } from '$lib/utils/rationale';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import SettingsModal from '#lib/components/SettingsModal.svelte';
+	import QuestionAttachmentsSidebar from '#lib/components/QuestionAttachmentsSidebar.svelte';
+	import QuizToolsBar from '#lib/components/quiz-dock/QuizToolsBar.svelte';
+	import { getRationale, hasRationale } from '#lib/utils/rationale.js';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ProgressRing from './ProgressRing.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Kbd } from '$lib/components/ui/kbd';
-	import { Progress } from '$lib/components/ui/progress';
-	import * as Card from '$lib/components/ui/card';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
+	import { Progress } from '#lib/components/ui/progress/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 
 	let { qs = $bindable(), module, currentlySelected, classId } = $props();
 	let hideSidebar = $state(false);

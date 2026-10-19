@@ -4,8 +4,8 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Check from '@lucide/svelte/icons/check';
 	import Minus from '@lucide/svelte/icons/minus';
-	import { Button } from '$lib/components/ui/button';
-	import { Kbd } from '$lib/components/ui/kbd';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
 	import { DIVIDER_ID, dockHas } from '../layouts';
 	import { MOTION } from './constants';
 	import type { DockCustomizerState } from './dockCustomizer.svelte';

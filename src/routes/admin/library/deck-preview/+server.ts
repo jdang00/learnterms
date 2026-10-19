@@ -1,8 +1,8 @@
 import { error, json } from '@sveltejs/kit';
 import { Marp } from '@marp-team/marp-core';
 import type { RequestHandler } from './$types';
-import { buildMarpDeckMarkdown } from '$lib/admin/content-library/contentLibraryPreview';
-import { sanitizeDeckHtml } from '$lib/utils/sanitizeHtml';
+import { buildMarpDeckMarkdown } from '#lib/admin/content-library/contentLibraryPreview.js';
+import { sanitizeDeckHtml } from '#lib/utils/sanitizeHtml.js';
 
 const MAX_MARKDOWN_CHARS = 400_000;
 const MAX_PAGES = 2_000;

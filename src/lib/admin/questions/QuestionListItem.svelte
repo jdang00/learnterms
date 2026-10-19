@@ -1,10 +1,10 @@
 <script lang="ts">
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
-	import { abbreviateType } from '$lib/utils/questionType.js';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { abbreviateType } from '#lib/utils/questionType.js';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	import type { Doc } from '../../../convex/_generated/dataModel';
-	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
 
 	type QuestionItem = Doc<'question'>;
 

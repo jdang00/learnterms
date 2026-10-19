@@ -3,7 +3,7 @@
 	import { acceptedReviews, objectiveForCandidate } from './questionStudioRun';
 	import type { AgentJob, CandidateReview } from './questionStudioRun';
 	import type { CandidateQuestion } from './questionStudioTypes';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import { MediaQuery } from 'svelte/reactivity';
 
 	interface Props {

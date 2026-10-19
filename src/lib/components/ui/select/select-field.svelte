@@ -10,7 +10,7 @@
 
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 	import Root from './select.svelte';
 	import Trigger from './select-trigger.svelte';
 	import Content from './select-content.svelte';

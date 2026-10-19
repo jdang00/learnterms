@@ -14,8 +14,8 @@
 
 	let { isOpen, attachment, onClose }: Props = $props();
 
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 
 	let zoom = $state(1);
 	let panX = $state(0);

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Progress } from '$lib/components/ui/progress';
+	import { Progress } from '#lib/components/ui/progress/index.js';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Bot from '@lucide/svelte/icons/bot';
 	import Braces from '@lucide/svelte/icons/braces';
@@ -9,10 +9,10 @@
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { fade } from 'svelte/transition';
-	import ShimmerText from '$lib/components/ShimmerText.svelte';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Button } from '$lib/components/ui/button';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import ShimmerText from '#lib/components/ShimmerText.svelte';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import { type Message, prettyJson, formatChars, shortModel } from './model';
 	let {
 		messages,

@@ -4,10 +4,10 @@
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import X from '@lucide/svelte/icons/x';
 	import RagDocumentBrowser from '../source/RagDocumentBrowser.svelte';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Button } from '$lib/components/ui/button';
-	import { Alert } from '$lib/components/ui/alert';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import type { Id } from '../../../convex/_generated/dataModel';
 
 	interface Props {

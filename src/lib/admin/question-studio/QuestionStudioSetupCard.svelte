@@ -15,15 +15,15 @@
 	import type { SourceMode } from '../../../convex/questionStudio/pageSelection';
 	import QuestionStudioSourceAttachment from './QuestionStudioSourceAttachment.svelte';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
-	import type { ClassWithSemester } from '$lib/types';
+	import type { ClassWithSemester } from '#lib/types.js';
 	import type { QuestionType, TopicMapItem } from './questionStudioTypes';
 	import { questionTypes, questionTypeDefinitions } from './questionStudioTypes';
 	import { formatPageSelection } from './pagePickerSelection';
 	import { tokenClass } from './questionStudioToken';
-	import * as Card from '$lib/components/ui/card';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Textarea } from '$lib/components/ui/textarea';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
 
 	interface Props {
 		cohortId?: Id<'cohort'> | null;

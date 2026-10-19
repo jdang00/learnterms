@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { captureStudyTool } from '$lib/analytics/studyTools';
-	import { useStudyToolContext } from '$lib/analytics/studyToolContext';
+	import { captureStudyTool } from '#lib/analytics/studyTools.js';
+	import { useStudyToolContext } from '#lib/analytics/studyToolContext.js';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Doc } from '../../convex/_generated/dataModel';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	import {
 		stemFingerprint,
 		highlightChange,
@@ -12,7 +12,7 @@
 		type StemHighlight,
 		type HighlightChange,
 		type HighlightOperation
-	} from '$lib/utils/stemHighlights';
+	} from '#lib/utils/stemHighlights.js';
 	import { onDestroy, tick } from 'svelte';
 
 	let {

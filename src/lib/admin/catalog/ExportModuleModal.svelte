@@ -3,8 +3,8 @@
 	import FileJson from '@lucide/svelte/icons/file-json';
 	import FileSpreadsheet from '@lucide/svelte/icons/file-spreadsheet';
 	import type { Doc } from '../../../convex/_generated/dataModel';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 
 	// Define a compatible type that matches what the parent passes
 	// The parent passes a Doc<'module'> extended with questionCount and tags

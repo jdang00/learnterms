@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { convexLoad } from 'convex-svelte/sveltekit';
-import { requireConvexSession } from '$lib/server/convex';
+import { requireConvexSession } from '#lib/server/convex.js';
 import { api } from '../../../../convex/_generated/api';
 
 export const load: PageServerLoad = async ({ locals }) => {

@@ -7,11 +7,11 @@
 	import X from '@lucide/svelte/icons/x';
 	import type { Snippet } from 'svelte';
 	import { Confetti } from 'svelte-confetti';
-	import Sheet from '$lib/components/Sheet.svelte';
+	import Sheet from '#lib/components/Sheet.svelte';
 	import DockButton from './DockButton.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
 	import { getQuizCommands, isCommandShown } from './commands.svelte';
 	import { getDockPreferences } from './dockPreferences.svelte';
 	import {

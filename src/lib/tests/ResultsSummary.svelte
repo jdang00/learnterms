@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { RadialProgress } from '$lib/components/ui/radial-progress';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import * as Card from '$lib/components/ui/card';
-	import { Progress } from '$lib/components/ui/progress';
-	import { formatClock } from '$lib/utils/format';
+	import { RadialProgress } from '#lib/components/ui/radial-progress/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import { Progress } from '#lib/components/ui/progress/index.js';
+	import { formatClock } from '#lib/utils/format.js';
 	import { resolve } from '$app/paths';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import Clock from '@lucide/svelte/icons/clock';

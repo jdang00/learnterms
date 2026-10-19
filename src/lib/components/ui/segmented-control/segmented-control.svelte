@@ -15,8 +15,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { RadioGroup } from 'bits-ui';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import { cn } from '$lib/utils.js';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.js';
 
 	let {
 		value = $bindable(''),

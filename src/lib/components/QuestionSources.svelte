@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import X from '@lucide/svelte/icons/x';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	interface Props {
 		source?: {

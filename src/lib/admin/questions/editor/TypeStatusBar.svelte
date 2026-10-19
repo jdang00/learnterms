@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { SegmentedControl } from '$lib/components/ui/segmented-control';
-	import { Button } from '$lib/components/ui/button';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { SegmentedControl } from '#lib/components/ui/segmented-control/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import CheckCircle from '@lucide/svelte/icons/check-circle';
 	import Archive from '@lucide/svelte/icons/archive';
@@ -11,7 +11,7 @@
 	import ListChecks from '@lucide/svelte/icons/list-checks';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
-	import { QUESTION_TYPES } from '$lib/types';
+	import { QUESTION_TYPES } from '#lib/types.js';
 	import type { QuestionEditorState } from './questionEditor.svelte';
 
 	let { form, hidden }: { form: QuestionEditorState; hidden: boolean } = $props();

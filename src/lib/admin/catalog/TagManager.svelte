@@ -9,13 +9,13 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import X from '@lucide/svelte/icons/x';
 	import Check from '@lucide/svelte/icons/check';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Input } from '$lib/components/ui/input';
-	import { LoadingState } from '$lib/components/ui/spinner';
-	import { Tip } from '$lib/components/ui/tooltip';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
+	import { Tip } from '#lib/components/ui/tooltip/index.js';
 
 	const client = useConvexClient();
 	// useQuery with function args for reactivity

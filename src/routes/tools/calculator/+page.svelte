@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { provideStudyToolContext } from '$lib/analytics/studyToolContext';
-	import { captureStudyTool } from '$lib/analytics/studyTools';
+	import { provideStudyToolContext } from '#lib/analytics/studyToolContext.js';
+	import { captureStudyTool } from '#lib/analytics/studyTools.js';
 	provideStudyToolContext(() => ({ surface: 'standalone_calculator' }));
 	onMount(() =>
 		captureStudyTool(
@@ -14,7 +14,7 @@
 			{ source: 'standalone' }
 		)
 	);
-	import CalculatorPanel from '$lib/components/calculator/CalculatorPanel.svelte';
+	import CalculatorPanel from '#lib/components/calculator/CalculatorPanel.svelte';
 	import { useClerkContext } from 'svelte-clerk/client';
 	const clerk = useClerkContext();
 </script>

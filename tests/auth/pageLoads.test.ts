@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('svelte-clerk/server', () => ({ clerkClient: { users: { getUser: mocks.getUser } } }));
 vi.mock('$env/static/public', () => ({ PUBLIC_CONVEX_URL: 'https://example.convex.cloud' }));
 vi.mock('convex-svelte/sveltekit', () => ({ convexLoad: mocks.convexLoad }));
-vi.mock('$lib/server/convex', () => ({
+vi.mock('#lib/server/convex.js', () => ({
 	authenticatedConvexClient: mocks.authenticatedConvexClient
 }));
 

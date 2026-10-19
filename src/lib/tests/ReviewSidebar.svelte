@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { RadialProgress } from '$lib/components/ui/radial-progress';
-	import { Button } from '$lib/components/ui/button';
-	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
+	import { RadialProgress } from '#lib/components/ui/radial-progress/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import QuestionAttachmentsSidebar from '#lib/components/QuestionAttachmentsSidebar.svelte';
 	import { resolve } from '$app/paths';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import PanelRight from '@lucide/svelte/icons/panel-right';

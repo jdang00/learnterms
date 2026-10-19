@@ -5,8 +5,8 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import CloudOff from '@lucide/svelte/icons/cloud-off';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import { Button } from '$lib/components/ui/button';
-	import * as ButtonGroup from '$lib/components/ui/button-group';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as ButtonGroup from '#lib/components/ui/button-group/index.js';
 	import { isPassive } from '../dockStyles';
 	import { DIVIDER_ID } from '../layouts';
 	import { DISPLAY_OPTIONS, MOTION } from './constants';

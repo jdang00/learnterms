@@ -1,5 +1,5 @@
 <script lang="ts">
-	import SemesterSelect from '$lib/components/SemesterSelect.svelte';
+	import SemesterSelect from '#lib/components/SemesterSelect.svelte';
 	let { isEditModalOpen, closeEditModal, editingClass, semesters, userData } = $props();
 
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
@@ -9,14 +9,14 @@
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
-	import { pickDefaultSemesterName } from '$lib/utils/semester';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { LoadingState } from '$lib/components/ui/spinner';
-	import { Textarea } from '$lib/components/ui/textarea';
+	import { pickDefaultSemesterName } from '#lib/utils/semester.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
 
 	const client = useConvexClient();
 

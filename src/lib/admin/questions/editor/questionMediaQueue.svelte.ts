@@ -1,9 +1,9 @@
 import type { ConvexClient } from 'convex/browser';
 import type { Id } from '../../../../convex/_generated/dataModel';
 import { api } from '../../../../convex/_generated/api.js';
-import { toastStore } from '$lib/stores/toast.svelte';
-import { uploadQuestionImage } from '$lib/utils/uploadQuestionImage';
-import { MAX_QUESTION_IMAGES, validateQuestionImage } from '$lib/utils/questionMediaUpload';
+import { toastStore } from '#lib/stores/toast.svelte.js';
+import { uploadQuestionImage } from '#lib/utils/uploadQuestionImage.js';
+import { MAX_QUESTION_IMAGES, validateQuestionImage } from '#lib/utils/questionMediaUpload.js';
 
 export type QueuedMedia = {
 	uploadId: Id<'questionMediaUploads'>;

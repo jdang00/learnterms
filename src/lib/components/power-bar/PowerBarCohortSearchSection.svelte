@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import Layers from '@lucide/svelte/icons/layers';
 	import { Command } from 'bits-ui';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { POWER_HEADING_CLASS, POWER_ITEM_CLASS, POWER_NOTE_CLASS } from './styles';
 	import type { CohortClassSearchItem, CohortModuleSearchItem } from './types';
 

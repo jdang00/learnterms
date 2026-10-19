@@ -1,10 +1,10 @@
 <script lang="ts">
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Layers from '@lucide/svelte/icons/layers';
-	import SemesterSelect from '$lib/components/SemesterSelect.svelte';
-	import SearchablePicker from '$lib/components/SearchablePicker.svelte';
+	import SemesterSelect from '#lib/components/SemesterSelect.svelte';
+	import SearchablePicker from '#lib/components/SearchablePicker.svelte';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
-	import type { ClassWithSemester } from '$lib/types';
+	import type { ClassWithSemester } from '#lib/types.js';
 	interface Props {
 		currentSemester: string;
 		semesters?: Doc<'semester'>[];

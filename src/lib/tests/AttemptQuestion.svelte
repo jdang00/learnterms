@@ -1,12 +1,12 @@
 <script lang="ts">
-	import Matching from '$lib/components/Matching.svelte';
-	import AnswerOptions from '$lib/components/AnswerOptions.svelte';
-	import FillInTheBlank from '$lib/components/FillInTheBlank.svelte';
-	import QuestionMediaStrip from '$lib/components/QuestionMediaStrip.svelte';
-	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import * as Alert from '$lib/components/ui/alert';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import Matching from '#lib/components/Matching.svelte';
+	import AnswerOptions from '#lib/components/AnswerOptions.svelte';
+	import FillInTheBlank from '#lib/components/FillInTheBlank.svelte';
+	import QuestionMediaStrip from '#lib/components/QuestionMediaStrip.svelte';
+	import ExamFindings from '#lib/components/exam-findings/ExamFindings.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Flag from '@lucide/svelte/icons/flag';
 	import { isFitb, isMatching, type AttemptRunnerState } from './attempt.svelte';

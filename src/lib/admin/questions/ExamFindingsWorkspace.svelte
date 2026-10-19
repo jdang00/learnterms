@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SegmentedControl } from '$lib/components/ui/segmented-control';
+	import { SegmentedControl } from '#lib/components/ui/segmented-control/index.js';
 	import { tick } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import { fade, scale } from 'svelte/transition';
@@ -13,7 +13,7 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import Rows3 from '@lucide/svelte/icons/rows-3';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
-	import { getExamTest, type ExamTest } from '$lib/examFindings/catalog';
+	import { getExamTest, type ExamTest } from '#lib/examFindings/catalog.js';
 	import {
 		applyNormalValues,
 		countExamValues,
@@ -21,15 +21,15 @@
 		examFindingTitle,
 		MAX_EXAM_FINDINGS,
 		type ExamFinding
-	} from '$lib/examFindings/findings';
-	import { WIDE_GRID_COLUMNS } from '$lib/examFindings/view';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
-	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
-	import { EXAM_GROUP_STYLE } from '$lib/components/exam-findings/groups';
+	} from '#lib/examFindings/findings.js';
+	import { WIDE_GRID_COLUMNS } from '#lib/examFindings/view.js';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
+	import ExamFindings from '#lib/components/exam-findings/ExamFindings.svelte';
+	import { EXAM_GROUP_STYLE } from '#lib/components/exam-findings/groups.js';
 	import ExamFindingEditorCard from './ExamFindingEditorCard.svelte';
 	import ExamFindingsPicker from './ExamFindingsPicker.svelte';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	let {
 		findings = $bindable([]),

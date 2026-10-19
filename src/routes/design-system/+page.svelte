@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SelectField } from '$lib/components/ui/select';
+	import { SelectField } from '#lib/components/ui/select/index.js';
 	import { toast } from 'svelte-sonner';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -13,46 +13,46 @@
 	import Settings from '@lucide/svelte/icons/settings';
 	import Sun from '@lucide/svelte/icons/sun';
 	import Moon from '@lucide/svelte/icons/moon';
-	import { theme } from '$lib/theme.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Tip } from '$lib/components/ui/tooltip';
-	import { Kbd } from '$lib/components/ui/kbd';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Popover from '$lib/components/ui/popover';
-	import * as Select from '$lib/components/ui/select';
-	import * as Tabs from '$lib/components/ui/tabs';
-	import * as ToggleGroup from '$lib/components/ui/toggle-group';
-	import * as RadioGroup from '$lib/components/ui/radio-group';
-	import * as Card from '$lib/components/ui/card';
-	import * as Alert from '$lib/components/ui/alert';
-	import * as Table from '$lib/components/ui/table';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import * as Field from '$lib/components/ui/field';
-	import { Input } from '$lib/components/ui/input';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { Switch } from '$lib/components/ui/switch';
-	import { Slider } from '$lib/components/ui/slider';
-	import { Label } from '$lib/components/ui/label';
-	import { Progress } from '$lib/components/ui/progress';
-	import { RadialProgress } from '$lib/components/ui/radial-progress';
-	import { SegmentedControl } from '$lib/components/ui/segmented-control';
-	import { LoadingState } from '$lib/components/ui/spinner';
-	import * as Empty from '$lib/components/ui/empty';
+	import { theme } from '#lib/theme.svelte.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Tip } from '#lib/components/ui/tooltip/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import * as Popover from '#lib/components/ui/popover/index.js';
+	import * as Select from '#lib/components/ui/select/index.js';
+	import * as Tabs from '#lib/components/ui/tabs/index.js';
+	import * as ToggleGroup from '#lib/components/ui/toggle-group/index.js';
+	import * as RadioGroup from '#lib/components/ui/radio-group/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import * as Table from '#lib/components/ui/table/index.js';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
+	import * as Field from '#lib/components/ui/field/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
+	import { Slider } from '#lib/components/ui/slider/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Progress } from '#lib/components/ui/progress/index.js';
+	import { RadialProgress } from '#lib/components/ui/radial-progress/index.js';
+	import { SegmentedControl } from '#lib/components/ui/segmented-control/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
+	import * as Empty from '#lib/components/ui/empty/index.js';
 	import CheckCircle from '@lucide/svelte/icons/check-circle';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Archive from '@lucide/svelte/icons/archive';
 	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 	import List from '@lucide/svelte/icons/list';
 	import Library from '@lucide/svelte/icons/library';
-	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { Spinner } from '$lib/components/ui/spinner';
-	import { Separator } from '$lib/components/ui/separator';
-	import { TONES } from '$lib/components/ui/tone';
-	import Sheet from '$lib/components/Sheet.svelte';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import { TONES } from '#lib/components/ui/tone.js';
+	import Sheet from '#lib/components/Sheet.svelte';
 	import Explorations from './Explorations.svelte';
 
 	const variants = ['solid', 'soft', 'outline', 'dash', 'ghost', 'link'] as const;
@@ -107,7 +107,7 @@
 			<h1 class="title-hero">LearnTerms design system</h1>
 			<p class="mt-2 max-w-2xl text-muted-foreground">
 				shadcn-svelte primitives tuned to the brand sheet. Components live in
-				<code class="font-mono text-sm">$lib/components/ui</code>.
+				<code class="font-mono text-sm">#lib/components/ui</code>.
 			</p>
 		</div>
 		<Button variant="outline" tone="neutral" onclick={() => theme.toggle()}>

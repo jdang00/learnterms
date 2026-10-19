@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SelectField } from '$lib/components/ui/select';
+	import { SelectField } from '#lib/components/ui/select/index.js';
 	import { resolve } from '$app/paths';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
@@ -11,10 +11,10 @@
 	import Minus from '@lucide/svelte/icons/minus';
 	import Timer from '@lucide/svelte/icons/timer';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import PublicPage from '$lib/components/landing/PublicPage.svelte';
-	import PublicCta from '$lib/components/landing/PublicCta.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Tip } from '$lib/components/ui/tooltip';
+	import PublicPage from '#lib/components/landing/PublicPage.svelte';
+	import PublicCta from '#lib/components/landing/PublicCta.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Tip } from '#lib/components/ui/tooltip/index.js';
 	import {
 		featureGroups,
 		featureAvailability,
@@ -22,7 +22,7 @@
 		sources,
 		type Competitor,
 		type Availability
-	} from '$lib/content/features';
+	} from '#lib/content/features.js';
 
 	let category = $state('All features');
 	let competitor = $state<Competitor>('anki');

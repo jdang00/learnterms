@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { useClerkContext } from 'svelte-clerk/client';
-	import { userDisplayName } from '$lib/userDisplayName';
+	import { userDisplayName } from '#lib/userDisplayName.js';
 	import { browser } from '$app/environment';
-	import { getPostHog } from '$lib/analytics/posthogClient';
+	import { getPostHog } from '#lib/analytics/posthogClient.js';
 
 	const ctx = useClerkContext();
 	const user = $derived(ctx.user);

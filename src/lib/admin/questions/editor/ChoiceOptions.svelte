@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import X from '@lucide/svelte/icons/x';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Shuffle from '@lucide/svelte/icons/shuffle';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import { QUESTION_TYPES } from '$lib/types';
+	import { QUESTION_TYPES } from '#lib/types.js';
 	import type { QuestionEditorState } from './questionEditor.svelte';
 
 	let { form, onGenerate }: { form: QuestionEditorState; onGenerate: () => void } = $props();

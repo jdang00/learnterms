@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { SegmentedControl } from '$lib/components/ui/segmented-control';
-	import { SelectField } from '$lib/components/ui/select';
+	import { SegmentedControl } from '#lib/components/ui/segmented-control/index.js';
+	import { SelectField } from '#lib/components/ui/select/index.js';
 	import type { PageData } from './$types';
 	import type { Id } from '../../../convex/_generated/dataModel';
 	import { useQuery, useConvexClient } from 'convex-svelte';
@@ -26,21 +26,21 @@
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import TrendingUp from '@lucide/svelte/icons/trending-up';
 	import Users from '@lucide/svelte/icons/users';
-	import StudentDetailModal from '$lib/admin/progress/StudentDetailModal.svelte';
-	import CuratorGenerationRuns from '$lib/admin/progress/CuratorGenerationRuns.svelte';
-	import StudentAvatar from '$lib/admin/progress/StudentAvatar.svelte';
-	import Explorer from '$lib/admin/progress/Explorer.svelte';
-	import ActivityBars from '$lib/admin/progress/ActivityBars.svelte';
-	import StudyHeatmap from '$lib/admin/progress/StudyHeatmap.svelte';
-	import LiveFeed from '$lib/admin/progress/LiveFeed.svelte';
-	import * as Alert from '$lib/components/ui/alert';
-	import * as Card from '$lib/components/ui/card';
-	import * as InputGroup from '$lib/components/ui/input-group';
-	import * as Table from '$lib/components/ui/table';
-	import * as Tabs from '$lib/components/ui/tabs';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import StudentDetailModal from '#lib/admin/progress/StudentDetailModal.svelte';
+	import CuratorGenerationRuns from '#lib/admin/progress/CuratorGenerationRuns.svelte';
+	import StudentAvatar from '#lib/admin/progress/StudentAvatar.svelte';
+	import Explorer from '#lib/admin/progress/Explorer.svelte';
+	import ActivityBars from '#lib/admin/progress/ActivityBars.svelte';
+	import StudyHeatmap from '#lib/admin/progress/StudyHeatmap.svelte';
+	import LiveFeed from '#lib/admin/progress/LiveFeed.svelte';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import * as Table from '#lib/components/ui/table/index.js';
+	import * as Tabs from '#lib/components/ui/tabs/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import {
 		DAY_MS,
 		HOUR_MS,
@@ -54,7 +54,7 @@
 		relativeTime,
 		startOfLocalDay,
 		type Engagement
-	} from '$lib/admin/progress/utils';
+	} from '#lib/admin/progress/utils.js';
 
 	let { data }: { data: PageData } = $props();
 	const user = $derived(data.userData.data);

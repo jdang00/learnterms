@@ -1,27 +1,27 @@
 <script lang="ts">
 	import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Button } from '$lib/components/ui/button';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { fade } from 'svelte/transition';
-	import QuestionStudioCandidateModal from '$lib/admin/question-studio/QuestionStudioCandidateModal.svelte';
-	import QuestionStudioHeader from '$lib/admin/question-studio/QuestionStudioHeader.svelte';
-	import QuestionStudioRunBar from '$lib/admin/question-studio/QuestionStudioRunBar.svelte';
-	import QuestionStudioRunStage from '$lib/admin/question-studio/QuestionStudioRunStage.svelte';
-	import QuestionStudioSetupCard from '$lib/admin/question-studio/QuestionStudioSetupCard.svelte';
-	import QuestionStudioTopicDetailModal from '$lib/admin/question-studio/QuestionStudioTopicDetailModal.svelte';
-	import { buildRunRows, runTelemetry } from '$lib/admin/question-studio/questionStudioRun';
-	import type { CandidateReview } from '$lib/admin/question-studio/questionStudioRun';
+	import QuestionStudioCandidateModal from '#lib/admin/question-studio/QuestionStudioCandidateModal.svelte';
+	import QuestionStudioHeader from '#lib/admin/question-studio/QuestionStudioHeader.svelte';
+	import QuestionStudioRunBar from '#lib/admin/question-studio/QuestionStudioRunBar.svelte';
+	import QuestionStudioRunStage from '#lib/admin/question-studio/QuestionStudioRunStage.svelte';
+	import QuestionStudioSetupCard from '#lib/admin/question-studio/QuestionStudioSetupCard.svelte';
+	import QuestionStudioTopicDetailModal from '#lib/admin/question-studio/QuestionStudioTopicDetailModal.svelte';
+	import { buildRunRows, runTelemetry } from '#lib/admin/question-studio/questionStudioRun.js';
+	import type { CandidateReview } from '#lib/admin/question-studio/questionStudioRun.js';
 	import type {
 		CandidateQuestion,
 		QuestionType,
 		TopicMapItem
-	} from '$lib/admin/question-studio/questionStudioTypes';
-	import { questionTypes } from '$lib/admin/question-studio/questionStudioTypes';
+	} from '#lib/admin/question-studio/questionStudioTypes.js';
+	import { questionTypes } from '#lib/admin/question-studio/questionStudioTypes.js';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api';
 	import { useQuery, useConvexClient } from 'convex-svelte';
-	import type { ClassWithSemester } from '$lib/types';
-	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
+	import type { ClassWithSemester } from '#lib/types.js';
+	import { pickDefaultSemesterName, setLastSemesterName } from '#lib/utils/semester.js';
 	import { useClerkContext } from 'svelte-clerk';
 	import { onMount } from 'svelte';
 

@@ -2,7 +2,7 @@
 	import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 	import { restorePdfCanvas, rememberPdfCanvas } from './pdfCanvasCache';
 	import { withPdfRenderSlot } from './pdfRenderQueue';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	let {
 		document,
 		pageNumber,

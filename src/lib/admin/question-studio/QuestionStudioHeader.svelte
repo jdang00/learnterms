@@ -2,7 +2,7 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { resolve } from '$app/paths';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 </script>
 
 <header class="mb-4 flex items-center gap-4">

@@ -23,7 +23,7 @@
 		type ExamField,
 		type ExamRow,
 		type ExamTest
-	} from '$lib/examFindings/catalog';
+	} from '#lib/examFindings/catalog.js';
 	import {
 		applyNormalValues,
 		countExamValues,
@@ -34,7 +34,7 @@
 		normalExamValues,
 		type ExamFinding,
 		type ExamFindingSize
-	} from '$lib/examFindings/findings';
+	} from '#lib/examFindings/findings.js';
 	import {
 		COVER_CORRECTION_CHOICES,
 		combinePrism,
@@ -52,20 +52,20 @@
 		phoriaParts,
 		prismParts,
 		toggleCoverCorrection
-	} from '$lib/examFindings/input';
-	import { EXAM_GROUP_STYLE } from '$lib/components/exam-findings/groups';
+	} from '#lib/examFindings/input.js';
+	import { EXAM_GROUP_STYLE } from '#lib/components/exam-findings/groups.js';
 	import Worth4DotEditor from './Worth4DotEditor.svelte';
 	import { DropdownMenu as DropdownMenuPrimitive, mergeProps } from 'bits-ui';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { Input } from '$lib/components/ui/input';
-	import * as InputGroup from '$lib/components/ui/input-group';
-	import { Kbd } from '$lib/components/ui/kbd';
-	import { SelectField } from '$lib/components/ui/select';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import { Tip } from '$lib/components/ui/tooltip';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
+	import { SelectField } from '#lib/components/ui/select/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
+	import { Tip } from '#lib/components/ui/tooltip/index.js';
 
 	let {
 		finding,

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { MediaQuery } from 'svelte/reactivity';
-	import Sheet from '$lib/components/Sheet.svelte';
-	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
+	import Sheet from '#lib/components/Sheet.svelte';
+	import { useQuestionMedia } from '#lib/utils/useQuestionMedia.svelte.js';
 	import type { PageData } from './$types';
 	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
 	import { useQuery, useConvexClient } from 'convex-svelte';
@@ -14,26 +14,26 @@
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ArrowRightLeft from '@lucide/svelte/icons/arrow-right-left';
-	import AddQuestionModal from '$lib/admin/questions/AddQuestionModal.svelte';
+	import AddQuestionModal from '#lib/admin/questions/AddQuestionModal.svelte';
 
-	import EditQuestionModal from '$lib/admin/questions/EditQuestionModal.svelte';
-	import DuplicateQuestionModal from '$lib/admin/questions/DuplicateQuestionModal.svelte';
-	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
-	import MoveQuestionsModal from '$lib/admin/questions/MoveQuestionsModal.svelte';
-	import QuestionEditorInline from '$lib/admin/questions/QuestionEditorInline.svelte';
-	import QuestionListControls from '$lib/admin/questions/QuestionListControls.svelte';
-	import QuestionListItem from '$lib/admin/questions/QuestionListItem.svelte';
-	import QuestionDetailView from '$lib/admin/questions/QuestionDetailView.svelte';
-	import AttachmentViewerModal from '$lib/admin/questions/AttachmentViewerModal.svelte';
-	import ModuleLimitModal from '$lib/admin/questions/ModuleLimitModal.svelte';
+	import EditQuestionModal from '#lib/admin/questions/EditQuestionModal.svelte';
+	import DuplicateQuestionModal from '#lib/admin/questions/DuplicateQuestionModal.svelte';
+	import DeleteConfirmationModal from '#lib/admin/DeleteConfirmationModal.svelte';
+	import MoveQuestionsModal from '#lib/admin/questions/MoveQuestionsModal.svelte';
+	import QuestionEditorInline from '#lib/admin/questions/QuestionEditorInline.svelte';
+	import QuestionListControls from '#lib/admin/questions/QuestionListControls.svelte';
+	import QuestionListItem from '#lib/admin/questions/QuestionListItem.svelte';
+	import QuestionDetailView from '#lib/admin/questions/QuestionDetailView.svelte';
+	import AttachmentViewerModal from '#lib/admin/questions/AttachmentViewerModal.svelte';
+	import ModuleLimitModal from '#lib/admin/questions/ModuleLimitModal.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	import { curationState, type QuestionItem } from './states.svelte.js';
-	import { Button } from '$lib/components/ui/button';
-	import { Skeleton } from '$lib/components/ui/skeleton';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 
 	let { data }: { data: PageData } = $props();
 	const isPhoneLayout = new MediaQuery('(max-width: 767.98px)');

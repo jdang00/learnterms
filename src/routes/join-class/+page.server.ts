@@ -1,9 +1,9 @@
 import { isRedirect, redirect } from '@sveltejs/kit';
-import { userDisplayName } from '$lib/userDisplayName';
+import { userDisplayName } from '#lib/userDisplayName.js';
 import type { PageServerLoad } from './$types';
 import { clerkClient } from 'svelte-clerk/server';
 import { convexLoad } from 'convex-svelte/sveltekit';
-import { authenticatedConvexClient } from '$lib/server/convex';
+import { authenticatedConvexClient } from '#lib/server/convex.js';
 import { api } from '../../convex/_generated/api';
 
 const seo = {

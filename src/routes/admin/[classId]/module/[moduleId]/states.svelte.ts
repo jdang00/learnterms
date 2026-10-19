@@ -2,8 +2,8 @@ import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
 import type { ConvexClient } from 'convex/browser';
 import { goto } from '$app/navigation';
-import { toastStore } from '$lib/stores/toast.svelte';
-import type { StatusFilter } from '$lib/types';
+import { toastStore } from '#lib/stores/toast.svelte.js';
+import type { StatusFilter } from '#lib/types.js';
 import { SvelteMap, SvelteSet, SvelteURL } from 'svelte/reactivity';
 
 export type QuestionItem = Doc<'question'>;

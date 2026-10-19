@@ -3,7 +3,7 @@
 	import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
 	import Timer from '@lucide/svelte/icons/timer';
 	import { fly } from 'svelte/transition';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import StudentAvatar from './StudentAvatar.svelte';
 	import { relativeTime } from './utils';
 

@@ -1,4 +1,4 @@
-import { blogPosts } from '$lib/content/blog';
+import { blogPosts } from '#lib/content/blog.js';
 
 export const SITE_ORIGIN = 'https://learnterms.com';
 

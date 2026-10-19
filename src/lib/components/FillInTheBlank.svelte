@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import HighlightedStem from './HighlightedStem.svelte';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	import Eye from '@lucide/svelte/icons/eye';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import * as Card from '$lib/components/ui/card';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
 	import { tick } from 'svelte';
 	import { getQuizCommands } from './quiz-dock/commands.svelte';
 	type Option = { id: string; text: string };

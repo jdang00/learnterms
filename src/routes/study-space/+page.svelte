@@ -1,6 +1,6 @@
 <script lang="ts">
-	import * as Tabs from '$lib/components/ui/tabs';
-	import { Progress } from '$lib/components/ui/progress';
+	import * as Tabs from '#lib/components/ui/tabs/index.js';
+	import { Progress } from '#lib/components/ui/progress/index.js';
 	import { resolve } from '$app/paths';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -27,9 +27,9 @@
 	import Shuffle from '@lucide/svelte/icons/shuffle';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import CircleDot from '@lucide/svelte/icons/circle-dot';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Textarea } from '$lib/components/ui/textarea';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
 
 	type ChatMessage = {
 		role: 'assistant' | 'user';
