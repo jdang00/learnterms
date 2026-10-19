@@ -1,4 +1,6 @@
 <script lang="ts">
+	import * as Tabs from '$lib/components/ui/tabs';
+	import { Progress } from '$lib/components/ui/progress';
 	import { resolve } from '$app/paths';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -449,28 +451,15 @@ TODO: Review pressure-volume loops before exam...`;
 					in:fly={{ x: -20, duration: 300, easing: cubicOut }}
 				>
 					<!-- Panel tabs -->
-					<div class="flex border-b border-border/50">
-						<button
-							class="flex-1 px-4 py-2.5 text-xs font-medium transition-colors duration-150 relative
-								{activeTab === 'sources' ? 'text-primary-ink' : 'text-foreground/50 hover:text-foreground/80'}"
-							onclick={() => (activeTab = 'sources')}
-						>
-							Sources
-							{#if activeTab === 'sources'}
-								<div class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"></div>
-							{/if}
-						</button>
-						<button
-							class="flex-1 px-4 py-2.5 text-xs font-medium transition-colors duration-150 relative
-								{activeTab === 'notes' ? 'text-primary-ink' : 'text-foreground/50 hover:text-foreground/80'}"
-							onclick={() => (activeTab = 'notes')}
-						>
-							My Notes
-							{#if activeTab === 'notes'}
-								<div class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"></div>
-							{/if}
-						</button>
-					</div>
+					<Tabs.Root
+						value={activeTab}
+						onValueChange={(value) => (activeTab = value as typeof activeTab)}
+					>
+						<Tabs.List variant="line" class="h-10 w-full border-b border-border/50 px-2">
+							<Tabs.Trigger value="sources" class="flex-1 text-xs">Sources</Tabs.Trigger>
+							<Tabs.Trigger value="notes" class="flex-1 text-xs">My Notes</Tabs.Trigger>
+						</Tabs.List>
+					</Tabs.Root>
 
 					{#if activeTab === 'sources'}
 						<!-- Add sources area -->
@@ -517,9 +506,7 @@ TODO: Review pressure-volume loops before exam...`;
 												{source.name}
 											</div>
 											<div class="flex items-center gap-1.5 mt-1">
-												<Badge size="xs" class="text-[10px] uppercase tracking-wider"
-													>{source.type}</Badge
-												>
+												<Badge size="xs" class="label-caps">{source.type}</Badge>
 												<span class="text-[10px] text-foreground/35">{source.pages} pages</span>
 											</div>
 										</div>
@@ -614,10 +601,7 @@ TODO: Review pressure-volume loops before exam...`;
 										{#if message.role === 'assistant' && message.sources}
 											<div class="mt-3 pt-2.5 border-t border-border/40">
 												<div class="flex items-center gap-1.5 flex-wrap">
-													<span
-														class="text-[10px] text-foreground/35 uppercase tracking-wider font-medium"
-														>Sources:</span
-													>
+													<span class="label-caps">Sources:</span>
 													{#each message.sources as src, i (`${src}-${i}`)}
 														<Badge size="xs" class="text-[10px]">{src}</Badge>
 													{/each}
@@ -637,9 +621,7 @@ TODO: Review pressure-volume loops before exam...`;
 							class="flex flex-col gap-2 mt-4"
 							style="animation: chatReveal 0.4s cubic-bezier(.16,1,.3,1) 600ms both;"
 						>
-							<span class="text-[10px] text-foreground/35 uppercase tracking-wider font-medium px-1"
-								>Suggested</span
-							>
+							<span class="label-caps px-1">Suggested</span>
 							<div class="flex flex-wrap gap-2">
 								{#each ['Explain pressure-volume loops', 'Quiz me on cardiac drugs', 'Compare systolic vs diastolic failure', 'Summarize Ch. 12 key points'] as suggestion (suggestion)}
 									<button
@@ -728,7 +710,7 @@ TODO: Review pressure-volume loops before exam...`;
 								size="xs"
 								shape="circle"
 								class="text-foreground/40"
-								title="Shuffle"
+								tooltip="Shuffle"
 								aria-label="Shuffle questions"><Shuffle size={12} /></Button
 							>
 							<Button
@@ -737,7 +719,7 @@ TODO: Review pressure-volume loops before exam...`;
 								size="xs"
 								shape="circle"
 								class="text-foreground/40"
-								title="Reset"
+								tooltip="Reset"
 								aria-label="Reset progress"><RotateCcw size={12} /></Button
 							>
 						</div>
@@ -771,12 +753,7 @@ TODO: Review pressure-volume loops before exam...`;
 								>{interactedCount}/{questions.length} touched</span
 							>
 							<div class="flex items-center gap-1.5">
-								<div class="h-1 w-12 rounded-full bg-muted-strong/60 overflow-hidden">
-									<div
-										class="h-full rounded-full bg-success transition-all duration-500"
-										style="width: {progressPercent}%;"
-									></div>
-								</div>
+								<Progress value={progressPercent} tone="success" class="h-1 w-12" />
 								<span class="text-[10px] font-medium text-success-ink">{progressPercent}%</span>
 							</div>
 						</div>
@@ -788,9 +765,7 @@ TODO: Review pressure-volume loops before exam...`;
 							<div style="animation: questionSlideIn 0.3s cubic-bezier(.16,1,.3,1) both;">
 								<!-- Context pill -->
 								<div class="flex items-center gap-1.5 mb-3">
-									<Badge size="xs" class="text-[9px] uppercase tracking-widest"
-										>From: {currentQuestion.source}</Badge
-									>
+									<Badge size="xs" class="label-caps">From: {currentQuestion.source}</Badge>
 								</div>
 
 								<!-- Stem -->
@@ -895,10 +870,7 @@ TODO: Review pressure-volume loops before exam...`;
 									>
 										<div class="flex items-center gap-1.5 mb-1.5">
 											<Eye size={11} class="text-foreground/40" />
-											<span
-												class="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider"
-												>Rationale</span
-											>
+											<span class="label-caps">Rationale</span>
 										</div>
 										<p class="text-[11px] text-foreground/65 leading-relaxed">
 											{currentQuestion.rationale}
@@ -921,7 +893,7 @@ TODO: Review pressure-volume loops before exam...`;
 									? 'text-warning-ink bg-warning/10'
 									: ''}"
 								onclick={toggleFlagged}
-								title="Flag question"
+								tooltip="Flag question"
 								aria-label="Toggle flag"
 							>
 								<Flag size={12} class={isFlagged ? 'fill-warning' : ''} />

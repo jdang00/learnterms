@@ -15,7 +15,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { LoadingState } from '$lib/components/ui/spinner';
 	import { Tip } from '$lib/components/ui/tooltip';
 
 	let {
@@ -216,9 +216,7 @@
 		{#if student}
 			<StudentStatsContent userId={student._id} {cohortId} />
 		{:else}
-			<div class="flex items-center justify-center py-8">
-				<Spinner class="size-6" />
-			</div>
+			<LoadingState />
 		{/if}
 
 		<!-- Footer -->

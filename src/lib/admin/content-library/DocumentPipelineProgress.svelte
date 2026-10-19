@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { Spinner } from '$lib/components/ui/spinner';
 	import Clock3 from '@lucide/svelte/icons/clock-3';
-	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import type { Doc } from '../../../convex/_generated/dataModel';
 	import { documentPipeline } from './documentPipeline';
@@ -22,11 +22,7 @@
 			{#if progress.failed}
 				<TriangleAlert size={12} class="mt-px shrink-0" aria-hidden="true" />
 			{:else if progress.active}
-				<LoaderCircle
-					size={12}
-					class="mt-px shrink-0 motion-safe:animate-spin"
-					aria-hidden="true"
-				/>
+				<Spinner class="mt-px size-3 shrink-0 motion-reduce:animate-none" aria-hidden="true" />
 			{:else}
 				<Clock3 size={12} class="mt-px shrink-0" aria-hidden="true" />
 			{/if}

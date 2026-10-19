@@ -59,7 +59,7 @@
 <!-- Master: list rail -->
 <div class="flex min-h-0 flex-col border-b border-border md:border-b-0 md:border-r">
 	<div class="px-4 pt-4 pb-2">
-		<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/45">
+		<span class="label-caps">
 			{draftLinks.length} of 12
 		</span>
 	</div>
@@ -83,9 +83,7 @@
 			}}
 		>
 			<div class="mb-1 flex items-center justify-between px-2">
-				<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/45">
-					Shown
-				</span>
+				<span class="label-caps"> Shown </span>
 				<span class="text-[10px] text-foreground/35">{visibleLinks.length}</span>
 			</div>
 			<div class="space-y-1">
@@ -186,9 +184,7 @@
 			}}
 		>
 			<div class="mb-1 flex items-center justify-between px-2">
-				<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/45">
-					Hidden
-				</span>
+				<span class="label-caps"> Hidden </span>
 				<span class="text-[10px] text-foreground/35">{hiddenLinks.length}</span>
 			</div>
 			{#if hiddenLinks.length === 0}

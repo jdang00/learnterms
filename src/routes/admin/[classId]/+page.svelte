@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { LoadingState } from '$lib/components/ui/spinner';
 	import type { PageData } from './$types';
 	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
 	import { useQuery, useConvexClient } from 'convex-svelte';
@@ -22,6 +23,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as HoverCard from '$lib/components/ui/hover-card';
 
 	let { data }: { data: PageData } = $props();
 	const classId: Id<'class'> = $derived(data.classId as Id<'class'>);
@@ -271,9 +273,7 @@
 	<div class="mb-8 flex flex-col gap-2">
 		<div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
 			{#if classInfo.isLoading}
-				<div class="flex items-center justify-center p-8">
-					<div class="text-foreground/70">Loading class...</div>
-				</div>
+				<LoadingState label="Loading class…" />
 			{:else if classInfo.error != null}
 				<div class="flex items-center justify-center p-8">
 					<div class="text-error-ink">Failed to load: {classInfo.error.toString()}</div>
@@ -325,9 +325,7 @@
 	{/if}
 
 	{#if modules.isLoading}
-		<div class="flex items-center justify-center p-8">
-			<div class="text-foreground/70">Loading modules...</div>
-		</div>
+		<LoadingState label="Loading modules…" />
 	{:else if modules.error != null}
 		<div class="flex items-center justify-center p-8">
 			<div class="text-error-ink">Failed to load: {modules.error.toString()}</div>
@@ -417,23 +415,23 @@
 												</span>
 											{/each}
 											{#if moduleItem.tags.length > 3}
-												<div class="group relative z-50 inline-block">
-													<Button
-														tabindex={0}
-														role="button"
-														variant="ghost"
-														tone="neutral"
-														size="xs"
-														class="border border-border px-2">+{moduleItem.tags.length - 3}</Button
-													>
-													<div
-														class="absolute z-50 mt-2 left-0 hidden w-44 rounded-2xl border border-border bg-background p-2 shadow-lg group-hover:block group-focus-within:block"
-													>
+												<HoverCard.Root openDelay={80} closeDelay={80}>
+													<HoverCard.Trigger>
+														{#snippet child({ props })}
+															<Button
+																{...props}
+																variant="ghost"
+																tone="neutral"
+																size="xs"
+																class="border border-border px-2"
+																>+{(moduleItem.tags?.length ?? 0) - 3}</Button
+															>
+														{/snippet}
+													</HoverCard.Trigger>
+													<HoverCard.Content align="start" class="w-44 p-2">
 														<div class="flex flex-col gap-1">
-															{#each moduleItem.tags.slice(3) as tag (tag._id)}
-																<div
-																	class="flex items-center gap-2 rounded-md px-2 py-1 text-xs hover:bg-muted/70"
-																>
+															{#each moduleItem.tags?.slice(3) ?? [] as tag (tag._id)}
+																<div class="flex items-center gap-2 rounded-md px-2 py-1 text-xs">
 																	<span
 																		class="h-2 w-2 rounded-full"
 																		style={`background-color: ${tag.color || '#94a3b8'}`}
@@ -442,8 +440,8 @@
 																</div>
 															{/each}
 														</div>
-													</div>
-												</div>
+													</HoverCard.Content>
+												</HoverCard.Root>
 											{/if}
 										</div>
 									{/if}

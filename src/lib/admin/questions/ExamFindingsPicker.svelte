@@ -166,9 +166,7 @@
 					class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-3 pt-2"
 				>
 					{#each groups as group (group.group)}
-						<p
-							class="px-2.5 pb-1 pt-3 text-[0.65rem] font-semibold uppercase tracking-wider text-foreground/40 first:pt-1"
-						>
+						<p class="px-2.5 pb-1 pt-3 label-caps first:pt-1">
 							{group.label}
 						</p>
 						{#each group.tests as entry (entry.id)}
@@ -212,11 +210,7 @@
 				{#if active && preview}
 					{#key active.id}
 						<div class="min-h-0 flex-1 overflow-y-auto p-5" in:fade={{ duration: 140 }}>
-							<p
-								class="mb-2 text-[0.65rem] font-semibold uppercase tracking-wider text-foreground/40"
-							>
-								Preview · sample values
-							</p>
+							<p class="mb-2 label-caps">Preview · sample values</p>
 							<div class="mx-auto max-w-md">
 								<ExamFindingCard view={preview} class="shadow-md" />
 							</div>

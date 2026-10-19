@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SegmentedControl } from '$lib/components/ui/segmented-control';
 	import { tick } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import { fade, scale } from 'svelte/transition';
@@ -51,7 +52,7 @@
 			? 0
 			: 1;
 	const BONE = 'rounded-full bg-foreground/[0.06]';
-	const CAPTION = 'text-[0.65rem] font-semibold uppercase tracking-wider text-foreground/40';
+	const CAPTION = 'label-caps';
 
 	let mode = $state<'edit' | 'preview'>('edit');
 	let device = $state<'desktop' | 'phone'>('desktop');
@@ -246,31 +247,6 @@
 	}}
 />
 
-{#snippet segmented(
-	label: string,
-	options: Array<{ active: boolean; label: string; icon: typeof Eye; onclick: () => void }>
-)}
-	<div
-		role="radiogroup"
-		aria-label={label}
-		class="flex shrink-0 items-center gap-0.5 rounded-full bg-muted p-1"
-	>
-		{#each options as option (option.label)}
-			<Button
-				role="radio"
-				size="xs"
-				variant={option.active ? 'soft' : 'ghost'}
-				tone={option.active ? 'primary' : 'neutral'}
-				class="gap-1.5 px-3"
-				aria-checked={option.active}
-				onclick={option.onclick}
-			>
-				<option.icon size={13} /> <span class="hidden @2xl:inline">{option.label}</span>
-			</Button>
-		{/each}
-	</div>
-{/snippet}
-
 <div
 	class="@container flex h-full min-h-0 flex-col bg-background"
 	in:fade={{ duration: 160 * motion }}
@@ -296,10 +272,21 @@
 			</p>
 		</div>
 
-		{@render segmented('Workspace view', [
-			{ active: mode === 'edit', label: 'Edit', icon: PencilLine, onclick: () => (mode = 'edit') },
-			{ active: mode === 'preview', label: 'Preview', icon: Eye, onclick: () => (mode = 'preview') }
-		])}
+		<SegmentedControl
+			aria-label="Workspace view"
+			value={mode}
+			onValueChange={(value) => (mode = value as typeof mode)}
+			options={[
+				{ value: 'edit', label: 'Edit', icon: PencilLine },
+				{ value: 'preview', label: 'Preview', icon: Eye }
+			]}
+			size="xs"
+			activeVariant="soft"
+			track="muted"
+			class="shrink-0"
+			itemClass="gap-1.5 px-3"
+			labelClass="hidden @2xl:inline"
+		/>
 
 		{#if mode === 'edit'}
 			{#if findings.length}
@@ -308,7 +295,7 @@
 					tone="success"
 					size="sm"
 					class="shrink-0 gap-1.5"
-					title="Fill every empty field that has a normal finding"
+					tooltip="Fill every empty field that has a normal finding"
 					onclick={fillAllNormal}
 					{disabled}
 				>
@@ -317,40 +304,39 @@
 				</Button>
 			{/if}
 		{:else}
-			{@render segmented('Box style', [
-				{
-					active: !compact,
-					label: 'Cards',
-					icon: LayoutGrid,
-					onclick: () => {
-						compact = false;
-						commit();
-					}
-				},
-				{
-					active: compact,
-					label: 'Compact',
-					icon: Rows3,
-					onclick: () => {
-						compact = true;
-						commit();
-					}
-				}
-			])}
-			{@render segmented('Preview on', [
-				{
-					active: device === 'desktop',
-					label: 'Desktop',
-					icon: Monitor,
-					onclick: () => (device = 'desktop')
-				},
-				{
-					active: device === 'phone',
-					label: 'Phone',
-					icon: Smartphone,
-					onclick: () => (device = 'phone')
-				}
-			])}
+			<SegmentedControl
+				aria-label="Box style"
+				value={compact ? 'compact' : 'cards'}
+				onValueChange={(value) => {
+					compact = value === 'compact';
+					commit();
+				}}
+				options={[
+					{ value: 'cards', label: 'Cards', icon: LayoutGrid },
+					{ value: 'compact', label: 'Compact', icon: Rows3 }
+				]}
+				size="xs"
+				activeVariant="soft"
+				track="muted"
+				class="shrink-0"
+				itemClass="gap-1.5 px-3"
+				labelClass="hidden @2xl:inline"
+			/>
+			<SegmentedControl
+				aria-label="Preview on"
+				value={device}
+				onValueChange={(value) => (device = value as typeof device)}
+				options={[
+					{ value: 'desktop', label: 'Desktop', icon: Monitor },
+					{ value: 'phone', label: 'Phone', icon: Smartphone }
+				]}
+				size="xs"
+				activeVariant="soft"
+				track="muted"
+				class="shrink-0"
+				itemClass="gap-1.5 px-3"
+				labelClass="hidden @2xl:inline"
+			/>
 		{/if}
 
 		<Button

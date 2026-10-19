@@ -284,13 +284,7 @@
 
 		{#if isFreeResponse}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
-				<div
-					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
-						? 'mb-2'
-						: 'mb-3'}"
-				>
-					Acceptance
-				</div>
+				<div class="label-caps {isMobile ? 'mb-2' : 'mb-3'}">Acceptance</div>
 				<div
 					class="flex items-center rounded-3xl border-2 border-border bg-muted {isMobile
 						? 'gap-3 px-4 py-2'
@@ -307,11 +301,7 @@
 			</div>
 
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
-				<div
-					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 flex items-center gap-2 {isMobile
-						? 'mb-2'
-						: 'mb-3'}"
-				>
+				<div class="label-caps flex items-center gap-2 {isMobile ? 'mb-2' : 'mb-3'}">
 					<Target size={14} /> Ground Truth
 				</div>
 				<div
@@ -332,13 +322,7 @@
 			<!-- Fill in the Blank -->
 		{:else if isFillInTheBlank}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
-				<div
-					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
-						? 'mb-2'
-						: 'mb-3'}"
-				>
-					Accepted Answers
-				</div>
+				<div class="label-caps {isMobile ? 'mb-2' : 'mb-3'}">Accepted Answers</div>
 				<Card.Root class="py-0 shadow-xs">
 					<Card.Content class={isMobile ? 'p-3' : 'p-4'}>
 						{#if fitbAnswers.length > 0}
@@ -374,13 +358,7 @@
 			<!-- Matching -->
 		{:else if isMatching}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
-				<div
-					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
-						? 'mb-2'
-						: 'mb-3'}"
-				>
-					Matching Pairs
-				</div>
+				<div class="label-caps {isMobile ? 'mb-2' : 'mb-3'}">Matching Pairs</div>
 				<div class={isMobile ? 'space-y-2' : 'space-y-3'}>
 					{#each matchingPrompts as prompt (prompt.id)}
 						{@const correctAnswer = getCorrectAnswerForPrompt(prompt.id)}
@@ -459,13 +437,7 @@
 			<!-- Multiple Choice / Multiple Select -->
 		{:else if isMultipleChoice && question.options?.length}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
-				<div
-					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
-						? 'mb-2'
-						: 'mb-3'}"
-				>
-					Options
-				</div>
+				<div class="label-caps {isMobile ? 'mb-2' : 'mb-3'}">Options</div>
 				<div class={isMobile ? 'space-y-2' : 'space-y-3'}>
 					{#each question.options as option, optIndex (option.id)}
 						<label
@@ -506,13 +478,7 @@
 		<!-- Rationale -->
 		{#if hasRationale(question) && !isFreeResponse}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
-				<div
-					class="text-xs font-semibold uppercase tracking-wide text-foreground/60"
-					class:mb-2={isMobile}
-					class:mb-3={!isMobile}
-				>
-					Rationale
-				</div>
+				<div class="label-caps" class:mb-2={isMobile} class:mb-3={!isMobile}>Rationale</div>
 				<div class="surface-muted" class:p-3={isMobile} class:p-4={!isMobile}>
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					<div class="text-sm text-foreground/80 tiptap-content">{@html questionRationale}</div>
@@ -524,9 +490,7 @@
 		<!-- Attachments (desktop only) -->
 		{#if !isMobile && media && media.length > 0}
 			<div class="mb-6">
-				<div
-					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-3 flex items-center gap-2"
-				>
+				<div class="label-caps mb-3 flex items-center gap-2">
 					<Paperclip size={14} />
 					Attachments ({media.length})
 				</div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Empty from '$lib/components/ui/empty';
 	import QuickLinksList from './QuickLinksList.svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';
@@ -20,7 +21,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { LoadingState } from '$lib/components/ui/spinner';
 
 	interface Props {
 		isOpen?: boolean;
@@ -213,10 +214,7 @@
 		</div>
 
 		{#if quickLinksQuery.isLoading}
-			<div class="flex items-center gap-3 px-6 py-16 text-foreground/70">
-				<Spinner class="size-5" />
-				<span>Loading quick links…</span>
-			</div>
+			<LoadingState label="Loading quick links…" class="py-16" />
 		{:else if quickLinksQuery.error}
 			<div class="p-6">
 				<Alert.Root tone="error">
@@ -228,21 +226,19 @@
 				<QuickLinksList bind:draftLinks bind:selectedIndex {linkError} {setLinkHidden} {addLink} />
 				<div class="min-h-0 overflow-y-auto">
 					{#if !selectedLink}
-						<div
-							class="flex h-full min-h-[18rem] flex-col items-center justify-center gap-4 p-8 text-center"
-						>
-							<div class="rounded-2xl bg-muted p-4 text-foreground/40">
-								<Link2 size={28} />
-							</div>
-							<div>
-								<p class="font-semibold">No quick links yet</p>
-								<p class="mt-1 text-sm text-foreground/55">Add your first link to get started.</p>
-							</div>
-							<Button size="sm" class="gap-2" onclick={addLink}>
-								<Plus size={16} />
-								<span>Add quick link</span>
-							</Button>
-						</div>
+						<Empty.Root class="h-full min-h-[18rem] p-8">
+							<Empty.Header>
+								<Empty.Media variant="icon" class="size-16 [&_svg]:size-7"><Link2 /></Empty.Media>
+								<Empty.Title>No quick links yet</Empty.Title>
+								<Empty.Description>Add your first link to get started.</Empty.Description>
+							</Empty.Header>
+							<Empty.Content>
+								<Button size="sm" class="gap-2" onclick={addLink}>
+									<Plus size={16} />
+									<span>Add quick link</span>
+								</Button>
+							</Empty.Content>
+						</Empty.Root>
 					{:else}
 						<div class="space-y-5 p-5">
 							<div class="surface-muted p-3">

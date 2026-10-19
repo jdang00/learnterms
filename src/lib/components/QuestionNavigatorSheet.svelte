@@ -30,7 +30,7 @@
 	let grid = $state<HTMLOListElement>();
 
 	const CELL: Record<NavigatorStatus, string> = {
-		mastered: 'bg-emerald-800 text-white',
+		mastered: 'bg-mastered text-mastered-foreground',
 		correct: 'bg-success/20 text-success-ink',
 		incorrect: 'bg-error/20 text-error-ink',
 		answered: 'bg-accent/20 text-foreground',

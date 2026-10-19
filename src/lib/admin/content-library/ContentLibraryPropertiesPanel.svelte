@@ -119,9 +119,7 @@
 	<div class="surface p-4">
 		<div class="mb-4 flex items-center gap-2">
 			<Sparkles size={13} class="text-foreground/40" />
-			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
-				Processing pipeline
-			</span>
+			<span class="label-caps"> Processing pipeline </span>
 		</div>
 		<div class="flex items-center">
 			{#each pipeline as step, index (step.label)}
@@ -192,9 +190,7 @@
 	<section class="overflow-hidden surface">
 		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
 			<FileText size={13} class="text-foreground/40" />
-			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
-				General
-			</span>
+			<span class="label-caps"> General </span>
 		</div>
 		<div class="divide-y divide-muted">
 			{@render kv('Title', document.title)}
@@ -211,9 +207,7 @@
 	<section class="overflow-hidden surface">
 		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
 			<Clock3 size={13} class="text-foreground/40" />
-			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
-				Activity
-			</span>
+			<span class="label-caps"> Activity </span>
 		</div>
 		<div class="divide-y divide-muted">
 			{@render kv('Uploaded', formatDate(document._creationTime))}
@@ -226,9 +220,7 @@
 	<section class="overflow-hidden surface">
 		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
 			<Database size={13} class="text-foreground/40" />
-			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
-				RAG index
-			</span>
+			<span class="label-caps"> RAG index </span>
 		</div>
 		<div class="divide-y divide-muted">
 			{@render kv('Provider', document.metadata?.extractionProvider ?? '-', true)}
@@ -247,9 +239,7 @@
 	<section class="overflow-hidden surface">
 		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
 			<HardDrive size={13} class="text-foreground/40" />
-			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
-				Storage
-			</span>
+			<span class="label-caps"> Storage </span>
 		</div>
 		<div class="divide-y divide-muted">
 			{@render kv('Provider', document.metadata?.storageProvider ?? '-', true)}
@@ -261,7 +251,7 @@
 
 	<details class="group overflow-hidden surface">
 		<summary
-			class="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-foreground/50 hover:bg-muted/50"
+			class="flex cursor-pointer items-center gap-2 px-4 py-2.5 label-caps hover:bg-muted/50"
 		>
 			<Hash size={13} class="text-foreground/40" />
 			Raw metadata

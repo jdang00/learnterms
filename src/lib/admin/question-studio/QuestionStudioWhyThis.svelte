@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { Spinner } from '$lib/components/ui/spinner';
 	import FileText from '@lucide/svelte/icons/file-text';
-	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import { getPostHog } from '$lib/analytics/posthogClient';
@@ -104,12 +104,12 @@
 						tone="neutral"
 						size="xs"
 						class="gap-1 font-normal"
-						title={citation.quote || `Open the document at page ${citation.pageNumber}`}
+						tooltip={citation.quote || `Open the document at page ${citation.pageNumber}`}
 						disabled={openingCitationId !== null}
 						onclick={() => openEvidence(citation.citationId, citation.pageNumber)}
 					>
 						{#if openingCitationId === citation.citationId}
-							<LoaderCircle size={11} class="animate-spin" />
+							<Spinner class="size-[11px]" />
 						{:else}
 							<FileText size={11} />
 						{/if}

@@ -6,7 +6,10 @@
 		variants: {
 			variant: {
 				default: 'bg-transparent',
-				icon: "bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg [&_svg:not([class*='size-'])]:size-6"
+				// LearnTerms: a soft tile; tint it with a tone class (bg-primary/10 text-primary-ink) when the
+				// empty state invites an action.
+				icon: "bg-muted text-foreground/45 flex size-14 shrink-0 items-center justify-center rounded-2xl [&_svg:not([class*='size-'])]:size-6",
+				emoji: 'text-5xl leading-none'
 			}
 		},
 		defaultVariants: {

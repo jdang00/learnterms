@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { MediaQuery } from 'svelte/reactivity';
+	import Sheet from '$lib/components/Sheet.svelte';
 	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
 	import type { PageData } from './$types';
 	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
@@ -12,7 +14,6 @@
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ArrowRightLeft from '@lucide/svelte/icons/arrow-right-left';
-	import X from '@lucide/svelte/icons/x';
 	import AddQuestionModal from '$lib/admin/questions/AddQuestionModal.svelte';
 
 	import EditQuestionModal from '$lib/admin/questions/EditQuestionModal.svelte';
@@ -36,6 +37,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 
 	let { data }: { data: PageData } = $props();
+	const isPhoneLayout = new MediaQuery('(max-width: 767.98px)');
 	const moduleId = $derived(data.moduleId);
 
 	// Initialize state with dependencies
@@ -696,62 +698,37 @@
 </div>
 
 {#if selectedQuestion}
-	<!-- Mobile Modal (below md) -->
-	<div
-		class="fixed inset-0 z-50 items-center justify-center p-4 md:hidden {curationState.selectedQuestionId !==
-		null
-			? 'flex'
-			: 'hidden'}"
+	{@const selectedIndex = curationState.questionList.findIndex(
+		(q) => q._id === curationState.selectedQuestionId
+	)}
+	<!-- Below md the detail panel is hidden, so the selected question opens in a sheet. -->
+	<Sheet
+		bind:open={
+			() => isPhoneLayout.current && curationState.selectedQuestionId !== null,
+			(open) => {
+				if (!open) curationState.clearMobileSelection();
+			}
+		}
+		title="Question #{selectedIndex + 1}"
+		width="sm:max-w-2xl"
+		expandable
 	>
-		<div
-			class="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-border bg-popover text-popover-foreground shadow-2xl shadow-black/10"
-		>
-			<div
-				class="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-border bg-background"
-			>
-				<div class="flex items-center gap-2">
-					<span class="text-sm font-medium"
-						>Question #{curationState.questionList.findIndex(
-							(q) => q._id === curationState.selectedQuestionId
-						) + 1}</span
-					>
-				</div>
-				<Button
-					type="button"
-					variant="ghost"
-					tone="neutral"
-					size="sm"
-					shape="circle"
-					aria-label="Close question details"
-					onclick={() => curationState.clearMobileSelection()}><X size={18} /></Button
-				>
-			</div>
-			<QuestionDetailView
-				question={selectedQuestion}
-				questionIndex={curationState.questionList.findIndex(
-					(q) => q._id === curationState.selectedQuestionId
-				)}
-				{canEdit}
-				variant="mobile"
-				{isModuleFull}
-				onEdit={() => curationState.editQuestion(selectedQuestion)}
-				onMove={() => curationState.openMoveModalForOne(selectedQuestion._id)}
-				onDuplicate={() =>
-					isModuleFull
-						? (curationState.isLimitModalOpen = true)
-						: curationState.quickDuplicate(selectedQuestion._id)}
-				onDuplicateMany={() =>
-					curationState.openDuplicateModal(questions.data, selectedQuestion._id)}
-				onDelete={() => curationState.openDeleteModal(questions.data, selectedQuestion._id)}
-			/>
-		</div>
-		<button
-			type="button"
-			class="absolute inset-0 bg-black/40 supports-backdrop-filter:backdrop-blur-[2px]"
-			aria-label="Close question details"
-			onclick={() => curationState.clearMobileSelection()}
-		></button>
-	</div>
+		<QuestionDetailView
+			question={selectedQuestion}
+			questionIndex={selectedIndex}
+			{canEdit}
+			variant="mobile"
+			{isModuleFull}
+			onEdit={() => curationState.editQuestion(selectedQuestion)}
+			onMove={() => curationState.openMoveModalForOne(selectedQuestion._id)}
+			onDuplicate={() =>
+				isModuleFull
+					? (curationState.isLimitModalOpen = true)
+					: curationState.quickDuplicate(selectedQuestion._id)}
+			onDuplicateMany={() => curationState.openDuplicateModal(questions.data, selectedQuestion._id)}
+			onDelete={() => curationState.openDeleteModal(questions.data, selectedQuestion._id)}
+		/>
+	</Sheet>
 {/if}
 
 <AddQuestionModal

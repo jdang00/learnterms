@@ -7,7 +7,7 @@
 
 <div class="container mx-auto px-4 py-8">
 	<div class="max-w-4xl mx-auto">
-		<h1 class="font-display text-4xl font-bold text-foreground mb-8">Admin Documentation</h1>
+		<h1 class="title-hero mb-8">Admin Documentation</h1>
 
 		<p class="text-lg text-foreground/80 mb-8">
 			Comprehensive guides for managing and administering LearnTerms content and systems.

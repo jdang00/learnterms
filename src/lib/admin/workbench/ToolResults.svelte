@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Progress } from '$lib/components/ui/progress';
 	import Braces from '@lucide/svelte/icons/braces';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Database from '@lucide/svelte/icons/database';
@@ -34,7 +35,7 @@
 
 {#snippet statTile(label: string, value: string, sub: string)}
 	<div class="min-w-0 surface-sm px-3 py-2.5">
-		<p class="text-[10px] font-semibold uppercase tracking-wide text-foreground/40">{label}</p>
+		<p class="label-caps">{label}</p>
 		<p class="mt-0.5 truncate text-sm font-semibold">{value}</p>
 		<p class="truncate font-mono text-[10px] text-foreground/40">{sub}</p>
 	</div>
@@ -273,14 +274,11 @@
 									</div>
 
 									<div class="mt-2.5 flex items-center gap-2.5">
-										<div class="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-											<div
-												class="h-full rounded-full {saturated
-													? 'bg-warning'
-													: 'bg-primary'} transition-all"
-												style="width: {fill}%"
-											></div>
-										</div>
+										<Progress
+											value={fill}
+											tone={saturated ? 'warning' : 'primary'}
+											class="h-1.5 flex-1 bg-muted"
+										/>
 										<span
 											class="shrink-0 font-mono text-[10px] font-semibold {saturated
 												? 'text-warning-ink'

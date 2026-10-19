@@ -1,8 +1,8 @@
 <script lang="ts">
+	import { Spinner } from '$lib/components/ui/spinner';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import Layers from '@lucide/svelte/icons/layers';
-	import Loader2 from '@lucide/svelte/icons/loader-2';
 	import { Command } from 'bits-ui';
 	import { Badge } from '$lib/components/ui/badge';
 	import { POWER_HEADING_CLASS, POWER_ITEM_CLASS, POWER_NOTE_CLASS } from './styles';
@@ -53,7 +53,7 @@
 			</p>
 		{:else if isLoading && !hasResults}
 			<div class="flex items-center gap-2 {POWER_NOTE_CLASS}">
-				<Loader2 size={14} class="animate-spin" />
+				<Spinner class="size-3.5" />
 				<span>Searching classes and modules…</span>
 			</div>
 		{:else if !hasResults && hasSearchError}
@@ -62,7 +62,7 @@
 			<p class={POWER_NOTE_CLASS}>No class or module matches in this cohort.</p>
 		{:else}
 			{#if classes.length > 0}
-				<p class="px-3 text-[10px] uppercase tracking-wide text-foreground/30">Classes</p>
+				<p class="px-3 label-caps">Classes</p>
 				{#each classes as classItem (classItem._id)}
 					<Command.Item
 						value="class:{classItem._id}"
@@ -90,7 +90,7 @@
 			{/if}
 
 			{#if modules.length > 0}
-				<p class="px-3 pt-1 text-[10px] uppercase tracking-wide text-foreground/30">Modules</p>
+				<p class="px-3 pt-1 label-caps">Modules</p>
 				{#each modules as moduleItem (moduleItem._id)}
 					<Command.Item
 						value="module:{moduleItem._id}"

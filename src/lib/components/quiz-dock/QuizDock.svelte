@@ -11,7 +11,6 @@
 	import DockButton from './DockButton.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Tip } from '$lib/components/ui/tooltip';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { getQuizCommands, isCommandShown } from './commands.svelte';
 	import { getDockPreferences } from './dockPreferences.svelte';
@@ -330,7 +329,7 @@
 							shape="circle"
 							class="text-foreground/70 hover:bg-white/60 dark:hover:bg-white/10"
 							aria-label="More quiz options"
-							title="More"
+							tooltip="More"
 						>
 							<ArrowUpWideNarrow size={19} />
 						</Button>
@@ -395,21 +394,17 @@
 		{/each}
 
 		{#if customizable && preferences}
-			<Tip label="Customize dock">
-				{#snippet child({ props })}
-					<Button
-						{...props}
-						variant="ghost"
-						tone="neutral"
-						shape="circle"
-						class="text-foreground/45 hover:bg-white/60 hover:text-foreground dark:hover:bg-white/10"
-						aria-label="Customize dock"
-						onclick={() => preferences.open()}
-					>
-						<SlidersHorizontal size={16} />
-					</Button>
-				{/snippet}
-			</Tip>
+			<Button
+				variant="ghost"
+				tone="neutral"
+				shape="circle"
+				class="text-foreground/45 hover:bg-white/60 hover:text-foreground dark:hover:bg-white/10"
+				aria-label="Customize dock"
+				onclick={() => preferences.open()}
+				tooltip="Customize dock"
+			>
+				<SlidersHorizontal size={16} />
+			</Button>
 		{/if}
 	</div>
 {/if}

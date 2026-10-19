@@ -297,7 +297,7 @@
 				variant={isActive(button.mark) ? 'soft' : 'ghost'}
 				tone={isActive(button.mark) ? 'primary' : 'neutral'}
 				aria-label={button.name}
-				title={button.name}
+				tooltip={button.name}
 				aria-pressed={isActive(button.mark)}
 				disabled={!editor}
 				onclick={() => {

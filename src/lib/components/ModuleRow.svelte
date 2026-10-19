@@ -79,7 +79,7 @@
 			class="hidden h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-foreground/10 md:flex"
 			aria-hidden="true"
 		>
-			<span class="h-full bg-emerald-800" style:width="{pct(progress.mastered)}%"></span>
+			<span class="h-full bg-mastered" style:width="{pct(progress.mastered)}%"></span>
 			<span class="h-full bg-success/60" style:width="{pct(progress.answered - progress.mastered)}%"
 			></span>
 		</span>

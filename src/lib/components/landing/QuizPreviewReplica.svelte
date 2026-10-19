@@ -336,9 +336,7 @@
 
 					<section class="mt-5" aria-label="Tools">
 						<div class="mb-1.5 flex items-center justify-between px-1">
-							<h3 class="text-[0.7rem] font-semibold tracking-wider text-foreground/45 uppercase">
-								Tools
-							</h3>
+							<h3 class="label-caps">Tools</h3>
 							<span class="pointer-events-none grid size-6 place-items-center text-foreground/40">
 								<SlidersHorizontal size={13} />
 							</span>
@@ -371,7 +369,7 @@
 								<span class="flex items-center gap-1 text-sm font-semibold text-foreground">
 									<Flame
 										size={16}
-										class={streak ? 'text-orange-500' : 'text-foreground/40'}
+										class={streak ? 'text-ember' : 'text-foreground/40'}
 										fill={streak ? 'currentColor' : 'none'}
 									/>
 									{streak}

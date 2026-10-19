@@ -34,7 +34,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { Progress } from '$lib/components/ui/progress';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { LoadingState } from '$lib/components/ui/spinner';
 
 	const classId = $derived(page.params.classId as Id<'class'>);
 	const attemptId = $derived(page.params.attemptId as Id<'quizAttempts'>);
@@ -317,12 +317,7 @@
 
 <div class="flex flex-col h-[calc(100dvh-4rem)]" transition:fade={{ duration: 200 }}>
 	{#if resultsQuery.isLoading}
-		<div class="flex-1 flex items-center justify-center">
-			<div class="text-center">
-				<Spinner class="size-6 text-primary" />
-				<p class="text-foreground/60 mt-3">Loading your results...</p>
-			</div>
-		</div>
+		<LoadingState label="Loading your results…" class="flex-1 text-base" />
 	{:else if resultsQuery.error}
 		<div class="flex-1 flex items-center justify-center p-4">
 			<Alert.Root tone="error" class="max-w-md">
@@ -349,7 +344,7 @@
 							>
 								<ChevronLeft size={16} /> Back to Class
 							</Button>
-							<h1 class="font-display text-2xl sm:text-3xl font-bold">Your Results</h1>
+							<h1 class="title-page">Your Results</h1>
 							<p class="text-sm text-foreground/50 mt-1">
 								{friendlyStatus(attempt.status)} · {attempt.className ?? 'Test'}
 							</p>

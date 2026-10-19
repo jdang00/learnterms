@@ -63,7 +63,7 @@
 	const ringSegments = [
 		{ arc: arcs.answered, cls: 'stroke-warning' },
 		{ arc: arcs.correct, cls: 'stroke-success' },
-		{ arc: arcs.mastered, cls: 'stroke-emerald-700' }
+		{ arc: arcs.mastered, cls: 'stroke-mastered' }
 	];
 
 	const counts = $derived({
@@ -129,8 +129,8 @@
 	const statusStyle: Record<AnswerStatus, { label: string; cell: string; chip: string }> = {
 		mastered: {
 			label: 'Mastered',
-			cell: 'bg-emerald-700 text-white border-emerald-800 shadow-sm shadow-emerald-900/20',
-			chip: 'bg-emerald-700/12 text-emerald-700 dark:text-emerald-400'
+			cell: 'bg-mastered text-mastered-foreground border-mastered shadow-sm shadow-mastered/20',
+			chip: 'bg-mastered/12 text-mastered-ink'
 		},
 		correct: {
 			label: 'Correct',
@@ -160,8 +160,8 @@
 			key: 'mastered',
 			label: 'Mastered overall',
 			icon: Trophy,
-			tone: 'text-emerald-700 dark:text-emerald-400',
-			active: 'border-emerald-600/50 bg-emerald-600/10 ring-emerald-600/20'
+			tone: 'text-mastered-ink',
+			active: 'border-mastered/50 bg-mastered/10 ring-mastered/20'
 		},
 		{
 			key: 'correct',
@@ -264,7 +264,7 @@
 
 		<div
 			class="relative mt-4 overflow-hidden rounded-3xl border bg-background p-5 shadow-xs sm:p-7 {summary.isMastered
-				? 'border-emerald-600/30'
+				? 'border-mastered/30'
 				: 'border-border'}"
 		>
 			<div
@@ -315,7 +315,7 @@
 					>
 						{#if summary.isMastered}
 							<span in:scale={{ duration: reduced ? 0 : 500, start: 0.3, easing: backOut }}>
-								<Trophy size={22} class="trophy-wiggle mx-auto mb-0.5 text-emerald-600" />
+								<Trophy size={22} class="trophy-wiggle mx-auto mb-0.5 text-mastered-ink" />
 							</span>
 						{/if}
 						<span class="text-4xl font-semibold tracking-tight tabular-nums"
@@ -334,11 +334,7 @@
 							>{emoji}</span
 						>
 						<div class="min-w-0">
-							<h1
-								bind:this={heading}
-								tabindex="-1"
-								class="font-display text-2xl font-semibold outline-none sm:text-3xl"
-							>
+							<h1 bind:this={heading} tabindex="-1" class="title-page outline-none">
 								{summary.isMastered
 									? 'Module mastered'
 									: summary.isAllCorrect
@@ -466,7 +462,7 @@
 						{number}
 						{#if result.status !== 'mastered' && result.cleanRecallCount === 1}
 							<span
-								class="absolute -bottom-0.5 left-1/2 h-1 w-3 -translate-x-1/2 rounded-full bg-emerald-600 ring-2 ring-background"
+								class="absolute -bottom-0.5 left-1/2 h-1 w-3 -translate-x-1/2 rounded-full bg-mastered ring-2 ring-background"
 							></span>
 						{/if}
 					</button>
@@ -506,7 +502,7 @@
 								<span
 									class="h-1.5 w-6 rounded-full transition-colors duration-500 {step <
 									selectedResult.cleanRecallCount
-										? 'bg-emerald-600'
+										? 'bg-mastered'
 										: 'bg-muted-strong'}"
 								></span>
 							{/each}

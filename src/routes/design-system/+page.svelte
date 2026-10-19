@@ -39,6 +39,15 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Progress } from '$lib/components/ui/progress';
 	import { RadialProgress } from '$lib/components/ui/radial-progress';
+	import { SegmentedControl } from '$lib/components/ui/segmented-control';
+	import { LoadingState } from '$lib/components/ui/spinner';
+	import * as Empty from '$lib/components/ui/empty';
+	import CheckCircle from '@lucide/svelte/icons/check-circle';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import Archive from '@lucide/svelte/icons/archive';
+	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
+	import List from '@lucide/svelte/icons/list';
+	import Library from '@lucide/svelte/icons/library';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Spinner } from '$lib/components/ui/spinner';
 	import { Separator } from '$lib/components/ui/separator';
@@ -83,6 +92,9 @@
 	let radioValue = $state('timed');
 	let slider = $state(60);
 	let flagged = $state(true);
+	let dsStatus = $state('draft');
+	let dsView = $state('grid');
+	let dsPane = $state('preview');
 </script>
 
 <svelte:head>
@@ -92,7 +104,7 @@
 <div class="mx-auto max-w-6xl space-y-16 px-5 py-12 sm:px-8">
 	<header class="flex flex-wrap items-end justify-between gap-4">
 		<div>
-			<h1 class="font-display text-5xl font-bold">LearnTerms design system</h1>
+			<h1 class="title-hero">LearnTerms design system</h1>
 			<p class="mt-2 max-w-2xl text-muted-foreground">
 				shadcn-svelte primitives tuned to the brand sheet. Components live in
 				<code class="font-mono text-sm">$lib/components/ui</code>.
@@ -135,7 +147,7 @@
 				<span class="font-mono text-xs text-muted-foreground">Display · Space Grotesk</span>
 				<span class="font-display text-7xl leading-none font-bold">kerat/o</span>
 				<span class="font-mono text-xs text-muted-foreground">Page title · font-display</span>
-				<h1 class="font-display text-5xl font-bold">Module 3 review</h1>
+				<h1 class="title-hero">Module 3 review</h1>
 				<span class="font-mono text-xs text-muted-foreground">Heading · sans 600</span>
 				<h2 class="text-3xl font-semibold">Missed questions</h2>
 				<span class="font-mono text-xs text-muted-foreground">Body · sans 400</span>
@@ -274,6 +286,112 @@
 			<span class="font-mono text-xs text-muted-foreground"
 				>shape="segment-start" / "segment-end"</span
 			>
+		</div>
+	</section>
+
+	<!-- Choices, loading and empty -->
+	<section class="space-y-6">
+		<div>
+			<h2 class="text-3xl font-semibold">Choices, loading and empty</h2>
+			<p class="mt-1 text-muted-foreground">
+				SegmentedControl for one-of-a-few choices, LoadingState and Empty for the in-between
+				moments.
+			</p>
+		</div>
+		<div class="grid gap-4 lg:grid-cols-2">
+			<div class="surface space-y-4 p-5">
+				<p class="label-caps">Segmented control</p>
+				<SegmentedControl
+					bind:value={dsStatus}
+					aria-label="Status"
+					options={[
+						{ value: 'published', label: 'Published', icon: CheckCircle, tone: 'success' },
+						{ value: 'draft', label: 'Draft', icon: FileText, tone: 'info' },
+						{ value: 'archived', label: 'Archived', icon: Archive, tone: 'error' }
+					]}
+				/>
+				<div class="flex flex-wrap items-center gap-3">
+					<SegmentedControl
+						bind:value={dsPane}
+						aria-label="Panel"
+						size="xs"
+						track="muted"
+						activeVariant="raised"
+						itemClass="px-4"
+						options={[
+							{ value: 'preview', label: 'Preview' },
+							{ value: 'source', label: 'Source' },
+							{ value: 'properties', label: 'Properties' }
+						]}
+					/>
+					<SegmentedControl
+						bind:value={dsView}
+						aria-label="View"
+						size="xs"
+						track="muted"
+						activeVariant="raised"
+						itemClass="size-7 px-0"
+						labelClass="sr-only"
+						options={[
+							{ value: 'grid', label: 'Grid view', icon: LayoutGrid },
+							{ value: 'list', label: 'List view', icon: List }
+						]}
+					/>
+					<Button
+						variant="ghost"
+						tone="neutral"
+						shape="circle"
+						tooltip="Settings"
+						tooltipKbd="S"
+						aria-label="Settings"><Settings /></Button
+					>
+				</div>
+				<p class="font-mono text-xs text-muted-foreground">
+					activeVariant solid | soft | raised · track surface | muted | none · Button tooltip=""
+				</p>
+			</div>
+			<div class="surface space-y-4 p-5">
+				<p class="label-caps">Loading</p>
+				<LoadingState inline label="Loading tags…" />
+				<LoadingState label="Building slide deck preview…" class="surface-muted py-6" />
+				<div class="flex items-center gap-3">
+					<Button loading>Saving</Button>
+					<span class="flex items-center gap-2 text-sm"
+						><span class="size-3 rounded-sm bg-mastered"></span><span class="text-mastered-ink"
+							>Mastered</span
+						></span
+					>
+				</div>
+			</div>
+		</div>
+		<div class="grid gap-4 lg:grid-cols-2">
+			<Empty.Root class="surface-dashed py-12">
+				<Empty.Header>
+					<Empty.Media variant="icon" class="size-16 bg-primary/10 text-primary-ink [&_svg]:size-7"
+						><Library /></Empty.Media
+					>
+					<Empty.Title>Your library is empty</Empty.Title>
+					<Empty.Description
+						>Add your first PDF to make it searchable for your class.</Empty.Description
+					>
+				</Empty.Header>
+				<Empty.Content><Button size="sm"><Plus />Add file</Button></Empty.Content>
+			</Empty.Root>
+			<Empty.Root class="surface py-12">
+				<Empty.Header>
+					<Empty.Media variant="emoji">📚</Empty.Media>
+					<Empty.Title class="text-lg">No modules yet</Empty.Title>
+					<Empty.Description
+						>Modules will appear here once they are added to this class.</Empty.Description
+					>
+				</Empty.Header>
+			</Empty.Root>
+		</div>
+		<div class="surface space-y-2 p-5">
+			<p class="label-caps">Titles</p>
+			<p class="title-hero">title-hero</p>
+			<p class="title-page">title-page</p>
+			<p class="label-caps text-primary-ink">label-caps, tinted</p>
 		</div>
 	</section>
 

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { SegmentedControl } from '$lib/components/ui/segmented-control';
+	import { Spinner } from '$lib/components/ui/spinner';
 	import { SelectField } from '$lib/components/ui/select';
 	import { acceptanceLevels, type AcceptanceLevel } from '$lib/utils/freeResponse';
 	import AcceptanceMeter from '$lib/components/AcceptanceMeter.svelte';
@@ -38,7 +40,7 @@
 	import ImageIcon from '@lucide/svelte/icons/image';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import Check from '@lucide/svelte/icons/check';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
 	import Stethoscope from '@lucide/svelte/icons/stethoscope';
@@ -65,7 +67,6 @@
 	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
 	import { getEditorExtensions } from '../../config/tiptap';
 	import { useClerkContext } from 'svelte-clerk';
-	import Loader2 from '@lucide/svelte/icons/loader-2';
 	import { getRationale, getRationalePlainText } from '$lib/utils/rationale';
 	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
 	import { uploadQuestionImage } from '$lib/utils/uploadQuestionImage';
@@ -307,32 +308,8 @@
 		}
 	];
 	let typeMenuOpen = $state(false);
-	let typeMenuEl = $state<HTMLDivElement>();
-	let typeTriggerEl = $state<HTMLButtonElement>();
-
-	$effect(() => {
-		if (!typeMenuOpen) return;
-		const handlePointerDown = (event: PointerEvent) => {
-			if (!typeMenuEl?.contains(event.target as Node)) typeMenuOpen = false;
-		};
-		document.addEventListener('pointerdown', handlePointerDown);
-		return () => document.removeEventListener('pointerdown', handlePointerDown);
-	});
-
-	function openTypeMenu() {
-		typeMenuOpen = true;
-		requestAnimationFrame(() =>
-			typeMenuEl?.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus()
-		);
-	}
-
-	function closeTypeMenu() {
-		typeMenuOpen = false;
-		typeTriggerEl?.focus();
-	}
-
 	function selectQuestionType(value: string) {
-		closeTypeMenu();
+		typeMenuOpen = false;
 		typeLocked = true;
 		autoTyped = null;
 		if (value === questionType) return;
@@ -343,27 +320,6 @@
 		questionType = value;
 		handleTypeChange();
 		onChange();
-	}
-
-	function handleTypeMenuKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape' || event.key === 'Tab') {
-			if (event.key === 'Escape') event.preventDefault();
-			closeTypeMenu();
-			return;
-		}
-		if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
-		event.preventDefault();
-		const items = Array.from(
-			typeMenuEl?.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]') ?? []
-		);
-		const current = items.indexOf(document.activeElement as HTMLButtonElement);
-		const next =
-			event.key === 'Home'
-				? 0
-				: event.key === 'End'
-					? items.length - 1
-					: (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
-		items[next]?.focus();
 	}
 
 	const statusOptions = [
@@ -1437,58 +1393,44 @@
 	>
 		<!-- Type Selector -->
 		<div class="flex flex-col gap-2">
-			<span
-				id="question-type-label"
-				class="text-[10px] font-bold text-foreground/40 uppercase tracking-wider ml-1">Type</span
-			>
-			<div class="relative" bind:this={typeMenuEl}>
+			<span id="question-type-label" class="label-caps ml-1">Type</span>
+			<DropdownMenu.Root bind:open={typeMenuOpen}>
 				<div class="flex shadow-xs bg-background rounded-full border border-border p-1">
-					<Button
-						bind:ref={typeTriggerEl}
-						variant="soft"
-						tone="neutral"
-						size="xs"
-						class="gap-2 pr-2.5 font-medium sm:h-8 sm:px-3.5 sm:text-sm"
-						aria-haspopup="menu"
-						aria-expanded={typeMenuOpen}
-						aria-labelledby="question-type-label question-type-current"
-						onclick={() => (typeMenuOpen ? closeTypeMenu() : openTypeMenu())}
-						onkeydown={(event) => {
-							if (event.key === 'ArrowDown' && !typeMenuOpen) {
-								event.preventDefault();
-								openTypeMenu();
-							}
-						}}
-					>
-						<currentTypeOption.icon size={16} />
-						<span id="question-type-current">{currentTypeOption.label}</span>
-						<ChevronDown
-							size={14}
-							class="opacity-50 transition-transform duration-200 {typeMenuOpen
-								? 'rotate-180'
-								: ''}"
-						/>
-					</Button>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								variant="soft"
+								tone="neutral"
+								size="xs"
+								class="gap-2 pr-2.5 font-medium sm:h-8 sm:px-3.5 sm:text-sm"
+								aria-labelledby="question-type-label question-type-current"
+							>
+								<currentTypeOption.icon size={16} />
+								<span id="question-type-current">{currentTypeOption.label}</span>
+								<ChevronDown
+									size={14}
+									class="opacity-50 transition-transform duration-200 {typeMenuOpen
+										? 'rotate-180'
+										: ''}"
+								/>
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
 				</div>
 
-				{#if typeMenuOpen}
-					<div
-						role="menu"
-						tabindex="-1"
+				<DropdownMenu.Content align="start" class="w-72 p-1.5">
+					<DropdownMenu.RadioGroup
+						value={questionType}
+						onValueChange={selectQuestionType}
 						aria-labelledby="question-type-label"
-						class="type-menu absolute left-0 top-full z-30 mt-2 w-72 rounded-3xl border border-border bg-background p-1.5 shadow-lg"
-						onkeydown={handleTypeMenuKeydown}
 					>
 						{#each questionTypeOptions as option (option.value)}
 							{@const selected = questionType === option.value}
-							<button
-								type="button"
-								role="menuitemradio"
-								aria-checked={selected}
-								class="flex w-full items-center gap-3 rounded-2xl px-2.5 py-2 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 {selected
-									? 'bg-muted'
-									: 'hover:bg-muted/60 focus-visible:bg-muted/60'}"
-								onclick={() => selectQuestionType(option.value)}
+							<DropdownMenu.RadioItem
+								value={option.value}
+								closeOnSelect
+								class="gap-3 px-2.5 py-2 {selected ? 'bg-muted' : ''}"
 							>
 								<span
 									class="grid size-8 shrink-0 place-items-center rounded-full transition-colors {selected
@@ -1501,44 +1443,31 @@
 									<span class="block text-sm {selected ? 'font-semibold' : 'font-medium'}"
 										>{option.label}</span
 									>
-									<span class="block text-xs text-foreground/50">{option.description}</span>
+									<span class="block text-xs font-normal text-foreground/50"
+										>{option.description}</span
+									>
 								</span>
-								{#if selected}
-									<Check size={14} class="shrink-0 text-primary" />
-								{/if}
-							</button>
+							</DropdownMenu.RadioItem>
 						{/each}
-					</div>
-				{/if}
-			</div>
+					</DropdownMenu.RadioGroup>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 		</div>
 
 		<div class="w-px h-10 bg-muted-strong hidden sm:block"></div>
 
 		<!-- Status Selector -->
 		<div class="flex flex-col gap-2">
-			<span class="text-[10px] font-bold text-foreground/70 uppercase tracking-wider ml-1"
-				>Status</span
-			>
-			<div class="flex flex-wrap gap-1 surface p-1 shadow-xs">
-				{#each statusOptions as option (option.value)}
-					<Button
-						size="sm"
-						variant={questionStatus === option.value ? 'solid' : 'ghost'}
-						tone={questionStatus === option.value ? option.tone : 'neutral'}
-						aria-pressed={questionStatus === option.value}
-						class="px-3 font-semibold"
-						onclick={() => {
-							questionStatus = option.value;
-							onChange();
-						}}
-						title={option.label}
-					>
-						<option.icon size={16} />
-						<span>{option.label}</span>
-					</Button>
-				{/each}
-			</div>
+			<span class="label-caps text-foreground/70 ml-1">Status</span>
+			<SegmentedControl
+				value={questionStatus}
+				onValueChange={(value) => {
+					questionStatus = value as typeof questionStatus;
+					onChange();
+				}}
+				options={statusOptions}
+				aria-label="Question status"
+			/>
 		</div>
 	</div>
 
@@ -1552,9 +1481,7 @@
 			<!-- Question Stem -->
 			<div class="space-y-2">
 				<div class="flex items-center justify-between">
-					<label
-						class="text-xs font-semibold uppercase tracking-wide text-foreground/60 flex items-center gap-2"
-					>
+					<label class="label-caps flex items-center gap-2">
 						<MessageSquare size={14} /> Question
 					</label>
 					<span class="text-[10px] text-foreground/40 font-medium hidden sm:inline"
@@ -1575,7 +1502,8 @@
 									size="xs"
 									shape="square"
 									onclick={item.command}
-									title={item.name}
+									tooltip={item.name}
+									aria-label={item.name}
 								>
 									<item.icon size={12} />
 								</Button>
@@ -1630,12 +1558,7 @@
 			<div>
 				{#if questionType === QUESTION_TYPES.FREE_RESPONSE}
 					<div class="space-y-4">
-						<div
-							id="acceptance-label"
-							class="text-xs font-semibold uppercase tracking-wide text-foreground/60"
-						>
-							Acceptance
-						</div>
+						<div id="acceptance-label" class="label-caps">Acceptance</div>
 						<div
 							role="radiogroup"
 							aria-labelledby="acceptance-label"
@@ -1675,19 +1598,17 @@
 				{:else if questionType === QUESTION_TYPES.FILL_IN_THE_BLANK}
 					<div class="space-y-4">
 						<div class="flex items-center justify-between mb-2">
-							<div class="text-xs font-semibold uppercase tracking-wide text-foreground/60">
-								Accepted Answers
-							</div>
+							<div class="label-caps">Accepted Answers</div>
 							<Button
 								variant="ghost"
 								tone="neutral"
 								size="xs"
 								class="gap-1"
 								onclick={generateAIOptions}
-								title="Create source-grounded questions in Question Studio"
+								tooltip="Create source-grounded questions in Question Studio"
 							>
 								{#if isGeneratingAI}
-									<Loader2 size={12} class="animate-spin" />
+									<Spinner class="size-3" />
 								{:else}
 									<Sparkles size={12} />
 								{/if}
@@ -1789,9 +1710,7 @@
 					</div>
 				{:else if questionType === QUESTION_TYPES.MATCHING}
 					<div class="space-y-4">
-						<div class="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-2">
-							Matching Pairs
-						</div>
+						<div class="label-caps mb-2">Matching Pairs</div>
 						<div class="space-y-3">
 							{#each matchingRowIndexes as i (i)}
 								<div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
@@ -1904,9 +1823,7 @@
 					<div class="space-y-4">
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-3">
-								<div class="text-xs font-semibold uppercase tracking-wide text-foreground/60">
-									Options
-								</div>
+								<div class="label-caps">Options</div>
 								<span class="text-[10px] text-foreground/40 font-medium hidden sm:inline"
 									>Ctrl + Enter to toggle correct</span
 								>
@@ -1924,7 +1841,7 @@
 											: 'Add stem and correct answer first'}
 									>
 										{#if isGeneratingAI}
-											<Loader2 size={12} class="animate-spin" />
+											<Spinner class="size-3" />
 										{:else}
 											<Sparkles size={12} />
 										{/if}
@@ -2021,18 +1938,14 @@
 			>
 				<div>
 					{#if isFreeResponse}
-						<div
-							class="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1 flex items-center gap-2"
-						>
+						<div class="label-caps mb-1 flex items-center gap-2">
 							<Target size={14} /> Ground Truth
 						</div>
 						<p class="text-[10px] text-foreground/40 mb-2">
 							The expected answer or source text responses are graded against.
 						</p>
 					{:else}
-						<div
-							class="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-1 flex items-center gap-2"
-						>
+						<div class="label-caps mb-1 flex items-center gap-2">
 							<MessageSquare size={14} /> Rationale
 						</div>
 						<p class="text-[10px] text-foreground/40 mb-2">
@@ -2066,7 +1979,8 @@
 										size="xs"
 										shape="square"
 										onclick={item.command}
-										title={item.name}
+										tooltip={item.name}
+										aria-label={item.name}
 									>
 										<item.icon size={12} />
 									</Button>
@@ -2088,9 +2002,7 @@
 				</div>
 
 				<div>
-					<div
-						class="text-xs font-semibold uppercase tracking-wide text-foreground/60 mb-2 flex items-center gap-2"
-					>
+					<div class="label-caps mb-2 flex items-center gap-2">
 						<ImageIcon size={14} /> Attachments
 					</div>
 

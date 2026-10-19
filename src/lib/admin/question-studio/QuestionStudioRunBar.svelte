@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Progress } from '$lib/components/ui/progress';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Check from '@lucide/svelte/icons/check';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
@@ -6,6 +7,7 @@
 	import { resolve } from '$app/paths';
 	import ShimmerText from '$lib/components/ShimmerText.svelte';
 	import { Button } from '$lib/components/ui/button';
+	import * as Popover from '$lib/components/ui/popover';
 	import { formatPageSelection } from './pagePickerSelection';
 	import { plannedSlots, runHeadline, runPhase } from './questionStudioRun';
 	import type { AgentJob } from './questionStudioRun';
@@ -70,8 +72,6 @@
 	}
 </script>
 
-<svelte:window onkeydown={(event) => event.key === 'Escape' && (confirmingNewRun = false)} />
-
 <div class="shrink-0 border-b border-border bg-background">
 	<div class="flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 sm:px-4">
 		<Button
@@ -117,61 +117,61 @@
 			{/if}
 
 			{#if canStartNewRun}
-				<div class="relative">
-					<Button variant="soft" tone="neutral" size="sm" class="gap-1.5" onclick={requestNewRun}>
-						<RotateCcw size={13} />
-						<span class="hidden sm:inline">New run</span>
-					</Button>
-					{#if confirmingNewRun}
-						<div
-							class="fixed inset-0 z-30"
-							onclick={() => (confirmingNewRun = false)}
-							role="none"
-						></div>
-						<div
-							class="absolute right-0 top-full z-40 mt-1.5 w-72 rounded-2xl border border-border bg-background p-4 shadow-lg"
-							role="alertdialog"
-							aria-label="Discard unsaved drafts"
-						>
-							<p class="text-sm leading-relaxed">
-								{unsavedCount} draft{unsavedCount === 1 ? " hasn't" : "s haven't"} been saved. Starting
-								a new run discards {unsavedCount === 1 ? 'it' : 'them'}.
-							</p>
-							<div class="mt-3 flex gap-1.5">
-								<Button
-									variant="ghost"
-									tone="neutral"
-									size="sm"
-									class="flex-1"
-									onclick={() => (confirmingNewRun = false)}
-								>
-									Keep reviewing
-								</Button>
-								<Button
-									tone="error"
-									size="sm"
-									class="flex-1"
-									onclick={() => {
-										confirmingNewRun = false;
-										onStartNewRun();
-									}}
-								>
-									Discard
-								</Button>
-							</div>
+				<!-- The trigger only opens the confirmation when there are unsaved drafts. -->
+				<Popover.Root bind:open={confirmingNewRun}>
+					<Popover.Trigger>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								variant="soft"
+								tone="neutral"
+								size="sm"
+								class="gap-1.5"
+								onclick={requestNewRun}
+							>
+								<RotateCcw size={13} />
+								<span class="hidden sm:inline">New run</span>
+							</Button>
+						{/snippet}
+					</Popover.Trigger>
+					<Popover.Content align="end" class="w-72" aria-label="Discard unsaved drafts">
+						<p class="text-sm leading-relaxed">
+							{unsavedCount} draft{unsavedCount === 1 ? " hasn't" : "s haven't"} been saved. Starting
+							a new run discards {unsavedCount === 1 ? 'it' : 'them'}.
+						</p>
+						<div class="mt-3 flex gap-1.5">
+							<Button
+								variant="ghost"
+								tone="neutral"
+								size="sm"
+								class="flex-1"
+								onclick={() => (confirmingNewRun = false)}
+							>
+								Keep reviewing
+							</Button>
+							<Button
+								tone="error"
+								size="sm"
+								class="flex-1"
+								onclick={() => {
+									confirmingNewRun = false;
+									onStartNewRun();
+								}}
+							>
+								Discard
+							</Button>
 						</div>
-					{/if}
-				</div>
+					</Popover.Content>
+				</Popover.Root>
 			{/if}
 		</div>
 	</div>
 
 	{#if working}
-		<div class="h-0.5 w-full bg-muted">
-			<div
-				class="h-full bg-primary transition-[width] duration-500 ease-out"
-				style="width: {Math.round(progress * 100)}%"
-			></div>
-		</div>
+		<Progress
+			value={Math.round(progress * 100)}
+			class="h-0.5 rounded-none bg-muted"
+			aria-label="Run progress"
+		/>
 	{/if}
 </div>

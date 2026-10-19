@@ -22,7 +22,7 @@
 
 	<div class="error-content relative mx-auto w-full max-w-xl">
 		<p class="error-code font-semibold tracking-tight text-foreground/35">{page.status}</p>
-		<h1 class="mt-2 font-display text-4xl font-bold text-foreground sm:text-5xl">
+		<h1 class="title-hero mt-2">
 			{page.status === 404 ? 'Page not found' : 'Something went wrong'}
 		</h1>
 		<p class="mx-auto mt-5 max-w-sm text-base leading-relaxed text-foreground/75 sm:text-lg">

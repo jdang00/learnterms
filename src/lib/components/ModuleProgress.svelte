@@ -27,7 +27,7 @@
 	const correctWidth = Tween.of(() => pct(summary.correct), motion);
 	const reviewWidth = Tween.of(() => pct(summary.incorrect), motion);
 	const cellClass = {
-		mastered: 'bg-emerald-800',
+		mastered: 'bg-mastered',
 		correct: 'bg-success/60',
 		incorrect: 'bg-error/60',
 		unanswered: 'bg-foreground/10'
@@ -99,7 +99,7 @@
 				><span class="size-2 rounded-full bg-success"></span>{summary.correct} correct</span
 			>
 			<span class="inline-flex items-center gap-1.5"
-				><span class="size-2 rounded-sm bg-emerald-800"></span>{summary.mastered} mastered</span
+				><span class="size-2 rounded-sm bg-mastered"></span>{summary.mastered} mastered</span
 			>
 			{#if summary.incorrect}
 				<span class="inline-flex items-center gap-1.5"

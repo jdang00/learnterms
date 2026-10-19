@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SegmentedControl } from '$lib/components/ui/segmented-control';
 	import { SelectField } from '$lib/components/ui/select';
 	import {
 		type Pane,
@@ -225,28 +226,19 @@
 					</p>
 				</div>
 			</div>
-			<div class="ml-auto flex items-center rounded-full border border-border bg-muted/60 p-1">
-				<Button
-					size="xs"
-					variant={activePane === 'tools' ? 'solid' : 'ghost'}
-					tone={activePane === 'tools' ? 'primary' : 'neutral'}
-					class="gap-1.5"
-					onclick={() => (activePane = 'tools')}
-				>
-					<Wrench size={13} />
-					Tools
-				</Button>
-				<Button
-					size="xs"
-					variant={activePane === 'rag' ? 'solid' : 'ghost'}
-					tone={activePane === 'rag' ? 'primary' : 'neutral'}
-					class="gap-1.5"
-					onclick={() => (activePane = 'rag')}
-				>
-					<MessageSquare size={13} />
-					RAG chat
-				</Button>
-			</div>
+			<SegmentedControl
+				value={activePane}
+				onValueChange={(value) => (activePane = value as Pane)}
+				options={[
+					{ value: 'tools', label: 'Tools', icon: Wrench },
+					{ value: 'rag', label: 'RAG chat', icon: MessageSquare }
+				]}
+				size="xs"
+				track="muted"
+				aria-label="Workbench pane"
+				class="ml-auto"
+				itemClass="gap-1.5"
+			/>
 		</header>
 
 		<div

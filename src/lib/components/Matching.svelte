@@ -352,7 +352,7 @@
 				onclick={handleToggleSolution}
 				aria-pressed={qs.showSolution}
 				aria-label={qs.showSolution ? 'Hide rationale' : 'Show rationale'}
-				title={qs.showSolution ? 'Hide rationale' : 'Show rationale'}
+				tooltip={qs.showSolution ? 'Hide rationale' : 'Show rationale'}
 			>
 				<Eye />
 			</Button>

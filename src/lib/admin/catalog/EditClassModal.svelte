@@ -15,7 +15,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { LoadingState } from '$lib/components/ui/spinner';
 	import { Textarea } from '$lib/components/ui/textarea';
 
 	const client = useConvexClient();
@@ -171,10 +171,7 @@
 		{/if}
 
 		{#if semesters.isLoading}
-			<div class="flex items-center gap-3 text-foreground/70">
-				<Spinner class="size-5" />
-				<span>Loading semesters…</span>
-			</div>
+			<LoadingState inline label="Loading semesters…" />
 		{:else if semesters.error != null}
 			<Alert.Root tone="error">
 				<Alert.Title>Failed to load: {semesters.error.toString()}</Alert.Title>

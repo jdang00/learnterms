@@ -13,7 +13,7 @@
 <aside class="">
 	<ul class="w-56 rounded-3xl bg-muted p-3">
 		{#each docsNav as section (section.title)}
-			<li class="px-2.5 pt-3 pb-1 text-xs font-semibold uppercase opacity-70">{section.title}</li>
+			<li class="px-2.5 pt-3 pb-1 label-caps">{section.title}</li>
 			{#each section.items as item (item.path)}
 				<li>
 					<a

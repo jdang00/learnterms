@@ -71,7 +71,7 @@
 			<span aria-current="page" class="truncate">{data.post.title}</span>
 		</nav>
 		<header class="mt-7">
-			<h1 class="text-balance font-display text-4xl font-bold leading-tight sm:text-5xl">
+			<h1 class="title-hero text-balance">
 				{data.post.title}
 			</h1>
 			<p class="mt-4 text-sm text-foreground/60">

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import * as Empty from '$lib/components/ui/empty';
+	import { Progress } from '$lib/components/ui/progress';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import type { PageData } from './$types';
 	import { api } from '../../convex/_generated/api.js';
@@ -241,7 +243,7 @@
 				</div>
 			</div>
 		{:else if user === null}
-			<h1 class="font-display text-2xl font-bold text-foreground">Welcome, Guest!</h1>
+			<h1 class="title-page">Welcome, Guest!</h1>
 			<p class="text-foreground/60 text-sm">Here's your learning dashboard.</p>
 		{:else}
 			<div class="flex flex-row gap-5 items-center">
@@ -253,7 +255,7 @@
 				</Avatar.Root>
 
 				<div>
-					<h1 class="font-display text-2xl font-bold text-foreground mb-1">
+					<h1 class="title-page mb-1">
 						Hi, {name}!
 					</h1>
 					{#if userData === null}
@@ -301,7 +303,7 @@
 						<div class="overflow-x-auto pb-1">
 							<div class="flex min-w-max gap-2">
 								{#each Array(3), i (i)}
-									<div class="surface-sm px-3 py-2.5 animate-pulse min-w-[19rem]">
+									<div class="surface-sm px-3 py-2.5 min-w-[19rem]">
 										<div class="flex items-center gap-3">
 											<Skeleton class="h-5 w-5 rounded-sm" />
 											<Skeleton class="h-3.5 w-32" />
@@ -333,12 +335,7 @@
 							<span class="block text-xs font-medium text-primary-ink">Continue studying</span>
 							<span class="block truncate font-semibold">{resume.moduleTitle}</span>
 							<span class="mt-2 flex items-center gap-2 text-xs text-foreground/60">
-								<span class="h-1.5 flex-1 overflow-hidden rounded-full bg-muted-strong/70">
-									<span
-										class="block h-full rounded-full bg-success"
-										style="width: {resume.progress}%;"
-									></span>
-								</span>
+								<Progress value={resume.progress} tone="success" class="h-1.5 flex-1" />
 								<span class="tabular-nums">{resume.progress}%</span>
 							</span>
 						</span>
@@ -407,12 +404,7 @@
 												</span>
 											</div>
 											<div class="ml-1 shrink-0 w-10">
-												<div class="h-1.5 rounded-full bg-muted-strong/60 overflow-hidden">
-													<div
-														class="h-full rounded-full bg-success"
-														style="width: {recentModule.progress}%;"
-													></div>
-												</div>
+												<Progress value={recentModule.progress} tone="success" class="h-1.5" />
 											</div>
 										</a>
 									{/each}
@@ -518,15 +510,15 @@
 							<Alert.Title>Failed to load modules: {modules.error.toString()}</Alert.Title>
 						</Alert.Root>
 					{:else if !modules.data || modules.data.length === 0}
-						<div class="surface shadow-xs p-8">
-							<div class="text-center py-8">
-								<div class="text-5xl mb-4">📚</div>
-								<h3 class="text-lg font-semibold mb-2 text-foreground">No modules yet</h3>
-								<p class="text-foreground/60 text-sm">
+						<Empty.Root class="surface shadow-xs py-16">
+							<Empty.Header>
+								<Empty.Media variant="emoji">📚</Empty.Media>
+								<Empty.Title class="text-lg">No modules yet</Empty.Title>
+								<Empty.Description>
 									Modules will appear here once they are added to this class.
-								</p>
-							</div>
-						</div>
+								</Empty.Description>
+							</Empty.Header>
+						</Empty.Root>
 					{:else}
 						<ol
 							class="divide-y divide-border overflow-hidden surface"

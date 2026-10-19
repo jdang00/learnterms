@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SegmentedControl } from '$lib/components/ui/segmented-control';
 	import { SelectField } from '$lib/components/ui/select';
 	import type { PageData } from './$types';
 	import type { Id } from '../../../convex/_generated/dataModel';
@@ -406,7 +407,7 @@
 			</Button>
 			<div class="min-w-0">
 				<p class="text-xs text-foreground/55">{user?.schoolName}</p>
-				<h1 class="truncate font-display text-2xl font-bold">
+				<h1 class="title-page truncate">
 					{user?.cohortName ?? 'Class progress'}
 				</h1>
 			</div>
@@ -829,23 +830,26 @@
 								/>
 							</div>
 						</div>
-						<div class="mt-4 flex flex-wrap gap-1.5" aria-label="Student filters">
-							{#each filters as option (option.id)}<Button
-									variant={filter === option.id ? 'solid' : 'ghost'}
-									tone={filter === option.id ? 'primary' : 'neutral'}
-									size="xs"
-									class={filter === option.id ? '' : 'bg-muted'}
-									aria-pressed={filter === option.id}
-									onclick={() => navigate({ filter: option.id === 'all' ? null : option.id })}
-									>{#if option.id in engagementMeta}<span
-											class="inline-block size-1.5 rounded-full {engagementMeta[
-												option.id as Engagement
-											].dot}"
-										></span>{/if}{option.label}<span class="opacity-60 tabular-nums"
-										>{option.count}</span
-									></Button
-								>{/each}
-						</div>
+						<SegmentedControl
+							value={filter}
+							onValueChange={(value) => navigate({ filter: value === 'all' ? null : value })}
+							options={filters.map((option) => ({ value: option.id, label: option.label }))}
+							size="xs"
+							track="none"
+							aria-label="Student filters"
+							class="mt-4 gap-1.5"
+							itemClass="data-[state=unchecked]:bg-muted"
+						>
+							{#snippet item(option)}
+								{#if option.value in engagementMeta}<span
+										class="inline-block size-1.5 rounded-full {engagementMeta[
+											option.value as Engagement
+										].dot}"
+									></span>{/if}{option.label}<span class="opacity-60 tabular-nums"
+									>{filters.find((entry) => entry.id === option.value)?.count}</span
+								>
+							{/snippet}
+						</SegmentedControl>
 					</div>
 					{#if studentsQuery.isLoading}<div class="space-y-2 p-5">
 							{#each [1, 2, 3, 4, 5] as row (row)}<Skeleton class="h-12" />{/each}

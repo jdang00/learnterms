@@ -76,6 +76,10 @@ export const DOCK_ISLAND_CLASS =
 export const DOCK_PHONE_BAR_CLASS =
 	'dock-glass bottom-dock fixed inset-x-0 z-50 rounded-t-[1.75rem] border-b-0 md:hidden';
 
+// A big tappable tool in the phone Tools sheet. Callers add the active tone.
+export const TOOL_TILE_CLASS =
+	'flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-border text-sm font-medium active:scale-[0.97] px-2 transition-colors disabled:opacity-40';
+
 export const READOUT_CLASS =
 	'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium tabular-nums text-foreground/80 bg-foreground/[0.06]';
 

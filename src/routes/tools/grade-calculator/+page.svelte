@@ -93,15 +93,15 @@
 		const first = letter[0]?.toUpperCase();
 		switch (first) {
 			case 'A':
-				return 'text-green-700';
+				return 'text-success-ink';
 			case 'B':
-				return 'text-green-500';
+				return 'text-success-ink/80';
 			case 'C':
-				return 'text-amber-500';
+				return 'text-warning-ink';
 			case 'D':
-				return 'text-orange-500';
+				return 'text-ember-ink';
 			default:
-				return 'text-red-500';
+				return 'text-error-ink';
 		}
 	}
 
@@ -173,10 +173,10 @@
 	});
 
 	function requirementTone(neededPercent: number) {
-		if (neededPercent <= 70) return 'text-green-500';
-		if (neededPercent <= 85) return 'text-amber-500';
-		if (neededPercent <= 100) return 'text-orange-500';
-		return 'text-red-500';
+		if (neededPercent <= 70) return 'text-success-ink/80';
+		if (neededPercent <= 85) return 'text-warning-ink';
+		if (neededPercent <= 100) return 'text-ember-ink';
+		return 'text-error-ink';
 	}
 
 	onMount(() => {
@@ -381,7 +381,7 @@
 <div class="min-h-screen bg-background">
 	<div class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
 		<header class="mb-6">
-			<h1 class="font-display text-2xl font-bold sm:text-3xl">Grade calculator</h1>
+			<h1 class="title-page">Grade calculator</h1>
 			<p class="mt-2 max-w-2xl text-sm text-foreground/70">
 				LearnTerms doesn't store your grades on any server. Everything you type stays in this
 				browser, on your device — no one else can see it unless they're sitting at your screen.
@@ -420,7 +420,7 @@
 							{#if selectedCourse}
 								<div class="rounded-2xl bg-muted/60 p-4">
 									{#if selectedCourse.code}
-										<div class="text-xs font-semibold uppercase tracking-wider text-primary-ink">
+										<div class="label-caps text-primary-ink">
 											{selectedCourse.code}
 										</div>
 									{/if}
@@ -496,18 +496,14 @@
 
 							{#if bandRequirements.length > 0}
 								<div class="border-t border-muted pt-4">
-									<div
-										class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-foreground/60"
-									>
+									<div class="mb-2 flex items-center gap-1.5 label-caps">
 										<Target size={13} />
 										What you need to finish at
 									</div>
 									<div class="overflow-hidden surface">
 										<Table.Root>
 											<Table.Header>
-												<Table.Row
-													class="bg-muted/60 text-xs uppercase tracking-wider text-foreground/60"
-												>
+												<Table.Row class="bg-muted/60 label-caps">
 													<Table.Head class="font-semibold">Grade</Table.Head>
 													<Table.Head class="text-right font-semibold"
 														>Needed on remaining</Table.Head
@@ -522,7 +518,7 @@
 														</Table.Cell>
 														<Table.Cell class="text-right font-mono">
 															{#if row.status === 'achieved'}
-																<span class="text-green-500 font-sans text-sm font-medium">
+																<span class="text-success-ink font-sans text-sm font-medium">
 																	already secured
 																</span>
 															{:else if row.status === 'impossible'}
@@ -564,9 +560,7 @@
 				{#if selectedCourse?.ruleset}
 					<Card.Root class="py-0">
 						<Card.Content class="gap-3 p-5 sm:p-6">
-							<div class="text-xs font-semibold uppercase tracking-wider text-foreground/60">
-								Grade scale
-							</div>
+							<div class="label-caps">Grade scale</div>
 							<dl class="divide-y divide-muted">
 								{#each [...selectedCourse.ruleset.gradeBands].sort((a, b) => b.minPercentage - a.minPercentage) as band (band.id)}
 									<div class="flex items-baseline justify-between py-2">
@@ -634,7 +628,7 @@
 														{group.entry.name}
 													</h3>
 													{#if isBonus}
-														<span class="text-xs font-medium text-amber-500">bonus</span>
+														<span class="text-xs font-medium text-warning-ink">bonus</span>
 													{/if}
 													<span class="text-xs font-mono text-foreground/60">
 														{groupCompletion(group.items)}/{group.items.length}
@@ -658,7 +652,7 @@
 													size="xs"
 													shape="circle"
 													aria-label="Fill this group with full-credit values"
-													title="Fill this group with full-credit values"
+													tooltip="Fill this group with full-credit values"
 													onclick={() => fillGroupWithMaximum(group.items)}
 												>
 													<ChevronsUp size={14} />
@@ -669,7 +663,7 @@
 													size="xs"
 													shape="circle"
 													aria-label="Clear this group"
-													title="Clear this group"
+													tooltip="Clear this group"
 													onclick={() => clearGroup(group.items)}
 												>
 													<X size={14} />

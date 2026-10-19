@@ -2,7 +2,8 @@
 	import {
 		DOCK_ISLAND_CLASS,
 		DOCK_PHONE_BAR_CLASS,
-		dockGlass
+		dockGlass,
+		TOOL_TILE_CLASS
 	} from '$lib/components/quiz-dock/dockStyles';
 	import { RadialProgress } from '$lib/components/ui/radial-progress';
 	import { formatClock } from '$lib/utils/format';
@@ -56,7 +57,7 @@
 	import * as Alert from '$lib/components/ui/alert';
 	import * as Card from '$lib/components/ui/card';
 	import { Progress } from '$lib/components/ui/progress';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { LoadingState } from '$lib/components/ui/spinner';
 
 	type LocalResponse = {
 		selectedOptions: string[];
@@ -829,12 +830,7 @@
 
 <div class="flex flex-col h-dvh lg:h-[calc(100dvh-4rem)]">
 	{#if runnerQuery.isLoading}
-		<div class="flex-1 flex items-center justify-center">
-			<div class="text-center">
-				<Spinner class="size-6 text-primary" />
-				<p class="text-foreground/60 mt-3">Loading your test...</p>
-			</div>
-		</div>
+		<LoadingState label="Loading your test…" class="flex-1 text-base" />
 	{:else if runnerQuery.error}
 		<div class="flex-1 flex items-center justify-center p-4">
 			<Alert.Root tone="error" class="max-w-md">
@@ -946,7 +942,7 @@
 								<Card.Content class="p-4">
 									<div class="flex items-center gap-2 mb-1">
 										<Clock size={14} class="text-foreground/50" />
-										<span class="text-xs uppercase tracking-wide text-foreground/50">Timer</span>
+										<span class="label-caps">Timer</span>
 									</div>
 									<div class="text-3xl font-bold tabular-nums">
 										{formatClock(elapsedMsLocal)}
@@ -1415,8 +1411,7 @@
 						<li>
 							<button
 								type="button"
-								class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-border text-sm font-medium active:scale-[0.97] {sidePanel.current ===
-								'notes'
+								class="{TOOL_TILE_CLASS} {sidePanel.current === 'notes'
 									? 'bg-info/12 text-info-ink'
 									: ''}"
 								aria-pressed={sidePanel.current === 'notes'}
@@ -1430,8 +1425,7 @@
 					<li>
 						<button
 							type="button"
-							class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-border text-sm font-medium active:scale-[0.97] {sidePanel.current ===
-							'calculator'
+							class="{TOOL_TILE_CLASS} {sidePanel.current === 'calculator'
 								? 'bg-info/12 text-info-ink'
 								: ''}"
 							aria-pressed={sidePanel.current === 'calculator'}

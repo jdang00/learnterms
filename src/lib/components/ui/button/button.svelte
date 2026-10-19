@@ -73,11 +73,18 @@
 			shape?: ButtonShape;
 			/** Shows a spinner in place of the leading content and blocks clicks. */
 			loading?: boolean;
+			/** Wraps the button in the LearnTerms Tip. Use instead of `title` for hover hints. */
+			tooltip?: string;
+			tooltipSide?: 'top' | 'right' | 'bottom' | 'left';
+			/** Shortcut keys shown in the tooltip. */
+			tooltipKbd?: string | string[];
 		};
 </script>
 
 <script lang="ts">
+	import { mergeProps } from 'bits-ui';
 	import { Spinner } from '../spinner/index.js';
+	import { Tip } from '../tooltip/index.js';
 
 	let {
 		class: className,
@@ -86,6 +93,9 @@
 		size = 'md',
 		shape = 'pill',
 		loading = false,
+		tooltip,
+		tooltipSide,
+		tooltipKbd,
 		ref = $bindable(),
 		href = undefined,
 		type = 'button',
@@ -97,34 +107,44 @@
 	const classes = $derived(cn(buttonVariants({ variant, tone, size, shape }), className));
 </script>
 
-{#if href}
-	<!-- eslint-disable svelte/no-navigation-without-resolve -- callers pass a resolve()d or external href -->
-	<a
-		bind:this={ref}
-		data-slot="button"
-		class={classes}
-		href={disabled ? undefined : href}
-		aria-disabled={disabled || loading || undefined}
-		aria-busy={loading || undefined}
-		role={disabled ? 'link' : undefined}
-		tabindex={disabled ? -1 : undefined}
-		{...restProps}
-	>
-		{#if loading}<Spinner />{/if}
-		{@render children?.()}
-	</a>
-	<!-- eslint-enable svelte/no-navigation-without-resolve -->
+{#snippet element(extra: Record<string, unknown>)}
+	{#if href}
+		<!-- eslint-disable svelte/no-navigation-without-resolve -- callers pass a resolve()d or external href -->
+		<a
+			bind:this={ref}
+			data-slot="button"
+			class={classes}
+			href={disabled ? undefined : href}
+			aria-disabled={disabled || loading || undefined}
+			aria-busy={loading || undefined}
+			role={disabled ? 'link' : undefined}
+			tabindex={disabled ? -1 : undefined}
+			{...mergeProps(restProps, extra)}
+		>
+			{#if loading}<Spinner />{/if}
+			{@render children?.()}
+		</a>
+		<!-- eslint-enable svelte/no-navigation-without-resolve -->
+	{:else}
+		<button
+			bind:this={ref}
+			data-slot="button"
+			class={classes}
+			{type}
+			disabled={disabled || loading}
+			aria-busy={loading || undefined}
+			{...mergeProps(restProps, extra)}
+		>
+			{#if loading}<Spinner />{/if}
+			{@render children?.()}
+		</button>
+	{/if}
+{/snippet}
+
+{#if tooltip}
+	<Tip label={tooltip} side={tooltipSide} kbd={tooltipKbd}>
+		{#snippet child({ props })}{@render element(props)}{/snippet}
+	</Tip>
 {:else}
-	<button
-		bind:this={ref}
-		data-slot="button"
-		class={classes}
-		{type}
-		disabled={disabled || loading}
-		aria-busy={loading || undefined}
-		{...restProps}
-	>
-		{#if loading}<Spinner />{/if}
-		{@render children?.()}
-	</button>
+	{@render element({})}
 {/if}

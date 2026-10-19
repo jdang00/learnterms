@@ -206,7 +206,8 @@
 								tone="neutral"
 								size="sm"
 								class="gap-1"
-								title="New Question Status"
+								tooltip="New Question Status"
+								aria-label="New question status: {defaultStatus}"
 							>
 								{#if defaultStatus === 'published'}
 									<CheckCircle size={14} class="text-success" />
@@ -255,7 +256,7 @@
 					class="gap-1"
 					onclick={onReorderToggle}
 					aria-label={reorderMode ? 'Finish reordering' : 'Reorder questions'}
-					title={reorderMode ? 'Finish reordering' : 'Reorder questions'}
+					tooltip={reorderMode ? 'Finish reordering' : 'Reorder questions'}
 				>
 					<GripVertical size={14} />
 					<span class="hidden sm:inline">{reorderMode ? 'Done' : 'Reorder'}</span>
@@ -419,7 +420,8 @@
 								tone="neutral"
 								size="sm"
 								class="gap-1 px-3"
-								title="New questions save as: {defaultStatus}"
+								tooltip="New questions save as: {defaultStatus}"
+								aria-label="New questions save as: {defaultStatus}"
 							>
 								{#if defaultStatus === 'published'}
 									<CheckCircle size={14} class="text-success" />
@@ -431,7 +433,7 @@
 						{/snippet}
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content align="start" class="w-48">
-						<DropdownMenu.Label class="text-[10px] uppercase tracking-wider opacity-50">
+						<DropdownMenu.Label class="label-caps opacity-50">
 							New questions save as
 						</DropdownMenu.Label>
 						<DropdownMenu.Item
@@ -476,7 +478,7 @@
 					tone="neutral"
 					class="gap-1"
 					onclick={onPublishSelected}
-					title="Publish selected"
+					tooltip="Publish selected"
 				>
 					<Send size={14} />
 					Publish
@@ -487,7 +489,7 @@
 					tone="neutral"
 					class="gap-1"
 					onclick={onDraftSelected}
-					title="Save selected as drafts"
+					tooltip="Save selected as drafts"
 				>
 					<FileText size={14} />
 					Draft
@@ -498,7 +500,7 @@
 					tone="neutral"
 					class="gap-1"
 					onclick={onArchiveSelected}
-					title="Archive selected"
+					tooltip="Archive selected"
 				>
 					<Archive size={14} />
 					Archive
@@ -509,7 +511,7 @@
 					tone="neutral"
 					class="gap-1"
 					onclick={onMoveSelected}
-					title="Move selected"
+					tooltip="Move selected"
 				>
 					<ArrowRightLeft size={14} />
 					Move
@@ -520,7 +522,7 @@
 					tone="error"
 					class="gap-1"
 					onclick={onDeleteSelected}
-					title="Delete selected"
+					tooltip="Delete selected"
 				>
 					<Trash2 size={14} />
 					Delete
@@ -531,7 +533,7 @@
 					tone="neutral"
 					class="gap-1"
 					onclick={onDeselectAll}
-					title="Clear selection"
+					tooltip="Clear selection"
 				>
 					<X size={14} />
 					Clear

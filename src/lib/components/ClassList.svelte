@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Empty from '$lib/components/ui/empty';
 	import SemesterSelect from '$lib/components/SemesterSelect.svelte';
 	import { fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -84,7 +85,7 @@
 	{#if classes.isLoading}
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			{#each Array(4), index (index)}
-				<div class="surface shadow-xs p-5 animate-pulse">
+				<div class="surface shadow-xs p-5">
 					<div class="flex items-start gap-3 mb-3">
 						<Skeleton class="h-8 w-8 rounded-lg shrink-0" />
 						<div class="flex-1 space-y-2">
@@ -121,13 +122,13 @@
 			<Alert.Title>Failed to load classes: {classes.error.toString()}</Alert.Title>
 		</Alert.Root>
 	{:else if !filteredClasses || filteredClasses.length === 0}
-		<div class="surface shadow-xs p-8">
-			<div class="text-center py-8">
-				<div class="text-5xl mb-4">📚</div>
-				<h3 class="text-lg font-semibold mb-2 text-foreground">No classes yet</h3>
-				<p class="text-foreground/60 text-sm">Your classes will appear here once enrolled.</p>
-			</div>
-		</div>
+		<Empty.Root class="surface shadow-xs py-16">
+			<Empty.Header>
+				<Empty.Media variant="emoji">📚</Empty.Media>
+				<Empty.Title class="text-lg">No classes yet</Empty.Title>
+				<Empty.Description>Your classes will appear here once enrolled.</Empty.Description>
+			</Empty.Header>
+		</Empty.Root>
 	{:else if variant === 'grid'}
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 			{#each filteredClasses as classItem, i (classItem._id)}

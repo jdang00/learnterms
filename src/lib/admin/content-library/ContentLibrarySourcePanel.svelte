@@ -4,7 +4,7 @@
 	import type { Doc } from '../../../convex/_generated/dataModel';
 	import { fileKind } from './contentLibrary';
 	import { Button } from '$lib/components/ui/button';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { LoadingState } from '$lib/components/ui/spinner';
 
 	let {
 		document,
@@ -25,10 +25,7 @@
 
 <div class="h-full overflow-hidden surface-muted">
 	{#if isOpening}
-		<div class="flex h-full min-h-72 flex-col items-center justify-center gap-3">
-			<Spinner class="size-6 text-primary" />
-			<p class="text-sm text-foreground/60">Loading source...</p>
-		</div>
+		<LoadingState label="Loading source…" class="h-full min-h-72" />
 	{:else if viewUrl && document.metadata?.mimeType === 'application/pdf'}
 		<iframe class="h-full min-h-[60vh] w-full" title={`${document.title} source`} src={viewUrl}
 		></iframe>

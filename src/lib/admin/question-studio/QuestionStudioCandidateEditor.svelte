@@ -82,11 +82,7 @@
 
 			<!-- Options -->
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
-				<div
-					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
-						? 'mb-2'
-						: 'mb-3'}"
-				>
+				<div class="label-caps {isMobile ? 'mb-2' : 'mb-3'}">
 					Options · select the correct answer
 				</div>
 				<RadioGroup.Root
@@ -132,13 +128,7 @@
 
 			<!-- Rationale -->
 			<div>
-				<div
-					class="text-xs font-semibold uppercase tracking-wide text-foreground/60 {isMobile
-						? 'mb-2'
-						: 'mb-3'}"
-				>
-					Rationale
-				</div>
+				<div class="label-caps {isMobile ? 'mb-2' : 'mb-3'}">Rationale</div>
 				<QuestionRichTextEditor label="Rationale" bind:value={rationale} disabled={saving} />
 				<QuestionSources
 					source={{

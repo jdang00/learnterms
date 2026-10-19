@@ -69,9 +69,7 @@
 			<div class="flex items-start gap-3">
 				<span class="shrink-0 text-4xl leading-none">{emoji}</span>
 				<div class="min-w-0">
-					<h1 id="module-empty-title" class="font-display text-2xl font-semibold sm:text-3xl">
-						No questions yet
-					</h1>
+					<h1 id="module-empty-title" class="title-page">No questions yet</h1>
 					<p class="mt-0.5 truncate text-sm text-foreground/55">{title}</p>
 				</div>
 			</div>

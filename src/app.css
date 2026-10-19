@@ -61,6 +61,10 @@
 	--ember: #f97316;
 	--ember-foreground: #ffffff;
 	--ember-ink: #c2410c;
+	/* Mastery: the deep green past "correct" in progress grids, rings and bars. */
+	--mastered: #065f46;
+	--mastered-foreground: #ffffff;
+	--mastered-ink: #047857;
 
 	--ring: var(--primary);
 	--destructive: var(--error);
@@ -106,6 +110,8 @@
 	--warning-ink: #ffcc33;
 	--error-ink: #ff8da1;
 	--ember-ink: #fb923c;
+	--mastered: #047857;
+	--mastered-ink: #34d399;
 }
 
 /* Tailwind utilities for the tokens: bg-primary, text-success-ink, border-border, … */
@@ -162,6 +168,9 @@
 	--color-ember: var(--ember);
 	--color-ember-foreground: var(--ember-foreground);
 	--color-ember-ink: var(--ember-ink);
+	--color-mastered: var(--mastered);
+	--color-mastered-foreground: var(--mastered-foreground);
+	--color-mastered-ink: var(--mastered-ink);
 
 	--color-chart-1: var(--chart-1);
 	--color-chart-2: var(--chart-2);
@@ -305,6 +314,41 @@ body {
 	border-radius: var(--radius-surface);
 	border: 1px dashed var(--color-border);
 	background-color: color-mix(in oklab, var(--color-background) 60%, transparent);
+}
+
+/* Small uppercase section label ("Type", "Top result", "Width"). Add a text color to tint it. */
+@utility label-caps {
+	font-size: 0.6875rem;
+	line-height: 1rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--color-muted-foreground);
+}
+
+/* Page titles. title-page for app pages, title-hero for public page heroes. */
+@utility title-page {
+	font-family: var(--font-brand);
+	font-size: 1.5rem;
+	line-height: 2rem;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	@media (width >= 40rem) {
+		font-size: 1.875rem;
+		line-height: 2.25rem;
+	}
+}
+
+@utility title-hero {
+	font-family: var(--font-brand);
+	font-size: 2.25rem;
+	line-height: 1.15;
+	font-weight: 700;
+	letter-spacing: -0.015em;
+	@media (width >= 40rem) {
+		font-size: 3rem;
+		line-height: 1.1;
+	}
 }
 
 @utility font-display {

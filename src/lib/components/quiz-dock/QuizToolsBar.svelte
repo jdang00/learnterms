@@ -4,10 +4,9 @@
 	import ToolCase from '@lucide/svelte/icons/tool-case';
 	import Sheet from '$lib/components/Sheet.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { Tip } from '$lib/components/ui/tooltip';
 	import { getQuizCommands, isCommandShown } from './commands.svelte';
 	import { getDockPreferences } from './dockPreferences.svelte';
-	import { isPassive, TONE_BADGE, TONE_TEXT } from './dockStyles';
+	import { isPassive, TONE_BADGE, TONE_TEXT, TOOL_TILE_CLASS } from './dockStyles';
 	import { DEFAULT_DOCK } from './layouts';
 	import { ariaShortcutFor, shortcutLabelFor } from './shortcuts';
 	import type { QuizCommand } from './types';
@@ -143,29 +142,20 @@
 {#if variant === 'panel'}
 	<section aria-labelledby="quiz-tools-heading">
 		<div class="mb-1.5 flex items-center justify-between px-1">
-			<h3
-				id="quiz-tools-heading"
-				class="text-[0.7rem] font-semibold uppercase tracking-wider text-foreground/45"
-			>
-				Tools
-			</h3>
+			<h3 id="quiz-tools-heading" class="label-caps">Tools</h3>
 			{#if preferences}
-				<Tip label="Customize tools">
-					{#snippet child({ props })}
-						<Button
-							{...props}
-							variant="ghost"
-							tone="neutral"
-							size="xs"
-							shape="circle"
-							class="text-foreground/40 hover:text-foreground"
-							aria-label="Customize tools"
-							onclick={customize}
-						>
-							<SlidersHorizontal size={13} />
-						</Button>
-					{/snippet}
-				</Tip>
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="xs"
+					shape="circle"
+					class="text-foreground/40 hover:text-foreground"
+					aria-label="Customize tools"
+					onclick={customize}
+					tooltip="Customize tools"
+				>
+					<SlidersHorizontal size={13} />
+				</Button>
 			{/if}
 		</div>
 		{#if tools.length}
@@ -224,7 +214,7 @@
 		aria-label="Tools"
 		aria-haspopup="dialog"
 		aria-expanded={sheetOpen}
-		title="Tools"
+		tooltip="Tools"
 		onclick={openSheet}
 	>
 		<ToolCase size={20} aria-hidden="true" />
@@ -250,8 +240,7 @@
 						{:else}
 							<button
 								type="button"
-								class="flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-border px-2 text-sm font-medium transition-colors active:scale-[0.97] disabled:opacity-40
-									{tileTone(command, active)}"
+								class="{TOOL_TILE_CLASS} {tileTone(command, active)}"
 								aria-pressed={command.active ? active : undefined}
 								disabled={command.enabled?.() === false}
 								onclick={() => run(command)}

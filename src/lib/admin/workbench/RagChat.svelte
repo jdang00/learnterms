@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Progress } from '$lib/components/ui/progress';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Bot from '@lucide/svelte/icons/bot';
 	import Braces from '@lucide/svelte/icons/braces';
@@ -38,7 +39,7 @@
 
 {#snippet statTile(label: string, value: string, sub: string)}
 	<div class="min-w-0 surface-sm px-3 py-2.5">
-		<p class="text-[10px] font-semibold uppercase tracking-wide text-foreground/40">{label}</p>
+		<p class="label-caps">{label}</p>
 		<p class="mt-0.5 truncate text-sm font-semibold">{value}</p>
 		<p class="truncate font-mono text-[10px] text-foreground/40">{sub}</p>
 	</div>
@@ -257,9 +258,7 @@
 
 			{#if inspected.context?.results?.length}
 				<div class="space-y-2">
-					<p class="text-[10px] font-semibold uppercase tracking-wide text-foreground/40">
-						Retrieved chunk groups · ranked by score
-					</p>
+					<p class="label-caps">Retrieved chunk groups · ranked by score</p>
 					{#each inspected.context.results as group, groupIndex (groupIndex)}
 						{@const pageNumber = group.content[0]?.metadata?.pageNumber}
 						{@const preview = group.content.map((chunk) => chunk.text).join(' ')}
@@ -284,12 +283,11 @@
 										class="text-foreground/30 transition-transform group-open:rotate-90"
 									/>
 								</span>
-								<span class="mt-1.5 block h-1 overflow-hidden rounded-full bg-muted">
-									<span
-										class="block h-full rounded-full bg-primary/70"
-										style="width: {Math.min(100, Math.max(4, Math.round(group.score * 100)))}%"
-									></span>
-								</span>
+								<Progress
+									value={Math.min(100, Math.max(4, Math.round(group.score * 100)))}
+									class="mt-1.5 h-1 bg-muted"
+									aria-label="Relevance"
+								/>
 								<span
 									class="mt-2 line-clamp-2 block text-[11px] leading-relaxed text-foreground/55 group-open:hidden"
 								>

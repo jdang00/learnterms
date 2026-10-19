@@ -1,11 +1,11 @@
 <script lang="ts">
+	import { Spinner } from '$lib/components/ui/spinner';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import PartyPopper from '@lucide/svelte/icons/party-popper';
 	import Rocket from '@lucide/svelte/icons/rocket';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import Loader2 from '@lucide/svelte/icons/loader-2';
 	import { Confetti } from 'svelte-confetti';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
@@ -50,7 +50,7 @@
 				class="w-24 h-24 bg-gradient-to-br from-primary/20 to-success/20 rounded-full flex items-center justify-center mx-auto relative"
 			>
 				{#if isSyncing}
-					<Loader2 size={48} class="text-primary animate-spin" />
+					<Spinner class="size-12 text-primary" />
 				{:else}
 					<PartyPopper size={48} class="text-primary" />
 				{/if}
@@ -70,7 +70,7 @@
 		</div>
 
 		<!-- Message -->
-		<h1 class="font-display text-4xl font-bold mb-4">
+		<h1 class="title-hero mb-4">
 			{#if isSyncing}
 				Setting up your account...
 			{:else}

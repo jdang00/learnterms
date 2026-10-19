@@ -1,10 +1,10 @@
 <script lang="ts">
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Check from '@lucide/svelte/icons/check';
-	import Loader2 from '@lucide/svelte/icons/loader-2';
 	import Minus from '@lucide/svelte/icons/minus';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
@@ -217,7 +217,7 @@
 				</div>
 				<p class="mt-1 text-sm text-foreground/65">Generate questions from your course sources.</p>
 				{#if productsQuery.isLoading}
-					<div class="mt-5 h-12 w-28 animate-pulse rounded-lg bg-muted"></div>
+					<Skeleton class="mt-5 h-12 w-28 rounded-lg" />
 				{:else}
 					{@render priceTag(semesterPrice, 'per 6 months')}
 				{/if}
@@ -370,7 +370,7 @@
 					Create and organize your cohort’s study material.
 				</p>
 				{#if productsQuery.isLoading}
-					<div class="mt-5 h-12 w-28 animate-pulse rounded-lg bg-muted"></div>
+					<Skeleton class="mt-5 h-12 w-28 rounded-lg" />
 				{:else if currentProduct}
 					{@render priceTag(
 						formatPrice(currentProduct.prices?.[0]?.priceAmount),
@@ -381,21 +381,15 @@
 				{/if}
 				<div class="mt-6 flex-1">{@render featureList(proFeatures)}</div>
 				{#if subscriptionQuery.isLoading}
-					<Button class="mt-8" disabled>
-						<Loader2 size={18} class="animate-spin" />
-					</Button>
+					<Button class="mt-8" loading aria-label="Loading plan" />
 				{:else}
 					<Button
 						class="mt-8"
 						onclick={handleUpgrade}
-						disabled={isCheckoutLoading || !currentProduct}
+						loading={isCheckoutLoading}
+						disabled={!currentProduct}
 					>
-						{#if isCheckoutLoading}
-							<Loader2 size={18} class="animate-spin" />
-							Redirecting...
-						{:else}
-							Upgrade to Pro
-						{/if}
+						{isCheckoutLoading ? 'Redirecting...' : 'Upgrade to Pro'}
 					</Button>
 				{/if}
 			</div>

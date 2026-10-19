@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Empty from '$lib/components/ui/empty';
 	import DocumentPipelineProgress from './DocumentPipelineProgress.svelte';
 	import { documentPipeline } from './documentPipeline';
 	import Check from '@lucide/svelte/icons/check';
@@ -50,27 +51,32 @@
 		</div>
 	{/if}
 {:else if docs.length === 0 && searchTerm}
-	<div class="flex flex-col items-center justify-center surface-dashed py-20 text-center">
-		<div class="mb-3 rounded-full bg-muted p-4 text-foreground/40">
-			<Search size={24} />
-		</div>
-		<p class="text-sm font-semibold">No matches for "{searchTerm}"</p>
-		<p class="mt-1 text-xs text-foreground/50">Try a different word or check the spelling.</p>
-	</div>
+	<Empty.Root class="surface-dashed py-20">
+		<Empty.Header>
+			<Empty.Media variant="icon" class="rounded-full"><Search /></Empty.Media>
+			<Empty.Title class="text-sm">No matches for "{searchTerm}"</Empty.Title>
+			<Empty.Description class="text-xs"
+				>Try a different word or check the spelling.</Empty.Description
+			>
+		</Empty.Header>
+	</Empty.Root>
 {:else if docs.length === 0}
-	<div class="flex flex-col items-center justify-center surface-dashed py-20 text-center">
-		<div class="mb-4 rounded-2xl bg-primary/10 p-5 text-primary-ink">
-			<Library size={30} />
-		</div>
-		<p class="text-base font-semibold">Your library is empty</p>
-		<p class="mt-1 max-w-xs text-sm text-foreground/50">
-			Add your first PDF to make it searchable for your class.
-		</p>
-		<Button size="sm" class="mt-5 gap-2" onclick={onAdd}>
-			<Plus size={15} />
-			Add file
-		</Button>
-	</div>
+	<Empty.Root class="surface-dashed py-20">
+		<Empty.Header>
+			<Empty.Media variant="icon" class="size-16 bg-primary/10 text-primary-ink [&_svg]:size-7"
+				><Library /></Empty.Media
+			>
+			<Empty.Title>Your library is empty</Empty.Title>
+			<Empty.Description>Add your first PDF to make it searchable for your class.</Empty.Description
+			>
+		</Empty.Header>
+		<Empty.Content>
+			<Button size="sm" class="gap-2" onclick={onAdd}>
+				<Plus size={15} />
+				Add file
+			</Button>
+		</Empty.Content>
+	</Empty.Root>
 {:else if viewMode === 'grid'}
 	<div
 		class="grid grid-cols-2 gap-3 {isDrawerOpen
@@ -93,7 +99,7 @@
 				>
 					<div class="doc-stage relative h-28 w-full shrink-0 overflow-hidden">
 						<span
-							class="absolute left-2.5 top-2.5 z-10 inline-flex items-center rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground/65 backdrop-blur"
+							class="absolute left-2.5 top-2.5 z-10 inline-flex items-center rounded-full bg-background/85 px-2 py-0.5 label-caps text-foreground/65 backdrop-blur"
 						>
 							{kind.label}
 						</span>

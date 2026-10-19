@@ -139,7 +139,7 @@
 						shape="circle"
 						size="xs"
 						class="mt-2 shrink-0 text-foreground/35 hover:text-foreground/70"
-						title="Topic details"
+						tooltip="Topic details"
 						aria-label="Topic details"
 						onclick={() => (detailTopic = topic)}
 					>

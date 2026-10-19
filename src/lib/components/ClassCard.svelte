@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { fade } from 'svelte/transition';
 	import ColorMark from './ColorMark.svelte';
@@ -40,7 +41,7 @@
 		new: 'bg-foreground/10',
 		started: 'bg-success/60',
 		answered: 'bg-success/60',
-		mastered: 'bg-emerald-800'
+		mastered: 'bg-mastered'
 	} as const;
 </script>
 
@@ -97,7 +98,7 @@
 				{/each}
 			</span>
 		{:else if loading && !progress}
-			<span class="block h-2.5 w-full animate-pulse rounded-full bg-muted-strong"></span>
+			<Skeleton class="h-2.5 w-full rounded-full" />
 		{/if}
 
 		<span class="mt-auto flex items-center justify-between gap-3">

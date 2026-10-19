@@ -303,7 +303,7 @@
 		<!-- Empty -->
 		<div class="surface p-5">
 			{@render usecase('Empty', 'Calm empty states: no flagged questions, an empty library.')}
-			<Empty.Root class="border">
+			<Empty.Root class="surface-dashed">
 				<Empty.Header>
 					<Empty.Media variant="icon"><Inbox /></Empty.Media>
 					<Empty.Title>No flagged questions</Empty.Title>

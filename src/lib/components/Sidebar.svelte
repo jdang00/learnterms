@@ -79,7 +79,7 @@
 	{/if}
 {:else}
 	<div class="lg:col-span-1">
-		<h3 class="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground/50">
+		<h3 class="mb-4 label-caps">
 			{title}
 		</h3>
 

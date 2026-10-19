@@ -14,7 +14,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Input } from '$lib/components/ui/input';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { LoadingState } from '$lib/components/ui/spinner';
 	import { Tip } from '$lib/components/ui/tooltip';
 
 	const client = useConvexClient();
@@ -191,10 +191,7 @@
 
 	<div>
 		{#if tagsQuery.isLoading}
-			<div class="flex items-center gap-2 text-sm text-foreground/60 py-4">
-				<Spinner />
-				<span>Loading tags...</span>
-			</div>
+			<LoadingState inline label="Loading tags…" class="py-4" />
 		{:else if tagsQuery.error}
 			<Alert.Root tone="error" class="py-2 text-sm">
 				<Alert.Title>Failed to load tags.</Alert.Title>
@@ -232,7 +229,7 @@
 									class="size-5"
 									onclick={cancelEdit}
 									aria-label="Cancel edit"
-									title="Cancel"
+									tooltip="Cancel"
 								>
 									<X size={12} />
 								</Button>
@@ -272,7 +269,7 @@
 												shape="square"
 												class="size-4"
 												aria-label="Tag options"
-												title="Options"
+												tooltip="Options"
 											>
 												<svg
 													xmlns="http://www.w3.org/2000/svg"

@@ -49,7 +49,7 @@
 	size="lg"
 	class="mx-1.5 max-w-full gap-2 px-5 align-middle font-medium"
 	disabled={!cohortId || cohortLoading}
-	title={selectedDocumentId ? 'Change document' : undefined}
+	tooltip={selectedDocumentId ? 'Change document' : undefined}
 	onclick={() => (open = true)}
 >
 	{#if selectedDocumentId}

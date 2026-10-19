@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SegmentedControl } from '$lib/components/ui/segmented-control';
 	import ModuleEmojiSuggestion from './ModuleEmojiSuggestion.svelte';
 	import BookOpenText from '@lucide/svelte/icons/book-open-text';
 	import AlignLeft from '@lucide/svelte/icons/align-left';
@@ -17,7 +18,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { LoadingState } from '$lib/components/ui/spinner';
 	import { Textarea } from '$lib/components/ui/textarea';
 
 	type Props = {
@@ -256,28 +257,13 @@
 							<Hash size={18} class="text-primary/80" />
 							<span>Status</span>
 						</span>
-						<div
-							class="flex w-fit flex-wrap justify-self-start gap-1 rounded-full border border-border bg-background p-1 shadow-xs"
-							role="group"
+						<SegmentedControl
+							value={moduleStatus}
+							onValueChange={(value) => (moduleStatus = value as typeof moduleStatus)}
+							options={statusOptions}
 							aria-label="Module status"
-						>
-							{#each statusOptions as option (option.value)}
-								<Button
-									variant={moduleStatus === option.value ? 'solid' : 'ghost'}
-									tone={moduleStatus === option.value ? option.tone : 'neutral'}
-									size="sm"
-									class="px-3 font-semibold {moduleStatus === option.value
-										? ''
-										: 'text-foreground'}"
-									aria-pressed={moduleStatus === option.value}
-									onclick={() => (moduleStatus = option.value)}
-									title={option.label}
-								>
-									<option.icon size={16} />
-									<span>{option.label}</span>
-								</Button>
-							{/each}
-						</div>
+							class="justify-self-start"
+						/>
 					</div>
 
 					<Label
@@ -297,10 +283,7 @@
 						</Label>
 						<div class="w-full" id="module-tags">
 							{#if tags.isLoading || moduleTagsQuery.isLoading}
-								<div class="flex items-center gap-2 text-xs text-foreground/60">
-									<Spinner class="size-3" />
-									<span>Loading tags...</span>
-								</div>
+								<LoadingState inline label="Loading tags…" class="text-xs" />
 							{:else if tags.error || moduleTagsQuery.error}
 								<div class="text-xs text-error-ink">Failed to load tags.</div>
 							{:else if !tags.data || tags.data.length === 0}

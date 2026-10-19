@@ -107,7 +107,7 @@
 						<School size={26} />
 					</div>
 				{/if}
-				<h1 class="font-display text-2xl font-bold text-foreground sm:text-3xl">Join your class</h1>
+				<h1 class="title-page">Join your class</h1>
 				<p class="mt-1.5 max-w-sm text-sm text-foreground/60">
 					Enter the class code from your invitation to access your class's content.
 				</p>
@@ -170,9 +170,7 @@
 				<Badge tone="success">
 					<Check size={13} /> Class found
 				</Badge>
-				<h1 class="mt-3 font-display text-2xl font-bold text-foreground sm:text-3xl">
-					Confirm your class
-				</h1>
+				<h1 class="title-page mt-3">Confirm your class</h1>
 				<p class="mt-1.5 text-sm text-foreground/60">
 					Make sure this is the right class before joining.
 				</p>

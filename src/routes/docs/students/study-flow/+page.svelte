@@ -57,7 +57,7 @@
 					size="sm"
 					shape="circle"
 					class="mr-4"
-					title="Eliminate"><Eye size={16} /></Button
+					tooltip="Eliminate"><Eye size={16} /></Button
 				>
 			</label>
 			<label class="flex cursor-pointer items-center rounded-full border-2 bg-muted p-3">
@@ -72,7 +72,7 @@
 					size="sm"
 					shape="circle"
 					class="mr-4"
-					title="Eliminate"><Eye size={16} /></Button
+					tooltip="Eliminate"><Eye size={16} /></Button
 				>
 			</label>
 		</div>

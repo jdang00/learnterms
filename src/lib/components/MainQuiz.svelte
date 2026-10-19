@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { LoadingState } from '$lib/components/ui/spinner';
 	import { provideStudyToolContext } from '$lib/analytics/studyToolContext';
 	import QuestionNotesTool from './question-notes/QuestionNotesTool.svelte';
 	import CalculatorTool from './calculator/CalculatorTool.svelte';
@@ -144,7 +145,7 @@
 </script>
 
 {#if questions.isLoading}
-	<p>Loading...</p>
+	<LoadingState label="Loading questions…" />
 {:else if shouldShowError}
 	<ErrorDisplay error={questions.error} showReload={true} class="mb-4" />
 {:else if currentlySelected}
@@ -221,7 +222,7 @@
 								)}
 								target="_blank"
 								rel="noopener noreferrer"
-								title="Edit"
+								tooltip="Edit"
 							>
 								<Pencil size="16" />
 							</Button>

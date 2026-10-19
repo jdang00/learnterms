@@ -55,7 +55,8 @@
 	} from '$lib/examFindings/input';
 	import { EXAM_GROUP_STYLE } from '$lib/components/exam-findings/groups';
 	import Worth4DotEditor from './Worth4DotEditor.svelte';
-	import { followAnchor } from '$lib/utils/anchoredPopover';
+	import { DropdownMenu as DropdownMenuPrimitive, mergeProps } from 'bits-ui';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Checkbox } from '$lib/components/ui/checkbox';
@@ -119,9 +120,6 @@
 	let cardElement = $state<HTMLElement | null>(null);
 	let notesInput = $state<HTMLTextAreaElement | null>(null);
 	let noteDraft = $state('');
-	let menuButton = $state<HTMLButtonElement | null>(null);
-	let menuPopover = $state<HTMLDivElement | null>(null);
-	let unfollowMenu: (() => void) | undefined;
 	let flashed = $state<Set<string>>(new Set());
 	let flashTimer: ReturnType<typeof setTimeout> | undefined;
 	let customKeys = $state<string[]>([]);
@@ -164,20 +162,6 @@
 			onChange();
 		}
 		notesOpen = false;
-	}
-
-	function handleMenuToggle(event: Event) {
-		unfollowMenu?.();
-		unfollowMenu = undefined;
-		if (!menuPopover || !menuButton) return;
-		const open = (event as ToggleEvent).newState === 'open';
-		if (open) unfollowMenu = followAnchor(menuPopover, menuButton);
-		// Toggle fires a frame after opening, so the menu stays invisible until it is placed.
-		menuPopover.style.visibility = open ? 'visible' : 'hidden';
-	}
-
-	function closeMenu() {
-		menuPopover?.hidePopover();
 	}
 
 	function setSize(size: ExamFindingSize | undefined) {
@@ -579,104 +563,65 @@
 				tone: note ? 'warning' : 'neutral',
 				dot: Boolean(note)
 			})}
-			<Tip label="More" side="bottom">
-				{#snippet child({ props })}
-					<Button
-						{...props}
-						bind:ref={menuButton}
-						variant="ghost"
-						tone="neutral"
-						shape="circle"
-						size="xs"
-						class="size-7 shrink-0"
-						aria-label="More box options"
-						aria-haspopup="menu"
-						popovertarget="{uid}-menu"
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props: menuProps })}
+						<Tip label="More" side="bottom">
+							{#snippet child({ props })}
+								<Button
+									{...mergeProps(menuProps, props)}
+									variant="ghost"
+									tone="neutral"
+									shape="circle"
+									size="xs"
+									class="size-7 shrink-0"
+									aria-label="More box options"
+								>
+									<Ellipsis size={14} />
+								</Button>
+							{/snippet}
+						</Tip>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end" class="w-64 p-1.5">
+					<DropdownMenu.Label class="px-2 pb-1 pt-1 label-caps">Width</DropdownMenu.Label>
+					<!-- A segmented control instead of a list, so all four widths fit on one row. -->
+					<DropdownMenuPrimitive.RadioGroup
+						value={finding.size ?? ''}
+						onValueChange={(value) =>
+							setSize(SIZE_OPTIONS.find((option) => (option.value ?? '') === value)?.value)}
+						class="mb-1 grid grid-cols-4 gap-1 rounded-full bg-muted/70 p-1"
+						aria-label="Box width"
 					>
-						<Ellipsis size={14} />
-					</Button>
-				{/snippet}
-			</Tip>
-			<div
-				bind:this={menuPopover}
-				id="{uid}-menu"
-				popover="auto"
-				ontoggle={handleMenuToggle}
-				style="visibility: hidden"
-				class="fixed inset-auto m-0 w-64 rounded-2xl border border-border bg-background p-1.5 text-foreground shadow-xl"
-			>
-				<p
-					class="px-2 pb-1 pt-1 text-[0.65rem] font-semibold uppercase tracking-wider text-foreground/40"
-				>
-					Width
-				</p>
-				<div
-					class="mb-1 grid grid-cols-4 gap-1 rounded-full bg-muted/70 p-1"
-					role="radiogroup"
-					aria-label="Box width"
-				>
-					{#each SIZE_OPTIONS as option (option.label)}
-						{@const active = finding.size === option.value}
-						<button
-							type="button"
-							role="radio"
-							aria-checked={active}
-							class="flex items-center justify-center gap-1 rounded-full py-1 text-[0.7rem] font-medium transition-colors {active
-								? 'bg-background shadow-xs ring-1 ring-border'
-								: 'text-foreground/55 hover:text-foreground'}"
-							onclick={() => setSize(option.value)}
-						>
-							<option.icon size={12} />
-							{option.label}
-						</button>
-					{/each}
-				</div>
-				<ul class="w-full">
-					<li>
-						<button
-							type="button"
-							disabled={index === 0}
-							class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
-							onclick={() => {
-								closeMenu();
-								onMove(-1);
-							}}><ArrowUp size={14} /> Move earlier</button
-						>
-					</li>
-					<li>
-						<button
-							type="button"
-							disabled={index === total - 1}
-							class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
-							onclick={() => {
-								closeMenu();
-								onMove(1);
-							}}><ArrowDown size={14} /> Move later</button
-						>
-					</li>
-					<li>
-						<button
-							type="button"
-							disabled={!canDuplicate}
-							class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
-							onclick={() => {
-								closeMenu();
-								onDuplicate();
-							}}><Copy size={14} /> Duplicate</button
-						>
-					</li>
-					<li>
-						<button
-							type="button"
-							class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm text-error-ink hover:bg-muted"
-							onclick={() => {
-								closeMenu();
-								onRemove();
-							}}><Trash2 size={14} /> Remove box</button
-						>
-					</li>
-				</ul>
-			</div>
+						{#each SIZE_OPTIONS as option (option.label)}
+							<DropdownMenuPrimitive.RadioItem
+								value={option.value ?? ''}
+								closeOnSelect={false}
+								class="flex cursor-pointer items-center justify-center gap-1 rounded-full py-1 text-[0.7rem] font-medium text-foreground/55 outline-hidden transition-colors data-highlighted:text-foreground data-[state=checked]:bg-background data-[state=checked]:text-foreground data-[state=checked]:shadow-xs data-[state=checked]:ring-1 data-[state=checked]:ring-border"
+							>
+								<option.icon size={12} />
+								{option.label}
+							</DropdownMenuPrimitive.RadioItem>
+						{/each}
+					</DropdownMenuPrimitive.RadioGroup>
+					<DropdownMenu.Item class="rounded-xl" disabled={index === 0} onSelect={() => onMove(-1)}>
+						<ArrowUp size={14} /> Move earlier
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
+						class="rounded-xl"
+						disabled={index === total - 1}
+						onSelect={() => onMove(1)}
+					>
+						<ArrowDown size={14} /> Move later
+					</DropdownMenu.Item>
+					<DropdownMenu.Item class="rounded-xl" disabled={!canDuplicate} onSelect={onDuplicate}>
+						<Copy size={14} /> Duplicate
+					</DropdownMenu.Item>
+					<DropdownMenu.Item class="rounded-xl" variant="destructive" onSelect={onRemove}>
+						<Trash2 size={14} /> Remove box
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 			{@render tool(RotateCcw, 'Clear findings', clearValues, { off: empty })}
 			{@render tool(
 				CircleDot,

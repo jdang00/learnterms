@@ -34,7 +34,7 @@
 
 					<!-- Instagram icon (decorative) -->
 					<svg
-						class="ml-auto h-6 w-6 text-pink-500 opacity-90"
+						class="ml-auto h-6 w-6 text-secondary opacity-90"
 						viewBox="0 0 24 24"
 						aria-hidden="true"
 						focusable="false"

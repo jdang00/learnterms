@@ -198,7 +198,7 @@
 					shape="square"
 					{disabled}
 					onclick={item.command}
-					title={item.name}
+					tooltip={item.name}
 					aria-label={item.name}
 					aria-pressed={item.active()}><item.icon size={14} /></Button
 				>

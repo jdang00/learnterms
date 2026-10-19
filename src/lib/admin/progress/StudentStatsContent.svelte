@@ -12,7 +12,7 @@
 	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Progress } from '$lib/components/ui/progress';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { LoadingState } from '$lib/components/ui/spinner';
 	import type { Tone } from '$lib/components/ui/tone';
 
 	let { userId, cohortId }: { userId: Id<'users'>; cohortId: Id<'cohort'> } = $props();
@@ -71,9 +71,7 @@
 </script>
 
 {#if userStats.isLoading}
-	<div class="flex items-center justify-center py-8">
-		<Spinner class="size-6" />
-	</div>
+	<LoadingState />
 {:else if userStats.error}
 	<Alert.Root tone="error">
 		<Alert.Description>Failed to load stats: {userStats.error.message}</Alert.Description>

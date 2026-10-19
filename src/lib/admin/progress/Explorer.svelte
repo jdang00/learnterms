@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Empty from '$lib/components/ui/empty';
 	import { SelectField } from '$lib/components/ui/select';
 	import SemesterSelect from '$lib/components/SemesterSelect.svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
@@ -192,10 +193,10 @@
 					</span>
 				</button>
 			{:else}
-				<div class="col-span-full surface-dashed p-10 text-center text-sm text-foreground/55">
-					<BookOpen size={22} class="mx-auto mb-2 text-foreground/35" />
-					No classes in this semester yet.
-				</div>
+				<Empty.Root class="col-span-full surface-dashed gap-2 p-10">
+					<Empty.Media class="mb-0 text-foreground/35"><BookOpen size={22} /></Empty.Media>
+					<Empty.Description>No classes in this semester yet.</Empty.Description>
+				</Empty.Root>
 			{/each}
 		</nav>
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HeroGlow from '$lib/components/landing/HeroGlow.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BrainCircuit from '@lucide/svelte/icons/brain-circuit';
 	import Flag from '@lucide/svelte/icons/flag';
@@ -58,15 +59,6 @@
 
 		return { destroy: () => observer.disconnect() };
 	}
-
-	let scrollY = $state(0);
-	let glowContainer: HTMLElement;
-
-	$effect(() => {
-		if (!glowContainer) return;
-		const rate = scrollY * 0.12;
-		glowContainer.style.transform = `translateY(${rate}px)`;
-	});
 
 	// Flag & filter demo state
 	let showFlaggedOnly = $state(false);
@@ -220,17 +212,8 @@
 	];
 </script>
 
-<svelte:window bind:scrollY />
-
 <div class="relative isolate overflow-hidden pb-28">
-	<div class="pointer-events-none absolute inset-0 -z-10">
-		<div class="bg-graph-paper absolute inset-0"></div>
-		<div bind:this={glowContainer} class="glow-wrap">
-			<div class="glow glow-focus"></div>
-			<div class="glow glow-momentum"></div>
-			<div class="glow glow-spark"></div>
-		</div>
-	</div>
+	<HeroGlow variant="landing" />
 
 	<div class="mx-auto max-w-6xl px-4 sm:px-8 lg:px-12">
 		<section
@@ -936,110 +919,6 @@
 		font-family: var(--font-brand);
 		font-weight: 600;
 		letter-spacing: -0.03em;
-	}
-
-	.glow-wrap {
-		position: absolute;
-		inset: 0;
-		will-change: transform;
-	}
-
-	.glow {
-		position: absolute;
-		pointer-events: none;
-	}
-
-	/* Wide primary wash — sits behind hero text, weighted to the left like a reading lamp */
-	.glow-focus {
-		top: 6rem;
-		left: 2%;
-		width: 55%;
-		height: 28rem;
-		border-radius: 40% 60% 55% 45%;
-		background: radial-gradient(
-			ellipse at 40% 50%,
-			color-mix(in oklab, var(--primary) 48%, transparent),
-			color-mix(in oklab, var(--primary) 18%, transparent) 55%,
-			transparent 100%
-		);
-		filter: blur(64px);
-		opacity: 0.6;
-		animation: focus-breathe 7s ease-in-out infinite;
-	}
-
-	/* Diagonal secondary streak — cuts across the right side, bold and directional */
-	.glow-momentum {
-		top: 10rem;
-		right: -2rem;
-		width: 36rem;
-		height: 10rem;
-		border-radius: 999px;
-		background: linear-gradient(
-			90deg,
-			transparent 5%,
-			color-mix(in oklab, var(--secondary) 50%, transparent) 35%,
-			color-mix(in oklab, var(--secondary) 60%, transparent) 55%,
-			color-mix(in oklab, var(--secondary) 20%, transparent) 85%,
-			transparent
-		);
-		filter: blur(44px);
-		opacity: 0.55;
-		transform: rotate(-22deg);
-		animation: streak-drift 9s ease-in-out infinite;
-	}
-
-	/* Accent spark — organic shape, sits lower-left as a vivid counterpoint */
-	.glow-spark {
-		bottom: 22%;
-		left: 12%;
-		width: 14rem;
-		height: 12rem;
-		border-radius: 30% 70% 55% 45%;
-		background: radial-gradient(
-			ellipse at 55% 45%,
-			color-mix(in oklab, var(--accent) 60%, transparent),
-			color-mix(in oklab, var(--accent) 22%, transparent) 55%,
-			transparent 100%
-		);
-		filter: blur(40px);
-		opacity: 0.5;
-		animation: spark-pulse 5s ease-in-out infinite;
-	}
-
-	@keyframes focus-breathe {
-		0%,
-		100% {
-			opacity: 0.6;
-			transform: scale(1) translate(0, 0);
-		}
-		50% {
-			opacity: 0.45;
-			transform: scale(1.06) translate(0.5rem, -0.3rem);
-		}
-	}
-
-	@keyframes streak-drift {
-		0%,
-		100% {
-			transform: rotate(-22deg) translateX(0);
-			opacity: 0.55;
-		}
-		50% {
-			transform: rotate(-19deg) translateX(2rem);
-			opacity: 0.45;
-		}
-	}
-
-	@keyframes spark-pulse {
-		0%,
-		100% {
-			opacity: 0.5;
-			transform: scale(1) rotate(0deg);
-		}
-		50% {
-			opacity: 0.65;
-			transform: scale(1.15) rotate(3deg);
-		}
 	}
 
 	/* Timeline workflow */

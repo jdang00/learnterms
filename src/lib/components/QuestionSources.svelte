@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { Spinner } from '$lib/components/ui/spinner';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import FileText from '@lucide/svelte/icons/file-text';
-	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import X from '@lucide/svelte/icons/x';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
@@ -165,10 +165,9 @@
 						onfocus={() => (active = group.start)}
 						onblur={() => (active = null)}
 					>
-						{#if opening === group.start}<LoaderCircle
+						{#if opening === group.start}<Spinner class="size-3" />{:else}<FileText
 								size={12}
-								class="animate-spin"
-							/>{:else}<FileText size={12} />{/if}
+							/>{/if}
 						{group.label}<ExternalLink size={11} />
 					</Button>
 					{#if onRemovePage}

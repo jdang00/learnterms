@@ -23,7 +23,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { LoadingState } from '$lib/components/ui/spinner';
 	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
 	import { useClerkContext } from 'svelte-clerk/client';
 	import { resolve } from '$app/paths';
@@ -203,7 +203,7 @@
 	<div class=" flex flex-col gap-2">
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 			<div>
-				<h1 class="font-display text-3xl sm:text-4xl font-bold text-foreground">Admin Dashboard</h1>
+				<h1 class="title-page">Admin Dashboard</h1>
 				<p class="text-base text-foreground/70">
 					{userData?.schoolName} - {userData?.cohortName}
 				</p>
@@ -268,7 +268,7 @@
 
 		<div class="flex flex-row justify-between items-start mt-12">
 			<div>
-				<h1 class="font-display font-semibold text-2xl flex items-center gap-2">
+				<h1 class="title-page flex items-center gap-2">
 					My Classes
 					{#if viewMode === 'reorder'}
 						<Badge tone="info" size="sm">Reorder Mode</Badge>
@@ -303,10 +303,7 @@
 		</div>
 
 		{#if semesters.isLoading}
-			<div class="mb-4 flex items-center gap-3 text-foreground/70">
-				<Spinner class="size-5" />
-				<span>Loading semesters…</span>
-			</div>
+			<LoadingState inline label="Loading semesters…" class="mb-4" />
 		{:else if semesters.error != null}
 			<Alert.Root tone="error" class="mb-4">
 				<Alert.Title>Failed to load: {semesters.error.toString()}</Alert.Title>
@@ -341,9 +338,7 @@
 	</div>
 
 	{#if classes.isLoading}
-		<div class="flex items-center justify-center p-8">
-			<div class="text-foreground/70">Loading classes...</div>
-		</div>
+		<LoadingState label="Loading classes…" />
 	{:else if classes.error != null}
 		<div class="flex items-center justify-center p-8">
 			<div class="text-error-ink">Failed to load: {classes.error.toString()}</div>

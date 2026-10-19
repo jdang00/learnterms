@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SegmentedControl } from '$lib/components/ui/segmented-control';
 	import type { PageData } from './$types';
 	import { useQuery } from 'convex-svelte';
 	import { resolve } from '$app/paths';
@@ -124,7 +125,7 @@
 					</Avatar.Fallback>
 				</Avatar.Root>
 				<div>
-					<h1 class="font-display text-2xl font-bold md:text-3xl">{cohort.name}</h1>
+					<h1 class="title-page">{cohort.name}</h1>
 					<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground/70">
 						{#if data.userData?.schoolName}
 							<span>{data.userData.schoolName}</span>
@@ -155,25 +156,16 @@
 						bind:value={searchQuery}
 					/>
 				</InputGroup.Root>
-				<div class="flex flex-wrap gap-2">
-					<Button
-						size="sm"
-						variant={sortMode === 'leaderboard' ? 'solid' : 'ghost'}
-						tone={sortMode === 'leaderboard' ? 'primary' : 'neutral'}
-						onclick={() => (sortMode = 'leaderboard')}
-					>
-						<Trophy size={14} />
-						Leaderboard
-					</Button>
-					<Button
-						size="sm"
-						variant={sortMode === 'az' ? 'solid' : 'ghost'}
-						tone={sortMode === 'az' ? 'primary' : 'neutral'}
-						onclick={() => (sortMode = 'az')}
-					>
-						A-Z
-					</Button>
-				</div>
+				<SegmentedControl
+					value={sortMode}
+					onValueChange={(value) => (sortMode = value as typeof sortMode)}
+					options={[
+						{ value: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+						{ value: 'az', label: 'A-Z' }
+					]}
+					track="none"
+					aria-label="Sort classmates"
+				/>
 			</div>
 
 			{#if filteredMembers.length === 0}

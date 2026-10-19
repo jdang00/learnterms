@@ -100,7 +100,7 @@
 					size="sm"
 					shape="circle"
 					aria-label="Edit this draft"
-					title="Edit this draft"
+					tooltip="Edit this draft"
 					onclick={() => setEditing(true)}
 				>
 					<Pencil size={15} />
@@ -138,7 +138,7 @@
 					size="sm"
 					shape="circle"
 					aria-label="Close question"
-					title="Close"
+					tooltip="Close"
 					disabled={editing}
 					onclick={onClose}
 				>

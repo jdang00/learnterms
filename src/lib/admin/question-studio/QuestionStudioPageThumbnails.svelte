@@ -57,9 +57,7 @@
 </script>
 
 <div class="flex items-center justify-between gap-2 px-5 py-3">
-	<span class="text-[11px] font-semibold tracking-wider text-foreground/45 uppercase"
-		>{selectedOnly ? 'Selected pages' : 'All pages'}</span
-	>
+	<span class="label-caps">{selectedOnly ? 'Selected pages' : 'All pages'}</span>
 	<form
 		class="flex items-center gap-1"
 		onsubmit={(event) => {

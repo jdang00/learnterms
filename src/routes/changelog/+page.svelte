@@ -1,4 +1,5 @@
 <script lang="ts">
+	import HeroGlow from '$lib/components/landing/HeroGlow.svelte';
 	import { resolve } from '$app/paths';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -80,15 +81,6 @@
 
 		return { destroy: () => observer.disconnect() };
 	}
-
-	let scrollY = $state(0);
-	let glowContainer: HTMLElement;
-
-	$effect(() => {
-		if (!glowContainer) return;
-		const rate = scrollY * 0.08;
-		glowContainer.style.transform = `translateY(${rate}px)`;
-	});
 
 	type ChangelogEntry = {
 		version: string;
@@ -814,16 +806,8 @@
 	];
 </script>
 
-<svelte:window bind:scrollY />
-
 <div class="relative isolate overflow-hidden pb-28">
-	<div class="pointer-events-none absolute inset-0 -z-10">
-		<div class="bg-graph-paper absolute inset-0"></div>
-		<div bind:this={glowContainer} class="glow-wrap">
-			<div class="glow glow-focus"></div>
-			<div class="glow glow-momentum"></div>
-		</div>
-	</div>
+	<HeroGlow variant="page" />
 
 	<div class="mx-auto max-w-4xl px-4 sm:px-8 lg:px-12">
 		<!-- Hero -->
@@ -836,9 +820,7 @@
 				</div>
 				<Badge tone="primary" variant="soft">Changelog</Badge>
 			</div>
-			<h1 class="font-display text-4xl font-bold leading-tight sm:text-5xl">
-				What's new in LearnTerms
-			</h1>
+			<h1 class="title-hero">What's new in LearnTerms</h1>
 			<p class="mt-4 max-w-2xl text-lg text-foreground/65 leading-relaxed">
 				A history of LearnTerms updates, with links to the GitHub releases and code behind them.
 			</p>
@@ -922,78 +904,6 @@
 </div>
 
 <style>
-	.glow-wrap {
-		position: absolute;
-		inset: 0;
-		will-change: transform;
-	}
-
-	.glow {
-		position: absolute;
-		pointer-events: none;
-	}
-
-	.glow-focus {
-		top: 4rem;
-		left: 5%;
-		width: 50%;
-		height: 22rem;
-		border-radius: 40% 60% 55% 45%;
-		background: radial-gradient(
-			ellipse at 40% 50%,
-			color-mix(in oklab, var(--primary) 40%, transparent),
-			color-mix(in oklab, var(--primary) 14%, transparent) 55%,
-			transparent 100%
-		);
-		filter: blur(64px);
-		opacity: 0.5;
-		animation: focus-breathe 7s ease-in-out infinite;
-	}
-
-	.glow-momentum {
-		top: 8rem;
-		right: -1rem;
-		width: 28rem;
-		height: 8rem;
-		border-radius: 999px;
-		background: linear-gradient(
-			90deg,
-			transparent 5%,
-			color-mix(in oklab, var(--secondary) 40%, transparent) 35%,
-			color-mix(in oklab, var(--secondary) 50%, transparent) 55%,
-			color-mix(in oklab, var(--secondary) 15%, transparent) 85%,
-			transparent
-		);
-		filter: blur(44px);
-		opacity: 0.45;
-		transform: rotate(-18deg);
-		animation: streak-drift 9s ease-in-out infinite;
-	}
-
-	@keyframes focus-breathe {
-		0%,
-		100% {
-			opacity: 0.5;
-			transform: scale(1) translate(0, 0);
-		}
-		50% {
-			opacity: 0.38;
-			transform: scale(1.06) translate(0.5rem, -0.3rem);
-		}
-	}
-
-	@keyframes streak-drift {
-		0%,
-		100% {
-			transform: rotate(-18deg) translateX(0);
-			opacity: 0.45;
-		}
-		50% {
-			transform: rotate(-15deg) translateX(2rem);
-			opacity: 0.35;
-		}
-	}
-
 	/* Timeline layout */
 	.changelog-timeline {
 		position: relative;

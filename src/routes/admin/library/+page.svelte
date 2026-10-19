@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { SegmentedControl } from '$lib/components/ui/segmented-control';
+	import '$lib/admin/content-library/markdown-preview.css';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import { LoadingState } from '$lib/components/ui/spinner';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import FileUp from '@lucide/svelte/icons/file-up';
 	import Maximize2 from '@lucide/svelte/icons/maximize-2';
@@ -562,35 +564,20 @@
 
 		<!-- Tabs + actions (one line) -->
 		<div class="flex items-center gap-2 border-b border-border px-4 py-2.5">
-			<div class="inline-flex rounded-full bg-muted p-1">
-				<button
-					class="rounded-full px-4 py-1.5 text-xs font-medium transition-colors {drawerTab ===
-					'preview'
-						? 'bg-background text-foreground shadow-sm'
-						: 'text-foreground/60 hover:text-foreground'}"
-					onclick={() => (drawerTab = 'preview')}
-				>
-					Preview
-				</button>
-				<button
-					class="rounded-full px-4 py-1.5 text-xs font-medium transition-colors {drawerTab ===
-					'source'
-						? 'bg-background text-foreground shadow-sm'
-						: 'text-foreground/60 hover:text-foreground'}"
-					onclick={() => (drawerTab = 'source')}
-				>
-					Source
-				</button>
-				<button
-					class="rounded-full px-4 py-1.5 text-xs font-medium transition-colors {drawerTab ===
-					'properties'
-						? 'bg-background text-foreground shadow-sm'
-						: 'text-foreground/60 hover:text-foreground'}"
-					onclick={() => (drawerTab = 'properties')}
-				>
-					Properties
-				</button>
-			</div>
+			<SegmentedControl
+				value={drawerTab}
+				onValueChange={(value) => (drawerTab = value as DrawerTab)}
+				options={[
+					{ value: 'preview', label: 'Preview' },
+					{ value: 'source', label: 'Source' },
+					{ value: 'properties', label: 'Properties' }
+				]}
+				size="xs"
+				track="muted"
+				activeVariant="raised"
+				itemClass="px-4"
+				aria-label="Document panel"
+			/>
 			<div class="flex-1"></div>
 			<Button
 				variant="ghost"
@@ -655,10 +642,7 @@
 					</div>
 					{#if isDeckMode}
 						{#if isDeckLoading}
-							<div class="flex h-full min-h-72 flex-col items-center justify-center gap-3">
-								<Spinner class="size-6 text-primary" />
-								<p class="text-sm text-foreground/60">Building slide deck preview...</p>
-							</div>
+							<LoadingState label="Building slide deck preview…" class="h-full min-h-72" />
 						{:else if deckPreviewError}
 							<ContentLibraryPreviewUnavailable
 								title="Slide deck preview unavailable"
@@ -685,10 +669,7 @@
 							/>
 						{/if}
 					{:else if isMarkdownLoading}
-						<div class="flex h-full min-h-72 flex-col items-center justify-center gap-3">
-							<Spinner class="size-6 text-primary" />
-							<p class="text-sm text-foreground/60">Generating markdown preview...</p>
-						</div>
+						<LoadingState label="Generating markdown preview…" class="h-full min-h-72" />
 					{:else if markdownPreviewError}
 						<ContentLibraryPreviewUnavailable
 							title="Markdown preview unavailable"
@@ -866,302 +847,7 @@
 		list-style: decimal;
 	}
 
-	.markdown-preview {
-		--maximize-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 3H5a2 2 0 0 0-2 2v3'/%3E%3Cpath d='M21 8V5a2 2 0 0 0-2-2h-3'/%3E%3Cpath d='M3 16v3a2 2 0 0 0 2 2h3'/%3E%3Cpath d='M16 21h3a2 2 0 0 0 2-2v-3'/%3E%3C/svg%3E");
-		--copy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='14' height='14' x='8' y='8' rx='2' ry='2'/%3E%3Cpath d='M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2'/%3E%3C/svg%3E");
-		--check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
-		color: color-mix(in oklab, currentColor 92%, transparent);
-		font-family: Georgia, 'Times New Roman', Times, serif;
-		overflow-wrap: break-word;
-	}
-
-	.preview-scroll,
-	.fullscreen-table {
+	.preview-scroll {
 		scroll-padding-bottom: 6rem;
-	}
-
-	.markdown-preview :global(h1),
-	.markdown-preview :global(h2),
-	.markdown-preview :global(h3) {
-		margin: 1.5rem 0 1rem;
-		font-family: Georgia, 'Times New Roman', Times, serif;
-		font-weight: 700;
-		line-height: 1.25;
-	}
-
-	.markdown-preview :global(h1) {
-		border-bottom: 1px solid color-mix(in oklab, currentColor 16%, transparent);
-		padding-bottom: 0.3rem;
-		font-size: 2rem;
-	}
-
-	.markdown-preview :global(h2) {
-		border-bottom: 1px solid color-mix(in oklab, currentColor 16%, transparent);
-		padding-bottom: 0.3rem;
-		font-size: 1.5rem;
-	}
-
-	.markdown-preview :global(h3) {
-		font-size: 1.25rem;
-	}
-
-	.markdown-preview :global(h4),
-	.markdown-preview :global(h5),
-	.markdown-preview :global(h6) {
-		margin: 1.25rem 0 1rem;
-		font-family: Georgia, 'Times New Roman', Times, serif;
-		font-weight: 700;
-		line-height: 1.25;
-	}
-
-	.markdown-preview :global(p),
-	.markdown-preview :global(ul),
-	.markdown-preview :global(ol),
-	.markdown-preview :global(blockquote),
-	.markdown-preview :global(pre),
-	.markdown-preview :global(.table-frame) {
-		margin: 0.75rem 0;
-	}
-
-	.markdown-preview :global(ul),
-	.markdown-preview :global(ol) {
-		padding-left: 2rem;
-	}
-
-	.markdown-preview :global(ul) {
-		list-style: disc;
-	}
-
-	.markdown-preview :global(ol) {
-		list-style: decimal;
-	}
-
-	.markdown-preview :global(code) {
-		border-radius: 0.375rem;
-		background: color-mix(in oklab, currentColor 9%, transparent);
-		padding: 0.2em 0.4em;
-		font-family:
-			ui-monospace, SFMono-Regular, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
-		font-size: 0.85em;
-	}
-
-	.markdown-preview :global(pre) {
-		overflow-x: auto;
-		border-radius: 0.375rem;
-		background: color-mix(in oklab, currentColor 5.5%, transparent);
-		padding: 1rem;
-	}
-
-	.markdown-preview :global(pre code) {
-		background: transparent;
-		padding: 0;
-	}
-
-	.markdown-preview :global(blockquote) {
-		border-left: 0.25rem solid color-mix(in oklab, currentColor 24%, transparent);
-		padding: 0 1rem;
-		color: color-mix(in oklab, currentColor 68%, transparent);
-	}
-
-	.markdown-preview :global(.table-frame) {
-		overflow: hidden;
-		border: 1px solid color-mix(in oklab, currentColor 14%, transparent);
-		border-radius: 0.6rem;
-		background: color-mix(in oklab, currentColor 2%, transparent);
-	}
-
-	.markdown-preview :global(.table-toolbar) {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		border-bottom: 1px solid color-mix(in oklab, currentColor 12%, transparent);
-		padding: 0.4rem 0.55rem;
-		font-family:
-			ui-sans-serif,
-			system-ui,
-			-apple-system,
-			BlinkMacSystemFont,
-			'Segoe UI',
-			sans-serif;
-		font-size: 0.72rem;
-		font-weight: 600;
-		color: color-mix(in oklab, currentColor 58%, transparent);
-	}
-
-	.markdown-preview :global(.table-toolbar span) {
-		flex: 1;
-	}
-
-	.markdown-preview :global(.table-fullscreen) {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.7rem;
-		height: 1.7rem;
-		border: 1px solid color-mix(in oklab, var(--primary) 22%, transparent);
-		border-radius: 0.5rem;
-		background: color-mix(in oklab, var(--primary) 7%, Canvas);
-		color: color-mix(in oklab, var(--primary) 80%, currentColor);
-		cursor: pointer;
-		transition:
-			background 0.15s ease,
-			color 0.15s ease,
-			border-color 0.15s ease;
-	}
-
-	.markdown-preview :global(.table-fullscreen:hover) {
-		background: color-mix(in oklab, var(--primary) 14%, Canvas);
-		color: var(--primary);
-		border-color: color-mix(in oklab, var(--primary) 40%, transparent);
-	}
-
-	.markdown-preview :global(.table-fullscreen-icon) {
-		width: 0.95rem;
-		height: 0.95rem;
-		background-color: currentColor;
-		-webkit-mask: var(--maximize-icon) center / contain no-repeat;
-		mask: var(--maximize-icon) center / contain no-repeat;
-	}
-
-	.markdown-preview :global(.table-scroll) {
-		max-width: 100%;
-		overflow-x: auto;
-	}
-
-	.markdown-preview :global(table) {
-		width: 100%;
-		table-layout: auto;
-		border-collapse: collapse;
-		font-size: 0.9rem;
-	}
-
-	.markdown-preview :global(th),
-	.markdown-preview :global(td) {
-		border: 1px solid color-mix(in oklab, currentColor 16%, transparent);
-		padding: 0.45rem 0.65rem;
-		text-align: left;
-		vertical-align: top;
-		white-space: normal;
-		overflow-wrap: break-word;
-		word-break: break-word;
-	}
-
-	/* Inline preview keeps wide tables on one line with horizontal scroll;
-	   only the fullscreen view wraps. */
-	.markdown-preview :global(.table-scroll table) {
-		width: max-content;
-		min-width: 100%;
-	}
-
-	.markdown-preview :global(.table-scroll th),
-	.markdown-preview :global(.table-scroll td) {
-		white-space: pre-wrap;
-		overflow-wrap: normal;
-		word-break: normal;
-	}
-
-	.markdown-preview :global(th) {
-		font-weight: 700;
-	}
-
-	.markdown-preview :global(tr:nth-child(2n)) {
-		background: color-mix(in oklab, currentColor 3.5%, transparent);
-	}
-
-	.fullscreen-table :global(table) {
-		width: 100%;
-		table-layout: auto;
-		border-collapse: collapse;
-		font-size: 0.95rem;
-	}
-
-	.markdown-preview :global(hr) {
-		height: 0.25rem;
-		margin: 1.5rem 0;
-		border: 0;
-		background: color-mix(in oklab, currentColor 12%, transparent);
-	}
-
-	.markdown-preview :global(.katex-display) {
-		display: block;
-		max-width: 100%;
-		overflow-x: auto;
-		overflow-y: visible;
-		padding: 0.35rem 0 0.55rem;
-		text-align: center;
-	}
-
-	.markdown-preview :global(.katex) {
-		font-size: 1.03em;
-		white-space: nowrap;
-	}
-
-	.markdown-preview :global(.katex-display > .katex) {
-		display: inline-block;
-		max-width: 100%;
-		white-space: nowrap;
-	}
-
-	.markdown-preview :global(td .katex-display),
-	.markdown-preview :global(th .katex-display) {
-		margin: 0.25rem 0;
-		text-align: left;
-	}
-
-	.markdown-preview :global(.math-block) {
-		position: relative;
-		display: block;
-		margin: 1rem 0;
-		border-radius: 0.5rem;
-		background: color-mix(in oklab, currentColor 3.5%, transparent);
-		padding: 0.75rem 2.75rem 0.75rem 1rem;
-	}
-
-	.markdown-preview :global(.math-block .katex-display) {
-		margin: 0;
-	}
-
-	.markdown-preview :global(.math-copy) {
-		position: absolute;
-		right: 0.5rem;
-		top: 0.5rem;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.7rem;
-		height: 1.7rem;
-		border: 1px solid color-mix(in oklab, var(--primary) 22%, transparent);
-		border-radius: 0.5rem;
-		background: color-mix(in oklab, var(--primary) 7%, Canvas);
-		color: color-mix(in oklab, var(--primary) 80%, currentColor);
-		cursor: pointer;
-		transition:
-			background 0.15s ease,
-			color 0.15s ease,
-			border-color 0.15s ease;
-	}
-
-	.markdown-preview :global(.math-copy:hover) {
-		background: color-mix(in oklab, var(--primary) 14%, Canvas);
-		color: var(--primary);
-		border-color: color-mix(in oklab, var(--primary) 40%, transparent);
-	}
-
-	.markdown-preview :global(.math-copy-icon) {
-		width: 0.9rem;
-		height: 0.9rem;
-		background-color: currentColor;
-		-webkit-mask: var(--copy-icon) center / contain no-repeat;
-		mask: var(--copy-icon) center / contain no-repeat;
-	}
-
-	.markdown-preview :global(.math-copy.is-copied) {
-		color: var(--color-success, #16a34a);
-		border-color: color-mix(in oklab, var(--color-success, #16a34a) 40%, transparent);
-	}
-
-	.markdown-preview :global(.math-copy.is-copied .math-copy-icon) {
-		-webkit-mask: var(--check-icon) center / contain no-repeat;
-		mask: var(--check-icon) center / contain no-repeat;
 	}
 </style>

@@ -204,7 +204,7 @@
 			shape="circle"
 			size="sm"
 			aria-label="Open stats for nerds"
-			title="Stats for nerds"
+			tooltip="Stats for nerds"
 			aria-haspopup="dialog"
 			aria-expanded={diagnosticsOpen}
 			onclick={() => {

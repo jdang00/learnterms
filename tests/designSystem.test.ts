@@ -36,6 +36,30 @@ describe('design system', () => {
 		expect(offenders).toEqual([]);
 	});
 
+	test('colors come from brand tokens, not the raw Tailwind palette', async () => {
+		const palette =
+			/\b(bg|text|border|ring|stroke|fill|from|to|via|shadow)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}\b/;
+		const offenders: string[] = [];
+		for await (const { file, source } of appSources()) {
+			const match = source.match(palette);
+			if (match) offenders.push(`${file}: ${match[0]}`);
+		}
+		expect(offenders).toEqual([]);
+	});
+
+	test('spinners and popovers use the shared primitives', async () => {
+		const offenders: string[] = [];
+		for await (const { file, source } of appSources()) {
+			if (/animate-spin/.test(source))
+				offenders.push(`${file}: animate-spin (use Spinner or LoadingState)`);
+			if (/\spopover="(auto|manual)"/.test(source))
+				offenders.push(`${file}: native popover (use Popover or DropdownMenu)`);
+			if (/role="radio"/.test(source) && !file.includes('Worth4DotEditor'))
+				offenders.push(`${file}: hand-built radio (use SegmentedControl or RadioGroup)`);
+		}
+		expect(offenders).toEqual([]);
+	});
+
 	test('icons are imported one module at a time', async () => {
 		const offenders: string[] = [];
 		for await (const file of new Glob('src/**/*.{svelte,ts}').scan('.')) {

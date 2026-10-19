@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SegmentedControl } from '$lib/components/ui/segmented-control';
 	import ArrowDownUp from '@lucide/svelte/icons/arrow-down-up';
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -87,28 +88,20 @@
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
-	<div class="inline-flex items-center rounded-full bg-muted p-1">
-		<button
-			class="rounded-full p-1.5 transition-colors {viewMode === 'grid'
-				? 'bg-background text-foreground shadow-sm'
-				: 'text-foreground/50 hover:text-foreground'}"
-			onclick={() => (viewMode = 'grid')}
-			aria-label="Grid view"
-			title="Grid view"
-		>
-			<LayoutGrid size={15} />
-		</button>
-		<button
-			class="rounded-full p-1.5 transition-colors {viewMode === 'list'
-				? 'bg-background text-foreground shadow-sm'
-				: 'text-foreground/50 hover:text-foreground'}"
-			onclick={() => (viewMode = 'list')}
-			aria-label="List view"
-			title="List view"
-		>
-			<List size={15} />
-		</button>
-	</div>
+	<SegmentedControl
+		value={viewMode}
+		onValueChange={(value) => (viewMode = value as typeof viewMode)}
+		options={[
+			{ value: 'grid', label: 'Grid view', icon: LayoutGrid },
+			{ value: 'list', label: 'List view', icon: List }
+		]}
+		size="xs"
+		track="muted"
+		activeVariant="raised"
+		itemClass="size-7 px-0"
+		labelClass="sr-only"
+		aria-label="Library view"
+	/>
 
 	<Button size="sm" class="gap-2" onclick={onAdd} aria-label="Upload PDFs">
 		<Plus size={15} />
