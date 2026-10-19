@@ -1,4 +1,4 @@
-import { dark } from '@clerk/themes';
+import { dark } from '@clerk/ui/themes';
 import { toStore } from 'svelte/store';
 import { browser } from '$app/environment';
 

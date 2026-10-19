@@ -120,10 +120,7 @@
 	<meta name="twitter:image" content={seo.image} />
 </svelte:head>
 
-<ClerkProvider
-	publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}
-	appearance={{ baseTheme: $clerkTheme }}
->
+<ClerkProvider publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY} appearance={{ theme: $clerkTheme }}>
 	<ConvexAuth initialToken={data?.token ?? null} />
 	<PostHogIdentify />
 	<Tooltip.Provider>
