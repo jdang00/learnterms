@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { useConvexClient } from 'convex-svelte';
-	import { Sparkles } from 'lucide-svelte';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
 	import { Button } from '$lib/components/ui/button';

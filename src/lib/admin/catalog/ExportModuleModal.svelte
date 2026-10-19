@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { FileText, FileJson, FileSpreadsheet } from 'lucide-svelte';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import FileJson from '@lucide/svelte/icons/file-json';
+	import FileSpreadsheet from '@lucide/svelte/icons/file-spreadsheet';
 	import type { Doc } from '../../../convex/_generated/dataModel';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';

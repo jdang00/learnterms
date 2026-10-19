@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { ChevronDown, FileText, Paperclip, X } from 'lucide-svelte';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import Paperclip from '@lucide/svelte/icons/paperclip';
+	import X from '@lucide/svelte/icons/x';
 	import RagDocumentBrowser from '../source/RagDocumentBrowser.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
@@ -66,7 +69,7 @@
 		<div class="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
 			<div class="flex items-center gap-2">
 				<span
-					class="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary"
+					class="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary-ink"
 				>
 					<Paperclip size={16} />
 				</span>

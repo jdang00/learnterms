@@ -1,12 +1,10 @@
 <script lang="ts">
-	import {
-		ArrowRight,
-		ArrowUpWideNarrow,
-		Check,
-		Ellipsis,
-		SlidersHorizontal,
-		X
-	} from 'lucide-svelte';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import ArrowUpWideNarrow from '@lucide/svelte/icons/arrow-up-wide-narrow';
+	import Check from '@lucide/svelte/icons/check';
+	import Ellipsis from '@lucide/svelte/icons/ellipsis';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
+	import X from '@lucide/svelte/icons/x';
 	import type { Snippet } from 'svelte';
 	import { Confetti } from 'svelte-confetti';
 	import Sheet from '$lib/components/Sheet.svelte';
@@ -17,7 +15,13 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { getQuizCommands, isCommandShown } from './commands.svelte';
 	import { getDockPreferences } from './dockPreferences.svelte';
-	import { isPassive, segmentShape, TONE_TEXT } from './dockStyles';
+	import {
+		DOCK_ISLAND_CLASS,
+		DOCK_PHONE_BAR_CLASS,
+		isPassive,
+		segmentShape,
+		TONE_TEXT
+	} from './dockStyles';
 	import {
 		DEFAULT_DOCK,
 		DIVIDER_ID,
@@ -146,8 +150,6 @@
 	}
 
 	// The desktop island: centred with margins (not translate) so its rise-in animation can't knock it off-centre.
-	const DESKTOP_CLASS =
-		'dock-glass fixed inset-x-0 bottom-5 z-40 mx-auto hidden w-fit items-center gap-2 rounded-full p-2.5 md:inline-flex animate-in fade-in-0 slide-in-from-bottom-6 duration-500 ease-out motion-reduce:animate-none';
 </script>
 
 {#snippet checkSlot(slot: CommandSlot)}
@@ -184,10 +186,7 @@
 {/snippet}
 
 {#if phone}
-	<div
-		class="dock-glass bottom-dock fixed inset-x-0 z-50 rounded-t-[1.75rem] border-b-0 md:hidden"
-		bind:clientWidth={dockWidth}
-	>
+	<div class={DOCK_PHONE_BAR_CLASS} bind:clientWidth={dockWidth}>
 		{#if above}
 			<div class="absolute inset-x-0 bottom-full">{@render above()}</div>
 		{/if}
@@ -198,7 +197,7 @@
 		{/if}
 		<div
 			class="flex items-center gap-1 px-2 pt-2"
-			style="--dock-gap: 0.25rem"
+			style="--segment-gap: 0.25rem"
 			role="toolbar"
 			aria-label="Quiz controls"
 		>
@@ -226,7 +225,7 @@
 			</div>
 			{#if phone.prev || phone.next}
 				<!-- The same split pill as the desktop dock. -->
-				<div class="ms-1 flex shrink-0 items-center" style="--dock-gap: 0px">
+				<div class="ms-1 flex shrink-0 items-center" style="--segment-gap: 0px">
 					{#if phone.prev}
 						<DockButton
 							command={phone.prev.command}
@@ -313,7 +312,7 @@
 		{/if}
 	</Sheet>
 {:else}
-	<div class={DESKTOP_CLASS} style="--dock-gap: 0.5rem" role="toolbar" aria-label="Quiz controls">
+	<div class={DOCK_ISLAND_CLASS} role="toolbar" aria-label="Quiz controls">
 		{#if showConfetti}
 			<div class="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 z-[65] w-0 h-0">
 				<Confetti />

@@ -1,7 +1,11 @@
 <script lang="ts">
 	import ModuleProgress from './ModuleProgress.svelte';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
-	import { PanelRight, Eye, Info, ChevronLeft, Settings } from 'lucide-svelte';
+	import PanelRight from '@lucide/svelte/icons/panel-right';
+	import Eye from '@lucide/svelte/icons/eye';
+	import Info from '@lucide/svelte/icons/info';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import Settings from '@lucide/svelte/icons/settings';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import QuestionAttachmentsSidebar from '$lib/components/QuestionAttachmentsSidebar.svelte';
 	import QuizToolsBar from '$lib/components/quiz-dock/QuizToolsBar.svelte';
@@ -111,7 +115,7 @@
 			/>
 
 			{#if hasRationale(currentlySelected)}
-				<Card.Root class="mt-6 gap-0 rounded-2xl border-border bg-background text-base">
+				<Card.Root class="mt-6 gap-0 text-base">
 					<Card.Content class="gap-2">
 						<div class="flex flex-row flex-wrap justify-between border-b pb-2">
 							<h2 class="flex items-center gap-2 text-lg font-semibold">Rationale</h2>

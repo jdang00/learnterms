@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { useQuery } from 'convex-svelte';
-	import { CircleDollarSign, Clock, Layers, Sparkles, UserRound } from 'lucide-svelte';
+	import CircleDollarSign from '@lucide/svelte/icons/circle-dollar-sign';
+	import Clock from '@lucide/svelte/icons/clock';
+	import Layers from '@lucide/svelte/icons/layers';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import UserRound from '@lucide/svelte/icons/user-round';
 	import { resolve } from '$app/paths';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
@@ -67,7 +71,7 @@
 	<div class="space-y-4">
 		<section class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Question Studio summary">
 			{#each [{ label: 'Runs this week', icon: Sparkles, value: String(summary?.runsThisWeek ?? 0), note: summary?.failedThisWeek ? `${summary.failedThisWeek} failed` : 'None failed', tone: summary?.failedThisWeek ? 'text-warning-ink' : '' }, { label: 'Questions kept', icon: Layers, value: String(summary?.savedThisWeek ?? 0), note: drafted ? `${percent(kept, drafted)}% of drafts kept recently` : 'Saved into modules this week', tone: '' }, { label: 'Spend this week', icon: CircleDollarSign, value: formatUsd(summary?.spendThisWeek ?? 0), note: summary?.costPerSavedQuestion ? `${formatUsd(summary.costPerSavedQuestion)} per kept question` : `${formatTokens(summary?.tokensThisWeek ?? 0)} tokens`, tone: '' }, { label: 'Typical run', icon: Clock, value: summary?.medianDurationMs ? formatDuration(summary.medianDurationMs) : '—', note: 'Median start to finish', tone: '' }] as stat (stat.label)}
-				<Card.Root class="gap-0 bg-background p-4">
+				<Card.Root class="gap-0 p-4">
 					<span class="flex items-center justify-between text-xs text-foreground/60"
 						>{stat.label}<stat.icon size={15} class="text-primary" /></span
 					>
@@ -105,7 +109,7 @@
 		{/if}
 
 		<div class="grid items-start gap-4 lg:grid-cols-3">
-			<Card.Root class="gap-0 overflow-hidden bg-background py-0 lg:col-span-2">
+			<Card.Root class="gap-0 overflow-hidden py-0 lg:col-span-2">
 				<header class="border-b border-muted px-5 py-4">
 					<h2 class="text-base font-semibold">Question Studio runs</h2>
 					<p class="text-xs text-foreground/55">Most recent {runs.length} runs for this cohort</p>
@@ -136,7 +140,7 @@
 									<Table.Cell class="min-w-0 py-2.5 pl-5">
 										{#if run.moduleClassId}
 											<a
-												class="font-medium hover:text-primary"
+												class="font-medium hover:text-primary-ink"
 												href={resolve('/admin/[classId]/module/[moduleId]', {
 													classId: String(run.moduleClassId),
 													moduleId: String(run.moduleId)
@@ -187,7 +191,7 @@
 				{/if}
 			</Card.Root>
 
-			<Card.Root class="gap-0 bg-background p-5">
+			<Card.Root class="gap-0 p-5">
 				<h2 class="text-base font-semibold">Curators</h2>
 				<p class="text-xs text-foreground/55">Across the runs listed here</p>
 				{#if history.isLoading}<Skeleton class="mt-4 h-32" />{:else}

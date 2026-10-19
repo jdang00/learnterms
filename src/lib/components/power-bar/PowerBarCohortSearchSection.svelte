@@ -1,6 +1,11 @@
 <script lang="ts">
-	import { BookOpen, GraduationCap, Layers, Loader2 } from 'lucide-svelte';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
+	import Layers from '@lucide/svelte/icons/layers';
+	import Loader2 from '@lucide/svelte/icons/loader-2';
+	import { Command } from 'bits-ui';
 	import { Badge } from '$lib/components/ui/badge';
+	import { POWER_HEADING_CLASS, POWER_ITEM_CLASS, POWER_NOTE_CLASS } from './styles';
 	import type { CohortClassSearchItem, CohortModuleSearchItem } from './types';
 
 	interface Props {
@@ -33,48 +38,36 @@
 	const hasResults = $derived.by(() => classes.length > 0 || modules.length > 0);
 </script>
 
-<section class="space-y-2">
-	<div class="px-3 pt-1">
-		<p class="text-[11px] font-medium uppercase tracking-wider text-foreground/35">Search Cohort</p>
-	</div>
-
-	{#if !hasQuery}
-		<p class="px-3 py-2 text-sm text-foreground/45">
-			Type 2+ characters for classes, 3+ for modules.
-		</p>
-	{:else if !activeCohortId}
-		<p class="px-3 py-2 text-sm text-foreground/45">
-			Switch to a cohort to search classes and modules.
-		</p>
-	{:else if queryLength < 2}
-		<p class="px-3 py-2 text-sm text-foreground/45">
-			Type at least 2 characters to search classes.
-		</p>
-	{:else if queryLength < 3 && classes.length === 0}
-		<p class="px-3 py-2 text-sm text-foreground/45">
-			No class matches yet. Type one more character to include modules.
-		</p>
-	{:else if isLoading && !hasResults}
-		<div class="flex items-center gap-2 px-3 py-2 text-sm text-foreground/45">
-			<Loader2 size={14} class="animate-spin" />
-			<span>Searching classes and modules…</span>
-		</div>
-	{:else if !hasResults && hasSearchError}
-		<p class="px-3 py-2 text-sm text-foreground/45">
-			Search is temporarily unavailable. Try again in a moment.
-		</p>
-	{:else if !hasResults}
-		<p class="px-3 py-2 text-sm text-foreground/45">No class or module matches in this cohort.</p>
-	{:else}
-		{#if classes.length > 0}
-			<div class="space-y-1">
+<Command.Group value="search-cohort">
+	<Command.GroupHeading class={POWER_HEADING_CLASS}>Search Cohort</Command.GroupHeading>
+	<Command.GroupItems class="space-y-1">
+		{#if !hasQuery}
+			<p class={POWER_NOTE_CLASS}>Type 2+ characters for classes, 3+ for modules.</p>
+		{:else if !activeCohortId}
+			<p class={POWER_NOTE_CLASS}>Switch to a cohort to search classes and modules.</p>
+		{:else if queryLength < 2}
+			<p class={POWER_NOTE_CLASS}>Type at least 2 characters to search classes.</p>
+		{:else if queryLength < 3 && classes.length === 0}
+			<p class={POWER_NOTE_CLASS}>
+				No class matches yet. Type one more character to include modules.
+			</p>
+		{:else if isLoading && !hasResults}
+			<div class="flex items-center gap-2 {POWER_NOTE_CLASS}">
+				<Loader2 size={14} class="animate-spin" />
+				<span>Searching classes and modules…</span>
+			</div>
+		{:else if !hasResults && hasSearchError}
+			<p class={POWER_NOTE_CLASS}>Search is temporarily unavailable. Try again in a moment.</p>
+		{:else if !hasResults}
+			<p class={POWER_NOTE_CLASS}>No class or module matches in this cohort.</p>
+		{:else}
+			{#if classes.length > 0}
 				<p class="px-3 text-[10px] uppercase tracking-wide text-foreground/30">Classes</p>
 				{#each classes as classItem (classItem._id)}
-					<button
-						type="button"
-						class="group flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-left transition-colors duration-100 hover:bg-muted/60"
-						onclick={() => onOpenClass?.(classItem._id)}
-						data-power-item="true"
+					<Command.Item
+						value="class:{classItem._id}"
+						class={POWER_ITEM_CLASS}
+						onSelect={() => onOpenClass?.(classItem._id)}
 					>
 						<span
 							class="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-foreground/55"
@@ -92,20 +85,17 @@
 								{/if}
 							</span>
 						</span>
-					</button>
+					</Command.Item>
 				{/each}
-			</div>
-		{/if}
+			{/if}
 
-		{#if modules.length > 0}
-			<div class="space-y-1">
-				<p class="px-3 text-[10px] uppercase tracking-wide text-foreground/30">Modules</p>
+			{#if modules.length > 0}
+				<p class="px-3 pt-1 text-[10px] uppercase tracking-wide text-foreground/30">Modules</p>
 				{#each modules as moduleItem (moduleItem._id)}
-					<button
-						type="button"
-						class="group flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-left transition-colors duration-100 hover:bg-muted/60"
-						onclick={() => onOpenModule?.(moduleItem.classId, moduleItem._id)}
-						data-power-item="true"
+					<Command.Item
+						value="module:{moduleItem._id}"
+						class={POWER_ITEM_CLASS}
+						onSelect={() => onOpenModule?.(moduleItem.classId, moduleItem._id)}
 					>
 						<span
 							class="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-foreground/55"
@@ -128,9 +118,9 @@
 							<Layers size={10} />
 							{moduleItem.questionCount}
 						</Badge>
-					</button>
+					</Command.Item>
 				{/each}
-			</div>
+			{/if}
 		{/if}
-	{/if}
-</section>
+	</Command.GroupItems>
+</Command.Group>

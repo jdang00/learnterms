@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { formatBytes } from '$lib/utils/format';
-	import { CheckCircle2, FileText, Layers, Search, TriangleAlert } from 'lucide-svelte';
+	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import Layers from '@lucide/svelte/icons/layers';
+	import Search from '@lucide/svelte/icons/search';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { onDestroy } from 'svelte';
 	import { useQuery } from 'convex-svelte';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
@@ -134,7 +138,7 @@
 							: 'border-border hover:border-foreground/20 hover:bg-muted/60'} w-full p-3 text-left"
 					>
 						<div class="flex items-start gap-3">
-							<div class="rounded-xl bg-primary/10 p-2 text-primary">
+							<div class="rounded-xl bg-primary/10 p-2 text-primary-ink">
 								<FileText size={16} />
 							</div>
 							<div class="min-w-0 flex-1">

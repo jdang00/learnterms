@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { TriangleAlert, BookOpen, Layers, Brain } from 'lucide-svelte';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import Layers from '@lucide/svelte/icons/layers';
+	import Brain from '@lucide/svelte/icons/brain';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { ArrowLeft } from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ReleaseOne from '$lib/components/blog/ReleaseOne.svelte';
 	import Lens from '$lib/components/blog/Lens.svelte';
 	import VersionTwoBeta from '$lib/components/blog/VersionTwoBeta.svelte';

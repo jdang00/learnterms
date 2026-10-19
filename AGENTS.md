@@ -1,6 +1,6 @@
 # LearnTerms: Agent Guide
 
-A study platform for health-professions cohorts. It uses SvelteKit 2 with Svelte 5 runes, Convex, TailwindCSS 4 with DaisyUI 5, Clerk auth, R2 document storage and OpenAI/OpenRouter models. It deploys to Vercel.
+A study platform for health-professions cohorts. It uses SvelteKit 2 with Svelte 5 runes, Convex, TailwindCSS 4 with shadcn-svelte (bits-ui) on brand tokens, Clerk auth, R2 document storage and OpenAI/OpenRouter models. It deploys to Vercel.
 
 ## Commands
 
@@ -35,7 +35,16 @@ Use **Bun only**. Never use `npm`, `npx`, `yarn` or `pnpm`. Treat any older `npm
 - **AI models:** every model ID lives in `src/convex/aiModels.ts` (`TEXT_MODEL`, `OPENROUTER_TEXT_MODEL`, `EMBEDDING_MODEL`). The Datalab OCR model stays in `datalab.ts`.
 - **Rendering HTML:** question stems, options and rationales are rich HTML. Always render them with `{@html sanitizeHtml(x)}` (`$lib/utils/sanitizeHtml`), and put `<!-- eslint-disable-next-line svelte/no-at-html-tags -->` on the line above.
 - **Formatting:** `$lib/utils/format.ts` has `formatBytes` and `formatClock`. `$lib/utils/errorHandling.ts` has `getErrorText` and `isConvexAuthError`.
-- **UI:** use DaisyUI classes (`modal`, `btn`, `card`, …) and `lucide-svelte` icons. Use `Sheet.svelte` for mobile bottom sheets and `resolve()` from `$app/paths` for internal links.
+- **UI:** shadcn-svelte primitives in `$lib/components/ui` on the brand tokens in `src/app.css`. `/design-system` is the living reference and `dev/v4.5-paola-migration-guide.md` covers the rules. There is no DaisyUI; don't add `btn`, `card`, `modal` or theme classes.
+  - **Tones:** Button, Badge, Alert and Progress take `variant` plus `tone` (`tone.ts`). For role-colored text on the page use `text-<role>-ink`; keep the solid `text-<role>` for icons and fills. Use `-foreground` for text on a solid role fill.
+  - **Surfaces:** use `Card` or the surface utilities for every bordered panel instead of hand-rolling `rounded-2xl border bg-background`. The utilities are `surface` (panel), `surface-sm` (tile or row), `surface-muted` (recessed panel), `surface-inset` (nested panel) and `surface-dashed` (empty state or drop target). A guard test fails on hand-built surfaces.
+  - **Shared pieces:** `SelectField` and `SemesterSelect` (never a native `<select>`), `Tip` for tooltips, and `toast` from `svelte-sonner` (the old `$lib/stores/toast.svelte` facade still works).
+  - **Dialogs and sheets:** use `Dialog.Content sheet` for a phone bottom sheet that is a centered dialog on desktop, and `Dialog.CornerClose` for a close button. Use `Sheet.svelte` for draggable mobile sheets.
+  - **Split pill:** use Button `shape="segment-start"`/`"segment-end"`.
+  - **Docks:** test and review docks use `DOCK_ISLAND_CLASS`/`DOCK_PHONE_BAR_CLASS` and `dockGlass()` from `quiz-dock/dockStyles`.
+  - **Icons:** import one icon per module, `import X from '@lucide/svelte/icons/x'`. ESLint blocks the barrel and `lucide-svelte`, which pull every icon into the build. Type icon props as `LucideIcon` (`import type { LucideIcon } from '@lucide/svelte'`).
+  - **CLI:** `bunx shadcn-svelte add` overwrites customized primitives (Button, Badge, Dialog content, Select, Card…). Check `git diff src/lib/components/ui` afterward and restore the brand changes. Never pass `-o` blindly.
+  - **Links:** use `resolve()` from `$app/paths` for internal links.
 - **Svelte 5:** use runes (`$state`, `$derived`, `$effect`, `$props`). Prefer a writable `$derived` over `$state` plus an `$effect` that copies.
 - **Lint:** fix problems rather than disabling rules. When a disable is genuinely needed, scope it to one line and give a reason (`-- why`). Prefix intentionally unused args with `_`.
 - **Comments:** keep them minimal. Add one only when the logic isn't obvious.

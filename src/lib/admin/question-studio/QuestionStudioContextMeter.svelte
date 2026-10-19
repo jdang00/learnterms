@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { CircleHelp, TriangleAlert } from 'lucide-svelte';
+	import CircleHelp from '@lucide/svelte/icons/circle-help';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import {
 		selectedContextSize,
 		SOURCE_CONTEXT_TARGET,
@@ -51,7 +52,7 @@
 				href="https://docs.learnterms.com/docs/admin/source-context"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="inline-flex items-center gap-1 text-foreground/45 underline-offset-2 hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-primary"
+				class="inline-flex items-center gap-1 text-foreground/45 underline-offset-2 hover:text-primary-ink hover:underline focus-visible:outline-2 focus-visible:outline-primary"
 			>
 				<CircleHelp size={13} />
 				How much should I give it?
@@ -81,7 +82,7 @@
 		{/if}
 
 		{#if tooBroad}
-			<p class="mt-1.5 flex items-start gap-2 leading-relaxed text-warning">
+			<p class="mt-1.5 flex items-start gap-2 leading-relaxed text-warning-ink">
 				<TriangleAlert size={13} class="mt-0.5 shrink-0" />
 				<span
 					>That's a lot at once, so questions may get shallow. Narrow it down for sharper ones.</span

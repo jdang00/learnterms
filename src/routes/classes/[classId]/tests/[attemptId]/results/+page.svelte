@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { dockGlass } from '$lib/components/quiz-dock/dockStyles';
+	import { DOCK_ISLAND_CLASS, dockGlass } from '$lib/components/quiz-dock/dockStyles';
 	import { RadialProgress } from '$lib/components/ui/radial-progress';
 	import { formatClock } from '$lib/utils/format';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
@@ -14,22 +14,20 @@
 	import { fade, slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
 	import { resolve } from '$app/paths';
-	import {
-		ChevronLeft,
-		CircleAlert,
-		PanelRight,
-		Clock,
-		Target,
-		Flag,
-		CheckCircle2,
-		XCircle,
-		MinusCircle,
-		ArrowLeft,
-		ArrowRight,
-		BarChart3,
-		BookOpen,
-		Plus
-	} from 'lucide-svelte';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import PanelRight from '@lucide/svelte/icons/panel-right';
+	import Clock from '@lucide/svelte/icons/clock';
+	import Target from '@lucide/svelte/icons/target';
+	import Flag from '@lucide/svelte/icons/flag';
+	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+	import XCircle from '@lucide/svelte/icons/x-circle';
+	import MinusCircle from '@lucide/svelte/icons/minus-circle';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import BarChart3 from '@lucide/svelte/icons/bar-chart-3';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import Plus from '@lucide/svelte/icons/plus';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Alert from '$lib/components/ui/alert';
@@ -370,7 +368,7 @@
 					</div>
 
 					<!-- Score hero card -->
-					<Card.Root class="rounded-2xl bg-background py-0 shadow-xs overflow-hidden">
+					<Card.Root class="py-0 shadow-xs overflow-hidden">
 						<Card.Content class="p-6 sm:p-8">
 							<div class="flex flex-col sm:flex-row items-center sm:items-start gap-8">
 								<div class="flex flex-col items-center text-center shrink-0">
@@ -409,7 +407,7 @@
 											</div>
 											<div class="text-xs text-foreground/50">Incorrect</div>
 										</div>
-										<div class="rounded-xl border border-border p-4 text-center">
+										<div class="surface-sm p-4 text-center">
 											<MinusCircle class="mx-auto text-foreground/30 mb-1" size={20} />
 											<div class="font-bold text-2xl">{summary?.unansweredCount ?? 0}</div>
 											<div class="text-xs text-foreground/50">Skipped</div>
@@ -417,14 +415,14 @@
 									</div>
 
 									<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 text-sm">
-										<div class="rounded-xl border border-border p-3 flex items-center gap-2">
+										<div class="surface-sm p-3 flex items-center gap-2">
 											<Target size={14} class="text-foreground/40 shrink-0" />
 											<div>
 												<div class="text-xs text-foreground/40">Pass at</div>
 												<div class="font-semibold">{summary?.passThresholdPct ?? 0}%</div>
 											</div>
 										</div>
-										<div class="rounded-xl border border-border p-3 flex items-center gap-2">
+										<div class="surface-sm p-3 flex items-center gap-2">
 											<Clock size={14} class="text-foreground/40 shrink-0" />
 											<div>
 												<div class="text-xs text-foreground/40">Time</div>
@@ -433,7 +431,7 @@
 												</div>
 											</div>
 										</div>
-										<div class="rounded-xl border border-border p-3 flex items-center gap-2">
+										<div class="surface-sm p-3 flex items-center gap-2">
 											<Flag size={14} class="text-foreground/40 shrink-0" />
 											<div>
 												<div class="text-xs text-foreground/40">Flagged</div>
@@ -442,7 +440,7 @@
 												</div>
 											</div>
 										</div>
-										<div class="rounded-xl border border-border p-3 flex items-center gap-2">
+										<div class="surface-sm p-3 flex items-center gap-2">
 											<BookOpen size={14} class="text-foreground/40 shrink-0" />
 											<div>
 												<div class="text-xs text-foreground/40">Questions</div>
@@ -486,7 +484,7 @@
 
 					<!-- Breakdowns -->
 					<div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-						<Card.Root class="rounded-2xl bg-background py-0 shadow-xs">
+						<Card.Root class="py-0 shadow-xs">
 							<Card.Content class="p-8">
 								<h2 class="flex items-center gap-2 text-base font-semibold">
 									<BarChart3 size={16} class="text-foreground/50" />
@@ -497,7 +495,7 @@
 								{:else}
 									<div class="space-y-2">
 										{#each summary.byModule as row (row.moduleId)}
-											<div class="border border-border rounded-xl p-3">
+											<div class="surface-sm p-3">
 												<div class="flex items-center justify-between gap-2">
 													<div class="font-medium text-sm">{row.moduleTitle}</div>
 													<Badge
@@ -532,7 +530,7 @@
 							</Card.Content>
 						</Card.Root>
 
-						<Card.Root class="rounded-2xl bg-background py-0 shadow-xs">
+						<Card.Root class="py-0 shadow-xs">
 							<Card.Content class="p-8">
 								<h2 class="flex items-center gap-2 text-base font-semibold">
 									<BarChart3 size={16} class="text-foreground/50" />
@@ -543,7 +541,7 @@
 								{:else}
 									<div class="space-y-2">
 										{#each summary.byType as row (row.questionType)}
-											<div class="border border-border rounded-xl p-3">
+											<div class="surface-sm p-3">
 												<div class="flex items-center justify-between gap-2">
 													<div class="font-medium text-sm">
 														{friendlyTypeName(row.questionType)}
@@ -650,15 +648,15 @@
 							</div>
 
 							<div class="grid grid-cols-3 gap-2 text-sm mt-5">
-								<div class="rounded-xl border border-border p-2 text-center">
+								<div class="surface-sm p-2 text-center">
 									<div class="font-bold text-success-ink">{summary?.correctCount ?? 0}</div>
 									<div class="text-[10px] text-foreground/40">Correct</div>
 								</div>
-								<div class="rounded-xl border border-border p-2 text-center">
+								<div class="surface-sm p-2 text-center">
 									<div class="font-bold text-error-ink">{summary?.incorrectCount ?? 0}</div>
 									<div class="text-[10px] text-foreground/40">Wrong</div>
 								</div>
-								<div class="rounded-xl border border-border p-2 text-center">
+								<div class="surface-sm p-2 text-center">
 									<div class="font-bold">{summary?.unansweredCount ?? 0}</div>
 									<div class="text-[10px] text-foreground/40">Skipped</div>
 								</div>
@@ -782,7 +780,7 @@
 					</div>
 
 					{#if filteredReviewEntries.length === 0}
-						<div class="rounded-2xl border border-border p-5 text-sm text-foreground/60">
+						<div class="surface p-5 text-sm text-foreground/60">
 							No questions match this filter.
 							<Button
 								variant="ghost"
@@ -927,13 +925,11 @@
 									</div>
 
 									{#if rows.length === 0}
-										<div class="rounded-xl border border-border p-4 text-sm text-foreground/50">
+										<div class="surface-sm p-4 text-sm text-foreground/50">
 											No matching pairs found for this question.
 										</div>
 									{:else}
-										<div
-											class="rounded-xl border border-border/60 overflow-hidden divide-y divide-border/40"
-										>
+										<div class="surface-inset overflow-hidden divide-y divide-border/40">
 											{#each rows as row (row.promptId)}
 												<div
 													class="flex items-start gap-2.5 px-3 py-2.5 {row.isCorrect
@@ -1047,7 +1043,7 @@
 
 							<!-- Rationale -->
 							{#if hasRationale(selectedItem.question)}
-								<Card.Root class="mt-6 ms-2 rounded-2xl bg-background py-0 shadow-xl">
+								<Card.Root class="mt-6 ms-2 py-0 shadow-xl">
 									<Card.Content class="p-8">
 										<h3 class="text-base font-semibold">Rationale</h3>
 										<div class="tiptap-content text-sm text-foreground/80">
@@ -1058,7 +1054,7 @@
 									</Card.Content>
 								</Card.Root>
 							{:else}
-								<div class="rounded-xl border border-border p-4 mt-6 ms-2">
+								<div class="surface-sm p-4 mt-6 ms-2">
 									<div class="text-sm text-foreground/40">
 										No rationale available for this question.
 									</div>
@@ -1070,9 +1066,7 @@
 			</div>
 
 			<!-- Fixed bottom nav bar for review -->
-			<div
-				class="dock-glass fixed inset-x-0 bottom-5 z-40 mx-auto hidden w-fit items-center gap-2 rounded-full p-2.5 md:inline-flex animate-in fade-in-0 slide-in-from-bottom-6 duration-500 ease-out motion-reduce:animate-none"
-			>
+			<div class={DOCK_ISLAND_CLASS}>
 				<Button
 					class={dockGlass('soft')}
 					size="sm"
@@ -1093,7 +1087,7 @@
 					class={dockGlass('outline')}
 					variant="outline"
 					tone="neutral"
-					style="border-radius: 9999px 0.3rem 0.3rem 9999px;"
+					shape="segment-start"
 					onclick={() => goToAdjacentReviewQuestion(-1)}
 					disabled={selectedIndex === 0}
 				>
@@ -1103,7 +1097,7 @@
 					class={dockGlass('outline')}
 					variant="outline"
 					tone="neutral"
-					style="border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: calc(-1.5px - 0.5rem);"
+					shape="segment-end"
 					onclick={() => goToAdjacentReviewQuestion(1)}
 					disabled={selectedIndex === (filteredReviewEntries.length || 1) - 1}
 				>

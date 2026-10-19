@@ -1,12 +1,10 @@
 <script lang="ts">
-	import {
-		Clock3,
-		MousePointerClick,
-		ChartNoAxesCombined,
-		RotateCcw,
-		Save,
-		X
-	} from 'lucide-svelte';
+	import Clock3 from '@lucide/svelte/icons/clock-3';
+	import MousePointerClick from '@lucide/svelte/icons/mouse-pointer-click';
+	import ChartNoAxesCombined from '@lucide/svelte/icons/chart-no-axes-combined';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import Save from '@lucide/svelte/icons/save';
+	import X from '@lucide/svelte/icons/x';
 	import { resolve } from '$app/paths';
 	import { fade } from 'svelte/transition';
 	import ShimmerText from '$lib/components/ShimmerText.svelte';
@@ -108,9 +106,7 @@
 	<div class="grid min-h-0 flex-1 gap-3 lg:grid-cols-12">
 		<!-- Question list -->
 		<div class="flex min-h-0 flex-col gap-3 lg:col-span-5 xl:col-span-4">
-			<aside
-				class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xs"
-			>
+			<aside class="flex min-h-0 flex-1 flex-col overflow-hidden surface shadow-xs">
 				<div class="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
 					<h2 class="text-sm font-semibold">Questions</h2>
 					<span class="text-xs text-foreground/45">
@@ -162,7 +158,7 @@
 
 		<!-- Inspector -->
 		<section
-			class="hidden min-h-0 overflow-hidden rounded-2xl border border-border bg-background shadow-xs lg:col-span-7 lg:flex xl:col-span-8"
+			class="hidden min-h-0 overflow-hidden surface shadow-xs lg:col-span-7 lg:flex xl:col-span-8"
 		>
 			{#if activeCandidate && displayIndex !== null}
 				<QuestionStudioCandidateInspector
@@ -195,9 +191,7 @@
 	</div>
 
 	<!-- Commit bar -->
-	<div
-		class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-border bg-background px-3 py-2 shadow-xs"
-	>
+	<div class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 surface px-3 py-2 shadow-xs">
 		{#if telemetry}
 			<span class="flex items-center gap-1.5 text-xs text-foreground/55" aria-label="Elapsed time">
 				<Clock3 size={14} />

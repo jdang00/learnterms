@@ -1,23 +1,21 @@
 <script lang="ts">
-	import {
-		ArrowDownNarrowWide,
-		ArrowLeft,
-		ArrowRight,
-		Calculator,
-		ChevronLeft,
-		ExternalLink,
-		Eye,
-		FileText,
-		Flag,
-		Flame,
-		Highlighter,
-		Info,
-		PanelRight,
-		Settings,
-		Shuffle,
-		SlidersHorizontal,
-		StickyNote
-	} from 'lucide-svelte';
+	import ArrowDownNarrowWide from '@lucide/svelte/icons/arrow-down-narrow-wide';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Calculator from '@lucide/svelte/icons/calculator';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import Eye from '@lucide/svelte/icons/eye';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import Flag from '@lucide/svelte/icons/flag';
+	import Flame from '@lucide/svelte/icons/flame';
+	import Highlighter from '@lucide/svelte/icons/highlighter';
+	import Info from '@lucide/svelte/icons/info';
+	import PanelRight from '@lucide/svelte/icons/panel-right';
+	import Settings from '@lucide/svelte/icons/settings';
+	import Shuffle from '@lucide/svelte/icons/shuffle';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
+	import StickyNote from '@lucide/svelte/icons/sticky-note';
 	import { Confetti } from 'svelte-confetti';
 	import ModuleProgress from '$lib/components/ModuleProgress.svelte';
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
@@ -345,7 +343,7 @@
 								<SlidersHorizontal size={13} />
 							</span>
 						</div>
-						<div class="grid grid-cols-4 gap-1 rounded-2xl border border-border bg-muted/50 p-1">
+						<div class="grid grid-cols-4 gap-1 surface-muted p-1">
 							<button
 								type="button"
 								class="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.68rem] font-medium transition-colors {highlightOn
@@ -387,7 +385,7 @@
 				</div>
 
 				<div class="m-4 flex flex-col justify-center">
-					<Card.Root class="gap-0 rounded-2xl bg-background py-0">
+					<Card.Root class="gap-0 py-0">
 						<Card.Content class="gap-2 p-8">
 							<div class="flex flex-row flex-wrap justify-between border-b pb-2">
 								<h2 class="text-lg font-semibold">Rationale</h2>
@@ -449,9 +447,7 @@
 					>
 						<Eye />
 					</Button>
-					<div
-						class="flex flex-col items-center gap-1 rounded-2xl border border-border bg-muted/50 p-1"
-					>
+					<div class="flex flex-col items-center gap-1 surface-muted p-1">
 						<span class="grid size-11 place-items-center rounded-xl">
 							<Highlighter size={20} class="text-[var(--highlighter-ink)]" />
 						</span>
@@ -471,7 +467,7 @@
 		</div>
 
 		<div class="w-full lg:min-w-0 lg:flex-1">
-			<div class="mb-3 rounded-2xl border border-border bg-background/80 p-3 lg:hidden">
+			<div class="mb-3 surface p-3 lg:hidden">
 				<h3 class="text-lg font-semibold">{moduleInfo.emoji} {moduleInfo.title}</h3>
 				<p class="text-sm text-foreground/70">{moduleInfo.description}</p>
 			</div>
@@ -562,7 +558,7 @@
 
 				<!-- The Classic dock layout, pinned inside the preview instead of the viewport. -->
 				<div
-					class="absolute -bottom-7 left-1/2 z-40 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-background/80 px-5 py-4 shadow-xl backdrop-blur-md md:inline-flex"
+					class="absolute -bottom-7 left-1/2 z-40 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-background/80 px-5 py-4 shadow-xl backdrop-blur-md md:inline-flex [--segment-gap:--spacing(2)]"
 					role="toolbar"
 					aria-label="Quiz controls"
 				>
@@ -595,8 +591,7 @@
 						variant="outline"
 						tone="neutral"
 						size="sm"
-						shape="rect"
-						style="border-radius: 9999px 0.3rem 0.3rem 9999px"
+						shape="segment-start"
 						aria-label="Previous question"
 						disabled={currentIndex === 0}
 						onclick={() => select(currentIndex - 1)}
@@ -607,8 +602,7 @@
 						variant="outline"
 						tone="neutral"
 						size="sm"
-						shape="rect"
-						style="border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: calc(2px - 0.5rem)"
+						shape="segment-end"
 						aria-label="Next question"
 						disabled={currentIndex === questions.length - 1}
 						onclick={() => select(currentIndex + 1)}

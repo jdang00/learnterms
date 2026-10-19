@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { ChevronRight } from 'lucide-svelte';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { buildBreadcrumbTrail } from './nav';
 	const trail = $derived(buildBreadcrumbTrail(page.url.pathname));
 </script>

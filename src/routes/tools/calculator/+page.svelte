@@ -21,7 +21,7 @@
 
 <div class="mx-auto w-full max-w-sm p-4 sm:p-6">
 	<h1 class="font-display text-2xl font-semibold mb-5">Calculator</h1>
-	<div class="flex flex-col rounded-3xl border border-border pt-4">
+	<div class="flex flex-col surface pt-4">
 		{#key clerk.user?.id}<CalculatorPanel storageKey={clerk.user?.id ?? 'guest'} />{/key}
 	</div>
 </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Eye, X } from 'lucide-svelte';
+	import Eye from '@lucide/svelte/icons/eye';
+	import X from '@lucide/svelte/icons/x';
 	import { Button } from '$lib/components/ui/button';
 	import { SelectField } from '$lib/components/ui/select';
 	type Option = { id: string; text: string };

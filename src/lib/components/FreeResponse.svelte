@@ -57,11 +57,7 @@
 			{qs.gradingErrors[question._id]}
 		</p>{/if}
 	{#if currentGrade}
-		<section
-			aria-label="Feedback"
-			aria-live="polite"
-			class="rounded-2xl border border-border p-4 space-y-2"
-		>
+		<section aria-label="Feedback" aria-live="polite" class="surface p-4 space-y-2">
 			<div class="flex items-center gap-2">
 				<h3 class="font-semibold">Feedback</h3>
 				<Badge variant="solid" tone={currentGrade.isCorrect ? 'success' : 'warning'}

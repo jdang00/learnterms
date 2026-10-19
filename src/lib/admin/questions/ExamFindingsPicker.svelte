@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import { Check, CornerDownLeft, Plus, Search, X } from 'lucide-svelte';
+	import Check from '@lucide/svelte/icons/check';
+	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Search from '@lucide/svelte/icons/search';
+	import X from '@lucide/svelte/icons/x';
 	import {
 		EXAM_TEST_GROUPS,
 		EXAM_TESTS,
@@ -107,7 +111,8 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content
-		class="inset-x-0 top-auto bottom-0 flex h-[min(40rem,88dvh)] max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-t-[2rem] rounded-b-none border p-0 shadow-2xl sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-w-4xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[1.75rem]"
+		sheet
+		class="flex h-[min(40rem,88dvh)] flex-col gap-0 overflow-hidden border p-0 shadow-2xl sm:max-w-4xl"
 		showCloseButton={false}
 		onOpenAutoFocus={(event) => {
 			event.preventDefault();
@@ -186,7 +191,7 @@
 								<span class="min-w-0 flex-1 truncate">{entry.title}</span>
 								{#if addedCount[entry.id]}
 									<span
-										class="flex items-center gap-0.5 text-[0.7rem] font-medium text-success"
+										class="flex items-center gap-0.5 text-[0.7rem] font-medium text-success-ink"
 										title="Already on this question"
 									>
 										<Check size={12} />{addedCount[entry.id] > 1 ? addedCount[entry.id] : ''}

@@ -1,4 +1,6 @@
-import { FileText, Image as ImageIcon, Presentation } from 'lucide-svelte';
+import FileText from '@lucide/svelte/icons/file-text';
+import ImageIcon from '@lucide/svelte/icons/image';
+import Presentation from '@lucide/svelte/icons/presentation';
 import type { Doc } from '../../../convex/_generated/dataModel';
 
 export type ViewMode = 'grid' | 'list';

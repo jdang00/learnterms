@@ -15,7 +15,7 @@
 
 		<div class="grid gap-6 md:grid-cols-2">
 			{#each docsNav.find((section) => section.title === 'Admin')?.items || [] as item (item.path)}
-				<Card.Root class="bg-background shadow-lg">
+				<Card.Root class="shadow-lg">
 					<Card.Header>
 						<Card.Title class="text-xl font-semibold">
 							<h2>

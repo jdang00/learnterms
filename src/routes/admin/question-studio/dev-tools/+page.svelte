@@ -15,15 +15,13 @@
 	import ToolHistory from '$lib/admin/workbench/ToolHistory.svelte';
 	import RagChat from '$lib/admin/workbench/RagChat.svelte';
 
-	import {
-		ArrowLeft,
-		Check,
-		Database,
-		MessageSquare,
-		Play,
-		TriangleAlert,
-		Wrench
-	} from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Check from '@lucide/svelte/icons/check';
+	import Database from '@lucide/svelte/icons/database';
+	import MessageSquare from '@lucide/svelte/icons/message-square';
+	import Play from '@lucide/svelte/icons/play';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import Wrench from '@lucide/svelte/icons/wrench';
 	import { fade } from 'svelte/transition';
 	import { useClerkContext } from 'svelte-clerk';
 	import { useConvexClient, useQuery } from 'convex-svelte';
@@ -217,7 +215,7 @@
 			</Button>
 			<div class="h-6 w-px bg-muted-strong"></div>
 			<div class="flex min-w-0 items-center gap-3">
-				<div class="hidden rounded-xl bg-primary/10 p-2 text-primary sm:flex">
+				<div class="hidden rounded-xl bg-primary/10 p-2 text-primary-ink sm:flex">
 					<Wrench size={18} />
 				</div>
 				<div class="min-w-0">
@@ -252,13 +250,13 @@
 		</header>
 
 		<div
-			class="mb-4 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-border bg-background px-4 py-3 shadow-xs"
+			class="mb-4 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-3 surface px-4 py-3 shadow-xs"
 		>
 			<div class="flex min-w-0 flex-1 basis-64 items-center gap-2.5">
 				<span
 					class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl {selectedDocument
-						? 'bg-success/10 text-success'
-						: 'bg-primary/10 text-primary'}"
+						? 'bg-success/10 text-success-ink'
+						: 'bg-primary/10 text-primary-ink'}"
 				>
 					{#if selectedDocument}<Check size={15} />{:else}<Database size={15} />{/if}
 				</span>
@@ -329,9 +327,7 @@
 
 		<div class="flex flex-1 flex-col gap-4 xl:grid xl:min-h-0 xl:grid-cols-12">
 			{#if activePane === 'tools'}
-				<section
-					class="flex min-h-[32rem] flex-col rounded-2xl border border-border bg-background shadow-xs xl:col-span-8 xl:min-h-0"
-				>
+				<section class="flex min-h-[32rem] flex-col surface shadow-xs xl:col-span-8 xl:min-h-0">
 					<div
 						class="flex shrink-0 items-center gap-1 overflow-x-auto rounded-t-2xl border-b border-border px-3 py-2.5"
 					>
@@ -340,7 +336,7 @@
 							<button
 								class="flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition {selectedTool ===
 								tool.id
-									? 'bg-primary/10 text-primary'
+									? 'bg-primary/10 text-primary-ink'
 									: 'text-foreground/45 hover:bg-muted hover:text-foreground/75'}"
 								onclick={() => (selectedTool = tool.id)}
 							>

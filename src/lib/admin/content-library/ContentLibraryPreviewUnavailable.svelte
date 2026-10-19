@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { Check, ChevronRight, Copy, RotateCcw, TriangleAlert } from 'lucide-svelte';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Copy from '@lucide/svelte/icons/copy';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
@@ -34,7 +38,7 @@
 
 <div class="flex h-full min-h-72 flex-col items-center justify-center p-8 text-center">
 	<div
-		class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-warning/10 text-warning"
+		class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-warning/10 text-warning-ink"
 	>
 		<TriangleAlert size={24} />
 	</div>
@@ -82,7 +86,7 @@
 						{/if}
 					</Button>
 					<pre
-						class="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-border bg-muted/50 p-3 pr-16 text-left font-mono text-[11px] leading-relaxed text-foreground/70">{errorText}</pre>
+						class="max-h-48 overflow-auto whitespace-pre-wrap break-words surface-inset p-3 pr-16 text-left font-mono text-[11px] leading-relaxed text-foreground/70">{errorText}</pre>
 				</div>
 			{/if}
 		</div>

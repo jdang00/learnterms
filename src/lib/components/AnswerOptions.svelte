@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Eye } from 'lucide-svelte';
+	import Eye from '@lucide/svelte/icons/eye';
 	import { Button } from '$lib/components/ui/button';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';

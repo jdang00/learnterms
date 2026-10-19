@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Settings, SlidersHorizontal, ToolCase } from 'lucide-svelte';
+	import Settings from '@lucide/svelte/icons/settings';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
+	import ToolCase from '@lucide/svelte/icons/tool-case';
 	import Sheet from '$lib/components/Sheet.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Tip } from '$lib/components/ui/tooltip';

@@ -2,33 +2,31 @@
 	import { resolve } from '$app/paths';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
-	import {
-		Sparkles,
-		BrainCircuit,
-		BookOpen,
-		ChartColumnIncreasing,
-		CircleGauge,
-		ClipboardCheck,
-		Database,
-		FileCog,
-		FolderOpen,
-		GalleryVerticalEnd,
-		GitBranch,
-		Keyboard,
-		BarChart3,
-		FileText,
-		Eye,
-		Image,
-		LayoutDashboard,
-		Palette,
-		Search,
-		Shield,
-		SlidersHorizontal,
-		WandSparkles,
-		Users,
-		Zap,
-		ArrowRight
-	} from 'lucide-svelte';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import BrainCircuit from '@lucide/svelte/icons/brain-circuit';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import ChartColumnIncreasing from '@lucide/svelte/icons/chart-column-increasing';
+	import CircleGauge from '@lucide/svelte/icons/circle-gauge';
+	import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
+	import Database from '@lucide/svelte/icons/database';
+	import FileCog from '@lucide/svelte/icons/file-cog';
+	import FolderOpen from '@lucide/svelte/icons/folder-open';
+	import GalleryVerticalEnd from '@lucide/svelte/icons/gallery-vertical-end';
+	import GitBranch from '@lucide/svelte/icons/git-branch';
+	import Keyboard from '@lucide/svelte/icons/keyboard';
+	import BarChart3 from '@lucide/svelte/icons/bar-chart-3';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import Eye from '@lucide/svelte/icons/eye';
+	import Image from '@lucide/svelte/icons/image';
+	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
+	import Palette from '@lucide/svelte/icons/palette';
+	import Search from '@lucide/svelte/icons/search';
+	import Shield from '@lucide/svelte/icons/shield';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
+	import WandSparkles from '@lucide/svelte/icons/wand-sparkles';
+	import Users from '@lucide/svelte/icons/users';
+	import Zap from '@lucide/svelte/icons/zap';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 
 	function reveal(node: HTMLElement, opts?: { y?: number; delay?: number; stagger?: number }) {
 		const y = opts?.y ?? 24;
@@ -832,7 +830,7 @@
 		<section class="pt-16 pb-12 sm:pt-20 sm:pb-16" use:reveal={{ y: 20 }}>
 			<div class="flex items-center gap-3 mb-5">
 				<div
-					class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center"
+					class="w-10 h-10 rounded-full bg-primary/10 text-primary-ink flex items-center justify-center"
 				>
 					<Sparkles size={20} />
 				</div>
@@ -877,7 +875,7 @@
 							{#each entry.highlights as highlight (highlight.title)}
 								{@const Icon = highlight.icon}
 								<div class="highlight-card">
-									<div class="rounded-xl border border-border/80 bg-background/70 p-2 mb-3 w-fit">
+									<div class="surface-inset p-2 mb-3 w-fit">
 										<Icon size={16} />
 									</div>
 									<h3 class="text-sm font-semibold">{highlight.title}</h3>

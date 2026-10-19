@@ -1,15 +1,13 @@
 <script lang="ts">
-	import {
-		GripVertical,
-		Trash2,
-		ArrowRightLeft,
-		X,
-		FileText,
-		CheckCircle,
-		Filter,
-		Send,
-		Archive
-	} from 'lucide-svelte';
+	import GripVertical from '@lucide/svelte/icons/grip-vertical';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import ArrowRightLeft from '@lucide/svelte/icons/arrow-right-left';
+	import X from '@lucide/svelte/icons/x';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import CheckCircle from '@lucide/svelte/icons/check-circle';
+	import Filter from '@lucide/svelte/icons/filter';
+	import Send from '@lucide/svelte/icons/send';
+	import Archive from '@lucide/svelte/icons/archive';
 	import type { StatusFilter } from '$lib/types';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';

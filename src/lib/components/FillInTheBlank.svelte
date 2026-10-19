@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import HighlightedStem from './HighlightedStem.svelte';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
-	import { Eye } from 'lucide-svelte';
+	import Eye from '@lucide/svelte/icons/eye';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Card from '$lib/components/ui/card';
@@ -148,9 +148,7 @@
 	</div>
 
 	{#if showAnswerPanel}
-		<Card.Root
-			class="mt-6 w-72 gap-0 rounded-2xl border-foreground/10 bg-background shadow-md sm:w-80"
-		>
+		<Card.Root class="mt-6 w-72 gap-0 shadow-md sm:w-80">
 			<Card.Content class="gap-2">
 				<h3 class="text-lg font-semibold mb-2 {qs.showSolution ? '' : 'blur-xs'}">
 					{displayAnswer()}

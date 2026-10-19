@@ -75,7 +75,7 @@
 		{#each days as day, i (day.start)}
 			<span
 				class="min-w-0 flex-1 truncate text-center {day.isToday
-					? 'font-semibold text-primary'
+					? 'font-semibold text-primary-ink'
 					: ''}"
 				>{i % 2 === days.length % 2 || day.isToday
 					? day.isToday

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AlertTriangle } from 'lucide-svelte';
+	import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import { fade } from 'svelte/transition';
@@ -756,9 +756,7 @@
 		<div class="mx-auto flex w-full max-w-[1800px] min-h-0 flex-1 flex-col p-4 sm:p-6">
 			<QuestionStudioHeader />
 
-			<section
-				class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xs"
-			>
+			<section class="flex min-h-0 flex-1 flex-col overflow-hidden surface shadow-xs">
 				<div class="qs-canvas relative min-h-0 flex-1 overflow-y-auto rounded-2xl bg-muted">
 					<div class="qs-grid pointer-events-none absolute inset-0"></div>
 					<div class="relative mx-auto w-full max-w-5xl space-y-3 p-4 sm:p-10">

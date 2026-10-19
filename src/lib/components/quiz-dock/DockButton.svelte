@@ -2,13 +2,7 @@
 	import type { CommandSource, QuizCommand } from './types';
 	import type { DockDisplay } from './layouts';
 	import { ariaShortcutFor, shortcutLabelFor } from './shortcuts';
-	import {
-		dockButtonClass,
-		isPassive,
-		READOUT_CLASS,
-		segmentStyle,
-		type DockShape
-	} from './dockStyles';
+	import { dockButtonClass, isPassive, READOUT_CLASS, type DockShape } from './dockStyles';
 	import ReadoutContent from './ReadoutContent.svelte';
 	import { cn } from '$lib/utils.js';
 	import { mergeProps } from 'bits-ui';
@@ -71,7 +65,6 @@
 			<a
 				{...props}
 				class={className}
-				style={segmentStyle(shape)}
 				href={command.href()}
 				target="_blank"
 				rel="noopener noreferrer"
@@ -86,7 +79,6 @@
 				{...mergeProps(props, { onclick: () => command.run(source) })}
 				type="button"
 				class={className}
-				style={segmentStyle(shape)}
 				disabled={!enabled}
 				aria-label={label}
 				aria-pressed={command.active ? active : undefined}

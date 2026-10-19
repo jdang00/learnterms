@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { ArrowLeft, ArrowRight, Calendar, Check, School, Users } from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Calendar from '@lucide/svelte/icons/calendar';
+	import Check from '@lucide/svelte/icons/check';
+	import School from '@lucide/svelte/icons/school';
+	import Users from '@lucide/svelte/icons/users';
 	import { useClerkContext } from 'svelte-clerk';
 	import { useConvexClient } from 'convex-svelte';
 	import { resolve } from '$app/paths';
@@ -96,7 +101,9 @@
 						<Avatar.Fallback />
 					</Avatar.Root>
 				{:else}
-					<div class="mb-5 grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+					<div
+						class="mb-5 grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary-ink"
+					>
 						<School size={26} />
 					</div>
 				{/if}
@@ -106,10 +113,7 @@
 				</p>
 			</div>
 
-			<div
-				class="rounded-2xl border border-border bg-background p-5 shadow-xs sm:p-6"
-				in:fly={{ y: 12, duration: 350, delay: 100 }}
-			>
+			<div class="surface p-5 shadow-xs sm:p-6" in:fly={{ y: 12, duration: 350, delay: 100 }}>
 				{#if user === null}
 					<p class="mb-4 text-center text-sm text-foreground/70">
 						Sign in to enter your class code and join your cohort.
@@ -174,10 +178,7 @@
 				</p>
 			</div>
 
-			<div
-				class="rounded-2xl border border-border bg-background p-5 shadow-xs sm:p-6"
-				in:fly={{ y: 12, duration: 350, delay: 100 }}
-			>
+			<div class="surface p-5 shadow-xs sm:p-6" in:fly={{ y: 12, duration: 350, delay: 100 }}>
 				<div class="flex items-center gap-4">
 					{#if cohortInfo.cohort.pic_url && !cohortImageFailed}
 						<img
@@ -188,7 +189,7 @@
 						/>
 					{:else}
 						<div
-							class="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary"
+							class="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary-ink"
 						>
 							<School size={24} />
 						</div>

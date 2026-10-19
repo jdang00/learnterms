@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Layers, Trash2 } from 'lucide-svelte';
+	import Layers from '@lucide/svelte/icons/layers';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 
 	import ShimmerText from '$lib/components/ShimmerText.svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -19,9 +20,7 @@
 	} = $props();
 </script>
 
-<aside
-	class="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xs xl:col-span-4"
->
+<aside class="flex min-h-0 flex-col overflow-hidden surface shadow-xs xl:col-span-4">
 	<div class="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
 		<div class="flex items-center gap-2">
 			<Layers size={14} class="text-foreground/45" />
@@ -97,7 +96,7 @@
 						<span class="flex items-center gap-2">
 							<span
 								class="truncate font-mono text-xs font-semibold {isSelected
-									? 'text-primary'
+									? 'text-primary-ink'
 									: 'text-foreground/75'}"
 							>
 								{run.tool}

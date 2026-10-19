@@ -169,7 +169,7 @@
 	--color-chart-4: var(--chart-4);
 	--color-chart-5: var(--chart-5);
 
-	/* Brand radii: 8 for chips and small controls, 14 for answer options, 24 for cards, pills for actions. */
+	/* Brand radii: 8 for chips and small controls, 14 for answer options and nested panels, 20 for surfaces, pills for actions. */
 	--radius-sm: 0.25rem;
 	--radius-md: 0.375rem;
 	--radius-lg: var(--radius);
@@ -177,6 +177,7 @@
 	--radius-2xl: 1rem;
 	--radius-3xl: 1.5rem;
 	--radius-4xl: 2rem;
+	--radius-surface: 1.25rem;
 
 	--animate-checkbox-pop: checkbox-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
 	--animate-checkbox-draw: checkbox-draw 260ms cubic-bezier(0.65, 0, 0.35, 1) both;
@@ -229,6 +230,15 @@
 	body {
 		@apply bg-background text-foreground;
 	}
+	[data-slot='dialog-content'],
+	[data-slot='alert-dialog-content'],
+	[data-slot='sheet-content'],
+	[data-slot='drawer-content'],
+	[data-slot='popover-content'],
+	[data-slot='hover-card-content'],
+	[data-surface='popover'] {
+		--surface-bg: var(--color-popover);
+	}
 }
 
 /* viewport-fit=cover lets landscape phones draw under the notch; keep content clear of it. */
@@ -262,6 +272,41 @@ body {
 }
 
 /* Brand face for page titles; body text stays in the system sans. */
+/* Surfaces: every bordered panel on a page. Restyle cards and panels here, not per page.
+   surface = card/panel, surface-sm = small tile or row, surface-muted = recessed panel,
+   surface-inset = small panel nested in a surface, surface-dashed = empty state or drop target. Overlays set --surface-bg so panels inside them match. */
+@utility surface {
+	border-radius: var(--radius-surface);
+	border: 1px solid var(--color-border);
+	background-color: var(--surface-bg, var(--color-card));
+	color: var(--color-card-foreground);
+}
+
+@utility surface-sm {
+	border-radius: var(--radius-xl);
+	border: 1px solid var(--color-border);
+	background-color: var(--surface-bg, var(--color-card));
+	color: var(--color-card-foreground);
+}
+
+@utility surface-inset {
+	border-radius: var(--radius-xl);
+	border: 1px solid color-mix(in oklab, var(--color-border) 75%, transparent);
+	background-color: color-mix(in oklab, var(--color-muted) 70%, transparent);
+}
+
+@utility surface-muted {
+	border-radius: var(--radius-surface);
+	border: 1px solid var(--color-border);
+	background-color: color-mix(in oklab, var(--color-muted) 70%, transparent);
+}
+
+@utility surface-dashed {
+	border-radius: var(--radius-surface);
+	border: 1px dashed var(--color-border);
+	background-color: color-mix(in oklab, var(--color-background) 60%, transparent);
+}
+
 @utility font-display {
 	font-family: var(--font-brand);
 	letter-spacing: -0.025em;

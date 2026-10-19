@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ArrowLeft, Sparkles } from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 </script>
@@ -11,7 +12,7 @@
 	</Button>
 	<div class="h-6 w-px bg-muted-strong"></div>
 	<div class="flex items-center gap-3">
-		<div class="hidden rounded-xl bg-primary/10 p-2 text-primary sm:flex">
+		<div class="hidden rounded-xl bg-primary/10 p-2 text-primary-ink sm:flex">
 			<Sparkles size={18} />
 		</div>
 		<h1 class="font-display text-xl font-semibold leading-tight">Question Studio</h1>

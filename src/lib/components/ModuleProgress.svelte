@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { ChevronRight, Trophy, RotateCcw } from 'lucide-svelte';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Trophy from '@lucide/svelte/icons/trophy';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import { scale } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button';
 	import { backOut, cubicOut } from 'svelte/easing';

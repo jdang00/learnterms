@@ -3,17 +3,15 @@
 	import { flip } from 'svelte/animate';
 	import { fade, scale } from 'svelte/transition';
 	import { backOut, cubicOut } from 'svelte/easing';
-	import {
-		ArrowLeft,
-		CheckCheck,
-		Eye,
-		LayoutGrid,
-		Monitor,
-		PencilLine,
-		Plus,
-		Rows3,
-		Smartphone
-	} from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import CheckCheck from '@lucide/svelte/icons/check-check';
+	import Eye from '@lucide/svelte/icons/eye';
+	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
+	import Monitor from '@lucide/svelte/icons/monitor';
+	import PencilLine from '@lucide/svelte/icons/pencil-line';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Rows3 from '@lucide/svelte/icons/rows-3';
+	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import { getExamTest, type ExamTest } from '$lib/examFindings/catalog';
 	import {
 		applyNormalValues,
@@ -366,9 +364,7 @@
 	</header>
 
 	<div class="min-h-0 flex-1 overflow-y-auto p-4">
-		<div
-			class="graph-stage flex min-h-full flex-col rounded-3xl border border-border/70 bg-muted/50 px-3 py-4 @md:px-5"
-		>
+		<div class="graph-stage flex min-h-full flex-col surface-muted px-3 py-4 @md:px-5">
 			{#if findings.length === 0}
 				<button
 					type="button"
@@ -444,7 +440,7 @@
 					{#if !full && !drag}
 						<button
 							type="button"
-							class="flex min-h-24 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border text-sm font-medium text-foreground/50 transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+							class="flex min-h-24 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border text-sm font-medium text-foreground/50 transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary-ink"
 							onclick={() => (pickerOpen = true)}
 							{disabled}
 						>

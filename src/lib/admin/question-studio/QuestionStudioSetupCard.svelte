@@ -1,7 +1,11 @@
 <script lang="ts">
 	import QuestionStudioDestinationPicker from './QuestionStudioDestinationPicker.svelte';
 	import QuestionStudioSetupDialogs from './QuestionStudioSetupDialogs.svelte';
-	import { ChevronDown, Grid2X2, ListChecks, Network, Sparkles } from 'lucide-svelte';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Grid2X2 from '@lucide/svelte/icons/grid-2-x-2';
+	import ListChecks from '@lucide/svelte/icons/list-checks';
+	import Network from '@lucide/svelte/icons/network';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { fly } from 'svelte/transition';
 	import QuestionStudioPagePicker from './QuestionStudioPagePicker.svelte';
 	import QuestionStudioContextMeter from './QuestionStudioContextMeter.svelte';
@@ -184,7 +188,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <div in:fly={{ y: 16, duration: 280 }}>
-	<Card.Root class="gap-0 bg-background py-0 shadow-sm">
+	<Card.Root class="gap-0 py-0 shadow-sm">
 		<Card.Content class="px-7 py-8 sm:px-14 sm:py-10">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<h2 class="flex items-center gap-2 text-sm font-medium text-foreground/55">

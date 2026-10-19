@@ -2,7 +2,10 @@
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
-	import { BookOpen, ChevronRight, Flag, TrendingUp } from 'lucide-svelte';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Flag from '@lucide/svelte/icons/flag';
+	import TrendingUp from '@lucide/svelte/icons/trending-up';
 	import { SvelteSet } from 'svelte/reactivity';
 	import * as Alert from '$lib/components/ui/alert';
 	import * as Collapsible from '$lib/components/ui/collapsible';
@@ -79,7 +82,7 @@
 	{@const overall = userStats.data.overall}
 	<!-- Overall Stats -->
 	<div
-		class="mb-4 flex flex-col divide-y divide-border overflow-hidden rounded-2xl border border-border shadow-xs sm:flex-row sm:divide-x sm:divide-y-0"
+		class="mb-4 flex flex-col divide-y divide-border overflow-hidden surface shadow-xs sm:flex-row sm:divide-x sm:divide-y-0"
 	>
 		<div class="flex flex-1 items-start justify-between gap-3 px-6 py-3">
 			<div>
@@ -153,7 +156,7 @@
 									<Collapsible.Root
 										open={classOpen}
 										onOpenChange={() => toggleClass(cls.classId)}
-										class="rounded-2xl border border-border bg-background"
+										class="surface"
 									>
 										<Collapsible.Trigger
 											aria-label={`Expand ${cls.className}`}

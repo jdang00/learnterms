@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Paperclip, X } from 'lucide-svelte';
+	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -152,7 +152,7 @@
 
 {#if !collapsed}
 	{#if visibleMedia.length > 0 || (showHiddenNote && hiddenCount > 0)}
-		<div class="mt-6 rounded-3xl border border-border bg-card shadow-xl shadow-black/5">
+		<div class="mt-6 surface shadow-xl shadow-black/5">
 			<div class="flex flex-col gap-2 p-6">
 				<h3 class="text-lg font-semibold">Attachments</h3>
 				{#if visibleMedia.length > 0}
@@ -231,77 +231,49 @@
 	</Button>
 {/if}
 
-{#if showCompactAttachments && visibleMedia.length > 1}
-	<div
-		class="fixed inset-0 z-40 flex items-center justify-center"
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="compact-attachments-title"
-	>
-		<button
-			class="fixed inset-0 bg-black/50 cursor-default"
-			onclick={closeCompactAttachments}
-			onkeydown={(e) => {
-				if (e.key === 'Escape') closeCompactAttachments();
-			}}
-			aria-label="Close attachments viewer"
-			tabindex="-1"
-		></button>
-
-		<div
-			class="bg-background rounded-xl shadow-2xl border border-border p-4 max-w-sm w-full mx-4 max-h-[80vh] overflow-y-auto relative z-10"
-			role="document"
-		>
-			<div class="flex items-center justify-between mb-4">
-				<h3 id="compact-attachments-title" class="font-semibold text-lg">
-					Attachments ({visibleMedia.length})
-				</h3>
-				<Button
-					variant="ghost"
-					tone="neutral"
-					size="sm"
-					shape="circle"
-					onclick={closeCompactAttachments}
-					aria-label="Close attachments"
+<Dialog.Root
+	open={showCompactAttachments && visibleMedia.length > 1}
+	onOpenChange={(open) => {
+		if (!open) closeCompactAttachments();
+	}}
+>
+	<Dialog.Content sheet class="max-h-[80vh] gap-4 overflow-y-auto sm:max-w-sm">
+		<Dialog.Header>
+			<Dialog.Title>Attachments ({visibleMedia.length})</Dialog.Title>
+		</Dialog.Header>
+		<div class="grid grid-cols-2 gap-3">
+			{#each visibleMedia as attachment (attachment._id)}
+				<button
+					class="group border-2 border-border rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary"
+					onclick={() => {
+						handleAttachmentClick(attachment);
+						closeCompactAttachments();
+					}}
+					aria-label={`View attachment: ${attachment.altText}`}
 				>
-					<X size={16} />
-				</Button>
-			</div>
-
-			<div class="grid grid-cols-2 gap-3">
-				{#each visibleMedia as attachment (attachment._id)}
-					<button
-						class="group border-2 border-border rounded-lg overflow-hidden cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-primary"
-						onclick={() => {
-							handleAttachmentClick(attachment);
-							closeCompactAttachments();
-						}}
-						aria-label={`View attachment: ${attachment.altText}`}
-					>
-						<div class="relative">
-							<img
-								src={attachment.url}
-								alt={attachment.altText}
-								class:blur-md={shouldBlurAttachment(attachment)}
-								class="w-full h-20 object-cover group-hover:brightness-110 transition-all duration-200"
-							/>
-							{#if showSolutionBadges && attachment.showOnSolution}
-								<Badge size="xs" class="absolute top-1.5 left-1.5">Rationale</Badge>
-							{/if}
-							{#if attachment.caption}
-								<div
-									class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2"
-								>
-									<p class="text-white text-xs truncate">{attachment.caption}</p>
-								</div>
-							{/if}
-						</div>
-					</button>
-				{/each}
-			</div>
+					<div class="relative">
+						<img
+							src={attachment.url}
+							alt={attachment.altText}
+							class:blur-md={shouldBlurAttachment(attachment)}
+							class="w-full h-20 object-cover group-hover:brightness-110 transition-all duration-200"
+						/>
+						{#if showSolutionBadges && attachment.showOnSolution}
+							<Badge size="xs" class="absolute top-1.5 left-1.5">Rationale</Badge>
+						{/if}
+						{#if attachment.caption}
+							<div
+								class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2"
+							>
+								<p class="text-white text-xs truncate">{attachment.caption}</p>
+							</div>
+						{/if}
+					</div>
+				</button>
+			{/each}
 		</div>
-	</div>
-{/if}
+	</Dialog.Content>
+</Dialog.Root>
 
 <Dialog.Root
 	open={attachmentOpen}

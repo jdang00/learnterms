@@ -92,7 +92,6 @@
 		"file-type": "^21",
 		"gpt-tokenizer": "^4.0.0",
 		"katex": "^0.17.0",
-		"lucide-svelte": "^0.525.0",
 		"marked": "^16.4.2",
 		"mathlive": "^0.110.0",
 		"pdf-lib": "^1.17.1",

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Calculator } from 'lucide-svelte';
+	import Calculator from '@lucide/svelte/icons/calculator';
 	import { untrack } from 'svelte';
 	import { getQuizCommands } from '$lib/components/quiz-dock/commands.svelte';
 	import SidePanel from '$lib/components/side-panel/SidePanel.svelte';

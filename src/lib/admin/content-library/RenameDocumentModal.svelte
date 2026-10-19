@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { FilePenLine } from 'lucide-svelte';
+	import FilePenLine from '@lucide/svelte/icons/file-pen-line';
 	import { tick } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check } from 'lucide-svelte';
+	import Check from '@lucide/svelte/icons/check';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { questionTypeLabel } from './questionStudioTypes';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
@@ -58,7 +58,7 @@
 	<div class="flex items-start gap-3">
 		{#if isSaved}
 			<span
-				class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/15 text-success"
+				class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/15 text-success-ink"
 				title="Published to module"
 			>
 				<Check size={12} />

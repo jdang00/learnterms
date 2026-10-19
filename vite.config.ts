@@ -32,7 +32,7 @@ export default defineConfig({
 		dedupe: ['prosemirror-state', 'prosemirror-model', 'prosemirror-transform', 'prosemirror-view']
 	},
 	optimizeDeps: {
-		include: ['lucide-svelte', 'convex-svelte', 'svelte-confetti', 'posthog-js'],
+		include: ['convex-svelte', 'svelte-confetti', 'posthog-js'],
 		esbuildOptions: {
 			target: 'esnext',
 			plugins: [

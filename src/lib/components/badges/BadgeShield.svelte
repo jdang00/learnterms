@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ComponentType } from 'svelte';
+	import type { LucideIcon } from '@lucide/svelte';
 
 	type Gradient = {
 		from: string;
@@ -12,7 +12,7 @@
 		size?: number;
 		gradient: Gradient;
 		iconColor: string;
-		icon?: ComponentType;
+		icon?: LucideIcon;
 		iconScale?: number;
 		class?: string;
 	}

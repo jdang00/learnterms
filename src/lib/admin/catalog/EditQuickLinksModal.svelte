@@ -4,19 +4,17 @@
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id } from '../../../convex/_generated/dataModel';
 	import type { QuickLinkItem } from '$lib/components/power-bar/types';
-	import {
-		ArrowDown,
-		ArrowUp,
-		Eye,
-		EyeOff,
-		ExternalLink,
-		Link2,
-		Plus,
-		RotateCcw,
-		Trash2,
-		TriangleAlert,
-		X
-	} from 'lucide-svelte';
+	import ArrowDown from '@lucide/svelte/icons/arrow-down';
+	import ArrowUp from '@lucide/svelte/icons/arrow-up';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import Link2 from '@lucide/svelte/icons/link-2';
+	import Plus from '@lucide/svelte/icons/plus';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import X from '@lucide/svelte/icons/x';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -190,7 +188,9 @@
 	>
 		<div class="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
 			<div class="flex items-center gap-3">
-				<div class="rounded-2xl bg-primary/10 p-2.5 text-primary ring-1 ring-inset ring-primary/15">
+				<div
+					class="rounded-2xl bg-primary/10 p-2.5 text-primary-ink ring-1 ring-inset ring-primary/15"
+				>
 					<Link2 size={20} />
 				</div>
 				<div>
@@ -245,7 +245,7 @@
 						</div>
 					{:else}
 						<div class="space-y-5 p-5">
-							<div class="rounded-2xl border border-border bg-muted/40 p-3">
+							<div class="surface-muted p-3">
 								<div class="rounded-2xl bg-background p-2 shadow-xs ring-1 ring-border/60">
 									<div class="flex w-full items-center gap-3 rounded-full px-3 py-2.5">
 										<span

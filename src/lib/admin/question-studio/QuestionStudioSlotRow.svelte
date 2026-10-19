@@ -11,7 +11,7 @@
 	let { slot, writing = false }: Props = $props();
 </script>
 
-<div class="rounded-2xl border border-dashed border-border bg-background/60 px-3 py-2.5">
+<div class="surface-dashed px-3 py-2.5">
 	<div class="flex items-start gap-3">
 		<span class="mt-1 flex h-4 w-4 shrink-0 items-center justify-center">
 			{#if writing}

@@ -2,7 +2,7 @@
 	import { useClerkContext } from 'svelte-clerk/client';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
-	import { ChevronRight } from 'lucide-svelte';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
 	import type { QuickLinkPath } from './power-bar/types';

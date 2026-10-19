@@ -6,7 +6,13 @@
 	import { Editor, Extension } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
 	import { Plugin } from '@tiptap/pm/state';
-	import { Bold, Italic, Underline, List, ListOrdered, Undo2, Redo2 } from 'lucide-svelte';
+	import Bold from '@lucide/svelte/icons/bold';
+	import Italic from '@lucide/svelte/icons/italic';
+	import Underline from '@lucide/svelte/icons/underline';
+	import List from '@lucide/svelte/icons/list';
+	import ListOrdered from '@lucide/svelte/icons/list-ordered';
+	import Undo2 from '@lucide/svelte/icons/undo-2';
+	import Redo2 from '@lucide/svelte/icons/redo-2';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		EMPTY_NOTE,
@@ -279,9 +285,7 @@
 		}
 	}}
 />
-<div
-	class="flex min-h-72 flex-1 flex-col rounded-xl border border-border overflow-hidden ph-no-capture ph-mask"
->
+<div class="flex min-h-72 flex-1 flex-col surface-sm overflow-hidden ph-no-capture ph-mask">
 	<div
 		class="flex flex-wrap gap-1 border-b border-border bg-muted/50 p-2"
 		role="group"

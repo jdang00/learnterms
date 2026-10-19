@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { ChevronUp, MessageSquareText, Paperclip, Settings } from 'lucide-svelte';
+	import ChevronUp from '@lucide/svelte/icons/chevron-up';
+	import MessageSquareText from '@lucide/svelte/icons/message-square-text';
+	import Paperclip from '@lucide/svelte/icons/paperclip';
+	import Settings from '@lucide/svelte/icons/settings';
 	import { fly } from 'svelte/transition';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import Sheet from '$lib/components/Sheet.svelte';
@@ -113,7 +116,7 @@
 			<div
 				role="button"
 				tabindex="0"
-				class="flex min-h-12 w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-border bg-background px-4 py-2 text-left shadow-lg active:bg-muted"
+				class="flex min-h-12 w-full cursor-pointer items-center gap-2.5 surface px-4 py-2 text-left shadow-lg active:bg-muted"
 				aria-label="Show rationale"
 				use:sheetDrag={peekDrag}
 				onclick={() => (qs.isModalOpen = true)}

@@ -6,7 +6,7 @@ export const getEditorExtensions = () => [
 		link: {
 			openOnClick: false,
 			HTMLAttributes: {
-				class: 'text-primary underline'
+				class: 'text-primary-ink underline'
 			}
 		}
 	}),

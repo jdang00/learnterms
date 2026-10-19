@@ -5,15 +5,13 @@
 	import type { Doc, Id } from '../../convex/_generated/dataModel';
 	import { fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import {
-		ArrowLeft,
-		ChevronRight,
-		ShieldCheckIcon,
-		UserRoundPenIcon,
-		ClipboardCheck,
-		RotateCcw,
-		ArrowRight as ArrowRightIcon
-	} from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
+	import UserRoundPenIcon from '@lucide/svelte/icons/user-round-pen';
+	import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import ArrowRightIcon from '@lucide/svelte/icons/arrow-right';
 	import { page } from '$app/state';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -303,9 +301,7 @@
 						<div class="overflow-x-auto pb-1">
 							<div class="flex min-w-max gap-2">
 								{#each Array(3), i (i)}
-									<div
-										class="rounded-xl border border-border bg-background px-3 py-2.5 animate-pulse min-w-[19rem]"
-									>
+									<div class="surface-sm px-3 py-2.5 animate-pulse min-w-[19rem]">
 										<div class="flex items-center gap-3">
 											<Skeleton class="h-5 w-5 rounded-sm" />
 											<Skeleton class="h-3.5 w-32" />
@@ -502,7 +498,7 @@
 					{/if}
 
 					{#if modules.isLoading}
-						<div class="overflow-hidden rounded-2xl border border-border bg-background">
+						<div class="overflow-hidden surface">
 							{#each Array(5), index (index)}
 								<div
 									class="flex items-center gap-4 border-b border-border px-4 py-4 last:border-b-0"
@@ -522,7 +518,7 @@
 							<Alert.Title>Failed to load modules: {modules.error.toString()}</Alert.Title>
 						</Alert.Root>
 					{:else if !modules.data || modules.data.length === 0}
-						<div class="rounded-2xl bg-background shadow-xs border border-border p-8">
+						<div class="surface shadow-xs p-8">
 							<div class="text-center py-8">
 								<div class="text-5xl mb-4">📚</div>
 								<h3 class="text-lg font-semibold mb-2 text-foreground">No modules yet</h3>
@@ -533,7 +529,7 @@
 						</div>
 					{:else}
 						<ol
-							class="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-background"
+							class="divide-y divide-border overflow-hidden surface"
 							aria-label="Modules in {selectedClass.name}"
 						>
 							{#each sortedModules as module, i (module._id)}

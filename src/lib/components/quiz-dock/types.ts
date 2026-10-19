@@ -1,4 +1,4 @@
-import type { Check as LucideIcon } from 'lucide-svelte';
+import type { LucideIcon } from '@lucide/svelte';
 import type { Doc } from '../../../convex/_generated/dataModel';
 import type { DockDisplay } from './layouts';
 
@@ -59,7 +59,7 @@ export type ButtonLook = { variant: ButtonVariant; tone: CommandTone };
 export type QuizCommand = {
 	id: string;
 	scope: CommandScope;
-	icon: typeof LucideIcon;
+	icon: LucideIcon;
 	name: string;
 	description: string;
 	// readout shows text, meter shows a small progress bar; neither is clickable.
@@ -74,7 +74,7 @@ export type QuizCommand = {
 	caption?: () => string;
 	// Longer explanation for the tooltip; falls back to the label.
 	detail?: () => string;
-	activeIcon?: typeof LucideIcon;
+	activeIcon?: LucideIcon;
 	// Trailing value shown next to the name in the More menu, e.g. "03:12".
 	menuValue?: () => string;
 	// Whether the tool exists here at all (palette); `visible` hides it contextually in the dock.

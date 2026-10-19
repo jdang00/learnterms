@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { dockGlass } from '$lib/components/quiz-dock/dockStyles';
+	import {
+		DOCK_ISLAND_CLASS,
+		DOCK_PHONE_BAR_CLASS,
+		dockGlass
+	} from '$lib/components/quiz-dock/dockStyles';
 	import { RadialProgress } from '$lib/components/ui/radial-progress';
 	import { formatClock } from '$lib/utils/format';
 	import { provideStudyToolContext } from '$lib/analytics/studyToolContext';
@@ -31,25 +35,23 @@
 	import { getErrorText } from '$lib/utils/errorHandling';
 	import { slide } from 'svelte/transition';
 	import { cubicInOut } from 'svelte/easing';
-	import {
-		PanelRight,
-		ChevronLeft,
-		CircleAlert,
-		Clock,
-		Flag,
-		CheckCircle2,
-		Wifi,
-		WifiOff,
-		Save,
-		Send,
-		ArrowLeft,
-		ArrowRight,
-		Info,
-		Calculator,
-		StickyNote,
-		Eraser,
-		ToolCase
-	} from 'lucide-svelte';
+	import PanelRight from '@lucide/svelte/icons/panel-right';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Clock from '@lucide/svelte/icons/clock';
+	import Flag from '@lucide/svelte/icons/flag';
+	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+	import Wifi from '@lucide/svelte/icons/wifi';
+	import WifiOff from '@lucide/svelte/icons/wifi-off';
+	import Save from '@lucide/svelte/icons/save';
+	import Send from '@lucide/svelte/icons/send';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Info from '@lucide/svelte/icons/info';
+	import Calculator from '@lucide/svelte/icons/calculator';
+	import StickyNote from '@lucide/svelte/icons/sticky-note';
+	import Eraser from '@lucide/svelte/icons/eraser';
+	import ToolCase from '@lucide/svelte/icons/tool-case';
 	import { Button } from '$lib/components/ui/button';
 	import * as Alert from '$lib/components/ui/alert';
 	import * as Card from '$lib/components/ui/card';
@@ -919,7 +921,7 @@
 							</div>
 
 							<div class="grid grid-cols-2 gap-2 text-sm mt-5">
-								<div class="rounded-xl border border-border p-3">
+								<div class="surface-sm p-3">
 									<div class="text-xs text-foreground/50">Answered</div>
 									<div class="font-bold text-lg">
 										{answeredCount}<span class="text-foreground/40 text-sm font-normal">
@@ -927,7 +929,7 @@
 										>
 									</div>
 								</div>
-								<div class="rounded-xl border border-border p-3">
+								<div class="surface-sm p-3">
 									<div class="text-xs text-foreground/50 flex items-center gap-1">
 										<Flag size={10} />
 										Flagged
@@ -1236,9 +1238,7 @@
 			</div>
 
 			<!-- Fixed bottom action bar (matches QuizDock floating style) -->
-			<div
-				class="dock-glass fixed inset-x-0 bottom-5 z-40 mx-auto hidden w-fit items-center gap-2 rounded-full p-2.5 md:inline-flex animate-in fade-in-0 slide-in-from-bottom-6 duration-500 ease-out motion-reduce:animate-none"
-			>
+			<div class={DOCK_ISLAND_CLASS}>
 				<Button
 					class={dockGlass('outline')}
 					variant="outline"
@@ -1280,7 +1280,7 @@
 					class={dockGlass('outline')}
 					variant="outline"
 					tone="neutral"
-					style="border-radius: 9999px 0.3rem 0.3rem 9999px;"
+					shape="segment-start"
 					onclick={previousQuestion}
 					disabled={currentIndex === 0}
 				>
@@ -1290,7 +1290,7 @@
 					class={dockGlass('outline')}
 					variant="outline"
 					tone="neutral"
-					style="border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: calc(-1.5px - 0.5rem);"
+					shape="segment-end"
 					onclick={nextQuestion}
 					disabled={currentIndex === (runnerQuery.data?.items?.length ?? 1) - 1}
 				>
@@ -1314,9 +1314,7 @@
 			</div>
 
 			<!-- Phone dock: same shape as the quiz dock -->
-			<div
-				class="dock-glass bottom-dock fixed inset-x-0 z-50 rounded-t-[1.75rem] border-b-0 md:hidden"
-			>
+			<div class={DOCK_PHONE_BAR_CLASS}>
 				<div class="flex items-center gap-1 px-2 pt-2" role="toolbar" aria-label="Test controls">
 					<div class="flex min-w-0 flex-1 items-center justify-center gap-1">
 						<Button
@@ -1361,7 +1359,7 @@
 							variant="outline"
 							tone="neutral"
 							class="size-11"
-							style="border-radius: 9999px 0.3rem 0.3rem 9999px;"
+							shape="segment-start"
 							onclick={previousQuestion}
 							disabled={currentIndex === 0}
 							aria-label="Previous question"
@@ -1372,7 +1370,7 @@
 							variant="outline"
 							tone="neutral"
 							class="size-11"
-							style="border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: -1.5px;"
+							shape="segment-end"
 							onclick={nextQuestion}
 							disabled={isLastQuestion}
 							aria-label="Next question"
@@ -1462,13 +1460,13 @@
 						question with the correct answers and rationales.
 					</p>
 					<div class="grid grid-cols-2 gap-2 text-sm">
-						<div class="rounded-xl border border-border p-3">
+						<div class="surface-sm p-3">
 							<div class="text-xs text-foreground/50">Answered</div>
 							<div class="font-semibold">
 								{answeredCount} / {runnerQuery.data?.items?.length ?? 0}
 							</div>
 						</div>
-						<div class="rounded-xl border border-border p-3">
+						<div class="surface-sm p-3">
 							<div class="text-xs text-foreground/50">Unanswered</div>
 							<div
 								class="font-semibold {(runnerQuery.data?.items?.length ?? 0) - answeredCount > 0

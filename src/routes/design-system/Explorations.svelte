@@ -2,27 +2,25 @@
 	import { resolve } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import { getLocalTimeZone, today, type DateValue } from '@internationalized/date';
-	import {
-		BookOpen,
-		ChevronDown,
-		CircleCheck,
-		Copy,
-		Eye,
-		FileText,
-		Flag,
-		FolderInput,
-		GraduationCap,
-		Highlighter,
-		Inbox,
-		Library,
-		MoreHorizontal,
-		Pencil,
-		Search,
-		Shuffle,
-		Sparkles,
-		Trash2,
-		Users
-	} from 'lucide-svelte';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import Copy from '@lucide/svelte/icons/copy';
+	import Eye from '@lucide/svelte/icons/eye';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import Flag from '@lucide/svelte/icons/flag';
+	import FolderInput from '@lucide/svelte/icons/folder-input';
+	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
+	import Highlighter from '@lucide/svelte/icons/highlighter';
+	import Inbox from '@lucide/svelte/icons/inbox';
+	import Library from '@lucide/svelte/icons/library';
+	import MoreHorizontal from '@lucide/svelte/icons/more-horizontal';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Search from '@lucide/svelte/icons/search';
+	import Shuffle from '@lucide/svelte/icons/shuffle';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Users from '@lucide/svelte/icons/users';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Kbd, KbdGroup } from '$lib/components/ui/kbd';
@@ -92,9 +90,9 @@
 
 	<div class="grid grid-cols-1 gap-6 *:min-w-0 lg:grid-cols-2">
 		<!-- Command palette -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase('Command palette', 'The Power Bar: jump to any class, module, or question.')}
-			<Command.Root class="h-80 rounded-3xl border">
+			<Command.Root class="h-80 surface">
 				<Command.Input placeholder="Search classes, modules, questions…" />
 				<Command.List>
 					<Command.Empty>No results.</Command.Empty>
@@ -118,7 +116,7 @@
 		</div>
 
 		<!-- Carousel -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase('Carousel', 'Question figures and attachments, swipeable on phones.')}
 			<div class="px-12">
 				<Carousel.Root opts={{ align: 'start' }}>
@@ -126,7 +124,7 @@
 						{#each slides as slide (slide.title)}
 							<Carousel.Item class="basis-2/3">
 								<div
-									class="graph-stage flex h-40 flex-col justify-end rounded-3xl border p-4"
+									class="graph-stage flex h-40 flex-col justify-end surface p-4"
 									style="background: color-mix(in oklab, {slide.hue} 10%, var(--muted))"
 								>
 									<p class="font-semibold">{slide.title}</p>
@@ -142,12 +140,12 @@
 		</div>
 
 		<!-- Dropdown menu -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase(
 				'Dropdown menu',
 				'Question row actions in the admin list, with submenus and toggles.'
 			)}
-			<div class="flex items-center justify-between rounded-2xl border bg-background p-3">
+			<div class="flex items-center justify-between surface p-3">
 				<div class="min-w-0">
 					<p class="truncate text-sm font-medium">#12 · Which structure does kerat/o refer to?</p>
 					<p class="text-xs text-muted-foreground">Multiple choice · Published</p>
@@ -196,7 +194,7 @@
 		</div>
 
 		<!-- Menubar -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase(
 				'Menubar',
 				'A desktop-style menu for the question editor and Question Studio.'
@@ -231,7 +229,7 @@
 		</div>
 
 		<!-- Popover + Hover card -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase(
 				'Popover & hover card',
 				'Source citations that preview the page, and student mini-profiles.'
@@ -281,7 +279,7 @@
 		</div>
 
 		<!-- Context menu -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase('Context menu', 'Right-click a question or document for quick actions.')}
 			<ContextMenu.Root>
 				<ContextMenu.Trigger
@@ -303,7 +301,7 @@
 		</div>
 
 		<!-- Empty -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase('Empty', 'Calm empty states: no flagged questions, an empty library.')}
 			<Empty.Root class="border">
 				<Empty.Header>
@@ -317,7 +315,7 @@
 		</div>
 
 		<!-- Item -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase('Item', 'Rich rows for settings, notifications, and badge awards.')}
 			<Item.Group class="gap-2">
 				<Item.Root variant="outline">
@@ -342,7 +340,7 @@
 		</div>
 
 		<!-- KBD -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase('Keyboard shortcuts', 'A shortcut sheet for the quiz page.')}
 			<ul class="divide-y text-sm">
 				{#each [['Check answer', ['Enter']], ['Flag question', ['F']], ['Shuffle options', ['⇧', 'S']], ['Next question', ['→']], ['Reveal rationale', ['Tab']], ['Select option', ['1', '–', '5']]] as [label, keys] (label)}
@@ -357,7 +355,7 @@
 		</div>
 
 		<!-- Input OTP -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase('Input OTP', 'Class join codes: one slot per character, paste-friendly.')}
 			<div class="flex flex-col items-center gap-3 py-2">
 				<InputOTP.Root maxlength={6} bind:value={joinCode}>
@@ -376,21 +374,21 @@
 		</div>
 
 		<!-- Calendar -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase('Calendar', 'Exam dates for practice tests and study plans.')}
 			<div class="flex justify-center">
-				<Calendar type="single" bind:value={examDate} class="rounded-3xl border" />
+				<Calendar type="single" bind:value={examDate} class="surface" />
 			</div>
 		</div>
 
 		<!-- Resizable -->
-		<div class="rounded-3xl border p-5 lg:col-span-2">
+		<div class="surface p-5 lg:col-span-2">
 			{@render usecase(
 				'Resizable panes',
 				'Question editor beside a live student preview, or a PDF beside its questions.'
 			)}
 			<div class="h-64">
-				<Resizable.PaneGroup direction="horizontal" class="overflow-hidden rounded-3xl border">
+				<Resizable.PaneGroup direction="horizontal" class="overflow-hidden surface">
 					<Resizable.Pane defaultSize={55} class="p-4">
 						<p class="text-xs text-muted-foreground">Editor</p>
 						<p class="mt-2 font-medium">
@@ -418,7 +416,7 @@
 		</div>
 
 		<!-- Navigation menu -->
-		<div class="rounded-3xl border p-5 lg:col-span-2">
+		<div class="surface p-5 lg:col-span-2">
 			{@render usecase('Navigation menu', 'The public site header with a Features panel.')}
 			<NavigationMenu.Root>
 				<NavigationMenu.List>
@@ -453,7 +451,7 @@
 		</div>
 
 		<!-- Accordion + Collapsible -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase(
 				'Accordion & collapsible',
 				'Docs and FAQs; a long rationale folded into steps.'
@@ -472,7 +470,7 @@
 					>
 				</Accordion.Item>
 			</Accordion.Root>
-			<Collapsible.Root class="mt-4 rounded-2xl border p-3">
+			<Collapsible.Root class="mt-4 surface p-3">
 				<Collapsible.Trigger class="flex w-full items-center justify-between text-sm font-semibold">
 					Show the full derivation <ChevronDown class="size-4" />
 				</Collapsible.Trigger>
@@ -484,7 +482,7 @@
 		</div>
 
 		<!-- Breadcrumb + Pagination -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase('Breadcrumb & pagination', 'Admin location and long question lists.')}
 			<Breadcrumb.Root>
 				<Breadcrumb.List>
@@ -521,16 +519,16 @@
 		</div>
 
 		<!-- Scroll area + aspect ratio -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase(
 				'Scroll area & aspect ratio',
 				'Long rationales in a tidy pane; lecture slides at 16:9.'
 			)}
 			<div class="grid grid-cols-2 gap-3">
-				<ScrollArea class="h-44 rounded-2xl border p-3 text-sm">
+				<ScrollArea class="h-44 surface p-3 text-sm">
 					{#each rationale as step (step)}<p class="mb-2">{step}</p>{/each}
 				</ScrollArea>
-				<AspectRatio ratio={16 / 9} class="overflow-hidden rounded-2xl border">
+				<AspectRatio ratio={16 / 9} class="overflow-hidden surface">
 					<div
 						class="graph-stage flex size-full items-center justify-center bg-primary/8 text-xs font-semibold"
 					>
@@ -541,7 +539,7 @@
 		</div>
 
 		<!-- Sheet + Drawer -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase(
 				'Sheet & drawer',
 				'A side panel for question details; a swipeable drawer on phones.'
@@ -577,7 +575,7 @@
 		</div>
 
 		<!-- Avatar group, toggle group, button group, slider, input group -->
-		<div class="rounded-3xl border p-5">
+		<div class="surface p-5">
 			{@render usecase(
 				'Small pieces',
 				'Who is studying now, filters, split actions, text size, search.'

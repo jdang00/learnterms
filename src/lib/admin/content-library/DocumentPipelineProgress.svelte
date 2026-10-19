@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Clock3, LoaderCircle, TriangleAlert } from 'lucide-svelte';
+	import Clock3 from '@lucide/svelte/icons/clock-3';
+	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import type { Doc } from '../../../convex/_generated/dataModel';
 	import { documentPipeline } from './documentPipeline';
 

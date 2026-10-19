@@ -1,4 +1,7 @@
-import { Search, FileText, Map, Database } from 'lucide-svelte';
+import Search from '@lucide/svelte/icons/search';
+import FileText from '@lucide/svelte/icons/file-text';
+import Map from '@lucide/svelte/icons/map';
+import Database from '@lucide/svelte/icons/database';
 export type Pane = 'tools' | 'rag';
 export type ToolId =
 	| 'searchSourceChunks'

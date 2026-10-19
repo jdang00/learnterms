@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { RotateCcw, SlidersHorizontal } from 'lucide-svelte';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import { getDockPreferences } from './quiz-dock/dockPreferences.svelte';
 	import Sheet from './Sheet.svelte';
 	import { Button } from '$lib/components/ui/button';

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ChevronDown, ChevronUp } from 'lucide-svelte';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import type { AgentJob, CoverageRow } from './questionStudioRun';
 
 	let {
@@ -19,7 +20,7 @@
 	const notes = $derived([...(job?.plan?.riskNotes ?? []), ...(job?.plan?.coverageNotes ?? [])]);
 </script>
 
-<div class="shrink-0 rounded-2xl border border-border bg-background shadow-xs">
+<div class="shrink-0 surface shadow-xs">
 	<button
 		type="button"
 		class="flex w-full items-center gap-2 px-3 py-2 text-left"
@@ -47,7 +48,7 @@
 			<ul class="space-y-1">
 				{#each rows as row (row.topicId)}
 					<li class="flex items-center gap-2 text-xs">
-						<span class="min-w-0 flex-1 truncate {row.kept === 0 ? 'text-warning' : ''}">
+						<span class="min-w-0 flex-1 truncate {row.kept === 0 ? 'text-warning-ink' : ''}">
 							{row.topicTitle}
 						</span>
 						<span class="shrink-0 tabular-nums text-foreground/45">

@@ -1,14 +1,12 @@
 <script lang="ts">
-	import {
-		Braces,
-		ChevronRight,
-		Database,
-		FileText,
-		ListTree,
-		Map,
-		Search,
-		Wrench
-	} from 'lucide-svelte';
+	import Braces from '@lucide/svelte/icons/braces';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Database from '@lucide/svelte/icons/database';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import ListTree from '@lucide/svelte/icons/list-tree';
+	import Map from '@lucide/svelte/icons/map';
+	import Search from '@lucide/svelte/icons/search';
+	import Wrench from '@lucide/svelte/icons/wrench';
 	import { fade, slide } from 'svelte/transition';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -35,7 +33,7 @@
 </script>
 
 {#snippet statTile(label: string, value: string, sub: string)}
-	<div class="min-w-0 rounded-xl border border-border bg-background px-3 py-2.5">
+	<div class="min-w-0 surface-sm px-3 py-2.5">
 		<p class="text-[10px] font-semibold uppercase tracking-wide text-foreground/40">{label}</p>
 		<p class="mt-0.5 truncate text-sm font-semibold">{value}</p>
 		<p class="truncate font-mono text-[10px] text-foreground/40">{sub}</p>
@@ -77,7 +75,7 @@
 		</div>
 		<div class="max-h-[26rem] space-y-2 overflow-y-auto pr-1">
 			{#each splitSourcePages(text) as section, index (index)}
-				<div class="rounded-xl border border-border bg-background p-3.5">
+				<div class="surface-sm p-3.5">
 					{#if section.pageNumber !== null}
 						<span
 							class="mb-2 inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] font-semibold text-foreground/60"
@@ -119,7 +117,7 @@
 			class="relative flex h-full min-h-[24rem] flex-col items-center justify-center gap-3 p-8 text-center"
 		>
 			<span
-				class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary"
+				class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary-ink"
 			>
 				<Wrench size={19} />
 			</span>
@@ -154,7 +152,7 @@
 			{@render diagnosticsRow(run.result.diagnostics)}
 
 			{#if run.tool === 'searchSourceChunks'}
-				<div class="rounded-2xl border border-border bg-background p-4">
+				<div class="surface p-4">
 					<div class="flex flex-wrap items-center gap-2">
 						<p class="min-w-0 flex-1 text-sm">
 							<span class="text-foreground/45">Searched for</span>
@@ -166,7 +164,7 @@
 							limit {run.result.input.limit}
 						</span>
 						<span
-							class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary"
+							class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary-ink"
 						>
 							{output.resultCount} chunk groups · {output.citations?.length ?? 0} citations
 						</span>
@@ -176,7 +174,7 @@
 						<div class="mt-3 grid gap-1.5 sm:grid-cols-2">
 							{#each output.citations as citation (citation.citationId)}
 								<button
-									class="group flex items-center gap-2.5 rounded-xl border border-border bg-background px-3 py-2 text-left transition hover:border-primary/40 hover:bg-primary/5"
+									class="group flex items-center gap-2.5 surface-sm px-3 py-2 text-left transition hover:border-primary/40 hover:bg-primary/5"
 									onclick={() => openPages([citation.pageNumber])}
 									title="Open page {citation.pageNumber} with getSourcePages"
 								>
@@ -189,7 +187,7 @@
 										{citation.chunkTitle}
 									</span>
 									<span
-										class="shrink-0 font-mono text-[10px] font-semibold text-foreground/45 transition group-hover:text-primary"
+										class="shrink-0 font-mono text-[10px] font-semibold text-foreground/45 transition group-hover:text-primary-ink"
 									>
 										p.{citation.pageNumber}
 									</span>
@@ -221,7 +219,7 @@
 					{/if}
 				</div>
 			{:else if run.tool === 'getTopicCoverageMap'}
-				<div class="rounded-2xl border border-border bg-background p-4">
+				<div class="surface p-4">
 					<div class="flex flex-wrap items-center gap-2">
 						<span class="flex items-center gap-1.5 text-sm font-semibold">
 							<ListTree size={15} class="text-primary" />
@@ -240,7 +238,7 @@
 								{@const capacity = Math.max(1, topic.estimatedQuestionCapacity)}
 								{@const fill = Math.min(100, (topic.existingQuestionCount / capacity) * 100)}
 								{@const saturated = topic.existingQuestionCount >= topic.estimatedQuestionCapacity}
-								<div class="rounded-xl border border-border bg-background p-3">
+								<div class="surface-sm p-3">
 									<div class="flex items-start gap-3">
 										<div class="min-w-0 flex-1">
 											<p class="text-[13px] font-medium leading-snug">{topic.title}</p>
@@ -249,7 +247,7 @@
 													{topic.topicId}
 												</span>
 												<button
-													class="rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] text-foreground/55 transition hover:bg-primary/10 hover:text-primary"
+													class="rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] text-foreground/55 transition hover:bg-primary/10 hover:text-primary-ink"
 													onclick={() => openPages(topic.pageNumbers.slice(0, 5))}
 													title="Open these pages with getSourcePages"
 												>
@@ -265,7 +263,7 @@
 											variant="ghost"
 											tone="neutral"
 											size="xs"
-											class="shrink-0 gap-1 text-foreground/50 hover:text-primary"
+											class="shrink-0 gap-1 text-foreground/50 hover:text-primary-ink"
 											onclick={() => searchTopic(topic.title)}
 											title="Search source chunks for this topic"
 										>
@@ -285,7 +283,7 @@
 										</div>
 										<span
 											class="shrink-0 font-mono text-[10px] font-semibold {saturated
-												? 'text-warning'
+												? 'text-warning-ink'
 												: 'text-foreground/50'}"
 										>
 											{topic.existingQuestionCount}/{topic.estimatedQuestionCapacity} written
@@ -334,11 +332,11 @@
 					{/if}
 				</div>
 			{:else if output.text}
-				<div class="rounded-2xl border border-border bg-background p-4">
+				<div class="surface p-4">
 					<div class="mb-3 flex flex-wrap items-center gap-1.5">
 						{#each output.pageNumbers ?? [] as pageNumber (pageNumber)}
 							<span
-								class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary"
+								class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary-ink"
 							>
 								p.{pageNumber}
 							</span>

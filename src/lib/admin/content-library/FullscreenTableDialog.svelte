@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { X } from 'lucide-svelte';
+	import X from '@lucide/svelte/icons/x';
 	import { fade } from 'svelte/transition';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import { Button } from '$lib/components/ui/button';

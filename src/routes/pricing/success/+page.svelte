@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
-	import { Sparkles, PartyPopper, Rocket, ArrowRight, Loader2 } from 'lucide-svelte';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import PartyPopper from '@lucide/svelte/icons/party-popper';
+	import Rocket from '@lucide/svelte/icons/rocket';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Loader2 from '@lucide/svelte/icons/loader-2';
 	import { Confetti } from 'svelte-confetti';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';

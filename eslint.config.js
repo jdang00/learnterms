@@ -48,6 +48,22 @@ export default ts.config(
 					caughtErrorsIgnorePattern: '^_',
 					ignoreRestSiblings: true
 				}
+			],
+			'@typescript-eslint/no-restricted-imports': [
+				'error',
+				{
+					paths: [
+						{
+							name: 'lucide-svelte',
+							message: "Use per-icon imports: import X from '@lucide/svelte/icons/x'."
+						},
+						{
+							name: '@lucide/svelte',
+							message: "Use per-icon imports: import X from '@lucide/svelte/icons/x'.",
+							allowTypeImports: true
+						}
+					]
+				}
 			]
 		}
 	},

@@ -59,19 +59,16 @@
 	});
 </script>
 
-<dl
-	class="divide-y divide-border overflow-hidden rounded-xl border border-border bg-background"
-	aria-label="Run telemetry"
->
+<dl class="divide-y divide-border overflow-hidden surface-sm" aria-label="Run telemetry">
 	{#each items as item (item.label)}
 		<div class="flex items-center justify-between gap-3 px-3 py-2">
 			<dt class="text-xs text-foreground/55">{item.label}</dt>
 			<dd class="min-w-0 text-right">
 				<span
 					class="text-xs font-semibold tabular-nums {item.tone === 'error'
-						? 'text-error'
+						? 'text-error-ink'
 						: item.tone === 'warning'
-							? 'text-warning'
+							? 'text-warning-ink'
 							: ''}">{item.value}</span
 				>
 				{#if item.note}

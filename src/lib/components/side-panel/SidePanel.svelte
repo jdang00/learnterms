@@ -2,7 +2,8 @@
 	import { useStudyToolContext } from '$lib/analytics/studyToolContext';
 	import { captureStudyTool } from '$lib/analytics/studyTools';
 	import { createToolVisibilityTracker } from '$lib/analytics/studyToolEvents';
-	import { X, type Check as IconType } from 'lucide-svelte';
+	import X from '@lucide/svelte/icons/x';
+	import IconType from '@lucide/svelte/icons/check';
 	import { onMount, tick, untrack, type Snippet } from 'svelte';
 	import { sidePanel, type SidePanelId } from './state.svelte';
 	import { sheetDrag } from '$lib/utils/sheetDrag';

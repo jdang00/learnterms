@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { ArrowLeft, Check, RotateCcw, TriangleAlert } from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Check from '@lucide/svelte/icons/check';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { resolve } from '$app/paths';
 	import ShimmerText from '$lib/components/ShimmerText.svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -96,7 +99,7 @@
 		<div class="ml-auto flex min-w-0 items-center gap-2.5">
 			{#if phase === 'ready'}
 				<span
-					class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/15 text-success"
+					class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/15 text-success-ink"
 				>
 					<Check size={12} />
 				</span>

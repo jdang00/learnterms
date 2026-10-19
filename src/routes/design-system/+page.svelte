@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { SelectField } from '$lib/components/ui/select';
 	import { toast } from 'svelte-sonner';
-	import {
-		Flag,
-		Shuffle,
-		Check,
-		Trash2,
-		Plus,
-		ChevronDown,
-		Info,
-		Settings,
-		Sun,
-		Moon
-	} from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Flag from '@lucide/svelte/icons/flag';
+	import Shuffle from '@lucide/svelte/icons/shuffle';
+	import Check from '@lucide/svelte/icons/check';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Plus from '@lucide/svelte/icons/plus';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Info from '@lucide/svelte/icons/info';
+	import Settings from '@lucide/svelte/icons/settings';
+	import Sun from '@lucide/svelte/icons/sun';
+	import Moon from '@lucide/svelte/icons/moon';
 	import { theme, isDark } from '$lib/theme.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -117,7 +117,7 @@
 		</div>
 		<div class="grid grid-cols-3 gap-3 sm:grid-cols-6">
 			{#each surfaces as [name, cls] (name)}
-				<div class="overflow-hidden rounded-2xl border">
+				<div class="overflow-hidden surface">
 					<div class="h-14 {cls}"></div>
 					<div class="px-3 py-2 font-mono text-xs text-muted-foreground">{name}</div>
 				</div>
@@ -229,6 +229,51 @@
 				<Badge size="md" tone="warning"><Flag />Flagged</Badge>
 				<Badge size="md" class="font-mono font-medium">Module 3 · Q 4 / 40</Badge>
 			</div>
+		</div>
+	</section>
+
+	<!-- Surfaces -->
+	<section class="space-y-6">
+		<div>
+			<h2 class="text-3xl font-semibold">Surfaces</h2>
+			<p class="mt-1 text-muted-foreground">
+				Every bordered panel uses Card or one of these utilities, so a restyle lands everywhere.
+			</p>
+		</div>
+		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="surface p-5">
+				<p class="font-mono text-xs text-muted-foreground">surface</p>
+				<p class="mt-2 font-semibold">Lids & Adnexa</p>
+				<div class="mt-3 surface-inset p-3 text-xs text-muted-foreground">
+					<span class="font-mono">surface-inset</span> · 24 questions · 3 flagged
+				</div>
+			</div>
+			<div class="surface-muted p-5">
+				<p class="font-mono text-xs text-muted-foreground">surface-muted</p>
+				<p class="mt-2 font-semibold">Recessed panel</p>
+				<div class="mt-3 surface-sm px-3 py-2.5 text-sm">
+					<span class="font-mono text-xs text-muted-foreground">surface-sm</span> · Row or tile
+				</div>
+			</div>
+			<div
+				class="flex flex-col items-center justify-center gap-1 surface-dashed p-5 text-center text-sm text-muted-foreground"
+			>
+				<span class="font-mono text-xs">surface-dashed</span>
+				Drop slides here
+			</div>
+		</div>
+		<div class="flex flex-wrap items-center gap-3">
+			<div class="flex items-center">
+				<Button variant="outline" tone="neutral" shape="segment-start" aria-label="Previous"
+					><ArrowLeft /></Button
+				>
+				<Button variant="outline" tone="neutral" shape="segment-end" aria-label="Next"
+					><ArrowRight /></Button
+				>
+			</div>
+			<span class="font-mono text-xs text-muted-foreground"
+				>shape="segment-start" / "segment-end"</span
+			>
 		</div>
 	</section>
 

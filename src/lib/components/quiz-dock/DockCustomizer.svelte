@@ -3,24 +3,22 @@
 	import { fade, fly, scale, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { backOut, cubicOut } from 'svelte/easing';
-	import {
-		ArrowLeft,
-		ArrowUpWideNarrow,
-		Check,
-		ChevronDown,
-		ChevronLeft,
-		ChevronRight,
-		CloudOff,
-		Eye,
-		Minus,
-		Monitor,
-		RotateCcw,
-		SeparatorVertical,
-		SlidersHorizontal,
-		Smartphone,
-		ToolCase,
-		Trash2
-	} from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowUpWideNarrow from '@lucide/svelte/icons/arrow-up-wide-narrow';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import CloudOff from '@lucide/svelte/icons/cloud-off';
+	import Eye from '@lucide/svelte/icons/eye';
+	import Minus from '@lucide/svelte/icons/minus';
+	import Monitor from '@lucide/svelte/icons/monitor';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import SeparatorVertical from '@lucide/svelte/icons/separator-vertical';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
+	import Smartphone from '@lucide/svelte/icons/smartphone';
+	import ToolCase from '@lucide/svelte/icons/tool-case';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import { getQuizCommands } from './commands.svelte';
 	import { getDockPreferences } from './dockPreferences.svelte';
 	import {
@@ -28,7 +26,6 @@
 		READOUT_CLASS,
 		segmentShape,
 		isPassive,
-		segmentStyle,
 		TONE_BADGE
 	} from './dockStyles';
 	import ReadoutContent from './ReadoutContent.svelte';
@@ -622,7 +619,7 @@
 {#snippet dockZoneEl()}
 	<div
 		bind:this={itemsZone}
-		style="--dock-gap: {preview === 'desktop' ? '0.5rem' : '0.25rem'}"
+		style="--segment-gap: {preview === 'desktop' ? '0.5rem' : '0.25rem'}"
 		class="flex min-h-14 flex-wrap items-center justify-center border bg-background/95 py-3 backdrop-blur transition-all duration-300
 			{preview === 'desktop'
 			? 'min-w-[14rem] max-w-full gap-2 rounded-full px-4 shadow-lg'
@@ -670,9 +667,6 @@
 							? 'outline-1 outline-dashed outline-offset-2 outline-foreground/30'
 							: ''}
 							{inMoreOnPhone ? 'opacity-45' : ''}"
-						style={item.id === DIVIDER_ID || isPassive(command)
-							? undefined
-							: segmentStyle(segmentShape(itemIds, entry.index))}
 						title={hiddenOnPhone
 							? 'Divider · hidden on phones'
 							: inMoreOnPhone
@@ -798,7 +792,7 @@
 									<span class="size-5 shrink-0 rounded-full border-2 border-foreground/15"></span>
 									<Eye size={14} class="shrink-0 text-foreground/35" />
 									<span
-										class="grid size-7 shrink-0 place-items-center rounded-full text-primary ring-1 ring-primary/40"
+										class="grid size-7 shrink-0 place-items-center rounded-full text-primary-ink ring-1 ring-primary/40"
 										title="The Tools button in the top bar opens the sheet below"
 									>
 										<ToolCase size={14} />
@@ -863,9 +857,7 @@
 							<div
 								bind:this={overflowZone}
 								class="transition-all duration-200
-							{moreOpen
-									? 'w-full max-w-md rounded-2xl border bg-background/85 p-2.5'
-									: 'self-center rounded-full border'}
+							{moreOpen ? 'w-full max-w-md surface p-2.5' : 'self-center rounded-full border'}
 							{drag?.over?.zone === 'overflow'
 									? 'scale-[1.02] border-primary/60 ring-4 ring-primary/15'
 									: moreOpen

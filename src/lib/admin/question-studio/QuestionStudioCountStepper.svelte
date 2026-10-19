@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Minus, Plus } from 'lucide-svelte';
+	import Minus from '@lucide/svelte/icons/minus';
+	import Plus from '@lucide/svelte/icons/plus';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 

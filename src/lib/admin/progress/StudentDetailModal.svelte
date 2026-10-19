@@ -2,9 +2,14 @@
 	import type { Id } from '../../../convex/_generated/dataModel';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
-	import { X, Shield, PenTool, User, Zap, Info } from 'lucide-svelte';
+	import X from '@lucide/svelte/icons/x';
+	import Shield from '@lucide/svelte/icons/shield';
+	import PenTool from '@lucide/svelte/icons/pen-tool';
+	import User from '@lucide/svelte/icons/user';
+	import Zap from '@lucide/svelte/icons/zap';
+	import Info from '@lucide/svelte/icons/info';
 	import StudentStatsContent from './StudentStatsContent.svelte';
-	import type { ComponentType } from 'svelte';
+	import type { LucideIcon } from '@lucide/svelte';
 	import * as Alert from '$lib/components/ui/alert';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -60,7 +65,7 @@
 		const roles: Array<{
 			value: 'dev' | 'admin' | 'curator' | null;
 			label: string;
-			icon: ComponentType;
+			icon: LucideIcon;
 			color: 'neutral' | 'info' | 'primary';
 		}> = [{ value: null, label: 'Student', icon: User, color: 'neutral' }];
 

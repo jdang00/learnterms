@@ -18,18 +18,6 @@ export const TONE_TEXT: Record<CommandTone, string> = {
 	ember: 'text-ember-ink'
 };
 
-// Previous/next read as one split pill: rounded outside, flat where they meet, nearly touching.
-// Containers set --dock-gap so the pair can cancel it.
-const SEGMENT_RADIUS: Record<Exclude<DockShape, 'auto'>, string> = {
-	'segment-start': 'border-radius: 9999px 0.3rem 0.3rem 9999px',
-	'segment-end':
-		'border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: calc(2px - var(--dock-gap, 0px))'
-};
-
-export function segmentStyle(shape: DockShape): string | undefined {
-	return shape === 'auto' ? undefined : SEGMENT_RADIUS[shape];
-}
-
 export const TONE_BADGE: Record<CommandTone, string> = {
 	neutral: 'bg-foreground/5 text-foreground/80',
 	primary: 'bg-primary/12 text-primary-ink',
@@ -78,9 +66,15 @@ export function dockButtonClass(
 		variant,
 		tone,
 		size: 'md',
-		shape: shape === 'auto' && display === 'icon' ? 'circle' : 'pill'
+		shape: shape !== 'auto' ? shape : display === 'icon' ? 'circle' : 'pill'
 	})} ${GLASS[variant]}`;
 }
+
+// The floating desktop island and the phone bar. Test and review pages reuse these for their own docks.
+export const DOCK_ISLAND_CLASS =
+	'dock-glass fixed inset-x-0 bottom-5 z-40 mx-auto hidden w-fit items-center gap-2 rounded-full p-2.5 md:inline-flex animate-in fade-in-0 slide-in-from-bottom-6 duration-500 ease-out motion-reduce:animate-none [--segment-gap:--spacing(2)]';
+export const DOCK_PHONE_BAR_CLASS =
+	'dock-glass bottom-dock fixed inset-x-0 z-50 rounded-t-[1.75rem] border-b-0 md:hidden';
 
 export const READOUT_CLASS =
 	'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium tabular-nums text-foreground/80 bg-foreground/[0.06]';

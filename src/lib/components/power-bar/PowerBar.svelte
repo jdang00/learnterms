@@ -5,7 +5,10 @@
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
-	import { Search, Keyboard, Sparkles } from 'lucide-svelte';
+	import Search from '@lucide/svelte/icons/search';
+	import Keyboard from '@lucide/svelte/icons/keyboard';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import { Command } from 'bits-ui';
 	import { isDark, theme } from '$lib/theme.svelte';
 	import { modifierKeyLabel } from '$lib/utils/platform';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -16,6 +19,7 @@
 	import PowerBarCohortSection from './PowerBarCohortSection.svelte';
 	import PowerBarQuickLinksSection from './PowerBarQuickLinksSection.svelte';
 	import PowerBarSettingsSection from './PowerBarSettingsSection.svelte';
+	import { POWER_HEADING_CLASS, POWER_NOTE_CLASS } from './styles';
 	import type {
 		CohortClassSearchItem,
 		CohortItem,
@@ -61,8 +65,7 @@
 
 	let searchQuery = $state('');
 	let debouncedSearchQuery = $state('');
-	let dialogRef = $state<HTMLElement | null>(null);
-	let searchInputRef: HTMLInputElement | null = null;
+	let searchInputRef = $state<HTMLInputElement | null>(null);
 	let autoNextEnabled = $state(true);
 	let optionsShuffleEnabled = $state(false);
 
@@ -271,53 +274,6 @@
 		await item.onSelect();
 	}
 
-	function getNavigableItems() {
-		if (!dialogRef) return [];
-		return Array.from(
-			dialogRef.querySelectorAll<HTMLElement>('[data-power-item="true"]:not([disabled])')
-		).filter((item) => item.offsetParent !== null);
-	}
-
-	function moveFocus(direction: 1 | -1) {
-		const items = getNavigableItems();
-		if (items.length === 0) return;
-
-		const active = document.activeElement as HTMLElement | null;
-		const activeIndex = items.findIndex((item) => item === active);
-		const nextIndex =
-			activeIndex === -1
-				? direction === 1
-					? 0
-					: items.length - 1
-				: (activeIndex + direction + items.length) % items.length;
-
-		items[nextIndex]?.focus();
-	}
-
-	function handleDialogKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape') {
-			isOpen = false;
-			return;
-		}
-
-		if (event.key === 'Enter' && event.target === searchInputRef && topResult) {
-			event.preventDefault();
-			void executeCommand(topResult);
-			return;
-		}
-
-		if (event.key === 'ArrowDown') {
-			event.preventDefault();
-			moveFocus(1);
-			return;
-		}
-
-		if (event.key === 'ArrowUp') {
-			event.preventDefault();
-			moveFocus(-1);
-		}
-	}
-
 	$effect(() => {
 		if (!isOpen) return;
 		searchQuery = '';
@@ -367,105 +323,110 @@
 <Dialog.Root bind:open={isOpen}>
 	<!-- Phones get a full-screen panel that stops above the keyboard so the results can scroll. -->
 	<Dialog.Content
-		bind:ref={dialogRef}
 		showCloseButton={false}
-		onkeydown={handleDialogKeydown}
 		aria-describedby={undefined}
 		class="pt-safe top-0 left-0 flex h-[calc(100dvh-var(--keyboard-inset,0px))] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 shadow-2xl sm:top-1/2 sm:left-1/2 sm:h-auto sm:max-h-[min(80vh,40rem)] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border sm:border-border sm:pt-0"
 	>
 		<Dialog.Title class="sr-only">Search LearnTerms</Dialog.Title>
-		<div class="flex shrink-0 items-center gap-2.5 border-b border-border px-4">
-			<Search size={15} class="shrink-0 text-foreground/40" />
-			<input
-				type="text"
-				class="h-12 w-full bg-transparent text-sm outline-hidden placeholder:text-foreground/40"
-				placeholder="Search cohorts, classes, modules, links, settings..."
-				bind:value={searchQuery}
-				bind:this={searchInputRef}
-			/>
-			<Kbd class="hidden opacity-40 sm:inline-flex">esc</Kbd>
-			<Button
-				variant="ghost"
-				tone="neutral"
-				size="sm"
-				class="-mr-2 shrink-0 sm:hidden"
-				onclick={() => (isOpen = false)}
+		<!-- Results are filtered and ranked here and in the sections, so Command only handles
+		     selection, arrow keys and Enter. -->
+		<Command.Root shouldFilter={false} loop class="flex min-h-0 flex-1 flex-col">
+			<div class="flex shrink-0 items-center gap-2.5 border-b border-border px-4">
+				<Search size={15} class="shrink-0 text-foreground/40" />
+				<Command.Input
+					class="h-12 w-full bg-transparent text-sm outline-hidden placeholder:text-foreground/40"
+					placeholder="Search cohorts, classes, modules, links, settings..."
+					bind:value={searchQuery}
+					bind:ref={searchInputRef}
+				/>
+				<Kbd class="hidden opacity-40 sm:inline-flex">esc</Kbd>
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					class="-mr-2 shrink-0 sm:hidden"
+					onclick={() => (isOpen = false)}
+				>
+					Cancel
+				</Button>
+			</div>
+
+			<Command.List
+				class="min-h-0 flex-1 scroll-py-3 overflow-y-auto overscroll-contain p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3"
 			>
-				Cancel
-			</Button>
-		</div>
-
-		<div
-			class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3"
-		>
-			{#if searchQuery.trim()}
-				<section class="space-y-2">
-					<div class="px-3 pt-1">
-						<p class="text-[11px] font-medium uppercase tracking-wider text-foreground/35">
-							Top Result
-						</p>
-					</div>
-					{#if topResult}
-						<button
-							type="button"
-							class="group flex w-full items-center gap-3 rounded-xl border border-primary/25 bg-primary/8 px-4 py-3 text-left ring-1 ring-primary/15 transition-colors duration-100 hover:border-primary/40 hover:bg-primary/10"
-							onclick={() => executeCommand(topResult)}
-							data-power-item="true"
-						>
-							<span
-								class="flex h-7 w-7 items-center justify-center rounded-full bg-primary/12 text-primary"
-							>
-								<Sparkles size={14} />
-							</span>
-							<span class="min-w-0 flex-1">
-								<span class="block truncate text-[13px] font-semibold">{topResult.title}</span>
-								<span class="block truncate text-[11px] text-foreground/50"
-									>{topResult.description}</span
-								>
-							</span>
-							<Badge size="xs" class="capitalize">{topResult.kind}</Badge>
-						</button>
-					{:else}
-						<p class="px-3 py-2 text-sm text-foreground/45">
-							No direct matches yet. Try a cohort, quick link, or setting.
-						</p>
+				<Command.Viewport class="space-y-4">
+					{#if searchQuery.trim()}
+						<Command.Group value="top-result">
+							<Command.GroupHeading class={POWER_HEADING_CLASS}>Top Result</Command.GroupHeading>
+							<Command.GroupItems>
+								{#if topResult}
+									<Command.Item
+										value="top:{topResult.id}"
+										class="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-primary/25 bg-primary/8 px-4 py-3 text-left ring-1 ring-primary/15 outline-hidden transition-colors duration-100 data-selected:border-primary/40 data-selected:bg-primary/10"
+										onSelect={() => executeCommand(topResult)}
+									>
+										<span
+											class="flex h-7 w-7 items-center justify-center rounded-full bg-primary/12 text-primary-ink"
+										>
+											<Sparkles size={14} />
+										</span>
+										<span class="min-w-0 flex-1">
+											<span class="block truncate text-[13px] font-semibold">{topResult.title}</span
+											>
+											<span class="block truncate text-[11px] text-foreground/50"
+												>{topResult.description}</span
+											>
+										</span>
+										<Badge size="xs" class="capitalize">{topResult.kind}</Badge>
+									</Command.Item>
+								{:else}
+									<p class={POWER_NOTE_CLASS}>
+										No direct matches yet. Try a cohort, quick link, or setting.
+									</p>
+								{/if}
+							</Command.GroupItems>
+						</Command.Group>
 					{/if}
-				</section>
-			{/if}
 
-			<PowerBarCohortSearchSection
-				{searchQuery}
-				{activeCohortId}
-				classes={cohortClassResults}
-				modules={cohortModuleResults}
-				isLoadingClasses={classSearchQuery.isLoading}
-				isLoadingModules={moduleSearchQuery.isLoading}
-				{hasSearchError}
-				onOpenClass={goToClass}
-				onOpenModule={goToModule}
-			/>
+					<PowerBarCohortSearchSection
+						{searchQuery}
+						{activeCohortId}
+						classes={cohortClassResults}
+						modules={cohortModuleResults}
+						isLoadingClasses={classSearchQuery.isLoading}
+						isLoadingModules={moduleSearchQuery.isLoading}
+						{hasSearchError}
+						onOpenClass={goToClass}
+						onOpenModule={goToModule}
+					/>
 
-			<PowerBarCohortSection
-				isVisible={canSwitchCohorts}
-				{cohorts}
-				{activeCohortId}
-				{searchQuery}
-				isSwitching={isSwitchingCohort}
-				onSwitch={onSwitchCohort}
-			/>
+					<PowerBarCohortSection
+						isVisible={canSwitchCohorts}
+						{cohorts}
+						{activeCohortId}
+						{searchQuery}
+						isSwitching={isSwitchingCohort}
+						onSwitch={onSwitchCohort}
+					/>
 
-			<PowerBarQuickLinksSection {quickLinks} {searchQuery} onNavigate={() => (isOpen = false)} />
+					<PowerBarQuickLinksSection
+						{quickLinks}
+						{searchQuery}
+						onNavigate={() => (isOpen = false)}
+					/>
 
-			<PowerBarSettingsSection
-				{searchQuery}
-				isDarkMode={$isDark}
-				{autoNextEnabled}
-				{optionsShuffleEnabled}
-				onSetTheme={(mode) => theme.set(mode)}
-				onSetAutoNext={setAutoNext}
-				onSetShuffleAnswers={setShuffleAnswers}
-			/>
-		</div>
+					<PowerBarSettingsSection
+						{searchQuery}
+						isDarkMode={$isDark}
+						{autoNextEnabled}
+						{optionsShuffleEnabled}
+						onSetTheme={(mode) => theme.set(mode)}
+						onSetAutoNext={setAutoNext}
+						onSetShuffleAnswers={setShuffleAnswers}
+					/>
+				</Command.Viewport>
+			</Command.List>
+		</Command.Root>
 
 		<div
 			class="hidden shrink-0 items-center justify-between border-t border-border px-4 py-2 sm:flex"
@@ -475,8 +436,6 @@
 				<span>{modifierKey} K</span>
 				<span>·</span>
 				<span>Arrow keys</span>
-				<span>·</span>
-				<span>Tab</span>
 				<span>·</span>
 				<span>Enter</span>
 			</div>

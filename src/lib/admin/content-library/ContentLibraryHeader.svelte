@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ArrowLeft, Library } from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Library from '@lucide/svelte/icons/library';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 
@@ -13,7 +14,7 @@
 	</Button>
 	<div class="h-6 w-px bg-muted-strong"></div>
 	<div class="flex items-center gap-3">
-		<div class="hidden rounded-xl bg-primary/10 p-2 text-primary sm:flex">
+		<div class="hidden rounded-xl bg-primary/10 p-2 text-primary-ink sm:flex">
 			<Library size={18} />
 		</div>
 		<div>

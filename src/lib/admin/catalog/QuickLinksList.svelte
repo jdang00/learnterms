@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { Eye, EyeOff, GripVertical, Plus, TriangleAlert } from 'lucide-svelte';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import GripVertical from '@lucide/svelte/icons/grip-vertical';
+	import Plus from '@lucide/svelte/icons/plus';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import type { QuickLinkItem } from '$lib/components/power-bar/types';
 	import { Button } from '$lib/components/ui/button';
 	type LinkCategory = 'visible' | 'hidden';
@@ -141,7 +145,7 @@
 							</span>
 						</span>
 						{#if error}
-							<span class="shrink-0 text-warning" title={error}>
+							<span class="shrink-0 text-warning-ink" title={error}>
 								<TriangleAlert size={14} />
 							</span>
 						{/if}
@@ -188,9 +192,7 @@
 				<span class="text-[10px] text-foreground/35">{hiddenLinks.length}</span>
 			</div>
 			{#if hiddenLinks.length === 0}
-				<div
-					class="rounded-xl border border-dashed border-border px-3 py-4 text-center text-xs text-foreground/40"
-				>
+				<div class="surface-dashed rounded-xl px-3 py-4 text-center text-xs text-foreground/40">
 					Drag links here to hide them.
 				</div>
 			{:else}
@@ -251,7 +253,7 @@
 								</span>
 							</span>
 							{#if error}
-								<span class="shrink-0 text-warning" title={error}>
+								<span class="shrink-0 text-warning-ink" title={error}>
 									<TriangleAlert size={14} />
 								</span>
 							{/if}

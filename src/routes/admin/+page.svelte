@@ -6,17 +6,15 @@
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
 	import { api } from '../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-	import {
-		Pencil,
-		Trash2,
-		Plus,
-		NotebookPen,
-		Sparkles,
-		ChartColumnIncreasing,
-		GripVertical,
-		Link2,
-		X
-	} from 'lucide-svelte';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Plus from '@lucide/svelte/icons/plus';
+	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import ChartColumnIncreasing from '@lucide/svelte/icons/chart-column-increasing';
+	import GripVertical from '@lucide/svelte/icons/grip-vertical';
+	import Link2 from '@lucide/svelte/icons/link-2';
+	import X from '@lucide/svelte/icons/x';
 	import EditClassModal from '$lib/admin/catalog/EditClassModal.svelte';
 	import AddClassModal from '$lib/admin/catalog/AddClassModal.svelte';
 	import EditQuickLinksModal from '$lib/admin/catalog/EditQuickLinksModal.svelte';
@@ -215,14 +213,14 @@
 		<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8" role="list">
 			<a
 				href={resolve('/admin/library')}
-				class="group rounded-2xl bg-background p-5 shadow-xs border border-border transition hover:shadow-md hover:border-primary/70 focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/30 flex items-start gap-4"
+				class="group surface p-5 shadow-xs transition hover:shadow-md hover:border-primary/70 focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Content Library"
 			>
 				<div class="rounded-xl border bg-primary-foreground border-border p-2">
 					<NotebookPen size={20} class="text-primary" aria-hidden="true" />
 				</div>
 				<div class="flex-1 min-w-0">
-					<h3 class="text-base font-semibold text-foreground group-hover:text-primary">
+					<h3 class="text-base font-semibold text-foreground group-hover:text-primary-ink">
 						Content Library
 					</h3>
 					<p class="text-sm text-foreground/70 line-clamp-2">
@@ -233,14 +231,14 @@
 
 			<a
 				href={resolve('/admin/question-studio')}
-				class="group rounded-2xl bg-background p-5 shadow-xs border border-border transition hover:shadow-md hover:border-primary/70 focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/30 flex items-start gap-4"
+				class="group surface p-5 shadow-xs transition hover:shadow-md hover:border-primary/70 focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Question Studio"
 			>
 				<div class="rounded-xl bg-primary-foreground border border-border p-2">
 					<Sparkles size={20} class="text-primary" aria-hidden="true" />
 				</div>
 				<div class="flex-1 min-w-0">
-					<h3 class="text-base font-semibold text-foreground group-hover:text-primary">
+					<h3 class="text-base font-semibold text-foreground group-hover:text-primary-ink">
 						Question Studio
 					</h3>
 					<p class="text-sm text-foreground/70 line-clamp-2">
@@ -251,14 +249,14 @@
 
 			<a
 				href={resolve('/admin/progress')}
-				class="group rounded-2xl bg-background p-5 shadow-xs border border-border transition hover:shadow-md hover:border-primary/70 focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/30 flex items-start gap-4"
+				class="group surface p-5 shadow-xs transition hover:shadow-md hover:border-primary/70 focus:outline-hidden focus-visible:ring-3 focus-visible:ring-primary/30 flex items-start gap-4"
 				aria-label="Open Class Progress"
 			>
 				<div class="rounded-xl bg-primary-foreground border border-border p-2">
 					<ChartColumnIncreasing size={20} class="text-primary" aria-hidden="true" />
 				</div>
 				<div class="flex-1 min-w-0">
-					<h3 class="text-base font-semibold text-foreground group-hover:text-primary">
+					<h3 class="text-base font-semibold text-foreground group-hover:text-primary-ink">
 						Class Progress
 					</h3>
 					<p class="text-sm text-foreground/70 line-clamp-2">
@@ -383,7 +381,7 @@
 										>
 											<div class="min-w-0 flex-1">
 												<h3
-													class="truncate text-lg font-semibold text-foreground group-hover:text-primary"
+													class="truncate text-lg font-semibold text-foreground group-hover:text-primary-ink"
 												>
 													{classItem.name}
 												</h3>
@@ -478,7 +476,7 @@
 								dragData: classItem,
 								interactive: ['[data-delete-btn]', '[data-edit-btn]', '.interactive']
 							}}
-							class="flex items-center gap-3 p-3 sm:gap-4 sm:p-4 bg-background rounded-2xl border border-border shadow-xs hover:shadow-md transition-all duration-200 svelte-dnd-touch-feedback touch-manipulation"
+							class="flex items-center gap-3 p-3 sm:gap-4 sm:p-4 surface shadow-xs hover:shadow-md transition-all duration-200 svelte-dnd-touch-feedback touch-manipulation"
 							animate:flip={{ duration: 300 }}
 						>
 							<!-- Drag Handle -->
@@ -510,7 +508,7 @@
 
 							<!-- Order Indicator -->
 							<div
-								class="flex-none flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary font-bold text-xs sm:text-sm"
+								class="flex-none flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary-ink font-bold text-xs sm:text-sm"
 							>
 								{index + 1}
 							</div>

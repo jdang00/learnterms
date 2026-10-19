@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { BookmarkCheck, ChartPie, Eye, EyeOff, Flag, ListRestart } from 'lucide-svelte';
+	import BookmarkCheck from '@lucide/svelte/icons/bookmark-check';
+	import ChartPie from '@lucide/svelte/icons/chart-pie';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import Flag from '@lucide/svelte/icons/flag';
+	import ListRestart from '@lucide/svelte/icons/list-restart';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';

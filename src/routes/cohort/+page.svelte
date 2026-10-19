@@ -4,7 +4,11 @@
 	import { resolve } from '$app/paths';
 	import { api } from '../../convex/_generated/api';
 	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
-	import { ArrowLeft, HelpCircle, Search, Trophy, Users } from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import HelpCircle from '@lucide/svelte/icons/help-circle';
+	import Search from '@lucide/svelte/icons/search';
+	import Trophy from '@lucide/svelte/icons/trophy';
+	import Users from '@lucide/svelte/icons/users';
 	import { getBadgeIcon } from '$lib/components/badges/icons';
 	import * as Alert from '$lib/components/ui/alert';
 	import * as Avatar from '$lib/components/ui/avatar';
@@ -104,9 +108,7 @@
 		</Alert.Root>
 	{:else if boardQuery.data}
 		{@const cohort = boardQuery.data.cohort}
-		<section
-			class="hero-card relative isolate overflow-hidden rounded-2xl border border-border p-5 md:p-7"
-		>
+		<section class="hero-card relative isolate overflow-hidden surface p-5 md:p-7">
 			<div class="hero-orb hero-orb-a"></div>
 			<div class="hero-orb hero-orb-b"></div>
 			<div class="hero-shine"></div>
@@ -140,7 +142,7 @@
 			</div>
 		</section>
 
-		<section class="member-panel mt-5 rounded-2xl border border-border p-4 md:p-5">
+		<section class="member-panel mt-5 surface p-4 md:p-5">
 			<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 				<h2 class="font-semibold">Your Class</h2>
 				<InputGroup.Root class="w-full max-w-md">
@@ -175,9 +177,7 @@
 			</div>
 
 			{#if filteredMembers.length === 0}
-				<div
-					class="mt-4 rounded-xl border border-dashed border-border p-5 text-center text-sm text-foreground/60"
-				>
+				<div class="mt-4 surface-dashed rounded-xl p-5 text-center text-sm text-foreground/60">
 					No matching members.
 				</div>
 			{:else}
@@ -267,7 +267,7 @@
 			>
 				<Dialog.Content
 					showCloseButton={false}
-					class="trophy-modal max-w-xl gap-0 overflow-visible rounded-2xl border border-border p-0 sm:max-w-xl"
+					class="trophy-modal max-w-xl gap-0 overflow-visible surface p-0 sm:max-w-xl"
 				>
 					<Dialog.CornerClose
 						onclick={() => (selectedMemberId = null)}

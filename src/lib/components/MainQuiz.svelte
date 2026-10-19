@@ -27,7 +27,10 @@
 	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
 	import ErrorDisplay from '$lib/components/ErrorDisplay.svelte';
 	import ModuleEmpty from '$lib/components/ModuleEmpty.svelte';
-	import { Flag, BookmarkCheck, ArrowDownNarrowWide, Pencil } from 'lucide-svelte';
+	import Flag from '@lucide/svelte/icons/flag';
+	import BookmarkCheck from '@lucide/svelte/icons/bookmark-check';
+	import ArrowDownNarrowWide from '@lucide/svelte/icons/arrow-down-narrow-wide';
+	import Pencil from '@lucide/svelte/icons/pencil';
 	import { QUESTION_TYPES } from '$lib/utils/questionType';
 	import { isConvexAuthError } from '$lib/utils/errorHandling';
 	import { slide } from 'svelte/transition';

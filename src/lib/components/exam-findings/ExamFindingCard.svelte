@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { StickyNote, X } from 'lucide-svelte';
+	import StickyNote from '@lucide/svelte/icons/sticky-note';
+	import X from '@lucide/svelte/icons/x';
 	import {
 		WIDE_GRID_COLUMNS,
 		type ExamCell,
@@ -218,12 +219,9 @@
 
 {#if note}
 	<Dialog.Root bind:open={notesOpen}>
-		<Dialog.Content
-			class="inset-x-0 top-auto bottom-0 max-w-none translate-x-0 translate-y-0 gap-0 rounded-t-[2rem] rounded-b-none p-0 sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[1.75rem]"
-			showCloseButton={false}
-		>
+		<Dialog.Content sheet class="gap-0 p-0 sm:max-w-xl" showCloseButton={false}>
 			<header class="flex items-center gap-3 border-b border-muted px-5 py-4">
-				<span class="grid size-9 shrink-0 place-items-center rounded-full bg-info/12 text-info">
+				<span class="grid size-9 shrink-0 place-items-center rounded-full bg-info/12 text-info-ink">
 					<StickyNote size={16} />
 				</span>
 				<div class="min-w-0 flex-1">

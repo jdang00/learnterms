@@ -1,7 +1,9 @@
 <script lang="ts">
 	import QuestionStudioPagePreview from './QuestionStudioPagePreview.svelte';
 	import QuestionStudioPageThumbnails from './QuestionStudioPageThumbnails.svelte';
-	import { Check, RotateCcw, X } from 'lucide-svelte';
+	import Check from '@lucide/svelte/icons/check';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import X from '@lucide/svelte/icons/x';
 	import { useConvexClient } from 'convex-svelte';
 	import { untrack } from 'svelte';
 	import type { PDFDocumentProxy } from 'pdfjs-dist';

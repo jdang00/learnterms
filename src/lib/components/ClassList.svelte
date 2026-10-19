@@ -84,7 +84,7 @@
 	{#if classes.isLoading}
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			{#each Array(4), index (index)}
-				<div class="rounded-2xl bg-background shadow-xs border border-border p-5 animate-pulse">
+				<div class="surface shadow-xs p-5 animate-pulse">
 					<div class="flex items-start gap-3 mb-3">
 						<Skeleton class="h-8 w-8 rounded-lg shrink-0" />
 						<div class="flex-1 space-y-2">
@@ -121,7 +121,7 @@
 			<Alert.Title>Failed to load classes: {classes.error.toString()}</Alert.Title>
 		</Alert.Root>
 	{:else if !filteredClasses || filteredClasses.length === 0}
-		<div class="rounded-2xl bg-background shadow-xs border border-border p-8">
+		<div class="surface shadow-xs p-8">
 			<div class="text-center py-8">
 				<div class="text-5xl mb-4">📚</div>
 				<h3 class="text-lg font-semibold mb-2 text-foreground">No classes yet</h3>

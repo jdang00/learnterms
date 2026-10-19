@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ChevronRight, Flag } from 'lucide-svelte';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Flag from '@lucide/svelte/icons/flag';
 	import { resolve } from '$app/paths';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import {

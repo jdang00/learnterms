@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { BookOpen, Layers } from 'lucide-svelte';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import Layers from '@lucide/svelte/icons/layers';
 	import SemesterSelect from '$lib/components/SemesterSelect.svelte';
 	import SearchablePicker from '$lib/components/SearchablePicker.svelte';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';

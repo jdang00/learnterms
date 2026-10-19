@@ -2,18 +2,16 @@
 	import { onMount, untrack } from 'svelte';
 	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
 	import type { Readable } from 'svelte/store';
-	import {
-		Bold,
-		Italic,
-		Underline as UnderlineIcon,
-		Strikethrough as StrikethroughIcon,
-		Code as CodeIcon,
-		Highlighter as HighlighterIcon,
-		Link as LinkIcon,
-		Quote as QuoteIcon,
-		List as ListIcon,
-		ListOrdered as ListOrderedIcon
-	} from 'lucide-svelte';
+	import Bold from '@lucide/svelte/icons/bold';
+	import Italic from '@lucide/svelte/icons/italic';
+	import UnderlineIcon from '@lucide/svelte/icons/underline';
+	import StrikethroughIcon from '@lucide/svelte/icons/strikethrough';
+	import CodeIcon from '@lucide/svelte/icons/code';
+	import HighlighterIcon from '@lucide/svelte/icons/highlighter';
+	import LinkIcon from '@lucide/svelte/icons/link';
+	import QuoteIcon from '@lucide/svelte/icons/quote';
+	import ListIcon from '@lucide/svelte/icons/list';
+	import ListOrderedIcon from '@lucide/svelte/icons/list-ordered';
 	import { getEditorExtensions } from '$lib/config/tiptap';
 	import { Button } from '$lib/components/ui/button';
 	let {
@@ -185,9 +183,7 @@
 	});
 </script>
 
-<div
-	class="min-w-0 overflow-hidden rounded-2xl border border-border bg-background focus-within:border-primary"
->
+<div class="min-w-0 overflow-hidden surface focus-within:border-primary">
 	{#if $editor}
 		<div
 			class="flex flex-wrap gap-1 border-b border-border bg-muted/50 p-1"

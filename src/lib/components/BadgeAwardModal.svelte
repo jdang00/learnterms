@@ -5,7 +5,7 @@
 	import type { Id } from '../../convex/_generated/dataModel';
 	import { Confetti } from 'svelte-confetti';
 	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
-	import { Award } from 'lucide-svelte';
+	import Award from '@lucide/svelte/icons/award';
 	import { getBadgeIcon } from '$lib/components/badges/icons';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';

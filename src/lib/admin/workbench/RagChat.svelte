@@ -1,14 +1,12 @@
 <script lang="ts">
-	import {
-		BookOpen,
-		Bot,
-		Braces,
-		ChevronRight,
-		MessageSquare,
-		Send,
-		Sparkles,
-		TriangleAlert
-	} from 'lucide-svelte';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import Bot from '@lucide/svelte/icons/bot';
+	import Braces from '@lucide/svelte/icons/braces';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import MessageSquare from '@lucide/svelte/icons/message-square';
+	import Send from '@lucide/svelte/icons/send';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { fade } from 'svelte/transition';
 	import ShimmerText from '$lib/components/ShimmerText.svelte';
 	import * as Alert from '$lib/components/ui/alert';
@@ -39,16 +37,14 @@
 </script>
 
 {#snippet statTile(label: string, value: string, sub: string)}
-	<div class="min-w-0 rounded-xl border border-border bg-background px-3 py-2.5">
+	<div class="min-w-0 surface-sm px-3 py-2.5">
 		<p class="text-[10px] font-semibold uppercase tracking-wide text-foreground/40">{label}</p>
 		<p class="mt-0.5 truncate text-sm font-semibold">{value}</p>
 		<p class="truncate font-mono text-[10px] text-foreground/40">{sub}</p>
 	</div>
 {/snippet}
 
-<section
-	class="flex min-h-[32rem] flex-col rounded-2xl border border-border bg-background shadow-xs xl:col-span-8 xl:min-h-0"
->
+<section class="flex min-h-[32rem] flex-col surface shadow-xs xl:col-span-8 xl:min-h-0">
 	<div class="qs-canvas relative min-h-0 flex-1 overflow-y-auto rounded-t-2xl bg-muted">
 		<div class="qs-grid pointer-events-none absolute inset-0"></div>
 		<div class="relative space-y-4 p-4 sm:p-5">
@@ -57,7 +53,7 @@
 					class="flex h-full min-h-[22rem] flex-col items-center justify-center gap-3 p-8 text-center"
 				>
 					<span
-						class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary"
+						class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary-ink"
 					>
 						<MessageSquare size={19} />
 					</span>
@@ -83,14 +79,12 @@
 						{@const isInspected = inspectedMessage === message}
 						<div class="flex gap-3">
 							<span
-								class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+								class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-ink"
 							>
 								<Bot size={15} />
 							</span>
 							<div class="min-w-0 max-w-[82%]">
-								<div
-									class="rounded-2xl rounded-tl-md border border-border bg-background px-4 py-3 shadow-xs"
-								>
+								<div class="surface rounded-tl-md px-4 py-3 shadow-xs">
 									<p class="whitespace-pre-wrap text-sm leading-relaxed">{message.text}</p>
 								</div>
 								<div class="mt-1.5 flex flex-wrap items-center gap-1.5 px-1">
@@ -120,7 +114,7 @@
 									{/if}
 									<button
 										class="rounded-full px-2 py-0.5 text-[10px] font-semibold transition {isInspected
-											? 'bg-primary/10 text-primary'
+											? 'bg-primary/10 text-primary-ink'
 											: 'text-foreground/40 hover:bg-background hover:text-foreground/70'}"
 										onclick={() => (inspectedMessageIndex = index)}
 									>
@@ -134,7 +128,7 @@
 				{#if isAsking}
 					<div class="flex items-center gap-3">
 						<span
-							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-ink"
 						>
 							<Sparkles size={15} />
 						</span>
@@ -165,9 +159,7 @@
 			ask();
 		}}
 	>
-		<div
-			class="flex items-end gap-2 rounded-2xl border border-border bg-background p-2 focus-within:border-primary/40"
-		>
+		<div class="flex items-end gap-2 surface p-2 focus-within:border-primary/40">
 			<textarea
 				class="max-h-32 min-h-10 flex-1 resize-none border-0 bg-transparent px-2 py-1.5 text-sm leading-relaxed outline-none placeholder:text-foreground/35"
 				placeholder="Ask about {selectedDocument?.title ?? 'the selected document'}…"
@@ -192,9 +184,7 @@
 	</form>
 </section>
 
-<aside
-	class="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xs xl:col-span-4"
->
+<aside class="flex min-h-0 flex-col overflow-hidden surface shadow-xs xl:col-span-4">
 	<div class="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3">
 		<BookOpen size={14} class="text-foreground/45" />
 		<p class="text-sm font-semibold">Retrieval inspector</p>
@@ -257,7 +247,7 @@
 					{/if}
 					{#if inspected.usage.totalTokens}
 						<span
-							class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary"
+							class="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary-ink"
 						>
 							{inspected.usage.totalTokens.toLocaleString()} total tok
 						</span>
@@ -273,7 +263,7 @@
 					{#each inspected.context.results as group, groupIndex (groupIndex)}
 						{@const pageNumber = group.content[0]?.metadata?.pageNumber}
 						{@const preview = group.content.map((chunk) => chunk.text).join(' ')}
-						<details class="group rounded-xl border border-border bg-background">
+						<details class="group surface-sm">
 							<summary class="cursor-pointer list-none p-3">
 								<span class="flex items-center gap-2">
 									<span class="font-mono text-[10px] font-bold text-foreground/40">
@@ -286,7 +276,7 @@
 											p.{pageNumber}
 										</span>
 									{/if}
-									<span class="ml-auto font-mono text-[10px] font-semibold text-primary">
+									<span class="ml-auto font-mono text-[10px] font-semibold text-primary-ink">
 										{group.score.toFixed(3)}
 									</span>
 									<ChevronRight

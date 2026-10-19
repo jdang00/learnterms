@@ -1,7 +1,11 @@
 <script lang="ts">
 	import DocumentPipelineProgress from './DocumentPipelineProgress.svelte';
 	import { documentPipeline } from './documentPipeline';
-	import { Check, Library, Pencil, Plus, Search } from 'lucide-svelte';
+	import Check from '@lucide/svelte/icons/check';
+	import Library from '@lucide/svelte/icons/library';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Search from '@lucide/svelte/icons/search';
 	import type { Doc } from '../../../convex/_generated/dataModel';
 	import { docHue, fileKind, formatPages, relativeTime, type ViewMode } from './contentLibrary';
 	import { formatBytes } from '$lib/utils/format';
@@ -46,9 +50,7 @@
 		</div>
 	{/if}
 {:else if docs.length === 0 && searchTerm}
-	<div
-		class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background py-20 text-center"
-	>
+	<div class="flex flex-col items-center justify-center surface-dashed py-20 text-center">
 		<div class="mb-3 rounded-full bg-muted p-4 text-foreground/40">
 			<Search size={24} />
 		</div>
@@ -56,10 +58,8 @@
 		<p class="mt-1 text-xs text-foreground/50">Try a different word or check the spelling.</p>
 	</div>
 {:else if docs.length === 0}
-	<div
-		class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background py-20 text-center"
-	>
-		<div class="mb-4 rounded-2xl bg-primary/10 p-5 text-primary">
+	<div class="flex flex-col items-center justify-center surface-dashed py-20 text-center">
+		<div class="mb-4 rounded-2xl bg-primary/10 p-5 text-primary-ink">
 			<Library size={30} />
 		</div>
 		<p class="text-base font-semibold">Your library is empty</p>
@@ -99,7 +99,7 @@
 						</span>
 						{#if isReady}
 							<span
-								class="absolute right-3 top-3 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-background/90 text-success group-hover:opacity-0 group-focus-within:opacity-0"
+								class="absolute right-3 top-3 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-background/90 text-success-ink group-hover:opacity-0 group-focus-within:opacity-0"
 								title="Ready"
 							>
 								<Check size={12} strokeWidth={2.5} aria-hidden="true" /><span class="sr-only"
@@ -161,7 +161,7 @@
 		{/each}
 	</div>
 {:else}
-	<div class="overflow-hidden rounded-2xl border border-border bg-background">
+	<div class="overflow-hidden surface">
 		<div
 			class="hidden grid-cols-[1fr_4rem_5rem_7rem_2.25rem] items-center gap-3 border-b border-border px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-foreground/40 {isDrawerOpen
 				? ''
@@ -194,7 +194,7 @@
 								<div class="doc-mini {tone.tint} {tone.accent}"><kind.icon size={15} /></div>
 								{#if isReady}
 									<span
-										class="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-background text-success"
+										class="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-background text-success-ink"
 										title="Ready"
 									>
 										<Check size={11} strokeWidth={2.5} aria-hidden="true" /><span class="sr-only"

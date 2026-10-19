@@ -1,14 +1,12 @@
 <script lang="ts">
-	import {
-		Eye,
-		Flag,
-		Shuffle,
-		ArrowRight,
-		ArrowLeft,
-		BookOpenText,
-		Settings,
-		Check
-	} from 'lucide-svelte';
+	import Eye from '@lucide/svelte/icons/eye';
+	import Flag from '@lucide/svelte/icons/flag';
+	import Shuffle from '@lucide/svelte/icons/shuffle';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import BookOpenText from '@lucide/svelte/icons/book-open-text';
+	import Settings from '@lucide/svelte/icons/settings';
+	import Check from '@lucide/svelte/icons/check';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
@@ -43,7 +41,7 @@
 	<li>After <strong>Check</strong>, correct options are highlighted for quick feedback.</li>
 </ul>
 
-<Card.Root class="bg-background shadow-xs">
+<Card.Root class="shadow-xs">
 	<Card.Content>
 		<p class="mb-2 text-sm text-foreground/70">Example options preview</p>
 		<div class="flex flex-col space-y-3">
@@ -98,7 +96,7 @@
 <h3>Top question navigation</h3>
 <p>Jump directly between questions. We save your interactions automatically.</p>
 
-<div class="flex flex-row w-full overflow-x-auto space-x-4 border border-border p-4 rounded-xl">
+<div class="flex flex-row w-full overflow-x-auto space-x-4 surface-sm p-4">
 	<div class="relative inline-flex">
 		<span
 			class="absolute -top-0.5 -right-0.5 size-2 rounded-full border border-background bg-warning"
@@ -140,7 +138,7 @@
 <h2>Sidebar</h2>
 <p>Your sidebar keeps you oriented with module info, progress, rationale reveal, and settings.</p>
 
-<Card.Root class="bg-background shadow-xs">
+<Card.Root class="shadow-xs">
 	<Card.Content>
 		<h4 class="text-sm tracking-wide text-secondary-ink">MODULE 2</h4>
 		<h2 class="font-semibold text-2xl mt-1 flex items-center gap-2">

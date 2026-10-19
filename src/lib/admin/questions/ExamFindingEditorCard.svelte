@@ -1,24 +1,22 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import {
-		ArrowDown,
-		ArrowUp,
-		CircleDot,
-		Clock,
-		Equal,
-		Columns2,
-		Columns3,
-		Copy,
-		Ellipsis,
-		EyeOff,
-		GripVertical,
-		RectangleHorizontal,
-		RotateCcw,
-		Sparkles,
-		StickyNote,
-		Trash2,
-		X
-	} from 'lucide-svelte';
+	import ArrowDown from '@lucide/svelte/icons/arrow-down';
+	import ArrowUp from '@lucide/svelte/icons/arrow-up';
+	import CircleDot from '@lucide/svelte/icons/circle-dot';
+	import Clock from '@lucide/svelte/icons/clock';
+	import Equal from '@lucide/svelte/icons/equal';
+	import Columns2 from '@lucide/svelte/icons/columns-2';
+	import Columns3 from '@lucide/svelte/icons/columns-3';
+	import Copy from '@lucide/svelte/icons/copy';
+	import Ellipsis from '@lucide/svelte/icons/ellipsis';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import GripVertical from '@lucide/svelte/icons/grip-vertical';
+	import RectangleHorizontal from '@lucide/svelte/icons/rectangle-horizontal';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import StickyNote from '@lucide/svelte/icons/sticky-note';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import X from '@lucide/svelte/icons/x';
 	import {
 		rowHasColumn,
 		sectionValueKey,
@@ -477,7 +475,7 @@
 			{#if column.input === 'time'}
 				<InputGroup.Button
 					size="icon-xs"
-					class="-mr-2 text-foreground/55 hover:text-primary"
+					class="-mr-2 text-foreground/55 hover:text-primary-ink"
 					title="Record the current time"
 					aria-label={`${label}: record the current time`}
 					onclick={() => {
@@ -795,7 +793,8 @@
 
 <Dialog.Root bind:open={notesOpen}>
 	<Dialog.Content
-		class="top-auto bottom-0 max-w-none translate-y-0 gap-0 rounded-t-[2rem] border-border p-0 shadow-2xl sm:top-1/2 sm:bottom-auto sm:max-w-xl sm:-translate-y-1/2 sm:rounded-[1.75rem]"
+		sheet
+		class="gap-0 border-border p-0 shadow-2xl sm:max-w-xl"
 		showCloseButton={false}
 		onOpenAutoFocus={(event) => {
 			event.preventDefault();
@@ -803,7 +802,9 @@
 		}}
 	>
 		<header class="flex items-center gap-3 border-b border-muted px-5 py-4">
-			<span class="grid size-9 shrink-0 place-items-center rounded-full bg-warning/15 text-warning">
+			<span
+				class="grid size-9 shrink-0 place-items-center rounded-full bg-warning/15 text-warning-ink"
+			>
 				<StickyNote size={16} />
 			</span>
 			<div class="min-w-0 flex-1">

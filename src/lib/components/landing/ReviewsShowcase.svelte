@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Quote, ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import Quote from '@lucide/svelte/icons/quote';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { Button } from '$lib/components/ui/button';
 	import { landingReviews } from './reviews.data';
 

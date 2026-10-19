@@ -6,7 +6,8 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
-	import { Search, Sparkles } from 'lucide-svelte';
+	import Search from '@lucide/svelte/icons/search';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { onMount } from 'svelte';
 	import { modifierKeyLabel } from '$lib/utils/platform';
 	import { resolve } from '$app/paths';

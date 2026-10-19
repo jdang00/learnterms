@@ -7,18 +7,16 @@
 	import { api } from '../../../../../convex/_generated/api';
 	import type { Id } from '../../../../../convex/_generated/dataModel';
 	import { getErrorText } from '$lib/utils/errorHandling';
-	import {
-		ChevronLeft,
-		CircleAlert,
-		Clock,
-		Target,
-		Shuffle,
-		Hash,
-		Filter,
-		Play,
-		History,
-		Tags
-	} from 'lucide-svelte';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Clock from '@lucide/svelte/icons/clock';
+	import Target from '@lucide/svelte/icons/target';
+	import Shuffle from '@lucide/svelte/icons/shuffle';
+	import Hash from '@lucide/svelte/icons/hash';
+	import Filter from '@lucide/svelte/icons/filter';
+	import Play from '@lucide/svelte/icons/play';
+	import History from '@lucide/svelte/icons/history';
+	import Tags from '@lucide/svelte/icons/tags';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Card from '$lib/components/ui/card';
@@ -352,7 +350,7 @@
 									</div>
 
 									{#if builderQuery.data.tagCollections && builderQuery.data.tagCollections.length > 0}
-										<div class="mb-4 rounded-2xl border border-border bg-muted/40 p-4">
+										<div class="mb-4 surface-muted p-4">
 											<div class="flex items-start justify-between gap-3 flex-wrap">
 												<div>
 													<div class="text-sm font-semibold flex items-center gap-2">
@@ -641,17 +639,17 @@
 									<div class="text-error-ink text-sm">{summaryQuery.error.toString()}</div>
 								{:else}
 									<div class="grid grid-cols-3 gap-2 text-sm">
-										<div class="rounded-xl border border-border p-2.5 text-center">
+										<div class="surface-sm p-2.5 text-center">
 											<div class="font-bold text-lg">{effectiveQuestionCount}</div>
 											<div class="text-[10px] text-foreground/40">Questions</div>
 										</div>
-										<div class="rounded-xl border border-border p-2.5 text-center">
+										<div class="surface-sm p-2.5 text-center">
 											<div class="font-bold text-lg">{timed ? `${timeLimitMinutes}` : '—'}</div>
 											<div class="text-[10px] text-foreground/40">
 												{timed ? 'Minutes' : 'Untimed'}
 											</div>
 										</div>
-										<div class="rounded-xl border border-border p-2.5 text-center">
+										<div class="surface-sm p-2.5 text-center">
 											<div class="font-bold text-lg">{passThresholdPct}%</div>
 											<div class="text-[10px] text-foreground/40">To pass</div>
 										</div>
@@ -716,7 +714,7 @@
 																})}
 													<!-- eslint-disable svelte/no-navigation-without-resolve -->
 													<a
-														class="block border border-border rounded-xl p-2.5 hover:border-primary/40 transition-all duration-200"
+														class="block surface-sm p-2.5 hover:border-primary/40 transition-all duration-200"
 														href={attemptHref}
 													>
 														<div class="flex justify-between items-center gap-2 text-xs">

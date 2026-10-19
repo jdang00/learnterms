@@ -5,7 +5,12 @@
 	import type { FunctionReturnType } from 'convex/server';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
-	import { ArrowLeft, BookOpen, ChevronRight, Flag, Layers, Search } from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Flag from '@lucide/svelte/icons/flag';
+	import Layers from '@lucide/svelte/icons/layers';
+	import Search from '@lucide/svelte/icons/search';
 	import ModuleDetail from './ModuleDetail.svelte';
 	import { relativeTime } from './utils';
 	import * as Alert from '$lib/components/ui/alert';
@@ -187,16 +192,14 @@
 					</span>
 				</button>
 			{:else}
-				<div
-					class="col-span-full rounded-2xl border border-dashed border-border p-10 text-center text-sm text-foreground/55"
-				>
+				<div class="col-span-full surface-dashed p-10 text-center text-sm text-foreground/55">
 					<BookOpen size={22} class="mx-auto mb-2 text-foreground/35" />
 					No classes in this semester yet.
 				</div>
 			{/each}
 		</nav>
 
-		<Card.Root class="min-w-0 gap-0 overflow-hidden bg-background py-0">
+		<Card.Root class="min-w-0 gap-0 overflow-hidden py-0">
 			<header
 				class="flex flex-wrap items-center justify-between gap-3 border-b border-muted px-5 py-4"
 			>

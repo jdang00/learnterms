@@ -2,15 +2,13 @@
 	import ModuleEmojiSuggestion from './ModuleEmojiSuggestion.svelte';
 	let { isAddModalOpen, closeAddModal, classId } = $props();
 
-	import {
-		BookOpenText,
-		AlignLeft,
-		Hash,
-		Laugh,
-		CheckCircle,
-		Archive,
-		FileText
-	} from 'lucide-svelte';
+	import BookOpenText from '@lucide/svelte/icons/book-open-text';
+	import AlignLeft from '@lucide/svelte/icons/align-left';
+	import Hash from '@lucide/svelte/icons/hash';
+	import Laugh from '@lucide/svelte/icons/laugh';
+	import CheckCircle from '@lucide/svelte/icons/check-circle';
+	import Archive from '@lucide/svelte/icons/archive';
+	import FileText from '@lucide/svelte/icons/file-text';
 	import { isSingleEmoji, sanitizeEmoji } from '$lib/utils/emoji';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';

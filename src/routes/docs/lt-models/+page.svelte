@@ -29,7 +29,7 @@
 <h2 class="mt-10">Available Models</h2>
 
 <div class="mt-4">
-	<div class="overflow-hidden rounded-3xl border border-border bg-background">
+	<div class="overflow-hidden surface">
 		<Table.Root class="text-base">
 			<Table.Header>
 				<Table.Row>

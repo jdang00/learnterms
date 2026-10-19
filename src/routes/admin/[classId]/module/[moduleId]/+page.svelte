@@ -7,7 +7,12 @@
 	import type { Id } from '../../../../../convex/_generated/dataModel';
 	import { api } from '../../../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-	import { Plus, ArrowLeft, GripVertical, Trash2, ArrowRightLeft, X } from 'lucide-svelte';
+	import Plus from '@lucide/svelte/icons/plus';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import GripVertical from '@lucide/svelte/icons/grip-vertical';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import ArrowRightLeft from '@lucide/svelte/icons/arrow-right-left';
+	import X from '@lucide/svelte/icons/x';
 	import AddQuestionModal from '$lib/admin/questions/AddQuestionModal.svelte';
 
 	import EditQuestionModal from '$lib/admin/questions/EditQuestionModal.svelte';
@@ -259,7 +264,7 @@
 			</div>
 		{/if}
 		<!-- Controls for mobile/tablet (below xl) -->
-		<div class="xl:hidden p-3 bg-background rounded-2xl border border-border mb-4">
+		<div class="xl:hidden p-3 surface mb-4">
 			<QuestionListControls
 				searchInput={curationState.searchInput}
 				sortMode={curationState.sortMode}
@@ -294,7 +299,7 @@
 		{#if !curationState.reorderMode}
 			<div class="hidden md:block xl:hidden mb-4">
 				<div
-					class="flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-3 relative items-center border border-border px-4 py-3 rounded-3xl bg-background"
+					class="flex flex-row w-full overflow-x-auto overflow-y-hidden whitespace-nowrap space-x-3 relative items-center surface px-4 py-3"
 				>
 					{#if questions.isLoading}
 						<div class="flex gap-3">
@@ -336,9 +341,7 @@
 
 		<!-- Mobile Question List (below md) -->
 		<div class="md:hidden flex-1 min-h-0 flex flex-col">
-			<div
-				class="bg-background rounded-2xl border border-border overflow-hidden flex-1 min-h-0 flex flex-col"
-			>
+			<div class="surface overflow-hidden flex-1 min-h-0 flex flex-col">
 				{#if questions.isLoading}
 					<div class="divide-y divide-muted">
 						{#each Array(5), index (index)}
@@ -422,9 +425,7 @@
 		<div class="hidden md:grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0">
 			<!-- Desktop Sidebar (xl and above) -->
 			<div class="xl:col-span-5 2xl:col-span-4 hidden xl:block min-h-0">
-				<div
-					class="bg-muted/30 rounded-2xl border border-border h-full overflow-hidden flex flex-col"
-				>
+				<div class="surface-muted h-full overflow-hidden flex flex-col">
 					<div class="p-4 border-b border-border bg-background shrink-0">
 						<QuestionListControls
 							searchInput={curationState.searchInput}
@@ -556,9 +557,7 @@
 
 			<!-- Main Content Panel (md and above) -->
 			<div class="xl:col-span-7 2xl:col-span-8 hidden md:block min-h-0">
-				<div
-					class="bg-background rounded-2xl border border-border h-full overflow-hidden flex flex-col"
-				>
+				<div class="surface h-full overflow-hidden flex flex-col">
 					<!-- Reorder mode only visible on tablet (md-xl) -->
 					<div
 						class="h-full flex-col overflow-hidden {curationState.reorderMode

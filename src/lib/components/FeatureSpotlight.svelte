@@ -3,15 +3,13 @@
 	import { fly, scale } from 'svelte/transition';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { prefersReducedMotion } from 'svelte/motion';
-	import {
-		ArrowLeft,
-		ArrowRight,
-		ClipboardCheck,
-		History,
-		LayoutDashboard,
-		Sparkles,
-		Users
-	} from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
+	import History from '@lucide/svelte/icons/history';
+	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import Users from '@lucide/svelte/icons/users';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
 
@@ -111,7 +109,8 @@
 	<Dialog.Content
 		showCloseButton={false}
 		aria-labelledby="spotlight-title"
-		class="top-auto bottom-0 flex max-h-[calc(100dvh-1rem)] max-w-full flex-col translate-y-0 gap-0 overflow-hidden rounded-t-3xl rounded-b-none p-0 z-[1000] sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 sm:max-h-[calc(100dvh-2rem)] sm:max-w-3xl sm:rounded-4xl"
+		sheet
+		class="z-[1000] flex max-h-[calc(100dvh-1rem)] flex-col gap-0 overflow-hidden p-0 sm:max-h-[calc(100dvh-2rem)] sm:max-w-3xl"
 	>
 		<div class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
 			<div class="relative px-5 pt-5 sm:px-8 sm:pt-8">
@@ -183,7 +182,7 @@
 					id="spotlight-panel"
 					role="tabpanel"
 					aria-labelledby="spotlight-tab-{active}"
-					class="relative min-h-52 overflow-hidden rounded-3xl border border-border p-5 sm:min-h-60 sm:p-6"
+					class="relative min-h-52 overflow-hidden surface p-5 sm:min-h-60 sm:p-6"
 				>
 					<div
 						class="pointer-events-none absolute inset-0 transition-[background] duration-500"

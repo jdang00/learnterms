@@ -7,7 +7,9 @@
 		type StudyToolDetails
 	} from '$lib/analytics/studyToolEvents';
 	import 'mathlive/static.css';
-	import { ChevronLeft, Delete, X } from 'lucide-svelte';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import Delete from '@lucide/svelte/icons/delete';
+	import X from '@lucide/svelte/icons/x';
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import type { MathfieldElement } from 'mathlive';

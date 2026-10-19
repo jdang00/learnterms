@@ -2,31 +2,29 @@
 	import { resolve } from '$app/paths';
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import {
-		Sparkles,
-		ChevronRight,
-		ChevronLeft,
-		Plus,
-		MoreHorizontal,
-		Zap,
-		Mic,
-		Send,
-		CheckCircle2,
-		ArrowLeft,
-		X,
-		Settings,
-		PanelLeftClose,
-		PanelRightClose,
-		NotebookPen,
-		Flag,
-		Eye,
-		EyeOff,
-		RotateCcw,
-		Check,
-		Shuffle,
-		ArrowRight,
-		CircleDot
-	} from 'lucide-svelte';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import Plus from '@lucide/svelte/icons/plus';
+	import MoreHorizontal from '@lucide/svelte/icons/more-horizontal';
+	import Zap from '@lucide/svelte/icons/zap';
+	import Mic from '@lucide/svelte/icons/mic';
+	import Send from '@lucide/svelte/icons/send';
+	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import X from '@lucide/svelte/icons/x';
+	import Settings from '@lucide/svelte/icons/settings';
+	import PanelLeftClose from '@lucide/svelte/icons/panel-left-close';
+	import PanelRightClose from '@lucide/svelte/icons/panel-right-close';
+	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
+	import Flag from '@lucide/svelte/icons/flag';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import Check from '@lucide/svelte/icons/check';
+	import Shuffle from '@lucide/svelte/icons/shuffle';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import CircleDot from '@lucide/svelte/icons/circle-dot';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Textarea } from '$lib/components/ui/textarea';
@@ -549,7 +547,7 @@ TODO: Review pressure-volume loops before exam...`;
 					{:else}
 						<!-- Notes tab -->
 						<div class="flex-1 p-3">
-							<div class="rounded-xl bg-muted/50 border border-border/50 p-4 h-full">
+							<div class="surface-inset p-4 h-full">
 								<div class="flex items-center gap-2 mb-3">
 									<NotebookPen size={14} class="text-foreground/50" />
 									<span class="text-xs font-medium text-foreground/60">Quick Notes</span>
@@ -665,7 +663,7 @@ TODO: Review pressure-volume loops before exam...`;
 				>
 					<div class="max-w-2xl mx-auto">
 						<div
-							class="flex items-end gap-2 rounded-2xl bg-background border border-border/60 shadow-xs p-2 focus-within:border-primary/40 focus-within:shadow-md transition-all duration-200"
+							class="flex items-end gap-2 surface shadow-xs p-2 focus-within:border-primary/40 focus-within:shadow-md transition-all duration-200"
 						>
 							<Button
 								variant="ghost"
@@ -838,7 +836,7 @@ TODO: Review pressure-volume loops before exam...`;
 																	? 'bg-error text-error-foreground'
 																	: state === 'eliminated'
 																		? 'bg-muted-strong/50 text-foreground/20'
-																		: 'bg-muted/80 text-foreground/50 group-hover:bg-primary/15 group-hover:text-primary'}
+																		: 'bg-muted/80 text-foreground/50 group-hover:bg-primary/15 group-hover:text-primary-ink'}
 														transition-all duration-150"
 													>
 														{#if state === 'correct'}
@@ -858,7 +856,7 @@ TODO: Review pressure-volume loops before exam...`;
 												<button
 													type="button"
 													class="absolute top-1/2 right-1.5 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-md border border-border/60
-															bg-background/90 text-foreground/45 shadow-xs transition-all duration-150 hover:border-warning/40 hover:bg-warning/10 hover:text-warning
+															bg-background/90 text-foreground/45 shadow-xs transition-all duration-150 hover:border-warning/40 hover:bg-warning/10 hover:text-warning-ink
 															focus-visible:border-warning/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/30"
 													onclick={() => toggleElimination(option.id)}
 													aria-label={`Eliminate option ${String.fromCharCode(65 + i)}`}
@@ -892,7 +890,7 @@ TODO: Review pressure-volume loops before exam...`;
 								<!-- Rationale -->
 								{#if showRationale || checkResult === 'correct'}
 									<div
-										class="mt-3 rounded-xl bg-muted/50 border border-border/40 p-3"
+										class="mt-3 surface-inset p-3"
 										style="animation: rationaleReveal 0.4s cubic-bezier(.16,1,.3,1) 0.15s both;"
 									>
 										<div class="flex items-center gap-1.5 mb-1.5">
@@ -919,8 +917,8 @@ TODO: Review pressure-volume loops before exam...`;
 								tone="neutral"
 								size="xs"
 								shape="rect"
-								class="gap-1 text-foreground/50 hover:text-warning {isFlagged
-									? 'text-warning bg-warning/10'
+								class="gap-1 text-foreground/50 hover:text-warning-ink {isFlagged
+									? 'text-warning-ink bg-warning/10'
 									: ''}"
 								onclick={toggleFlagged}
 								title="Flag question"

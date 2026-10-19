@@ -31,8 +31,8 @@
 
 	const CELL: Record<NavigatorStatus, string> = {
 		mastered: 'bg-emerald-800 text-white',
-		correct: 'bg-success/20 text-success',
-		incorrect: 'bg-error/20 text-error',
+		correct: 'bg-success/20 text-success-ink',
+		incorrect: 'bg-error/20 text-error-ink',
 		answered: 'bg-accent/20 text-foreground',
 		unanswered: 'bg-muted text-foreground/70'
 	};

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { ChevronDown, ChevronLeft } from 'lucide-svelte';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import { Button } from '$lib/components/ui/button';
 
 	// The one top bar study screens show below lg: back, where you are, and one or two instruments.

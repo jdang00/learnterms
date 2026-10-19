@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Paperclip, GripVertical } from 'lucide-svelte';
+	import Paperclip from '@lucide/svelte/icons/paperclip';
+	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import { abbreviateType } from '$lib/utils/questionType.js';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 	import type { Doc } from '../../../convex/_generated/dataModel';

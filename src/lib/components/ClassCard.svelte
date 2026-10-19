@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowRight } from 'lucide-svelte';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { fade } from 'svelte/transition';
 	import ColorMark from './ColorMark.svelte';
 	import type { ClassWithSemester } from '../types';
@@ -50,7 +50,7 @@
 	onclick={() => onSelect(classItem)}
 	aria-label={`Open class ${classItem.name}`}
 	style:--class-color={color}
-	class="class-card group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border bg-background text-left transition-[border-color,translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:hover:translate-y-0"
+	class="class-card group flex h-full w-full flex-col overflow-hidden surface text-left transition-[border-color,translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:hover:translate-y-0"
 >
 	<span class="class-card-head flex items-center gap-3 px-5 py-4">
 		<ColorMark {color} class="size-9 text-foreground" />

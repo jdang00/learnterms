@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { ExternalLink, FileText, LoaderCircle, X } from 'lucide-svelte';
+	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
+	import X from '@lucide/svelte/icons/x';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
@@ -115,7 +118,8 @@
 					<div
 						id={previewId}
 						role="tooltip"
-						class="rounded-xl border border-border bg-background p-3 text-left shadow-lg"
+						data-surface="popover"
+						class="surface-sm p-3 text-left shadow-lg"
 					>
 						<p class="text-xs font-semibold text-foreground">
 							{title || 'Source'} · <span class="font-mono">{activeGroup.label}</span>

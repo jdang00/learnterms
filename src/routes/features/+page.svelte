@@ -1,18 +1,16 @@
 <script lang="ts">
 	import { SelectField } from '$lib/components/ui/select';
 	import { resolve } from '$app/paths';
-	import {
-		ArrowRight,
-		ArrowUpRight,
-		Calculator,
-		Check,
-		FileText,
-		Flag,
-		GraduationCap,
-		Minus,
-		Timer,
-		TriangleAlert
-	} from 'lucide-svelte';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
+	import Calculator from '@lucide/svelte/icons/calculator';
+	import Check from '@lucide/svelte/icons/check';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import Flag from '@lucide/svelte/icons/flag';
+	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
+	import Minus from '@lucide/svelte/icons/minus';
+	import Timer from '@lucide/svelte/icons/timer';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import PublicPage from '$lib/components/landing/PublicPage.svelte';
 	import PublicCta from '$lib/components/landing/PublicCta.svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -96,7 +94,7 @@
 		{#each highlights as item (item.title)}
 			{@const Icon = item.icon}
 			<div class="panel-graph p-5">
-				<div class="w-fit rounded-xl border border-border/80 bg-background/70 p-2">
+				<div class="w-fit surface-inset p-2">
 					<Icon size={18} />
 				</div>
 				<h2 class="mt-4 text-lg font-semibold">{item.title}</h2>
@@ -263,9 +261,7 @@
 				class="panel-graph group flex items-start gap-4 p-5 transition-colors hover:border-primary/50"
 				href={resolve('/tools/grade-calculator')}
 			>
-				<span class="rounded-xl border border-border/80 bg-background/70 p-2"
-					><GraduationCap size={18} /></span
-				>
+				<span class="surface-inset p-2"><GraduationCap size={18} /></span>
 				<span class="min-w-0 flex-1">
 					<span class="flex items-center justify-between font-semibold"
 						>Grade calculator <ArrowRight
@@ -282,9 +278,7 @@
 				class="panel-graph group flex items-start gap-4 p-5 transition-colors hover:border-primary/50"
 				href={resolve('/tools/calculator')}
 			>
-				<span class="rounded-xl border border-border/80 bg-background/70 p-2"
-					><Calculator size={18} /></span
-				>
+				<span class="surface-inset p-2"><Calculator size={18} /></span>
 				<span class="min-w-0 flex-1">
 					<span class="flex items-center justify-between font-semibold"
 						>Scientific calculator <ArrowRight

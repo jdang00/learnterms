@@ -3,16 +3,14 @@
 	import AcceptanceMeter from '$lib/components/AcceptanceMeter.svelte';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
 	import ExamFindings from '$lib/components/exam-findings/ExamFindings.svelte';
-	import {
-		Pencil,
-		Trash2,
-		Copy,
-		CopyPlus,
-		ArrowRightLeft,
-		Paperclip,
-		Check,
-		Target
-	} from 'lucide-svelte';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Copy from '@lucide/svelte/icons/copy';
+	import CopyPlus from '@lucide/svelte/icons/copy-plus';
+	import ArrowRightLeft from '@lucide/svelte/icons/arrow-right-left';
+	import Paperclip from '@lucide/svelte/icons/paperclip';
+	import Check from '@lucide/svelte/icons/check';
+	import Target from '@lucide/svelte/icons/target';
 	import { convertToDisplayFormat } from '$lib/utils/questionType.js';
 	import { getRationale, hasRationale } from '$lib/utils/rationale';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
@@ -298,7 +296,7 @@
 						? 'gap-3 px-4 py-2'
 						: 'gap-4 px-5 py-3'}"
 				>
-					<AcceptanceMeter level={acceptance} class="shrink-0 text-primary" />
+					<AcceptanceMeter level={acceptance} class="shrink-0 text-primary-ink" />
 					<div class="min-w-0">
 						<div class="{isMobile ? 'text-xs' : 'text-sm'} font-semibold">
 							{acceptanceLevels[acceptance].label}
@@ -341,7 +339,7 @@
 				>
 					Accepted Answers
 				</div>
-				<Card.Root class="bg-background py-0 shadow-xs">
+				<Card.Root class="py-0 shadow-xs">
 					<Card.Content class={isMobile ? 'p-3' : 'p-4'}>
 						{#if fitbAnswers.length > 0}
 							<div class="flex items-center gap-2 mb-2">
@@ -515,11 +513,7 @@
 				>
 					Rationale
 				</div>
-				<div
-					class="rounded-2xl border border-border bg-muted/30"
-					class:p-3={isMobile}
-					class:p-4={!isMobile}
-				>
+				<div class="surface-muted" class:p-3={isMobile} class:p-4={!isMobile}>
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					<div class="text-sm text-foreground/80 tiptap-content">{@html questionRationale}</div>
 					<QuestionSources source={question.metadata.source ?? question.metadata.generation} />

@@ -5,7 +5,12 @@
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
-	import { Pencil, Trash2, Plus, ArrowLeft, GripVertical, Download } from 'lucide-svelte';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Plus from '@lucide/svelte/icons/plus';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import GripVertical from '@lucide/svelte/icons/grip-vertical';
+	import Download from '@lucide/svelte/icons/download';
 	import { resolve } from '$app/paths';
 	import { exportModuleQuestions, type ExportableQuestion } from '$lib/utils/questionExport';
 	import EditModuleModal from '$lib/admin/catalog/EditModuleModal.svelte';
@@ -379,7 +384,7 @@
 													classId,
 													moduleId: moduleItem._id
 												})}
-												class="font-semibold text-foreground text-left hover:text-primary transition-colors cursor-pointer block"
+												class="font-semibold text-foreground text-left hover:text-primary-ink transition-colors cursor-pointer block"
 												title={`Go to questions for ${moduleItem.title}`}
 											>
 												<span class="mr-2 text-xl inline-block align-middle"

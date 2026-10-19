@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { Check, ChevronLeft, ChevronRight, Pencil, Plus, TriangleAlert, X } from 'lucide-svelte';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Plus from '@lucide/svelte/icons/plus';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import X from '@lucide/svelte/icons/x';
 	import QuestionStudioCandidateEditor from './QuestionStudioCandidateEditor.svelte';
 	import QuestionStudioWhyThis from './QuestionStudioWhyThis.svelte';
 	import { candidateConcern } from './questionStudioRun';

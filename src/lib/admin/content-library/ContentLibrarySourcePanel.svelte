@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ExternalLink, TriangleAlert } from 'lucide-svelte';
+	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import type { Doc } from '../../../convex/_generated/dataModel';
 	import { fileKind } from './contentLibrary';
 	import { Button } from '$lib/components/ui/button';
@@ -22,7 +23,7 @@
 	}
 </script>
 
-<div class="h-full overflow-hidden rounded-2xl border border-border bg-muted/40">
+<div class="h-full overflow-hidden surface-muted">
 	{#if isOpening}
 		<div class="flex h-full min-h-72 flex-col items-center justify-center gap-3">
 			<Spinner class="size-6 text-primary" />

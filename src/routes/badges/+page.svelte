@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { Globe, GraduationCap, Eye, EyeOff, CircleAlert } from 'lucide-svelte';
+	import Globe from '@lucide/svelte/icons/globe';
+	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import { useQuery } from 'convex-svelte';
 	import type { FunctionReturnType } from 'convex/server';
 	import { resolve } from '$app/paths';

@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Check, Info, X } from 'lucide-svelte';
+	import Check from '@lucide/svelte/icons/check';
+	import Info from '@lucide/svelte/icons/info';
+	import X from '@lucide/svelte/icons/x';
 	import QuestionStudioContextMeter from './QuestionStudioContextMeter.svelte';
 	import QuestionStudioCountStepper from './QuestionStudioCountStepper.svelte';
 	import type { SourcePreviewBatch } from '../source/sourceContext';

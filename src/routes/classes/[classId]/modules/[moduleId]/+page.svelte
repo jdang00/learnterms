@@ -13,7 +13,7 @@
 	import { resolve } from '$app/paths';
 	import { pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
-	import { BookOpen } from 'lucide-svelte';
+	import BookOpen from '@lucide/svelte/icons/book-open';
 	import {
 		QUIZ_PREFERENCE_CHANGED_EVENT,
 		QUIZ_PREFERENCE_KEYS,

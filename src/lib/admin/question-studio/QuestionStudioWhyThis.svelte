@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { FileText, LoaderCircle } from 'lucide-svelte';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import { getPostHog } from '$lib/analytics/posthogClient';

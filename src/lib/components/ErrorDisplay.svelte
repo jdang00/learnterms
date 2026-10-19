@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { RefreshCw } from 'lucide-svelte';
+	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { isConvexAuthError } from '$lib/utils/errorHandling';
 	import { Button } from '$lib/components/ui/button';
 

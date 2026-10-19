@@ -1,14 +1,12 @@
 <script lang="ts">
-	import {
-		ArrowDownUp,
-		Check,
-		ChevronDown,
-		LayoutGrid,
-		List,
-		Plus,
-		Search,
-		X
-	} from 'lucide-svelte';
+	import ArrowDownUp from '@lucide/svelte/icons/arrow-down-up';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
+	import List from '@lucide/svelte/icons/list';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Search from '@lucide/svelte/icons/search';
+	import X from '@lucide/svelte/icons/x';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
@@ -34,9 +32,7 @@
 	const sortLabel = $derived(sortOptions.find((option) => option.key === sortKey)?.label ?? 'Sort');
 </script>
 
-<div
-	class="mb-5 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-background p-2.5"
->
+<div class="mb-5 flex flex-wrap items-center gap-2 surface p-2.5">
 	<InputGroup.Root class="h-8 w-full sm:w-72">
 		<InputGroup.Addon>
 			<Search size={14} class="text-foreground/50" />
@@ -78,7 +74,7 @@
 		<DropdownMenu.Content align="end" class="w-52">
 			{#each sortOptions as option (option.key)}
 				<DropdownMenu.Item
-					class="justify-between {sortKey === option.key ? 'bg-primary/10 text-primary' : ''}"
+					class="justify-between {sortKey === option.key ? 'bg-primary/10 text-primary-ink' : ''}"
 					onSelect={() => {
 						sortKey = option.key;
 						if (document.activeElement instanceof HTMLElement) document.activeElement.blur();

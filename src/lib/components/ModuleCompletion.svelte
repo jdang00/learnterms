@@ -5,16 +5,14 @@
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { Tween, prefersReducedMotion } from 'svelte/motion';
 	import { Confetti } from 'svelte-confetti';
-	import {
-		ArrowLeft,
-		ArrowRight,
-		Check,
-		CircleDashed,
-		Flag,
-		RotateCcw,
-		Trophy,
-		X
-	} from 'lucide-svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Check from '@lucide/svelte/icons/check';
+	import CircleDashed from '@lucide/svelte/icons/circle-dashed';
+	import Flag from '@lucide/svelte/icons/flag';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import Trophy from '@lucide/svelte/icons/trophy';
+	import X from '@lucide/svelte/icons/x';
 	import { Button } from '$lib/components/ui/button';
 	import type { AnswerStatus, ModuleSummary } from '$lib/utils/moduleCompletion';
 
@@ -423,7 +421,7 @@
 			{/each}
 		</div>
 
-		<div class="mt-5 rounded-3xl border border-border bg-background p-5 shadow-xs sm:p-6">
+		<div class="mt-5 surface p-5 shadow-xs sm:p-6">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<h2 class="font-semibold">
 					Questions{#if filter !== 'all'}<span class="font-normal text-foreground/55"
@@ -488,7 +486,7 @@
 			{#if selectedResult}
 				{@const style = statusStyle[selectedResult.status]}
 				<div
-					class="mt-5 rounded-2xl border border-border bg-muted/40 p-4 text-sm"
+					class="mt-5 surface-muted p-4 text-sm"
 					aria-label="Question mastery details"
 					transition:slide={{ duration: reduced ? 0 : 220, easing: cubicOut }}
 				>

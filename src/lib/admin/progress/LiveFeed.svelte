@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Id } from '../../../convex/_generated/dataModel';
-	import { ClipboardCheck, Timer } from 'lucide-svelte';
+	import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
+	import Timer from '@lucide/svelte/icons/timer';
 	import { fly } from 'svelte/transition';
 	import { Badge } from '$lib/components/ui/badge';
 	import StudentAvatar from './StudentAvatar.svelte';

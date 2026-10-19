@@ -2,7 +2,10 @@
 	import SemesterSelect from '$lib/components/SemesterSelect.svelte';
 	let { isAddModalOpen, closeAddModal, semesters, userData, currentSemester } = $props();
 
-	import { CalendarDays, BookOpenText, Hash, AlignLeft } from 'lucide-svelte';
+	import CalendarDays from '@lucide/svelte/icons/calendar-days';
+	import BookOpenText from '@lucide/svelte/icons/book-open-text';
+	import Hash from '@lucide/svelte/icons/hash';
+	import AlignLeft from '@lucide/svelte/icons/align-left';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';

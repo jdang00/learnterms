@@ -1,14 +1,12 @@
 <script lang="ts">
 	import { useQuery } from 'convex-svelte';
-	import {
-		Activity,
-		ArrowUpRight,
-		ChevronLeft,
-		ChevronRight,
-		Flag,
-		ListChecks,
-		Users
-	} from 'lucide-svelte';
+	import Activity from '@lucide/svelte/icons/activity';
+	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Flag from '@lucide/svelte/icons/flag';
+	import ListChecks from '@lucide/svelte/icons/list-checks';
+	import Users from '@lucide/svelte/icons/users';
 	import { resolve } from '$app/paths';
 	import { api } from '../../../convex/_generated/api';
 	import type { Id } from '../../../convex/_generated/dataModel';
@@ -66,7 +64,7 @@
 	{@const module = overview.data.module}
 	{@const untried = totals.questionsWithNoInteractions}
 	<div class="space-y-4">
-		<Card.Root class="gap-0 bg-background p-5">
+		<Card.Root class="gap-0 p-5">
 			<div class="flex flex-wrap items-start justify-between gap-3">
 				<div class="flex min-w-0 items-center gap-3">
 					<span
@@ -103,7 +101,7 @@
 			</dl>
 		</Card.Root>
 
-		<Card.Root class="gap-0 scroll-mt-20 overflow-hidden bg-background py-0">
+		<Card.Root class="gap-0 scroll-mt-20 overflow-hidden py-0">
 			<nav
 				class="m-3 flex w-fit max-w-[calc(100%-1.5rem)] flex-nowrap gap-1 overflow-x-auto rounded-full bg-muted p-1"
 				aria-label="Module detail views"

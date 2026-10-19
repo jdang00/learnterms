@@ -1,30 +1,28 @@
 import { responseText, responseWordCount, MAX_RESPONSE_WORDS } from '$lib/utils/freeResponse';
 import { getContext, setContext } from 'svelte';
-import {
-	ArrowLeft,
-	ArrowRight,
-	BookmarkCheck,
-	Check,
-	Dices,
-	Eraser,
-	ALargeSmall,
-	ChartPie,
-	Eye,
-	FastForward,
-	Flag,
-	Flame,
-	FlagTriangleRight,
-	Focus,
-	Hash,
-	Highlighter,
-	ListRestart,
-	Minimize2,
-	Pause,
-	Pencil,
-	Shuffle,
-	SkipForward,
-	Timer
-} from 'lucide-svelte';
+import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+import ArrowRight from '@lucide/svelte/icons/arrow-right';
+import BookmarkCheck from '@lucide/svelte/icons/bookmark-check';
+import Check from '@lucide/svelte/icons/check';
+import Dices from '@lucide/svelte/icons/dices';
+import Eraser from '@lucide/svelte/icons/eraser';
+import ALargeSmall from '@lucide/svelte/icons/a-large-small';
+import ChartPie from '@lucide/svelte/icons/chart-pie';
+import Eye from '@lucide/svelte/icons/eye';
+import FastForward from '@lucide/svelte/icons/fast-forward';
+import Flag from '@lucide/svelte/icons/flag';
+import Flame from '@lucide/svelte/icons/flame';
+import FlagTriangleRight from '@lucide/svelte/icons/flag-triangle-right';
+import Focus from '@lucide/svelte/icons/focus';
+import Hash from '@lucide/svelte/icons/hash';
+import Highlighter from '@lucide/svelte/icons/highlighter';
+import ListRestart from '@lucide/svelte/icons/list-restart';
+import Minimize2 from '@lucide/svelte/icons/minimize-2';
+import Pause from '@lucide/svelte/icons/pause';
+import Pencil from '@lucide/svelte/icons/pencil';
+import Shuffle from '@lucide/svelte/icons/shuffle';
+import SkipForward from '@lucide/svelte/icons/skip-forward';
+import Timer from '@lucide/svelte/icons/timer';
 import type { Doc, Id } from '../../../convex/_generated/dataModel';
 import { QUESTION_TYPES } from '$lib/utils/questionType';
 import { captureStudyTool } from '$lib/analytics/studyTools';

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tick, type Snippet } from 'svelte';
-	import { Check, ChevronDown } from 'lucide-svelte';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -122,7 +123,8 @@
 	role="dialog"
 	tabindex="-1"
 	aria-label={placeholder}
-	class="picker-panel rounded-2xl border border-border bg-background p-3 text-sm font-normal leading-normal text-foreground shadow-lg"
+	data-surface="popover"
+	class="picker-panel surface p-3 text-sm font-normal leading-normal text-foreground shadow-lg"
 	style:width={`min(${size === 'md' ? 384 : 352}px, calc(100vw - 24px))`}
 	style:left={`${left}px`}
 	style:top={`${top}px`}

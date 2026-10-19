@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
-	import { ArrowRight, BookOpen, Check, Loader2, Minus } from 'lucide-svelte';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import Check from '@lucide/svelte/icons/check';
+	import Loader2 from '@lucide/svelte/icons/loader-2';
+	import Minus from '@lucide/svelte/icons/minus';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import PublicPage from '$lib/components/landing/PublicPage.svelte';

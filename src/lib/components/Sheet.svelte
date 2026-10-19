@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { untrack } from 'svelte';
 	import { Dialog } from 'bits-ui';
-	import { X } from 'lucide-svelte';
+	import X from '@lucide/svelte/icons/x';
 	import { Button } from '$lib/components/ui/button';
 	import { sheetDrag } from '$lib/utils/sheetDrag';
 	import { cn } from '$lib/utils.js';
@@ -82,6 +82,7 @@
 			class="fixed inset-0 z-50 bg-black/40 duration-200 supports-backdrop-filter:backdrop-blur-[2px] data-closed:animate-out data-closed:fade-out-0 data-open:animate-in data-open:fade-in-0"
 		/>
 		<Dialog.Content
+			data-surface="popover"
 			class={cn(
 				'fixed inset-x-0 bottom-0 z-50 mx-auto flex w-full flex-col overflow-hidden rounded-t-3xl border border-b-0 border-border bg-popover text-popover-foreground shadow-2xl shadow-black/15 outline-none',
 				'duration-200 data-closed:animate-out data-closed:slide-out-to-bottom data-open:animate-in data-open:slide-in-from-bottom',

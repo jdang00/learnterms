@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { formatBytes } from '$lib/utils/format';
 	import { untrack } from 'svelte';
-	import { CheckCircle2, FileUp, X } from 'lucide-svelte';
+	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+	import FileUp from '@lucide/svelte/icons/file-up';
+	import X from '@lucide/svelte/icons/x';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id } from '../../../convex/_generated/dataModel';

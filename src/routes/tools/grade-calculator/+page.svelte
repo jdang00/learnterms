@@ -4,7 +4,13 @@
 	import { onMount, tick } from 'svelte';
 	import { useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
-	import { RotateCcw, Trash2, Eraser, ChevronsUp, X, Target, CircleAlert } from 'lucide-svelte';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Eraser from '@lucide/svelte/icons/eraser';
+	import ChevronsUp from '@lucide/svelte/icons/chevrons-up';
+	import X from '@lucide/svelte/icons/x';
+	import Target from '@lucide/svelte/icons/target';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import * as Alert from '$lib/components/ui/alert';
@@ -496,7 +502,7 @@
 										<Target size={13} />
 										What you need to finish at
 									</div>
-									<div class="overflow-hidden rounded-2xl border border-border">
+									<div class="overflow-hidden surface">
 										<Table.Root>
 											<Table.Header>
 												<Table.Row
@@ -618,7 +624,7 @@
 							{:else}
 								{#each expandedEntries as group (group.entry.id)}
 									{@const isBonus = (group.entry.contributionType ?? 'standard') === 'bonus'}
-									<article class="rounded-2xl border border-border bg-muted/40 overflow-hidden">
+									<article class="surface-muted overflow-hidden">
 										<header
 											class="flex items-start justify-between gap-3 border-b border-border/70 px-4 py-3"
 										>
@@ -716,9 +722,7 @@
 					</Card.Content>
 				</Card.Root>
 
-				<div
-					class="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/40 px-4 py-3"
-				>
+				<div class="flex flex-wrap items-center justify-between gap-2 surface-muted px-4 py-3">
 					<Button variant="ghost" tone="neutral" size="sm" onclick={wipeEverything}>
 						<Eraser size={14} />
 						Erase local data

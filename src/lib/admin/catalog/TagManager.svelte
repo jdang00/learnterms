@@ -4,7 +4,11 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id, Doc } from '../../../convex/_generated/dataModel';
-	import { Pencil, Trash2, Plus, X, Check } from 'lucide-svelte';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Plus from '@lucide/svelte/icons/plus';
+	import X from '@lucide/svelte/icons/x';
+	import Check from '@lucide/svelte/icons/check';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -105,7 +109,7 @@
 	}
 </script>
 
-<section class="rounded-2xl border border-border bg-background p-4">
+<section class="surface p-4">
 	<div class="flex items-center justify-between mb-4">
 		<div class="flex items-center gap-2">
 			<h3 class="text-base font-semibold text-foreground">Tags</h3>
@@ -139,7 +143,7 @@
 	</div>
 
 	{#if showAddForm}
-		<div class="mb-4 p-3 rounded-2xl bg-muted/50 border border-border">
+		<div class="mb-4 p-3 surface-muted">
 			<div class="flex flex-col gap-3">
 				<div class="flex items-center gap-2">
 					<Input

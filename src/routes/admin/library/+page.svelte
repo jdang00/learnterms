@@ -2,16 +2,14 @@
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import { Spinner } from '$lib/components/ui/spinner';
-	import {
-		ExternalLink,
-		FileUp,
-		Maximize2,
-		Minimize2,
-		Pencil,
-		Presentation,
-		Trash2,
-		X
-	} from 'lucide-svelte';
+	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import FileUp from '@lucide/svelte/icons/file-up';
+	import Maximize2 from '@lucide/svelte/icons/maximize-2';
+	import Minimize2 from '@lucide/svelte/icons/minimize-2';
+	import Pencil from '@lucide/svelte/icons/pencil';
+	import Presentation from '@lucide/svelte/icons/presentation';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import X from '@lucide/svelte/icons/x';
 	import { fade } from 'svelte/transition';
 	import * as FileDropZone from '$lib/components/ui/file-drop-zone';
 	import { toastStore } from '$lib/stores/toast.svelte';
@@ -637,7 +635,7 @@
 			{/if}
 
 			{#if drawerTab === 'preview'}
-				<div class="h-full overflow-hidden rounded-2xl border border-border bg-muted/40">
+				<div class="h-full overflow-hidden surface-muted">
 					<div class="flex items-center gap-2 border-b border-border bg-background px-4 py-2">
 						<span class="text-xs font-medium text-foreground/60">
 							{isDeckMode ? 'Slide deck preview' : 'Markdown preview'}

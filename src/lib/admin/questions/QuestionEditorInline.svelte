@@ -13,38 +13,36 @@
 	import ExamFindingsWorkspace from './ExamFindingsWorkspace.svelte';
 	import type { ExamFinding } from '$lib/examFindings/findings';
 	import QuestionSources from '$lib/components/QuestionSources.svelte';
-	import {
-		X,
-		Bold,
-		Italic,
-		CheckCircle,
-		Archive,
-		CheckSquare,
-		ToggleLeft,
-		Edit3,
-		ListChecks,
-		Underline as UnderlineIcon,
-		Strikethrough as StrikethroughIcon,
-		Code as CodeIcon,
-		Quote as QuoteIcon,
-		List as ListIcon,
-		ListOrdered as ListOrderedIcon,
-		Link as LinkIcon,
-		Highlighter as HighlighterIcon,
-		MessageSquare,
-		Plus,
-		Shuffle,
-		Trash2,
-		Save,
-		Image as ImageIcon,
-		FileText,
-		Sparkles,
-		Check,
-		ChevronDown,
-		NotebookPen,
-		Stethoscope,
-		Target
-	} from 'lucide-svelte';
+	import X from '@lucide/svelte/icons/x';
+	import Bold from '@lucide/svelte/icons/bold';
+	import Italic from '@lucide/svelte/icons/italic';
+	import CheckCircle from '@lucide/svelte/icons/check-circle';
+	import Archive from '@lucide/svelte/icons/archive';
+	import CheckSquare from '@lucide/svelte/icons/check-square';
+	import ToggleLeft from '@lucide/svelte/icons/toggle-left';
+	import Edit3 from '@lucide/svelte/icons/edit-3';
+	import ListChecks from '@lucide/svelte/icons/list-checks';
+	import UnderlineIcon from '@lucide/svelte/icons/underline';
+	import StrikethroughIcon from '@lucide/svelte/icons/strikethrough';
+	import CodeIcon from '@lucide/svelte/icons/code';
+	import QuoteIcon from '@lucide/svelte/icons/quote';
+	import ListIcon from '@lucide/svelte/icons/list';
+	import ListOrderedIcon from '@lucide/svelte/icons/list-ordered';
+	import LinkIcon from '@lucide/svelte/icons/link';
+	import HighlighterIcon from '@lucide/svelte/icons/highlighter';
+	import MessageSquare from '@lucide/svelte/icons/message-square';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Shuffle from '@lucide/svelte/icons/shuffle';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Save from '@lucide/svelte/icons/save';
+	import ImageIcon from '@lucide/svelte/icons/image';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
+	import Stethoscope from '@lucide/svelte/icons/stethoscope';
+	import Target from '@lucide/svelte/icons/target';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import type { FunctionArgs, FunctionReturnType } from 'convex/server';
 	import { api } from '../../../convex/_generated/api.js';
@@ -67,7 +65,7 @@
 	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
 	import { getEditorExtensions } from '../../config/tiptap';
 	import { useClerkContext } from 'svelte-clerk';
-	import { Loader2 } from 'lucide-svelte';
+	import Loader2 from '@lucide/svelte/icons/loader-2';
 	import { getRationale, getRationalePlainText } from '$lib/utils/rationale';
 	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
 	import { uploadQuestionImage } from '$lib/utils/uploadQuestionImage';
@@ -1494,7 +1492,7 @@
 							>
 								<span
 									class="grid size-8 shrink-0 place-items-center rounded-full transition-colors {selected
-										? 'bg-primary/10 text-primary'
+										? 'bg-primary/10 text-primary-ink'
 										: 'bg-muted text-foreground/60'}"
 								>
 									<option.icon size={16} />
@@ -1522,9 +1520,7 @@
 			<span class="text-[10px] font-bold text-foreground/70 uppercase tracking-wider ml-1"
 				>Status</span
 			>
-			<div
-				class="flex flex-wrap gap-1 rounded-2xl border border-border bg-background p-1 shadow-xs"
-			>
+			<div class="flex flex-wrap gap-1 surface p-1 shadow-xs">
 				{#each statusOptions as option (option.value)}
 					<Button
 						size="sm"
@@ -1566,7 +1562,7 @@
 					>
 				</div>
 				<div
-					class="border border-border rounded-2xl overflow-hidden bg-background shadow-xs group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all"
+					class="surface overflow-hidden shadow-xs group focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all"
 				>
 					{#if editor}
 						<div
@@ -1663,7 +1659,7 @@
 									<span class="flex items-center gap-2 text-sm font-semibold">
 										<AcceptanceMeter
 											level={value as AcceptanceLevel}
-											class={selected ? 'text-primary' : 'text-foreground/50'}
+											class={selected ? 'text-primary-ink' : 'text-foreground/50'}
 										/>
 										{level.label}
 										{#if value === 'lenient'}
@@ -1698,7 +1694,7 @@
 								<span class="hidden sm:inline">Question Studio</span>
 							</Button>
 						</div>
-						<Card.Root class="gap-0 bg-background py-0 shadow-xs">
+						<Card.Root class="gap-0 py-0 shadow-xs">
 							<Card.Content class="gap-4 p-4">
 								{#each fitbAnswers as row, index (index)}
 									<div class="flex flex-col sm:flex-row gap-3 items-start">
@@ -1823,7 +1819,7 @@
 											{/if}
 										{:else}
 											<div
-												class="h-12 w-full rounded-3xl border border-dashed border-border bg-background/50 flex items-center justify-center text-xs text-foreground/30 italic"
+												class="h-12 w-full surface-dashed flex items-center justify-center text-xs text-foreground/30 italic"
 											>
 												Distractor (No Prompt)
 											</div>
@@ -1868,7 +1864,7 @@
 											{/if}
 										{:else}
 											<div
-												class="h-12 w-full rounded-3xl border border-dashed border-border bg-background/50 flex items-center justify-center text-xs text-foreground/30 italic"
+												class="h-12 w-full surface-dashed flex items-center justify-center text-xs text-foreground/30 italic"
 											>
 												No Answer
 											</div>
@@ -2007,7 +2003,7 @@
 								variant="ghost"
 								tone="neutral"
 								size="sm"
-								class="mt-2 w-full gap-2 border-2 border-dashed border-border hover:border-primary hover:text-primary"
+								class="mt-2 w-full gap-2 border-2 border-dashed border-border hover:border-primary hover:text-primary-ink"
 								onclick={addOption}
 							>
 								<Plus size={14} /> Add Option
@@ -2103,7 +2099,7 @@
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 								<!-- Existing Media -->
 								{#each existingMedia as m (m._id)}
-									<div class="border border-border rounded-2xl overflow-hidden bg-background">
+									<div class="surface overflow-hidden">
 										<div class="relative group">
 											<img src={m.url} alt={m.altText} class="w-full h-32 object-cover" />
 											<Button

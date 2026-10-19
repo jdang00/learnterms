@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { StickyNote } from 'lucide-svelte';
+	import StickyNote from '@lucide/svelte/icons/sticky-note';
 	import { untrack } from 'svelte';
 	import { getQuizCommands } from '$lib/components/quiz-dock/commands.svelte';
 	import SidePanel from '$lib/components/side-panel/SidePanel.svelte';

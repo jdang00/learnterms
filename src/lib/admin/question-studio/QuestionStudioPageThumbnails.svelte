@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Check, ChevronRight, FileText } from 'lucide-svelte';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import FileText from '@lucide/svelte/icons/file-text';
 	import { tick } from 'svelte';
 	import type { PDFDocumentProxy } from 'pdfjs-dist';
 	import { Button } from '$lib/components/ui/button';

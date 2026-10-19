@@ -10,23 +10,21 @@
 	import { page } from '$app/state';
 	import { pushState } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import {
-		ArrowDownRight,
-		ArrowLeft,
-		ArrowUpRight,
-		BookOpen,
-		ChevronRight,
-		CircleHelp,
-		ClipboardCheck,
-		Flag,
-		Flame,
-		LayoutDashboard,
-		Radio,
-		Search,
-		Sparkles,
-		TrendingUp,
-		Users
-	} from 'lucide-svelte';
+	import ArrowDownRight from '@lucide/svelte/icons/arrow-down-right';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import CircleHelp from '@lucide/svelte/icons/circle-help';
+	import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
+	import Flag from '@lucide/svelte/icons/flag';
+	import Flame from '@lucide/svelte/icons/flame';
+	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
+	import Radio from '@lucide/svelte/icons/radio';
+	import Search from '@lucide/svelte/icons/search';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import TrendingUp from '@lucide/svelte/icons/trending-up';
+	import Users from '@lucide/svelte/icons/users';
 	import StudentDetailModal from '$lib/admin/progress/StudentDetailModal.svelte';
 	import CuratorGenerationRuns from '$lib/admin/progress/CuratorGenerationRuns.svelte';
 	import StudentAvatar from '$lib/admin/progress/StudentAvatar.svelte';
@@ -456,7 +454,7 @@
 			{#if view === 'overview'}
 				<section class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Key metrics">
 					<button
-						class="col-span-2 rounded-3xl border border-border bg-background p-4 text-left transition hover:border-success lg:col-span-1"
+						class="col-span-2 surface p-4 text-left transition hover:border-success lg:col-span-1"
 						onclick={() => showStudents('live')}
 					>
 						<span class="flex items-center justify-between text-xs text-foreground/60"
@@ -481,7 +479,7 @@
 						{/if}
 					</button>
 					<button
-						class="rounded-3xl border border-border bg-background p-4 text-left transition hover:border-primary"
+						class="surface p-4 text-left transition hover:border-primary"
 						onclick={() => showStudents('active')}
 					>
 						<span class="flex items-center justify-between text-xs text-foreground/60"
@@ -499,7 +497,7 @@
 							>
 						{/if}
 					</button>
-					<Card.Root class="gap-0 bg-background p-4">
+					<Card.Root class="gap-0 p-4">
 						<span class="flex items-center justify-between text-xs text-foreground/60"
 							>Questions tried · 7d <TrendingUp size={15} class="text-primary" /></span
 						>
@@ -512,7 +510,7 @@
 							>
 						{/if}
 					</Card.Root>
-					<Card.Root class="gap-0 bg-background p-4">
+					<Card.Root class="gap-0 p-4">
 						<span class="flex items-center justify-between text-xs text-foreground/60"
 							>Practice tests · 14d <ClipboardCheck size={15} class="text-primary" /></span
 						>
@@ -531,7 +529,7 @@
 				</section>
 
 				<div class="mt-4 grid gap-4 lg:grid-cols-3">
-					<Card.Root class="gap-0 bg-background p-5 lg:col-span-2">
+					<Card.Root class="gap-0 p-5 lg:col-span-2">
 						<div class="flex flex-wrap items-start justify-between gap-3">
 							{@render cardHeader('Study activity', 'Last 14 days, by local day')}
 							<Tabs.Root
@@ -552,7 +550,7 @@
 						</div>
 					</Card.Root>
 
-					<Card.Root class="flex flex-col gap-0 overflow-hidden bg-background py-0 lg:row-span-2">
+					<Card.Root class="flex flex-col gap-0 overflow-hidden py-0 lg:row-span-2">
 						<header class="flex items-center justify-between gap-3 border-b border-muted p-5 pb-4">
 							{@render cardHeader('Live activity', 'Updates as students study')}
 						</header>
@@ -567,7 +565,7 @@
 						</div>
 					</Card.Root>
 
-					<Card.Root class="gap-0 bg-background p-5 lg:col-span-2">
+					<Card.Root class="gap-0 p-5 lg:col-span-2">
 						{@render cardHeader(
 							'When your cohort studies',
 							'Questions tried by weekday and hour, last 14 days'
@@ -579,7 +577,7 @@
 				</div>
 
 				<div class="mt-4 grid gap-4 lg:grid-cols-3">
-					<Card.Root class="gap-0 bg-background p-5">
+					<Card.Root class="gap-0 p-5">
 						{@render cardHeader('Engagement', 'Where every student is right now')}
 						{#if !ready}<Skeleton class="mt-4 h-40" />{:else}
 							<ul class="mt-3 -mx-2">
@@ -605,7 +603,7 @@
 						{/if}
 					</Card.Root>
 
-					<Card.Root class="gap-0 bg-background p-5">
+					<Card.Root class="gap-0 p-5">
 						<div class="flex items-start justify-between gap-3">
 							{@render cardHeader('Worth a check-in', 'Studied recently, quiet for over a week')}
 							{#if engagementCounts.cooling > checkIns.length}
@@ -648,7 +646,7 @@
 						{/if}
 					</Card.Root>
 
-					<Card.Root class="gap-0 bg-background p-5">
+					<Card.Root class="gap-0 p-5">
 						<div class="flex items-start justify-between gap-3">
 							{@render cardHeader('Most active this week', 'By questions tried in the last 7 days')}
 							{#if onStreak.length}
@@ -697,7 +695,7 @@
 				</div>
 
 				<div class="mt-4 grid gap-4 lg:grid-cols-2">
-					<Card.Root class="gap-0 overflow-hidden bg-background py-0">
+					<Card.Root class="gap-0 overflow-hidden py-0">
 						<header class="p-5 pb-3">
 							{@render cardHeader('Trending modules', 'Most students studying in the last 14 days')}
 						</header>
@@ -732,7 +730,7 @@
 						{/if}
 					</Card.Root>
 
-					<Card.Root class="gap-0 overflow-hidden bg-background py-0">
+					<Card.Root class="gap-0 overflow-hidden py-0">
 						<header class="p-5 pb-3">
 							{@render cardHeader(
 								'Flagged by students',
@@ -794,7 +792,7 @@
 			{:else if view === 'studio'}
 				<CuratorGenerationRuns {cohortId} />
 			{:else}
-				<Card.Root class="gap-0 overflow-hidden bg-background py-0">
+				<Card.Root class="gap-0 overflow-hidden py-0">
 					<div class="border-b border-muted p-5">
 						<div class="flex flex-wrap items-center justify-between gap-3">
 							{@render cardHeader(

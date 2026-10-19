@@ -1,19 +1,17 @@
 <script lang="ts">
-	import {
-		ArrowRight,
-		BrainCircuit,
-		Flag,
-		Keyboard,
-		FileText,
-		Sparkles,
-		Check,
-		BarChart3,
-		Eye,
-		EyeOff,
-		Image,
-		ZoomIn,
-		Users
-	} from 'lucide-svelte';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import BrainCircuit from '@lucide/svelte/icons/brain-circuit';
+	import Flag from '@lucide/svelte/icons/flag';
+	import Keyboard from '@lucide/svelte/icons/keyboard';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import Check from '@lucide/svelte/icons/check';
+	import BarChart3 from '@lucide/svelte/icons/bar-chart-3';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import Image from '@lucide/svelte/icons/image';
+	import ZoomIn from '@lucide/svelte/icons/zoom-in';
+	import Users from '@lucide/svelte/icons/users';
 	import QuizPreviewReplica from '$lib/components/landing/QuizPreviewReplica.svelte';
 	import ReviewsShowcase from '$lib/components/landing/ReviewsShowcase.svelte';
 	import BrandLogo from '$lib/components/BrandLogo.svelte';
@@ -299,7 +297,7 @@
 				</p>
 			</div>
 			<div in:scale={{ duration: 600, delay: 120, easing: cubicOut }}>
-				<div class="relative z-10 overflow-visible rounded-3xl border border-border bg-background">
+				<div class="relative z-10 overflow-visible surface">
 					<div class="flex items-center px-4 pt-3 pb-2">
 						<div
 							class="flex h-9 w-full items-center rounded-full border border-border bg-background px-4 text-sm text-muted-foreground"
@@ -330,7 +328,7 @@
 				<!-- Flag & filter — interactive mini quiz nav -->
 				<div class="panel-graph p-4 flex flex-col">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
+						<div class="surface-inset p-2">
 							<Flag size={18} />
 						</div>
 					</div>
@@ -339,9 +337,7 @@
 						Mark what you missed and focus your next pass where it matters most.
 					</p>
 
-					<div
-						class="mt-4 flex flex-1 flex-col rounded-xl border border-border/60 bg-background/50 overflow-hidden"
-					>
+					<div class="mt-4 flex flex-1 flex-col surface-inset overflow-hidden">
 						<div class="flex items-center justify-between border-b border-border/40 px-3 py-2">
 							<span class="text-[10px] text-foreground/50"
 								>{visibleQuestions.length} of {mockQuestions.length} questions</span
@@ -392,7 +388,7 @@
 				<!-- AI generation — animated pipeline demo -->
 				<div class="panel-graph p-4 ai-card min-w-0">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
+						<div class="surface-inset p-2">
 							<BrainCircuit size={18} />
 						</div>
 					</div>
@@ -402,9 +398,7 @@
 						in the same workflow.
 					</p>
 
-					<div
-						class="ai-pipeline mt-4 overflow-hidden rounded-xl border border-border/60 bg-background/50"
-					>
+					<div class="ai-pipeline mt-4 overflow-hidden surface-inset">
 						<!-- Step indicators -->
 						<div class="flex items-center gap-0 border-b border-border/40 text-[10px] font-medium">
 							<div
@@ -546,7 +540,7 @@
 				<!-- Rationale-first questions -->
 				<div class="panel-graph p-4 sm:col-span-2 lg:col-span-1">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
+						<div class="surface-inset p-2">
 							<Eye size={18} />
 						</div>
 					</div>
@@ -556,7 +550,7 @@
 						Students don't just get answers, they get the why.
 					</p>
 
-					<div class="mt-4 rounded-xl border border-border/60 bg-background/50 p-3">
+					<div class="mt-4 surface-inset p-3">
 						<p class="text-[11px] font-medium leading-snug text-foreground/80">
 							Clear, cylindrical collarettes wrapping the base of the lashes are pathognomonic for:
 						</p>
@@ -621,7 +615,7 @@
 				<!-- Cohort Analytics -->
 				<div class="panel-graph p-4">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
+						<div class="surface-inset p-2">
 							<BarChart3 size={18} />
 						</div>
 					</div>
@@ -632,7 +626,7 @@
 
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
-						class="analytics-demo mt-4 rounded-xl border border-border/60 bg-background/50 p-3"
+						class="analytics-demo mt-4 surface-inset p-3"
 						use:reveal={{ y: 0 }}
 						onmouseenter={() => (analyticsVisible = true)}
 					>
@@ -673,7 +667,7 @@
 											<Flag size={7} />{student.flags}
 										</span>
 									{:else}
-										<span class="flex items-center gap-0.5 text-[8px] text-success/50 w-5">
+										<span class="flex items-center gap-0.5 text-[8px] text-success-ink/50 w-5">
 											<Check size={7} />
 										</span>
 									{/if}
@@ -693,7 +687,7 @@
 				<!-- Keyboard shortcuts — mini quiz that reacts -->
 				<div class="panel-graph p-4 flex flex-col">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
+						<div class="surface-inset p-2">
 							<Keyboard size={18} />
 						</div>
 					</div>
@@ -702,9 +696,7 @@
 						Number keys to select, Enter to check, arrows to navigate.
 					</p>
 
-					<div
-						class="mt-4 flex flex-1 flex-col rounded-xl border border-border/60 bg-background/50 overflow-hidden"
-					>
+					<div class="mt-4 flex flex-1 flex-col surface-inset overflow-hidden">
 						<!-- Mini quiz context — fixed height to prevent layout shift -->
 						<div class="flex-1 border-b border-border/40 p-3">
 							<p class="mb-1.5 text-[10px] text-foreground/50">Lids &amp; Adnexa · 2 of 6</p>
@@ -790,7 +782,7 @@
 				<!-- Rich Attachments & Formatting -->
 				<div class="panel-graph p-4 sm:col-span-2 lg:col-span-1">
 					<div class="mb-3 flex items-start justify-between">
-						<div class="rounded-xl border border-border/80 bg-background/70 p-2">
+						<div class="surface-inset p-2">
 							<Image size={18} />
 						</div>
 					</div>
@@ -799,11 +791,9 @@
 						Rich formatting, media attachments, zoom, and captions so question quality stays high.
 					</p>
 
-					<div class="mt-4 rounded-xl border border-border/60 bg-background/50 p-3">
+					<div class="mt-4 surface-inset p-3">
 						<!-- Mini rich text toolbar -->
-						<div
-							class="mb-2 flex items-center gap-0.5 rounded-lg border border-border/40 bg-muted/50 px-1.5 py-1"
-						>
+						<div class="mb-2 flex items-center gap-0.5 surface-inset px-1.5 py-1">
 							<span class="rich-btn text-[10px] font-bold px-1.5 py-0.5 rounded-sm">B</span>
 							<span class="rich-btn text-[10px] italic px-1.5 py-0.5 rounded-sm">I</span>
 							<span class="rich-btn text-[10px] underline px-1.5 py-0.5 rounded-sm">U</span>

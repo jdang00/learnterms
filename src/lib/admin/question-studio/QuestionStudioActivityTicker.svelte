@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ChevronDown, ChevronUp } from 'lucide-svelte';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import { formatDuration } from './questionStudioRun';
 	import type { JobEvent } from './questionStudioRun';
 
@@ -24,7 +25,7 @@
 	});
 </script>
 
-<div class="shrink-0 rounded-2xl border border-border bg-background shadow-xs">
+<div class="shrink-0 surface shadow-xs">
 	<button
 		type="button"
 		class="flex w-full items-center gap-3 px-3 py-2 text-left"

@@ -31,7 +31,11 @@
 				pill: 'rounded-full',
 				rect: 'rounded-xl',
 				circle: 'aspect-square rounded-full px-0',
-				square: 'aspect-square rounded-xl px-0'
+				square: 'aspect-square rounded-xl px-0',
+				// Previous/next as one split pill: rounded outside, nearly touching where they meet.
+				// Containers that space them with a gap set --segment-gap so the end can cancel it.
+				'segment-start': 'rounded-[9999px_0.3rem_0.3rem_9999px]',
+				'segment-end': 'ms-[calc(2px-var(--segment-gap,0px))] rounded-[0.3rem_9999px_9999px_0.3rem]'
 			}
 		},
 		compoundVariants: [

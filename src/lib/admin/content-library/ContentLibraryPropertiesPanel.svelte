@@ -1,17 +1,15 @@
 <script lang="ts">
-	import {
-		Check,
-		ChevronDown,
-		Clock3,
-		Copy,
-		Database,
-		FileSearch,
-		FileText,
-		HardDrive,
-		Hash,
-		Sparkles,
-		TriangleAlert
-	} from 'lucide-svelte';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Clock3 from '@lucide/svelte/icons/clock-3';
+	import Copy from '@lucide/svelte/icons/copy';
+	import Database from '@lucide/svelte/icons/database';
+	import FileSearch from '@lucide/svelte/icons/file-search';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import HardDrive from '@lucide/svelte/icons/hard-drive';
+	import Hash from '@lucide/svelte/icons/hash';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api';
 	import type { Doc } from '../../../convex/_generated/dataModel';
@@ -118,7 +116,7 @@
 </script>
 
 <div class="space-y-3">
-	<div class="rounded-2xl border border-border bg-background p-4">
+	<div class="surface p-4">
 		<div class="mb-4 flex items-center gap-2">
 			<Sparkles size={13} class="text-foreground/40" />
 			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
@@ -135,11 +133,11 @@
 						<div
 							class="flex h-9 w-9 items-center justify-center rounded-full border-2 {step.state ===
 							'done'
-								? 'border-success bg-success/10 text-success'
+								? 'border-success bg-success/10 text-success-ink'
 								: step.state === 'active'
-									? 'border-info bg-info/10 text-info animate-pulse'
+									? 'border-info bg-info/10 text-info-ink animate-pulse'
 									: step.state === 'error'
-										? 'border-error bg-error/10 text-error'
+										? 'border-error bg-error/10 text-error-ink'
 										: 'border-border bg-muted text-foreground/40'}"
 						>
 							{#if step.state === 'done'}
@@ -191,7 +189,7 @@
 		{/if}
 	</div>
 
-	<section class="overflow-hidden rounded-2xl border border-border bg-background">
+	<section class="overflow-hidden surface">
 		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
 			<FileText size={13} class="text-foreground/40" />
 			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
@@ -210,7 +208,7 @@
 		</div>
 	</section>
 
-	<section class="overflow-hidden rounded-2xl border border-border bg-background">
+	<section class="overflow-hidden surface">
 		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
 			<Clock3 size={13} class="text-foreground/40" />
 			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
@@ -225,7 +223,7 @@
 		</div>
 	</section>
 
-	<section class="overflow-hidden rounded-2xl border border-border bg-background">
+	<section class="overflow-hidden surface">
 		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
 			<Database size={13} class="text-foreground/40" />
 			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
@@ -246,7 +244,7 @@
 		</div>
 	</section>
 
-	<section class="overflow-hidden rounded-2xl border border-border bg-background">
+	<section class="overflow-hidden surface">
 		<div class="flex items-center gap-2 border-b border-muted px-4 py-2.5">
 			<HardDrive size={13} class="text-foreground/40" />
 			<span class="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">
@@ -261,7 +259,7 @@
 		</div>
 	</section>
 
-	<details class="group overflow-hidden rounded-2xl border border-border bg-background">
+	<details class="group overflow-hidden surface">
 		<summary
 			class="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-foreground/50 hover:bg-muted/50"
 		>
