@@ -1,5 +1,5 @@
 import { dark } from '@clerk/themes';
-import { writable, derived } from 'svelte/store';
+import { toStore } from 'svelte/store';
 import { browser } from '$app/environment';
 
 export type ThemeMode = 'light' | 'dark';
@@ -12,48 +12,44 @@ function applyTheme(theme: ThemeMode) {
 	document.querySelector('meta[name="theme-color"]')?.setAttribute('content', CHROME_COLOR[theme]);
 }
 
-const createThemeStore = () => {
-	const { subscribe, set, update } = writable<ThemeMode>('light');
+class ThemeState {
+	current = $state<ThemeMode>('light');
 
-	const init = () => {
-		if (browser) {
-			const savedTheme = localStorage.getItem('theme');
-			const theme: ThemeMode =
-				savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'light';
-			set(theme);
-			applyTheme(theme);
-		}
-	};
+	get isDark() {
+		return this.current === 'dark';
+	}
 
-	const toggle = () => {
-		update((current) => {
-			const newTheme = current === 'light' ? 'dark' : 'light';
-			if (browser) {
-				localStorage.setItem('theme', newTheme);
-				applyTheme(newTheme);
-			}
-			return newTheme;
-		});
-	};
+	get clerkTheme() {
+		return this.current === 'dark' ? dark : undefined;
+	}
 
-	const setTheme = (theme: ThemeMode) => {
-		set(theme);
-		if (browser) {
-			localStorage.setItem('theme', theme);
-			applyTheme(theme);
-		}
-	};
+	init() {
+		if (!browser) return;
+		const saved = localStorage.getItem('theme');
+		const mode: ThemeMode = saved === 'light' || saved === 'dark' ? saved : 'light';
+		this.current = mode;
+		applyTheme(mode);
+	}
 
-	return {
-		subscribe,
-		toggle,
-		set: setTheme,
-		init
-	};
-};
+	toggle() {
+		this.set(this.current === 'light' ? 'dark' : 'light');
+	}
 
-export const theme = createThemeStore();
+	set(mode: ThemeMode) {
+		this.current = mode;
+		if (!browser) return;
+		localStorage.setItem('theme', mode);
+		applyTheme(mode);
+	}
 
-export const clerkTheme = derived(theme, ($theme) => ($theme === 'dark' ? dark : undefined));
+	// Store contract so `$theme` keeps working in templates that haven't moved to `theme.current`.
+	subscribe(run: (mode: ThemeMode) => void) {
+		return themeStore.subscribe(run);
+	}
+}
 
-export const isDark = derived(theme, ($theme) => $theme === 'dark');
+export const theme = new ThemeState();
+const themeStore = toStore(() => theme.current);
+
+export const isDark = toStore(() => theme.isDark);
+export const clerkTheme = toStore(() => theme.clerkTheme);

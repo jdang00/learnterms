@@ -13,7 +13,7 @@
 	import Settings from '@lucide/svelte/icons/settings';
 	import Sun from '@lucide/svelte/icons/sun';
 	import Moon from '@lucide/svelte/icons/moon';
-	import { theme, isDark } from '$lib/theme.svelte';
+	import { theme } from '$lib/theme.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Tip } from '$lib/components/ui/tooltip';
@@ -111,8 +111,8 @@
 			</p>
 		</div>
 		<Button variant="outline" tone="neutral" onclick={() => theme.toggle()}>
-			{#if $isDark}<Sun />{:else}<Moon />{/if}
-			{$isDark ? 'Light' : 'Dark'} theme
+			{#if theme.isDark}<Sun />{:else}<Moon />{/if}
+			{theme.isDark ? 'Light' : 'Dark'} theme
 		</Button>
 	</header>
 

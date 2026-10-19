@@ -23,55 +23,20 @@
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { resolve } from '$app/paths';
-
-	function reveal(node: HTMLElement, opts?: { y?: number; delay?: number; stagger?: number }) {
-		const y = opts?.y ?? 24;
-		const delay = opts?.delay ?? 0;
-		const stagger = opts?.stagger ?? 0;
-
-		const children = stagger ? (Array.from(node.children) as HTMLElement[]) : [];
-		const targets = stagger ? children : [node];
-
-		targets.forEach((el, i) => {
-			el.style.opacity = '0';
-			el.style.transform = `translateY(${y}px)`;
-			el.style.transition = `opacity 0.6s cubic-bezier(.16,1,.3,1) ${delay + i * stagger}ms, transform 0.6s cubic-bezier(.16,1,.3,1) ${delay + i * stagger}ms`;
-		});
-
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				if (entry.isIntersecting) {
-					targets.forEach((el, i) => {
-						setTimeout(
-							() => {
-								el.style.opacity = '1';
-								el.style.transform = 'translateY(0)';
-							},
-							delay + i * stagger
-						);
-					});
-					observer.disconnect();
-				}
-			},
-			{ threshold: 0.15 }
-		);
-		observer.observe(node);
-
-		return { destroy: () => observer.disconnect() };
-	}
+	import { reveal } from '$lib/actions/reveal';
+	import {
+		adminSteps,
+		aiSteps,
+		cohortStudents,
+		demoQuestions,
+		keyOptions,
+		keySequence,
+		studentSteps
+	} from '$lib/content/landing';
 
 	// Flag & filter demo state
 	let showFlaggedOnly = $state(false);
-	let mockQuestions = $state([
-		{ id: 1, answered: true, flagged: false },
-		{ id: 2, answered: true, flagged: true },
-		{ id: 3, answered: true, flagged: false },
-		{ id: 4, answered: true, flagged: true },
-		{ id: 5, answered: false, flagged: false },
-		{ id: 6, answered: false, flagged: false },
-		{ id: 7, answered: false, flagged: false },
-		{ id: 8, answered: false, flagged: true }
-	]);
+	let mockQuestions = $state(demoQuestions.map((q) => ({ ...q })));
 	let flagActiveQ = $state(3); // which question is "selected" in the demo
 	let visibleQuestions = $derived(
 		showFlaggedOnly ? mockQuestions.filter((q) => q.flagged) : mockQuestions
@@ -83,21 +48,7 @@
 	}
 
 	// Keyboard shortcut animation, using the quiz's real bindings (quiz-dock/shortcuts.ts)
-	const keySequence: { key: string; label: string; action: string }[] = [
-		{ key: '3', label: 'Select C', action: 'selected-c' },
-		{ key: '1', label: 'Select A', action: 'selected-a' },
-		{ key: 'Enter', label: 'Check', action: 'checking' },
-		{ key: 'Tab', label: 'Rationale', action: 'solution' },
-		{ key: 'F', label: 'Flag', action: 'flagging' },
-		{ key: '→', label: 'Next', action: 'next' }
-	];
 	let activeKeyIndex = $state(0);
-	const keyOptions = [
-		'Demodex blepharitis',
-		'Seborrheic blepharitis',
-		'Meibomian gland dysfunction'
-	];
-
 	let activeAction = $derived(keySequence[activeKeyIndex]?.action ?? '');
 
 	$effect(() => {
@@ -109,8 +60,6 @@
 
 	// AI generation animation
 	let aiStep = $state(0);
-	const aiSteps = ['parsing', 'generating', 'done'] as const;
-
 	$effect(() => {
 		const timings = [2200, 2800, 2000];
 		let timeout: ReturnType<typeof setTimeout>;
@@ -125,91 +74,10 @@
 	// Rationale reveal demo
 	let solutionRevealed = $state(false);
 
-	// Analytics demo — cohort student roster
-	const cohortStudents = [
-		{
-			initials: 'MR',
-			name: 'Maya R.',
-			progress: 94,
-			flags: 1,
-			color: 'bg-primary',
-			ink: 'text-primary-ink',
-			recent: '2m ago'
-		},
-		{
-			initials: 'JD',
-			name: 'Jake D.',
-			progress: 82,
-			flags: 3,
-			color: 'bg-secondary',
-			ink: 'text-secondary-ink',
-			recent: '8m ago'
-		},
-		{
-			initials: 'SP',
-			name: 'Sofia P.',
-			progress: 71,
-			flags: 5,
-			color: 'bg-accent',
-			ink: 'text-accent-ink',
-			recent: '14m ago'
-		},
-		{
-			initials: 'LT',
-			name: 'Liam T.',
-			progress: 58,
-			flags: 8,
-			color: 'bg-info',
-			ink: 'text-info-ink',
-			recent: '21m ago'
-		}
-	];
 	let analyticsVisible = $state(false);
 
 	// Attachment demo — image zoom
 	let attachmentZoomed = $state(false);
-
-	// Workflow data — lean, no decorative fluff
-	const studentSteps = [
-		{
-			title: 'Pick a module and start',
-			detail:
-				'Select topic scope and question count. Every session has a clear objective from the first click.'
-		},
-		{
-			title: 'Answer under exam-style controls',
-			detail:
-				'Elimination, flagging, and keyboard shortcuts — the same mechanics you use on test day.'
-		},
-		{
-			title: 'Filter to what you missed',
-			detail: 'Flagged items become your next session. No wasted reps on material you already know.'
-		},
-		{
-			title: 'Repeat until clean',
-			detail: 'Each pass narrows the set. Watch your flag count drop and your confidence rise.'
-		}
-	];
-
-	const adminSteps = [
-		{
-			title: 'Upload source material',
-			detail: 'Drop lecture notes, PDFs, or outlines into the pipeline. No reformatting needed.'
-		},
-		{
-			title: 'Generate questions in batches',
-			detail: 'AI produces stems, choices, and rationales in one pass. Edit what needs editing.'
-		},
-		{
-			title: 'Review and publish',
-			detail: 'Approve production-ready items, flag anything that needs another look.'
-		},
-		{
-			title: 'Monitor and improve',
-			detail:
-				'Analytics surface weak questions, high flag rates, and emerging gaps. Update the bank live.'
-		}
-	];
 </script>
 
 <div class="relative isolate overflow-hidden pb-28">

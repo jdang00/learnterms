@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Sun from '@lucide/svelte/icons/sun';
 	import Moon from '@lucide/svelte/icons/moon';
-	import { theme, isDark } from '$lib/theme.svelte';
+	import { theme } from '$lib/theme.svelte';
 	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
@@ -30,14 +30,14 @@
 	aria-label="Toggle theme"
 >
 	<div
-		class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-in-out {$isDark
+		class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-in-out {theme.isDark
 			? 'opacity-0 -rotate-90'
 			: 'opacity-100 rotate-0'}"
 	>
 		<Sun size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} />
 	</div>
 	<div
-		class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-in-out {$isDark
+		class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-in-out {theme.isDark
 			? 'opacity-100 rotate-0'
 			: 'opacity-0 rotate-90'}"
 	>

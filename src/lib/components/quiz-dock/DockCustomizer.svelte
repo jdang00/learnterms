@@ -1,711 +1,48 @@
 <script lang="ts">
-	import { fade, fly, scale, slide } from 'svelte/transition';
-	import { flip } from 'svelte/animate';
-	import { backOut, cubicOut } from 'svelte/easing';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import ArrowUpWideNarrow from '@lucide/svelte/icons/arrow-up-wide-narrow';
-	import Check from '@lucide/svelte/icons/check';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import CloudOff from '@lucide/svelte/icons/cloud-off';
-	import Eye from '@lucide/svelte/icons/eye';
-	import Minus from '@lucide/svelte/icons/minus';
+	import { fade, fly } from 'svelte/transition';
+	import { backOut } from 'svelte/easing';
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
-	import SeparatorVertical from '@lucide/svelte/icons/separator-vertical';
-	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
-	import ToolCase from '@lucide/svelte/icons/tool-case';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import { getQuizCommands } from './commands.svelte';
 	import { getDockPreferences } from './dockPreferences.svelte';
-	import {
-		dockButtonClass,
-		READOUT_CLASS,
-		segmentShape,
-		isPassive,
-		TONE_BADGE
-	} from './dockStyles';
-	import ReadoutContent from './ReadoutContent.svelte';
-	import { Button, buttonVariants } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Kbd } from '$lib/components/ui/kbd';
-	import { Switch } from '$lib/components/ui/switch';
+	import { Button } from '$lib/components/ui/button';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { Dialog } from 'bits-ui';
-	import * as ButtonGroup from '$lib/components/ui/button-group';
-	import { shortcutLabelFor } from './shortcuts';
-	import {
-		DEFAULT_DOCK,
-		DIVIDER_ID,
-		displayFor,
-		DOCK_PRESETS,
-		dockHas,
-		homeZoneFor,
-		insertIntoDock,
-		matchPreset,
-		phoneRowFit,
-		quickAddIndex,
-		removeFromDock,
-		removeTool,
-		sameDock,
-		withTools,
-		zoneOf,
-		type DockConfig,
-		type DockDisplay,
-		type DockDrop,
-		type DockSurface,
-		type DockZone
-	} from './layouts';
-	import type { CommandScope, QuizCommand } from './types';
+	import { DockCustomizerState } from './customizer/dockCustomizer.svelte';
+	import { CAPTION, MOTION } from './customizer/constants';
+	import StageMock from './customizer/StageMock.svelte';
+	import ToolsZone from './customizer/ToolsZone.svelte';
+	import DockZone from './customizer/DockZone.svelte';
+	import OverflowZone from './customizer/OverflowZone.svelte';
+	import SelectionInspector from './customizer/SelectionInspector.svelte';
+	import PresetPanel from './customizer/PresetPanel.svelte';
+	import PalettePanel from './customizer/PalettePanel.svelte';
+	import DragGhost from './customizer/DragGhost.svelte';
 
 	const registry = getQuizCommands();
 	const preferences = getDockPreferences();
+	const customizer = new DockCustomizerState(registry, preferences);
 
-	const open = $derived(preferences?.customizing ?? false);
-	const config = $derived<DockConfig>(preferences?.layout ?? DEFAULT_DOCK);
-	const advanced = $derived(preferences?.advanced ?? false);
-
-	const motion =
-		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-			? 0
-			: 1;
-
-	let preview = $state<DockSurface>('desktop');
-
-	const SECTIONS: { scope: CommandScope | 'layout'; title: string }[] = [
-		{ scope: 'answer', title: 'Answer' },
-		{ scope: 'question', title: 'Question' },
-		{ scope: 'navigation', title: 'Navigate' },
-		{ scope: 'insight', title: 'At a glance' },
-		{ scope: 'session', title: 'Session' },
-		{ scope: 'preference', title: 'Preferences' },
-		{ scope: 'layout', title: 'Layout' }
-	];
-
-	const QUICK_TOOLS = [
-		'notes',
-		'calculator',
-		'reveal',
-		'highlight',
-		'streak',
-		'shuffle',
-		'progress',
-		'timer',
-		'nextUnanswered',
-		'autoNext',
-		'textSize',
-		'reset'
-	];
-
-	const MINI_DOCK_LIMIT = 7;
-	const BONE = 'rounded-full bg-foreground/[0.06]';
-	const MOCK = 'rounded-2xl border border-dashed border-foreground/15 bg-background';
-	const PHONE = 'rounded-[2rem] border-[3px] border-foreground/10 bg-background';
-	const CAPTION = 'px-1 label-caps';
-
-	const DISPLAY_OPTIONS: [DockDisplay, string][] = [
-		['icon', 'Icon'],
-		['label', 'Text'],
-		['both', 'Both']
-	];
-
-	type PaletteEntry = {
-		id: string;
-		name: string;
-		description: string;
-		icon: QuizCommand['icon'];
-		badge: string;
-		shortcut?: string;
-	};
-
-	const DIVIDER_ENTRY: PaletteEntry = {
-		id: DIVIDER_ID,
-		name: 'Divider',
-		description: 'Group tools into clusters',
-		icon: SeparatorVertical,
-		badge: TONE_BADGE.neutral
-	};
-
-	function entryFor(command: QuizCommand): PaletteEntry {
-		return {
-			id: command.id,
-			name: command.name,
-			description: command.description,
-			icon: command.icon,
-			badge: TONE_BADGE[command.tone],
-			shortcut: shortcutLabelFor(command.id)
-		};
-	}
-
-	const available = $derived(
-		Object.values(registry?.commands ?? {}).filter((command) => command.available?.() !== false)
-	);
-
-	const palette = $derived.by(() => {
-		let offset = 0;
-		return SECTIONS.map(({ scope, title }) => {
-			const entries =
-				scope === 'layout'
-					? [DIVIDER_ENTRY]
-					: available.filter((command) => command.scope === scope).map(entryFor);
-			const section = { title, entries, offset };
-			offset += entries.length;
-			return section;
-		}).filter((section) => section.entries.length > 0);
-	});
-
-	const quickTools = $derived(
-		QUICK_TOOLS.map((id) => registry?.get(id)).filter(
-			(command): command is QuizCommand => Boolean(command) && command!.available?.() !== false
-		)
-	);
-
-	const activePreset = $derived(matchPreset(config));
-
-	function commit(next: DockConfig) {
-		preferences?.set(next);
-	}
-
-	function applyPreset(presetConfig: DockConfig) {
-		selected = null;
-		const next = withTools(presetConfig, config.tools);
-		if (sameDock(next, DEFAULT_DOCK)) preferences?.reset();
-		else commit(next);
-	}
-
-	function addToHome(id: string, itemsIndex: number) {
-		const zone = homeZoneFor(id);
-		commit(
-			insertIntoDock(
-				config,
-				{ zone, index: zone === 'items' ? itemsIndex : config[zone].length },
-				id,
-				registry?.get(id)?.defaultDisplay ?? 'icon'
-			)
-		);
-	}
-
-	function toggleQuickTool(id: string) {
-		if (dockHas(config, id)) {
-			commit(removeTool(config, id));
-			if (selection?.id === id) selected = null;
-			return;
-		}
-		addToHome(id, quickAddIndex(config));
-	}
-
-	function acceptsOverflow(id: string) {
-		return id !== DIVIDER_ID && !isPassive(registry?.get(id));
-	}
-
-	function accepts(zone: DockZone, id: string) {
-		if (zone === 'overflow') return acceptsOverflow(id);
-		if (zone === 'tools') return id !== DIVIDER_ID;
-		return true;
-	}
-
-	const ZONE_NAMES: Record<DockZone, string> = {
-		items: 'dock',
-		overflow: 'menu',
-		tools: 'tools'
-	};
-
-	function nameOf(id: string) {
-		return id === DIVIDER_ID ? 'Divider' : (registry?.get(id)?.name ?? id);
-	}
-
-	// ── selection ────────────────────────────────────────────────────────────
-	let selected = $state<{ zone: DockZone; key: string } | null>(null);
-
-	const selection = $derived.by(() => {
-		if (!selected) return null;
-		if (selected.zone === 'items') {
-			const index = config.items.findIndex((item) => item.key === selected!.key);
-			if (index === -1) return null;
-			const item = config.items[index];
-			return { zone: 'items' as const, index, id: item.id, display: item.display };
-		}
-		const zone = selected.zone;
-		const index = config[zone].indexOf(selected.key);
-		if (index === -1) return null;
-		return { zone, index, id: selected.key, display: 'icon' as DockDisplay };
-	});
-
-	function toggleSelected(zone: DockZone, key: string) {
-		if (suppressClick) return;
-		selected = selected?.key === key && selected.zone === zone ? null : { zone, key };
-	}
-
-	function setDisplay(display: DockDisplay) {
-		if (selection?.zone !== 'items') return;
-		commit({
-			...config,
-			items: config.items.map((item, i) => (i === selection.index ? { ...item, display } : item))
-		});
-	}
-
-	function moveSelected(delta: number) {
-		if (!selection) return;
-		const target = selection.index + delta;
-		const list = selection.zone === 'items' ? [...config.items] : [...config[selection.zone]];
-		if (target < 0 || target >= list.length) return;
-		[list[selection.index], list[target]] = [list[target], list[selection.index]];
-		commit({ ...config, [selection.zone]: list });
-	}
-
-	function moveToZone(zone: DockZone) {
-		if (!selection || zone === selection.zone || !accepts(zone, selection.id)) return;
-		if (zone === 'overflow') moreOpen = true;
-		const without = removeFromDock(config, selection.zone, selection.index);
-		const next = insertIntoDock(
-			without,
-			{ zone, index: zone === 'items' ? quickAddIndex(without) : without[zone].length },
-			selection.id,
-			registry?.get(selection.id)?.defaultDisplay ?? 'icon'
-		);
-		commit(next);
-		const key = zone === 'items' ? next.items.find((i) => i.id === selection.id)?.key : null;
-		selected = { zone, key: key ?? selection.id };
-	}
-
-	function removeSelected() {
-		if (!selection) return;
-		commit(removeFromDock(config, selection.zone, selection.index));
-		selected = null;
-	}
-
-	function handleChipKeydown(event: KeyboardEvent, zone: DockZone, key: string) {
-		if (selected?.key !== key || selected.zone !== zone) return;
-		if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') moveSelected(-1);
-		else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') moveSelected(1);
-		else if (event.key === 'Delete' || event.key === 'Backspace') removeSelected();
-		else return;
-		event.preventDefault();
-	}
-
-	function togglePaletteEntry(id: string) {
-		if (suppressClick) return;
-		if (id !== DIVIDER_ID && dockHas(config, id)) {
-			commit(removeTool(config, id));
-			if (selection?.id === id) selected = null;
-			return;
-		}
-		if (id === DIVIDER_ID) {
-			commit(insertIntoDock(config, { zone: 'items', index: config.items.length }, id));
-			return;
-		}
-		addToHome(id, config.items.length);
-	}
-
-	// ── drag and drop ────────────────────────────────────────────────────────
-	type DragSource =
-		| { from: 'palette'; id: string }
-		| { from: DockZone; id: string; index: number; display: DockDisplay };
-
-	type Drag = { source: DragSource; x: number; y: number; over: DockDrop | null };
-
-	let drag = $state<Drag | null>(null);
-	let ghostOut = $state({ start: 0.6, duration: 180 * motion });
-	let itemsZone = $state<HTMLElement | null>(null);
-	let overflowZone = $state<HTMLElement | null>(null);
-	let toolsZone = $state<HTMLElement | null>(null);
-	let moreOpen = $state(false);
-	let suppressClick = false;
-	let pending: {
-		source: DragSource;
-		startX: number;
-		startY: number;
-		pointerType: string;
-		immediate: boolean;
-		timer: ReturnType<typeof setTimeout> | null;
-	} | null = null;
-
-	const removing = $derived(drag !== null && drag.source.from !== 'palette' && drag.over === null);
-
-	function handlePointerDown(event: PointerEvent, source: DragSource, immediate: boolean) {
-		if (event.button !== 0) return;
-		pending = {
-			source,
-			startX: event.clientX,
-			startY: event.clientY,
-			pointerType: event.pointerType,
-			immediate: immediate || event.pointerType !== 'touch',
-			timer: null
-		};
-		if (!pending.immediate) {
-			pending.timer = setTimeout(() => startDrag(event.clientX, event.clientY), 220);
-		}
-		window.addEventListener('pointermove', handlePointerMove);
-		window.addEventListener('pointerup', handlePointerUp);
-		window.addEventListener('pointercancel', cancelDrag);
-		window.addEventListener('touchmove', blockScroll, { passive: false });
-	}
-
-	function startDrag(x: number, y: number) {
-		if (!pending) return;
-		drag = { source: pending.source, x, y, over: null };
-		drag.over = hitTest(x, y);
-		selected = null;
-		if (pending.pointerType === 'touch') navigator.vibrate?.(8);
-	}
-
-	function handlePointerMove(event: PointerEvent) {
-		if (drag) {
-			drag.x = event.clientX;
-			drag.y = event.clientY;
-			drag.over = hitTest(event.clientX, event.clientY);
-			return;
-		}
-		if (!pending) return;
-		const distance = Math.hypot(event.clientX - pending.startX, event.clientY - pending.startY);
-		if (pending.immediate && distance > 4) startDrag(event.clientX, event.clientY);
-		else if (!pending.immediate && distance > 10) cancelDrag();
-	}
-
-	function handlePointerUp() {
-		if (drag) {
-			const { source, over } = drag;
-			let next = config;
-			if (source.from !== 'palette') next = removeFromDock(next, source.from, source.index);
-			if (over) {
-				const display =
-					source.from === 'items'
-						? source.display
-						: (registry?.get(source.id)?.defaultDisplay ?? 'icon');
-				next = insertIntoDock(next, over, source.id, display);
-			}
-			ghostOut = { start: over ? 1 : 0.4, duration: over ? 0 : 200 * motion };
-			if (next !== config) commit(next);
-			suppressClick = true;
-			setTimeout(() => (suppressClick = false), 0);
-		}
-		cancelDrag();
-	}
-
-	function cancelDrag() {
-		if (pending?.timer) clearTimeout(pending.timer);
-		pending = null;
-		drag = null;
-		window.removeEventListener('pointermove', handlePointerMove);
-		window.removeEventListener('pointerup', handlePointerUp);
-		window.removeEventListener('pointercancel', cancelDrag);
-		window.removeEventListener('touchmove', blockScroll);
-	}
-
-	function blockScroll(event: TouchEvent) {
-		if (drag) event.preventDefault();
-	}
-
-	function hitTest(x: number, y: number): DockDrop | null {
-		const id = drag?.source.id ?? pending?.source.id;
-		for (const [zone, element] of [
-			['tools', toolsZone],
-			['items', itemsZone],
-			['overflow', overflowZone]
-		] as const) {
-			if (!element) continue;
-			const rect = element.getBoundingClientRect();
-			const slack = 18;
-			if (
-				x < rect.left - slack ||
-				x > rect.right + slack ||
-				y < rect.top - slack ||
-				y > rect.bottom + slack
-			)
-				continue;
-			if (id && !accepts(zone, id)) return null;
-			// The collapsed More menu still takes drops; they land at the end.
-			if (zone === 'overflow' && !moreOpen) return { zone, index: config.overflow.length };
-			return { zone, index: indexAt(element, x, y) };
-		}
-		return null;
-	}
-
-	function indexAt(zone: HTMLElement, x: number, y: number) {
-		const chips = zone.querySelectorAll<HTMLElement>('[data-chip]');
-		for (let i = 0; i < chips.length; i++) {
-			const rect = chips[i].getBoundingClientRect();
-			if (y < rect.top) return i;
-			if (y <= rect.bottom && x < rect.left + rect.width / 2) return i;
-		}
-		return chips.length;
-	}
-
-	type ViewEntry<T> = { kind: 'chip'; value: T; index: number } | { kind: 'placeholder' };
-
-	function withPlaceholder<T>(list: T[], zone: DockZone): ViewEntry<T>[] {
-		let view: ViewEntry<T>[] = list.map((value, index) => ({ kind: 'chip', value, index }));
-		if (drag && drag.source.from === zone) {
-			const hidden = drag.source.index;
-			view = view.filter((entry) => entry.kind !== 'chip' || entry.index !== hidden);
-		}
-		if (drag?.over?.zone === zone) view.splice(drag.over.index, 0, { kind: 'placeholder' });
-		return view;
-	}
-
-	const itemsView = $derived(withPlaceholder(config.items, 'items'));
-	const overflowView = $derived(withPlaceholder(config.overflow, 'overflow'));
-	const toolsView = $derived(withPlaceholder(config.tools, 'tools'));
-	const itemIds = $derived(config.items.map((item) => item.id));
-	// Keys of dock items a typical phone moves into More to keep its one row.
-	const PHONE_PREVIEW_WIDTH = 375;
-	const foldedOnPhone = $derived.by(() => {
-		if (preview !== 'mobile') return new Set<string>();
-		const middle = config.items.filter(
-			(item) => item.id !== DIVIDER_ID && item.id !== 'previous' && item.id !== 'next'
-		);
-		const navButtons = config.items.filter(
-			(item) => item.id === 'previous' || item.id === 'next'
-		).length;
-		const fit = phoneRowFit(
-			middle.map((item) => ({ id: item.id, passive: isPassive(registry?.get(item.id)) })),
-			PHONE_PREVIEW_WIDTH,
-			navButtons
-		);
-		return new Set(middle.filter((_, index) => !fit.has(index)).map((item) => item.key));
-	});
-	const foldedNames = $derived(
-		config.items.filter((item) => foldedOnPhone.has(item.key)).map((item) => nameOf(item.id))
-	);
-
-	// ── chrome ───────────────────────────────────────────────────────────────
 	let doneButton = $state<HTMLButtonElement | null>(null);
-	let confirmingReset = $state(false);
 
 	$effect(() => {
-		if (!open) return;
-		selected = null;
-		confirmingReset = false;
-		moreOpen = false;
-		preview = window.matchMedia('(min-width: 768px)').matches ? 'desktop' : 'mobile';
+		if (!customizer.open) return;
+		customizer.opened();
 	});
 
 	$effect(() => {
-		if (!confirmingReset) return;
-		const timer = setTimeout(() => (confirmingReset = false), 3000);
+		if (!customizer.confirmingReset) return;
+		const timer = setTimeout(() => (customizer.confirmingReset = false), 3000);
 		return () => clearTimeout(timer);
 	});
-
-	function resetDock() {
-		if (!confirmingReset) {
-			confirmingReset = true;
-			return;
-		}
-		preferences?.reset();
-		selected = null;
-		confirmingReset = false;
-	}
-
-	function close() {
-		cancelDrag();
-		preferences?.close();
-	}
-
-	// Escape backs out one step at a time: a drag, then a selection, then the customizer.
-	function handleEscape(event: KeyboardEvent) {
-		if (drag) cancelDrag();
-		else if (selected) selected = null;
-		else return;
-		event.preventDefault();
-	}
 </script>
-
-{#snippet miniDock(preset: DockConfig)}
-	{@const shown = preset.items.slice(0, MINI_DOCK_LIMIT)}
-	{@const extra = preset.items.length - shown.length + preset.overflow.length}
-	<span class="flex min-w-0 max-w-full items-center gap-1 overflow-hidden">
-		{#each shown as item (item.key)}
-			{@const command = registry?.get(item.id)}
-			{#if item.id === DIVIDER_ID}
-				<span class="mx-0.5 h-3.5 w-px shrink-0 bg-foreground/20"></span>
-			{:else if command}
-				{@const Icon = command.icon}
-				<span
-					class="grid size-5 shrink-0 place-items-center rounded-full {TONE_BADGE[command.tone]}"
-				>
-					<Icon size={11} />
-				</span>
-			{/if}
-		{/each}
-		{#if extra > 0}
-			<span class="ml-0.5 shrink-0 text-[0.65rem] font-medium text-foreground/45">+{extra}</span>
-		{/if}
-	</span>
-{/snippet}
-
-{#snippet toolsZoneEl()}
-	{@const phone = preview === 'mobile'}
-	{@const tileSize = phone ? 'h-14 w-[4.5rem]' : 'h-12 w-14'}
-	<div
-		bind:this={toolsZone}
-		class="mx-auto w-full rounded-2xl border bg-background/95 p-2 shadow-lg backdrop-blur transition-all duration-200
-			{phone ? 'max-w-[21rem] pt-1.5' : ''}
-			{drag?.over?.zone === 'tools' ? 'border-primary/60 ring-4 ring-primary/15' : 'border-border'}"
-	>
-		{#if phone}
-			<span class="mx-auto mb-1.5 block h-1 w-8 rounded-full bg-muted-strong"></span>
-			<div class="mb-1.5 px-0.5 text-xs font-semibold">Tools</div>
-		{:else}
-			<div class="mb-1 flex items-center justify-between px-0.5 label-caps">
-				Tools
-				<SlidersHorizontal size={10} />
-			</div>
-		{/if}
-		<div class="flex flex-wrap gap-1" role="list" aria-label="Tools bar preview">
-			{#each toolsView as entry (entry.kind === 'chip' ? entry.value : 'placeholder')}
-				<div
-					class="flex"
-					role="listitem"
-					animate:flip={{ duration: 220 * motion, easing: cubicOut }}
-					in:scale={{ start: 0.6, duration: 260 * motion, easing: backOut }}
-				>
-					{#if entry.kind === 'placeholder'}
-						<span
-							class="{tileSize} rounded-xl border-2 border-dashed border-primary/50 bg-primary/10"
-						></span>
-					{:else}
-						{@const id = entry.value}
-						{@const command = registry?.get(id)}
-						{@const Icon = command?.icon}
-						{@const isSelected = selected?.zone === 'tools' && selected.key === id}
-						<button
-							type="button"
-							data-chip
-							class="flex {tileSize} touch-none select-none cursor-grab flex-col items-center justify-center gap-0.5 rounded-xl text-[0.6rem] font-semibold shadow-xs ring-1 ring-inset ring-current/20 transition active:cursor-grabbing hover:ring-current/40 {command
-								? TONE_BADGE[command.tone]
-								: 'bg-background'}
-							{isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}"
-							aria-label={`${nameOf(id)}${isSelected ? ', selected' : ''}`}
-							aria-pressed={isSelected}
-							onpointerdown={(event) =>
-								handlePointerDown(
-									event,
-									{ from: 'tools', id, index: entry.index, display: 'icon' },
-									true
-								)}
-							onclick={() => toggleSelected('tools', id)}
-							onkeydown={(event) => handleChipKeydown(event, 'tools', id)}
-						>
-							{#if Icon}<Icon size={16} />{/if}
-							<span class="max-w-full truncate px-1">{command?.name ?? id}</span>
-						</button>
-					{/if}
-				</div>
-			{:else}
-				<span
-					class="flex min-h-12 w-full items-center justify-center rounded-xl border border-dashed border-border px-2 text-center text-[0.68rem] text-foreground/45"
-				>
-					Drop study tools here
-				</span>
-			{/each}
-		</div>
-	</div>
-{/snippet}
-
-{#snippet optionBone(width: number)}
-	<span class="flex h-7 items-center gap-2 rounded-full border border-foreground/10 px-2.5">
-		<span class="size-3 shrink-0 rounded-full border border-foreground/15"></span>
-		<span class="h-1.5 {BONE}" style="width: {width}%"></span>
-	</span>
-{/snippet}
-
-{#snippet dockZoneEl()}
-	<div
-		bind:this={itemsZone}
-		style="--segment-gap: {preview === 'desktop' ? '0.5rem' : '0.25rem'}"
-		class="flex min-h-14 flex-wrap items-center justify-center border bg-background/95 py-3 backdrop-blur transition-all duration-300
-			{preview === 'desktop'
-			? 'min-w-[14rem] max-w-full gap-2 rounded-full px-4 shadow-lg'
-			: 'w-full max-w-[21rem] gap-1 rounded-2xl px-2 shadow-lg'}
-			{drag?.over?.zone === 'items' ? 'border-primary/60 ring-4 ring-primary/15' : 'border-border'}"
-		role="list"
-		aria-label="Dock preview"
-	>
-		{#each itemsView as entry (entry.kind === 'chip' ? entry.value.key : 'placeholder')}
-			<div
-				class="flex"
-				role="listitem"
-				animate:flip={{ duration: 220 * motion, easing: cubicOut }}
-				in:scale={{ start: 0.5, duration: 280 * motion, easing: backOut }}
-			>
-				{#if entry.kind === 'placeholder'}
-					<span class="h-8 w-10 rounded-full border-2 border-dashed border-primary/50 bg-primary/10"
-					></span>
-				{:else}
-					{@const item = entry.value}
-					{@const command = registry?.get(item.id)}
-					{@const display = displayFor(item.id, item.display, preview)}
-					{@const isSelected = selected?.zone === 'items' && selected.key === item.key}
-					{@const ring = isSelected
-						? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
-						: ''}
-					{@const contextual = command?.visible?.() === false}
-					{@const hiddenOnPhone = item.id === DIVIDER_ID && preview === 'mobile'}
-					{@const inMoreOnPhone = foldedOnPhone.has(item.key)}
-					<button
-						type="button"
-						data-chip
-						class="touch-none select-none cursor-grab active:cursor-grabbing {item.id === DIVIDER_ID
-							? `flex h-8 w-4 items-center justify-center rounded-full ${ring} ${hiddenOnPhone ? 'opacity-30' : ''}`
-							: isPassive(command)
-								? `${READOUT_CLASS} ${ring}`
-								: command
-									? `${dockButtonClass(command, {
-											display,
-											shape: segmentShape(itemIds, entry.index),
-											active: command.active?.() ?? false
-										})} ${ring}`
-									: `${buttonVariants({ variant: 'dash', tone: 'neutral', size: 'sm' })} ${ring}`}
-							{contextual || inMoreOnPhone
-							? 'outline-1 outline-dashed outline-offset-2 outline-foreground/30'
-							: ''}
-							{inMoreOnPhone ? 'opacity-45' : ''}"
-						title={hiddenOnPhone
-							? 'Divider · hidden on phones'
-							: inMoreOnPhone
-								? `${nameOf(item.id)} · in More on phones`
-								: contextual
-									? `${nameOf(item.id)} · appears when available`
-									: nameOf(item.id)}
-						aria-label={`${nameOf(item.id)}${isSelected ? ', selected' : ''}`}
-						aria-pressed={isSelected}
-						onpointerdown={(event) =>
-							handlePointerDown(
-								event,
-								{ from: 'items', id: item.id, index: entry.index, display: item.display },
-								true
-							)}
-						onclick={() => toggleSelected('items', item.key)}
-						onkeydown={(event) => handleChipKeydown(event, 'items', item.key)}
-					>
-						{#if item.id === DIVIDER_ID}
-							<span class="h-6 w-px bg-foreground/25"></span>
-						{:else if command && isPassive(command)}
-							<ReadoutContent {command} />
-						{:else if command}
-							{@const Icon =
-								command.active?.() && command.activeIcon ? command.activeIcon : command.icon}
-							{#if display !== 'label'}<Icon size={18} />{/if}
-							{#if display !== 'icon'}{command.label()}{/if}
-						{:else}
-							{nameOf(item.id)}
-						{/if}
-					</button>
-				{/if}
-			</div>
-		{:else}
-			<span class="px-2 text-sm text-foreground/50">Drop tools here</span>
-		{/each}
-	</div>
-{/snippet}
 
 <!-- forceMount keeps the customizer's own fade and spring instead of the default dialog motion. -->
 <Dialog.Root
-	open={open && Boolean(preferences)}
+	open={customizer.open && Boolean(preferences)}
 	onOpenChange={(next) => {
-		if (!next) close();
+		if (!next) customizer.close();
 	}}
 >
 	<Dialog.Portal>
@@ -715,14 +52,14 @@
 					<div
 						{...props}
 						class="fixed inset-0 z-[90] bg-black/35 backdrop-blur-[3px]"
-						transition:fade={{ duration: 200 * motion }}
+						transition:fade={{ duration: 200 * MOTION }}
 					></div>
 				{/if}
 			{/snippet}
 		</Dialog.Overlay>
 		<Dialog.Content
 			forceMount
-			onEscapeKeydown={handleEscape}
+			onEscapeKeydown={(event) => customizer.handleEscape(event)}
 			onOpenAutoFocus={(event) => {
 				event.preventDefault();
 				doneButton?.focus();
@@ -733,7 +70,7 @@
 					<div
 						{...props}
 						class="fixed inset-x-0 bottom-0 z-[90] mx-auto flex max-h-[92dvh] w-full max-w-4xl flex-col rounded-t-[2rem] border border-b-0 border-border bg-background shadow-2xl outline-none"
-						transition:fly={{ y: 120, opacity: 0, duration: 420 * motion, easing: backOut }}
+						transition:fly={{ y: 120, opacity: 0, duration: 420 * MOTION, easing: backOut }}
 					>
 						<div class="mx-auto mt-3 h-1.5 w-10 shrink-0 rounded-full bg-muted-strong"></div>
 
@@ -746,7 +83,10 @@
 									One layout, synced to your account on every device.
 								</Dialog.Description>
 							</div>
-							<Tabs.Root value={preview} onValueChange={(v) => (preview = v as typeof preview)}>
+							<Tabs.Root
+								value={customizer.preview}
+								onValueChange={(v) => (customizer.preview = v as typeof customizer.preview)}
+							>
 								<Tabs.List aria-label="Preview on">
 									<Tabs.Trigger value="desktop"><Monitor size={14} /> Desktop</Tabs.Trigger>
 									<Tabs.Trigger value="mobile"><Smartphone size={14} /> Phone</Tabs.Trigger>
@@ -765,496 +105,50 @@
 								<!-- Mock cards sit on top; the editable zones break out below them, side by side. -->
 								<div class="grid w-full gap-x-3 sm:grid-cols-[minmax(11rem,14rem)_1fr]">
 									<span
-										class="{CAPTION} mb-1.5 sm:col-start-1 sm:row-start-1 {preview === 'mobile'
+										class="{CAPTION} mb-1.5 sm:col-start-1 sm:row-start-1 {customizer.preview ===
+										'mobile'
 											? 'text-center'
 											: ''}"
-										>{preview === 'desktop' ? 'Sidebar' : 'Tools sheet, from the top bar'}</span
+										>{customizer.preview === 'desktop'
+											? 'Sidebar'
+											: 'Tools sheet, from the top bar'}</span
 									>
-									{#if preview === 'desktop'}
-										<div
-											class="flex flex-col gap-2.5 {MOCK} p-3 pb-12 sm:col-start-1 sm:row-start-2"
-											aria-label="Sidebar"
-										>
-											<span class="h-2 w-10 {BONE}"></span>
-											<span class="flex items-center gap-1.5">
-												<span class="size-4 shrink-0 {BONE}"></span>
-												<span class="h-2.5 w-3/4 {BONE}"></span>
-											</span>
-											<span
-												class="flex flex-col gap-1.5 rounded-xl border border-foreground/10 p-2"
-											>
-												<span class="h-1.5 w-1/2 {BONE}"></span>
-												<span class="h-1 w-full {BONE}"
-													><span class="block h-1 w-1/6 rounded-full bg-foreground/15"></span></span
-												>
-											</span>
-											<span class="h-1.5 w-2/3 {BONE}"></span>
-										</div>
-									{:else}
-										<div
-											class="mx-auto flex w-full max-w-[21rem] flex-col gap-2 {PHONE} px-4 pb-12 pt-4 sm:col-start-1 sm:row-start-2"
-											aria-label="Phone"
-										>
-											<span
-												class="-mx-1 flex items-center gap-1.5 border-b border-foreground/10 pb-2"
-												aria-label="Top bar"
-											>
-												<ChevronLeft size={14} class="shrink-0 text-foreground/35" />
-												<span class="flex flex-1 flex-col gap-1">
-													<span class="h-2 w-3/4 {BONE}"></span>
-													<span class="h-1.5 w-1/3 {BONE}"></span>
-												</span>
-												<span class="size-5 shrink-0 rounded-full border-2 border-foreground/15"
-												></span>
-												<Eye size={14} class="shrink-0 text-foreground/35" />
-												<span
-													class="grid size-7 shrink-0 place-items-center rounded-full text-primary-ink ring-1 ring-primary/40"
-													title="The Tools button in the top bar opens the sheet below"
-												>
-													<ToolCase size={14} />
-												</span>
-											</span>
-											<span class="h-2.5 w-full {BONE}"></span>
-											{@render optionBone(40)}
-										</div>
-									{/if}
+									<StageMock kind="sidebar" preview={customizer.preview} />
 									<div class="relative z-10 -mt-9 px-2 sm:col-start-1 sm:row-start-3">
-										{@render toolsZoneEl()}
+										<ToolsZone {customizer} />
 									</div>
 
 									<span
-										class="{CAPTION} mb-1.5 mt-4 sm:col-start-2 sm:row-start-1 sm:mt-0 {preview ===
+										class="{CAPTION} mb-1.5 mt-4 sm:col-start-2 sm:row-start-1 sm:mt-0 {customizer.preview ===
 										'mobile'
 											? 'text-center'
 											: ''}">Question</span
 									>
-									{#if preview === 'desktop'}
-										<div
-											class="flex flex-col gap-2 {MOCK} p-3 pb-12 sm:col-start-2 sm:row-start-2"
-											aria-label="Question"
-										>
-											<span
-												class="mb-1 flex gap-1 overflow-hidden rounded-full border border-foreground/10 p-1"
-											>
-												{#each { length: 12 }, i (i)}
-													<span
-														class="size-3.5 shrink-0 rounded-full {i === 3
-															? 'bg-foreground/15'
-															: 'bg-foreground/[0.06]'}"
-													></span>
-												{/each}
-											</span>
-											<span class="h-2.5 w-11/12 {BONE}"></span>
-											<span class="mb-1 h-2.5 w-2/3 {BONE}"></span>
-											{#each { length: 2 }, i (i)}
-												{@render optionBone([45, 30][i])}
-											{/each}
-										</div>
-									{:else}
-										<div
-											class="mx-auto flex w-full max-w-[21rem] flex-col gap-2 {PHONE} px-4 pb-12 pt-4 sm:col-start-2 sm:row-start-2"
-											aria-label="Phone"
-										>
-											<span class="h-2.5 w-full {BONE}"></span>
-											<span class="mb-1 h-2.5 w-2/3 {BONE}"></span>
-											{@render optionBone(50)}
-										</div>
-									{/if}
+									<StageMock kind="question" preview={customizer.preview} />
 									<div
 										class="relative z-10 -mt-9 flex items-start justify-center px-2 sm:col-start-2 sm:row-start-3"
 									>
-										{@render dockZoneEl()}
+										<DockZone {customizer} />
 									</div>
 								</div>
 
 								<div class="grid w-full gap-3 sm:grid-cols-[minmax(11rem,14rem)_1fr]">
 									<span class="hidden sm:block"></span>
 									<div class="flex justify-center">
-										<div
-											bind:this={overflowZone}
-											class="transition-all duration-200
-							{moreOpen ? 'w-full max-w-md surface p-2.5' : 'self-center rounded-full border'}
-							{drag?.over?.zone === 'overflow'
-												? 'scale-[1.02] border-primary/60 ring-4 ring-primary/15'
-												: moreOpen
-													? 'border-border'
-													: 'border-transparent'}"
-										>
-											<button
-												type="button"
-												class="flex items-center gap-1.5 rounded-full text-xs font-medium text-foreground/55 transition-colors hover:text-foreground
-								{moreOpen ? 'mb-2 px-1' : 'px-3 py-1.5 hover:bg-foreground/5'}"
-												aria-expanded={moreOpen}
-												aria-controls="dock-more-menu"
-												onclick={() => {
-													moreOpen = !moreOpen;
-													if (!moreOpen && selected?.zone === 'overflow') selected = null;
-												}}
-											>
-												<ArrowUpWideNarrow size={13} />
-												More menu
-												{#if config.overflow.length}
-													<Badge size="xs">{config.overflow.length}</Badge>
-												{/if}
-												{#if moreOpen}
-													<span class="font-normal text-foreground/40"
-														>· tucked behind one button</span
-													>
-												{/if}
-												<ChevronDown
-													size={13}
-													class="transition-transform duration-200 {moreOpen ? 'rotate-180' : ''}"
-												/>
-											</button>
-											{#if moreOpen}
-												<div
-													id="dock-more-menu"
-													class="flex min-h-8 flex-wrap gap-1.5"
-													role="list"
-													aria-label="More menu preview"
-													transition:slide={{ duration: 180 * motion, easing: cubicOut }}
-												>
-													{#each overflowView as entry (entry.kind === 'chip' ? entry.value : 'placeholder')}
-														<div
-															class="flex"
-															role="listitem"
-															animate:flip={{ duration: 220 * motion, easing: cubicOut }}
-															in:scale={{ start: 0.6, duration: 260 * motion, easing: backOut }}
-														>
-															{#if entry.kind === 'placeholder'}
-																<span
-																	class="h-8 w-20 rounded-lg border-2 border-dashed border-primary/50 bg-primary/10"
-																></span>
-															{:else}
-																{@const id = entry.value}
-																{@const command = registry?.get(id)}
-																{@const Icon = command?.icon}
-																{@const isSelected =
-																	selected?.zone === 'overflow' && selected.key === id}
-																<button
-																	type="button"
-																	data-chip
-																	class="inline-flex h-8 touch-none select-none cursor-grab items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium shadow-xs transition active:cursor-grabbing hover:border-foreground/25
-												{command?.tone === 'error' ? 'text-error-ink' : ''}
-												{isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}"
-																	aria-label={`${nameOf(id)}${isSelected ? ', selected' : ''}`}
-																	aria-pressed={isSelected}
-																	onpointerdown={(event) =>
-																		handlePointerDown(
-																			event,
-																			{ from: 'overflow', id, index: entry.index, display: 'icon' },
-																			true
-																		)}
-																	onclick={() => toggleSelected('overflow', id)}
-																	onkeydown={(event) => handleChipKeydown(event, 'overflow', id)}
-																>
-																	{#if Icon}<Icon size={14} />{/if}
-																	{nameOf(id)}
-																</button>
-															{/if}
-														</div>
-													{:else}
-														<span
-															class="flex h-8 w-full items-center justify-center rounded-lg border border-dashed border-border text-xs text-foreground/45"
-														>
-															Drop tools here to tuck them away
-														</span>
-													{/each}
-												</div>
-											{/if}
-										</div>
+										<OverflowZone {customizer} />
 									</div>
 								</div>
 
-								<div class="flex min-h-9 items-center justify-center text-center">
-									{#if selection}
-										{@const canOverflow = acceptsOverflow(selection.id)}
-										{@const isReadout = isPassive(registry?.get(selection.id))}
-										<div
-											class="flex flex-wrap items-center justify-center gap-2 rounded-full border border-border bg-background px-2 py-1 shadow-sm"
-											in:fly={{ y: 6, duration: 200 * motion, easing: cubicOut }}
-										>
-											<span class="px-2 text-sm font-medium">{nameOf(selection.id)}</span>
-											{#if selection.zone === 'items' && selection.id !== DIVIDER_ID && !isReadout}
-												{#if preview === 'mobile' && selection.id !== 'check'}
-													<span class="text-xs text-foreground/50">Icon only on phones</span>
-												{:else}
-													<ButtonGroup.Root role="group" aria-label="Button style">
-														{#each DISPLAY_OPTIONS as [value, text] (value)}
-															<Button
-																size="xs"
-																variant={selection.display === value ? 'solid' : 'ghost'}
-																tone={selection.display === value ? 'primary' : 'neutral'}
-																aria-pressed={selection.display === value}
-																onclick={() => setDisplay(value)}>{text}</Button
-															>
-														{/each}
-													</ButtonGroup.Root>
-												{/if}
-											{/if}
-											<div class="flex items-center">
-												<Button
-													variant="ghost"
-													tone="neutral"
-													size="xs"
-													shape="circle"
-													aria-label="Move earlier"
-													tooltip="Move earlier (←)"
-													disabled={selection.index === 0}
-													onclick={() => moveSelected(-1)}><ChevronLeft size={14} /></Button
-												>
-												<Button
-													variant="ghost"
-													tone="neutral"
-													size="xs"
-													shape="circle"
-													aria-label="Move later"
-													tooltip="Move later (→)"
-													disabled={selection.index ===
-														(selection.zone === 'items'
-															? config.items.length
-															: config[selection.zone].length) -
-															1}
-													onclick={() => moveSelected(1)}><ChevronRight size={14} /></Button
-												>
-											</div>
-											{#if selection.id !== DIVIDER_ID}
-												{#each ['tools', 'items', 'overflow'] as const as zone (zone)}
-													{#if zone !== selection.zone && (zone !== 'overflow' || canOverflow)}
-														<Button
-															variant="ghost"
-															tone="neutral"
-															size="xs"
-															onclick={() => moveToZone(zone)}
-														>
-															Move to {ZONE_NAMES[zone]}
-														</Button>
-													{/if}
-												{/each}
-											{/if}
-											<Button
-												variant="ghost"
-												tone="error"
-												size="xs"
-												shape="circle"
-												aria-label="Remove"
-												tooltip="Remove (Delete)"
-												onclick={removeSelected}><Trash2 size={14} /></Button
-											>
-										</div>
-									{:else if foldedNames.length}
-										<p
-											class="rounded-full bg-warning/15 px-3 py-1 text-xs text-foreground/80"
-											in:fade={{ duration: 150 * motion }}
-										>
-											Phones keep one row, so {new Intl.ListFormat('en', {
-												type: 'conjunction'
-											}).format(foldedNames)}
-											{foldedNames.length === 1 ? 'moves' : 'move'} into More there.
-										</p>
-									{:else if preferences.syncError}
-										<p
-											class="flex items-center gap-1.5 rounded-full bg-warning/15 px-3 py-1 text-xs text-foreground/80"
-										>
-											<CloudOff size={13} class="text-warning" /> Saved on this device. It will sync once
-											you're back online.
-										</p>
-									{:else}
-										<p class="text-xs text-foreground/45">
-											{preview === 'mobile'
-												? 'Phones show one row of icons: Check stretches, and previous and next sit together on the right.'
-												: 'Drag to reorder. Tap a tool to fine-tune it.'}
-										</p>
-									{/if}
-								</div>
+								<SelectionInspector {customizer} syncError={Boolean(preferences.syncError)} />
 							</div>
 
 							<div
 								class="px-5 pb-4 pt-5 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:overscroll-contain sm:px-7"
 							>
-								{#if !advanced}
-									<div in:fade={{ duration: 180 * motion }}>
-										<div class="mb-2 flex items-baseline justify-between">
-											<h3 class="label-caps">Start from</h3>
-											{#if !activePreset}
-												<span in:scale={{ duration: 180 * motion }}
-													><Badge>Custom layout</Badge></span
-												>
-											{/if}
-										</div>
-										<div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-											{#each DOCK_PRESETS as preset, i (preset.id)}
-												{@const current = activePreset === preset.id}
-												<button
-													type="button"
-													class="group relative flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
-										{current
-														? 'border-primary bg-primary/[0.05] ring-1 ring-primary/30'
-														: 'border-border bg-background hover:border-foreground/20'}"
-													aria-pressed={current}
-													onclick={() => applyPreset(preset.config)}
-													in:fly|global={{
-														y: 10,
-														duration: 280 * motion,
-														delay: (60 + i * 40) * motion,
-														easing: cubicOut
-													}}
-												>
-													<span class="flex w-full items-center justify-between">
-														<span class="text-sm font-semibold">{preset.name}</span>
-														{#if current}
-															<span
-																class="grid size-5 place-items-center rounded-full bg-primary text-primary-foreground"
-																in:scale={{ start: 0.3, duration: 240 * motion, easing: backOut }}
-															>
-																<Check size={11} strokeWidth={3} />
-															</span>
-														{/if}
-													</span>
-													{@render miniDock(preset.config)}
-													<span class="text-xs text-foreground/55">{preset.description}</span>
-												</button>
-											{/each}
-										</div>
-
-										<h3 class="mb-2 mt-6 label-caps">Quick tools</h3>
-										<ul class="divide-y divide-border/70 rounded-2xl border border-border">
-											{#each quickTools as command, i (command.id)}
-												{@const on = dockHas(config, command.id)}
-												{@const zone = zoneOf(config, command.id)}
-												{@const Icon = command.icon}
-												<li
-													in:fly|global={{
-														y: 8,
-														duration: 260 * motion,
-														delay: (160 + i * 22) * motion,
-														easing: cubicOut
-													}}
-												>
-													<label
-														class="flex cursor-pointer items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/50"
-													>
-														<span
-															class="grid size-8 shrink-0 place-items-center rounded-lg {TONE_BADGE[
-																command.tone
-															]}"
-														>
-															<Icon size={16} />
-														</span>
-														<span class="min-w-0 flex-1">
-															<span class="flex items-center gap-1.5 text-sm font-medium">
-																{command.name}
-																{#if zone === 'overflow' || zone === 'tools'}
-																	<Badge size="xs">in {ZONE_NAMES[zone]}</Badge>
-																{/if}
-															</span>
-															<span class="block truncate text-xs text-foreground/55"
-																>{command.description}</span
-															>
-														</span>
-														<Switch
-															size="sm"
-															checked={on}
-															onCheckedChange={() => toggleQuickTool(command.id)}
-															aria-label={`Show ${command.name} in ${ZONE_NAMES[zone ?? homeZoneFor(command.id)]}`}
-														/>
-													</label>
-												</li>
-											{/each}
-										</ul>
-
-										<button
-											type="button"
-											class="group mt-4 flex w-full items-center gap-3 rounded-2xl border border-dashed border-border px-4 py-3 text-left transition-colors hover:border-primary/50 hover:bg-primary/[0.03]"
-											onclick={() => preferences.setAdvanced(true)}
-										>
-											<span
-												class="grid size-8 place-items-center rounded-lg bg-foreground/5 text-foreground/70"
-											>
-												<SlidersHorizontal size={16} />
-											</span>
-											<span class="flex-1">
-												<span class="block text-sm font-medium">Fine-tune every button</span>
-												<span class="block text-xs text-foreground/55"
-													>All {available.length} tools, drag and drop, labels, and dividers</span
-												>
-											</span>
-											<ChevronRight
-												size={16}
-												class="text-foreground/40 transition-transform group-hover:translate-x-0.5"
-											/>
-										</button>
-									</div>
+								{#if !customizer.advanced}
+									<PresetPanel {customizer} onAdvanced={() => preferences.setAdvanced(true)} />
 								{:else}
-									<div in:fade={{ duration: 180 * motion }}>
-										<Button
-											variant="ghost"
-											tone="neutral"
-											size="xs"
-											class="-ml-2 mb-3 text-foreground/60"
-											onclick={() => preferences.setAdvanced(false)}
-										>
-											<ArrowLeft size={13} /> Presets and quick tools
-										</Button>
-										{#each palette as section (section.title)}
-											<h3 class="mb-2 mt-4 label-caps">
-												{section.title}
-											</h3>
-											<div class="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-3">
-												{#each section.entries as entry, i (entry.id)}
-													{@const added = entry.id !== DIVIDER_ID && dockHas(config, entry.id)}
-													{@const lifted =
-														drag?.source.from === 'palette' && drag.source.id === entry.id}
-													{@const Icon = entry.icon}
-													<button
-														type="button"
-														class="group relative flex select-none [-webkit-touch-callout:none] items-center gap-3 rounded-2xl border p-2.5 text-left transition-all duration-200 cursor-grab active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-md
-											{added
-															? 'border-primary/30 bg-primary/[0.04]'
-															: 'border-border bg-background hover:border-foreground/20'}
-											{lifted ? 'scale-95 opacity-40' : ''}"
-														aria-pressed={added}
-														aria-label={`${entry.name}: ${entry.description}. ${added ? 'Added, activate to remove' : 'Activate to add'}`}
-														onpointerdown={(event) =>
-															handlePointerDown(event, { from: 'palette', id: entry.id }, false)}
-														onclick={() => togglePaletteEntry(entry.id)}
-														in:fly|global={{
-															y: 10,
-															duration: 280 * motion,
-															delay: (40 + (section.offset + i) * 14) * motion,
-															easing: cubicOut
-														}}
-													>
-														<span
-															class="grid size-9 shrink-0 place-items-center rounded-lg transition-transform duration-200 group-hover:scale-110 {entry.badge}"
-														>
-															<Icon size={18} />
-														</span>
-														<span class="min-w-0 flex-1">
-															<span class="flex items-center gap-1.5 text-sm font-medium">
-																<span class="truncate">{entry.name}</span>
-																{#if entry.shortcut}
-																	<Kbd class="shrink-0 opacity-70">{entry.shortcut}</Kbd>
-																{/if}
-															</span>
-															<span class="block truncate text-xs text-foreground/55"
-																>{entry.description}</span
-															>
-														</span>
-														{#if added}
-															<span
-																class="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm ring-2 ring-background"
-																in:scale={{ start: 0.3, duration: 260 * motion, easing: backOut }}
-															>
-																<Check size={11} strokeWidth={3} class="group-hover:hidden" />
-																<Minus size={11} strokeWidth={3} class="hidden group-hover:block" />
-															</span>
-														{/if}
-													</button>
-												{/each}
-											</div>
-										{/each}
-									</div>
+									<PalettePanel {customizer} onBack={() => preferences.setAdvanced(false)} />
 								{/if}
 							</div>
 						</div>
@@ -1265,48 +159,25 @@
 						>
 							<Button
 								size="sm"
-								variant={confirmingReset ? 'soft' : 'ghost'}
-								tone={confirmingReset ? 'error' : 'neutral'}
+								variant={customizer.confirmingReset ? 'soft' : 'ghost'}
+								tone={customizer.confirmingReset ? 'error' : 'neutral'}
 								class="h-11 sm:h-8"
-								onclick={resetDock}
+								onclick={() => customizer.resetDock()}
 							>
 								<RotateCcw size={14} />
-								{confirmingReset ? 'Tap again to reset' : 'Reset to default'}
+								{customizer.confirmingReset ? 'Tap again to reset' : 'Reset to default'}
 							</Button>
-							<Button bind:ref={doneButton} size="sm" class="h-11 px-5 sm:h-8" onclick={close}>
+							<Button
+								bind:ref={doneButton}
+								size="sm"
+								class="h-11 px-5 sm:h-8"
+								onclick={() => customizer.close()}
+							>
 								Done
 							</Button>
 						</footer>
 
-						{#if drag}
-							{@const command = registry?.get(drag.source.id)}
-							{@const Icon = drag.source.id === DIVIDER_ID ? SeparatorVertical : command?.icon}
-							<div
-								class="pointer-events-none fixed left-0 top-0 z-[100]"
-								style="transform: translate3d({drag.x}px, {drag.y}px, 0);"
-							>
-								<div
-									class="flex -translate-x-1/2 -translate-y-1/2 -rotate-3 items-center gap-2 whitespace-nowrap rounded-full border bg-background px-3.5 py-2 text-sm font-medium shadow-2xl transition-colors duration-150
-						{removing
-										? 'border-error/50 text-error-ink'
-										: drag.over
-											? 'border-primary/50 ring-4 ring-primary/15'
-											: 'border-border'}"
-									in:scale={{ start: 0.7, duration: 180 * motion, easing: backOut }}
-									out:scale={ghostOut}
-								>
-									{#if removing}
-										<Trash2 size={16} />
-									{:else if Icon}
-										<Icon size={16} />
-									{/if}
-									{nameOf(drag.source.id)}
-									{#if removing}
-										<span class="text-xs font-normal opacity-70">· release to remove</span>
-									{/if}
-								</div>
-							</div>
-						{/if}
+						<DragGhost {customizer} />
 					</div>
 				{/if}
 			{/snippet}

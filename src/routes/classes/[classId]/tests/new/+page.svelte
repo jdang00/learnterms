@@ -278,7 +278,7 @@
 		<div class="max-w-6xl mx-auto space-y-6">
 			<div class="flex items-center justify-between gap-3 flex-wrap">
 				<div>
-					<!-- eslint-disable svelte/no-navigation-without-resolve -->
+					<!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() plus a classId query string -->
 					<Button
 						href={classDashboardHref}
 						variant="ghost"
@@ -702,8 +702,9 @@
 											</summary>
 											<div class="space-y-2 mt-3">
 												{#each attemptsQuery.data.slice(0, 4) as attempt (attempt._id)}
-													{@const attemptHref =
-														attempt.status === 'in_progress' || !attempt.resultSummary
+													<a
+														class="block surface-sm p-2.5 hover:border-primary/40 transition-all duration-200"
+														href={attempt.status === 'in_progress' || !attempt.resultSummary
 															? resolve('/classes/[classId]/tests/[attemptId]', {
 																	classId,
 																	attemptId: attempt._id
@@ -712,10 +713,6 @@
 																	classId,
 																	attemptId: attempt._id
 																})}
-													<!-- eslint-disable svelte/no-navigation-without-resolve -->
-													<a
-														class="block surface-sm p-2.5 hover:border-primary/40 transition-all duration-200"
-														href={attemptHref}
 													>
 														<div class="flex justify-between items-center gap-2 text-xs">
 															<Badge size="xs" tone={statusBadgeTone(attempt.status)}>
@@ -734,7 +731,6 @@
 															{/if}
 														</div>
 													</a>
-													<!-- eslint-enable svelte/no-navigation-without-resolve -->
 												{/each}
 											</div>
 										</details>
