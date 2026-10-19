@@ -95,7 +95,7 @@
 						{index + 1}
 						{#if item.flagged}
 							<span
-								class="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-warning ring-2 ring-background"
+								class="absolute -right-0.5 -top-0.5 size-3.5 rounded-full bg-warning ring-2 ring-background"
 								aria-hidden="true"
 							></span>
 						{/if}
@@ -116,7 +116,7 @@
 			{/each}
 			{#if anyFlagged}
 				<li class="flex items-center gap-1.5">
-					<span class="size-2.5 rounded-full bg-warning"></span>Flagged
+					<span class="size-3 rounded-full bg-warning"></span>Flagged
 				</li>
 			{/if}
 		</ul>
