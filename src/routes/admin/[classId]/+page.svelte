@@ -460,7 +460,7 @@
 													>
 												{/snippet}
 											</DropdownMenu.Trigger>
-											<DropdownMenu.Content align="end" role="menu" class="w-52">
+											<DropdownMenu.Content align="end" role="menu" class="w-56">
 												<DropdownMenu.Item
 													data-edit-btn
 													aria-label="Edit module"
@@ -475,7 +475,7 @@
 														onSelect={() => openExportModal(moduleItem)}
 													>
 														<Download size={16} />
-														<span>Export Questions</span>
+														<span class="whitespace-nowrap">Export Questions</span>
 														{#if !isPro}
 															<Badge variant="solid" tone="primary" size="xs" class="ml-auto"
 																>Pro</Badge

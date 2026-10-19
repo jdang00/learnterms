@@ -290,9 +290,9 @@
 							</Avatar.Root>
 						</div>
 
-						<h3 class="mt-5 text-center text-xl font-semibold leading-tight">
+						<Dialog.Title class="mt-5 text-center text-xl font-semibold leading-tight">
 							{selectedMember.name}
-						</h3>
+						</Dialog.Title>
 
 						<div class="mt-2.5 flex flex-wrap items-center justify-center gap-1.5">
 							<span class="role-chip">{formatRole(selectedMember.role)}</span>

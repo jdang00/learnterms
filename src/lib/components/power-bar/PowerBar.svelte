@@ -370,8 +370,10 @@
 		bind:ref={dialogRef}
 		showCloseButton={false}
 		onkeydown={handleDialogKeydown}
+		aria-describedby={undefined}
 		class="pt-safe top-0 left-0 flex h-[calc(100dvh-var(--keyboard-inset,0px))] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 shadow-2xl sm:top-1/2 sm:left-1/2 sm:h-auto sm:max-h-[min(80vh,40rem)] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border sm:border-border sm:pt-0"
 	>
+		<Dialog.Title class="sr-only">Search LearnTerms</Dialog.Title>
 		<div class="flex shrink-0 items-center gap-2.5 border-b border-border px-4">
 			<Search size={15} class="shrink-0 text-foreground/40" />
 			<input

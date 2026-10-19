@@ -25,6 +25,7 @@
 		showCloseButton={false}
 		class="h-[90vh] w-full sm:max-w-4xl flex flex-col gap-0 overflow-hidden p-0 bg-background"
 	>
+		<Dialog.Title class="sr-only">Add question</Dialog.Title>
 		<QuestionEditorInline
 			{moduleId}
 			mode="add"

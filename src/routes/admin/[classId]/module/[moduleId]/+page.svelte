@@ -176,7 +176,7 @@
 <div class="h-screen overflow-hidden bg-muted/30 flex flex-col">
 	<div class="max-w-[1800px] mx-auto p-4 sm:p-6 flex flex-col flex-1 min-h-0 w-full">
 		<!-- Header -->
-		<div class="flex items-center gap-4 mb-4">
+		<div class="flex items-center gap-2 sm:gap-4 mb-4">
 			{#if moduleInfo.data?.classId}
 				<Button
 					variant="ghost"
@@ -201,10 +201,12 @@
 			{:else if moduleInfo.data == null}
 				<div class="text-foreground/70 text-sm">Module not found</div>
 			{:else}
-				<div class="flex items-center gap-2">
+				<div class="flex min-w-0 items-center gap-2">
 					<span class="text-xl">{moduleInfo.data?.emoji || '📘'}</span>
-					<div>
-						<h1 class="font-display text-lg font-semibold leading-tight">
+					<div class="min-w-0">
+						<h1
+							class="font-display text-base font-semibold leading-tight [overflow-wrap:anywhere] sm:text-lg"
+						>
 							{moduleInfo.data.title}
 						</h1>
 						<p class="text-xs text-foreground/60 hidden sm:block">
@@ -217,7 +219,7 @@
 			{/if}
 			<div class="flex-1"></div>
 			{#if canEdit && curationState.editorMode !== 'add'}
-				<div class="flex items-center gap-1 sm:gap-2">
+				<div class="flex shrink-0 items-center gap-1 sm:gap-2">
 					<Button
 						size="sm"
 						class="gap-2"

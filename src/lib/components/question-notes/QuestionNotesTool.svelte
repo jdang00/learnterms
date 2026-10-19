@@ -41,6 +41,6 @@
 		{#if Panel}
 			<!-- Each question gets a fresh editor; the old one saves as it unmounts. -->
 			{#key `${userKey}:${questionId}`}<Panel {questionId} {userKey} />{/key}
-		{:else if error}<p role="alert" class="text-sm text-error">{error}</p>{/if}
+		{:else if error}<p role="alert" class="text-sm text-error-ink">{error}</p>{/if}
 	</div>
 </SidePanel>

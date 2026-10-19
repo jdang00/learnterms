@@ -15,7 +15,7 @@
 	}
 </script>
 
-{#if note.error}<p role="alert" class="text-sm text-error">
+{#if note.error}<p role="alert" class="text-sm text-error-ink">
 		Could not load your note. Close and reopen Notes to retry.
 	</p>
 {:else if note.data}<QuestionNoteEditor

@@ -158,7 +158,7 @@
 	<!-- Header -->
 	<div
 		class="flex items-center justify-between p-4 border-b border-border {isMobile
-			? 'sticky top-0 z-10 bg-background'
+			? 'sticky top-0 z-10 flex-wrap gap-y-2 bg-background'
 			: ''}"
 	>
 		<div class="flex items-center {isMobile ? 'gap-2' : 'gap-3'}">
@@ -181,12 +181,26 @@
 			</div>
 		</div>
 		{#if canEdit}
-			<div class="flex items-center gap-1">
-				<Button variant="ghost" tone="neutral" size="sm" class="gap-1" onclick={onEdit}>
+			<div class="ml-auto flex items-center gap-1">
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape={isMobile ? 'circle' : 'pill'}
+					class="gap-1"
+					onclick={onEdit}
+				>
 					<Pencil size={14} />
 					{#if !isMobile}Edit{/if}
 				</Button>
-				<Button variant="ghost" tone="neutral" size="sm" class="gap-1" onclick={onMove}>
+				<Button
+					variant="ghost"
+					tone="neutral"
+					size="sm"
+					shape={isMobile ? 'circle' : 'pill'}
+					class="gap-1"
+					onclick={onMove}
+				>
 					<ArrowRightLeft size={14} />
 					{#if !isMobile}Move{/if}
 				</Button>
@@ -196,6 +210,7 @@
 						variant="ghost"
 						tone="neutral"
 						size="sm"
+						shape={isMobile ? 'circle' : 'pill'}
 						class="gap-1"
 						onclick={onDuplicate}
 						title={isModuleFull ? 'Module limit reached' : 'Duplicate question'}
@@ -236,7 +251,14 @@
 					{/if}
 				</div>
 
-				<Button variant="ghost" tone="error" size="sm" class="gap-1" onclick={onDelete}>
+				<Button
+					variant="ghost"
+					tone="error"
+					size="sm"
+					shape={isMobile ? 'circle' : 'pill'}
+					class="gap-1"
+					onclick={onDelete}
+				>
 					<Trash2 size={14} />
 					{#if !isMobile}Delete{/if}
 				</Button>

@@ -26,6 +26,7 @@
 		showCloseButton={false}
 		class="h-[90vh] w-full sm:max-w-4xl flex flex-col gap-0 overflow-hidden p-0 bg-background"
 	>
+		<Dialog.Title class="sr-only">Edit question</Dialog.Title>
 		{#if editingQuestion}
 			{#key editingQuestion._id}
 				<QuestionEditorInline

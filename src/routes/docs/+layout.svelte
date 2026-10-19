@@ -26,14 +26,14 @@
 	<DocsBreadcrumbs />
 	<div class="mt-6 grid grid-cols-1 lg:grid-cols-[16rem_1fr] gap-6 items-start">
 		<DocsMenu />
-		<div>
-			<article class="prose max-w-none prose-h1:font-display">
+		<div class="min-w-0">
+			<article class="prose max-w-none dark:prose-invert prose-h1:font-display">
 				{@render children?.()}
 			</article>
 
 			<Separator class="my-10" />
 
-			<nav class="mt-10 flex items-center justify-between">
+			<nav class="mt-10 flex items-center justify-between gap-3">
 				{#if prevItem}
 					<Button
 						rel="prev"
@@ -41,7 +41,7 @@
 						variant="outline"
 						tone="neutral"
 						shape="rect"
-						class="h-auto py-8"
+						class="h-auto min-w-0 shrink whitespace-normal py-8 text-left"
 					>
 						<div class="flex flex-col gap-1">
 							<p class="text-xs text-foreground/70 self-start">Previous</p>
@@ -58,7 +58,7 @@
 						variant="outline"
 						tone="neutral"
 						shape="rect"
-						class="h-auto py-8"
+						class="h-auto min-w-0 shrink whitespace-normal py-8 text-left"
 					>
 						<div class="flex flex-col gap-1">
 							<p class="text-xs text-foreground/70 self-start">Next</p>

@@ -111,7 +111,7 @@
 	<Dialog.Content
 		showCloseButton={false}
 		aria-labelledby="spotlight-title"
-		class="top-auto bottom-0 flex max-h-[calc(100dvh-1rem)] max-w-full translate-y-0 gap-0 overflow-hidden rounded-t-3xl rounded-b-none p-0 z-[1000] sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 sm:max-h-[calc(100dvh-2rem)] sm:max-w-3xl sm:rounded-4xl"
+		class="top-auto bottom-0 flex max-h-[calc(100dvh-1rem)] max-w-full flex-col translate-y-0 gap-0 overflow-hidden rounded-t-3xl rounded-b-none p-0 z-[1000] sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 sm:max-h-[calc(100dvh-2rem)] sm:max-w-3xl sm:rounded-4xl"
 	>
 		<div class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
 			<div class="relative px-5 pt-5 sm:px-8 sm:pt-8">

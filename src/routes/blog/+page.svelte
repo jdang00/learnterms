@@ -16,7 +16,7 @@
 				<time datetime={post.date} class="text-sm text-foreground/55">{post.displayDate}</time>
 				<h2 class="mt-2 text-xl font-semibold">
 					<a
-						class="group inline-flex items-start gap-2 hover:text-primary"
+						class="group inline-flex items-start gap-2 hover:text-primary-ink"
 						href={resolve('/blog/[slug]', { slug: post.slug })}
 						>{post.title}<ArrowUpRight
 							size={18}

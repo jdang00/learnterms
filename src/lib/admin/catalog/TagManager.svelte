@@ -153,7 +153,7 @@
 					<div class="flex items-center gap-2">
 						<input
 							type="color"
-							class="h-8 w-8 rounded-full border-2 border-border cursor-pointer"
+							class="h-8 w-8 cursor-pointer rounded-full border-2 border-border appearance-none overflow-hidden p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
 							bind:value={newTagColor}
 							title="Choose tag color"
 						/>
@@ -216,7 +216,7 @@
 								/>
 								<input
 									type="color"
-									class="h-5 w-5 rounded-full border-2 border-border cursor-pointer"
+									class="h-5 w-5 cursor-pointer rounded-full border-2 border-border appearance-none overflow-hidden p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
 									bind:value={editColor}
 									title="Change color"
 								/>
@@ -289,7 +289,7 @@
 											</Button>
 										{/snippet}
 									</DropdownMenu.Trigger>
-									<DropdownMenu.Content align="end" class="w-32">
+									<DropdownMenu.Content align="start" class="w-32">
 										<DropdownMenu.Item class="py-1.5 text-xs" onSelect={() => startEdit(tag)}>
 											<Pencil size={11} />
 											<span>Edit</span>

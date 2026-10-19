@@ -163,7 +163,9 @@
 {:else}
 	<div class="overflow-hidden rounded-2xl border border-border bg-background">
 		<div
-			class="hidden grid-cols-[1fr_4rem_5rem_7rem_2.25rem] items-center gap-3 border-b border-border px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-foreground/40 sm:grid"
+			class="hidden grid-cols-[1fr_4rem_5rem_7rem_2.25rem] items-center gap-3 border-b border-border px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-foreground/40 {isDrawerOpen
+				? ''
+				: 'sm:grid'}"
 		>
 			<span>Name</span>
 			<span class="text-right">Pages</span>
@@ -180,7 +182,9 @@
 				{@const isSelected = selectedDocumentId === doc._id && isDrawerOpen}
 				<div class="group relative" style="--kind: {tone.hue}">
 					<button
-						class="grid w-full grid-cols-[1fr_2.25rem] items-center gap-3 px-4 py-2.5 text-left transition-colors sm:grid-cols-[1fr_4rem_5rem_7rem_2.25rem] {isSelected
+						class="grid w-full grid-cols-[1fr_2.25rem] items-center gap-3 px-4 py-2.5 text-left transition-colors {isDrawerOpen
+							? ''
+							: 'sm:grid-cols-[1fr_4rem_5rem_7rem_2.25rem]'} {isSelected
 							? 'bg-primary/5'
 							: 'hover:bg-muted/60'}"
 						onclick={() => onSelect(doc)}
@@ -203,19 +207,33 @@
 								<p class="truncate text-sm font-medium">{doc.title}</p>
 								<DocumentPipelineProgress metadata={doc.metadata} />
 								<p class="truncate text-xs text-foreground/50">
-									{doc.metadata?.originalFileName ?? kind.label}{#if pages}<span class="sm:hidden">
+									{doc.metadata?.originalFileName ?? kind.label}{#if pages}<span
+											class={isDrawerOpen ? '' : 'sm:hidden'}
+										>
 											· {pages}</span
 										>{/if}
 								</p>
 							</div>
 						</div>
-						<span class="text-right text-xs tabular-nums text-foreground/60 max-sm:hidden">
+						<span
+							class="text-right text-xs tabular-nums text-foreground/60 {isDrawerOpen
+								? 'hidden'
+								: 'max-sm:hidden'}"
+						>
 							{doc.metadata?.pageCount ?? '—'}
 						</span>
-						<span class="text-right text-xs text-foreground/60 max-sm:hidden">
+						<span
+							class="text-right text-xs text-foreground/60 {isDrawerOpen
+								? 'hidden'
+								: 'max-sm:hidden'}"
+						>
 							{formatBytes(doc.metadata?.sizeBytes)}
 						</span>
-						<span class="text-right text-xs text-foreground/60 max-sm:hidden">
+						<span
+							class="text-right text-xs text-foreground/60 {isDrawerOpen
+								? 'hidden'
+								: 'max-sm:hidden'}"
+						>
 							{relativeTime(doc.updatedAt)}
 						</span>
 						<span></span>

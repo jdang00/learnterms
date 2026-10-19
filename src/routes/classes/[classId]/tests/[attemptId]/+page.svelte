@@ -1290,7 +1290,7 @@
 					class={dockGlass('outline')}
 					variant="outline"
 					tone="neutral"
-					style="border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: calc(2px - 0.5rem);"
+					style="border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: calc(-1.5px - 0.5rem);"
 					onclick={nextQuestion}
 					disabled={currentIndex === (runnerQuery.data?.items?.length ?? 1) - 1}
 				>
@@ -1356,7 +1356,7 @@
 						</Button>
 					</div>
 					<!-- The same split pill as the desktop dock. -->
-					<div class="ms-1 flex shrink-0 items-center gap-0.5">
+					<div class="ms-1 flex shrink-0 items-center">
 						<Button
 							variant="outline"
 							tone="neutral"
@@ -1372,7 +1372,7 @@
 							variant="outline"
 							tone="neutral"
 							class="size-11"
-							style="border-radius: 0.3rem 9999px 9999px 0.3rem;"
+							style="border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: -1.5px;"
 							onclick={nextQuestion}
 							disabled={isLastQuestion}
 							aria-label="Next question"

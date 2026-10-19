@@ -62,9 +62,9 @@
 	<PublicBackdrop />
 	<article id="main-content" class="mx-auto max-w-3xl px-5 pt-14 pb-24 sm:px-8 sm:pt-20">
 		<nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm text-foreground/65">
-			<a href={resolve('/')} class="hover:text-primary">Home</a>
+			<a href={resolve('/')} class="hover:text-primary-ink">Home</a>
 			<span aria-hidden="true">/</span>
-			<a href={resolve('/blog')} class="inline-flex items-center gap-1 hover:text-primary"
+			<a href={resolve('/blog')} class="inline-flex items-center gap-1 hover:text-primary-ink"
 				><ArrowLeft size={14} /> Blog</a
 			>
 			<span aria-hidden="true">/</span>
@@ -84,7 +84,7 @@
 				Archived post. Features, plans, and performance claims describe the original release.
 			</p>{/if}
 		<div
-			class="prose mt-8 max-w-none prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-a:underline-offset-4 prose-img:rounded-xl prose-pre:whitespace-pre-wrap prose-pre:break-words"
+			class="prose mt-8 max-w-none dark:prose-invert prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-a:underline-offset-4 prose-img:rounded-xl prose-pre:whitespace-pre-wrap prose-pre:break-words"
 		>
 			<Article />
 		</div>

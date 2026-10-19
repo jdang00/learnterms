@@ -223,14 +223,14 @@
 						oninput={() => validateOnInput('classDescription', classDescription)}
 						maxlength={500}
 					/>
-					<div class="flex items-center justify-between gap-2 text-xs">
+					<div class="mt-2 flex items-center justify-between gap-2 px-3 text-xs">
 						<span class="text-foreground/60"> 10-500 characters </span>
 						<span class="text-foreground/40">
 							{classDescription.length}/500
 						</span>
 					</div>
 					{#if validationErrors.classDescription}
-						<span class="text-xs text-error-ink">
+						<span class="mt-1 block px-3 text-xs text-error-ink">
 							{validationErrors.classDescription}
 						</span>
 					{/if}
@@ -264,7 +264,7 @@
 							oninput={() => validateOnInput('className', className)}
 							maxlength={100}
 						/>
-						<div class="flex items-center justify-between gap-2 text-xs">
+						<div class="mt-2 flex items-center justify-between gap-2 px-3 text-xs">
 							<span class="text-foreground/60">
 								2-100 characters • Must be unique in your cohort
 							</span>
@@ -273,7 +273,7 @@
 							</span>
 						</div>
 						{#if validationErrors.className}
-							<span class="text-xs text-error-ink">
+							<span class="mt-1 block px-3 text-xs text-error-ink">
 								{validationErrors.className}
 							</span>
 						{/if}
@@ -305,14 +305,14 @@
 							oninput={() => validateOnInput('classCode', classCode)}
 							maxlength={20}
 						/>
-						<div class="flex items-center justify-between gap-2 text-xs">
+						<div class="mt-2 flex items-center justify-between gap-2 px-3 text-xs">
 							<span class="text-foreground/60"> 2-20 characters • Must be unique </span>
 							<span class="text-foreground/40">
 								{classCode.length}/20
 							</span>
 						</div>
 						{#if validationErrors.classCode}
-							<span class="text-xs text-error-ink">
+							<span class="mt-1 block px-3 text-xs text-error-ink">
 								{validationErrors.classCode}
 							</span>
 						{/if}
@@ -336,14 +336,14 @@
 						oninput={() => validateOnInput('classDescription', classDescription)}
 						maxlength={500}
 					/>
-					<div class="flex items-center justify-between gap-2 text-xs">
+					<div class="mt-2 flex items-center justify-between gap-2 px-3 text-xs">
 						<span class="text-foreground/60"> 10-500 characters </span>
 						<span class="text-foreground/40">
 							{classDescription.length}/500
 						</span>
 					</div>
 					{#if validationErrors.classDescription}
-						<span class="text-xs text-error-ink">
+						<span class="mt-1 block px-3 text-xs text-error-ink">
 							{validationErrors.classDescription}
 						</span>
 					{/if}

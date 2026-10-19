@@ -231,14 +231,14 @@
 								oninput={() => validateOnInput('moduleTitle', moduleTitle)}
 								maxlength={100}
 							/>
-							<div class="flex items-center justify-between gap-2 text-xs">
+							<div class="mt-2 flex items-center justify-between gap-2 px-3 text-xs">
 								<span class="text-foreground/60"> 2-100 characters • Must be unique </span>
 								<span class="text-foreground/40">
 									{moduleTitle.length}/100
 								</span>
 							</div>
 							{#if validationErrors.moduleTitle}
-								<span class="text-xs text-error-ink">
+								<span class="mt-1 block px-3 text-xs text-error-ink">
 									{validationErrors.moduleTitle}
 								</span>
 							{/if}
@@ -399,7 +399,9 @@
 								}}
 							/>
 							{#if validationErrors.moduleEmoji}
-								<span class="text-xs text-error-ink">{validationErrors.moduleEmoji}</span>
+								<span class="mt-1 block px-3 text-xs text-error-ink"
+									>{validationErrors.moduleEmoji}</span
+								>
 							{/if}
 						</div>
 					</div>

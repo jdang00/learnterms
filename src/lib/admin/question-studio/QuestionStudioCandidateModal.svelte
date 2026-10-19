@@ -54,6 +54,7 @@
 		class="max-h-[90vh] gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-2xl"
 		showCloseButton={false}
 	>
+		<Dialog.Title class="sr-only">Question draft</Dialog.Title>
 		{#if selectedCandidateIndex !== null && candidates[selectedCandidateIndex]}
 			<div class="flex h-[85vh] flex-col">
 				<QuestionStudioCandidateInspector

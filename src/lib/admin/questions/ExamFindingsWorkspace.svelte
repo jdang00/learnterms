@@ -282,7 +282,7 @@
 			<ArrowLeft size={16} /> Question
 		</Button>
 		<span class="hidden h-6 w-px bg-muted-strong @md:block"></span>
-		<div class="min-w-0 flex-1">
+		<div class="min-w-40 flex-1">
 			<div class="flex items-center gap-2">
 				<h3 class="truncate font-semibold tracking-tight">Exam findings</h3>
 				<Badge variant="soft" tone="info" size="xs">Beta</Badge>

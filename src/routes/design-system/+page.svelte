@@ -129,7 +129,9 @@
 	<section class="space-y-6">
 		<h2 class="text-3xl font-semibold">Type</h2>
 		<Card.Root>
-			<Card.Content class="grid grid-cols-[10rem_1fr] items-baseline gap-x-6 gap-y-5">
+			<Card.Content
+				class="grid grid-cols-1 items-baseline gap-x-6 gap-y-5 sm:grid-cols-[10rem_1fr]"
+			>
 				<span class="font-mono text-xs text-muted-foreground">Display · Space Grotesk</span>
 				<span class="font-display text-7xl leading-none font-bold">kerat/o</span>
 				<span class="font-mono text-xs text-muted-foreground">Page title · font-display</span>

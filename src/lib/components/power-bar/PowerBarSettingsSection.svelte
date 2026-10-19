@@ -84,7 +84,7 @@
 			{/if}
 
 			{#if showAutoNext}
-				<div class="mt-3 border-t border-border pt-3">
+				<div class="mt-3 border-t border-border pt-3 first:mt-0 first:border-t-0 first:pt-0">
 					<div class="flex items-center justify-between gap-3">
 						<div class="min-w-0">
 							<p class="text-[13px] font-semibold">Auto Next</p>
@@ -102,7 +102,7 @@
 			{/if}
 
 			{#if showShuffle}
-				<div class="mt-3 border-t border-border pt-3">
+				<div class="mt-3 border-t border-border pt-3 first:mt-0 first:border-t-0 first:pt-0">
 					<div class="flex items-center justify-between gap-3">
 						<div class="min-w-0">
 							<p class="text-[13px] font-semibold">Shuffle Answers</p>

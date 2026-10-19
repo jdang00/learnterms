@@ -14,7 +14,7 @@
 	{/snippet}
 
 	<article
-		class="prose max-w-none border-t border-foreground/10 pt-8 prose-headings:scroll-mt-8 prose-a:text-primary-ink"
+		class="prose max-w-none border-t border-foreground/10 pt-8 dark:prose-invert prose-headings:scroll-mt-8 prose-a:text-primary-ink"
 	>
 		{@render children()}
 	</article>

@@ -397,14 +397,14 @@
 									<div class="grid grid-cols-3 gap-3">
 										<div class="rounded-xl border border-success/20 bg-success/5 p-4 text-center">
 											<CheckCircle2 class="mx-auto text-success mb-1" size={20} />
-											<div class="font-bold text-2xl text-success">
+											<div class="font-bold text-2xl text-success-ink">
 												{summary?.correctCount ?? 0}
 											</div>
 											<div class="text-xs text-foreground/50">Correct</div>
 										</div>
 										<div class="rounded-xl border border-error/20 bg-error/5 p-4 text-center">
 											<XCircle class="mx-auto text-error mb-1" size={20} />
-											<div class="font-bold text-2xl text-error">
+											<div class="font-bold text-2xl text-error-ink">
 												{summary?.incorrectCount ?? 0}
 											</div>
 											<div class="text-xs text-foreground/50">Incorrect</div>
@@ -511,8 +511,8 @@
 													</Badge>
 												</div>
 												<div class="flex gap-3 text-xs text-foreground/50 mt-1.5">
-													<span class="text-success">{row.correct} correct</span>
-													<span class="text-error">{row.incorrect} incorrect</span>
+													<span class="text-success-ink">{row.correct} correct</span>
+													<span class="text-error-ink">{row.incorrect} incorrect</span>
 													{#if row.unanswered > 0}
 														<span>{row.unanswered} skipped</span>
 													{/if}
@@ -559,8 +559,8 @@
 													</Badge>
 												</div>
 												<div class="flex gap-3 text-xs text-foreground/50 mt-1.5">
-													<span class="text-success">{row.correct} correct</span>
-													<span class="text-error">{row.incorrect} incorrect</span>
+													<span class="text-success-ink">{row.correct} correct</span>
+													<span class="text-error-ink">{row.incorrect} incorrect</span>
 													{#if row.unanswered > 0}
 														<span>{row.unanswered} skipped</span>
 													{/if}
@@ -651,11 +651,11 @@
 
 							<div class="grid grid-cols-3 gap-2 text-sm mt-5">
 								<div class="rounded-xl border border-border p-2 text-center">
-									<div class="font-bold text-success">{summary?.correctCount ?? 0}</div>
+									<div class="font-bold text-success-ink">{summary?.correctCount ?? 0}</div>
 									<div class="text-[10px] text-foreground/40">Correct</div>
 								</div>
 								<div class="rounded-xl border border-border p-2 text-center">
-									<div class="font-bold text-error">{summary?.incorrectCount ?? 0}</div>
+									<div class="font-bold text-error-ink">{summary?.incorrectCount ?? 0}</div>
 									<div class="text-[10px] text-foreground/40">Wrong</div>
 								</div>
 								<div class="rounded-xl border border-border p-2 text-center">
@@ -898,7 +898,7 @@
 									</div>
 									<div class="rounded-full border-2 border-success/30 bg-success/5 p-3 px-6">
 										<div class="text-xs text-foreground/40 mb-1">Correct answer</div>
-										<div class="font-medium text-sm text-success">
+										<div class="font-medium text-sm text-success-ink">
 											{#each selectedItem.correctAnswerDisplay as ans, i (i)}
 												{#if i > 0},
 												{/if}{ans}
@@ -954,20 +954,20 @@
 													<div class="min-w-0 flex-1">
 														<div class="text-sm font-medium">{row.promptText}</div>
 														{#if row.isCorrect}
-															<div class="text-sm text-success/80 mt-0.5">
+															<div class="text-sm text-success-ink mt-0.5">
 																{row.correctAnswerText}
 															</div>
 														{:else if row.isAnswered}
-															<div class="text-sm text-error/70 line-through mt-0.5">
+															<div class="text-sm text-error-ink line-through mt-0.5">
 																{row.userAnswerText}
 															</div>
-															<div class="text-sm text-success/80 mt-0.5 flex items-center gap-1">
+															<div class="text-sm text-success-ink mt-0.5 flex items-center gap-1">
 																<ArrowRight size={11} class="shrink-0 text-success/50" />
 																{row.correctAnswerText}
 															</div>
 														{:else}
-															<div class="text-sm text-warning/70 italic mt-0.5">No answer</div>
-															<div class="text-sm text-success/80 mt-0.5 flex items-center gap-1">
+															<div class="text-sm text-warning-ink italic mt-0.5">No answer</div>
+															<div class="text-sm text-success-ink mt-0.5 flex items-center gap-1">
 																<ArrowRight size={11} class="shrink-0 text-success/50" />
 																{row.correctAnswerText}
 															</div>
@@ -1103,7 +1103,7 @@
 					class={dockGlass('outline')}
 					variant="outline"
 					tone="neutral"
-					style="border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: calc(2px - 0.5rem);"
+					style="border-radius: 0.3rem 9999px 9999px 0.3rem; margin-left: calc(-1.5px - 0.5rem);"
 					onclick={() => goToAdjacentReviewQuestion(1)}
 					disabled={selectedIndex === (filteredReviewEntries.length || 1) - 1}
 				>

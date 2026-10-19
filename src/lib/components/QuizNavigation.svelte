@@ -17,7 +17,7 @@
 					variant="solid"
 					tone="warning"
 					size="xs"
-					class="absolute top-0 left-0 z-[1] -translate-x-1/2 -translate-y-1/2"
+					class="absolute top-1 left-1 z-[1] size-2.5 -translate-x-1/2 -translate-y-1/2 p-0"
 				></Badge>
 			{/if}
 			<Button

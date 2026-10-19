@@ -10,7 +10,7 @@
 </script>
 
 <Sheet bind:open={isOpen} title="Settings">
-	<div class="space-y-4">
+	<div class="space-y-4 pt-2">
 		<div class="flex justify-between items-center">
 			<span>Auto next</span>
 			<Switch
@@ -19,7 +19,7 @@
 				aria-label="Auto next"
 			/>
 		</div>
-		<p class="text-xs text-foreground/70">
+		<p class="-mt-2 text-xs text-foreground/70">
 			Automatically advance to the next question after a correct answer.
 		</p>
 
@@ -31,7 +31,7 @@
 				aria-label="Shuffle options"
 			/>
 		</div>
-		<p class="text-xs text-foreground/70">
+		<p class="-mt-2 text-xs text-foreground/70">
 			Randomize the order of answer choices across all questions.
 		</p>
 
@@ -51,7 +51,7 @@
 					<span class="ml-1">Customize</span>
 				</Button>
 			</div>
-			<p class="text-xs text-foreground/70">
+			<p class="-mt-2 text-xs text-foreground/70">
 				Choose which tools live in your dock and in the More menu.
 			</p>
 		{/if}
@@ -71,7 +71,7 @@
 				<span class="ml-1">Reset</span>
 			</Button>
 		</div>
-		<p class="text-xs text-foreground/70">
+		<p class="-mt-2 text-xs text-foreground/70">
 			Clears selections, eliminations, flags, and saved progress for this chapter.
 		</p>
 

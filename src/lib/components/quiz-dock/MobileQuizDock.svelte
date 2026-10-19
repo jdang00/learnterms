@@ -124,7 +124,7 @@
 					}
 				}}
 			>
-				<span class="shrink-0 text-sm font-semibold text-success">Why</span>
+				<span class="shrink-0 text-sm font-semibold text-success-ink">Why</span>
 				<span class="min-w-0 flex-1 truncate text-sm text-foreground/70">{rationalePreview}</span>
 				<ChevronUp size={18} class="shrink-0 text-foreground/50" />
 			</div>

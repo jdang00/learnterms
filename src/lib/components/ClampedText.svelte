@@ -20,7 +20,7 @@
 <p bind:this={el} class="{className} {expanded ? '' : 'line-clamp-2'}">{text}</p>
 {#if overflows}
 	<button
-		class="mt-1 py-1 text-sm font-medium text-primary hover:underline"
+		class="mt-1 py-1 text-sm font-medium text-primary-ink hover:underline"
 		aria-expanded={expanded}
 		onclick={() => (expanded = !expanded)}
 	>

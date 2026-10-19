@@ -45,7 +45,7 @@
 	<span class="shrink-0 text-2xl leading-none">{module.emoji || '📘'}</span>
 	<span class="min-w-0 flex-1">
 		<span
-			class="block text-[0.95rem] leading-snug font-semibold text-foreground line-clamp-2 sm:truncate"
+			class="block text-[0.95rem] leading-snug font-semibold text-foreground line-clamp-2 [overflow-wrap:anywhere] sm:truncate"
 			>{module.title}</span
 		>
 		<span class="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-foreground/55">

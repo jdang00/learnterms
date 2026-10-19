@@ -754,7 +754,7 @@
 			>
 				<!-- Stage: each zone framed by the part of the module page it lives in. -->
 				<div
-					class="dock-stage mx-5 mt-4 flex shrink-0 flex-col items-center gap-3 rounded-3xl border border-border/70 bg-muted/50 px-3 py-4 sm:mx-7"
+					class="dock-stage mx-5 mt-4 flex shrink-0 flex-col items-center gap-3 rounded-3xl border border-border/70 bg-muted/50 px-3 py-4 sm:mx-7 sm:max-h-[48dvh] sm:overflow-y-auto"
 				>
 					<!-- Mock cards sit on top; the editable zones break out below them, side by side. -->
 					<div class="grid w-full gap-x-3 sm:grid-cols-[minmax(11rem,14rem)_1fr]">
@@ -924,7 +924,7 @@
 														type="button"
 														data-chip
 														class="inline-flex h-8 touch-none select-none cursor-grab items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium shadow-xs transition active:cursor-grabbing hover:border-foreground/25
-												{command?.tone === 'error' ? 'text-error' : ''}
+												{command?.tone === 'error' ? 'text-error-ink' : ''}
 												{isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}"
 														aria-label={`${nameOf(id)}${isSelected ? ', selected' : ''}`}
 														aria-pressed={isSelected}
@@ -1283,7 +1283,7 @@
 				<div
 					class="flex -translate-x-1/2 -translate-y-1/2 -rotate-3 items-center gap-2 whitespace-nowrap rounded-full border bg-background px-3.5 py-2 text-sm font-medium shadow-2xl transition-colors duration-150
 						{removing
-						? 'border-error/50 text-error'
+						? 'border-error/50 text-error-ink'
 						: drag.over
 							? 'border-primary/50 ring-4 ring-primary/15'
 							: 'border-border'}"

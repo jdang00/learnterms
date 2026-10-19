@@ -139,7 +139,7 @@
 			variant={activeFilter === 'all' ? 'solid' : 'ghost'}
 			tone="neutral"
 			size="sm"
-			class="h-10 shrink-0 {activeFilter === 'all' ? '' : 'bg-muted'}"
+			class="h-10 shrink-0 px-3 {activeFilter === 'all' ? '' : 'bg-muted'}"
 			aria-pressed={activeFilter === 'all'}
 			onclick={() => setFilter('all')}>All {summary.total}</Button
 		>
@@ -147,7 +147,7 @@
 			variant={activeFilter === 'flagged' ? 'solid' : 'ghost'}
 			tone={activeFilter === 'flagged' ? 'warning' : 'neutral'}
 			size="sm"
-			class="h-10 shrink-0 {activeFilter === 'flagged' ? '' : 'bg-muted'}"
+			class="h-10 shrink-0 px-3 {activeFilter === 'flagged' ? '' : 'bg-muted'}"
 			aria-pressed={activeFilter === 'flagged'}
 			disabled={!flaggedCount && activeFilter !== 'flagged'}
 			onclick={() => setFilter('flagged')}><Flag size={14} /> Flagged {flaggedCount}</Button
@@ -156,7 +156,7 @@
 			variant={activeFilter === 'incomplete' ? 'solid' : 'ghost'}
 			tone={activeFilter === 'incomplete' ? 'primary' : 'neutral'}
 			size="sm"
-			class="h-10 shrink-0 {activeFilter === 'incomplete' ? '' : 'bg-muted'}"
+			class="h-10 shrink-0 px-3 {activeFilter === 'incomplete' ? '' : 'bg-muted'}"
 			aria-pressed={activeFilter === 'incomplete'}
 			disabled={!summary.unanswered && activeFilter !== 'incomplete'}
 			onclick={() => setFilter('incomplete')}

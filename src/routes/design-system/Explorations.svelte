@@ -90,7 +90,7 @@
 		</p>
 	</div>
 
-	<div class="grid gap-6 lg:grid-cols-2">
+	<div class="grid grid-cols-1 gap-6 *:min-w-0 lg:grid-cols-2">
 		<!-- Command palette -->
 		<div class="rounded-3xl border p-5">
 			{@render usecase('Command palette', 'The Power Bar: jump to any class, module, or question.')}
@@ -425,7 +425,9 @@
 					<NavigationMenu.Item>
 						<NavigationMenu.Trigger>Features</NavigationMenu.Trigger>
 						<NavigationMenu.Content>
-							<ul class="grid w-[28rem] grid-cols-2 gap-2 p-2">
+							<ul
+								class="grid w-[calc(100vw-6.5rem)] grid-cols-1 gap-2 p-2 sm:w-[28rem] sm:grid-cols-2"
+							>
 								{#each [['Question banks', 'Class-aligned questions with sources'], ['Practice tests', 'Timed, exam-style sessions'], ['Question Studio', 'Generate questions from your PDFs'], ['Class progress', 'See what your cohort struggles with']] as [title, desc] (title)}
 									<li>
 										<NavigationMenu.Link
