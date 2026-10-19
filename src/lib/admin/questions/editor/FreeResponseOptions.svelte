@@ -1,6 +1,6 @@
 <script lang="ts">
-	import AcceptanceMeter from '$lib/components/AcceptanceMeter.svelte';
-	import { acceptanceLevels, type AcceptanceLevel } from '$lib/utils/freeResponse';
+	import AcceptanceMeter from '#lib/components/AcceptanceMeter.svelte';
+	import { acceptanceLevels, type AcceptanceLevel } from '#lib/utils/freeResponse.js';
 	import type { QuestionEditorState } from './questionEditor.svelte';
 
 	let { form }: { form: QuestionEditorState } = $props();

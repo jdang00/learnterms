@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { Badge } from '$lib/components/ui/badge';
-	import { Spinner } from '$lib/components/ui/spinner';
-	import QuestionRichTextEditor from '$lib/admin/questions/QuestionRichTextEditor.svelte';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
+	import QuestionRichTextEditor from '#lib/admin/questions/QuestionRichTextEditor.svelte';
 	import {
 		acceptanceLevels,
 		responseText,
 		responseWordCount,
 		MAX_RESPONSE_WORDS
-	} from '$lib/utils/freeResponse';
+	} from '#lib/utils/freeResponse.js';
 	import type { Doc } from '../../convex/_generated/dataModel';
 	import type { QuizState } from '../../routes/classes/[classId]/modules/[moduleId]/states.svelte';
 	let { qs, question }: { qs: QuizState; question: Doc<'question'> } = $props();

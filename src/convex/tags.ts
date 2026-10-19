@@ -151,6 +151,51 @@ export const archiveTag = authAdminMutation({
 	}
 });
 
+// Undo for archiveTag: brings the tag back and re-links the modules it was on.
+export const restoreTag = authAdminMutation({
+	args: {
+		tagId: v.id('tags'),
+		classId: v.id('class'),
+		moduleIds: v.array(v.id('module'))
+	},
+	handler: async (ctx, args) => {
+		await requireClassStaff(ctx, args.classId);
+		const tag = await ctx.db.get(args.tagId);
+		if (!tag || tag.classId !== args.classId) {
+			throw new Error('Tag not found or access denied');
+		}
+		if (!tag.deletedAt) return { restored: false };
+
+		const sameSlug = await ctx.db
+			.query('tags')
+			.withIndex('by_classId_slug', (q) => q.eq('classId', args.classId).eq('slug', tag.slug))
+			.take(20);
+		if (sameSlug.some((other) => other._id !== tag._id && !other.deletedAt)) {
+			throw new Error('A tag with this name already exists');
+		}
+
+		await ctx.db.patch(args.tagId, { deletedAt: undefined, updatedAt: Date.now() });
+
+		for (const moduleId of Array.from(new Set(args.moduleIds)).slice(0, 200)) {
+			const moduleDoc = await ctx.db.get(moduleId);
+			if (!moduleDoc || moduleDoc.classId !== args.classId || moduleDoc.deletedAt) continue;
+			const links = await ctx.db
+				.query('moduleTags')
+				.withIndex('by_moduleId', (q) => q.eq('moduleId', moduleId))
+				.take(11);
+			if (links.length >= 10 || links.some((link) => link.tagId === args.tagId)) continue;
+			await ctx.db.insert('moduleTags', {
+				moduleId,
+				tagId: args.tagId,
+				classId: args.classId,
+				createdAt: Date.now()
+			});
+		}
+
+		return { restored: true };
+	}
+});
+
 export const setModuleTags = authAdminMutation({
 	args: {
 		moduleId: v.id('module'),

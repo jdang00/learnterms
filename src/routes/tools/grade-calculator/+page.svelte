@@ -1,9 +1,7 @@
 <script lang="ts">
-	import { SelectField } from '$lib/components/ui/select';
-	import { browser } from '$app/environment';
+	import { SelectField } from '#lib/components/ui/select/index.js';
+	import { browser } from '$app/env';
 	import { onMount, tick } from 'svelte';
-	import { useQuery } from 'convex-svelte';
-	import { api } from '../../../convex/_generated/api';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Eraser from '@lucide/svelte/icons/eraser';
@@ -11,13 +9,13 @@
 	import X from '@lucide/svelte/icons/x';
 	import Target from '@lucide/svelte/icons/target';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import { Button } from '$lib/components/ui/button';
-	import * as Card from '$lib/components/ui/card';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { Progress } from '$lib/components/ui/progress';
-	import * as Table from '$lib/components/ui/table';
-	import * as InputGroup from '$lib/components/ui/input-group';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
+	import { Progress } from '#lib/components/ui/progress/index.js';
+	import * as Table from '#lib/components/ui/table/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
 	import {
 		calculateCourseSummary,
 		expandCourseEntries,
@@ -25,7 +23,7 @@
 		type CalculatorCourse,
 		type ItemInputMap,
 		type TrackableItem
-	} from '$lib/grade-calculator/runtime';
+	} from '#lib/grade-calculator/runtime.js';
 
 	type WorkspaceData = {
 		stats: {
@@ -47,7 +45,9 @@
 		courses: CalculatorCourse[];
 	};
 
-	const workspaceQuery = useQuery(api.gradeCalculator.getScaffoldOverview, {});
+	let { data } = $props();
+
+	const workspaceQuery = $derived(data.workspace);
 
 	const fallbackWorkspace: WorkspaceData = {
 		stats: { rulesetCount: 0, courseCount: 0, entryCount: 0, trackedItemCount: 0 },
@@ -55,7 +55,7 @@
 		courses: []
 	};
 
-	const workspace = $derived((workspaceQuery.data ?? fallbackWorkspace) as WorkspaceData);
+	const workspace = $derived((workspaceQuery?.data ?? fallbackWorkspace) as WorkspaceData);
 
 	const storageKey = 'lt_grade_calculator_db_v2';
 	let selectedCourseId = $state('');
@@ -392,7 +392,7 @@
 			<aside class="space-y-6 lg:sticky lg:top-6 lg:self-start">
 				<Card.Root class="py-0">
 					<Card.Content class="gap-4 p-5 sm:p-6">
-						{#if workspaceQuery.error}
+						{#if !workspaceQuery || workspaceQuery.error}
 							<Alert.Root tone="error">
 								<CircleAlert />
 								<Alert.Title>Couldn't load the course catalog.</Alert.Title>
@@ -600,11 +600,11 @@
 						</div>
 
 						<div bind:this={entriesRoot} class="space-y-4">
-							{#if workspaceQuery.isLoading}
+							{#if workspaceQuery?.isLoading}
 								{#each [0, 1, 2, 3] as i (i)}
 									<Skeleton class="h-24 w-full" />
 								{/each}
-							{:else if workspaceQuery.error}
+							{:else if !workspaceQuery || workspaceQuery.error}
 								<Alert.Root tone="error">
 									<CircleAlert />
 									<Alert.Title>Course entry data is unavailable.</Alert.Title>

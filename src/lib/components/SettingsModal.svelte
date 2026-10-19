@@ -3,11 +3,24 @@
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import { getDockPreferences } from './quiz-dock/dockPreferences.svelte';
 	import Sheet from './Sheet.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Kbd } from '$lib/components/ui/kbd';
-	import { Switch } from '$lib/components/ui/switch';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
+	import * as Collapsible from '#lib/components/ui/collapsible/index.js';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	let { qs = $bindable(), isOpen = $bindable(false) } = $props();
 	const dockPreferences = getDockPreferences();
+	const SHORTCUTS = [
+		['enter', 'Check'],
+		['esc', 'Clear'],
+		['0-9', 'Select option'],
+		['←  →', 'Navigate'],
+		['tab', 'Rationale'],
+		['f', 'Flag'],
+		['h', 'Highlight'],
+		['⌘/ctrl z', 'Undo highlight'],
+		['⇧ s', 'Shuffle']
+	] as const;
 </script>
 
 <Sheet bind:open={isOpen} title="Settings">
@@ -76,46 +89,32 @@
 			Clears selections, eliminations, flags, and saved progress for this chapter.
 		</p>
 
-		<div class="mt-6 border-t border-border pt-4 pointer-coarse:hidden">
-			<h4 class="font-semibold mb-2">Shortcuts</h4>
-			<div class="font-mono flex flex-col gap-2">
-				<div class="flex items-center gap-4 justify-between">
-					<Kbd>h</Kbd><span>Highlight mode</span>
-				</div>
-				<div class="flex items-center gap-4 justify-between">
-					<Kbd>ctrl / ⌘ + z</Kbd><span>Undo highlight</span>
-				</div>
-				<div class="flex items-center gap-4 justify-between">
-					<Kbd>tab</Kbd>
-					<span>Rationale</span>
-				</div>
-				<div class="flex items-center gap-4 justify-between">
-					<Kbd>shift + s</Kbd>
-					<span>Shuffle</span>
-				</div>
-				<div class="flex items-center gap-4 justify-between">
-					<Kbd>f</Kbd>
-					<span>Flag</span>
-				</div>
-				<div class="flex items-center gap-4 justify-between">
-					<Kbd>enter</Kbd>
-					<span>Check</span>
-				</div>
-				<div class="flex items-center gap-4 justify-between">
-					<div class="flex gap-1">
-						<Kbd>0-9</Kbd>
-					</div>
-					<span>Select options</span>
-				</div>
-				<div class="flex items-center gap-4 justify-between">
-					<Kbd>arrows</Kbd>
-					<span>Navigation</span>
-				</div>
-				<div class="flex items-center gap-4 justify-between">
-					<Kbd>esc</Kbd>
-					<span>Clear</span>
-				</div>
-			</div>
-		</div>
+		<Collapsible.Root class="border-t border-border pt-3 pointer-coarse:hidden">
+			<Collapsible.Trigger>
+				{#snippet child({ props })}
+					<button
+						{...props}
+						type="button"
+						class="group flex w-full items-center justify-between rounded-lg py-1 text-left"
+					>
+						<span>Keyboard shortcuts</span>
+						<ChevronDown
+							size={16}
+							class="text-foreground/60 transition-transform duration-200 group-data-[state=open]:rotate-180"
+						/>
+					</button>
+				{/snippet}
+			</Collapsible.Trigger>
+			<Collapsible.Content>
+				<dl class="grid grid-cols-2 gap-x-6 gap-y-2 pt-3 text-sm">
+					{#each SHORTCUTS as [keys, action] (action)}
+						<div class="flex items-center justify-between gap-2">
+							<dt class="text-foreground/75">{action}</dt>
+							<dd><Kbd>{keys}</Kbd></dd>
+						</div>
+					{/each}
+				</dl>
+			</Collapsible.Content>
+		</Collapsible.Root>
 	</div>
 </Sheet>

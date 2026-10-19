@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import QuestionEditorInline from './QuestionEditorInline.svelte';
 	import type { Doc } from '../../../convex/_generated/dataModel';
 

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import * as Empty from '$lib/components/ui/empty';
+	import * as Empty from '#lib/components/ui/empty/index.js';
 	import QuickLinksList from './QuickLinksList.svelte';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id } from '../../../convex/_generated/dataModel';
-	import type { QuickLinkItem } from '$lib/components/power-bar/types';
+	import type { QuickLinkItem } from '#lib/components/power-bar/types.js';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import Eye from '@lucide/svelte/icons/eye';
@@ -16,12 +16,12 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import X from '@lucide/svelte/icons/x';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Input } from '$lib/components/ui/input';
-	import { LoadingState } from '$lib/components/ui/spinner';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
 
 	interface Props {
 		isOpen?: boolean;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Empty from '$lib/components/ui/empty';
+	import * as Empty from '#lib/components/ui/empty/index.js';
 	import DocumentPipelineProgress from './DocumentPipelineProgress.svelte';
 	import { documentPipeline } from './documentPipeline';
 	import Check from '@lucide/svelte/icons/check';
@@ -9,9 +9,9 @@
 	import Search from '@lucide/svelte/icons/search';
 	import type { Doc } from '../../../convex/_generated/dataModel';
 	import { docHue, fileKind, formatPages, relativeTime, type ViewMode } from './contentLibrary';
-	import { formatBytes } from '$lib/utils/format';
-	import { Button } from '$lib/components/ui/button';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { formatBytes } from '#lib/utils/format.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 
 	let {
 		docs,

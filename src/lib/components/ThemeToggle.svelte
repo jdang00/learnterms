@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Sun from '@lucide/svelte/icons/sun';
 	import Moon from '@lucide/svelte/icons/moon';
-	import { theme } from '$lib/theme.svelte';
-	import { Button } from '$lib/components/ui/button';
+	import { theme } from '#lib/theme.svelte.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	interface Props {
 		size?: 'sm' | 'md' | 'lg';

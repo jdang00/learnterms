@@ -14,10 +14,10 @@
 	import { api } from '../../../convex/_generated/api';
 	import type { Doc } from '../../../convex/_generated/dataModel';
 	import { fileKind, formatDate } from './contentLibrary';
-	import { formatBytes } from '$lib/utils/format';
+	import { formatBytes } from '#lib/utils/format.js';
 	import { documentPipeline } from './documentPipeline';
-	import { Button } from '$lib/components/ui/button';
-	import { Tip } from '$lib/components/ui/tooltip';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Tip } from '#lib/components/ui/tooltip/index.js';
 
 	let {
 		document,

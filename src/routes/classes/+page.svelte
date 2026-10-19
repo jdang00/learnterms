@@ -1,6 +1,6 @@
 <script lang="ts">
-	import * as Empty from '$lib/components/ui/empty';
-	import { Progress } from '$lib/components/ui/progress';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import { Progress } from '#lib/components/ui/progress/index.js';
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import type { PageData } from './$types';
 	import { api } from '../../convex/_generated/api.js';
@@ -15,23 +15,24 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import ArrowRightIcon from '@lucide/svelte/icons/arrow-right';
 	import { page } from '$app/state';
-	import { goto, pushState, replaceState } from '$app/navigation';
+	import { goto } from '$app/navigation';
+	import { setPageState } from '#lib/utils/backNavigation.js';
 	import { resolve } from '$app/paths';
 	import FeatureSpotlight from '../../lib/components/FeatureSpotlight.svelte';
 	import ModuleRow from '../../lib/components/ModuleRow.svelte';
 	import ColorMark from '../../lib/components/ColorMark.svelte';
-	import { classColor, summarizeClassProgress } from '$lib/utils/classProgress';
+	import { classColor, summarizeClassProgress } from '#lib/utils/classProgress.js';
 	import Sidebar from '../../lib/components/Sidebar.svelte';
 	import ClassList from '../../lib/components/ClassList.svelte';
 	import ClampedText from '../../lib/components/ClampedText.svelte';
 	import ResetProgressSheet from '../../lib/components/ResetProgressSheet.svelte';
 	import type { ClassWithSemester } from '../../lib/types';
 	import { useClerkContext } from 'svelte-clerk/client';
-	import * as Alert from '$lib/components/ui/alert';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	const client = useConvexClient();
 	const ctx = useClerkContext();
 	const name = $derived(ctx.user?.firstName);
@@ -80,13 +81,8 @@
 		return () => ro.disconnect();
 	});
 
-	const classesQuery = useQuery(api.class.getUserClasses, () =>
-		userData?.cohortId ? { id: userData.cohortId as Id<'cohort'> } : 'skip'
-	);
-
-	const featureAnnouncementQuery = useQuery(api.featureAnnouncements.getCurrentForViewer, () =>
-		userData?.cohortId ? {} : 'skip'
-	);
+	const classesQuery = $derived(data.classes);
+	const featureAnnouncementQuery = $derived(data.featureAnnouncement);
 
 	const classes = $derived({
 		data: classesQuery.data || [],
@@ -119,9 +115,7 @@
 	type ModuleWithTags = Doc<'module'> & { tags?: TagSummary[] };
 
 	// One rollup-backed query feeds the class cards, the module list, and the resume strip.
-	const overviewQuery = useQuery(api.studyOverview.getMine, () =>
-		userData?.cohortId ? {} : 'skip'
-	);
+	const overviewQuery = $derived(data.overview);
 	const progressByClass = $derived(
 		new Map((overviewQuery.data?.classes ?? []).map((item) => [item.classId as string, item]))
 	);
@@ -169,7 +163,7 @@
 
 	function selectClass(classItem: ClassWithSemester | null) {
 		if (!classItem) return;
-		pushState('', { ...page.state, classId: classItem._id, classOpenedInPlace: true });
+		void setPageState({ ...page.state, classId: classItem._id, classOpenedInPlace: true });
 	}
 
 	async function goBackToClasses() {
@@ -178,10 +172,13 @@
 			return;
 		}
 		if (page.url.searchParams.has('classId')) {
-			await goto(resolve('/classes'), { replaceState: true });
+			await goto(resolve('/classes'), { replace: true });
 			return;
 		}
-		replaceState('', { ...page.state, classId: undefined, classOpenedInPlace: undefined });
+		await setPageState(
+			{ ...page.state, classId: undefined, classOpenedInPlace: undefined },
+			{ replace: true }
+		);
 	}
 
 	const featureCtaHref = $derived(
@@ -193,13 +190,13 @@
 	function featureHref(item: {
 		title: string;
 		href?: string;
-	}): '/cohort' | '/classes' | `/classes/${string}/tests/new` {
-		if (item.href === '/cohort') return '/cohort';
+	}): 'cohort' | 'classes' | `classes/${string}/tests/new` {
+		if (item.href === '/cohort') return 'cohort';
 		if (item.title === 'Build your own test') {
 			const classId = selectedClass?._id ?? firstClassId;
-			return classId ? `/classes/${classId}/tests/new` : '/classes';
+			return classId ? `classes/${classId}/tests/new` : 'classes';
 		}
-		return '/classes';
+		return 'classes';
 	}
 
 	async function dismissFeatureSpotlight() {
@@ -564,7 +561,7 @@
 		saving={featureSpotlightAcknowledging}
 		error={featureSpotlightError}
 		showCta={featureCtaHref !== page.url.pathname}
-		canOpen={(item) => featureHref(item) !== page.url.pathname}
+		canOpen={(item) => resolve(featureHref(item)) !== page.url.pathname}
 		ondismiss={dismissFeatureSpotlight}
 		onopenfeature={async (item) => {
 			await dismissFeatureSpotlight();

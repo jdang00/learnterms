@@ -1,6 +1,6 @@
 <script lang="ts">
-	import PublicPage from '$lib/components/landing/PublicPage.svelte';
-	import * as Avatar from '$lib/components/ui/avatar';
+	import PublicPage from '#lib/components/landing/PublicPage.svelte';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
 </script>
 
 <PublicPage

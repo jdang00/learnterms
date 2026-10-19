@@ -1,26 +1,11 @@
-import StarterKit from '@tiptap/starter-kit';
-import Highlight from '@tiptap/extension-highlight';
-
-export const getEditorExtensions = () => [
-	StarterKit.configure({
-		link: {
-			openOnClick: false,
-			HTMLAttributes: {
-				class: 'text-primary-ink underline'
-			}
-		}
-	}),
-	Highlight
-];
-
-/** Same extensions, loaded on demand so editors don't ship Tiptap with the page. */
+/** Loaded on demand so pages don't ship Tiptap until an editor mounts. */
 export async function loadEditorExtensions() {
-	const [{ default: StarterKitModule }, { default: HighlightModule }] = await Promise.all([
+	const [{ default: StarterKit }, { default: Highlight }] = await Promise.all([
 		import('@tiptap/starter-kit'),
 		import('@tiptap/extension-highlight')
 	]);
 	return [
-		StarterKitModule.configure({
+		StarterKit.configure({
 			link: {
 				openOnClick: false,
 				HTMLAttributes: {
@@ -28,6 +13,6 @@ export async function loadEditorExtensions() {
 				}
 			}
 		}),
-		HighlightModule
+		Highlight
 	];
 }

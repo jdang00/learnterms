@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { resolve } from '$app/paths';
-	import PublicPage from '$lib/components/landing/PublicPage.svelte';
+	import PublicPage from '#lib/components/landing/PublicPage.svelte';
 	let { title, summary, children }: { title: string; summary: string; children: Snippet } =
 		$props();
 </script>

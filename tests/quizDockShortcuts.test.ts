@@ -42,6 +42,15 @@ test('shuffle requires shift', () => {
 	expect(matchShortcut(key('S', { shiftKey: true }))?.command).toBe('shuffle');
 });
 
+test('Tab reveals from a focused button but leaves Shift+Tab alone', () => {
+	const tab = matchShortcut(key('Tab'));
+	expect(shouldIgnoreShortcut(guardEvent('Tab', element('BUTTON', ['button'])), tab)).toBe(false);
+	expect(matchShortcut(key('Tab', { shiftKey: true }))).toBeNull();
+	expect(shouldIgnoreShortcut(guardEvent('Tab', element('DIV', ['role="dialog"'])), tab)).toBe(
+		true
+	);
+});
+
 test('key repeat only passes for navigation', () => {
 	expect(matchShortcut(key('ArrowLeft', { repeat: true }))?.command).toBe('previous');
 	expect(matchShortcut(key('h', { repeat: true }))).toBeNull();

@@ -6,12 +6,12 @@
 		type ExamCell,
 		type ExamFindingView,
 		type ExamSectionView
-	} from '$lib/examFindings/view';
-	import { worth4DotSummary } from '$lib/examFindings/worth4dot';
+	} from '#lib/examFindings/view.js';
+	import { worth4DotSummary } from '#lib/examFindings/worth4dot.js';
 	import { EXAM_GROUP_STYLE } from './groups';
 	import Worth4DotDiagram from './Worth4DotDiagram.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 
 	let {
 		view,

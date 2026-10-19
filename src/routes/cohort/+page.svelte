@@ -1,28 +1,26 @@
 <script lang="ts">
-	import { SegmentedControl } from '$lib/components/ui/segmented-control';
+	import { SegmentedControl } from '#lib/components/ui/segmented-control/index.js';
 	import type { PageData } from './$types';
-	import { useQuery } from 'convex-svelte';
 	import { resolve } from '$app/paths';
-	import { api } from '../../convex/_generated/api';
-	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
+	import BadgeShield from '#lib/components/badges/BadgeShield.svelte';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import HelpCircle from '@lucide/svelte/icons/help-circle';
 	import Search from '@lucide/svelte/icons/search';
 	import Trophy from '@lucide/svelte/icons/trophy';
 	import Users from '@lucide/svelte/icons/users';
-	import { getBadgeIcon } from '$lib/components/badges/icons';
-	import * as Alert from '$lib/components/ui/alert';
-	import * as Avatar from '$lib/components/ui/avatar';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as InputGroup from '$lib/components/ui/input-group';
-	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { Tip } from '$lib/components/ui/tooltip';
+	import { getBadgeIcon } from '#lib/components/badges/icons.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import * as Avatar from '#lib/components/ui/avatar/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
+	import { Tip } from '#lib/components/ui/tooltip/index.js';
 
 	let { data }: { data: PageData } = $props();
 
-	const boardQuery = useQuery(api.badges.getCohortBadgeBoard, {});
+	const boardQuery = $derived(data.board);
 	let searchQuery = $state('');
 	let sortMode = $state<'leaderboard' | 'az'>('leaderboard');
 	let selectedMemberId = $state<string | null>(null);

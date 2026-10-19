@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { SegmentedControl } from '$lib/components/ui/segmented-control';
-	import { SelectField } from '$lib/components/ui/select';
+	import { SegmentedControl } from '#lib/components/ui/segmented-control/index.js';
+	import { SelectField } from '#lib/components/ui/select/index.js';
 	import {
 		type Pane,
 		type ToolId,
@@ -10,11 +10,11 @@
 		toolDefinitions,
 		parseOptionalNumber,
 		parsePageNumbers
-	} from '$lib/admin/workbench/model';
-	import { formatBytes } from '$lib/utils/format';
-	import ToolResults from '$lib/admin/workbench/ToolResults.svelte';
-	import ToolHistory from '$lib/admin/workbench/ToolHistory.svelte';
-	import RagChat from '$lib/admin/workbench/RagChat.svelte';
+	} from '#lib/admin/workbench/model.js';
+	import { formatBytes } from '#lib/utils/format.js';
+	import ToolResults from '#lib/admin/workbench/ToolResults.svelte';
+	import ToolHistory from '#lib/admin/workbench/ToolHistory.svelte';
+	import RagChat from '#lib/admin/workbench/RagChat.svelte';
 
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Check from '@lucide/svelte/icons/check';
@@ -24,27 +24,20 @@
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import Wrench from '@lucide/svelte/icons/wrench';
 	import { fade } from 'svelte/transition';
-	import { useClerkContext } from 'svelte-clerk';
-	import { useConvexClient, useQuery } from 'convex-svelte';
+	import { useConvexClient } from 'convex-svelte';
 	import { api } from '../../../../convex/_generated/api';
 	import type { Id } from '../../../../convex/_generated/dataModel';
 	import { resolve } from '$app/paths';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Spinner } from '$lib/components/ui/spinner';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 
-	const clerk = useClerkContext();
+	let { data } = $props();
+
 	const client = useConvexClient();
-	const clerkUser = $derived(clerk.user);
-
-	const userData = useQuery(api.users.getUserById, () =>
-		clerkUser ? { id: clerkUser.id } : 'skip'
-	);
-
-	const docs = useQuery(api.contentLib.getIndexedR2DocumentsForRagTester, () =>
-		userData.data ? {} : 'skip'
-	);
+	const userData = $derived(data.userData);
+	const docs = $derived(data.docs);
 
 	let activePane = $state<Pane>('tools');
 	let selectedDocumentId = $state('');

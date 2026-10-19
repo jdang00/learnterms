@@ -25,6 +25,8 @@
 	--card-foreground: #18181b;
 	--popover: #ffffff;
 	--popover-foreground: #18181b;
+	/* Floating layers: menus, selects, popovers and hover cards. Neutral in both themes. */
+	--menu: #ffffff;
 	--line: #e4e4e7;
 	--input: #e4e4e7;
 	--grid: #efeff1;
@@ -93,6 +95,7 @@
 	--card-foreground: #ecf9ff;
 	--popover: #232a32;
 	--popover-foreground: #ecf9ff;
+	--menu: #161618;
 	--line: color-mix(in oklab, #ecf9ff 11%, #1d232a);
 	--input: color-mix(in oklab, #ecf9ff 15%, #1d232a);
 	--grid: color-mix(in oklab, #ecf9ff 6%, #1d232a);
@@ -132,6 +135,7 @@
 	--color-card-foreground: var(--card-foreground);
 	--color-popover: var(--popover);
 	--color-popover-foreground: var(--popover-foreground);
+	--color-menu: var(--menu);
 	--color-border: var(--line);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
@@ -243,10 +247,12 @@
 	[data-slot='alert-dialog-content'],
 	[data-slot='sheet-content'],
 	[data-slot='drawer-content'],
-	[data-slot='popover-content'],
-	[data-slot='hover-card-content'],
 	[data-surface='popover'] {
 		--surface-bg: var(--color-popover);
+	}
+	[data-slot='popover-content'],
+	[data-slot='hover-card-content'] {
+		--surface-bg: var(--color-menu);
 	}
 }
 

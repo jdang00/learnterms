@@ -4,9 +4,9 @@
 	import { ariaShortcutFor, shortcutLabelFor } from './shortcuts';
 	import { dockButtonClass, isPassive, READOUT_CLASS, type DockShape } from './dockStyles';
 	import ReadoutContent from './ReadoutContent.svelte';
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 	import { mergeProps } from 'bits-ui';
-	import { Tip } from '$lib/components/ui/tooltip';
+	import { Tip } from '#lib/components/ui/tooltip/index.js';
 
 	let {
 		command,

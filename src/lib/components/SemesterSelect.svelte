@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
-	import { SelectField } from '$lib/components/ui/select';
+	import { SelectField } from '#lib/components/ui/select/index.js';
+	import { cn } from '#lib/utils.js';
 
 	// The one semester picker for the whole app. Values are semester names unless `by="id"`.
 	let {
@@ -37,7 +38,10 @@
 	{options}
 	{size}
 	{id}
-	class={className}
+	class={cn(
+		'border-border bg-background shadow-xs hover:border-foreground/25 dark:bg-black/25',
+		className
+	)}
 	aria-label={ariaLabel}
 	placeholder="Semester"
 	{onValueChange}

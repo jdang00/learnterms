@@ -1,16 +1,16 @@
 <script lang="ts">
-	import * as Empty from '$lib/components/ui/empty';
-	import SemesterSelect from '$lib/components/SemesterSelect.svelte';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import SemesterSelect from '#lib/components/SemesterSelect.svelte';
 	import { fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import ClassCard from './ClassCard.svelte';
 	import type { ClassWithSemester } from '../types';
 	import type { ClassOverview } from '../utils/classProgress';
 	import { pickDefaultSemesterName, setLastSemesterName } from '../utils/semester';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 
 	interface Props {
 		classes: {

@@ -2,8 +2,8 @@ import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
 import type { ConvexClient } from 'convex/browser';
 import { goto } from '$app/navigation';
-import { toastStore } from '$lib/stores/toast.svelte';
-import type { StatusFilter } from '$lib/types';
+import { toastStore } from '#lib/stores/toast.svelte.js';
+import type { StatusFilter } from '#lib/types.js';
 import { SvelteMap, SvelteSet, SvelteURL } from 'svelte/reactivity';
 
 export type QuestionItem = Doc<'question'>;
@@ -286,10 +286,7 @@ export class QuestionCurationState {
 			if (url.searchParams.has('edit')) {
 				url.searchParams.delete('edit');
 				// eslint-disable-next-line svelte/no-navigation-without-resolve -- pathname comes from the current URL after removing only the edit query param.
-				await goto(url.pathname, {
-					replaceState: true,
-					noScroll: true
-				});
+				await goto(url.pathname, { replace: true, reset: false });
 			}
 		} catch {
 			// Ignore URL cleanup failures; the editor state is reset below.

@@ -1,4 +1,4 @@
-import { browser, dev } from '$app/environment';
+import { browser, dev } from '$app/env';
 import type { PostHog } from 'posthog-js';
 
 const POSTHOG_API_KEY = 'phc_3eXFYO1aHVEWM75fi3wXFE6OiJZiDNvI5pcl67S19fK';

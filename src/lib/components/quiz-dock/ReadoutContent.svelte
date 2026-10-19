@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Progress } from '$lib/components/ui/progress';
+	import { Progress } from '#lib/components/ui/progress/index.js';
 	import { scale } from 'svelte/transition';
 	import { backOut } from 'svelte/easing';
 	import type { QuizCommand } from './types';

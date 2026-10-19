@@ -17,7 +17,7 @@
 		moduleCount?: number;
 	} = $props();
 
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
 </script>
 
 <AlertDialog.Root

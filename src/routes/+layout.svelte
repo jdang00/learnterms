@@ -1,33 +1,28 @@
 <script lang="ts">
 	import '../app.css';
 	import '@fontsource-variable/geist-mono';
-	import { getRouteSeo, SITE_ORIGIN } from '$lib/seo';
+	import { getRouteSeo, SITE_ORIGIN } from '#lib/seo.js';
 	import { ClerkProvider } from 'svelte-clerk';
-	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$env/static/public';
-	import { injectAnalytics } from '@vercel/analytics/sveltekit';
-	import NavBar from '$lib/components/NavBar.svelte';
-	import BrandLogo from '$lib/components/BrandLogo.svelte';
-	import BadgeAwardModal from '$lib/components/BadgeAwardModal.svelte';
-	import { Toaster } from '$lib/components/ui/sonner';
-	import * as Tooltip from '$lib/components/ui/tooltip';
-	import PostHogIdentify from '$lib/components/PostHogIdentify.svelte';
+	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_CONVEX_URL } from '$app/env/public';
+	import NavBar from '#lib/components/NavBar.svelte';
+	import BrandLogo from '#lib/components/BrandLogo.svelte';
+	import BadgeAwardModal from '#lib/components/BadgeAwardModal.svelte';
+	import { Toaster } from '#lib/components/ui/sonner/index.js';
+	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
+	import PostHogIdentify from '#lib/components/PostHogIdentify.svelte';
 	import { setupConvex } from 'convex-svelte';
-	import ConvexAuth from '$lib/components/ConvexAuth.svelte';
-	import { theme, clerkTheme } from '$lib/theme.svelte';
-	import { getPostHog } from '$lib/analytics/posthogClient';
+	import ConvexAuth from '#lib/components/ConvexAuth.svelte';
+	import { theme } from '#lib/theme.svelte.js';
+	import { getPostHog } from '#lib/analytics/posthogClient.js';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { browser, dev } from '$app/environment';
-	import { trackKeyboardInset } from '$lib/utils/keyboardInset';
-	import { trackPreviousPath } from '$lib/utils/backNavigation';
+	import { browser } from '$app/env';
+	import { trackKeyboardInset } from '#lib/utils/keyboardInset.js';
+	import { trackPreviousPath } from '#lib/utils/backNavigation.js';
+	import { trackVercelInsights } from '#lib/analytics/vercelInsights.svelte.js';
 
-	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
-
-	if (!dev) {
-		injectSpeedInsights();
-		injectAnalytics();
-	}
+	trackVercelInsights();
 
 	setupConvex(PUBLIC_CONVEX_URL);
 
@@ -120,87 +115,95 @@
 	<meta name="twitter:image" content={seo.image} />
 </svelte:head>
 
-<ClerkProvider publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY} appearance={{ theme: $clerkTheme }}>
-	<ConvexAuth initialToken={data?.token ?? null} />
-	<PostHogIdentify />
-	<Tooltip.Provider>
-		<div class="flex min-h-screen flex-col">
-			<div class={immersive ? 'hidden lg:block' : ''}>
-				<NavBar />
-			</div>
+<ClerkProvider
+	publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}
+	afterSignOutUrl="/"
+	appearance={{ theme: theme.clerkTheme }}
+>
+	<ConvexAuth initialToken={data?.token ?? null}>
+		<PostHogIdentify />
+		<Tooltip.Provider>
+			<div class="flex min-h-screen flex-col">
+				<div class={immersive ? 'hidden lg:block' : ''}>
+					<NavBar />
+				</div>
 
-			<main class="flex-1 w-full">
-				{@render children?.()}
-			</main>
+				<main class="flex-1 w-full">
+					{@render children?.()}
+				</main>
 
-			{#if !hideFooter}
-				<footer class="mt-auto border-t border-border bg-muted text-foreground">
-					<div
-						class="mx-auto grid w-full max-w-6xl grid-cols-2 gap-8 px-5 py-12 sm:grid-cols-4 sm:px-8 lg:px-12"
-					>
-						<div class="col-span-2 pr-8 sm:col-span-1">
-							<BrandLogo class="text-lg" />
-							<p class="mt-2 text-sm leading-relaxed text-foreground/70">
-								Class-aligned question banks and practice tests for health-professions cohorts.
-							</p>
-						</div>
-
-						<nav aria-label="Product" class="flex flex-col space-y-1.5 text-sm">
-							<h2 class="mb-1 text-xs font-semibold text-muted-foreground">Product</h2>
-							<a class="underline-offset-4 hover:underline" href={resolve('/features')}>Features</a>
-							<a class="underline-offset-4 hover:underline" href={resolve('/pricing')}>Pricing</a>
-							<a class="underline-offset-4 hover:underline" href={resolve('/changelog')}
-								>Changelog</a
-							>
-							<a
-								class="underline-offset-4 hover:underline"
-								href={resolve('/tools/grade-calculator')}>Grade calculator</a
-							>
-							<a class="underline-offset-4 hover:underline" href={resolve('/tools/calculator')}
-								>Scientific calculator</a
-							>
-						</nav>
-
-						<nav aria-label="Resources" class="flex flex-col space-y-1.5 text-sm">
-							<h2 class="mb-1 text-xs font-semibold text-muted-foreground">Resources</h2>
-							<a class="underline-offset-4 hover:underline" href="https://docs.learnterms.com/docs"
-								>Documentation</a
-							>
-							<a class="underline-offset-4 hover:underline" href={resolve('/blog')}>Blog</a>
-							<a class="underline-offset-4 hover:underline" href={resolve('/status')}>Status</a>
-						</nav>
-
-						<nav aria-label="Project" class="flex flex-col space-y-1.5 text-sm">
-							<h2 class="mb-1 text-xs font-semibold text-muted-foreground">Project</h2>
-							<a class="underline-offset-4 hover:underline" href={resolve('/about-us')}>About</a>
-							<a class="underline-offset-4 hover:underline" href={resolve('/contact')}>Contact</a>
-							<a
-								class="underline-offset-4 hover:underline"
-								href="https://github.com/jdang00/learnterms"
-								target="_blank"
-								rel="noopener noreferrer">GitHub</a
-							>
-						</nav>
-					</div>
-					<div class="border-t border-border">
+				{#if !hideFooter}
+					<footer class="mt-auto border-t border-border bg-muted text-foreground">
 						<div
-							class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-6 text-sm text-foreground/65 sm:flex-row sm:px-8 lg:px-12"
+							class="mx-auto grid w-full max-w-6xl grid-cols-2 gap-8 px-5 py-12 sm:grid-cols-4 sm:px-8 lg:px-12"
 						>
-							<p>© {year} LearnTerms. All rights reserved.</p>
-							<div class="flex gap-5">
-								<a class="underline-offset-4 hover:underline" href={resolve('/privacy')}
-									>Privacy Policy</a
+							<div class="col-span-2 pr-8 sm:col-span-1">
+								<BrandLogo class="text-lg" />
+								<p class="mt-2 text-sm leading-relaxed text-foreground/70">
+									Class-aligned question banks and practice tests for health-professions cohorts.
+								</p>
+							</div>
+
+							<nav aria-label="Product" class="flex flex-col space-y-1.5 text-sm">
+								<h2 class="mb-1 text-xs font-semibold text-muted-foreground">Product</h2>
+								<a class="underline-offset-4 hover:underline" href={resolve('/features')}
+									>Features</a
 								>
-								<a class="underline-offset-4 hover:underline" href={resolve('/terms')}
-									>Terms and Conditions</a
+								<a class="underline-offset-4 hover:underline" href={resolve('/pricing')}>Pricing</a>
+								<a class="underline-offset-4 hover:underline" href={resolve('/changelog')}
+									>Changelog</a
 								>
+								<a
+									class="underline-offset-4 hover:underline"
+									href={resolve('/tools/grade-calculator')}>Grade calculator</a
+								>
+								<a class="underline-offset-4 hover:underline" href={resolve('/tools/calculator')}
+									>Scientific calculator</a
+								>
+							</nav>
+
+							<nav aria-label="Resources" class="flex flex-col space-y-1.5 text-sm">
+								<h2 class="mb-1 text-xs font-semibold text-muted-foreground">Resources</h2>
+								<a
+									class="underline-offset-4 hover:underline"
+									href="https://docs.learnterms.com/docs">Documentation</a
+								>
+								<a class="underline-offset-4 hover:underline" href={resolve('/blog')}>Blog</a>
+								<a class="underline-offset-4 hover:underline" href={resolve('/status')}>Status</a>
+							</nav>
+
+							<nav aria-label="Project" class="flex flex-col space-y-1.5 text-sm">
+								<h2 class="mb-1 text-xs font-semibold text-muted-foreground">Project</h2>
+								<a class="underline-offset-4 hover:underline" href={resolve('/about-us')}>About</a>
+								<a class="underline-offset-4 hover:underline" href={resolve('/contact')}>Contact</a>
+								<a
+									class="underline-offset-4 hover:underline"
+									href="https://github.com/jdang00/learnterms"
+									target="_blank"
+									rel="noopener noreferrer">GitHub</a
+								>
+							</nav>
+						</div>
+						<div class="border-t border-border">
+							<div
+								class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-6 text-sm text-foreground/65 sm:flex-row sm:px-8 lg:px-12"
+							>
+								<p>© {year} LearnTerms. All rights reserved.</p>
+								<div class="flex gap-5">
+									<a class="underline-offset-4 hover:underline" href={resolve('/privacy')}
+										>Privacy Policy</a
+									>
+									<a class="underline-offset-4 hover:underline" href={resolve('/terms')}
+										>Terms and Conditions</a
+									>
+								</div>
 							</div>
 						</div>
-					</div>
-				</footer>
-			{/if}
-		</div>
-	</Tooltip.Provider>
-	<Toaster />
-	<BadgeAwardModal />
+					</footer>
+				{/if}
+			</div>
+		</Tooltip.Provider>
+		<Toaster />
+		<BadgeAwardModal />
+	</ConvexAuth>
 </ClerkProvider>

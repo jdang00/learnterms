@@ -1,11 +1,11 @@
 <script lang="ts">
 	import FilePenLine from '@lucide/svelte/icons/file-pen-line';
 	import { tick } from 'svelte';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Field from '$lib/components/ui/field';
-	import { Input } from '$lib/components/ui/input';
-	import * as Alert from '$lib/components/ui/alert';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as Field from '#lib/components/ui/field/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
 
 	let {
 		isOpen,

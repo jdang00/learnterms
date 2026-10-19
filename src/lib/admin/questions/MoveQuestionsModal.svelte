@@ -6,11 +6,11 @@
 	import type { Id } from '../../../convex/_generated/dataModel';
 	import { useClerkContext } from 'svelte-clerk/client';
 	import ModuleLimitModal from './ModuleLimitModal.svelte';
-	import { getErrorText } from '$lib/utils/errorHandling';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Field from '$lib/components/ui/field';
-	import { SelectField } from '$lib/components/ui/select';
+	import { getErrorText } from '#lib/utils/errorHandling.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as Field from '#lib/components/ui/field/index.js';
+	import { SelectField } from '#lib/components/ui/select/index.js';
 
 	const client = useConvexClient();
 	const clerk = useClerkContext();

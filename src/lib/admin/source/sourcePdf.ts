@@ -1,4 +1,4 @@
-import { base } from '$app/paths';
+import { copiedAsset } from '#lib/utils/copiedAsset.js';
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -19,7 +19,7 @@ export function createSourcePdf(getUrl: () => Promise<string>): SourcePdfResourc
 		const [url, pdfjs] = await Promise.all([getUrl(), import('pdfjs-dist')]);
 		if (destroyed) throw new Error('Source preview closed');
 		pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
-		const assetBase = `${base}/pdfjs/${pdfjs.version}`;
+		const assetBase = copiedAsset(`pdfjs/${pdfjs.version}`);
 		task = pdfjs.getDocument({
 			url,
 			cMapUrl: `${assetBase}/cmaps/`,

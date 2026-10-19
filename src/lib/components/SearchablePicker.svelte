@@ -3,10 +3,10 @@
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { Command } from 'bits-ui';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import * as InputGroup from '$lib/components/ui/input-group';
-	import * as Popover from '$lib/components/ui/popover';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import * as Popover from '#lib/components/ui/popover/index.js';
 
 	interface Option {
 		value: string;
@@ -97,7 +97,7 @@
 							'md'
 								? 'py-2.5'
 								: 'py-2'} {selected
-								? 'bg-primary text-primary-foreground data-selected:ring-2 data-selected:ring-primary/40 data-selected:ring-offset-1 data-selected:ring-offset-popover'
+								? 'bg-primary text-primary-foreground data-selected:ring-2 data-selected:ring-primary/40 data-selected:ring-offset-1 data-selected:ring-offset-menu'
 								: 'text-foreground data-selected:bg-muted'}"
 						>
 							<span class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">

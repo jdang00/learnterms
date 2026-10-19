@@ -12,19 +12,19 @@
 		getExamTest,
 		type ExamSection,
 		type ExamTestGroup
-	} from '$lib/examFindings/catalog';
+	} from '#lib/examFindings/catalog.js';
 	import {
 		MAX_EXAM_FINDINGS,
 		sampleExamFinding,
 		type ExamFinding
-	} from '$lib/examFindings/findings';
-	import { buildExamFindingView } from '$lib/examFindings/view';
-	import ExamFindingCard from '$lib/components/exam-findings/ExamFindingCard.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as InputGroup from '$lib/components/ui/input-group';
-	import { Kbd } from '$lib/components/ui/kbd';
-	import { EXAM_GROUP_STYLE } from '$lib/components/exam-findings/groups';
+	} from '#lib/examFindings/findings.js';
+	import { buildExamFindingView } from '#lib/examFindings/view.js';
+	import ExamFindingCard from '#lib/components/exam-findings/ExamFindingCard.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
+	import { EXAM_GROUP_STYLE } from '#lib/components/exam-findings/groups.js';
 
 	let {
 		open = $bindable(false),

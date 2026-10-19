@@ -1,8 +1,8 @@
 <script lang="ts">
-	import SemesterSelect from '$lib/components/SemesterSelect.svelte';
+	import SemesterSelect from '#lib/components/SemesterSelect.svelte';
 	import type { PageData } from './$types';
 	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
-	import { useQuery, useConvexClient } from 'convex-svelte';
+	import { useConvexClient } from 'convex-svelte';
 	import type { Id, Doc } from '../../convex/_generated/dataModel';
 	import { api } from '../../convex/_generated/api.js';
 	import { flip } from 'svelte/animate';
@@ -15,27 +15,21 @@
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Link2 from '@lucide/svelte/icons/link-2';
 	import X from '@lucide/svelte/icons/x';
-	import EditClassModal from '$lib/admin/catalog/EditClassModal.svelte';
-	import AddClassModal from '$lib/admin/catalog/AddClassModal.svelte';
-	import EditQuickLinksModal from '$lib/admin/catalog/EditQuickLinksModal.svelte';
-	import DeleteConfirmationModal from '$lib/admin/DeleteConfirmationModal.svelte';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { LoadingState } from '$lib/components/ui/spinner';
-	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
-	import { useClerkContext } from 'svelte-clerk/client';
+	import EditClassModal from '#lib/admin/catalog/EditClassModal.svelte';
+	import AddClassModal from '#lib/admin/catalog/AddClassModal.svelte';
+	import EditQuickLinksModal from '#lib/admin/catalog/EditQuickLinksModal.svelte';
+	import DeleteConfirmationModal from '#lib/admin/DeleteConfirmationModal.svelte';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
+	import { pickDefaultSemesterName, setLastSemesterName } from '#lib/utils/semester.js';
 	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
 	const userData = $derived(data.userData.data);
-	const clerk = useClerkContext();
-	const clerkUser = $derived(clerk.user);
-
-	const classes = useQuery(api.class.getUserClasses, () =>
-		userData?.cohortId ? { id: userData.cohortId as Id<'cohort'> } : 'skip'
-	);
+	const classes = $derived(data.classes);
 
 	const client = useConvexClient();
 
@@ -146,7 +140,7 @@
 		}
 	}
 
-	const semesters = useQuery(api.semester.getAllSemesters, () => (clerkUser ? {} : 'skip'));
+	const semesters = $derived(data.semesters);
 	let currentSemester = $state('');
 	let viewMode = $state<'normal' | 'reorder'>('normal');
 

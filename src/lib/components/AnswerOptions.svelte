@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Eye from '@lucide/svelte/icons/eye';
-	import { Button } from '$lib/components/ui/button';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	let { qs = $bindable(), currentlySelected, compact = false, allowElimination = true } = $props();
 
 	function handleOptionChange(optionId: string) {

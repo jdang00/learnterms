@@ -1,25 +1,25 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import type { DetachedQueryResult } from 'convex-svelte/sveltekit';
 	import type { PageData } from './$types';
 	import { api } from '../../../../../convex/_generated/api.js';
 	import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 	import { QuizState } from './states.svelte';
-	import MainQuiz from '$lib/components/MainQuiz.svelte';
-	import ModuleCompletion from '$lib/components/ModuleCompletion.svelte';
-	import ResetProgressSheet from '$lib/components/ResetProgressSheet.svelte';
+	import MainQuiz from '#lib/components/MainQuiz.svelte';
+	import ModuleCompletion from '#lib/components/ModuleCompletion.svelte';
+	import ResetProgressSheet from '#lib/components/ResetProgressSheet.svelte';
 	import { onMount, tick, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { resolve } from '$app/paths';
-	import { pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
+	import { setPageState } from '#lib/utils/backNavigation.js';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import {
 		QUIZ_PREFERENCE_CHANGED_EVENT,
 		QUIZ_PREFERENCE_KEYS,
 		type QuizPreferenceChangedDetail
-	} from '$lib/components/power-bar/preferences';
+	} from '#lib/components/power-bar/preferences.js';
 
 	let { data }: { data: PageData } = $props();
 
@@ -29,13 +29,23 @@
 	const client = useConvexClient();
 
 	let qs = $state(new QuizState());
-	function showProgress() {
+	// True between showProgress's two history writes, so the view effect doesn't close completion.
+	let openingProgress = false;
+	async function showProgress() {
 		qs.showCompletion = true;
 		if (page.state.quizView?.moduleId === moduleId && page.state.quizView.screen === 'progress')
 			return;
-		// Keep a quiz entry underneath the overview, including when completion opens it automatically.
-		replaceState('', { ...page.state, quizView: { moduleId, screen: 'questions' } });
-		pushState('', { ...page.state, quizView: { moduleId, screen: 'progress' } });
+		openingProgress = true;
+		try {
+			// Keep a quiz entry underneath the overview, including when completion opens it automatically.
+			await setPageState(
+				{ ...page.state, quizView: { moduleId, screen: 'questions' } },
+				{ replace: true }
+			);
+			await setPageState({ ...page.state, quizView: { moduleId, screen: 'progress' } });
+		} finally {
+			openingProgress = false;
+		}
 	}
 	qs.onOpenCompletion = showProgress;
 	function returnToQuiz() {
@@ -48,7 +58,7 @@
 		const isProgress = view?.moduleId === moduleId && view.screen === 'progress';
 		untrack(() => {
 			if (isProgress) qs.showCompletion = true;
-			else qs.closeCompletion();
+			else if (!openingProgress) qs.closeCompletion();
 		});
 	});
 	let loadGeneration = 0;
@@ -289,8 +299,8 @@
 		error: moduleProgressQuery.error
 	});
 
-	const learningQuery = useQuery(api.studyProgress.getForModule, () =>
-		userId ? { moduleId } : 'skip'
+	const learningQuery = $derived(
+		(data.learning ?? pending) as DetachedQueryResult<typeof api.studyProgress.getForModule>
 	);
 	$effect(() => {
 		const evidence = learningQuery.data;

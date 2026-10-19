@@ -10,8 +10,8 @@
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Users from '@lucide/svelte/icons/users';
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 
 	type Feature = { title: string; description: string; icon: string; href?: string };
 	type Announcement = {

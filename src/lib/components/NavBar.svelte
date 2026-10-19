@@ -3,18 +3,18 @@
 	import { useClerkContext } from 'svelte-clerk/client';
 	import ThemeToggle from './ThemeToggle.svelte';
 	import BrandLogo from './BrandLogo.svelte';
-	import { useConvexClient, useQuery } from 'convex-svelte';
+	import { useAuth, useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../convex/_generated/api';
 	import type { Id } from '../../convex/_generated/dataModel';
 	import Search from '@lucide/svelte/icons/search';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import { onMount } from 'svelte';
-	import { modifierKeyLabel } from '$lib/utils/platform';
+	import { modifierKeyLabel } from '#lib/utils/platform.js';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Kbd } from '$lib/components/ui/kbd';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Kbd } from '#lib/components/ui/kbd/index.js';
 	import PowerBar from './power-bar/PowerBar.svelte';
 	import type { CohortItem, QuickLinkItem } from './power-bar/types';
 
@@ -32,13 +32,14 @@
 
 	const ctx = useClerkContext();
 	const user = $derived(ctx.user);
+	const convexAuth = useAuth();
 
 	const client = useConvexClient();
 
 	const userDataQuery = useQuery(api.users.getUserById, () => (user ? { id: user.id } : 'skip'));
 
 	const subscriptionQuery = useQuery(api.polar.getCurrentUserWithSubscription, () =>
-		user ? {} : 'skip'
+		convexAuth.isAuthenticated ? {} : 'skip'
 	);
 
 	const dev = $derived(userDataQuery.data?.role === 'dev');
@@ -49,7 +50,9 @@
 	);
 
 	const cohortsList = useQuery(api.cohort.listCohortsWithSchools, () => (dev ? {} : 'skip'));
-	const quickLinksQuery = useQuery(api.cohort.getCurrentUserQuickLinks, () => (user ? {} : 'skip'));
+	const quickLinksQuery = useQuery(api.cohort.getCurrentUserQuickLinks, () =>
+		convexAuth.isAuthenticated ? {} : 'skip'
+	);
 
 	let selectedCohortId = $state('');
 	let isPowerBarOpen = $state(false);
@@ -171,7 +174,7 @@
 			<div class="self-center">
 				<Show when="signed-in">
 					<div class="mt-1">
-						<UserButton afterSignOutUrl="/" />
+						<UserButton />
 					</div>
 				</Show>
 				<Show when="signed-out">

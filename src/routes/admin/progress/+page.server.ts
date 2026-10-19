@@ -11,7 +11,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 	try {
 		const userData = await convexLoad(api.users.getUserById, { id: userId });
-		return { userData };
+		const cohortId = userData.data?.cohortId;
+		const students = await convexLoad(
+			api.progress.getStudentsWithProgress,
+			cohortId ? { cohortId, includeSubscription: false } : 'skip'
+		);
+		return { userData, students };
 	} catch (error) {
 		console.error('Failed to load progress page data:', error);
 		throw error;

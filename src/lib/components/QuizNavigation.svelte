@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '#lib/components/ui/button/index.js';
 	let { questions, handleSelect, currentlySelected, qs } = $props();
 
 	let reactiveInteractedQuestions = $derived(qs?.liveInteractedQuestions || []);
@@ -13,12 +12,10 @@
 	{#each questions.data as question, index (question._id)}
 		<div class="relative inline-flex">
 			{#if reactiveFlags.includes(question._id)}
-				<Badge
-					variant="solid"
-					tone="warning"
-					size="xs"
-					class="absolute top-1 left-1 z-[1] size-2.5 -translate-x-1/2 -translate-y-1/2 p-0"
-				></Badge>
+				<span
+					class="pointer-events-none absolute -top-0.5 -right-0.5 z-[1] size-3.5 rounded-full bg-warning ring-2 ring-background"
+					aria-hidden="true"
+				></span>
 			{/if}
 			<Button
 				bind:ref={qs.questionButtons[index]}

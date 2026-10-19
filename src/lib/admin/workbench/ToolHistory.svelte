@@ -2,8 +2,8 @@
 	import Layers from '@lucide/svelte/icons/layers';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
-	import ShimmerText from '$lib/components/ShimmerText.svelte';
-	import { Button } from '$lib/components/ui/button';
+	import ShimmerText from '#lib/components/ShimmerText.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { type ToolRun, toolDefinitions, formatTime, runSummary } from './model';
 	let {
 		toolRuns = $bindable(),

@@ -4,6 +4,7 @@ export type ShortcutBinding = {
 	key: string;
 	label: string;
 	command: CoreCommandId;
+	/** true requires Shift, false forbids it, unset accepts either. */
 	shift?: boolean;
 	allowRepeat?: boolean;
 	allowInTextInputs?: boolean;
@@ -12,7 +13,8 @@ export type ShortcutBinding = {
 export const QUIZ_SHORTCUTS: ShortcutBinding[] = [
 	{ key: 'Enter', label: 'Enter', command: 'check' },
 	{ key: 'Escape', label: 'Esc', command: 'clear' },
-	{ key: 'Tab', label: 'Tab', command: 'reveal', allowInTextInputs: true },
+	// Tab reveals even from a focused button; Shift+Tab is left for moving focus.
+	{ key: 'Tab', label: 'Tab', command: 'reveal', shift: false, allowInTextInputs: true },
 	{ key: 'ArrowRight', label: '→', command: 'next', allowRepeat: true, allowInTextInputs: true },
 	{ key: 'ArrowLeft', label: '←', command: 'previous', allowRepeat: true, allowInTextInputs: true },
 	{ key: 'h', label: 'H', command: 'highlight' },
@@ -36,7 +38,8 @@ type KeyLike = Pick<KeyboardEvent, 'key' | 'shiftKey' | 'repeat'>;
 export function matchShortcut(event: KeyLike): ShortcutBinding | null {
 	const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
 	const binding = QUIZ_SHORTCUTS.find(
-		(candidate) => candidate.key === key && (candidate.shift ? event.shiftKey : true)
+		(candidate) =>
+			candidate.key === key && (candidate.shift === undefined || candidate.shift === event.shiftKey)
 	);
 	if (!binding) return null;
 	if (event.repeat && !binding.allowRepeat) return null;
@@ -67,11 +70,15 @@ export function shouldIgnoreShortcut(
 	const target = event.target as TargetLike;
 	const within = (selector: string) => Boolean(target?.closest?.(selector));
 
-	if (['Enter', ' ', 'Tab'].includes(event.key) && within('button, a, [role="switch"]'))
-		return true;
+	if (['Enter', ' '].includes(event.key) && within('button, a, [role="switch"]')) return true;
 	if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return true;
 	if (event.shiftKey && event.key.startsWith('Arrow')) return true;
-	if (within('dialog, [contenteditable="true"]')) return true;
+	if (
+		within(
+			'dialog, [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [contenteditable="true"]'
+		)
+	)
+		return true;
 	if (isTextInput(target) && !binding?.allowInTextInputs) return true;
 	return false;
 }

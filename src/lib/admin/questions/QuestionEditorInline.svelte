@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Separator } from '$lib/components/ui/separator';
+	import { Separator } from '#lib/components/ui/separator/index.js';
 	import ExamFindingsWorkspace from './ExamFindingsWorkspace.svelte';
 	import EditorHeader from './editor/EditorHeader.svelte';
 	import TypeStatusBar from './editor/TypeStatusBar.svelte';
@@ -16,22 +16,22 @@
 	import { useConvexClient, useQuery } from 'convex-svelte';
 	import { api } from '../../../convex/_generated/api.js';
 	import type { Id } from '../../../convex/_generated/dataModel';
-	import { DISPLAY_QUESTION_TYPES, QUESTION_TYPES } from '$lib/types';
+	import { DISPLAY_QUESTION_TYPES, QUESTION_TYPES } from '#lib/types.js';
 	import {
 		INLINE_ANSWER,
 		parsePastedQuestion,
 		plainTextToHtml,
 		splitInlineAnswers,
 		type ParsedQuestion
-	} from '$lib/utils/questionAuthoring';
+	} from '#lib/utils/questionAuthoring.js';
 	import { onMount } from 'svelte';
-	import { toastStore } from '$lib/stores/toast.svelte';
+	import { toastStore } from '#lib/stores/toast.svelte.js';
 	import type { Readable } from 'svelte/store';
-	import { createEditor, type Editor } from 'svelte-tiptap';
-	import { getEditorExtensions } from '../../config/tiptap';
+	import type { Editor, EditorContent } from 'svelte-tiptap';
+	import { loadEditorExtensions } from '#lib/config/tiptap.js';
 	import { useClerkContext } from 'svelte-clerk';
-	import { getRationale, getRationalePlainText } from '$lib/utils/rationale';
-	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
+	import { getRationalePlainText } from '#lib/utils/rationale.js';
+	import { useQuestionMedia } from '#lib/utils/useQuestionMedia.svelte.js';
 
 	let {
 		moduleId,
@@ -69,6 +69,7 @@
 
 	let editor = $state() as Readable<Editor>;
 	let rationaleEditor = $state() as Readable<Editor>;
+	let Content = $state.raw<typeof EditorContent>();
 	let suggestionTimer: ReturnType<typeof setTimeout> | undefined;
 
 	function handleKeyboardSave(e: KeyboardEvent) {
@@ -79,30 +80,42 @@
 	}
 
 	onMount(() => {
-		editor = createEditor({
-			extensions: getEditorExtensions(),
-			content: editingQuestion?.stem || '',
-			editorProps: {
-				attributes: {
-					class: 'prose prose-sm max-w-none focus:outline-hidden min-h-[3rem] p-3 tiptap-content'
-				},
-				handlePaste: (_view, event) => handleStemPaste(event)
-			}
-		});
-
-		rationaleEditor = createEditor({
-			extensions: getEditorExtensions(),
-			content: getRationale(editingQuestion),
-			editorProps: {
-				attributes: {
-					class:
-						'prose prose-sm max-w-none focus:outline-hidden min-h-[3rem] p-3 tiptap-content text-sm'
+		let disposed = false;
+		void (async () => {
+			const [{ createEditor, EditorContent }, stemExtensions, rationaleExtensions] =
+				await Promise.all([
+					import('svelte-tiptap'),
+					loadEditorExtensions(),
+					loadEditorExtensions()
+				]);
+			if (disposed) return;
+			Content = EditorContent;
+			editor = createEditor({
+				extensions: stemExtensions,
+				content: form.questionStem,
+				editorProps: {
+					attributes: {
+						class: 'prose prose-sm max-w-none focus:outline-hidden min-h-[3rem] p-3 tiptap-content'
+					},
+					handlePaste: (_view, event) => handleStemPaste(event)
 				}
-			}
-		});
+			});
+
+			rationaleEditor = createEditor({
+				extensions: rationaleExtensions,
+				content: form.questionRationale,
+				editorProps: {
+					attributes: {
+						class:
+							'prose prose-sm max-w-none focus:outline-hidden min-h-[3rem] p-3 tiptap-content text-sm'
+					}
+				}
+			});
+		})();
 
 		window.addEventListener('keydown', handleKeyboardSave);
 		return () => {
+			disposed = true;
 			window.removeEventListener('keydown', handleKeyboardSave);
 			clearTimeout(suggestionTimer);
 			media.dispose();
@@ -349,7 +362,7 @@
 		onpaste={(event) => media.handlePaste(event)}
 	>
 		<div class="w-full max-w-none space-y-8">
-			<StemSection {form} editor={$editor} {menuItems} />
+			<StemSection {form} editor={$editor} {Content} {menuItems} />
 
 			<Separator class="my-2 opacity-50" />
 
@@ -374,6 +387,7 @@
 				<RationaleSection
 					{form}
 					editor={$rationaleEditor}
+					{Content}
 					menuItems={rationaleMenuItems}
 					{moduleId}
 					{editingQuestion}

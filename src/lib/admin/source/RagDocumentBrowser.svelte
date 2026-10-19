@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatBytes } from '$lib/utils/format';
+	import { formatBytes } from '#lib/utils/format.js';
 	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Layers from '@lucide/svelte/icons/layers';
@@ -9,8 +9,8 @@
 	import { useQuery } from 'convex-svelte';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api';
-	import * as InputGroup from '$lib/components/ui/input-group';
-	import { Skeleton } from '$lib/components/ui/skeleton';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 
 	export interface Props {
 		cohortId: Id<'cohort'>;

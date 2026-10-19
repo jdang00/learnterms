@@ -1,4 +1,4 @@
-import { SITE_ORIGIN } from '$lib/seo';
+import { SITE_ORIGIN } from '#lib/seo.js';
 import type { RequestHandler } from './$types';
 
 // Allow HTML crawling so search engines can see account pages' noindex tags.

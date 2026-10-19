@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { Progress } from '$lib/components/ui/progress';
+	import { Progress } from '#lib/components/ui/progress/index.js';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Check from '@lucide/svelte/icons/check';
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { resolve } from '$app/paths';
-	import ShimmerText from '$lib/components/ShimmerText.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import * as Popover from '$lib/components/ui/popover';
+	import ShimmerText from '#lib/components/ShimmerText.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Popover from '#lib/components/ui/popover/index.js';
 	import { formatPageSelection } from './pagePickerSelection';
 	import { plannedSlots, runHeadline, runPhase } from './questionStudioRun';
 	import type { AgentJob } from './questionStudioRun';

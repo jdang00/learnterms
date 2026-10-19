@@ -1,6 +1,5 @@
 import { dark } from '@clerk/ui/themes';
-import { toStore } from 'svelte/store';
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -41,15 +40,6 @@ class ThemeState {
 		localStorage.setItem('theme', mode);
 		applyTheme(mode);
 	}
-
-	// Store contract so `$theme` keeps working in templates that haven't moved to `theme.current`.
-	subscribe(run: (mode: ThemeMode) => void) {
-		return themeStore.subscribe(run);
-	}
 }
 
 export const theme = new ThemeState();
-const themeStore = toStore(() => theme.current);
-
-export const isDark = toStore(() => theme.isDark);
-export const clerkTheme = toStore(() => theme.clerkTheme);

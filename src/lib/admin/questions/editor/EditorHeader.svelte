@@ -1,7 +1,7 @@
 <script lang="ts">
-	import * as Tabs from '$lib/components/ui/tabs';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
+	import * as Tabs from '#lib/components/ui/tabs/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import MessageSquare from '@lucide/svelte/icons/message-square';
 	import Stethoscope from '@lucide/svelte/icons/stethoscope';
 	import Save from '@lucide/svelte/icons/save';

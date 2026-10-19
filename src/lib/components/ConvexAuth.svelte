@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { setupAuth } from 'convex-svelte';
-	import { untrack } from 'svelte';
+	import { untrack, type Snippet } from 'svelte';
 	import { useClerkContext } from 'svelte-clerk/client';
-	import { clerkConvexAuthProvider } from '$lib/convexAuthProvider';
+	import { clerkConvexAuthProvider } from '#lib/convexAuthProvider.js';
 
-	let { initialToken }: { initialToken: string | null } = $props();
+	// Wraps the app so every descendant can read Convex's auth state with `useAuth()`.
+	let { initialToken, children }: { initialToken: string | null; children?: Snippet } = $props();
 	const clerk = useClerkContext();
 
 	let markLoaded = () => {};
@@ -27,3 +28,5 @@
 		{ initialState: { isAuthenticated: Boolean(clerk.auth.userId && clerk.auth.sessionId) } }
 	);
 </script>
+
+{@render children?.()}

@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { useStudyToolContext } from '$lib/analytics/studyToolContext';
-	import { captureStudyTool } from '$lib/analytics/studyTools';
-	import { createToolVisibilityTracker } from '$lib/analytics/studyToolEvents';
+	import { useStudyToolContext } from '#lib/analytics/studyToolContext.js';
+	import { captureStudyTool } from '#lib/analytics/studyTools.js';
+	import { createToolVisibilityTracker } from '#lib/analytics/studyToolEvents.js';
 	import X from '@lucide/svelte/icons/x';
 	import IconType from '@lucide/svelte/icons/check';
 	import { onMount, tick, untrack, type Snippet } from 'svelte';
 	import { sidePanel, type SidePanelId } from './state.svelte';
-	import { sheetDrag } from '$lib/utils/sheetDrag';
-	import { Button } from '$lib/components/ui/button';
+	import { sheetDrag } from '#lib/utils/sheetDrag.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 
 	let {
 		id,

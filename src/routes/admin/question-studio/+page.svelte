@@ -1,29 +1,31 @@
 <script lang="ts">
 	import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Button } from '$lib/components/ui/button';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { fade } from 'svelte/transition';
-	import QuestionStudioCandidateModal from '$lib/admin/question-studio/QuestionStudioCandidateModal.svelte';
-	import QuestionStudioHeader from '$lib/admin/question-studio/QuestionStudioHeader.svelte';
-	import QuestionStudioRunBar from '$lib/admin/question-studio/QuestionStudioRunBar.svelte';
-	import QuestionStudioRunStage from '$lib/admin/question-studio/QuestionStudioRunStage.svelte';
-	import QuestionStudioSetupCard from '$lib/admin/question-studio/QuestionStudioSetupCard.svelte';
-	import QuestionStudioTopicDetailModal from '$lib/admin/question-studio/QuestionStudioTopicDetailModal.svelte';
-	import { buildRunRows, runTelemetry } from '$lib/admin/question-studio/questionStudioRun';
-	import type { CandidateReview } from '$lib/admin/question-studio/questionStudioRun';
+	import QuestionStudioCandidateModal from '#lib/admin/question-studio/QuestionStudioCandidateModal.svelte';
+	import QuestionStudioHeader from '#lib/admin/question-studio/QuestionStudioHeader.svelte';
+	import QuestionStudioRunBar from '#lib/admin/question-studio/QuestionStudioRunBar.svelte';
+	import QuestionStudioRunStage from '#lib/admin/question-studio/QuestionStudioRunStage.svelte';
+	import QuestionStudioSetupCard from '#lib/admin/question-studio/QuestionStudioSetupCard.svelte';
+	import QuestionStudioTopicDetailModal from '#lib/admin/question-studio/QuestionStudioTopicDetailModal.svelte';
+	import { buildRunRows, runTelemetry } from '#lib/admin/question-studio/questionStudioRun.js';
+	import type { CandidateReview } from '#lib/admin/question-studio/questionStudioRun.js';
 	import type {
 		CandidateQuestion,
 		QuestionType,
 		TopicMapItem
-	} from '$lib/admin/question-studio/questionStudioTypes';
-	import { questionTypes } from '$lib/admin/question-studio/questionStudioTypes';
+	} from '#lib/admin/question-studio/questionStudioTypes.js';
+	import { questionTypes } from '#lib/admin/question-studio/questionStudioTypes.js';
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
 	import { api } from '../../../convex/_generated/api';
 	import { useQuery, useConvexClient } from 'convex-svelte';
-	import type { ClassWithSemester } from '$lib/types';
-	import { pickDefaultSemesterName, setLastSemesterName } from '$lib/utils/semester';
+	import type { ClassWithSemester } from '#lib/types.js';
+	import { pickDefaultSemesterName, setLastSemesterName } from '#lib/utils/semester.js';
 	import { useClerkContext } from 'svelte-clerk';
 	import { onMount } from 'svelte';
+
+	let { data } = $props();
 
 	const client = useConvexClient();
 	const clerk = useClerkContext();
@@ -127,15 +129,9 @@
 		}
 	}
 
-	const convexUser = useQuery(api.users.getUserById, () =>
-		clerkUser ? { id: clerkUser.id } : 'skip'
-	);
-
-	const semesters = useQuery(api.semester.getAllSemesters, () => (clerkUser ? {} : 'skip'));
-
-	const classes = useQuery(api.class.getUserClasses, () =>
-		convexUser.data?.cohortId ? { id: convexUser.data.cohortId as Id<'cohort'> } : 'skip'
-	);
+	const convexUser = $derived(data.convexUser);
+	const semesters = $derived(data.semesters);
+	const classes = $derived(data.classes);
 
 	const modules = useQuery(api.module.getClassModules, () =>
 		selectedClass ? { id: selectedClass._id } : 'skip'
@@ -150,9 +146,7 @@
 			: 'skip'
 	);
 
-	const currentGenerationJob = useQuery(api.questionStudio.jobs.getCurrentGenerationJob, () =>
-		clerkUser ? {} : 'skip'
-	);
+	const currentGenerationJob = $derived(data.currentGenerationJob);
 
 	const activeJob = useQuery(api.questionStudio.jobs.getGenerationJob, () =>
 		activeJobId ? { jobId: activeJobId } : 'skip'

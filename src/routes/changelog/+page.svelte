@@ -1,10 +1,10 @@
 <script lang="ts">
-	import HeroGlow from '$lib/components/landing/HeroGlow.svelte';
+	import HeroGlow from '#lib/components/landing/HeroGlow.svelte';
 	import { resolve } from '$app/paths';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { reveal } from '$lib/actions/reveal';
-	import { changelog } from '$lib/content/changelog';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { reveal } from '#lib/actions/reveal.js';
+	import { changelog } from '#lib/content/changelog.js';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 </script>

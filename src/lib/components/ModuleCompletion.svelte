@@ -13,8 +13,8 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import Trophy from '@lucide/svelte/icons/trophy';
 	import X from '@lucide/svelte/icons/x';
-	import { Button } from '$lib/components/ui/button';
-	import type { AnswerStatus, ModuleSummary } from '$lib/utils/moduleCompletion';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import type { AnswerStatus, ModuleSummary } from '#lib/utils/moduleCompletion.js';
 
 	let {
 		title,

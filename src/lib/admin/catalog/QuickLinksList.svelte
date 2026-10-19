@@ -4,8 +4,8 @@
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Plus from '@lucide/svelte/icons/plus';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import type { QuickLinkItem } from '$lib/components/power-bar/types';
-	import { Button } from '$lib/components/ui/button';
+	import type { QuickLinkItem } from '#lib/components/power-bar/types.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	type LinkCategory = 'visible' | 'hidden';
 	let {
 		draftLinks = $bindable(),

@@ -9,8 +9,8 @@
 	import QuestionStudioCandidateEditor from './QuestionStudioCandidateEditor.svelte';
 	import QuestionStudioWhyThis from './QuestionStudioWhyThis.svelte';
 	import { candidateConcern } from './questionStudioRun';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
-	import { Button } from '$lib/components/ui/button';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import type { CandidateQuestion } from './questionStudioTypes';
 	import type { CandidateReview } from './questionStudioRun';
 

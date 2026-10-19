@@ -2,7 +2,7 @@
 	import { flip } from 'svelte/animate';
 	import { scale } from 'svelte/transition';
 	import { backOut, cubicOut } from 'svelte/easing';
-	import { buttonVariants } from '$lib/components/ui/button';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
 	import ReadoutContent from '../ReadoutContent.svelte';
 	import { dockButtonClass, READOUT_CLASS, segmentShape, isPassive } from '../dockStyles';
 	import { DIVIDER_ID, displayFor } from '../layouts';

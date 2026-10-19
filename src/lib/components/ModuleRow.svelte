@@ -7,7 +7,7 @@
 		moduleState,
 		moduleStatusLabel,
 		type ModuleProgressSummary
-	} from '$lib/utils/classProgress';
+	} from '#lib/utils/classProgress.js';
 
 	interface Props {
 		module: {

@@ -1,4 +1,6 @@
+import adapter from '@sveltejs/adapter-vercel';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
@@ -7,7 +9,11 @@ import pdfjsPackage from 'pdfjs-dist/package.json' with { type: 'json' };
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
-		sveltekit(),
+		sveltekit({
+			preprocess: [vitePreprocess()],
+			extensions: ['.svelte'],
+			adapter: adapter({ runtime: 'nodejs22.x' })
+		}),
 		// PDF.js loads these on demand from its worker, including non-Latin fonts
 		// and image decoders. Keep them local and versioned with the renderer.
 		viteStaticCopy({
@@ -32,14 +38,13 @@ export default defineConfig({
 	},
 	optimizeDeps: {
 		include: ['convex-svelte', 'svelte-confetti', 'posthog-js'],
-		esbuildOptions: { target: 'esnext' }
+		rolldownOptions: { transform: { target: 'esnext' } }
 	},
 	build: {
 		target: 'esnext'
 	},
 	server: {},
-	esbuild: {
-		jsx: 'automatic',
-		jsxImportSource: 'react'
+	oxc: {
+		jsx: { runtime: 'automatic', importSource: 'react' }
 	}
 });

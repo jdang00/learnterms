@@ -4,8 +4,8 @@
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Switch } from '$lib/components/ui/switch';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
 	import { TONE_BADGE } from '../dockStyles';
 	import {
 		DIVIDER_ID,

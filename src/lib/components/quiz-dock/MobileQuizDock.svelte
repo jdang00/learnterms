@@ -4,18 +4,18 @@
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import Settings from '@lucide/svelte/icons/settings';
 	import { fly } from 'svelte/transition';
-	import ImageViewer from '$lib/components/ImageViewer.svelte';
-	import Sheet from '$lib/components/Sheet.svelte';
-	import { sheetDrag } from '$lib/utils/sheetDrag';
-	import QuestionSources from '$lib/components/QuestionSources.svelte';
-	import SettingsModal from '$lib/components/SettingsModal.svelte';
+	import ImageViewer from '#lib/components/ImageViewer.svelte';
+	import Sheet from '#lib/components/Sheet.svelte';
+	import { sheetDrag } from '#lib/utils/sheetDrag.js';
+	import QuestionSources from '#lib/components/QuestionSources.svelte';
+	import SettingsModal from '#lib/components/SettingsModal.svelte';
 	import { untrack } from 'svelte';
 	import QuizDock from './QuizDock.svelte';
 	import { getQuizCommands } from './commands.svelte';
 	import type { Id } from '../../../convex/_generated/dataModel';
-	import { getRationale, hasRationale } from '$lib/utils/rationale';
-	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
-	import { useQuestionMedia } from '$lib/utils/useQuestionMedia.svelte';
+	import { getRationale, hasRationale } from '#lib/utils/rationale.js';
+	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
+	import { useQuestionMedia } from '#lib/utils/useQuestionMedia.svelte.js';
 
 	let { qs = $bindable(), currentlySelected } = $props();
 

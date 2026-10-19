@@ -1,9 +1,9 @@
-import { userDisplayName } from '$lib/userDisplayName';
+import { userDisplayName } from '#lib/userDisplayName.js';
 import type { PageServerLoad } from './$types';
 import { isRedirect, redirect } from '@sveltejs/kit';
 import { clerkClient } from 'svelte-clerk/server';
 import { convexLoad } from 'convex-svelte/sveltekit';
-import { authenticatedConvexClient } from '$lib/server/convex';
+import { authenticatedConvexClient } from '#lib/server/convex.js';
 import { api } from '../../convex/_generated/api';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -43,20 +43,24 @@ export const load: PageServerLoad = async ({ locals }) => {
 			return redirect(307, '/join-class');
 		}
 
-		await client.mutation(api.users.syncUserFromClerk, {
-			clerkUserId: user.id,
-			name: user.fullName?.trim() || undefined,
-			firstName: user.firstName || undefined,
-			lastName: user.lastName || undefined,
-			email: primaryEmail || undefined,
-			username: user.username || undefined,
-			imageUrl: user.imageUrl || undefined,
-			lastSignInAt: user.lastSignInAt || undefined,
-			lastActiveAt: user.lastActiveAt || undefined
-		});
+		const [board] = await Promise.all([
+			convexLoad(api.badges.getCohortBadgeBoard, {}),
+			client.mutation(api.users.syncUserFromClerk, {
+				clerkUserId: user.id,
+				name: user.fullName?.trim() || undefined,
+				firstName: user.firstName || undefined,
+				lastName: user.lastName || undefined,
+				email: primaryEmail || undefined,
+				username: user.username || undefined,
+				imageUrl: user.imageUrl || undefined,
+				lastSignInAt: user.lastSignInAt || undefined,
+				lastActiveAt: user.lastActiveAt || undefined
+			})
+		]);
 
 		return {
 			userData,
+			board,
 			seo: {
 				title: 'Class Activity — LearnTerms',
 				description: 'See how your class is progressing on LearnTerms.'

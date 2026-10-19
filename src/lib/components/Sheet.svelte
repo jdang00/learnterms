@@ -3,9 +3,9 @@
 	import { untrack } from 'svelte';
 	import { Dialog } from 'bits-ui';
 	import X from '@lucide/svelte/icons/x';
-	import { Button } from '$lib/components/ui/button';
-	import { sheetDrag } from '$lib/utils/sheetDrag';
-	import { cn } from '$lib/utils.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { sheetDrag } from '#lib/utils/sheetDrag.js';
+	import { cn } from '#lib/utils.js';
 
 	// A bottom sheet on phones (drag the handle down to dismiss, up to expand when allowed)
 	// and a centered dialog from sm up unless `desktop` says otherwise.

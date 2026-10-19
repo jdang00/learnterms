@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { LoadingState } from '$lib/components/ui/spinner';
+	import { LoadingState } from '#lib/components/ui/spinner/index.js';
 	import Globe from '@lucide/svelte/icons/globe';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import Eye from '@lucide/svelte/icons/eye';
@@ -10,11 +10,11 @@
 	import { resolve } from '$app/paths';
 	import { api } from '../../../convex/_generated/api';
 	import type { Doc } from '../../../convex/_generated/dataModel';
-	import BadgeShield from '$lib/components/badges/BadgeShield.svelte';
-	import { getBadgeIcon } from '$lib/components/badges/icons';
-	import { Button } from '$lib/components/ui/button';
-	import * as Alert from '$lib/components/ui/alert';
-	import { Switch } from '$lib/components/ui/switch';
+	import BadgeShield from '#lib/components/badges/BadgeShield.svelte';
+	import { getBadgeIcon } from '#lib/components/badges/icons.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Alert from '#lib/components/ui/alert/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
 
 	const percentFormatter = new Intl.NumberFormat('en-US', {
 		minimumFractionDigits: 2,

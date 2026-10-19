@@ -1,4 +1,4 @@
-import { blogPosts } from '$lib/content/blog';
+import { blogPosts } from '#lib/content/blog.js';
 
 export const SITE_ORIGIN = 'https://learnterms.com';
 
@@ -71,10 +71,6 @@ const routeMetadata: Record<string, readonly [string, string]> = {
 		'Grade Calculator',
 		'Calculate your current grade, explore target outcomes, and plan remaining coursework with grades stored in your browser.'
 	],
-	'/docs': [
-		'Documentation',
-		'Explore LearnTerms guides for students, cohort leaders, and content curators.'
-	],
 	'/classes': ['My Classes', 'Browse your classes and continue studying your course modules.'],
 	'/cohort': ['My Cohort', 'Manage your LearnTerms cohort and membership.'],
 	'/badges': ['My Badges', 'View your learning achievements and earned LearnTerms badges.'],
@@ -127,30 +123,6 @@ const routeMetadata: Record<string, readonly [string, string]> = {
 	'/classes/[classId]/tests/[attemptId]/results': [
 		'Test Results',
 		'Review your practice test results and explanations.'
-	],
-	'/docs/getting-started': [
-		'Getting Started',
-		'Get started with LearnTerms, join your cohort, and find your course materials.'
-	],
-	'/docs/onboarding': [
-		'Onboarding',
-		'Set up your LearnTerms account and begin studying with your cohort.'
-	],
-	'/docs/admin': [
-		'Admin Documentation',
-		'Learn how to manage LearnTerms classes, modules, and cohort content.'
-	],
-	'/docs/admin/content-library': [
-		'Content Library Guide',
-		'Learn how to organize course materials in the LearnTerms content library.'
-	],
-	'/docs/lt-models': [
-		'Generation Models',
-		'Learn about question generation options in LearnTerms.'
-	],
-	'/docs/students/study-flow': [
-		'Student Study Flow',
-		'Learn how to practice questions, review feedback, and track progress in LearnTerms.'
 	]
 };
 
