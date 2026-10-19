@@ -31,7 +31,7 @@ async function fixture() {
 
 test('exam findings are normalized on save, kept on untouched edits and cleared with null', async () => {
 	const { t, owner, args, findings } = await fixture();
-	const questionId = await owner.mutation(api.question.insertQuestion, {
+	const questionId = await owner.mutation(api.questions.write.insertQuestion, {
 		...args,
 		examFindings: findings,
 		examFindingsStyle: 'compact'
@@ -51,11 +51,11 @@ test('exam findings are normalized on save, kept on untouched edits and cleared 
 		rationale: args.rationale,
 		status: args.status
 	};
-	await owner.mutation(api.question.updateQuestion, update);
+	await owner.mutation(api.questions.write.updateQuestion, update);
 	question = (await t.run((ctx) => ctx.db.get(questionId)))!;
 	expect(question.examFindings).toHaveLength(1);
 
-	await owner.mutation(api.question.updateQuestion, {
+	await owner.mutation(api.questions.write.updateQuestion, {
 		...update,
 		examFindings: [
 			{ test: 'aidedVa', title: 'VA cc', values: { 'od.distance': '20' }, note: ' Squinting ' }
@@ -66,7 +66,7 @@ test('exam findings are normalized on save, kept on untouched edits and cleared 
 		{ test: 'aidedVa', title: 'VA cc', values: { 'od.distance': '20' }, note: 'Squinting' }
 	]);
 
-	await owner.mutation(api.question.updateQuestion, { ...update, examFindings: null });
+	await owner.mutation(api.questions.write.updateQuestion, { ...update, examFindings: null });
 	question = (await t.run((ctx) => ctx.db.get(questionId)))!;
 	expect(question.examFindings).toBeUndefined();
 	expect(question.examFindingsStyle).toBeUndefined();
@@ -75,13 +75,13 @@ test('exam findings are normalized on save, kept on untouched edits and cleared 
 test('unknown tests and AI-generated questions are rejected', async () => {
 	const { t, owner, args, findings } = await fixture();
 	await expect(
-		owner.mutation(api.question.insertQuestion, {
+		owner.mutation(api.questions.write.insertQuestion, {
 			...args,
 			examFindings: [{ test: 'madeUp', values: { a: '1' } }]
 		})
 	).rejects.toThrow('Unknown exam test');
 	await expect(
-		owner.mutation(api.question.insertQuestion, {
+		owner.mutation(api.questions.write.insertQuestion, {
 			...args,
 			aiGenerated: true,
 			examFindings: findings
@@ -92,9 +92,9 @@ test('unknown tests and AI-generated questions are rejected', async () => {
 
 test('practice test snapshots carry exam findings', async () => {
 	const { t, ids, owner, args, findings } = await fixture();
-	await owner.mutation(api.question.insertQuestion, { ...args, examFindings: findings });
+	await owner.mutation(api.questions.write.insertQuestion, { ...args, examFindings: findings });
 	const classId = await t.run(async (ctx) => (await ctx.db.get(ids.moduleId))!.classId);
-	await owner.mutation(api.customQuiz.createCustomQuizAttempt, {
+	await owner.mutation(api.tests.builder.createCustomQuizAttempt, {
 		classId,
 		moduleIds: [ids.moduleId],
 		questionCount: 1,

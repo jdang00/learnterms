@@ -1022,7 +1022,7 @@
 		onChange();
 	}
 
-	const questions = useQuery(api.question.getQuestionsByModule, () =>
+	const questions = useQuery(api.questions.read.getQuestionsByModule, () =>
 		moduleId ? { id: moduleId as Id<'module'> } : 'skip'
 	);
 
@@ -1234,7 +1234,7 @@
 			}));
 
 			if (mode === 'edit' && editingQuestion) {
-				await client.mutation(api.question.updateQuestion, {
+				await client.mutation(api.questions.write.updateQuestion, {
 					images,
 					source: questionSource ?? null,
 					examFindings: canEditExamFindings ? $state.snapshot(examFindings) : undefined,
@@ -1264,7 +1264,7 @@
 							}
 						: undefined;
 
-				questionId = await client.mutation(api.question.insertQuestion, {
+				questionId = await client.mutation(api.questions.write.insertQuestion, {
 					images,
 					source: questionSource,
 					examFindings: $state.snapshot(examFindings),

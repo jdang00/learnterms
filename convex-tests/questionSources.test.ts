@@ -34,9 +34,9 @@ async function fixture() {
 
 test('manual sources are optional, canonicalized, editable and removable', async () => {
 	const { t, owner, args, source } = await fixture();
-	const plainId = await owner.mutation(api.question.insertQuestion, args);
+	const plainId = await owner.mutation(api.questions.write.insertQuestion, args);
 	expect((await t.run((ctx) => ctx.db.get(plainId)))?.metadata).toEqual({});
-	const questionId = await owner.mutation(api.question.insertQuestion, { ...args, source });
+	const questionId = await owner.mutation(api.questions.write.insertQuestion, { ...args, source });
 	let question = (await t.run((ctx) => ctx.db.get(questionId)))!;
 	expect(question.aiGenerated).toBe(false);
 	expect(question.metadata.generation).toBeUndefined();
@@ -55,17 +55,17 @@ test('manual sources are optional, canonicalized, editable and removable', async
 		rationale: args.rationale,
 		status: args.status
 	};
-	await owner.mutation(api.question.updateQuestion, update);
+	await owner.mutation(api.questions.write.updateQuestion, update);
 	expect((await t.run((ctx) => ctx.db.get(questionId)))?.metadata.source).toEqual(
 		question.metadata.source
 	);
-	await owner.mutation(api.question.updateQuestion, {
+	await owner.mutation(api.questions.write.updateQuestion, {
 		...update,
 		source: { ...source, sourcePageNumbers: [5] }
 	});
 	question = (await t.run((ctx) => ctx.db.get(questionId)))!;
 	expect(question.metadata.source?.sourcePageNumbers).toEqual([5]);
-	await owner.mutation(api.question.updateQuestion, { ...update, source: null });
+	await owner.mutation(api.questions.write.updateQuestion, { ...update, source: null });
 	expect((await t.run((ctx) => ctx.db.get(questionId)))?.metadata.source).toBeUndefined();
 });
 
@@ -73,7 +73,7 @@ test('invalid pages and unavailable or foreign documents are rejected atomically
 	const { t, ids, owner, args, source } = await fixture();
 	for (const pages of [[], [0], [11], [1.5]]) {
 		await expect(
-			owner.mutation(api.question.insertQuestion, {
+			owner.mutation(api.questions.write.insertQuestion, {
 				...args,
 				source: { ...source, sourcePageNumbers: pages }
 			})
@@ -87,21 +87,21 @@ test('invalid pages and unavailable or foreign documents are rejected atomically
 		const otherId = await ctx.db.insert('cohort', { ...fields, name: 'Other cohort' });
 		await ctx.db.patch(ids.documentId, { cohortId: otherId });
 	});
-	await expect(owner.mutation(api.question.insertQuestion, { ...args, source })).rejects.toThrow(
-		'another cohort'
-	);
+	await expect(
+		owner.mutation(api.questions.write.insertQuestion, { ...args, source })
+	).rejects.toThrow('another cohort');
 	await t.run((ctx) => ctx.db.patch(ids.documentId, { cohortId: ids.cohortId, deletedAt: 1 }));
-	await expect(owner.mutation(api.question.insertQuestion, { ...args, source })).rejects.toThrow(
-		'unavailable'
-	);
+	await expect(
+		owner.mutation(api.questions.write.insertQuestion, { ...args, source })
+	).rejects.toThrow('unavailable');
 	expect(await t.run((ctx) => ctx.db.query('question').collect())).toHaveLength(0);
 });
 
 test('test attempts retain manual source chips in their snapshots', async () => {
 	const { t, ids, owner, args, source } = await fixture();
-	await owner.mutation(api.question.insertQuestion, { ...args, source });
+	await owner.mutation(api.questions.write.insertQuestion, { ...args, source });
 	const classId = await t.run(async (ctx) => (await ctx.db.get(ids.moduleId))!.classId);
-	await owner.mutation(api.customQuiz.createCustomQuizAttempt, {
+	await owner.mutation(api.tests.builder.createCustomQuizAttempt, {
 		classId,
 		moduleIds: [ids.moduleId],
 		questionCount: 1,

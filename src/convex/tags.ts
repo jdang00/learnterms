@@ -1,9 +1,4 @@
-import {
-	requireCurrentUser,
-	requireClassAccess,
-	requireModuleAccess,
-	requireClassStaff
-} from './access';
+import { requireClassAccess, requireModuleAccess, requireClassStaff } from './access';
 import { authQuery, authAdminMutation } from './authQueries';
 import { v } from 'convex/values';
 
@@ -25,7 +20,7 @@ function normalizeColor(color?: string) {
 export const getTagsForClass = authQuery({
 	args: { classId: v.id('class') },
 	handler: async (ctx, args) => {
-		await requireClassAccess(ctx, await requireCurrentUser(ctx), args.classId);
+		await requireClassAccess(ctx, ctx.user, args.classId);
 		const tags = await ctx.db
 			.query('tags')
 			.withIndex('by_classId', (q) => q.eq('classId', args.classId))

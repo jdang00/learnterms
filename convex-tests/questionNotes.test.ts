@@ -132,12 +132,12 @@ test.each(['single', 'bulk'])('%s question deletion cascades to every user note'
 			expectedRevision: 0
 		});
 		if (mode === 'single')
-			await f.owner.mutation(api.question.deleteQuestion, {
+			await f.owner.mutation(api.questions.write.deleteQuestion, {
 				questionId: f.questionId,
 				moduleId: f.ids.moduleId
 			});
 		else
-			await f.owner.mutation(api.question.bulkDeleteQuestions, {
+			await f.owner.mutation(api.questions.bulk.bulkDeleteQuestions, {
 				questionIds: [f.questionId],
 				moduleId: f.ids.moduleId
 			});

@@ -42,110 +42,45 @@ With backfilled stats, the dashboard:
 
 ## Usage
 
-### Quick Start - Backfill Everything
+Every backfill is a Convex internal function under `src/convex/migrations/`. Paginated ones
+schedule their own next page, so one command runs to completion. Add `--prod` for production.
+
+### Everything in one run
 
 ```bash
-./scripts/backfill-all-prod-stats.sh
+bunx convex run migrations/progressStats:backfillAllProgressStats --prod
 ```
 
-This script will:
+This action backfills cohort-level stats for every cohort, then user-level stats for every
+cohort page by page, and returns per-cohort counts.
 
-1. Show current status of all cohorts
-2. Ask for confirmation
-3. Backfill cohort-level stats for all cohorts
-4. Backfill user-level stats for each cohort (paginated)
-5. Show final status
-
-### Manual Commands
-
-#### Check Status
+### Manual commands
 
 ```bash
-bunx convex run migrations:getAllCohortsStatus --prod
+# Status per cohort
+bunx convex run migrations/progressStats:getAllCohortsStatus --prod
+
+# Cohort-level stats for every cohort, or one cohort
+bunx convex run migrations/progressStats:backfillAllCohortsStats --prod
+bunx convex run migrations/progressStats:backfillCohortStats '{"cohortId": "jd7..."}' --prod
+
+# User-level stats for one cohort (schedules its own pages)
+bunx convex run migrations/progressStats:backfillUserProgressStats '{"cohortId": "jd7..."}' --prod
+
+# Step one page at a time instead
+bunx convex run migrations/progressStats:backfillUserProgressStats '{"cohortId": "jd7...", "continueAutomatically": false}' --prod
+
+# Find a cohort id
+bunx convex run migrations/lookups:findCohortByName '{"search": "NSUOCO"}' --prod
 ```
 
-#### Backfill All Cohort Stats
+### Other paginated backfills
 
 ```bash
-bunx convex run migrations:backfillAllCohortsStats --prod
+bunx convex run migrations/questions:backfillFlagCounts --prod
+bunx convex run migrations/questions:backfillQuestionRationales --prod
+bunx convex run migrations/questions:backfillSearchTextForAllModules --prod
+bunx convex run migrations/modules:backfillPublishedQuestionCounts --prod
+bunx convex run migrations/attempts:backfillAttemptItemRationales --prod
+bunx convex run migrations/users:clearPlanField --prod
 ```
-
-#### Backfill User Stats for a Specific Cohort
-
-```bash
-# Single batch
-bunx convex run migrations:backfillUserProgressStats '{"cohortId": "jd7..."}' --prod
-
-# Continue with pagination (use cursor from previous result)
-bunx convex run migrations:backfillUserProgressStats '{"cohortId": "jd7...", "cursor": "abc..."}' --prod
-```
-
-#### Find Next Cohort Needing Backfill
-
-```bash
-bunx convex run migrations:getNextCohortForUserBackfill --prod
-```
-
-#### Backfill Specific Cohort Stats
-
-```bash
-bunx convex run migrations:backfillCohortStats '{"cohortId": "jd7..."}' --prod
-```
-
-## Migration Functions
-
-All migration functions are in `src/convex/migrations.ts`:
-
-- `getAllCohortsStatus` - Query to check backfill status
-- `backfillAllCohortsStats` - Mutation to backfill all cohort-level stats
-- `backfillCohortStats` - Mutation to backfill single cohort stats
-- `backfillUserProgressStats` - Mutation to backfill user stats (paginated)
-- `getNextCohortForUserBackfill` - Query to find next cohort needing backfill
-
-## Performance Considerations
-
-- **Cohort stats**: Computed in a single mutation per cohort
-- **User stats**: Paginated (default 20 users per batch) to avoid timeouts
-- **Batch size**: Configurable via `batchSize` parameter (default: 20)
-- **Total time**: Depends on number of cohorts and users (typically 5-10 min for full backfill)
-
-## When to Re-run
-
-You should re-run the backfill when:
-
-1. New cohorts are created
-2. Significant user activity has occurred
-3. Admin dashboard shows stale/missing data
-4. After bulk imports of questions or users
-
-## Automated Updates
-
-The following operations automatically update stats in real-time:
-
-- `saveUserProgress` - Updates user stats when progress is saved
-- Flag count increments/decrements are handled automatically
-- Cohort stats require manual backfill (no real-time updates)
-
-## Troubleshooting
-
-### Script Fails Midway
-
-The script is idempotent - you can safely re-run it. It will:
-
-- Skip cohorts that already have stats
-- Only process users without progressStats
-
-### Check Specific Cohort
-
-```bash
-bunx convex run migrations:findCohortByName '{"search": "NSUOCO"}' --prod
-bunx convex run migrations:backfillCohortStats '{"cohortId": "<id>"}' --prod
-```
-
-### Verify Results
-
-After backfill, check the admin dashboard:
-
-- Navigate to `/admin/progress`
-- Verify that stats load quickly
-- Check that student details modal loads without delay

@@ -1,7 +1,8 @@
 import type { QueryCtx } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 
-type ReadCtx = Pick<QueryCtx, 'auth' | 'db'>;
+// Wrapped handlers (authQueries.ts) carry the caller on ctx.user, so helpers skip a second lookup.
+type ReadCtx = Pick<QueryCtx, 'auth' | 'db'> & { user?: Doc<'users'> };
 
 export async function requireIdentity(ctx: Pick<QueryCtx, 'auth'>) {
 	const identity = await ctx.auth.getUserIdentity();
@@ -15,13 +16,26 @@ export async function requireSelfIdentity(ctx: Pick<QueryCtx, 'auth'>, clerkUser
 	return identity;
 }
 
-export async function requireCurrentUser(ctx: ReadCtx) {
-	const identity = await requireIdentity(ctx);
+export async function findUserByClerkId(ctx: Pick<QueryCtx, 'db'>, clerkUserId: string) {
 	const user = await ctx.db
 		.query('users')
-		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', identity.subject))
+		.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', clerkUserId))
 		.first();
-	if (!user || user.deletedAt) throw new Error('Unauthorized');
+	return user && !user.deletedAt ? user : null;
+}
+
+/** The caller's users doc, or null when they are signed out or not onboarded yet. */
+export async function optionalCurrentUser(ctx: ReadCtx) {
+	if (ctx.user) return ctx.user;
+	const identity = await ctx.auth.getUserIdentity();
+	return identity ? await findUserByClerkId(ctx, identity.subject) : null;
+}
+
+export async function requireCurrentUser(ctx: ReadCtx) {
+	if (ctx.user) return ctx.user;
+	const identity = await requireIdentity(ctx);
+	const user = await findUserByClerkId(ctx, identity.subject);
+	if (!user) throw new Error('Unauthorized');
 	return user;
 }
 

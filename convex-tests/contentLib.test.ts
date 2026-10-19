@@ -52,9 +52,10 @@ test('library rejects unauthenticated and other-cohort requests while allowing d
 	await expect(
 		t.withIdentity({ subject: 'outsider' }).query(api.contentLib.getR2DocumentsByCohort, args)
 	).rejects.toThrow('Unauthorized for this cohort');
+	// Identities without a users doc are rejected by the auth wrapper before any cohort check.
 	await expect(
 		t.withIdentity({ subject: 'unregistered' }).query(api.contentLib.getR2DocumentsByCohort, args)
-	).rejects.toThrow('Unauthorized for this cohort');
+	).rejects.toThrow('Unauthorized');
 	await expect(
 		t.withIdentity({ subject: 'developer' }).query(api.contentLib.getR2DocumentsByCohort, args)
 	).resolves.toEqual([]);

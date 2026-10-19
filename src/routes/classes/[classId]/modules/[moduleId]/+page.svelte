@@ -255,7 +255,7 @@
 
 	// Official convex-svelte pattern for SSR hydration with live updates
 	const questions = useQuery(
-		api.question.getQuestionsByModule,
+		api.questions.read.getQuestionsByModule,
 		() => ({ id: moduleId }),
 		() => ({ initialData: data.module })
 	);

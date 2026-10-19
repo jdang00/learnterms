@@ -72,7 +72,7 @@
 		if (!selectedQuestionIds || selectedQuestionIds.length === 0) return;
 		isSubmitting = true;
 		try {
-			await client.mutation(api.question.moveQuestionsToModule, {
+			await client.mutation(api.questions.order.moveQuestionsToModule, {
 				sourceModuleId: sourceModuleId as Id<'module'>,
 				targetModuleId: selectedModuleId as Id<'module'>,
 				questionIds: selectedQuestionIds as Id<'question'>[]

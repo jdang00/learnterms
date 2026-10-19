@@ -39,7 +39,7 @@
 	const classId = $derived(page.params.classId as Id<'class'>);
 	const attemptId = $derived(page.params.attemptId as Id<'quizAttempts'>);
 
-	const resultsQuery = useQuery(api.customQuiz.getAttemptResults, () =>
+	const resultsQuery = useQuery(api.tests.results.getAttemptResults, () =>
 		attemptId ? { attemptId } : 'skip'
 	);
 	type ResultsQueryData = NonNullable<typeof resultsQuery.data>;

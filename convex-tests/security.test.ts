@@ -4,9 +4,12 @@ import { convexTest } from 'convex-test';
 import polar from '@convex-dev/polar/test';
 import schema from '../src/convex/schema';
 import { api, internal } from '../src/convex/_generated/api';
-import * as migrations from '../src/convex/migrations';
-import * as moduleFunctions from '../src/convex/module';
-import * as questionFunctions from '../src/convex/question';
+import * as migrationAttempts from '../src/convex/migrations/attempts';
+import * as migrationLookups from '../src/convex/migrations/lookups';
+import * as migrationModules from '../src/convex/migrations/modules';
+import * as migrationProgressStats from '../src/convex/migrations/progressStats';
+import * as migrationQuestions from '../src/convex/migrations/questions';
+import * as migrationUsers from '../src/convex/migrations/users';
 import { syncProducts } from '../src/convex/polar';
 
 const modules = import.meta.glob('../src/convex/**/*.ts');
@@ -223,21 +226,23 @@ test('anonymous and student callers cannot create or delete administrative recor
 
 test('maintenance and bootstrap endpoints are internal; authenticated CLI maintenance still works', async () => {
 	for (const fn of [
-		...Object.values(migrations),
-		moduleFunctions.backfillModuleCohortIds,
-		moduleFunctions.backfillQuestionCounts,
-		questionFunctions.backfillQuestionSearchTextForModule,
-		questionFunctions.backfillSearchTextForAllModules,
-		questionFunctions.backfillQuestionRationales,
+		...Object.values(migrationAttempts),
+		...Object.values(migrationLookups),
+		...Object.values(migrationModules),
+		...Object.values(migrationProgressStats),
+		...Object.values(migrationQuestions),
+		...Object.values(migrationUsers),
 		syncProducts
 	]) {
 		expect(fn).toHaveProperty('isInternal', true);
 		expect(fn).not.toHaveProperty('isPublic');
 	}
 	const { t, ids } = await setup();
-	await t.mutation(internal.migrations.bootstrapDev, { clerkUserId: 'student' });
+	await t.mutation(internal.migrations.users.bootstrapDev, { clerkUserId: 'student' });
 	expect((await t.run((ctx) => ctx.db.get(ids.studentId)))?.role).toBe('dev');
-	await expect(t.mutation(internal.module.backfillQuestionCounts, {})).resolves.toMatchObject({
+	await expect(
+		t.mutation(internal.migrations.modules.backfillQuestionCounts, {})
+	).resolves.toMatchObject({
 		totalModules: 1
 	});
 });
@@ -518,23 +523,26 @@ test('class and module APIs enforce cohort boundaries for every non-developer ro
 			caller.query(api.module.getModuleQuestionCount, { moduleId: ids.moduleId })
 		).rejects.toThrow();
 		await expect(
-			caller.query(api.question.getQuestionsByModule, { id: ids.moduleId })
+			caller.query(api.questions.read.getQuestionsByModule, { id: ids.moduleId })
 		).rejects.toThrow();
 		await expect(
-			caller.query(api.question.getFirstQuestionInModule, { id: ids.moduleId })
+			caller.query(api.questions.read.getFirstQuestionInModule, { id: ids.moduleId })
 		).rejects.toThrow();
 		await expect(
-			caller.query(api.question.getQuestionsByModuleAdmin, { id: ids.moduleId })
+			caller.query(api.questions.read.getQuestionsByModuleAdmin, { id: ids.moduleId })
 		).rejects.toThrow();
 		await expect(
-			caller.query(api.question.searchQuestionsByModuleAdmin, { id: ids.moduleId, query: '' })
+			caller.query(api.questions.search.searchQuestionsByModuleAdmin, {
+				id: ids.moduleId,
+				query: ''
+			})
 		).rejects.toThrow();
 		await expect(
 			caller.query(api.tags.getTagsForModule, { moduleId: ids.moduleId })
 		).rejects.toThrow();
 	}
 	await expect(
-		student.query(api.question.getQuestionsByModule, { id: ids.moduleId })
+		student.query(api.questions.read.getQuestionsByModule, { id: ids.moduleId })
 	).resolves.toHaveLength(1);
 	await expect(student.query(api.module.getAdminModule, { id: ids.classId })).rejects.toThrow(
 		'Unauthorized'
@@ -547,12 +555,12 @@ test('class and module APIs enforce cohort boundaries for every non-developer ro
 	});
 	await t.run((ctx) => ctx.db.patch(ids.devId, { cohortId: ids.otherCohortId }));
 	await expect(
-		dev.query(api.question.getQuestionsByModuleAdmin, { id: ids.moduleId })
+		dev.query(api.questions.read.getQuestionsByModuleAdmin, { id: ids.moduleId })
 	).resolves.toHaveLength(1);
 	for (const query of [
 		api.class.getAllClasses,
 		api.module.getAllModules,
-		api.question.getAllQuestions
+		api.questions.read.getAllQuestions
 	]) {
 		await expect(student.query(query, {})).rejects.toThrow('Unauthorized');
 		await expect(dev.query(query, {})).resolves.toBeInstanceOf(Array);
@@ -571,16 +579,19 @@ test('foreign staff cannot edit, delete, or create content through direct reques
 		outside.mutation(api.tags.createTag, { classId: ids.classId, name: 'Foreign tag' })
 	).rejects.toThrow('access denied');
 	await expect(
-		outside.mutation(api.question.deleteQuestion, {
+		outside.mutation(api.questions.write.deleteQuestion, {
 			questionId: ids.questionId,
 			moduleId: ids.moduleId
 		})
 	).rejects.toThrow('access denied');
 	await expect(
-		outside.mutation(api.question.bulkInsertQuestions, { moduleId: ids.moduleId, questions: [] })
+		outside.mutation(api.questions.bulk.bulkInsertQuestions, {
+			moduleId: ids.moduleId,
+			questions: []
+		})
 	).rejects.toThrow('access denied');
 	await expect(
-		outside.mutation(api.question.duplicateQuestion, { questionId: ids.questionId })
+		outside.mutation(api.questions.duplicate.duplicateQuestion, { questionId: ids.questionId })
 	).rejects.toThrow('access denied');
 	expect(await t.run((ctx) => ctx.db.get(ids.questionId))).not.toBeNull();
 });
@@ -588,23 +599,23 @@ test('foreign staff cannot edit, delete, or create content through direct reques
 test('shared access helpers reject deleted users and foreign or deleted classes across modules', async () => {
 	const { t, student, dev, ids } = await setup();
 	await expect(
-		student.query(api.customQuiz.getUserAttemptsForClass, { classId: ids.classId })
+		student.query(api.tests.results.getUserAttemptsForClass, { classId: ids.classId })
 	).resolves.toEqual([]);
 	await expect(
-		student.query(api.customQuiz.getUserAttemptsForClass, { classId: ids.otherClassId })
+		student.query(api.tests.results.getUserAttemptsForClass, { classId: ids.otherClassId })
 	).rejects.toThrow('access denied');
 	await expect(
-		dev.query(api.customQuiz.getUserAttemptsForClass, { classId: ids.otherClassId })
+		dev.query(api.tests.results.getUserAttemptsForClass, { classId: ids.otherClassId })
 	).resolves.toEqual([]);
 
 	await t.run((ctx) => ctx.db.patch(ids.classId, { deletedAt: 1 }));
 	await expect(
-		student.query(api.customQuiz.getUserAttemptsForClass, { classId: ids.classId })
+		student.query(api.tests.results.getUserAttemptsForClass, { classId: ids.classId })
 	).rejects.toThrow('access denied');
 
 	await t.run((ctx) => ctx.db.patch(ids.studentId, { deletedAt: 1 }));
 	await expect(
-		student.query(api.customQuiz.getUserAttemptsForClass, { classId: ids.otherClassId })
+		student.query(api.tests.results.getUserAttemptsForClass, { classId: ids.otherClassId })
 	).rejects.toThrow('Unauthorized');
 	await expect(student.query(api.featureAnnouncements.getCurrentForViewer, {})).rejects.toThrow(
 		'Unauthorized'
@@ -651,4 +662,24 @@ test('study overview only reports the caller’s own progress inside their cohor
 	const outside = await t.withIdentity({ subject: 'outside' }).query(api.studyOverview.getMine, {});
 	expect(outside.classes.map((c) => c.classId)).toEqual([ids.otherClassId]);
 	expect(outside.recent).toEqual([]);
+});
+
+test('layout queries tolerate signed-in users who have not onboarded, but never anonymous callers', async () => {
+	const { t, student, ids } = await setup();
+	const unregistered = t.withIdentity({ subject: 'unregistered' });
+	await expect(t.query(api.cohort.getCurrentUserQuickLinks, {})).rejects.toThrow('Unauthorized');
+	await expect(t.query(api.badges.getNextUnseenBadgeAwardForViewer, {})).rejects.toThrow(
+		'Unauthorized'
+	);
+	await expect(unregistered.query(api.cohort.getCurrentUserQuickLinks, {})).resolves.toEqual([]);
+	await expect(
+		unregistered.query(api.badges.getNextUnseenBadgeAwardForViewer, {})
+	).resolves.toBeNull();
+	// Every other wrapped function rejects identities without a users doc before touching data.
+	await expect(
+		unregistered.query(api.tests.results.getUserAttemptsForClass, { classId: ids.classId })
+	).rejects.toThrow('Unauthorized');
+	await expect(student.query(api.cohort.getCurrentUserQuickLinks, {})).resolves.toBeInstanceOf(
+		Array
+	);
 });

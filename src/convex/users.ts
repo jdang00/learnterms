@@ -124,26 +124,22 @@ export const updateUserRole = authAdminMutation({
 		role: v.optional(v.union(v.literal('dev'), v.literal('admin'), v.literal('curator'), v.null()))
 	},
 	handler: async (ctx, args) => {
-		// Get the caller's user record to check their role
-		const caller = await ctx.db
-			.query('users')
-			.withIndex('by_clerkUserId', (q) => q.eq('clerkUserId', ctx.identity.subject))
-			.first();
+		const caller = ctx.user;
 
 		const targetUser = await ctx.db.get(args.userId);
 		if (!targetUser) {
 			throw new Error('Target user not found');
 		}
-		if (caller?.role !== 'dev' && (!caller?.cohortId || caller.cohortId !== targetUser.cohortId)) {
+		if (caller.role !== 'dev' && (!caller.cohortId || caller.cohortId !== targetUser.cohortId)) {
 			throw new Error('Unauthorized for this cohort');
 		}
 
-		const callerRole = caller?.role || 'student';
+		const callerRole = caller.role || 'student';
 		const targetCurrentRole = targetUser.role || 'student';
 		const targetNewRole = args.role === null ? 'student' : args.role || targetCurrentRole;
 
 		// Rule 1: Users cannot change their own role
-		if (caller?._id === args.userId && args.role !== undefined) {
+		if (caller._id === args.userId && args.role !== undefined) {
 			throw new Error('You cannot change your own role');
 		}
 

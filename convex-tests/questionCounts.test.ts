@@ -30,9 +30,9 @@ async function fixture() {
 
 test('drafts count for staff but not for students', async () => {
 	const { owner, ids, classId, question, counts } = await fixture();
-	const draftId = await owner.mutation(api.question.insertQuestion, question('draft', 0));
+	const draftId = await owner.mutation(api.questions.write.insertQuestion, question('draft', 0));
 	expect(await counts()).toEqual({ all: 1, published: 0 });
-	await owner.mutation(api.question.insertQuestion, question('published', 1));
+	await owner.mutation(api.questions.write.insertQuestion, question('published', 1));
 	expect(await counts()).toEqual({ all: 2, published: 1 });
 
 	const [studentModule] = await owner.query(api.module.getClassModules, { id: classId });
@@ -42,7 +42,7 @@ test('drafts count for staff but not for students', async () => {
 	});
 	expect(staffModule.questionCount).toBe(2);
 
-	await owner.mutation(api.question.bulkUpdateQuestionStatus, {
+	await owner.mutation(api.questions.bulk.bulkUpdateQuestionStatus, {
 		questionIds: [draftId],
 		moduleId: ids.moduleId,
 		status: 'published'
@@ -50,7 +50,7 @@ test('drafts count for staff but not for students', async () => {
 	expect(await counts()).toEqual({ all: 2, published: 2 });
 
 	const { moduleId, type, stem, rationale } = question('draft', 0);
-	await owner.mutation(api.question.updateQuestion, {
+	await owner.mutation(api.questions.write.updateQuestion, {
 		questionId: draftId,
 		moduleId,
 		type,
@@ -65,14 +65,14 @@ test('drafts count for staff but not for students', async () => {
 
 test('the backfill sets the published count on older modules', async () => {
 	const { t, owner, ids, classId, question, counts } = await fixture();
-	await owner.mutation(api.question.insertQuestion, question('published', 0));
-	await owner.mutation(api.question.insertQuestion, question('draft', 1));
+	await owner.mutation(api.questions.write.insertQuestion, question('published', 0));
+	await owner.mutation(api.questions.write.insertQuestion, question('draft', 1));
 	await t.run((ctx) => ctx.db.patch(ids.moduleId, { publishedQuestionCount: undefined }));
 
 	// Until the backfill runs, older modules fall back to the full count.
 	const [before] = await owner.query(api.module.getClassModules, { id: classId });
 	expect(before.questionCount).toBe(2);
 
-	await t.mutation(internal.migrations.backfillPublishedQuestionCounts, {});
+	await t.mutation(internal.migrations.modules.backfillPublishedQuestionCounts, {});
 	expect(await counts()).toEqual({ all: 2, published: 1 });
 });

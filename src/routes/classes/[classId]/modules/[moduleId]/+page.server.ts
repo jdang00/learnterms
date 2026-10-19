@@ -85,7 +85,7 @@ export const load: PageServerLoad = async ({
 	client.setAuth(token);
 
 	try {
-		const module = await client.query(api.question.getQuestionsByModule, {
+		const module = await client.query(api.questions.read.getQuestionsByModule, {
 			id: moduleId
 		});
 
