@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { createEditor, Editor, EditorContent } from 'svelte-tiptap';
+	import type { Editor } from 'svelte-tiptap';
 	import type { Readable } from 'svelte/store';
 	import Bold from '@lucide/svelte/icons/bold';
 	import Italic from '@lucide/svelte/icons/italic';
@@ -12,7 +12,7 @@
 	import QuoteIcon from '@lucide/svelte/icons/quote';
 	import ListIcon from '@lucide/svelte/icons/list';
 	import ListOrderedIcon from '@lucide/svelte/icons/list-ordered';
-	import { getEditorExtensions } from '$lib/config/tiptap';
+	import { loadEditorExtensions } from '$lib/config/tiptap';
 	import { Button } from '$lib/components/ui/button';
 	let {
 		value = $bindable(''),
@@ -20,6 +20,7 @@
 		disabled = false
 	}: { value?: string; label: string; disabled?: boolean } = $props();
 	let editor = $state<Readable<Editor>>();
+	let Content = $state.raw<(typeof import('svelte-tiptap'))['EditorContent']>();
 	type ToolbarItem = {
 		name: string;
 		command: () => void;
@@ -147,22 +148,34 @@
 
 	const toolbar = createToolbarCommands(() => $editor);
 	onMount(() => {
-		editor = createEditor({
-			extensions: getEditorExtensions(),
-			content: value,
-			editable: !disabled,
-			editorProps: {
-				attributes: {
-					class: 'prose prose-sm max-w-none focus:outline-hidden min-h-[5rem] p-3 tiptap-content',
-					'aria-label': label,
-					role: 'textbox',
-					'aria-multiline': 'true'
+		let disposed = false;
+		void (async () => {
+			const [{ createEditor, EditorContent }, extensions] = await Promise.all([
+				import('svelte-tiptap'),
+				loadEditorExtensions()
+			]);
+			if (disposed) return;
+			Content = EditorContent;
+			editor = createEditor({
+				extensions,
+				content: value,
+				editable: !disabled,
+				editorProps: {
+					attributes: {
+						class: 'prose prose-sm max-w-none focus:outline-hidden min-h-[5rem] p-3 tiptap-content',
+						'aria-label': label,
+						role: 'textbox',
+						'aria-multiline': 'true'
+					}
+				},
+				onUpdate: ({ editor }) => {
+					value = editor.isEmpty ? '' : editor.getHTML();
 				}
-			},
-			onUpdate: ({ editor }) => {
-				value = editor.isEmpty ? '' : editor.getHTML();
-			}
-		});
+			});
+		})();
+		return () => {
+			disposed = true;
+		};
 	});
 	let appliedValue: string | undefined;
 	$effect(() => {
@@ -184,7 +197,7 @@
 </script>
 
 <div class="min-w-0 overflow-hidden surface focus-within:border-primary">
-	{#if $editor}
+	{#if $editor && Content}
 		<div
 			class="flex flex-wrap gap-1 border-b border-border bg-muted/50 p-1"
 			role="group"
@@ -204,6 +217,6 @@
 				>
 			{/each}
 		</div>
-		<EditorContent editor={$editor} />
+		<Content editor={$editor} />
 	{/if}
 </div>

@@ -1,11 +1,15 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Marked, Renderer } from 'marked';
 	import {
+		loadKatex,
 		renderLatex,
 		stripPreviewArtifactReferences,
-		isLocalArtifactLink
+		isLocalArtifactLink,
+		type LatexRenderer
 	} from '../content-library/contentLibraryPreview';
 	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
+	import { LoadingState } from '$lib/components/ui/spinner';
 	import 'katex/dist/katex.min.css';
 	let { text }: { text: string } = $props();
 	const renderer = new Renderer();
@@ -15,14 +19,24 @@
 			? text
 			: `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
 	const parser = new Marked({ gfm: true, breaks: false, renderer });
+	let katex = $state.raw<LatexRenderer>();
+	onMount(() => {
+		void loadKatex().then((loaded) => (katex = loaded));
+	});
 	const html = $derived(
-		sanitizeHtml(String(parser.parse(renderLatex(stripPreviewArtifactReferences(text)))))
+		katex
+			? sanitizeHtml(String(parser.parse(renderLatex(stripPreviewArtifactReferences(text), katex))))
+			: ''
 	);
 </script>
 
-<!-- The rendered Markdown passes through sanitizeHtml before insertion. -->
-<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-<div class="source-page prose prose-sm max-w-none p-5 sm:p-7">{@html html}</div>
+{#if katex}
+	<!-- The rendered Markdown passes through sanitizeHtml before insertion. -->
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	<div class="source-page prose prose-sm max-w-none p-5 sm:p-7">{@html html}</div>
+{:else}
+	<LoadingState label="Preparing page…" class="min-h-40" />
+{/if}
 
 <style>
 	.source-page {
