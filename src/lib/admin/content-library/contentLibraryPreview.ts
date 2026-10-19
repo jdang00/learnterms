@@ -1,4 +1,20 @@
-import katex from 'katex';
+export type LatexRenderer = {
+	renderToString: (
+		latex: string,
+		options: {
+			displayMode: boolean;
+			throwOnError: boolean;
+			strict: boolean;
+			trust: boolean;
+			output: 'htmlAndMathml';
+		}
+	) => string;
+};
+
+/** KaTeX is loaded on demand so markdown previews don't ship it with the page. */
+export async function loadKatex(): Promise<LatexRenderer> {
+	return (await import('katex')).default;
+}
 
 export type DeckPreviewPage = {
 	pageNumber: number;
@@ -286,7 +302,7 @@ export function buildMarpDeckMarkdown(args: {
 	return `${frontmatter}${body}`;
 }
 
-export function renderLatex(markdown: string) {
+export function renderLatex(markdown: string, katex: LatexRenderer) {
 	const protectedBlocks: string[] = [];
 	const protect = (value: string) => {
 		const token = `@@LT_PROTECTED_${protectedBlocks.length}@@`;

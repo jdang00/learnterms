@@ -34,9 +34,9 @@
 	} from '../../../lib/admin/content-library/contentLibrary';
 	import { formatBytes } from '$lib/utils/format';
 	import {
-		buildMarpDeckMarkdown,
 		extractTableLabels,
 		isLocalArtifactLink,
+		loadKatex,
 		renderLatex,
 		resolveTableLabels,
 		stripPreviewArtifactReferences,
@@ -48,11 +48,11 @@
 	import type { Doc, Id } from '../../../convex/_generated/dataModel';
 	import { useClerkContext } from 'svelte-clerk';
 	import { browser } from '$app/environment';
+	import { resolve } from '$app/paths';
 	import { tick } from 'svelte';
 	import { Marked, Renderer } from 'marked';
-	import { Marp } from '@marp-team/marp-core';
 	import 'katex/dist/katex.min.css';
-	import { sanitizeHtml, sanitizeDeckHtml } from '$lib/utils/sanitizeHtml';
+	import { sanitizeHtml } from '$lib/utils/sanitizeHtml';
 
 	const client = useConvexClient();
 	const clerk = useClerkContext();
@@ -89,7 +89,6 @@
 	let isDeckMode = $state(false);
 	let deckPreviewHtml = $state('');
 	let deckPreviewCss = $state('');
-	let deckPreviewMarkdown = $state('');
 	let deckPreviewError = $state('');
 	let isDeckLoading = $state(false);
 	let deckPreviewDocumentId = $state('');
@@ -126,12 +125,6 @@
 		breaks: false,
 		renderer: markdownRenderer
 	});
-	const marp = new Marp({
-		html: false,
-		math: 'katex',
-		inlineSVG: true
-	});
-
 	const filteredDocs = $derived.by<Doc<'contentLib'>[]>(() => {
 		const search = searchTerm.trim().toLowerCase();
 		const docs = [...(documents.data ?? [])];
@@ -261,13 +254,18 @@
 		fullscreenTableLabel = '';
 
 		try {
-			const preview = await client.action(api.ragKnowledge.previews.getR2DocumentMarkdownPreview, {
-				documentId: document._id
-			});
+			const [preview, katex] = await Promise.all([
+				client.action(api.ragKnowledge.previews.getR2DocumentMarkdownPreview, {
+					documentId: document._id
+				}),
+				loadKatex()
+			]);
 			const cleanedPreview = stripPreviewArtifactReferences(preview.text);
 			pendingTableLabels = resolveTableLabels(extractTableLabels(cleanedPreview));
 			const displayPreview = stripStandaloneTableHeadings(cleanedPreview);
-			markdownPreviewHtml = sanitizeHtml(String(markdownParser.parse(renderLatex(displayPreview))));
+			markdownPreviewHtml = sanitizeHtml(
+				String(markdownParser.parse(renderLatex(displayPreview, katex)))
+			);
 			markdownPreviewTruncated = preview.truncated;
 		} catch (e) {
 			markdownPreviewError =
@@ -283,7 +281,6 @@
 		isDeckLoading = true;
 		deckPreviewHtml = '';
 		deckPreviewCss = '';
-		deckPreviewMarkdown = '';
 		deckPreviewError = '';
 		deckPreviewDocumentId = document._id;
 
@@ -291,13 +288,18 @@
 			const preview = await client.action(api.ragKnowledge.previews.getR2DocumentDeckPreview, {
 				documentId: document._id
 			});
-			deckPreviewMarkdown = buildMarpDeckMarkdown({
-				title: document.title,
-				markdown: preview.text,
-				pages: preview.pages ?? []
+			const response = await fetch(resolve('/admin/library/deck-preview'), {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					title: document.title,
+					markdown: preview.text,
+					pages: preview.pages ?? []
+				})
 			});
-			const rendered = marp.render(deckPreviewMarkdown);
-			deckPreviewHtml = sanitizeDeckHtml(rendered.html);
+			if (!response.ok) throw new Error(`Slide deck rendering failed (${response.status})`);
+			const rendered: { html: string; css: string } = await response.json();
+			deckPreviewHtml = rendered.html;
 			deckPreviewCss = rendered.css;
 			await tick();
 			fitDeckSlides();
