@@ -1,62 +1,98 @@
-[![LearnTerms](https://axcaluti7p.ufs.sh/f/DYlXFqnaImOr0iRZZjwE17POUXjVTyuaLZCAI0p9cgf4lt6w)](https://www.learnterms.com)
-
 # LearnTerms
 
-LearnTerms is a free, open-source study tool built to make mastering complex topics easier and faster. Created by the Northeastern State University Oklahoma College of Optometry Class of 2028, it bridges the gap between platforms like Quizlet and Anki with unique, paywall-free features. Whether you're prepping for exams or fine-tuning your knowledge, LearnTerms is flexible, practical, and designed with students in mind.
+LearnTerms is an open-source study platform for health-professions cohorts. Students practice with course-aligned questions and custom tests; student and faculty curators build and maintain the shared question bank.
 
-## Tools
+The project began as a medical terminology study tool for the Northeastern State University Oklahoma College of Optometry Class of 2028. It has since grown into a platform for organizing course content, studying, and reviewing progress.
 
-- **Svelte** - We use Svelte because it aligns with our functional first, performance oriented philosophy of developing software. Svelte framework ships minimal JavaScript to the front end and its syntax and coding style to implement reactivity is a joy to write.
-- **TailwindCSS** - Modern web devs use TailwindCSS. It provides CSS utility classes and a decent default look while giving fine grain control over everything else.
-- **shadcn-svelte** - Accessible primitives (bits-ui) styled on our own brand tokens, so every screen shares one look without a heavy component framework.
-- **Convex** - A modern, reactive database that simplifies data management and enables real-time features.
-- **Vercel** - Vercel hosts LearnTerms and works with GitHub to deploy the site with every new push. It runs CI/CD, analytics, manages our domains, and serves our AI infrastructure via the AI SDK.
+[Visit LearnTerms](https://learnterms.com) · [Explore features](https://learnterms.com/features) · [Pricing](https://learnterms.com/pricing)
 
-## FAQs
+## What you can do
 
-### How did LearnTerms come about?
+- **Study by course and module:** practice multiple-choice, multiple-select, fill-in-the-blank, matching, and free-response questions with explanations and source references.
+- **Build practice tests:** select course material and practice with a timed test.
+- **Review your work:** revisit missed or flagged questions, add notes and highlights, and track progress.
+- **Curate content:** organize classes and modules, edit questions, and manage course documents for a cohort.
+- **Draft questions with AI:** Question Studio helps curators generate source-grounded drafts for review before they are saved. AI output still needs human review.
 
-LearnTerms was born out of a challenge faced by our class in 4001 Introduction to Optometry, a one hour credit course in the NSUOCO first year curriculum. The weekly medical terminology quizzes presented three critical obstacles:
+Student access is free; the hosted service also offers a paid curator plan. See the [pricing page](https://learnterms.com/pricing) for current details. The source code is available under the [MIT License](LICENSE); running your own instance requires external services and may incur costs.
 
-- **Overwhelming Vocabulary**: Each week's term list exceeded 150 words.
-- **Spelling Precision**: Quizzes demanded exact spelling and specific combining forms.
-- **Inefficient Study Methods**: Self-guided preparation often led to long hours with limited success.
+## Technology
 
-LearnTerms was designed to solve these challenges through condensed learning, spelling mastery, and efficient studying. Today, it has evolved into a powerful study platform that leverages technology and collaboration to help you confidently prepare for your assessments.
+The frontend uses SvelteKit 3, Svelte 5, TypeScript, Tailwind CSS 4, and shadcn-svelte components. Convex provides the database, server functions, and reactive data; Clerk handles authentication. Course documents and question media use Cloudflare R2, while AI workflows use OpenAI, OpenRouter, and Datalab. The hosted app deploys to Vercel.
 
-### Why use LearnTerms?
+## Local development
 
-We understand that there are numerous study tools available, from Quizlet to Anki. What sets LearnTerms apart are its custom-built features designed specifically for your success:
+### Prerequisites
 
-- **Smart Algorithms**: We use predictive models to highlight the terms and questions most likely to appear on your quizzes and exams.
-- **AI-Powered Tools**: Our backend leverages large language models trained on course content, providing a level of specificity that's hard to find elsewhere.
-- **Integrated Learning**: LearnTerms complements your existing study methods, blending active recall, spaced repetition, and targeted practice to help you excel.
+- [Bun](https://bun.sh/) 1.3.5, as specified in `package.json`.
+- Node.js 22.17 or later; SvelteKit tooling runs under Node.
+- A Convex development deployment and a Clerk application. Optional features require additional service configuration described below.
 
-Rather than replace your current tools, LearnTerms enhances your learning experience, giving you a better chance at acing your tests.
+Use Bun for dependency installation and project commands.
 
-### How can I be a part of LearnTerms?
+```sh
+bun install --frozen-lockfile
+```
 
-We're always looking for collaborators! Here are ways you can contribute:
+Configure your own development services before starting the app:
 
-- **Provide Feedback**: Use the platform, suggest features, and tell us what's working (or not). Your input helps us grow and improve.
-- **Become a Tester**: We're actively seeking beta testers and quality assurance volunteers to validate new features and AI outputs.
-- **Contribute to the Code**: If you're a coder, our project is open-source on GitHub, with active issues and branches available for collaboration.
-- **Support Financially**: Running LearnTerms comes with costs—domain fees, infrastructure, and database management, to name a few. If you'd like to support us, reach out to the development team.
+1. Run `bun run dev:convex` and follow the Convex CLI prompts to connect a development deployment. Keep this process running to sync backend changes.
+2. Configure a Clerk JWT template named `convex`, and set `PUBLIC_CLERK_FRONTEND_API_URL` on the Convex deployment to your Clerk frontend API URL. The Convex auth configuration uses that URL and the `convex` application ID.
+3. Set the following in a local environment file such as `.env.local` for the SvelteKit app:
 
-LearnTerms thrives because of its community. Whether you're a casual user or an active contributor, we're grateful for your support!
+   ```dotenv
+   PUBLIC_CONVEX_URL=<your-convex-deployment-url>
+   PUBLIC_CLERK_PUBLISHABLE_KEY=<your-clerk-publishable-key>
+   CLERK_SECRET_KEY=<your-clerk-secret-key>
+   ```
+
+4. In another terminal, run `bun run dev` and open the local URL printed by Vite.
+
+Use development credentials and keep secrets out of Git. A new deployment also needs its own cohort, class, and user data; connecting the services alone does not copy production content or grant curator access. This setup describes the required integration points and has not yet been verified from a clean clone.
+
+### Feature-specific services
+
+Configure these on the Convex deployment when working on the corresponding features:
+
+| Feature                              | Configuration                                                                                                                                                                                                                 |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Document and question-image storage  | Cloudflare R2: `R2_BUCKET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, and `R2_SECRET_ACCESS_KEY`. Browser uploads also need bucket CORS configured for the app origin. See [question image uploads](docs/question-image-uploads.md). |
+| AI question generation and retrieval | `OPENAI_API_KEY` and `OPENROUTER_API_KEY`, depending on the workflow.                                                                                                                                                         |
+| Document OCR                         | `DATALAB_API_KEY`.                                                                                                                                                                                                            |
+| Hosted subscriptions                 | Polar integration and product configuration; see `src/convex/polar.ts`.                                                                                                                                                       |
+
+## Commands
+
+| Command               | Purpose                                                             |
+| --------------------- | ------------------------------------------------------------------- |
+| `bun run dev`         | Start the SvelteKit development server.                             |
+| `bun run dev:convex`  | Run the Convex development sync.                                    |
+| `bun run build`       | Build the app.                                                      |
+| `bun run verify`      | Run Svelte and Convex checks, lint, and all tests; also used by CI. |
+| `bun run verify:fast` | Run checks and lint without tests.                                  |
+| `bun run test:unit`   | Run Bun unit tests.                                                 |
+| `bun run test:convex` | Run Convex tests.                                                   |
+| `bun run test:state`  | Run state and auth tests.                                           |
+
+## Project structure
+
+```text
+src/routes/                  SvelteKit pages and server loads
+src/lib/components/          Shared study UI and component primitives
+src/lib/admin/               Curator and administration components
+src/convex/                  Schema, backend functions, AI workflows, and migrations
+tests/                       Bun unit tests
+convex-tests/                Convex and authorization tests
+docs/                        Feature and operational documentation
+scripts/                     Backfills, evaluations, and maintenance tools
+```
+
+The development-only `/design-system` route documents shared UI components and feature showcases. See [AGENTS.md](AGENTS.md) for project conventions and [the backfill guide](scripts/BACKFILL_README.md) for migration procedures.
+
+## Contributing
+
+Issues, feedback, and contributions are welcome. For code changes, use Bun, follow the project conventions in [AGENTS.md](AGENTS.md), and run `bun run verify` before opening a pull request. CI runs the same verification command on pull requests and pushes to `main`.
 
 ## License
 
-LearnTerms is released under the **MIT License**. See [LICENSE](./LICENSE) for full terms.
-
-## Open Source
-
-1. **Fork & Customize**  
-   You’re free to fork the repo, modify the code, contribute back—whatever you like. The codebase itself is 100% open and not behind any paywall.
-
-2. **Official Hosted Deployment**  
-   While the code is free, hosting and operating the service incurs infrastructure costs. The official LearnTerms platform offers:
-   - **Free Tier**: Core features, community support, and basic analytics at no cost.
-   - **Pro Plan**: Advanced analytics, priority support, team/collaboration tools, and higher usage limits.
-
-To use the hosted service, [create an account](<[https://www.learnterms.app/signup](https://accounts.learnterms.com/sign-up)>) and select the Free or Pro plan that suits your needs.
+LearnTerms is licensed under the [MIT License](LICENSE).
