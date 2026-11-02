@@ -69,7 +69,8 @@
 
 	// Study and test screens bring their own top bar on phones, so the site nav steps aside below lg.
 	const immersive = $derived(
-		/^\/classes\/[^/]+\/(modules\/[^/]+|tests\/(?!new\/?$)[^/]+)\/?$/.test(page.url.pathname)
+		/^\/classes\/[^/]+\/(modules\/[^/]+|tests\/(?!new\/?$)[^/]+)\/?$/.test(page.url.pathname) ||
+			page.url.pathname.startsWith('/study-space')
 	);
 
 	const hideFooter = $derived.by(() => {
