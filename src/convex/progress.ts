@@ -7,49 +7,6 @@ import { polar } from './polar';
 import { requireCohortStaff, requireUserReadById } from './access';
 
 /**
- * Get all students in a cohort with their basic info
- * Uses the by_cohortId index for efficient querying
- */
-export const getStudentsByCohort = authQuery({
-	args: { cohortId: v.id('cohort') },
-	handler: async (ctx, args) => {
-		await requireCohortStaff(ctx, args.cohortId);
-		const students = await ctx.db
-			.query('users')
-			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
-			.collect();
-
-		// Filter out deleted users and return essential fields
-		return students
-			.filter((student) => !student.deletedAt)
-			.map((student) => ({
-				_id: student._id,
-				name: student.name,
-				clerkUserId: student.clerkUserId,
-				updatedAt: student.updatedAt
-			}));
-	}
-});
-
-/**
- * Get total count of students in a cohort
- * Optimized to only count, not fetch full documents
- */
-export const getStudentCountByCohort = authQuery({
-	args: { cohortId: v.id('cohort') },
-	handler: async (ctx, args) => {
-		await requireCohortStaff(ctx, args.cohortId);
-		const students = await ctx.db
-			.query('users')
-			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
-			.collect();
-
-		// Count only non-deleted users
-		return students.filter((student) => !student.deletedAt).length;
-	}
-});
-
-/**
  * Get students with their progress stats for a specific cohort.
  * Uses precomputed progressStats from user records for fast reads.
  * Missing cached statistics are explicitly marked unavailable, never treated as evidence of no activity.
@@ -169,90 +126,6 @@ export const getStudentsWithProgress = authQuery({
 	}
 });
 
-/**
- * Get cohort overview stats (students, questions, modules, avg completion)
- * Uses precomputed stats from cohort.stats field for fast reads.
- * Falls back to computing if stats haven't been backfilled yet.
- */
-export const getCohortProgressStats = authQuery({
-	args: { cohortId: v.id('cohort') },
-	handler: async (ctx, args) => {
-		await requireCohortStaff(ctx, args.cohortId);
-		const cohort = await ctx.db.get(args.cohortId);
-		if (!cohort) {
-			return {
-				totalStudents: 0,
-				totalQuestions: 0,
-				totalModules: 0,
-				averageCompletion: 0
-			};
-		}
-
-		// Use precomputed stats if available
-		if (cohort.stats) {
-			return {
-				totalStudents: cohort.stats.totalStudents,
-				totalQuestions: cohort.stats.totalQuestions,
-				totalModules: cohort.stats.totalModules,
-				averageCompletion: cohort.stats.averageCompletion
-			};
-		}
-
-		// Fallback: compute stats (for cohorts not yet backfilled)
-		const students = await ctx.db
-			.query('users')
-			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
-			.filter((q) => q.eq(q.field('deletedAt'), undefined))
-			.collect();
-
-		const totalStudents = students.length;
-
-		const classes = await ctx.db
-			.query('class')
-			.withIndex('by_cohortId', (q) => q.eq('cohortId', args.cohortId))
-			.collect();
-
-		let totalModules = 0;
-		let totalQuestions = 0;
-
-		for (const classItem of classes) {
-			const modules = await ctx.db
-				.query('module')
-				.withIndex('by_classId', (q) => q.eq('classId', classItem._id))
-				.collect();
-
-			totalModules += modules.length;
-			for (const module of modules) {
-				totalQuestions += publishedQuestionCount(module);
-			}
-		}
-
-		// For fallback, use precomputed user stats if available, otherwise estimate
-		let totalProgressSum = 0;
-		if (totalQuestions > 0 && totalStudents > 0) {
-			for (const student of students) {
-				if (student.progressStats) {
-					const pct =
-						student.progressStats.totalQuestions > 0
-							? (student.progressStats.questionsInteracted / student.progressStats.totalQuestions) *
-								100
-							: 0;
-					totalProgressSum += pct;
-				}
-			}
-		}
-
-		const averageCompletion = totalStudents > 0 ? Math.round(totalProgressSum / totalStudents) : 0;
-
-		return {
-			totalStudents,
-			totalQuestions,
-			totalModules,
-			averageCompletion
-		};
-	}
-});
-
 type ModuleActivity = {
 	moduleId: Id<'module'>;
 	moduleTitle: string;
@@ -311,7 +184,7 @@ async function loadModuleActivity(
 				.collect(),
 			ctx.db
 				.query('userModuleStats')
-				.withIndex('by_classId', (q) => q.eq('classId', classItem._id))
+				.withIndex('by_classId_and_lastActivityAt', (q) => q.eq('classId', classItem._id))
 				.collect()
 		]);
 
@@ -378,49 +251,6 @@ async function loadModuleActivity(
 
 	return { totalStudents, classes, modules, activeStudentsByModule };
 }
-
-export const getModuleCompletionStats = authQuery({
-	args: {
-		cohortId: v.id('cohort'),
-		semesterId: v.optional(v.id('semester')),
-		limit: v.optional(v.number()),
-		offset: v.optional(v.number())
-	},
-	handler: async (ctx, args) => {
-		await requireCohortStaff(ctx, args.cohortId);
-		const limit = Math.max(1, Math.min(args.limit ?? 8, 50));
-		const offset = Math.max(0, args.offset ?? 0);
-		const { totalStudents, modules } = await loadModuleActivity(
-			ctx,
-			args.cohortId,
-			args.semesterId
-		);
-
-		const rankedModules = [...modules].sort((a, b) =>
-			totalStudents === 0
-				? a.className.localeCompare(b.className) || a.moduleOrder - b.moduleOrder
-				: a.completion - b.completion ||
-					a.className.localeCompare(b.className) ||
-					a.moduleOrder - b.moduleOrder
-		);
-
-		const averageCompletion =
-			rankedModules.length > 0
-				? Math.round(
-						rankedModules.reduce((sum, module) => sum + module.completion, 0) / rankedModules.length
-					)
-				: 0;
-		const hasMore = offset + limit < rankedModules.length;
-
-		return {
-			totalStudents,
-			totalModules: rankedModules.length,
-			averageCompletion,
-			modules: rankedModules.slice(offset, offset + limit),
-			page: { offset, limit, hasMore, nextOffset: hasMore ? offset + limit : null }
-		};
-	}
-});
 
 /**
  * Every class in the cohort with per-module activity, so curators can scan stats without drilling in.
@@ -817,7 +647,8 @@ const activityFields = {
 			emoji: v.union(v.string(), v.null()),
 			className: v.string(),
 			tries: v.number(),
-			userIds: v.array(v.id('users'))
+			userIds: v.array(v.id('users')),
+			hours: v.array(v.object({ hour: v.number(), tries: v.number() }))
 		})
 	),
 	quizzes: v.object({
@@ -841,6 +672,7 @@ async function collectActivity(
 		recordCap: number;
 		lookupCap: number;
 		quizCapPerClass: number;
+		moduleCap: number;
 	}
 ) {
 	const members = await ctx.db
@@ -948,13 +780,20 @@ async function collectActivity(
 		sessions.push(session);
 	}
 
-	const moduleActivity = new Map<Id<'module'>, { tries: number; userIds: Set<Id<'users'>> }>();
+	type ModuleEntry = { tries: number; userIds: Set<Id<'users'>>; hours: Map<number, number> };
+	const moduleActivity = new Map<Id<'module'>, ModuleEntry>();
 	for (const record of records) {
 		const moduleId = questionModule.get(record.questionId);
 		if (!moduleId || !moduleMap.has(moduleId)) continue;
-		const entry = moduleActivity.get(moduleId) ?? { tries: 0, userIds: new Set<Id<'users'>>() };
+		const entry = moduleActivity.get(moduleId) ?? {
+			tries: 0,
+			userIds: new Set<Id<'users'>>(),
+			hours: new Map<number, number>()
+		};
+		const hour = Math.floor((firstTriedAt(record) - args.from) / HOUR_MS);
 		entry.tries++;
 		entry.userIds.add(record.userId);
+		entry.hours.set(hour, (entry.hours.get(hour) ?? 0) + 1);
 		moduleActivity.set(moduleId, entry);
 	}
 	const modules = [...moduleActivity.entries()]
@@ -967,11 +806,12 @@ async function collectActivity(
 				emoji: moduleDoc.emoji ?? null,
 				className: classMap.get(moduleDoc.classId)?.name ?? 'Class',
 				tries: entry.tries,
-				userIds: [...entry.userIds]
+				userIds: [...entry.userIds],
+				hours: [...entry.hours].map(([hour, tries]) => ({ hour, tries }))
 			};
 		})
 		.sort((a, b) => b.userIds.length - a.userIds.length || b.tries - a.tries)
-		.slice(0, 12);
+		.slice(0, args.moduleCap);
 
 	const quizzes = { started: 0, submitted: 0, scoreTotal: 0, scored: 0 };
 	for (const classItem of classes) {
@@ -1040,7 +880,8 @@ export const getCohortActivityHistory = authQuery({
 			to,
 			recordCap: HISTORY_RECORD_CAP,
 			lookupCap: HISTORY_QUESTION_LOOKUP_CAP,
-			quizCapPerClass: 200
+			quizCapPerClass: 200,
+			moduleCap: 60
 		});
 		return activity;
 	}
@@ -1073,7 +914,8 @@ export const getCohortLiveActivity = authQuery({
 			from,
 			recordCap: LIVE_RECORD_CAP,
 			lookupCap: LIVE_QUESTION_LOOKUP_CAP,
-			quizCapPerClass: 20
+			quizCapPerClass: 20,
+			moduleCap: 60
 		});
 
 		const metrics = await Promise.all(

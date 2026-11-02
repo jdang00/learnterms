@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { rampFills as levels, rampLevel } from './viz';
+
 	let { cells }: { cells: number[][] } = $props();
 
 	const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-	const levels = ['bg-muted', 'bg-primary/20', 'bg-primary/40', 'bg-primary/65', 'bg-primary'];
 	let hovered = $state<{ day: number; hour: number } | null>(null);
 
 	const max = $derived(Math.max(0, ...cells.flat()));
@@ -16,10 +17,7 @@
 		return best;
 	});
 
-	function level(value: number) {
-		if (!value || !max) return 0;
-		return Math.min(4, Math.ceil((value / max) * 4));
-	}
+	const level = (value: number) => rampLevel(value, max);
 	function hourLabel(hour: number) {
 		const suffix = hour < 12 ? 'am' : 'pm';
 		return `${hour % 12 || 12}${suffix}`;
@@ -27,7 +25,7 @@
 </script>
 
 <div>
-	<p class="mb-3 h-5 text-sm text-foreground/60" aria-live="polite">
+	<p class="mb-3 min-h-5 text-sm text-muted-foreground" aria-live="polite">
 		{#if hovered}
 			<span class="font-semibold text-foreground tabular-nums"
 				>{cells[hovered.day][hovered.hour]}</span
@@ -50,7 +48,7 @@
 			aria-label="Questions tried by weekday and hour of day"
 		>
 			{#each cells as row, day (day)}
-				<span class="self-center text-[10px] text-foreground/50">{weekdays[day]}</span>
+				<span class="self-center text-[10px] text-muted-foreground">{weekdays[day]}</span>
 				{#each row as value, hour (hour)}
 					<span
 						class="aspect-square rounded-[3px] transition-colors {levels[
@@ -64,13 +62,13 @@
 			{/each}
 			<span></span>
 			{#each Array.from({ length: 24 }, (_, hour) => hour) as hour (hour)}
-				<span class="text-center text-[9px] text-foreground/40"
+				<span class="text-center text-[9px] text-muted-foreground"
 					>{hour % 6 === 0 ? hourLabel(hour) : ''}</span
 				>
 			{/each}
 		</div>
 	</div>
-	<div class="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-foreground/45">
+	<div class="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground">
 		Less {#each levels as fill (fill)}<span class="h-2.5 w-2.5 rounded-[3px] {fill}"></span>{/each} More
 	</div>
 </div>

@@ -243,7 +243,7 @@ export const deleteClass = authAdminMutation({
 
 		const statRows = await ctx.db
 			.query('userModuleStats')
-			.withIndex('by_classId', (q) => q.eq('classId', args.classId))
+			.withIndex('by_classId_and_lastActivityAt', (q) => q.eq('classId', args.classId))
 			.collect();
 		for (const row of statRows) {
 			await ctx.db.delete(row._id);

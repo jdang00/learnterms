@@ -453,6 +453,39 @@ test('analytics cannot bypass the private-profile restrictions; intended curator
 	).resolves.toBeDefined();
 });
 
+test('module activity is staff-only and scoped to the cohort', async () => {
+	const { t, student, outside, curator, ids } = await setup();
+	const calls = [
+		(caller: typeof curator) =>
+			caller.query(api.moduleActivity.getRecentModuleActivity, {
+				cohortId: ids.cohortId,
+				since: 0
+			}),
+		(caller: typeof curator) =>
+			caller.query(api.moduleActivity.getClassModuleGrid, {
+				cohortId: ids.cohortId,
+				classId: ids.classId
+			}),
+		(caller: typeof curator) =>
+			caller.query(api.moduleActivity.getModuleRoster, {
+				cohortId: ids.cohortId,
+				moduleId: ids.moduleId
+			}),
+		(caller: typeof curator) =>
+			caller.query(api.liveResults.getRecentChecks, { cohortId: ids.cohortId, since: 0 })
+	];
+	for (const call of calls) {
+		for (const caller of [t, student, outside]) await expect(call(caller)).rejects.toThrow();
+		await expect(call(curator)).resolves.toBeDefined();
+	}
+	await expect(
+		outside.query(api.moduleActivity.getModuleRoster, {
+			cohortId: ids.otherCohortId,
+			moduleId: ids.moduleId
+		})
+	).rejects.toThrow();
+});
+
 test('ordinary admins cannot promote themselves or anyone to dev/admin or manage foreign users', async () => {
 	const { t, admin, dev, outside, ids } = await setup();
 	await expect(

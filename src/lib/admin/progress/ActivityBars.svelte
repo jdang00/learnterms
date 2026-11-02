@@ -1,14 +1,13 @@
 <script lang="ts">
 	type Day = { start: number; tries: number; students: number; isToday: boolean };
 
-	let { days, metric }: { days: Day[]; metric: 'tries' | 'students' } = $props();
+	// Students active per day; the readout above carries the exact numbers for the focused day.
+	let { days, live = false }: { days: Day[]; live?: boolean } = $props();
 
 	let hovered = $state<number | null>(null);
-	const values = $derived(days.map((day) => (metric === 'tries' ? day.tries : day.students)));
-	const max = $derived(Math.max(1, ...values));
+	const max = $derived(Math.max(1, ...days.map((day) => day.students)));
 	const ticks = $derived([max, Math.round(max / 2), 0]);
 	const focus = $derived(hovered ?? days.length - 1);
-	const unit = $derived(metric === 'tries' ? 'questions tried' : 'active students');
 
 	function dayLabel(start: number, long = false) {
 		return new Date(start).toLocaleDateString(undefined, {
@@ -19,15 +18,17 @@
 </script>
 
 <div>
-	<p class="mb-3 h-5 text-sm text-foreground/60" aria-live="polite">
+	<p class="mb-3 min-h-5 text-sm text-muted-foreground" aria-live="polite">
 		{#if days[focus]}
-			<span class="font-semibold text-foreground tabular-nums">{values[focus]}</span>
-			{unit} · {days[focus].isToday ? 'Today so far' : dayLabel(days[focus].start, true)}
+			<span class="font-semibold text-foreground tabular-nums">{days[focus].students}</span>
+			{days[focus].students === 1 ? 'student' : 'students'} ·
+			<span class="text-foreground tabular-nums">{days[focus].tries}</span>
+			questions · {days[focus].isToday ? 'Today so far' : dayLabel(days[focus].start, true)}
 		{/if}
 	</p>
 	<div class="flex gap-3">
 		<div
-			class="flex h-44 flex-col justify-between text-right text-[10px] tabular-nums text-foreground/40"
+			class="flex h-44 flex-col justify-between text-right text-[10px] text-muted-foreground tabular-nums"
 			aria-hidden="true"
 		>
 			{#each ticks as tick, i (i)}<span class="-my-1.5">{tick}</span>{/each}
@@ -40,51 +41,55 @@
 				{#each ticks.keys() as i (i)}<span
 						class="border-t {i === ticks.length - 1
 							? 'border-border'
-							: 'border-dashed border-muted'}"
+							: 'border-dashed border-muted-strong'}"
 					></span>{/each}
 			</div>
 			<div
-				class="relative flex h-full items-end gap-0.5"
+				class="relative flex h-full items-end gap-1"
 				role="img"
-				aria-label="Daily {unit}: {days
-					.map((day, i) => `${dayLabel(day.start, true)} ${values[i]}`)
+				aria-label="Students active per day: {days
+					.map((day) => `${dayLabel(day.start, true)} ${day.students}`)
 					.join(', ')}"
 			>
 				{#each days as day, i (day.start)}
 					<button
 						type="button"
-						class="group flex h-full min-w-0 flex-1 items-end rounded-sm"
-						aria-label="{dayLabel(day.start, true)}: {values[i]} {unit}"
+						class="flex h-full min-w-0 flex-1 items-end rounded-sm"
+						aria-label="{dayLabel(day.start, true)}: {day.students} students, {day.tries} questions"
 						onmouseenter={() => (hovered = i)}
 						onmouseleave={() => (hovered = null)}
 						onfocus={() => (hovered = i)}
 						onblur={() => (hovered = null)}
 					>
 						<span
-							class="block w-full rounded-t transition-all duration-500 {day.isToday
-								? 'bg-primary'
-								: 'bg-primary/55'} {hovered === i ? 'bg-primary! ' : ''}"
-							style="height: {values[i] ? Math.max(3, (values[i] / max) * 100) : 0}%"
+							class="block w-full rounded-t-md transition-[height,background-color] duration-700 ease-out {day.isToday
+								? live
+									? 'bg-success'
+									: 'bg-primary'
+								: hovered === i
+									? 'bg-primary'
+									: 'bg-primary/45'}"
+							style="height: {day.students ? Math.max(3, (day.students / max) * 100) : 0}%"
 						></span>
 					</button>
 				{/each}
 			</div>
 		</div>
 	</div>
-	<div class="mt-2 flex gap-0.5 pl-8 text-[10px] text-foreground/45" aria-hidden="true">
+	<div class="mt-2 flex gap-1 pl-8 text-[10px] text-muted-foreground" aria-hidden="true">
 		{#each days as day, i (day.start)}
 			<span
 				class="min-w-0 flex-1 truncate text-center {day.isToday
-					? 'font-semibold text-primary-ink'
+					? 'font-semibold text-foreground'
 					: ''}"
-				>{i % 2 === days.length % 2 || day.isToday
-					? day.isToday
-						? 'Today'
-						: new Date(day.start).toLocaleDateString(undefined, {
+				>{day.isToday
+					? 'Today'
+					: i % 2 === days.length % 2
+						? new Date(day.start).toLocaleDateString(undefined, {
 								day: 'numeric',
 								month: 'numeric'
 							})
-					: ''}</span
+						: ''}</span
 			>
 		{/each}
 	</div>
