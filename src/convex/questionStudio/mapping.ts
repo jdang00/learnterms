@@ -9,11 +9,11 @@ import { createQuestionStudioAgent, questionStudioRateLimiter } from './runtime'
 import type { TopicMapItem } from './shared';
 import {
 	QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS,
-	assertQuestionStudioKey,
+	assertAnthropicKey,
 	topicMapSchema
 } from './shared';
 import { loadMarkdownPages, pagesToPromptText, selectPages } from './sourceRetrieval';
-import { TEXT_MODEL } from '../aiModels';
+import { STAGE_MODELS } from '../aiModels';
 
 export const MAPPING_VERSION = 'question-types-v4';
 
@@ -80,7 +80,7 @@ export const autoMapIndexedDocument = internalAction({
 				endPage: pages[pages.length - 1].pageNumber
 			};
 
-			assertQuestionStudioKey();
+			assertAnthropicKey();
 			const agentUserId = args.triggeredByClerkUserId ?? `document:${args.documentId}`;
 			const creator = args.triggeredByClerkUserId
 				? await ctx.runQuery(internal.ragKnowledgeInternal.getUserForRagAccess, {
@@ -88,7 +88,7 @@ export const autoMapIndexedDocument = internalAction({
 					})
 				: null;
 
-			const agent = createQuestionStudioAgent(TEXT_MODEL);
+			const agent = createQuestionStudioAgent(STAGE_MODELS.planning);
 			let threadId = '';
 			const topics: TopicMapItem[] = [];
 			const usage: unknown[] = [];
@@ -138,7 +138,7 @@ export const autoMapIndexedDocument = internalAction({
 					endPage: pageRange.endPage,
 					pageCount: pages.length,
 					topics,
-					model: TEXT_MODEL,
+					model: STAGE_MODELS.planning,
 					agentThreadId: threadId,
 					sourceDocumentUpdatedAt: document.updatedAt,
 					sourceIndexedAt: document.metadata?.indexedAt,

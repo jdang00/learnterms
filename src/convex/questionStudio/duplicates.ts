@@ -36,7 +36,7 @@ function jaccard(a: string[], b: string[]) {
 	return intersection / (left.size + right.size - intersection);
 }
 
-function stemSimilarity(a: string, b: string) {
+export function stemSimilarity(a: string, b: string) {
 	const normalizedA = normalizeText(a);
 	const normalizedB = normalizeText(b);
 	if (!normalizedA || !normalizedB) return 0;

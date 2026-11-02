@@ -3,7 +3,7 @@ import { questionTypeDefinitions, questionTypes, type QuestionCounts } from './q
 import { LEARN_QUESTIONS_PER_WORKER, type StoredMarkdownPage, type TopicMapItem } from './shared';
 import { cleanPlainText } from './text';
 
-/** First-order questions can choose their facts while drafting; no model planning round-trip. */
+/** Learn questions choose their concept while drafting; no model planning round-trip. */
 export function learnPageTopics(pages: StoredMarkdownPage[], count: number): TopicMapItem[] {
 	const readable = pages.filter((page) => page.text.trim().length >= 40);
 	if (!readable.length) return [];
@@ -26,7 +26,7 @@ export function learnPageTopics(pages: StoredMarkdownPage[], count: number): Top
 			learningObjectives: Array.from(
 				{ length: slots },
 				(_, slot) =>
-					`Choose distinct fact ${slot + 1} of ${slots} from these pages. Test a useful definition, association, finding, or distinction directly. Avoid facts already tested by exclusions or other slots.`
+					`Choose concept ${slot + 1} of ${slots} from these pages: the rule, mechanism, distinction or decision an instructor would most want tested. Ask what it does, why it happens, or how two near neighbors differ, rather than a remembered label, list membership or percentage. Avoid concepts already tested by exclusions or other slots.`
 			),
 			estimatedQuestionCapacity: slots
 		};

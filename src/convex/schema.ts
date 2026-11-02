@@ -1,5 +1,6 @@
 import { acceptanceValidator, freeResponseGradeValidator } from './freeResponseValidators';
 import { examFindingsStyleValidator, examFindingsValidator } from './examFindingsValidators';
+import { questionExemplarsTable } from './questionStudio/exemplarValidators';
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
@@ -164,7 +165,6 @@ export default defineSchema({
 		clerkUserId: v.string(),
 		cohortId: v.optional(v.id('cohort')),
 		name: v.string(),
-		// Additional Clerk user data for analytics
 		firstName: v.optional(v.string()),
 		lastName: v.optional(v.string()),
 		email: v.optional(v.string()),
@@ -566,7 +566,7 @@ export default defineSchema({
 	})
 		.index('by_user_module', ['userId', 'moduleId'])
 		.index('by_moduleId', ['moduleId'])
-		.index('by_classId', ['classId']),
+		.index('by_classId_and_lastActivityAt', ['classId', 'lastActivityAt']),
 	questionNotes: defineTable({
 		userId: v.id('users'),
 		questionId: v.id('question'),
@@ -673,7 +673,8 @@ export default defineSchema({
 		qualifyingRecall: v.boolean()
 	})
 		.index('by_attemptId_submissionId', ['attemptId', 'submissionId'])
-		.index('by_userId_questionId', ['userId', 'questionId']),
+		.index('by_userId_questionId', ['userId', 'questionId'])
+		.index('by_userId_and_checkedAt', ['userId', 'checkedAt']),
 	quizAttempts: defineTable({
 		userId: v.id('users'),
 		classId: v.id('class'),
@@ -1102,6 +1103,7 @@ export default defineSchema({
 	})
 		.index('by_jobId', ['jobId'])
 		.index('by_jobId_candidateIndex', ['jobId', 'candidateIndex']),
+	questionExemplars: questionExemplarsTable,
 	chunkContent: defineTable({
 		title: v.string(),
 		summary: v.string(),

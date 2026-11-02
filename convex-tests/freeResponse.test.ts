@@ -135,7 +135,7 @@ test('normalization discards formatting and non-text content, and decodes numeri
 	expect(responseText('<p>37&#176; &amp; &#x3b1;</p>')).toBe('37° & α');
 });
 
-test('the public grading action uses GPT-6 reasoning parameters, strips presentation, and grades against rationale', async () => {
+test('the public grading action uses Claude effort parameters, strips presentation, and grades against rationale', async () => {
 	const f = await fixture();
 	const { default: agent } = await import('@convex-dev/agent/test');
 	agent.register(f.t);
@@ -148,24 +148,19 @@ test('the public grading action uses GPT-6 reasoning parameters, strips presenta
 		async () =>
 			new Response(
 				JSON.stringify({
-					id: 'chatcmpl-test',
-					object: 'chat.completion',
-					created: 1,
-					model: 'gpt-6-luna',
-					choices: [
-						{
-							index: 0,
-							message: { role: 'assistant', content: JSON.stringify(providerOutput) },
-							finish_reason: 'stop'
-						}
-					],
-					usage: { prompt_tokens: 100, completion_tokens: 30, total_tokens: 130 }
+					id: 'msg_test',
+					type: 'message',
+					role: 'assistant',
+					model: 'claude-haiku-5-5',
+					content: [{ type: 'text', text: JSON.stringify(providerOutput) }],
+					stop_reason: 'end_turn',
+					usage: { input_tokens: 100, output_tokens: 30 }
 				}),
 				{ headers: { 'content-type': 'application/json' } }
 			)
 	);
 	vi.stubGlobal('fetch', fetchMock);
-	vi.stubEnv('OPENAI_API_KEY', 'test-key');
+	vi.stubEnv('ANTHROPIC_API_KEY', 'test-key');
 	try {
 		await expect(f.t.action(api.freeResponse.grade, f.submission)).rejects.toThrow('Unauthorized');
 		expect(fetchMock).not.toHaveBeenCalled();
@@ -176,11 +171,13 @@ test('the public grading action uses GPT-6 reasoning parameters, strips presenta
 		expect(result.grade.response).toBe('Water turns to gas.');
 		expect(result.grade.isCorrect).toBe(true);
 		const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-		expect(body.model).toBe('gpt-6-luna');
-		expect(body.max_completion_tokens).toBe(2500);
-		expect(body.max_tokens).toBeUndefined();
-		expect(body.reasoning_effort).toBe('low');
-		const prompt = JSON.parse(body.messages.at(-1).content);
+		expect(body.model).toBe('claude-haiku-5-5');
+		expect(body.max_tokens).toBe(2500);
+		expect(body.temperature).toBeUndefined();
+		expect(body.thinking).toEqual({ type: 'adaptive' });
+		expect(body.output_config.effort).toBe('low');
+		const userContent = body.messages.at(-1).content;
+		const prompt = JSON.parse(typeof userContent === 'string' ? userContent : userContent[0].text);
 		expect(prompt.groundTruth).toBe('Evaporation changes liquid into gas.');
 		expect(prompt.studentResponse).toBe('Water turns to gas.');
 		await f.owner.action(api.freeResponse.grade, {

@@ -29,12 +29,13 @@ import {
 	LEARN_MODEL_BATCH_SIZE,
 	MAX_CONCURRENT_LEARN_WORKERS,
 	QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS,
-	assertQuestionStudioKey,
+	assertAnthropicKey,
 	topicInputValidator
 } from './shared';
 import { loadMarkdownPages, selectPages } from './sourceRetrieval';
 import { cleanPlainText } from './text';
-import { TEXT_MODEL } from '../aiModels';
+import { STAGE_MODELS } from '../aiModels';
+import { estimateAiSdkCost } from './provider';
 
 // Each slot receives one objective; only nearby reserved objectives cross worker boundaries.
 function assignBlueprints(tasks: LiveWorkerTask[]) {
@@ -100,7 +101,7 @@ export const generateCandidates = action({
 				// Queuing progress is best-effort; scheduled workers own the durable result.
 			}
 		};
-		assertQuestionStudioKey();
+		assertAnthropicKey();
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) throw new Error('Unauthorized');
 		if (!args.jobId) throw new Error('A generation job is required for live worker generation.');
@@ -120,7 +121,7 @@ export const generateCandidates = action({
 		});
 		if (!claimed) throw new Error('Generation deadline reached');
 		const deadlineAt = generationDeadline(job);
-		const model = TEXT_MODEL;
+		const model = STAGE_MODELS.draft;
 		const focusNotes = cleanPlainText(args.focusNotes ?? '', 1800);
 
 		try {
@@ -185,7 +186,7 @@ export const generateCandidates = action({
 					eventLabel: 'Selected pages',
 					eventDetail: `Pages ${job.selectedPageNumbers?.join(', ')}. Only these pages are in context.`
 				});
-				const agent = createQuestionStudioAgent(TEXT_MODEL, true);
+				const agent = createQuestionStudioAgent(STAGE_MODELS.planning, true);
 				inputTopics = await planPageContext(
 					allPages,
 					job.selectedPageNumbers ?? [],
@@ -231,6 +232,8 @@ export const generateCandidates = action({
 							reasoningTokens: result.usage.outputTokenDetails?.reasoningTokens,
 							cachedInputTokens: result.usage.inputTokenDetails?.cacheReadTokens,
 							cacheWriteTokens: result.usage.inputTokenDetails?.cacheWriteTokens,
+							costUsd: estimateAiSdkCost(STAGE_MODELS.planning, result.usage),
+							costEstimated: true,
 							latencyMs: Date.now() - planningStarted
 						});
 						await report({

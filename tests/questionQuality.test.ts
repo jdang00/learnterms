@@ -9,16 +9,18 @@ import {
 	reviewPrompt,
 	cachedSourceEvidence,
 	withCachedSource,
-	draftSystem,
 	draftSchema,
 	learnReviewSchema,
 	type QualitySlot,
 	type QualityDraft
 } from '../src/convex/questionStudio/quality';
+import { draftSystem } from '../src/convex/questionStudio/prompts';
 import {
 	callQualityModel,
 	QuestionProviderError,
-	estimateLunaCost
+	estimateClaudeCost,
+	measureClaudeUsage,
+	clipToSchemaBounds
 } from '../src/convex/questionStudio/provider';
 import {
 	parseStoredPages,
@@ -49,7 +51,8 @@ const draft: QualityDraft = {
 	stem: 'What does two plus two equal?',
 	options: ['Four', 'Five', 'Six', 'Seven'],
 	answerIndex: 0,
-	rationale: 'Two plus two equals four by addition.',
+	rationale:
+		'Addition combines two quantities into one total, so two plus two equals four. Five, six and seven each overshoot that total by one, two or three units, so none of them is the sum.',
 	evidence: [{ citationId: 'p7c0', quote: 'Two plus two equals four.' }]
 };
 
@@ -80,7 +83,9 @@ test('source prefixes stay identical across tasks and repairs without expanding 
 		source,
 		'stable-session'
 	);
-	expect(first.system).toBe(second.system);
+	expect(first.system).toBe(request.system);
+	expect(first.context).toBe(second.context);
+	expect(first.context).toContain(slot.evidence[0].text);
 	expect(first.prompt).not.toContain(slot.evidence[0].text);
 	const payload = JSON.parse(first.prompt.split('\n').at(-1)!);
 	expect(payload.assignments[0].evidence).toEqual([{ citationId: 'p7c0' }]);
@@ -90,64 +95,238 @@ test('source prefixes stay identical across tasks and repairs without expanding 
 	).toThrow('mismatch');
 });
 
-test('OpenAI requests keep source caching, stored logs, high effort, and report cache usage', async () => {
+function claudeResponse(body: Record<string, unknown>, headers: Record<string, string> = {}) {
+	return new Response(
+		JSON.stringify({
+			id: 'msg_test',
+			type: 'message',
+			role: 'assistant',
+			model: 'claude-sonnet-5-5',
+			content: [],
+			stop_reason: 'end_turn',
+			stop_details: null,
+			...body
+		}),
+		{ headers: { 'content-type': 'application/json', 'request-id': 'req_test', ...headers } }
+	);
+}
+
+test('Claude requests cache the source block, set effort, opt into fallback and report cache usage', async () => {
 	const originalFetch = globalThis.fetch;
 	let sent: any;
-	globalThis.fetch = (async (_input: unknown, init: RequestInit) => {
-		sent = { url: _input, body: JSON.parse(String(init.body)), headers: init.headers };
-		return new Response(
-			JSON.stringify({
-				id: 'chatcmpl-test',
-				service_tier: 'default',
-				choices: [
-					{
-						finish_reason: 'stop',
-						message: { content: JSON.stringify({ questions: [draft], abstentions: [] }) }
-					}
-				],
-				usage: {
-					prompt_tokens: 2000,
-					completion_tokens: 1000,
-					prompt_tokens_details: { cached_tokens: 1536, cache_write_tokens: 128 },
-					completion_tokens_details: { reasoning_tokens: 600 },
-					cost: 0.001
-				}
-			})
-		);
+	globalThis.fetch = (async (input: unknown, init: RequestInit) => {
+		sent = { url: String(input), body: JSON.parse(String(init.body)), headers: init.headers };
+		return claudeResponse({
+			content: [{ type: 'text', text: JSON.stringify({ questions: [draft], abstentions: [] }) }],
+			usage: {
+				input_tokens: 336,
+				output_tokens: 1000,
+				cache_read_input_tokens: 1536,
+				cache_creation_input_tokens: 128,
+				output_tokens_details: { thinking_tokens: 600 },
+				service_tier: 'standard'
+			}
+		});
 	}) as typeof fetch;
 	try {
 		const result = await callQualityModel(
 			{
 				stage: 'draft',
+				model: 'claude-sonnet-5-5',
 				system: 'Stable evidence',
 				prompt: 'Variable assignment',
 				schema: draftSchema,
 				thinking: 'high',
-				maxOutputTokens: 8000,
-				sessionId: 'source-revision',
-				metadata: { job_id: 'job-test' }
+				maxOutputTokens: 8000
 			},
 			'test'
 		);
-		expect(sent.url).toBe('https://api.openai.com/v1/chat/completions');
-		expect(sent.body.prompt_cache_key).toBe('source-revision');
-		expect(sent.body.store).toBe(true);
-		expect(sent.body.service_tier).toBe('default');
-		expect(result.serviceTier).toBe('default');
-		expect(sent.body.metadata.job_id).toBe('job-test');
-		expect(sent.body.max_completion_tokens).toBe(8000);
-		expect(sent.body.messages[0].content[0].prompt_cache_breakpoint).toEqual({ mode: 'explicit' });
-		expect(sent.body.reasoning_effort).toBe('high');
-		expect(sent.headers['X-OpenRouter-Cache']).toBeUndefined();
-		expect(result.costEstimated).toBe(true);
-		expect(result.costUsd).toBeCloseTo(estimateLunaCost(2000, 1000, 1536, 128), 10);
-		expect(result.responseId).toBe('chatcmpl-test');
+		expect(sent.url).toContain('https://api.anthropic.com/v1/messages');
+		expect(sent.body.model).toBe('claude-sonnet-5-5');
+		expect(sent.body.max_tokens).toBe(8000);
+		expect(sent.body.system[0]).toEqual({
+			type: 'text',
+			text: 'Stable evidence',
+			cache_control: { type: 'ephemeral' }
+		});
+		expect(sent.body.thinking).toEqual({ type: 'adaptive' });
+		expect(sent.body.output_config.effort).toBe('high');
+		expect(sent.body.output_config.format.type).toBe('json_schema');
+		expect(sent.body.fallbacks).toBe('default');
+		expect(sent.body.temperature).toBeUndefined();
+		expect(new Headers(sent.headers).get('anthropic-beta')).toContain(
+			'server-side-fallback-2026-07-01'
+		);
+		expect(result.inputTokens).toBe(2000);
 		expect(result.cachedInputTokens).toBe(1536);
 		expect(result.cacheWriteTokens).toBe(128);
 		expect(result.reasoningTokens).toBe(600);
+		expect(result.costEstimated).toBe(true);
+		expect(result.costUsd).toBeCloseTo(
+			estimateClaudeCost('claude-sonnet-5-5', {
+				input: 336,
+				output: 1000,
+				cacheRead: 1536,
+				cacheWrite: 128
+			}),
+			10
+		);
+		expect(result.requestId).toBe('req_test');
+		expect(result.responseId).toBe('msg_test');
+		expect(result.object).toEqual({ questions: [draft], abstentions: [] });
 	} finally {
 		globalThis.fetch = originalFetch;
 	}
+});
+
+test('stable instructions always cache; the source block caches only when a reuse can follow', async () => {
+	const originalFetch = globalThis.fetch;
+	const bodies: any[] = [];
+	globalThis.fetch = (async (_input: unknown, init: RequestInit) => {
+		bodies.push(JSON.parse(String(init.body)));
+		return claudeResponse({
+			content: [{ type: 'text', text: JSON.stringify({ questions: [draft], abstentions: [] }) }],
+			usage: { input_tokens: 10, output_tokens: 10 }
+		});
+	}) as typeof fetch;
+	try {
+		const request = {
+			stage: 'draft' as const,
+			model: 'claude-sonnet-5-5' as const,
+			system: 'Instructions',
+			context: 'Source',
+			prompt: 'Assignment',
+			schema: draftSchema,
+			thinking: 'medium' as const,
+			maxOutputTokens: 4000
+		};
+		await callQualityModel(request, 'test');
+		await callQualityModel({ ...request, cache: false }, 'test');
+		await callQualityModel({ ...request, context: undefined, cache: false }, 'test');
+		const ephemeral = { type: 'ephemeral' };
+		expect(bodies[0].system).toEqual([
+			{ type: 'text', text: 'Instructions', cache_control: ephemeral },
+			{ type: 'text', text: 'Source', cache_control: ephemeral }
+		]);
+		expect(bodies[1].system).toEqual([
+			{ type: 'text', text: 'Instructions', cache_control: ephemeral },
+			{ type: 'text', text: 'Source' }
+		]);
+		expect(bodies[2].system).toEqual([
+			{ type: 'text', text: 'Instructions', cache_control: ephemeral }
+		]);
+	} finally {
+		globalThis.fetch = originalFetch;
+	}
+});
+
+test('diagnostic text and citation lists are clipped to schema bounds; content is untouched', () => {
+	const long = 'x'.repeat(900);
+	const citation = { citationId: 'p1c0' };
+	expect(
+		clipToSchemaBounds({
+			reviews: [{ reasons: ['a', 'b', 'c', 'd', 'e', 'f', long], stem: long }],
+			abstentions: [{ slotId: 'q1', reason: long }],
+			questions: [{ rationale: long, evidence: [1, 2, 3, 4, 5].map(() => citation) }]
+		})
+	).toEqual({
+		reviews: [{ reasons: ['a', 'b', 'c', 'd', 'e'], stem: long }],
+		abstentions: [{ slotId: 'q1', reason: 'x'.repeat(500) }],
+		questions: [{ rationale: long, evidence: [1, 2, 3, 4].map(() => citation) }]
+	});
+});
+
+test('Haiku requests omit server-side fallback', async () => {
+	const originalFetch = globalThis.fetch;
+	let body: any;
+	globalThis.fetch = (async (_input: unknown, init: RequestInit) => {
+		body = JSON.parse(String(init.body));
+		return claudeResponse({
+			model: 'claude-haiku-5-5',
+			content: [{ type: 'text', text: JSON.stringify({ questions: [], abstentions: [] }) }],
+			usage: { input_tokens: 10, output_tokens: 10 }
+		});
+	}) as typeof fetch;
+	try {
+		await callQualityModel(
+			{
+				stage: 'review',
+				model: 'claude-haiku-5-5',
+				system: 's',
+				prompt: 'p',
+				schema: draftSchema,
+				thinking: 'low',
+				maxOutputTokens: 100
+			},
+			'test'
+		);
+		expect(body.fallbacks).toBeUndefined();
+		expect(body.output_config.effort).toBe('low');
+	} finally {
+		globalThis.fetch = originalFetch;
+	}
+});
+
+test('Claude pricing follows each model, the Haiku long-prompt rate and fallback attempts', () => {
+	expect(estimateClaudeCost('claude-opus-5-5', { input: 1_000_000, output: 0 })).toBeCloseTo(4);
+	expect(estimateClaudeCost('claude-opus-5-5', { input: 0, output: 1_000_000 })).toBeCloseTo(20);
+	expect(
+		estimateClaudeCost('claude-sonnet-5-5', { input: 0, output: 0, cacheRead: 1_000_000 })
+	).toBeCloseTo(0.2);
+	expect(
+		estimateClaudeCost('claude-sonnet-5-5', { input: 0, output: 0, cacheWrite: 1_000_000 })
+	).toBeCloseTo(2.5);
+	expect(estimateClaudeCost('claude-haiku-5-5', { input: 100_000, output: 0 })).toBeCloseTo(0.01);
+	expect(estimateClaudeCost('claude-haiku-5-5', { input: 100_001, output: 0 })).toBeCloseTo(
+		0.0500005
+	);
+	expect(
+		estimateClaudeCost('claude-haiku-5-5', { input: 0, output: 0, cacheRead: 1_000_000 })
+	).toBeCloseTo(0.5 * 0.1);
+	// An unknown model is never treated as free.
+	expect(estimateClaudeCost('claude-unknown', { input: 1_000_000, output: 0 })).toBeCloseTo(5);
+	const measured = measureClaudeUsage('claude-opus-5-5', {
+		input_tokens: 1000,
+		output_tokens: 500,
+		cache_read_input_tokens: 0,
+		cache_creation_input_tokens: 0,
+		iterations: [
+			{
+				type: 'message',
+				model: 'claude-opus-5-5',
+				input_tokens: 1000,
+				output_tokens: 0,
+				cache_read_input_tokens: 0,
+				cache_creation_input_tokens: 0,
+				cache_creation: null
+			},
+			{
+				type: 'fallback_message',
+				model: 'claude-opus-4-8',
+				input_tokens: 1000,
+				output_tokens: 500,
+				cache_read_input_tokens: 0,
+				cache_creation_input_tokens: 0,
+				cache_creation: null
+			}
+		]
+	} as unknown as Parameters<typeof measureClaudeUsage>[1]);
+	expect(measured.inputTokens).toBe(2000);
+	expect(measured.costUsd).toBeCloseTo((1000 * 4 + 1000 * 5 + 500 * 25) / 1_000_000, 10);
+	// An Opus advisor bills its own iteration; top-level usage holds only the executor's tokens.
+	const advised = measureClaudeUsage('claude-sonnet-5-5', {
+		input_tokens: 3000,
+		output_tokens: 300,
+		cache_read_input_tokens: 0,
+		cache_creation_input_tokens: 0,
+		iterations: [
+			{ type: 'message', input_tokens: 1000, output_tokens: 100 },
+			{ type: 'advisor_message', model: 'claude-opus-5-5', input_tokens: 3000, output_tokens: 600 },
+			{ type: 'message', input_tokens: 2000, output_tokens: 200 }
+		]
+	} as unknown as Parameters<typeof measureClaudeUsage>[1]);
+	expect(advised.inputTokens).toBe(6000);
+	expect(advised.costUsd).toBeCloseTo((3000 * 2 + 300 * 10 + 3000 * 4 + 600 * 20) / 1_000_000, 10);
 });
 test('page rules inside pages do not discard evidence', () => {
 	const pages = [
@@ -306,7 +485,7 @@ test('source-referencing prose goes to repair without rejecting clinical evidenc
 			{ ...draft, rationale: 'This observation provides evidence of the relationship.' },
 			slot
 		)
-	).toEqual([]);
+	).not.toContain('Remove source framing from student-facing text.');
 });
 test('citation checks tolerate Markdown emphasis without changing numerical facts', () => {
 	const emphasized = {
@@ -468,44 +647,51 @@ test('repair receives only failed assignments and failed previous drafts', async
 	expect(repairSeen).toBe(true);
 });
 
-test('incomplete OpenAI responses retain billable usage and request IDs', async () => {
+test('refused and truncated Claude responses retain billable usage and request IDs', async () => {
 	const originalFetch = globalThis.fetch;
-	globalThis.fetch = (async () =>
-		new Response(
-			JSON.stringify({
-				id: 'chatcmpl-short',
-				choices: [{ finish_reason: 'length', message: { content: '' } }],
-				usage: {
-					prompt_tokens: 100,
-					completion_tokens: 800,
-					completion_tokens_details: { reasoning_tokens: 700 }
-				}
-			}),
-			{ headers: { 'x-request-id': 'req-short' } }
-		)) as unknown as typeof fetch;
-	try {
-		await callQualityModel(
-			{
-				stage: 'draft',
-				system: 'source',
-				prompt: 'question',
-				schema: draftSchema,
-				thinking: 'high',
-				maxOutputTokens: 800
-			},
-			'test'
-		);
-		throw new Error('Expected incomplete response');
-	} catch (error) {
-		expect(error).toBeInstanceOf(QuestionProviderError);
-		const usage = (error as QuestionProviderError).usage;
-		expect(usage.requestId).toBe('req-short');
-		expect(usage.outputTokens).toBe(800);
-		expect(usage.reasoningTokens).toBe(700);
-		expect(usage.costUsd).toBeGreaterThan(0);
-		expect(usage.finishReason).toBe('length');
-	} finally {
-		globalThis.fetch = originalFetch;
+	for (const [stopReason, finish] of [
+		['max_tokens', 'max_tokens'],
+		['refusal', 'refusal']
+	] as const) {
+		globalThis.fetch = (async () =>
+			claudeResponse(
+				{
+					stop_reason: stopReason,
+					stop_details: stopReason === 'refusal' ? { type: 'refusal', category: 'bio' } : null,
+					content: [{ type: 'text', text: '{"questions": [' }],
+					usage: {
+						input_tokens: 100,
+						output_tokens: 800,
+						output_tokens_details: { thinking_tokens: 700 }
+					}
+				},
+				{ 'request-id': 'req-short' }
+			)) as unknown as typeof fetch;
+		try {
+			await callQualityModel(
+				{
+					stage: 'draft',
+					system: 'source',
+					prompt: 'question',
+					schema: draftSchema,
+					thinking: 'high',
+					maxOutputTokens: 800
+				},
+				'test'
+			);
+			throw new Error('Expected incomplete response');
+		} catch (error) {
+			expect(error).toBeInstanceOf(QuestionProviderError);
+			const usage = (error as QuestionProviderError).usage;
+			expect(usage.requestId).toBe('req-short');
+			expect(usage.outputTokens).toBe(800);
+			expect(usage.reasoningTokens).toBe(700);
+			expect(usage.costUsd).toBeGreaterThan(0);
+			expect(usage.finishReason).toBe(finish);
+			if (stopReason === 'refusal') expect((error as Error).message).toContain('bio');
+		} finally {
+			globalThis.fetch = originalFetch;
+		}
 	}
 });
 
@@ -530,7 +716,9 @@ test('embolic sources are not confused with documents while document narration i
 		'Recognizing this source–composition relationship distinguishes embolic mechanisms.',
 		'Recognizing these sources helps identify systemic vascular risk.'
 	])
-		expect(structuralIssues({ ...draft, rationale }, slot)).toEqual([]);
+		expect(structuralIssues({ ...draft, rationale }, slot)).not.toContain(
+			'Remove source framing from student-facing text.'
+		);
 	for (const rationale of [
 		'The source states that two plus two equals four.',
 		'The supplied sources describe the calculation.'

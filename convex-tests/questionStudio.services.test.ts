@@ -59,16 +59,29 @@ test('AI telemetry converts reserved keys after the Convex boundary and survives
 	vi.unstubAllGlobals();
 });
 
+function claudeText(text: string) {
+	return new Response(
+		JSON.stringify({
+			id: 'msg_test',
+			type: 'message',
+			role: 'assistant',
+			model: 'claude-haiku-5-5',
+			content: [{ type: 'text', text }],
+			stop_reason: 'end_turn',
+			usage: { input_tokens: 10, output_tokens: 2 }
+		}),
+		{ headers: { 'content-type': 'application/json' } }
+	);
+}
+
 test('emoji suggestion authenticates before spending and only accepts a single emoji', async () => {
 	const { default: rateLimiter } = await import('@convex-dev/rate-limiter/test');
 	const { t, ids, owner } = await setup();
 	rateLimiter.register(t);
 	const classId = (await t.run((ctx) => ctx.db.get(ids.moduleId)))!.classId;
-	const fetchMock = vi
-		.fn()
-		.mockResolvedValue(new Response(JSON.stringify({ choices: [{ message: { content: '👁️' } }] })));
+	const fetchMock = vi.fn().mockImplementation(async () => claudeText('👁️'));
 	vi.stubGlobal('fetch', fetchMock);
-	vi.stubEnv('OPENROUTER_API_KEY', 'test-key');
+	vi.stubEnv('ANTHROPIC_API_KEY', 'test-key');
 	try {
 		await expect(
 			t.action(api.moduleEmoji.suggest, { classId, title: 'Ocular anatomy' })
@@ -78,14 +91,11 @@ test('emoji suggestion authenticates before spending and only accepts a single e
 			'👁️'
 		);
 		const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-		expect(body.model).toBe('openai/gpt-6-luna');
-		expect(body.reasoning.effort).toBe('none');
-		expect(body.max_tokens).toBe(16);
-		fetchMock.mockResolvedValue(
-			new Response(
-				JSON.stringify({ choices: [{ message: { content: 'Use 👁️ for this module' } }] })
-			)
-		);
+		expect(body.model).toBe('claude-haiku-5-5');
+		expect(body.thinking).toEqual({ type: 'disabled' });
+		expect(body.output_config.effort).toBe('low');
+		expect(body.max_tokens).toBe(32);
+		fetchMock.mockImplementation(async () => claudeText('Use 👁️ for this module'));
 		expect(
 			await owner.action(api.moduleEmoji.suggest, { classId, title: 'Ocular anatomy' })
 		).toBeNull();

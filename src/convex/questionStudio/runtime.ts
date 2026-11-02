@@ -2,8 +2,8 @@ import { Agent } from '@convex-dev/agent';
 import { MINUTE, RateLimiter } from '@convex-dev/rate-limiter';
 import { components, internal } from '../_generated/api';
 import type { ActionCtx } from '../_generated/server';
-import { questionStudioOpenAI } from './shared';
-import { TEXT_MODEL } from '../aiModels';
+import { anthropicProvider } from './shared';
+import { STAGE_MODELS } from '../aiModels';
 
 export async function captureTelemetry(
 	ctx: ActionCtx,
@@ -34,10 +34,13 @@ export const questionStudioRateLimiter = new RateLimiter(components.rateLimiter,
 	}
 });
 
-export function createQuestionStudioAgent(model = TEXT_MODEL, usageAlreadyReserved = false) {
+export function createQuestionStudioAgent(
+	model: string = STAGE_MODELS.planning,
+	usageAlreadyReserved = false
+) {
 	return new Agent(components.agent, {
 		name: 'Question Studio Curator',
-		languageModel: questionStudioOpenAI().chat(model),
+		languageModel: anthropicProvider()(model),
 		instructions: [
 			'You are a LearnTerms curriculum question curator.',
 			'Use only the provided source notes and context.',

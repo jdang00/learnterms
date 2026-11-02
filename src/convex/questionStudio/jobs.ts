@@ -11,7 +11,7 @@ import { validateCounts } from './planning';
 import { HARNESS_VERSION } from './quality';
 import { questionStudioRateLimiter } from './runtime';
 import { MAX_GENERATED_QUESTIONS } from './shared';
-import { TEXT_MODEL } from '../aiModels';
+import { STAGE_MODELS } from '../aiModels';
 
 function medianOf(values: number[]): number | null {
 	if (values.length === 0) return null;
@@ -63,7 +63,7 @@ export const createGenerationJob = mutation({
 		)
 			throw new Error('Source changed. Reload the pages before starting a run.');
 		const now = Date.now();
-		const model = TEXT_MODEL;
+		const model = STAGE_MODELS.draft;
 		const existingJobs = await ctx.db
 			.query('questionStudioJobs')
 			.withIndex('by_createdByUserId', (q) => q.eq('createdByUserId', user._id))

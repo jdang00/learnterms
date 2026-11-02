@@ -33,7 +33,8 @@ const draft: QualityDraft = {
 	stem: 'What does two plus two equal?',
 	options: ['Four', 'Five', 'Six', 'Seven'],
 	answerIndex: 0,
-	rationale: 'Two plus two equals four by addition.',
+	rationale:
+		'Addition combines two quantities into one total, so two plus two equals four. Five, six and seven each overshoot that total by one, two or three units, so none of them is the sum.',
 	evidence: [{ citationId: 'p3c0', quote: 'Two plus two equals four.' }]
 };
 const review = {
@@ -149,6 +150,7 @@ test('citation-ID drafting retains a blind reviewer and never exposes unrelated 
 		{
 			referenceLearn: true,
 			fastLearnReview: true,
+			canRepair: () => false,
 			sessionId: 'test',
 			sourcePages: [
 				{ pageNumber: 3, text: slot.evidence[0].text },
@@ -180,7 +182,7 @@ test('the citation-ID path accepts only a structurally valid, independently scre
 			reasoningTokens: 1,
 			finishReason: 'stop'
 		}),
-		{ referenceLearn: true, fastLearnReview: true }
+		{ referenceLearn: true, fastLearnReview: true, canRepair: () => false }
 	);
 	expect(result.calls).toHaveLength(2);
 	expect(result.corrections).toHaveLength(1);
@@ -206,7 +208,7 @@ test('the citation-ID option audit rejects a second defensible answer even when 
 				reasoningTokens: 1,
 				finishReason: 'stop'
 			}),
-			{ referenceLearn: true, fastLearnReview: true }
+			{ referenceLearn: true, fastLearnReview: true, canRepair: () => false }
 		);
 		expect(result.accepted).toHaveLength(0);
 		expect(result.rejected[0].reasons.join(' ')).toContain('option audit');
@@ -227,7 +229,7 @@ test('the citation-ID path withholds a correct key when its rationale fails the 
 			reasoningTokens: 1,
 			finishReason: 'stop'
 		}),
-		{ referenceLearn: true, fastLearnReview: true }
+		{ referenceLearn: true, fastLearnReview: true, canRepair: () => false }
 	);
 	expect(result.accepted).toHaveLength(0);
 	expect(result.rejected[0].reasons.join(' ')).toContain('teaching explanation');
@@ -280,4 +282,85 @@ test('one high-effort Learn call handles 15 slots and attaches exact source text
 	expect(tasks).toHaveLength(1);
 	expect(tasks[0].plannedCount).toBe(15);
 	expect(tasks[0].topicAllocations).toHaveLength(8);
+});
+
+test('a failed fast Learn slot gets one repair round with the reviewer reasons, then is re-screened', async () => {
+	const requests: QualityCall[] = [];
+	const result = await runQualityBatch(
+		[slot],
+		async (request) => {
+			requests.push(request);
+			const first = request.stage === 'review';
+			return {
+				object:
+					request.stage === 'draft' || request.stage === 'repair'
+						? { questions: [draft], abstentions: [] }
+						: {
+								reviews: [{ ...review, plausibleDistractors: !first, reasons: ['Weak options.'] }]
+							},
+				latencyMs: 1,
+				inputTokens: 1,
+				outputTokens: 1,
+				reasoningTokens: 1,
+				finishReason: 'stop'
+			};
+		},
+		{ fastLearnReview: true }
+	);
+	expect(requests.map((r) => r.stage)).toEqual(['draft', 'review', 'repair', 'review_repair']);
+	expect(requests[2].prompt).toContain('Weak options.');
+	expect(result.accepted).toHaveLength(1);
+});
+
+test('the deadline gate skips the fast Learn repair round', async () => {
+	let calls = 0;
+	const result = await runQualityBatch(
+		[slot],
+		async (request) => {
+			calls++;
+			return {
+				object:
+					request.stage === 'draft'
+						? { questions: [draft], abstentions: [] }
+						: { reviews: [{ ...review, plausibleDistractors: false }] },
+				latencyMs: 1,
+				inputTokens: 1,
+				outputTokens: 1,
+				reasoningTokens: 1,
+				finishReason: 'stop'
+			};
+		},
+		{ fastLearnReview: true, canRepair: () => false }
+	);
+	expect(calls).toBe(2);
+	expect(result.rejected).toHaveLength(1);
+});
+
+test('a cued key goes to repair once; the final pass is not probed because nothing could fix it', async () => {
+	const stages: string[] = [];
+	let probes = 0;
+	const result = await runQualityBatch(
+		[slot],
+		async (request) => {
+			stages.push(request.stage);
+			const object =
+				request.stage === 'probe'
+					? { picks: [{ slotId: 'one', index: probes++ < 2 ? 0 : 3 }] }
+					: request.stage === 'draft' || request.stage === 'repair'
+						? { questions: [draft], abstentions: [] }
+						: { reviews: [review] };
+			return {
+				object,
+				latencyMs: 1,
+				inputTokens: 1,
+				outputTokens: 1,
+				reasoningTokens: 1,
+				finishReason: 'stop'
+			};
+		},
+		{ fastLearnReview: true, cueProbe: true }
+	);
+	expect(stages).toEqual(['draft', 'review', 'probe', 'probe', 'repair', 'review_repair']);
+	expect(result.accepted).toHaveLength(1);
+	expect(result.calls.filter((c) => c.stage === 'probe')).toHaveLength(2);
 });

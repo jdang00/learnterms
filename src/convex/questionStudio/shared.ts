@@ -1,16 +1,32 @@
+import { createAnthropic, type AnthropicLanguageModelOptions } from '@ai-sdk/anthropic';
 import { createOpenAI } from '@ai-sdk/openai';
 import { v } from 'convex/values';
 import { z } from 'zod/v4';
 import type { Doc, Id } from '../_generated/dataModel';
 import type { QuestionCounts, QuestionType } from './questionTypes';
+import { CLAUDE_HAIKU, STAGE_MODELS } from '../aiModels';
 
-export const QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS = {
-	openai: {
-		reasoningEffort: 'low',
-		forceReasoning: true,
-		store: true
-	}
-} as const;
+export const SERVER_SIDE_FALLBACK_BETA = 'server-side-fallback-2026-07-01';
+
+/** Adaptive thinking with an explicit effort; Sonnet and Opus also reroute safeguard declines. */
+export function anthropicProviderOptions(
+	model: string,
+	effort: NonNullable<AnthropicLanguageModelOptions['effort']>
+) {
+	return {
+		anthropic: {
+			thinking: { type: 'adaptive' },
+			effort,
+			...(model === CLAUDE_HAIKU
+				? {}
+				: { fallbacks: 'default', anthropicBeta: [SERVER_SIDE_FALLBACK_BETA] })
+		} satisfies AnthropicLanguageModelOptions
+	};
+}
+export const QUESTION_STUDIO_MAPPING_PROVIDER_OPTIONS = anthropicProviderOptions(
+	STAGE_MODELS.planning,
+	'low'
+);
 export const questionStudioModelValidator = v.string();
 export const MAX_GENERATED_QUESTIONS = 30;
 export const MAX_QUESTIONS_PER_MODULE = 150;
@@ -211,12 +227,12 @@ export type DocumentRagMetadata = {
 	extractionArtifactKeys?: string[];
 };
 
-export function questionStudioOpenAI() {
-	return createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
+export function anthropicProvider() {
+	return createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
-export function assertQuestionStudioKey() {
-	if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not configured');
+export function assertAnthropicKey() {
+	if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is not configured');
 }
 
 export function openRouter() {

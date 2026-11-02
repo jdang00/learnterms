@@ -11,7 +11,7 @@ export const questionTypeDefinitions = {
 		mapping:
 			'The evidence explicitly supports a fact, relationship, definition, or distinction that can be tested directly.',
 		contract:
-			'Test one source-supported fact, relationship, definition, or distinction directly. Use a short, clear stem without a patient vignette or an added multi-step task. Prefer a high-yield distinguishing feature, mechanism, or association over incidental trivia. Give informative, plausible answer choices and a substantive rationale explaining the correct relationship and the closest important misconception using the evidence.',
+			'Test one source-supported fact, relationship, definition, or distinction directly in a one- or two-sentence stem with no patient vignette or added multi-step task. Ask what something does, why it happens, or how two near neighbors differ. Attach any number to its clinical use.',
 		review:
 			'The question must directly reinforce one concept. Reject unnecessary scenarios or extra reasoning steps that obscure the learning target.'
 	},
@@ -22,7 +22,7 @@ export const questionTypeDefinitions = {
 		mapping:
 			'The evidence connects patient observations or clinical findings to an interpretation or clinical decision. General administrative material alone does not qualify.',
 		contract:
-			'Apply a source-supported relationship to a concise patient scenario, clinical finding, or clinical decision. Include only details needed to answer. The scenario must require using the finding or patient context, not merely decorate a recall question. Abstain if the evidence does not support clinical application; never invent a diagnosis, treatment rule, or threshold to make the topic clinical.',
+			'Apply a source-supported relationship to a concise patient scenario, clinical finding, or clinical decision. Include only details needed to answer, including the pertinent negatives that rule out the closest alternatives; removing the key finding must change the answer. The scenario must require using the finding or patient context, not merely decorate a recall question. Abstain if the evidence does not support clinical application; never invent a diagnosis, treatment rule, or threshold to make the topic clinical.',
 		review:
 			'The clinical context must be relevant to solving the question, plausible, and supported by the supplied relationships. Reject decorative vignettes and clinical decisions requiring outside knowledge.'
 	},
@@ -33,7 +33,7 @@ export const questionTypeDefinitions = {
 		mapping:
 			'At least two explicit relationships can be used together to distinguish plausible alternatives or reach a conclusion. Several matching signs of a single memorized diagnosis are insufficient.',
 		contract:
-			'Require combining at least two source-supported relationships to interpret evidence, compare plausible alternatives, or reach a decision. The learner must use the relationships together: no single clue or memorized association should settle the answer. Several matching signs of one diagnosis are insufficient. Clinical and nonclinical contexts are both appropriate. Do not inflate difficulty with irrelevant details, obscure recall, or an artificial extra step. Abstain if the evidence only supports direct recall.',
+			'Require combining at least two source-supported relationships: one narrows the options and a second separates the finalists. For example, infer the diagnosis, then apply a stated patient constraint; or choose between two parallel causes using timing or a measurement. The diagnosis alone must not settle the answer, and several matching signs of one diagnosis are insufficient. Clinical and nonclinical contexts are both appropriate. Do not inflate difficulty with irrelevant details, obscure recall, or an artificial extra step. Abstain if the evidence only supports direct recall.',
 		review:
 			'Identify the source-supported relationships the learner must combine and explain why both are needed to distinguish the options. Mark typeMatches=false if one clue or a memorized association already settles the answer, even when other matching clues are present. Reject disguised recall or irrelevant complexity. A patient case, calculation, or named intermediate step is not required.'
 	}
