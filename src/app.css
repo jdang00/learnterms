@@ -175,6 +175,13 @@
 	--color-mastered: var(--mastered);
 	--color-mastered-foreground: var(--mastered-foreground);
 	--color-mastered-ink: var(--mastered-ink);
+	/* shadcn Sidebar reads these; they follow the page neutrals in both themes. */
+	--color-sidebar: var(--muted);
+	--color-sidebar-foreground: var(--foreground);
+	--color-sidebar-accent: var(--muted-strong);
+	--color-sidebar-accent-foreground: var(--foreground);
+	--color-sidebar-border: var(--line);
+	--color-sidebar-ring: var(--ring);
 
 	--color-chart-1: var(--chart-1);
 	--color-chart-2: var(--chart-2);
@@ -208,6 +215,37 @@
 		}
 		to {
 			stroke-dashoffset: 0;
+		}
+	}
+
+	/* Live data: a ring that fades when a new answer lands, and a soft breathing dot. */
+	--animate-live-flash: live-flash 1.4s ease-out;
+	--animate-live-breathe: live-breathe 2.4s ease-in-out infinite;
+	--animate-live-count: live-count 1.2s ease-out;
+	@keyframes live-count {
+		0% {
+			color: var(--success-ink);
+			translate: 0 -2px;
+		}
+		100% {
+			translate: 0 0;
+		}
+	}
+	@keyframes live-flash {
+		0% {
+			box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 70%, transparent);
+		}
+		100% {
+			box-shadow: 0 0 0 10px color-mix(in oklab, var(--success) 0%, transparent);
+		}
+	}
+	@keyframes live-breathe {
+		0%,
+		100% {
+			box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 45%, transparent);
+		}
+		50% {
+			box-shadow: 0 0 0 5px color-mix(in oklab, var(--success) 0%, transparent);
 		}
 	}
 }

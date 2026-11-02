@@ -51,6 +51,18 @@ const routeMetadata: Record<string, readonly [string, string]> = {
 		'Design System',
 		'The LearnTerms interface primitives: color, type, buttons, overlays and form controls.'
 	],
+	'/design-system/concepts': [
+		'Design Concepts',
+		'Development-only concept drafts of shadcn-svelte components placed in LearnTerms.'
+	],
+	'/design-system/concepts/[area]': [
+		'Design Concepts',
+		'Development-only concept drafts for one area of LearnTerms.'
+	],
+	'/design-system/[showcase]': [
+		'Design Showcase',
+		'A development-only showcase of LearnTerms components in every state.'
+	],
 	'/status': [
 		'Service Status',
 		'View the LearnTerms service status page for hosting, authentication, data services, and AI processing.'
