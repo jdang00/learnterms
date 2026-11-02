@@ -9,6 +9,14 @@ import {
 	type ParsedQuestion,
 	type TypeSuggestion
 } from '#lib/utils/questionAuthoring.js';
+import {
+	addMatchingSide,
+	encodeMatchingDraft,
+	insertPastedPairs,
+	matchingDraft,
+	removeMatchingSide,
+	type MatchingRowDraft
+} from '#lib/utils/matching.js';
 import { getRationale, getRationalePlainText } from '#lib/utils/rationale.js';
 
 export type QuestionItem = Doc<'question'>;
@@ -80,20 +88,14 @@ function initialFitbAnswers(question: QuestionItem | null): FitbAnswerRow[] {
 	});
 }
 
+const blankRows = (): MatchingRowDraft[] => [
+	{ prompt: '', answer: '' },
+	{ prompt: '', answer: '' }
+];
+
 function initialMatching(question: QuestionItem | null) {
-	if (question?.type !== QUESTION_TYPES.MATCHING || !question.options?.length) {
-		return { prompts: ['', ''], answers: ['', ''] };
-	}
-	const prompts = question.options
-		.filter((option) => option.text?.startsWith('prompt:'))
-		.map((option) => option.text.slice('prompt:'.length));
-	const answers = question.options
-		.filter((option) => option.text?.startsWith('answer:'))
-		.map((option) => option.text.slice('answer:'.length));
-	return {
-		prompts: prompts.length > 0 ? prompts : ['', ''],
-		answers: answers.length > 0 ? answers : ['', '']
-	};
+	const rows = question?.type === QUESTION_TYPES.MATCHING ? matchingDraft(question) : [];
+	return rows.length > 0 ? rows : blankRows();
 }
 
 function encodeFitbAnswer(row: FitbAnswerRow): string {
@@ -147,8 +149,7 @@ export class QuestionEditorState {
 	options = $state<EditorOption[]>(fourBlankOptions());
 	correctAnswers = $state<string[]>([]);
 	fitbAnswers = $state<FitbAnswerRow[]>([emptyFitbRow()]);
-	matchingPrompts = $state<string[]>(['', '']);
-	matchingAnswers = $state<string[]>(['', '']);
+	matchingRows = $state<MatchingRowDraft[]>(blankRows());
 	questionSource = $state<QuestionItem['metadata']['source']>();
 	examFindings = $state<ExamFinding[]>([]);
 	compactFindings = $state(false);
@@ -182,7 +183,7 @@ export class QuestionEditorState {
 		if (this.questionType === QUESTION_TYPES.FILL_IN_THE_BLANK)
 			return this.fitbAnswers.every((row) => !row.value.trim());
 		if (this.questionType === QUESTION_TYPES.MATCHING)
-			return [...this.matchingPrompts, ...this.matchingAnswers].every((text) => !text.trim());
+			return this.matchingRows.every((row) => !row.prompt?.trim() && !row.answer?.trim());
 		if (this.questionType === QUESTION_TYPES.TRUE_FALSE) return this.correctAnswers.length === 0;
 		return this.correctAnswers.length === 0 && this.options.every((option) => !option.text.trim());
 	});
@@ -219,13 +220,6 @@ export class QuestionEditorState {
 		return null;
 	});
 
-	matchingRowIndexes = $derived.by(() =>
-		Array.from(
-			{ length: Math.max(this.matchingPrompts.length, this.matchingAnswers.length) },
-			(_, index) => index
-		)
-	);
-
 	/** Loads a question (or a blank draft) into the form; the host syncs the TipTap editors. */
 	reset(editingQuestion: QuestionItem | null, mode: EditorMode, initialAddStatus: string) {
 		const nextStem = editingQuestion?.stem ?? '';
@@ -252,8 +246,7 @@ export class QuestionEditorState {
 		this.options = initialOptions(editingQuestion);
 		this.correctAnswers = initialCorrectAnswers(editingQuestion);
 		this.fitbAnswers = initialFitbAnswers(editingQuestion);
-		this.matchingPrompts = nextMatching.prompts;
-		this.matchingAnswers = nextMatching.answers;
+		this.matchingRows = nextMatching;
 		return { stem: nextStem, rationale: nextRationale };
 	}
 
@@ -303,8 +296,7 @@ export class QuestionEditorState {
 			this.options = fourBlankOptions();
 			this.correctAnswers = [];
 		} else if (this.questionType === QUESTION_TYPES.MATCHING) {
-			this.matchingPrompts = ['', ''];
-			this.matchingAnswers = ['', ''];
+			this.matchingRows = blankRows();
 			this.correctAnswers = [];
 		}
 	}
@@ -373,8 +365,7 @@ export class QuestionEditorState {
 			filled.push('the answer');
 		}
 		if (parsed.pairs.length) {
-			this.matchingPrompts = parsed.pairs.map((pair) => pair.prompt);
-			this.matchingAnswers = parsed.pairs.map((pair) => pair.answer);
+			this.matchingRows = parsed.pairs.map((pair) => ({ ...pair }));
 			filled.push(`${parsed.pairs.length} pairs`);
 		}
 		return filled;
@@ -416,26 +407,22 @@ export class QuestionEditorState {
 	}
 
 	// ── matching ─────────────────────────────────────────────────────────────
-	addMatchingPrompt() {
-		this.matchingPrompts = [...this.matchingPrompts, ''];
+	addMatchingSide(side: 'prompt' | 'answer') {
+		this.matchingRows = addMatchingSide(this.matchingRows, side);
 		this.notify();
 	}
 
-	removeMatchingPrompt(index: number) {
-		if (this.matchingPrompts.length <= 1) return;
-		this.matchingPrompts = this.matchingPrompts.filter((_, i) => i !== index);
+	removeMatchingSide(index: number, side: 'prompt' | 'answer') {
+		this.matchingRows = removeMatchingSide(this.matchingRows, index, side);
 		this.notify();
 	}
 
-	addMatchingAnswer() {
-		this.matchingAnswers = [...this.matchingAnswers, ''];
+	pasteMatchingPairs(index: number, text: string): boolean {
+		const next = insertPastedPairs(this.matchingRows, index, text);
+		if (!next) return false;
+		this.matchingRows = next;
 		this.notify();
-	}
-
-	removeMatchingAnswer(index: number) {
-		if (this.matchingAnswers.length <= 1) return;
-		this.matchingAnswers = this.matchingAnswers.filter((_, i) => i !== index);
-		this.notify();
+		return true;
 	}
 
 	// ── choices ──────────────────────────────────────────────────────────────
@@ -541,19 +528,10 @@ export class QuestionEditorState {
 		}
 
 		if (this.questionType === QUESTION_TYPES.MATCHING) {
-			const rawPrompts = this.matchingPrompts.map((t) => t.trim()).filter((t) => t.length > 0);
-			const rawAnswers = this.matchingAnswers.map((t) => t.trim()).filter((t) => t.length > 0);
-			if (rawPrompts.length === 0 || rawAnswers.length === 0) {
-				return { message: 'At least one prompt and one answer are required', kind: 'toast' };
-			}
-			const promptOptions = rawPrompts.map((text) => ({ text: `prompt:${text}` }));
-			const answersOffset = promptOptions.length;
-			const answerOptions = rawAnswers.map((text) => ({ text: `answer:${text}` }));
-			const mappings: string[] = [];
-			const n = Math.min(rawPrompts.length, rawAnswers.length);
-			for (let i = 0; i < n; i++) mappings.push(`${i}::${answersOffset + i}`);
-			this.options = [...promptOptions, ...answerOptions];
-			this.correctAnswers = mappings;
+			const encoded = encodeMatchingDraft(this.matchingRows);
+			if (encoded.error !== undefined) return { message: encoded.error, kind: 'toast' };
+			this.options = encoded.options;
+			this.correctAnswers = encoded.correctAnswers;
 		}
 
 		if (this.questionType === QUESTION_TYPES.FREE_RESPONSE) {

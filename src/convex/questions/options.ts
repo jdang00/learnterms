@@ -1,4 +1,11 @@
 // Option id assignment and answer normalization. Pure, so it is unit-testable.
+import {
+	answerTextKey,
+	matchingRole,
+	parsePairToken,
+	resolveOptionToken,
+	splitAnswerToken
+} from '../../lib/utils/matching';
 
 export function generateOptionId(used: Set<string>): string {
 	let candidate = '';
@@ -8,72 +15,8 @@ export function generateOptionId(used: Set<string>): string {
 	return candidate;
 }
 
-export function matchingRoleFromText(text: string): 'prompt' | 'answer' | null {
-	const normalized = String(text ?? '')
-		.trimStart()
-		.toLowerCase();
-	if (normalized.startsWith('prompt:')) return 'prompt';
-	if (normalized.startsWith('answer:')) return 'answer';
-	return null;
-}
-
-export function normalizeWhitespaceLower(value: string): string {
-	return String(value ?? '')
-		.trim()
-		.toLowerCase()
-		.replace(/\s+/g, ' ');
-}
-
 export function matchingOptionKey(text: string): string {
-	const role = matchingRoleFromText(text) ?? 'other';
-	const withoutPrefix =
-		role === 'prompt'
-			? String(text ?? '').replace(/^\s*prompt:\s*/i, '')
-			: role === 'answer'
-				? String(text ?? '').replace(/^\s*answer:\s*/i, '')
-				: String(text ?? '');
-	return `${role}:${normalizeWhitespaceLower(withoutPrefix)}`;
-}
-
-export function parseMatchingPairToken(
-	value: string
-): { promptToken: string; answerToken: string } | null {
-	const raw = String(value ?? '').trim();
-	const sep = raw.indexOf('::');
-	if (sep <= 0) return null;
-	const promptToken = raw.slice(0, sep).trim();
-	const answerToken = raw.slice(sep + 2).trim();
-	if (!promptToken || !answerToken) return null;
-	return { promptToken, answerToken };
-}
-
-export function splitAnswerToken(answerToken: string): string[] {
-	return String(answerToken ?? '')
-		.split('|')
-		.map((part) => part.trim())
-		.filter((part) => part.length > 0);
-}
-
-export function resolveOptionTokenToId(
-	token: string,
-	optionsWithIds: Array<{ id: string; text: string }>,
-	legacyIdMap?: Map<string, string>
-): string | null {
-	const raw = String(token ?? '').trim();
-	if (!raw) return null;
-	if (legacyIdMap?.has(raw)) return legacyIdMap.get(raw)!;
-
-	const byExact = optionsWithIds.find((option) => option.id === raw);
-	if (byExact) return byExact.id;
-
-	if (/^\d+$/.test(raw)) {
-		const index = Number(raw);
-		if (Number.isInteger(index) && index >= 0 && index < optionsWithIds.length) {
-			return optionsWithIds[index].id;
-		}
-	}
-
-	return null;
+	return `${matchingRole(text) ?? 'other'}:${answerTextKey(text)}`;
 }
 
 export function assignOptionIds(
@@ -197,7 +140,7 @@ export function normalizeStandardCorrectAnswers(
 	const seen = new Set<string>();
 
 	for (const token of rawCorrectAnswers || []) {
-		const resolved = resolveOptionTokenToId(String(token), optionsWithIds, legacyIdMap);
+		const resolved = resolveOptionToken(String(token), optionsWithIds, legacyIdMap);
 		if (!resolved || !optionIdSet.has(resolved) || seen.has(resolved)) continue;
 		normalized.push(resolved);
 		seen.add(resolved);
@@ -212,24 +155,24 @@ export function normalizeMatchingCorrectAnswers(
 	legacyIdMap?: Map<string, string>
 ): string[] {
 	const promptIds = optionsWithIds
-		.filter((o) => matchingRoleFromText(o.text) === 'prompt')
+		.filter((o) => matchingRole(o.text) === 'prompt')
 		.map((o) => o.id);
 	const answerIdSet = new Set(
-		optionsWithIds.filter((o) => matchingRoleFromText(o.text) === 'answer').map((o) => o.id)
+		optionsWithIds.filter((o) => matchingRole(o.text) === 'answer').map((o) => o.id)
 	);
 	const promptIdSet = new Set(promptIds);
 	const normalized: string[] = [];
 	const usedPrompts = new Set<string>();
 
 	for (const rawPair of rawCorrectAnswers || []) {
-		const parsed = parseMatchingPairToken(String(rawPair));
+		const parsed = parsePairToken(String(rawPair));
 		if (!parsed) continue;
 
-		const promptId = resolveOptionTokenToId(parsed.promptToken, optionsWithIds, legacyIdMap);
+		const promptId = resolveOptionToken(parsed.promptToken, optionsWithIds, legacyIdMap);
 		if (!promptId || !promptIdSet.has(promptId) || usedPrompts.has(promptId)) continue;
 
 		const candidateAnswerIds = splitAnswerToken(parsed.answerToken)
-			.map((token) => resolveOptionTokenToId(token, optionsWithIds, legacyIdMap))
+			.map((token) => resolveOptionToken(token, optionsWithIds, legacyIdMap))
 			.filter((id): id is string => Boolean(id))
 			.filter((id) => answerIdSet.has(id));
 
@@ -247,7 +190,7 @@ export function normalizeMatchingCorrectAnswers(
 	const fallbackPairs = promptIds
 		.map((promptId, index) => {
 			const answerToken = String(rawCorrectAnswers?.[index] ?? '');
-			const resolvedAnswerId = resolveOptionTokenToId(answerToken, optionsWithIds, legacyIdMap);
+			const resolvedAnswerId = resolveOptionToken(answerToken, optionsWithIds, legacyIdMap);
 			if (!resolvedAnswerId || !answerIdSet.has(resolvedAnswerId)) return null;
 			return `${promptId}::${resolvedAnswerId}`;
 		})
@@ -257,7 +200,7 @@ export function normalizeMatchingCorrectAnswers(
 
 	// Last-resort fallback: zip prompt/answer order.
 	const answerIds = optionsWithIds
-		.filter((o) => matchingRoleFromText(o.text) === 'answer')
+		.filter((o) => matchingRole(o.text) === 'answer')
 		.map((o) => o.id);
 	const zipped: string[] = [];
 	const n = Math.min(promptIds.length, answerIds.length);

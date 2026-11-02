@@ -135,7 +135,12 @@ export function createQuizCommands(ctx: QuizCommandContext): QuizCommandRegistry
 	function toggleOptionAt(index: number): boolean {
 		const question = ctx.question();
 		if (!question || ctx.qs.showSolution) return false;
-		if (question.type === QUESTION_TYPES.FILL_IN_THE_BLANK) return false;
+		if (
+			question.type === QUESTION_TYPES.FILL_IN_THE_BLANK ||
+			question.type === QUESTION_TYPES.MATCHING ||
+			question.type === QUESTION_TYPES.FREE_RESPONSE
+		)
+			return false;
 		const option = ctx.qs.getOrderedOptions(question)?.[index];
 		if (!option?.id) return false;
 		ctx.qs.toggleOption(option.id);

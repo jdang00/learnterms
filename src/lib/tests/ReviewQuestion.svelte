@@ -1,5 +1,7 @@
 <script lang="ts">
 	import QuestionSources from '#lib/components/QuestionSources.svelte';
+	import MatchingBoard from '#lib/components/matching/MatchingBoard.svelte';
+	import MatchResultCell from '#lib/components/matching/MatchResultCell.svelte';
 	import ExamFindings from '#lib/components/exam-findings/ExamFindings.svelte';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import * as Card from '#lib/components/ui/card/index.js';
@@ -8,16 +10,11 @@
 	import { getRationale, hasRationale } from '#lib/utils/rationale.js';
 	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	import Clock from '@lucide/svelte/icons/clock';
-	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
-	import XCircle from '@lucide/svelte/icons/x-circle';
-	import MinusCircle from '@lucide/svelte/icons/minus-circle';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import {
 		isFitb,
 		isMatching,
 		isSkippedItem,
-		matchingReviewRows,
-		matchingReviewStats,
+		matchingReview,
 		multiSelectAnalysis
 	} from './results';
 	import type { ReviewState } from './review.svelte';
@@ -101,8 +98,7 @@
 				</div>
 			</div>
 		{:else if isMatching(selectedItem.question.type)}
-			{@const rows = matchingReviewRows(selectedItem)}
-			{@const stats = matchingReviewStats(selectedItem)}
+			{@const stats = matchingReview(selectedItem)}
 			<div class="mt-5 ms-2 space-y-3">
 				<div class="flex flex-wrap gap-2">
 					<Badge variant="soft" size="md">
@@ -120,54 +116,16 @@
 					{/if}
 				</div>
 
-				{#if rows.length === 0}
+				{#if stats.rows.length === 0}
 					<div class="surface-sm p-4 text-sm text-foreground/50">
 						No matching pairs found for this question.
 					</div>
 				{:else}
-					<div class="surface-inset overflow-hidden divide-y divide-border/40">
-						{#each rows as row (row.promptId)}
-							<div
-								class="flex items-start gap-2.5 px-3 py-2.5 {row.isCorrect
-									? 'bg-success/[0.03]'
-									: row.isAnswered
-										? 'bg-error/[0.03]'
-										: ''}"
-							>
-								<div class="pt-0.5 shrink-0">
-									{#if row.isCorrect}
-										<CheckCircle2 size={15} class="text-success" />
-									{:else if row.isAnswered}
-										<XCircle size={15} class="text-error" />
-									{:else}
-										<MinusCircle size={15} class="text-warning" />
-									{/if}
-								</div>
-								<div class="min-w-0 flex-1">
-									<div class="text-sm font-medium">{row.promptText}</div>
-									{#if row.isCorrect}
-										<div class="text-sm text-success-ink mt-0.5">
-											{row.correctAnswerText}
-										</div>
-									{:else if row.isAnswered}
-										<div class="text-sm text-error-ink line-through mt-0.5">
-											{row.userAnswerText}
-										</div>
-										<div class="text-sm text-success-ink mt-0.5 flex items-center gap-1">
-											<ArrowRight size={11} class="shrink-0 text-success/50" />
-											{row.correctAnswerText}
-										</div>
-									{:else}
-										<div class="text-sm text-warning-ink italic mt-0.5">No answer</div>
-										<div class="text-sm text-success-ink mt-0.5 flex items-center gap-1">
-											<ArrowRight size={11} class="shrink-0 text-success/50" />
-											{row.correctAnswerText}
-										</div>
-									{/if}
-								</div>
-							</div>
-						{/each}
-					</div>
+					<MatchingBoard rows={stats.rows}>
+						{#snippet answer(row)}
+							<MatchResultCell chosen={row.chosen} correct={row.correct} status={row.status} />
+						{/snippet}
+					</MatchingBoard>
 				{/if}
 			</div>
 		{:else}

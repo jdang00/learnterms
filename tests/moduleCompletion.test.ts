@@ -112,7 +112,7 @@ describe('module completion and mastery', () => {
 		expect(answerStatus(q('regex:^\\d+$'), ['123'])).toBe('correct');
 		expect(answerStatus(q('regex:['), ['123'])).toBe('incorrect');
 	});
-	test('matching handles equivalent answers and rejects incomplete or missing keys', () => {
+	test('matching handles equivalent answers, prompts without answers and missing keys', () => {
 		const options = [
 			{ id: 'p1', text: 'prompt:One' },
 			{ id: 'p2', text: 'prompt:Two' },
@@ -123,6 +123,8 @@ describe('module completion and mastery', () => {
 		expect(answerStatus(q, ['p1::b', 'p2::a'])).toBe('correct');
 		expect(answerStatus(q, ['p1::a'])).toBe('incorrect');
 		expect(answerStatus({ ...q, correctAnswers: [] }, ['p1::a'])).toBe('incorrect');
-		expect(answerStatus({ ...q, correctAnswers: ['p1::a'] }, ['p1::a'])).toBe('incorrect');
+		// A prompt without an answer is correct only when left blank.
+		expect(answerStatus({ ...q, correctAnswers: ['p1::a'] }, ['p1::a'])).toBe('correct');
+		expect(answerStatus({ ...q, correctAnswers: ['p1::a'] }, ['p1::a', 'p2::b'])).toBe('incorrect');
 	});
 });

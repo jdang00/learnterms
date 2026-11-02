@@ -1,5 +1,5 @@
 import { responseText, type FreeResponseGrade } from '#lib/utils/freeResponse.js';
-import { answerStatus, evaluateMatching, summarizeModule } from '#lib/utils/moduleCompletion.js';
+import { answerStatus, summarizeModule } from '#lib/utils/moduleCompletion.js';
 import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { api } from '../../../../../convex/_generated/api';
 import type { ConvexClient } from 'convex/browser';
@@ -312,13 +312,6 @@ export class QuizState {
 
 	checkMatching(_question?: Doc<'question'> | null): boolean {
 		return this.checkAnswer([], this.selectedAnswers, { autoNextOnCorrect: false });
-	}
-
-	evaluateMatchingSelection(question?: Doc<'question'> | null): boolean {
-		const q = question ?? this.getCurrentQuestion();
-		if (!q) return false;
-
-		return evaluateMatching(q, this.selectedAnswers);
 	}
 
 	getProgressPercentage(): number {

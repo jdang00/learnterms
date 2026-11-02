@@ -9,7 +9,7 @@
 	import AnswerOptions from '#lib/components/AnswerOptions.svelte';
 	import FillInTheBlank from '#lib/components/FillInTheBlank.svelte';
 	import FreeResponse from './FreeResponse.svelte';
-	import Matching from '#lib/components/Matching.svelte';
+	import Matching from '#lib/components/matching/Matching.svelte';
 	import QuizDock from '#lib/components/quiz-dock/QuizDock.svelte';
 	import MobileQuizDock from '#lib/components/quiz-dock/MobileQuizDock.svelte';
 	import QuizShortcuts from '#lib/components/quiz-dock/QuizShortcuts.svelte';
@@ -279,7 +279,7 @@
 				{:else if currentlySelected.type === QUESTION_TYPES.FREE_RESPONSE}
 					{#key currentlySelected._id}<FreeResponse {qs} question={currentlySelected} />{/key}
 				{:else if currentlySelected.type === QUESTION_TYPES.MATCHING}
-					<Matching bind:qs {currentlySelected} />
+					<Matching {qs} {currentlySelected} />
 				{:else}
 					<div class="text-foreground/70 font-medium text-base sm:text-lg leading-tight my-3 ms-2">
 						Select {currentlySelected.correctAnswers.length}.

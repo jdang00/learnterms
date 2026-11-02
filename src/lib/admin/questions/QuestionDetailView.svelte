@@ -12,6 +12,9 @@
 	import Check from '@lucide/svelte/icons/check';
 	import Target from '@lucide/svelte/icons/target';
 	import { convertToDisplayFormat } from '#lib/utils/questionType.js';
+	import { matchingKey, matchingLabel, matchingSides, matchResults } from '#lib/utils/matching.js';
+	import MatchingBoard from '#lib/components/matching/MatchingBoard.svelte';
+	import MatchResultCell from '#lib/components/matching/MatchResultCell.svelte';
 	import { getRationale, hasRationale } from '#lib/utils/rationale.js';
 	import { sanitizeHtml } from '#lib/utils/sanitizeHtml.js';
 	import type { Doc } from '../../../convex/_generated/dataModel';
@@ -93,63 +96,19 @@
 			.filter((t) => t.length > 0);
 	});
 
-	// Matching helpers
-	const matchingPrompts = $derived.by(() => {
-		if (!isMatching) return [];
-		const opts = (question.options || []) as Option[];
-		return opts.filter((o) => o.text.startsWith('prompt:'));
+	const matching = $derived.by(() => {
+		if (!isMatching) return null;
+		const results = matchResults(question, []).map(({ id, prompt, correct }) => ({
+			id,
+			prompt,
+			correct
+		}));
+		const keyed = new Set([...matchingKey(question).values()].flat());
+		const distractors = matchingSides(question.options)
+			.answers.filter((answer) => !keyed.has(answer.id))
+			.map((answer) => ({ id: answer.id, label: matchingLabel(answer.text) }));
+		return { results, distractors };
 	});
-
-	const matchingAnswers = $derived.by(() => {
-		if (!isMatching) return [];
-		const opts = (question.options || []) as Option[];
-		return opts.filter((o) => o.text.startsWith('answer:'));
-	});
-
-	function getPromptLabel(text: string): string {
-		return text.startsWith('prompt:') ? text.slice('prompt:'.length).trim() : text;
-	}
-
-	function getAnswerLabel(text: string): string {
-		return text.startsWith('answer:') ? text.slice('answer:'.length).trim() : text;
-	}
-
-	function getCorrectAnswerForPrompt(promptId: string): string | undefined {
-		const options = (question.options || []) as Option[];
-		const resolveOptionToken = (token: string): string | undefined => {
-			const raw = String(token ?? '').trim();
-			if (!raw) return undefined;
-			if (options.some((o) => o.id === raw)) return raw;
-			if (/^\d+$/.test(raw)) {
-				const index = Number(raw);
-				if (Number.isInteger(index) && index >= 0 && index < options.length) {
-					return options[index]?.id;
-				}
-			}
-			return undefined;
-		};
-
-		const pair = (question.correctAnswers || [])
-			.map((raw: string) => {
-				const value = String(raw ?? '');
-				const sep = value.indexOf('::');
-				if (sep <= 0) return null;
-				const promptToken = value.slice(0, sep).trim();
-				const answerToken = value.slice(sep + 2).trim();
-				const resolvedPromptId = resolveOptionToken(promptToken);
-				return resolvedPromptId === promptId ? answerToken : null;
-			})
-			.find((token): token is string => Boolean(token));
-		if (!pair) return undefined;
-		const answerId = pair
-			.split('|')
-			.map((part) => part.trim())
-			.map((token) => resolveOptionToken(token))
-			.find((id): id is string => Boolean(id));
-		if (!answerId) return undefined;
-		const answerOpt = matchingAnswers.find((a) => a.id === answerId);
-		return answerOpt ? getAnswerLabel(answerOpt.text) : undefined;
-	}
 </script>
 
 <div class="h-full flex flex-col overflow-hidden">
@@ -356,78 +315,23 @@
 			</div>
 
 			<!-- Matching -->
-		{:else if isMatching}
+		{:else if matching}
 			<div class={isMobile ? 'mb-4' : 'mb-6'}>
 				<div class="label-caps {isMobile ? 'mb-2' : 'mb-3'}">Matching Pairs</div>
-				<div class={isMobile ? 'space-y-2' : 'space-y-3'}>
-					{#each matchingPrompts as prompt (prompt.id)}
-						{@const correctAnswer = getCorrectAnswerForPrompt(prompt.id)}
-						<div class="flex items-center {isMobile ? 'gap-2' : 'gap-3'}">
-							<!-- Prompt -->
-							<div class="flex-1">
-								<div
-									class="rounded-3xl border-2 border-border bg-muted {isMobile
-										? 'px-4 py-2'
-										: 'px-5 py-3'}"
-								>
-									<span class="font-semibold {isMobile ? 'text-xs' : 'text-sm'} tiptap-content"
-										>{getPromptLabel(prompt.text)}</span
-									>
-								</div>
-							</div>
-							<!-- Arrow -->
-							<div class="text-foreground/40 shrink-0">
-								<svg
-									class={isMobile ? 'w-4 h-4' : 'w-5 h-5'}
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M13 7l5 5m0 0l-5 5m5-5H6"
-									/>
-								</svg>
-							</div>
-							<!-- Answer -->
-							<div class="flex-1">
-								{#if correctAnswer}
-									<div
-										class="rounded-3xl border-2 border-success bg-success/10 {isMobile
-											? 'px-4 py-2'
-											: 'px-5 py-3'} flex items-center gap-2"
-									>
-										<Check size={isMobile ? 14 : 16} class="text-success shrink-0" />
-										<span class="{isMobile ? 'text-xs' : 'text-sm'} tiptap-content"
-											>{correctAnswer}</span
-										>
-									</div>
-								{:else}
-									<div
-										class="rounded-3xl border-2 border-dashed border-border bg-background {isMobile
-											? 'px-4 py-2'
-											: 'px-5 py-3'}"
-									>
-										<span class="{isMobile ? 'text-xs' : 'text-sm'} text-foreground/40 italic"
-											>No match defined</span
-										>
-									</div>
-								{/if}
-							</div>
-						</div>
-					{/each}
-				</div>
+				<MatchingBoard rows={matching.results}>
+					{#snippet answer(row)}
+						<MatchResultCell correct={row.correct} />
+					{/snippet}
+				</MatchingBoard>
 
-				{#if matchingAnswers.length > matchingPrompts.length}
-					<div class="mt-4 pt-4 border-t border-muted">
-						<p class="text-xs text-foreground/50 mb-2">
-							Available answers ({matchingAnswers.length}):
-						</p>
-						<div class="flex flex-wrap gap-2">
-							{#each matchingAnswers as answer (answer.id)}
-								<Badge variant="outline" size="sm">{getAnswerLabel(answer.text)}</Badge>
+				{#if matching.distractors.length > 0}
+					<div class="mt-4">
+						<div class="label-caps mb-2">Distractors ({matching.distractors.length})</div>
+						<div class="flex flex-wrap gap-1.5">
+							{#each matching.distractors as answer (answer.id)}
+								<Badge variant="outline" size="sm" class="h-auto py-0.5 whitespace-normal"
+									>{answer.label}</Badge
+								>
 							{/each}
 						</div>
 					</div>

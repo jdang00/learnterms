@@ -3,11 +3,11 @@ import {
 	buildCorrectAnswerDisplay,
 	computeAttemptCounters,
 	evaluateFitb,
-	evaluateMatchingSelection,
 	scoreAttemptItem,
-	shuffledWithSeed,
 	type AttemptItem
 } from '../src/convex/tests/scoring';
+import { evaluateMatching } from '../src/lib/utils/matching';
+import { shuffledWithSeed } from '../src/lib/utils/seededShuffle';
 
 function item(
 	snapshot: Partial<AttemptItem['questionSnapshot']>,
@@ -74,9 +74,9 @@ test('matching accepts answers with the same text and rejects partial maps', () 
 		correctAnswers: ['p1::a1', 'p2::a2']
 	};
 	const q = item(snapshot).questionSnapshot;
-	expect(evaluateMatchingSelection(q, ['p1::a1', 'p2::a3'])).toBe(true);
-	expect(evaluateMatchingSelection(q, ['p1::a1'])).toBe(false);
-	expect(evaluateMatchingSelection(q, ['p1::a2', 'p2::a1'])).toBe(false);
+	expect(evaluateMatching(q, ['p1::a1', 'p2::a3'])).toBe(true);
+	expect(evaluateMatching(q, ['p1::a1'])).toBe(false);
+	expect(evaluateMatching(q, ['p1::a2', 'p2::a1'])).toBe(false);
 });
 
 test('attempt counters and seeded shuffles are stable', () => {

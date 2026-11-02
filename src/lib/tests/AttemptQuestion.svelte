@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Matching from '#lib/components/Matching.svelte';
+	import Matching from '#lib/components/matching/Matching.svelte';
 	import AnswerOptions from '#lib/components/AnswerOptions.svelte';
 	import FillInTheBlank from '#lib/components/FillInTheBlank.svelte';
 	import QuestionMediaStrip from '#lib/components/QuestionMediaStrip.svelte';
@@ -100,16 +100,15 @@
 				/>
 			{/if}
 		{:else if isMatching(currentItem.question.type)}
-			<div class="mt-5 space-y-3 ms-2">
-				<div class="text-xs text-foreground/50 font-medium">
-					Match each prompt to one unique answer.
+			<div class="mt-4 ms-2">
+				<div class="text-foreground/60 font-medium text-base sm:text-lg leading-tight mb-1">
+					Match each prompt to one answer.
 				</div>
 				{#if runner.currentSharedQuestion}
 					<Matching
 						qs={runner.uiAdapter}
 						currentlySelected={runner.currentSharedQuestion}
 						allowSolution={false}
-						allowClear={true}
 					/>
 				{/if}
 			</div>

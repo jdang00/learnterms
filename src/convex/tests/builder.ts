@@ -4,7 +4,8 @@ import { authMutation, authQuery } from '../authQueries';
 import { requireClassAccess } from '../access';
 import { publishedQuestionCount } from '../moduleStats';
 import { getRationale } from '../../lib/utils/rationale';
-import { clampInt, normalizeQuestionType, shuffledWithSeed } from './scoring';
+import { shuffledWithSeed } from '../../lib/utils/seededShuffle';
+import { clampInt, normalizeQuestionType } from './scoring';
 import {
 	MAX_QUESTIONS_PER_ATTEMPT,
 	getClassPublishedModules,
