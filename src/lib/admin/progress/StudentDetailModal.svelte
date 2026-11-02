@@ -174,7 +174,7 @@
 
 		<!-- Role Management (Only if editable and not own profile) -->
 		{#if canEditRole && student && !isOwnProfile && updateRole}
-			<div class="bg-muted/50 rounded-2xl p-6 mb-6">
+			<div class="bg-muted/50 rounded-2xl p-4 sm:p-6 mb-6">
 				<div class="flex items-center gap-2 mb-4">
 					<Shield size={18} class="text-primary" />
 					<h4 class="font-bold">Account Management</h4>
@@ -191,14 +191,14 @@
 							<Alert.Description>Dev roles are managed via the CLI for security.</Alert.Description>
 						</Alert.Root>
 					{:else}
-						<div class="flex w-full gap-2">
+						<div class="grid w-full grid-cols-2 gap-2 sm:flex">
 							{#each availableRoles as roleOption (roleOption.value ?? 'student')}
 								{@const selected = (student.role ?? null) === roleOption.value}
 								<Button
 									variant={selected ? 'solid' : 'soft'}
 									tone={selected ? roleOption.color : 'neutral'}
 									size="sm"
-									class="flex-1 gap-2"
+									class="min-w-0 gap-2 sm:flex-1"
 									aria-pressed={selected}
 									onclick={() => updateRole(student._id, roleOption.value)}
 								>
