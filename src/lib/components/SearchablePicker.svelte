@@ -78,11 +78,20 @@
 	>
 		{#if header}<div class="shrink-0">{@render header()}</div>{/if}
 		<!-- Options arrive already filtered by `search`, so Command only handles keys and selection. -->
-		<Command.Root shouldFilter={false} loop class="flex min-h-0 flex-col gap-3">
+		<Command.Root
+			shouldFilter={false}
+			loop
+			disableInitialScroll
+			class="flex min-h-0 flex-col gap-3"
+		>
 			<InputGroup.Root class="h-8 shrink-0">
 				<Command.Input {placeholder} bind:value={search}>
 					{#snippet child({ props })}
-						<InputGroup.Input {...props} class="px-3 text-sm placeholder:text-foreground/70" />
+						<InputGroup.Input
+							{...props}
+							bind:value={search}
+							class="px-3 text-sm placeholder:text-foreground/70"
+						/>
 					{/snippet}
 				</Command.Input>
 			</InputGroup.Root>

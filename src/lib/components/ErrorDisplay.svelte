@@ -1,71 +1,53 @@
 <script lang="ts">
+	import LockKeyhole from '@lucide/svelte/icons/lock-keyhole';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { isConvexAuthError } from '#lib/utils/errorHandling.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 
-	let { error, showReload = false, size = 'normal', class: className = '' } = $props();
+	let {
+		error,
+		showReload = false,
+		size = 'normal',
+		class: className = ''
+	}: {
+		error: unknown;
+		showReload?: boolean;
+		size?: 'small' | 'normal' | 'large';
+		class?: string;
+	} = $props();
 
-	function handleReload() {
-		window.location.reload();
-	}
-
-	let isAuthError = $state(false);
-	let sizeClasses = $state('text-base');
-
-	$effect(() => {
-		isAuthError = isConvexAuthError(error);
-		sizeClasses = size === 'small' ? 'text-sm' : size === 'large' ? 'text-lg' : 'text-base';
-	});
+	// An expired Convex session reads as routine, not as a failure.
+	const isAuthError = $derived(isConvexAuthError(error));
+	const textSize = $derived(
+		size === 'small' ? 'text-sm' : size === 'large' ? 'text-lg' : 'text-base'
+	);
 </script>
 
-<div class="flex flex-col items-center justify-center p-6 {className}">
-	<div class="mb-3">
-		{#if isAuthError}
-			<svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-				></path>
-			</svg>
-		{:else}
-			<svg class="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-				></path>
-			</svg>
-		{/if}
-	</div>
-
-	<h3
-		class="font-semibold {sizeClasses} {isAuthError
-			? 'text-primary-ink'
-			: 'text-error-ink'} mb-2 text-center"
+<div class="flex flex-col items-center justify-center p-6 text-center {className}" role="alert">
+	<span
+		class="mb-3 grid size-12 place-items-center rounded-2xl {isAuthError
+			? 'bg-primary/10 text-primary-ink'
+			: 'bg-error/10 text-error-ink'}"
 	>
-		{isAuthError ? 'Session Refreshed' : 'Error'}
+		{#if isAuthError}<LockKeyhole size={22} />{:else}<TriangleAlert size={22} />{/if}
+	</span>
+	<h3 class="mb-1.5 font-semibold {textSize}">
+		{isAuthError ? 'Session refreshed' : 'Something went wrong'}
 	</h3>
-
-	<p class="{sizeClasses} text-foreground/80 text-center mb-4 max-w-sm">
+	<p class="mb-4 max-w-sm text-foreground/70 {textSize === 'text-lg' ? 'text-base' : 'text-sm'}">
 		{isAuthError
-			? 'Your session has been refreshed for security. Please reload to continue learning.'
-			: 'Something went wrong while loading this content.'}
+			? 'Your session was refreshed for security. Reload to keep studying.'
+			: 'This content didn’t load. Reloading usually fixes it.'}
 	</p>
-
 	{#if showReload}
 		<Button
 			size="sm"
 			variant={isAuthError ? 'solid' : 'outline'}
 			tone={isAuthError ? 'primary' : 'error'}
-			class="gap-2"
-			onclick={handleReload}
-			aria-label="Reload page"
+			onclick={() => window.location.reload()}
 		>
-			<RefreshCw size="16" />
-			<span>{isAuthError ? 'Continue' : 'Reload'}</span>
+			<RefreshCw />{isAuthError ? 'Continue' : 'Reload'}
 		</Button>
 	{/if}
 </div>
